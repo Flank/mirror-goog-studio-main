@@ -103,7 +103,7 @@ void InstallServer::HandleRequest(const ServerRequest& request) {
     ConvertEventToProtoEvent(event, response.add_events());
   }
 
-  output_.Write(response);
+  output_.WriteBlocking(response);
 }
 
 void InstallServer::HandleOpenSocket(
@@ -141,7 +141,7 @@ void InstallServer::HandleSendMessageInner(
       return;
     }
 
-    if (!agent->Write(request_bytes)) {
+    if (!agent->WriteBlocking(request_bytes)) {
       response->set_status(
           proto::SendAgentMessageResponse::WRITE_TO_AGENT_FAILED);
       return;
@@ -152,7 +152,7 @@ void InstallServer::HandleSendMessageInner(
 
   for (auto& agent : agents) {
     std::string message;
-    if (!agent->Read(&message)) {
+    if (!agent->ReadBlocking(&message)) {
       response->set_status(
           proto::SendAgentMessageResponse::READ_FROM_AGENT_FAILED);
       return;

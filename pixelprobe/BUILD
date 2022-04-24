@@ -13,6 +13,7 @@ iml_module(
         "src/test/tools",
     ],
     iml_files = ["android.sdktools.pixelprobe.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     resources = ["src/main/resources"],
     test_resources = ["src/test/resources"],

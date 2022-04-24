@@ -164,7 +164,7 @@ std::unique_ptr<proto::InstallServerResponse> InstallClient::Send(
 
 std::unique_ptr<proto::InstallServerResponse> InstallClient::SendOnce(
     proto::InstallServerRequest& req) {
-  if (!Write(req)) {
+  if (!WriteBlocking(req)) {
     return nullptr;
   }
 
@@ -243,9 +243,10 @@ InstallClient::SendAgentMessage(const proto::SendAgentMessageRequest& req) {
 }
 
 // Writes a serialized protobuf message to the connected client.
-bool InstallClient::Write(const proto::InstallServerRequest& request) const {
+bool InstallClient::WriteBlocking(
+    const proto::InstallServerRequest& request) const {
   ProtoPipe output(output_fd_);
-  return output.Write(request);
+  return output.WriteBlocking(request);
 }
 
 bool InstallClient::Read(proto::InstallServerResponse* response) {

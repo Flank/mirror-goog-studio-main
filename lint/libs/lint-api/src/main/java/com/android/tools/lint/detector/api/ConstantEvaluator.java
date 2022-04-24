@@ -278,14 +278,7 @@ public class ConstantEvaluator {
                             return value;
                         }
                     }
-                    //noinspection KotlinInternalInJava
-                    if (field
-                            instanceof
-                            org.jetbrains
-                                    .kotlin
-                                    .asJava
-                                    .classes
-                                    .KtUltraLightFieldForSourceDeclaration) {
+                    if (field instanceof KtLightField) {
                         Object fieldValue = evaluate(field);
                         if (fieldValue != null) {
                             return fieldValue;

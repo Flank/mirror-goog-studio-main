@@ -5,6 +5,7 @@ iml_module(
     name = "studio.android.sdktools.resource-repository",
     srcs = ["main/java"],
     iml_files = ["android.sdktools.resource-repository.iml"],
+    jvm_target = "8",
     test_data = [
         "//prebuilts/studio/layoutlib/data:framework_res.jar",
         "//prebuilts/studio/layoutlib/data/res",

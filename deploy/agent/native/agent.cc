@@ -63,7 +63,7 @@ void SendResponse(const deploy::Socket& socket,
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
-  socket.Write(response_bytes);
+  socket.WriteBlocking(response_bytes);
 }
 
 void SendFailure(const deploy::Socket& socket,
@@ -73,7 +73,7 @@ void SendFailure(const deploy::Socket& socket,
   response.set_status(status);
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
-  socket.Write(response_bytes);
+  socket.WriteBlocking(response_bytes);
 }
 
 jint HandleStartupAgent(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -128,7 +128,7 @@ jint HandleAgentRequest(jvmtiEnv* jvmti, JNIEnv* jni, char* socket_name) {
 
   // Read the request from the socket.
   std::string request_bytes;
-  if (!socket.Read(&request_bytes)) {
+  if (!socket.ReadBlocking(&request_bytes)) {
     ErrEvent("Could not read request from socket");
     SendFailure(socket, proto::AgentResponse::SOCKET_READ_FAILED);
     return JNI_OK;

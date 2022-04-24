@@ -42,10 +42,10 @@ TEST_F(SocketTest, TestBindAndConnect) {
   EXPECT_TRUE(write.Connect(socket_name));
 
   EXPECT_TRUE((read = server.Accept(1000)) != nullptr);
-  EXPECT_TRUE(write.Write("\xFF"));
+  EXPECT_TRUE(write.WriteBlocking("\xFF"));
 
   std::string received;
-  EXPECT_TRUE(read->Read(&received));
+  EXPECT_TRUE(read->ReadBlocking(&received));
   EXPECT_EQ(received, "\xFF");
 }
 

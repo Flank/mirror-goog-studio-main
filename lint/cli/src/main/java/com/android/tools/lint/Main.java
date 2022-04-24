@@ -186,6 +186,7 @@ public class Main {
     private static final String ARG_REPORT_ONLY = "--report-only";
     private static final String ARG_CACHE_DIR = "--cache-dir";
     private static final String ARG_SKIP_ANNOTATED = "--skip-annotated";
+    private static final String ARG_OFFLINE = "--offline";
 
     @SuppressWarnings("SpellCheckingInspection")
     private static final String ARG_NO_WARN_2 = "--nowarn";
@@ -1246,6 +1247,8 @@ public class Main {
                 for (String annotation : paths.split(",")) {
                     flags.addSkipAnnotation(annotation);
                 }
+            } else if (arg.equals(ARG_OFFLINE)) {
+                flags.setOffline(true);
             } else if (arg.equals(ARG_BUILD_API)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing compileSdkVersion");
@@ -2248,6 +2251,8 @@ public class Main {
                     "Sets the display name of the client, such as “Android Gradle Plugin”",
                     ARG_CLIENT_VERSION,
                     "Sets the version of the client, such as “7.1.0-alpha01”",
+                    ARG_OFFLINE,
+                    "Whether lint should attempt to stay offline",
                     "",
                     "\nExit Status:",
                     Integer.toString(ERRNO_SUCCESS),

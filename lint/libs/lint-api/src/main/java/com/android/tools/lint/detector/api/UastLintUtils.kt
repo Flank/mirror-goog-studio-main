@@ -29,6 +29,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiVariable
+import org.jetbrains.kotlin.asJava.elements.FakeFileForLightClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBlockExpression
@@ -93,31 +94,8 @@ class UastLintUtils {
 
             // In Kotlin files identifiers are sometimes using LightElements that are hosted in
             // a placeholder file, these do not have the right PsiFile as containing elements
-            val cls = containingFile.javaClass
-            val name = cls.name
-            if (name.startsWith(
-                    "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration"
-                )
-            ) {
-                try {
-                    val declaredField = cls.superclass.getDeclaredField("ktFile")
-                    declaredField.isAccessible = true
-                    val o = declaredField.get(containingFile)
-                    if (o is PsiFile) {
-                        return o
-                    }
-                } catch (ignore: Throwable) {
-                }
-            } else if (name == "org.jetbrains.kotlin.asJava.elements.FakeFileForLightClass") {
-                try {
-                    val declaredField = cls.getDeclaredField("ktFile")
-                    declaredField.isAccessible = true
-                    val o = declaredField.get(containingFile)
-                    if (o is PsiFile) {
-                        return o
-                    }
-                } catch (ignore: Throwable) {
-                }
+            if (containingFile is FakeFileForLightClass) {
+                return containingFile.ktFile
             }
             return containingFile
         }

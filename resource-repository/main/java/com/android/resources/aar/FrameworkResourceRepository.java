@@ -34,6 +34,7 @@ import com.android.resources.base.RepositoryLoader;
 import com.android.resources.base.ResourceSerializationUtil;
 import com.android.utils.Base128InputStream;
 import com.android.utils.Base128OutputStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,6 +52,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -413,6 +415,7 @@ public final class FrameworkResourceRepository extends AarSourceResourceReposito
   }
 
   private static class Loader extends RepositoryLoader<FrameworkResourceRepository> {
+    @NotNull private final List<String> myPublicFileNames = ImmutableList.of("public.xml", "public-final.xml", "public-staging.xml");
     @NotNull private final Set<String> myLoadedLanguageGroups;
     @Nullable private Set<String> myLanguageGroups;
 
@@ -426,6 +429,10 @@ public final class FrameworkResourceRepository extends AarSourceResourceReposito
       super(sourceRepository.myResourceDirectoryOrFile, null, ANDROID_NAMESPACE);
       myLanguageGroups = languageGroups;
       myLoadedLanguageGroups = new TreeSet<>(sourceRepository.myLanguageGroups);
+    }
+
+    public List<String> getPublicXmlFileNames() {
+      return myPublicFileNames;
     }
 
     @Override
@@ -522,7 +529,7 @@ public final class FrameworkResourceRepository extends AarSourceResourceReposito
           myFolderConfigCache.put(config.getQualifierString(), config);
         }
       }
-      else if ((fileName.equals("public.xml") || fileName.equals("symbols.xml")) &&
+      else if ((myPublicFileNames.contains(fileName) || fileName.equals("symbols.xml")) &&
                "values".equals(new PathString(fileOrDirectory).getParentFileName())) {
         return true; // Skip files that don't contain resources.
       }

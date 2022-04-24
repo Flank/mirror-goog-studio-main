@@ -669,6 +669,7 @@ com/android/tools/emulator/proto
   waterfall.proto
 
 com/android/tools/external/com-intellij/intellij-core
+  DebugProbesKt.bin
   META-INF/
   META-INF/AL2.0
   META-INF/Core.xml
@@ -685,6 +686,8 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/intellij.platform.extensions.kotlin_module
   META-INF/intellij.platform.util.kotlin_module
   META-INF/intellij.platform.util.xmlDom.kotlin_module
+  META-INF/kotlinx-coroutines-core.kotlin_module
+  META-INF/kotlinx-coroutines-jdk8.kotlin_module
   META-INF/maven/
   META-INF/maven/com.fasterxml/
   META-INF/maven/com.fasterxml/aalto-xml/
@@ -710,6 +713,8 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.properties
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.xml
+  META-INF/proguard/
+  META-INF/proguard/coroutines.pro
   META-INF/services/
   META-INF/services/javax.xml.stream.XMLEventFactory
   META-INF/services/javax.xml.stream.XMLInputFactory
@@ -769,6 +774,7 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/diagnostic/tracing/
   com/intellij/execution/
   com/intellij/execution/configurations/
+  com/intellij/execution/filters/
   com/intellij/execution/process/
   com/intellij/execution/rmi/
   com/intellij/execution/rmi/ssl/
@@ -1023,8 +1029,10 @@ com/android/tools/external/com-intellij/intellij-core
   com/sun/jna/aix-ppc/libjnidispatch.a
   com/sun/jna/aix-ppc64/
   com/sun/jna/aix-ppc64/libjnidispatch.a
-  com/sun/jna/darwin/
-  com/sun/jna/darwin/libjnidispatch.jnilib
+  com/sun/jna/darwin-aarch64/
+  com/sun/jna/darwin-aarch64/libjnidispatch.jnilib
+  com/sun/jna/darwin-x86-64/
+  com/sun/jna/darwin-x86-64/libjnidispatch.jnilib
   com/sun/jna/freebsd-x86-64/
   com/sun/jna/freebsd-x86-64/libjnidispatch.so
   com/sun/jna/freebsd-x86/
@@ -1042,6 +1050,8 @@ com/android/tools/external/com-intellij/intellij-core
   com/sun/jna/linux-ppc/libjnidispatch.so
   com/sun/jna/linux-ppc64le/
   com/sun/jna/linux-ppc64le/libjnidispatch.so
+  com/sun/jna/linux-riscv64/
+  com/sun/jna/linux-riscv64/libjnidispatch.so
   com/sun/jna/linux-s390x/
   com/sun/jna/linux-s390x/libjnidispatch.so
   com/sun/jna/linux-x86-64/
@@ -1121,6 +1131,22 @@ com/android/tools/external/com-intellij/intellij-core
   it/unimi/dsi/fastutil/longs/
   it/unimi/dsi/fastutil/objects/
   it/unimi/dsi/fastutil/shorts/
+  kotlinx/
+  kotlinx/coroutines/
+  kotlinx/coroutines/channels/
+  kotlinx/coroutines/debug/
+  kotlinx/coroutines/debug/internal/
+  kotlinx/coroutines/flow/
+  kotlinx/coroutines/flow/internal/
+  kotlinx/coroutines/future/
+  kotlinx/coroutines/internal/
+  kotlinx/coroutines/intrinsics/
+  kotlinx/coroutines/scheduling/
+  kotlinx/coroutines/selects/
+  kotlinx/coroutines/stream/
+  kotlinx/coroutines/sync/
+  kotlinx/coroutines/test/
+  kotlinx/coroutines/time/
   messages/
   messages/CoreBundle.properties
   messages/CoreDeprecatedMessagesBundle.properties
@@ -1133,24 +1159,9 @@ com/android/tools/external/com-intellij/intellij-core
   net/jpountz/
   net/jpountz/lz4/
   net/jpountz/util/
-  net/jpountz/util/darwin/
-  net/jpountz/util/darwin/x86_64/
-  net/jpountz/util/darwin/x86_64/liblz4-java.dylib
-  net/jpountz/util/linux/
-  net/jpountz/util/linux/aarch64/
-  net/jpountz/util/linux/aarch64/liblz4-java.so
-  net/jpountz/util/linux/amd64/
-  net/jpountz/util/linux/amd64/liblz4-java.so
-  net/jpountz/util/linux/i386/
-  net/jpountz/util/linux/i386/liblz4-java.so
-  net/jpountz/util/linux/ppc64le/
-  net/jpountz/util/linux/ppc64le/liblz4-java.so
-  net/jpountz/util/linux/s390x/
-  net/jpountz/util/linux/s390x/liblz4-java.so
-  net/jpountz/util/win32/
-  net/jpountz/util/win32/amd64/
-  net/jpountz/util/win32/amd64/liblz4-java.so
   net/jpountz/xxhash/
+  net/n3/
+  net/n3/nanoxml/
   one/
   one/util/
   one/util/streamex/
@@ -1184,6 +1195,17 @@ com/android/tools/external/com-intellij/intellij-core
   org/apache/commons/compress/compressors/xz/
   org/apache/commons/compress/compressors/z/
   org/apache/commons/compress/compressors/zstandard/
+  org/apache/commons/compress/harmony/
+  org/apache/commons/compress/harmony/archive/
+  org/apache/commons/compress/harmony/archive/internal/
+  org/apache/commons/compress/harmony/archive/internal/nls/
+  org/apache/commons/compress/harmony/pack200/
+  org/apache/commons/compress/harmony/unpack200/
+  org/apache/commons/compress/harmony/unpack200/bytecode/
+  org/apache/commons/compress/harmony/unpack200/bytecode/forms/
+  org/apache/commons/compress/java/
+  org/apache/commons/compress/java/util/
+  org/apache/commons/compress/java/util/jar/
   org/apache/commons/compress/parallel/
   org/apache/commons/compress/utils/
   org/apache/log4j/

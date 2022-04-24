@@ -202,4 +202,34 @@ public class JacocoTest {
                 .named("number of files processed with Jacoco")
                 .isEqualTo(0);
     }
+
+    @Test
+    public void androidTestApksDoNotIncludeOfflineInstrumentation()
+            throws Exception {
+        project.executor().run("assembleDebug", "assembleDebugAndroidTest");
+
+        try (Apk androidTestApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)) {
+            Dex dexClasses = androidTestApk.getMainDexFile().get();
+            DexClassSubject.assertThat(
+                            dexClasses.getClasses().get("Lcom/example/helloworld/HelloWorldTest;"))
+                    .doesNotHaveField("\\$jacoco");
+        }
+        try (Apk mainApk = project.getApk(GradleTestProject.ApkType.DEBUG)) {
+            Dex mainDexClasses = mainApk.getMainDexFile().get();
+            DexClassSubject.assertThat(
+                    mainDexClasses.getClasses().get("Lcom/example/helloworld/HelloWorld;")
+            ).hasField("$jacocoData");
+        }
+
+        // Check library androidTest apk test classes do not contain instrumentation.
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "com.android.application", "com.android.library");
+        project.executor().run("clean", "assembleDebugAndroidTest");
+        try (Apk libraryAndroidTestApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG)) {
+            Dex libraryDexClasses = libraryAndroidTestApk.getMainDexFile().get();
+            DexClassSubject.assertThat(
+                            libraryDexClasses.getClasses().get("Lcom/example/helloworld/HelloWorldTest;"))
+                    .doesNotHaveField("$jacocoData");
+        }
+    }
 }

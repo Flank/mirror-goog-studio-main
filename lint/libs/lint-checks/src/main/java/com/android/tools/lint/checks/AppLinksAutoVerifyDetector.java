@@ -21,7 +21,6 @@ import static com.android.SdkConstants.ATTR_HOST;
 import static com.android.SdkConstants.ATTR_SCHEME;
 import static com.android.SdkConstants.MANIFEST_PLACEHOLDER_PREFIX;
 import static com.android.SdkConstants.MANIFEST_PLACEHOLDER_SUFFIX;
-import static com.android.SdkConstants.UTF_8;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_CATEGORY;
@@ -31,6 +30,7 @@ import static com.android.xml.AndroidManifest.NODE_INTENT;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
@@ -58,7 +58,9 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -135,7 +137,7 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
             }
         }
 
-        Map<String, HttpResult> results = getJsonFileAsync();
+        Map<String, HttpResult> results = getJsonFileAsync(context.getClient());
 
         String packageName = context.getProject().getPackage();
         for (Map.Entry<String, HttpResult> result : results.entrySet()) {
@@ -349,23 +351,17 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
         return null;
     }
 
-    /* Normally null. Used for testing. */
-    @Nullable @VisibleForTesting static Map<String, HttpResult> sMockData;
-
     /**
      * Gets all the Digital Asset Links JSON file asynchronously.
      *
      * @return The map between the host url and the HTTP result.
      */
-    private Map<String, HttpResult> getJsonFileAsync() {
-        if (sMockData != null) {
-            return sMockData;
-        }
-
+    private Map<String, HttpResult> getJsonFileAsync(@NonNull LintClient client) {
         ExecutorService executorService = Executors.newCachedThreadPool();
         for (final Map.Entry<String, Attr> url : mJsonHost.entrySet()) {
             Future<HttpResult> future =
-                    executorService.submit(() -> getJson(url.getKey() + JSON_RELATIVE_PATH));
+                    executorService.submit(
+                            () -> getJson(client, url.getKey() + JSON_RELATIVE_PATH));
             mFutures.put(url.getKey(), future);
         }
         executorService.shutdown();
@@ -387,20 +383,22 @@ public class AppLinksAutoVerifyDetector extends Detector implements XmlScanner {
      * @param url The URL of the host on which JSON file will be fetched.
      */
     @NonNull
-    private static HttpResult getJson(@NonNull String url) {
+    private static HttpResult getJson(@NonNull LintClient client, @NonNull String url) {
         try {
             URL urlObj = new URL(url);
-            HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
-            if (connection == null) {
+            URLConnection urlConnection = client.openConnection(urlObj, 3000);
+            if (!(urlConnection instanceof HttpURLConnection)) {
                 return new HttpResult(STATUS_HTTP_CONNECT_FAIL, null);
             }
+            HttpURLConnection connection = (HttpURLConnection) urlConnection;
             try {
                 InputStream inputStream = connection.getInputStream();
                 if (inputStream == null) {
                     return new HttpResult(connection.getResponseCode(), null);
                 }
                 try (BufferedReader reader =
-                        new BufferedReader(new InputStreamReader(inputStream, UTF_8))) {
+                        new BufferedReader(
+                                new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
                     String line;
                     StringBuilder response = new StringBuilder();
                     while ((line = reader.readLine()) != null) {

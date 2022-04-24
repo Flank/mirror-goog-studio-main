@@ -1210,6 +1210,9 @@ public final class SdkConstants {
     public static final String TAG_SKIP = "skip";
     public static final String TAG_PUBLIC = "public";
     public static final String TAG_PUBLIC_GROUP = "public-group";
+    public static final String TAG_STAGING_PUBLIC_GROUP = "staging-public-group";
+    public static final String TAG_STAGING_PUBLIC_GROUP_FINAL = "staging-public-group-final";
+
 
     // Tags: Adaptive icon
     public static final String TAG_ADAPTIVE_ICON = "adaptive-icon";
@@ -2925,7 +2928,7 @@ public final class SdkConstants {
      * Studio product. It need not actually be the latest version of Gradle, but it will most likely
      * be fairly recent.
      */
-    public static final String GRADLE_LATEST_VERSION = "7.4.2";
+    public static final String GRADLE_LATEST_VERSION = "7.4";
 
     /**
      * The minimum released version of the Android Gradle Plugin that this version of Studio will

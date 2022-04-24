@@ -24,7 +24,6 @@ import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
@@ -32,7 +31,6 @@ import com.android.build.api.variant.Component
 import com.android.build.api.variant.DependenciesInfo
 import com.android.build.api.variant.DependenciesInfoBuilder
 import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
@@ -55,7 +53,6 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import javax.inject.Inject
 
 open class ApplicationVariantImpl @Inject constructor(
@@ -259,4 +256,6 @@ open class ApplicationVariantImpl @Inject constructor(
         ),
         internalServices,
     )
+    override val useJacocoTransformInstrumentation: Boolean
+        get() = isAndroidTestCoverageEnabled
 }

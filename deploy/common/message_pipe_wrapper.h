@@ -51,11 +51,11 @@ class MessagePipeWrapper {
 
   // Writes a message to the specified file descriptor. Blocks until the write
   // completes or an error occurs.
-  bool Write(const std::string& message) const;
+  bool WriteBlocking(const std::string& message) const;
 
   // Reads a message from the specified file descriptor. Blocks until the read
   // completes or an error occurs.
-  bool Read(std::string* message) const;
+  bool ReadBlocking(std::string* message) const;
 
   // Reads a message from the specified file descriptor. Blocks until the read
   // completes, an error occurs, or the timeout elapses.

@@ -16,68 +16,21 @@
 
 package com.android.adblib.tools.tests
 
-import com.android.adblib.AdbDeviceServices
-import com.android.adblib.AdbLibSession
 import com.android.adblib.DeviceSelector
-import com.android.adblib.SOCKET_CONNECT_TIMEOUT_MS
-import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.testingutils.TestingAdbLibHost
 import com.android.adblib.tools.UninstallResult
 import com.android.adblib.tools.uninstall
-import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.shellcommandhandlers.ShellConstants
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExpectedException
-import java.time.Duration
 
-class TestUninstall {
-
-    @JvmField
-    @Rule
-    val closeables = CloseablesRule()
-
-    @JvmField
-    @Rule
-    var exceptionRule: ExpectedException = ExpectedException.none()
-
-    private fun <T : AutoCloseable> registerCloseable(item: T): T {
-        return closeables.register(item)
-    }
-
-    private fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
-        val host = registerCloseable(TestingAdbLibHost())
-        val channelProvider = fakeAdb.createChannelProvider(host)
-        val session =
-            AdbLibSession.create(
-                host,
-                channelProvider,
-                Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
-            )
-        return session.deviceServices
-    }
-
-    private fun addFakeDevice(fakeAdb: FakeAdbServerProvider): DeviceState {
-        val fakeDevice =
-            fakeAdb.connectDevice(
-                "1234",
-                "test1",
-                "test2",
-                "model",
-                "sdk",
-                DeviceState.HostConnectionType.USB
-            )
-        fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
-        return fakeDevice
-    }
+class TestUninstall : TestInstallBase() {
 
     @Test
     fun testUninstallSuccess() {
         val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
-        val fakeDevice = addFakeDevice(fakeAdb)
+        val fakeDevice = addFakeDevice(fakeAdb, 30)
         val deviceServices = createDeviceServices(fakeAdb)
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
 
@@ -92,7 +45,7 @@ class TestUninstall {
     @Test
     fun testUninstallFailure() {
         val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
-        val fakeDevice = addFakeDevice(fakeAdb)
+        val fakeDevice = addFakeDevice(fakeAdb, 30)
         val deviceServices = createDeviceServices(fakeAdb)
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
 

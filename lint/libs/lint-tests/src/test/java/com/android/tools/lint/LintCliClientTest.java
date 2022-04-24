@@ -17,6 +17,11 @@
 package com.android.tools.lint;
 
 import static java.io.File.separator;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
@@ -25,11 +30,14 @@ import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.intellij.codeInsight.CustomExceptionHandler;
 import com.intellij.openapi.extensions.Extensions;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
 
 public class LintCliClientTest extends AbstractCheckTest {
@@ -132,6 +140,41 @@ public class LintCliClientTest extends AbstractCheckTest {
 
         projectDir.delete();
         binFile.delete();
+    }
+
+    public void testOffline() throws IOException {
+        LintCliClient client = new LintCliClient(LintClient.CLIENT_UNIT_TESTS);
+        URL url = mock(URL.class);
+        when(url.getProtocol()).thenReturn("http");
+        URLConnection urlConnection = mock(URLConnection.class);
+        when(url.openConnection()).thenReturn(urlConnection);
+
+        // Offline
+        client.getFlags().setOffline(true);
+        client.openConnection(url, 100);
+        verify(url, never()).openConnection();
+
+        // Offline, but file protocol -- *should* call network
+        client.getFlags().setOffline(false);
+        when(url.getProtocol()).thenReturn("file");
+        client.openConnection(url, 100);
+        verify(url, times(1)).openConnection();
+
+        // Online, with network: complain
+        when(url.getProtocol()).thenReturn("http");
+        client.openConnection(url, 100);
+        verify(url, times(2)).openConnection();
+
+        // Offline, JAR URL pointing to network: don't connect
+        client.getFlags().setOffline(true);
+        when(url.getProtocol()).thenReturn("jar");
+        when(url.getPath()).thenReturn("http://www.example.com/foo/bar.jar!/com/example/data.text");
+        client.openConnection(url, 100);
+        verify(url, times(2)).openConnection(); // 2: same as above, so wasn't called again
+        // JAR URL with file resource is okay
+        when(url.getPath()).thenReturn("file:/foo/bar.jar!/com/example/data.text");
+        client.openConnection(url, 100);
+        verify(url, times(3)).openConnection();
     }
 
     @Override

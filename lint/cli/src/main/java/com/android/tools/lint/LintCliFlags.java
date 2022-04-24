@@ -86,6 +86,7 @@ public class LintCliFlags {
     private boolean allowSuppress;
     private boolean printInternalErrorStackTrace;
     private boolean allowBaselineSuppress;
+    private boolean offline;
     private File cacheDir;
 
     public static final int ERRNO_SUCCESS = 0;
@@ -831,5 +832,23 @@ public class LintCliFlags {
             skipAnnotated = new ArrayList<>();
         }
         skipAnnotated.add(annotation);
+    }
+
+    /**
+     * Returns true if lint should be running in offline mode (off by default).
+     *
+     * @return the offline state
+     */
+    public boolean isOffline() {
+        return offline;
+    }
+
+    /**
+     * Sets whether lint should be running in offline mode.
+     *
+     * @param offline whether to stay offline
+     */
+    public void setOffline(boolean offline) {
+        this.offline = offline;
     }
 }

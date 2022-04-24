@@ -88,7 +88,7 @@ void SendResponse(proto::InstallerResponse* response,
   }
   std::string response_string;
   response->SerializeToString(&response_string);
-  workspace.GetOutput().Write(response_string);
+  workspace.GetOutput().WriteBlocking(response_string);
 }
 
 void Fail(proto::InstallerResponse::Status status, Workspace& workspace,
@@ -119,7 +119,7 @@ std::string GetVersion() {
 std::unique_ptr<proto::InstallerRequest> GetRequestFromFD(int input_fd) {
   deploy::MessagePipeWrapper wrapper(input_fd);
   std::string data;
-  if (!wrapper.Read(&data)) {
+  if (!wrapper.ReadBlocking(&data)) {
     return nullptr;
   }
   proto::InstallerRequest* request = new proto::InstallerRequest();

@@ -102,6 +102,7 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.io.PrintWriter
 import java.net.URL
+import java.net.URLConnection
 import java.nio.file.Files
 import kotlin.math.max
 
@@ -1941,4 +1942,18 @@ open class LintCliClient : LintClient {
 
     override val printInternalErrorStackTrace: Boolean
         get() = flags.printInternalErrorStackTrace || super.printInternalErrorStackTrace
+
+    @Throws(IOException::class)
+    override fun openConnection(url: URL, timeout: Int): URLConnection? {
+        if (flags.isOffline &&
+            // Allow file: and jar:file URLs (though these are incredibly unlikely to
+            // be called here; normally client code will just read the files directly,
+            // but we handle it in case there's code which reads URLs from a resource
+            // and then tries to access content
+            url.protocol != "file" && (url.protocol != "jar" || !url.path.startsWith("file:"))
+        ) {
+            return null
+        }
+        return super.openConnection(url, timeout)
+    }
 }

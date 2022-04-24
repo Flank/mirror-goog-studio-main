@@ -54,6 +54,7 @@ kotlin_test(
         "-Duser.home=/tmp",
     ],
     lint_baseline = "lint_baseline.xml",
+    resources = glob(["src/test/resources/**"]),
     shard_count = 2,
     tags = [
         "slow",
@@ -122,6 +123,7 @@ iml_module(
 iml_module(
     name = "studio.android.sdktools.lint.tests",
     iml_files = ["android.sdktools.lint.tests.iml"],
+    test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     # The cannonical test target for this is :tests (//tools/base/lint/libs/lint-tests:tests)
     # as that runs with the correct dependencies. This iml_module is only defined for development

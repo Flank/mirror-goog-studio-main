@@ -19,45 +19,22 @@ package com.android.tools.kotlin;
 import static org.jetbrains.kotlin.cli.common.CompilerSystemProperties.KOTLIN_COLORS_ENABLED_PROPERTY;
 
 import com.android.tools.utils.BazelWorker;
-import com.android.tools.utils.JarOutputCompiler;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
 import org.jetbrains.kotlin.cli.common.ExitCode;
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
 
-/**
- * A wrapper for the Kotlin compiler.
- */
-public class KotlinCompiler extends JarOutputCompiler {
-
-    protected KotlinCompiler() {
-        super("kotlinc");
-    }
+/** A wrapper for the Kotlin compiler. */
+public class KotlinCompiler {
 
     public static void main(String[] args) throws Exception {
-        BazelWorker.run(args, compilerArgs -> new KotlinCompiler().run(compilerArgs));
+        BazelWorker.run(args, KotlinCompiler::compile);
     }
 
-    @Override
-    protected boolean compile(List<String> forwardedArgs, String classPath, File outDir) {
+    private static int compile(List<String> args) {
         // Extracted from CLITool.doMain:
         System.setProperty("java.awt.headless", "true");
         KOTLIN_COLORS_ENABLED_PROPERTY.setValue("true");
-
-        List<String> args = new ArrayList<>(forwardedArgs.size() + 16);
-
-        args.add("-d");
-        args.add(outDir.getAbsolutePath());
-
-        args.add("-cp");
-        args.add(classPath.replace(":", File.pathSeparator));
-
-        args.addAll(forwardedArgs);
 
         ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[0]));
         if (exit.equals(ExitCode.INTERNAL_ERROR)) {
@@ -65,21 +42,6 @@ public class KotlinCompiler extends JarOutputCompiler {
             // Throw an exception to kill the Bazel persistent worker.
             throw new RuntimeException("the Kotlin compiler encountered an internal error");
         }
-        ensureManifestFile(outDir);
-        return exit == ExitCode.OK;
-    }
-
-    private static void ensureManifestFile(File outDir) {
-        try {
-            File manifest = new File(outDir, "META-INF/MANIFEST.MF");
-            if (!manifest.exists()) {
-                manifest.getParentFile().mkdirs();
-                try(PrintWriter writer = new PrintWriter(manifest)) {
-                    writer.println("Manifest-Version: 1.0");
-                }
-            }
-        } catch (FileNotFoundException e) {
-            throw new UncheckedIOException(e);
-        }
+        return exit.getCode();
     }
 }

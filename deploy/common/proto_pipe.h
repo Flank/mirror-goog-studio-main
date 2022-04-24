@@ -31,13 +31,13 @@ class ProtoPipe {
   ProtoPipe(int fd) : pipe_(fd) {}
 
   // Writes a serialized protobuf message to the pipe.
-  bool Write(const google::protobuf::MessageLite& message) {
+  bool WriteBlocking(const google::protobuf::MessageLite& message) {
     std::string bytes;
     if (!message.SerializeToString(&bytes)) {
       ErrEvent("Protopipe: Unable to serialize protobuffer message");
       return false;
     }
-    return pipe_.Write(bytes);
+    return pipe_.WriteBlocking(bytes);
   }
 
   // Waits up to timeout milliseconds for a message to be available from the

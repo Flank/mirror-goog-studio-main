@@ -29,7 +29,6 @@ import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.NettyServerBuilder;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -329,6 +328,9 @@ public class FakeDevice {
             final Path proc = getStorage().toPath().resolve("proc/" + process.pid);
             FileUtils.deleteRecursivelyIfExists(proc.toFile());
             process.shutdown();
+            if (deviceState != null) {
+                deviceState.stopClient(process.pid);
+            }
         }
     }
 

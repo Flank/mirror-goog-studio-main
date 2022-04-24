@@ -15,6 +15,42 @@
  */
 package com.android.resources.base;
 
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ATTR_FORMAT;
+import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.ATTR_INDEX;
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_PARENT;
+import static com.android.SdkConstants.ATTR_QUANTITY;
+import static com.android.SdkConstants.ATTR_TYPE;
+import static com.android.SdkConstants.ATTR_VALUE;
+import static com.android.SdkConstants.DOT_AAR;
+import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_ZIP;
+import static com.android.SdkConstants.FD_RES_VALUES;
+import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.TAG_ATTR;
+import static com.android.SdkConstants.TAG_EAT_COMMENT;
+import static com.android.SdkConstants.TAG_ENUM;
+import static com.android.SdkConstants.TAG_FLAG;
+import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_PUBLIC;
+import static com.android.SdkConstants.TAG_PUBLIC_GROUP;
+import static com.android.SdkConstants.TAG_RESOURCES;
+import static com.android.SdkConstants.TAG_SKIP;
+import static com.android.SdkConstants.TAG_STAGING_PUBLIC_GROUP;
+import static com.android.SdkConstants.TAG_STAGING_PUBLIC_GROUP_FINAL;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.ide.common.resources.AndroidAaptIgnoreKt.ANDROID_AAPT_IGNORE;
+import static com.android.ide.common.resources.ResourceItem.ATTR_EXAMPLE;
+import static com.android.ide.common.resources.ResourceItem.XLIFF_G_TAG;
+import static com.android.ide.common.resources.ResourceItem.XLIFF_NAMESPACE_PREFIX;
+import static com.intellij.util.io.URLUtil.JAR_PROTOCOL;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.android.ide.common.rendering.api.AttrResourceValue;
 import com.android.ide.common.rendering.api.AttributeFormat;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
@@ -55,12 +91,6 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.containers.ContainerUtil;
 import com.intellij.util.io.URLUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.kxml2.io.KXmlParser;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -85,40 +115,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
-import static com.android.SdkConstants.ANDROID_NS_NAME;
-import static com.android.SdkConstants.ATTR_FORMAT;
-import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.ATTR_INDEX;
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_PARENT;
-import static com.android.SdkConstants.ATTR_QUANTITY;
-import static com.android.SdkConstants.ATTR_TYPE;
-import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.SdkConstants.DOT_AAR;
-import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.DOT_XML;
-import static com.android.SdkConstants.DOT_ZIP;
-import static com.android.SdkConstants.FD_RES_VALUES;
-import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.TAG_ATTR;
-import static com.android.SdkConstants.TAG_EAT_COMMENT;
-import static com.android.SdkConstants.TAG_ENUM;
-import static com.android.SdkConstants.TAG_FLAG;
-import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_PUBLIC;
-import static com.android.SdkConstants.TAG_PUBLIC_GROUP;
-import static com.android.SdkConstants.TAG_RESOURCES;
-import static com.android.SdkConstants.TAG_SKIP;
-import static com.android.SdkConstants.TOOLS_URI;
-import static com.android.ide.common.resources.AndroidAaptIgnoreKt.ANDROID_AAPT_IGNORE;
-import static com.android.ide.common.resources.ResourceItem.ATTR_EXAMPLE;
-import static com.android.ide.common.resources.ResourceItem.XLIFF_G_TAG;
-import static com.android.ide.common.resources.ResourceItem.XLIFF_NAMESPACE_PREFIX;
-import static com.intellij.util.io.URLUtil.JAR_PROTOCOL;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.kxml2.io.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 public abstract class RepositoryLoader<T extends LoadableResourceRepository> implements FileFilter {
   private static final Logger LOG = Logger.getInstance(RepositoryLoader.class);
@@ -187,6 +188,10 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
     else {
       loadFromResFolder(repository);
     }
+  }
+
+  public List<String> getPublicXmlFileNames() {
+    return ImmutableList.of("public.xml");
   }
 
   protected void loadFromZip(@NotNull T repository) {
@@ -310,86 +315,98 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
    */
   protected void loadPublicResourceNames() {
     Path valuesFolder = myResourceDirectoryOrFile.resolve(FD_RES_VALUES);
-    Path publicXmlFile = valuesFolder.resolve("public.xml");
+    List<String> fileNames = getPublicXmlFileNames();
+    for (String fileName : fileNames) {
+      Path publicXmlFile = valuesFolder.resolve(fileName);
 
-    try (InputStream stream = new BufferedInputStream(CancellableFileIo.newInputStream(publicXmlFile))) {
-      CommentTrackingXmlPullParser parser = new CommentTrackingXmlPullParser();
-      parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
-      parser.setInput(stream, UTF_8.name());
+      try (InputStream stream = new BufferedInputStream(CancellableFileIo.newInputStream(publicXmlFile))) {
+        CommentTrackingXmlPullParser parser = new CommentTrackingXmlPullParser();
+        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+        parser.setInput(stream, UTF_8.name());
 
-      ResourceType groupType = null;
-      ResourceType lastType = null;
-      String lastTypeName = "";
-      while (true) {
-        int event = parser.nextToken();
-        if (event == XmlPullParser.START_TAG) {
-          if (parser.getName().equals(TAG_PUBLIC)) {
-            String name = null;
-            String typeName = groupType == null ? null : groupType.getName();
-            for (int i = 0, n = parser.getAttributeCount(); i < n; i++) {
-              String attribute = parser.getAttributeName(i);
+        String groupTag = null;
+        ResourceType groupType = null;
+        ResourceType lastType = null;
+        String lastTypeName = "";
+        while (true) {
+          int event = parser.nextToken();
+          if (event == XmlPullParser.START_TAG) {
+            if (parser.getName().equals(TAG_PUBLIC)) {
+              String name = null;
+              String typeName = groupType == null ? null : groupType.getName();
+              for (int i = 0, n = parser.getAttributeCount(); i < n; i++) {
+                String attribute = parser.getAttributeName(i);
 
-              if (attribute.equals(ATTR_NAME)) {
-                name = parser.getAttributeValue(i);
-                if (typeName != null) {
-                  // Skip attributes other than "type" and "name".
-                  break;
+                if (attribute.equals(ATTR_NAME)) {
+                  name = parser.getAttributeValue(i);
+                  if (typeName != null) {
+                    // Skip attributes other than "type" and "name".
+                    break;
+                  }
+                }
+                else if (attribute.equals(ATTR_TYPE)) {
+                  typeName = parser.getAttributeValue(i);
                 }
               }
-              else if (attribute.equals(ATTR_TYPE)) {
-                typeName = parser.getAttributeValue(i);
-              }
-            }
 
-            if (name != null && !name.startsWith("__removed") && (typeName != null || groupType != null) &&
-                (parser.getLastComment() == null || !containsWord(parser.getLastComment(), "@hide"))) {
-              ResourceType type;
-              if (groupType != null) {
-                type = groupType;
-              }
-              else {
-                if (typeName.equals(lastTypeName)) {
-                  type = lastType;
+              if (name != null && !name.startsWith("__removed") && (typeName != null || groupType != null) &&
+                  (parser.getLastComment() == null || !containsWord(parser.getLastComment(), "@hide"))) {
+                ResourceType type;
+                if (groupType != null) {
+                  type = groupType;
                 }
                 else {
-                  type = ResourceType.fromXmlValue(typeName);
-                  lastType = type;
-                  lastTypeName = typeName;
+                  if (typeName.equals(lastTypeName)) {
+                    type = lastType;
+                  }
+                  else {
+                    type = ResourceType.fromXmlValue(typeName);
+                    lastType = type;
+                    lastTypeName = typeName;
+                  }
+                }
+
+                if (type != null) {
+                  addPublicResourceName(type, name);
+                }
+                else {
+                  LOG.error("Public resource declaration \"" + name + "\" of type " + typeName + " points to unknown resource type.");
                 }
               }
-
-              if (type != null) {
-                addPublicResourceName(type, name);
-              }
-              else {
-                LOG.error("Public resource declaration \"" + name + "\" of type " + typeName + " points to unknown resource type.");
-              }
+            }
+            else if (isPublicGroupTag(parser.getName())) {
+              groupTag = parser.getName();
+              String typeName = parser.getAttributeValue(null, ATTR_TYPE);
+              groupType = typeName == null ? null : ResourceType.fromXmlValue(typeName);
             }
           }
-          else if (parser.getName().equals(TAG_PUBLIC_GROUP)) {
-            String typeName = parser.getAttributeValue(null, ATTR_TYPE);
-            groupType = typeName == null ? null : ResourceType.fromXmlValue(typeName);
+          else if (event == XmlPullParser.END_TAG) {
+            if (groupTag != null && groupTag.equals(parser.getName())) {
+              groupTag = null;
+              groupType = null;
+            }
           }
-        }
-        else if (event == XmlPullParser.END_TAG) {
-          if (parser.getName().equals(TAG_PUBLIC_GROUP)) {
-            groupType = null;
+          else if (event == XmlPullParser.END_DOCUMENT) {
+            break;
           }
-        }
-        else if (event == XmlPullParser.END_DOCUMENT) {
-          break;
         }
       }
-    }
-    catch (ProcessCanceledException e) {
+      catch (ProcessCanceledException e) {
         throw e;
+      }
+      catch (NoSuchFileException e) {
+        // There is no public.xml. This not considered an error.
+      }
+      catch (Exception e) {
+        LOG.error("Can't read and parse " + publicXmlFile, e);
+      }
     }
-    catch (NoSuchFileException e) {
-      // There is no public.xml. This not considered an error.
-    }
-    catch (Exception e) {
-      LOG.error("Can't read and parse " + publicXmlFile.toString(), e);
-    }
+  }
+
+  private boolean isPublicGroupTag(@NotNull String tag) {
+    return tag.equals(TAG_PUBLIC_GROUP) ||
+           tag.equals(TAG_STAGING_PUBLIC_GROUP) ||
+           tag.equals(TAG_STAGING_PUBLIC_GROUP_FINAL);
   }
 
   protected final void addPublicResourceName(ResourceType type, String name) {
@@ -398,7 +415,7 @@ public abstract class RepositoryLoader<T extends LoadableResourceRepository> imp
   }
 
   /**
-   * Checks if the given text contains contains the given word.
+   * Checks if the given text contains the given word.
    */
   private static boolean containsWord(@NotNull String text, @SuppressWarnings("SameParameterValue") @NotNull String word) {
     int end = 0;

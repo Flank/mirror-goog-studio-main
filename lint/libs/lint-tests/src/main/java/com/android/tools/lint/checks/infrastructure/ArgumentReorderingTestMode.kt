@@ -23,7 +23,8 @@ import com.android.tools.lint.detector.api.isKotlinHardKeyword
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.tree.LeafPsiElement
-import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
+import org.jetbrains.kotlin.asJava.elements.KtLightElement
+import org.jetbrains.kotlin.asJava.elements.KtLightMember
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtValueArgument
@@ -85,21 +86,17 @@ class ArgumentReorderingTestMode : UastSourceTransformationTestMode(
                 if (method is PsiCompiledElement) {
                     return
                 }
-                if (method is KtLightMemberImpl<*>) {
+                if (method is KtLightMember<*>) {
                     val argumentMapping = context.evaluator.computeArgumentMapping(call, method)
                     val arguments = mutableListOf<Triple<UExpression, KtValueArgument, KtParameter>>()
                     for (argument in call.valueArguments) {
                         val psi = argument.sourcePsi
                         val ktArgument = psi?.getParentOfType<KtValueArgument>(false) ?: return
                         val parameter = argumentMapping[argument]
-                        val ktParameter = try {
-                            parameter?.javaClass?.getDeclaredMethod("getKotlinOrigin")
-                                ?.invoke(parameter) as? KtParameter
+                        val ktParameter =
+                            (parameter as? KtLightElement<*, *>)?.kotlinOrigin as? KtParameter
                                 // We can't just reorder some and not all so if any are not found, skip this call
                                 ?: return
-                        } catch (ignore: Throwable) {
-                            return
-                        }
                         if (ktParameter.isVarArg) {
                             // Currently, we're not trying to reorder varags. This is a bit more complicated
                             // since the parameter mapping we're getting has a number of repeats and we

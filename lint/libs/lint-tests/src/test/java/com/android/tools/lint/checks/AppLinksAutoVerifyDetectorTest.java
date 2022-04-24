@@ -17,11 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.google.common.collect.Maps;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import java.util.Map;
 
 public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
     @Override
@@ -30,484 +25,402 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
     }
 
     public void testOk() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            JsonArray statementList = new JsonArray();
-            JsonObject statement = new JsonObject();
-            JsonArray relation = new JsonArray();
-            relation.add(new JsonPrimitive("delegate_permission/common.handle_all_urls"));
-            statement.add("relation", relation);
-            JsonObject target = new JsonObject();
-            target.addProperty("namespace", "android_app");
-            target.addProperty("package_name", "com.example.helloworld");
-            statement.add("target", target);
-            statementList.add(statement);
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
-
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expectClean();
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        // language=JSON
+                        "[{\n"
+                                + "  \"relation\": [\"delegate_permission/common.handle_all_urls\"],\n"
+                                + "  \"target\": {\n"
+                                + "    \"namespace\": \"android_app\",\n"
+                                + "    \"package_name\": \"com.example.helloworld\",\n"
+                                + "    \"sha256_cert_fingerprints\":\n"
+                                + "    [\"14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5\"]\n"
+                                + "  }\n"
+                                + "}]")
+                .run()
+                .expectClean();
     }
 
     public void testInvalidPackage() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            JsonArray statementList = new JsonArray();
-            JsonObject statement = new JsonObject();
-            JsonArray relation = new JsonArray();
-            relation.add(new JsonPrimitive("delegate_permission/common.handle_all_urls"));
-            statement.add("relation", relation);
-            JsonObject target = new JsonObject();
-            target.addProperty("namespace", "android_app");
-            target.addProperty("package_name", "com.example");
-            statement.add("target", target);
-            statementList.add(statement);
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        // language=JSON
+                        "[{\n"
+                                + "  \"relation\": [\"delegate_permission/common.handle_all_urls\"],\n"
+                                + "  \"target\": {\n"
+                                + "    \"namespace\": \"android_app\",\n"
+                                + "    \"package_name\": \"com.example\",\n"
+                                + "    \"sha256_cert_fingerprints\":\n"
+                                + "    [\"14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5\"]\n"
+                                + "  }\n"
+                                + "}]")
+                .run()
+                .expect(expected);
     }
 
     public void testNotAppTarget() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            JsonArray statementList = new JsonArray();
-            JsonObject statement = new JsonObject();
-            JsonArray relation = new JsonArray();
-            relation.add(new JsonPrimitive("delegate_permission/common.handle_all_urls"));
-            statement.add("relation", relation);
-            JsonObject target = new JsonObject();
-            target.addProperty("namespace", "web");
-            target.addProperty("package_name", "com.example.helloworld");
-            statement.add("target", target);
-            statementList.add(statement);
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_OK, statementList));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: This host does not support app links to your app. Checks the Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        // language=JSON
+                        "[{\n"
+                                + "  \"relation\": [\"delegate_permission/common.handle_all_urls\"],\n"
+                                + "  \"target\": {\n"
+                                + "    \"namespace\": \"web\",\n"
+                                + "    \"package_name\": \"com.example.helloworld\",\n"
+                                + "    \"sha256_cert_fingerprints\":\n"
+                                + "    [\"14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5\"]\n"
+                                + "  }\n"
+                                + "}]")
+                .run()
+                .expect(expected);
     }
 
     public void testHttpResponseError() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put("http://example.com", new AppLinksAutoVerifyDetector.HttpResult(404, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Warning: HTTP request for Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails. HTTP response code: 404 [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData("http://example.com/.well-known/assetlinks.json", 404)
+                .run()
+                .expect(expected);
     }
 
     public void testFailedHttpConnection() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL)
+                .run()
+                .expect(expected);
     }
 
     public void testMalformedUrl() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_MALFORMED_URL, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: Malformed URL of Digital Asset Links JSON file: http://example.com/.well-known/assetlinks.json. An unknown protocol is specified [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_MALFORMED_URL)
+                .run()
+                .expect(expected);
     }
 
     public void testUnknownHost() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST)
+                .run()
+                .expect(expected);
     }
 
     public void testNotFound() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_NOT_FOUND, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_NOT_FOUND)
+                .run()
+                .expect(expected);
     }
 
     public void testWrongJsonSyntax() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: http://example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX)
+                .run()
+                .expect(expected);
     }
 
     public void testFailedJsonParsing() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_JSON_PARSE_FAIL, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "1 errors, 0 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: Parsing JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_JSON_PARSE_FAIL)
+                .run()
+                .expect(expected);
     }
 
     public void testNoAutoVerify() {
@@ -580,237 +493,200 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
     }
 
     public void testMultipleLinks() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL, null));
-            data.put(
-                    "https://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_NOT_FOUND, null));
-            data.put(
-                    "http://www.example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
-            data.put(
-                    "https://www.example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
-                            + "                <data android:host=\"www.example.com\" />\n"
-                            + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
-                            + "                <data android:host=\"www.example.com\" />\n"
-                            + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "2 errors, 2 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <data android:scheme=\"https\" />\n"
-                                            + "                <data android:host=\"www.example.com\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Error: Digital Asset Links JSON file https://example.com/.well-known/assetlinks.json is not found on the host [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:15: Error: https://www.example.com/.well-known/assetlinks.json has incorrect JSON syntax [AppLinksAutoVerify]\n"
+                        + "                <data android:host=\"www.example.com\" />\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:12: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:15: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
+                        + "                <data android:host=\"www.example.com\" />\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "2 errors, 2 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <data android:scheme=\"https\" />\n"
+                                        + "                <data android:host=\"www.example.com\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL)
+                .networkData(
+                        "https://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_NOT_FOUND)
+                .networkData(
+                        "http://www.example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST)
+                .networkData(
+                        "https://www.example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_WRONG_JSON_SYNTAX)
+                .run()
+                .expect(expected);
     }
 
     public void testMultipleIntents() {
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL, null));
-            data.put(
-                    "http://www.example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
-
-            String expected =
-                    ""
-                            + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"www.example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"example.com\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 2 warnings\n";
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter>\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"www.example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data android:scheme=\"http\"\n"
-                                            + "                    android:host=\"example.com\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expect(expected);
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        String expected =
+                ""
+                        + "AndroidManifest.xml:12: Warning: Unknown host: http://www.example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"www.example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "AndroidManifest.xml:20: Warning: Connection to Digital Asset Links JSON file http://example.com/.well-known/assetlinks.json fails [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings\n";
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"www.example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data android:scheme=\"http\"\n"
+                                        + "                    android:host=\"example.com\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_HTTP_CONNECT_FAIL)
+                .networkData(
+                        "http://www.example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST)
+                .run()
+                .expect(expected);
     }
 
     public void testUnknownHostWithManifestPlaceholders() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=205990
         // Skip hosts that use manifest placeholders
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
-
-            lint().files(
-                            xml(
-                                    "AndroidManifest.xml",
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data\n"
-                                            + "                    android:host=\"${intentFilterHost}\"\n"
-                                            + "                    android:pathPrefix=\"/path/\"\n"
-                                            + "                    android:scheme=\"https\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"))
-                    .run()
-                    .expectClean();
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data\n"
+                                        + "                    android:host=\"${intentFilterHost}\"\n"
+                                        + "                    android:pathPrefix=\"/path/\"\n"
+                                        + "                    android:scheme=\"https\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST)
+                .run()
+                .expectClean();
     }
 
     public void testUnknownHostWithResolvedManifestPlaceholders() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=205990
         // Skip hosts that use manifest placeholders
-        try {
-            Map<String, AppLinksAutoVerifyDetector.HttpResult> data = Maps.newHashMap();
-            AppLinksAutoVerifyDetector.sMockData = data;
-            data.put(
-                    "http://example.com",
-                    new AppLinksAutoVerifyDetector.HttpResult(
-                            AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST, null));
+        String expected =
+                ""
+                        + "src/main/AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
+                        + "                    android:host=\"${intentFilterHost}\"\n"
+                        + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n";
 
-            String expected =
-                    ""
-                            + "src/main/AndroidManifest.xml:12: Warning: Unknown host: http://example.com. Check if the host exists, and check your network connection [AppLinksAutoVerify]\n"
-                            + "                    android:host=\"${intentFilterHost}\"\n"
-                            + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                            + "0 errors, 1 warnings\n";
-
-            lint().files(
-                            manifest(
-                                    ""
-                                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                            + "    package=\"com.example.helloworld\" >\n"
-                                            + "\n"
-                                            + "    <application\n"
-                                            + "        android:allowBackup=\"true\"\n"
-                                            + "        android:icon=\"@mipmap/ic_launcher\" >\n"
-                                            + "        <activity android:name=\".MainActivity\" >\n"
-                                            + "            <intent-filter android:autoVerify=\"true\">\n"
-                                            + "                <action android:name=\"android.intent.action.VIEW\" />\n"
-                                            + "                <data\n"
-                                            + "                    android:host=\"${intentFilterHost}\"\n"
-                                            + "                    android:pathPrefix=\"/gizmos/\"\n"
-                                            + "                    android:scheme=\"http\" />\n"
-                                            + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
-                                            + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
-                                            + "            </intent-filter>\n"
-                                            + "        </activity>\n"
-                                            + "    </application>\n"
-                                            + "\n"
-                                            + "</manifest>\n"),
-                            gradle(
-                                    ""
-                                            + "buildscript {\n"
-                                            + "    dependencies {\n"
-                                            + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
-                                            + "    }\n"
-                                            + "}\n"
-                                            + "android {\n"
-                                            + "    defaultConfig {\n"
-                                            + "        manifestPlaceholders = [ intentFilterHost:\"example.com\"]\n"
-                                            + "    }\n"
-                                            + "}\n"))
-                    .run()
-                    .expect(expected);
-
-        } finally {
-            AppLinksAutoVerifyDetector.sMockData = null;
-        }
+        lint().files(
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.helloworld\" >\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:allowBackup=\"true\"\n"
+                                        + "        android:icon=\"@mipmap/ic_launcher\" >\n"
+                                        + "        <activity android:name=\".MainActivity\" >\n"
+                                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                                        + "                <action android:name=\"android.intent.action.VIEW\" />\n"
+                                        + "                <data\n"
+                                        + "                    android:host=\"${intentFilterHost}\"\n"
+                                        + "                    android:pathPrefix=\"/gizmos/\"\n"
+                                        + "                    android:scheme=\"http\" />\n"
+                                        + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
+                                        + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"),
+                        gradle(
+                                ""
+                                        + "buildscript {\n"
+                                        + "    dependencies {\n"
+                                        + "        classpath 'com.android.tools.build:gradle:2.0.0'\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "android {\n"
+                                        + "    defaultConfig {\n"
+                                        + "        manifestPlaceholders = [ intentFilterHost:\"example.com\"]\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .networkData(
+                        "http://example.com/.well-known/assetlinks.json",
+                        AppLinksAutoVerifyDetector.STATUS_UNKNOWN_HOST)
+                .run()
+                .expect(expected);
     }
 }

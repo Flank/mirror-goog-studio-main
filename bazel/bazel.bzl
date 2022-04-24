@@ -18,6 +18,7 @@ ImlModuleInfo = provider(
         "module_deps",
         "plugin_deps",
         "external_deps",
+        "jvm_target",
         "names",
     ],
 )
@@ -98,13 +99,18 @@ def _iml_module_jar_impl(
     full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar") if use_ijar else None
 
     # Compiler args and JVM target.
-    # TODO(b/227814536): Support Java 11 too, and set the --release Javac flag.
     java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
     jvm_target = ctx.attr.jvm_target if ctx.attr.jvm_target else java_toolchain.target_version
     javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts
     kotlinc_opts = list(ctx.attr.kotlinc_opts)
     if jvm_target == "8":
+        javac_opts += ["--release", "8"]
         kotlinc_opts += ["-jvm-target", "1.8"]
+        kt_java_runtime = ctx.attr._kt_java_runtime_8[java_common.JavaRuntimeInfo]
+    elif jvm_target == "11":
+        # Ideally we use "--release 11" for javac too, but that is incompatible with "--add-exports".
+        kotlinc_opts += ["-jvm-target", "11"]
+        kt_java_runtime = ctx.attr._kt_java_runtime_11[java_common.JavaRuntimeInfo]
     else:
         fail("JVM target " + jvm_target + " is not currently supported in iml_module")
 
@@ -119,7 +125,7 @@ def _iml_module_jar_impl(
             friend_jars = friend_jars,
             out = kotlin_jar,
             out_ijar = kotlin_ijar,
-            jre = ctx.files._bootclasspath,
+            java_runtime = kt_java_runtime,
             kotlinc_opts = kotlinc_opts,
             transitive_classpath = False,  # Matches JPS.
         )]
@@ -247,6 +253,14 @@ def _iml_module_impl(ctx):
     for dep in ctx.attr.deps:
         if ImlModuleInfo in dep:
             module_deps += [dep]
+            if ctx.attr.jvm_target:
+                if not dep[ImlModuleInfo].jvm_target or int(dep[ImlModuleInfo].jvm_target) > int(ctx.attr.jvm_target):
+                    fail("The module %s has a jvm_target of \"%s\", but depends on module %s with target \"%s\"" % (
+                        ctx.attr.name,
+                        ctx.attr.jvm_target,
+                        dep[ImlModuleInfo].names[0],
+                        dep[ImlModuleInfo].jvm_target,
+                    ))
         elif hasattr(dep, "plugin_info"):
             plugin_deps += [dep]
         elif hasattr(dep, "platform_info"):
@@ -340,6 +354,7 @@ def _iml_module_impl(ctx):
         module_deps = depset(direct = module_deps),
         plugin_deps = depset(direct = plugin_deps),
         external_deps = depset(direct = external_deps),
+        jvm_target = ctx.attr.jvm_target,
         names = names,
     )
 
@@ -382,7 +397,21 @@ _iml_module_ = rule(
         "test_friends": attr.label_list(providers = [JavaInfo]),
         "data": attr.label_list(allow_files = True),
         "test_data": attr.label_list(allow_files = True),
-        "_java_toolchain": attr.label(default = Label("@bazel_tools//tools/jdk:current_java_toolchain")),
+        "_java_toolchain": attr.label(default = Label("//prebuilts/studio/jdk:jdk11_toolchain_java11")),
+        "_kt_java_runtime_8": attr.label(
+            # We need this to be able to target JRE 8 in Kotlin, because
+            # Kotlinc does not support the --release 8 Javac option.
+            default = Label("//prebuilts/studio/jdk:jdk_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+            cfg = "exec",
+        ),
+        "_kt_java_runtime_11": attr.label(
+            # We need this to be able to target JRE 11 in Kotlin, because
+            # Kotlinc does not support the --release 11 Javac option.
+            default = Label("//prebuilts/studio/jdk:jdk11_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+            cfg = "exec",
+        ),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
@@ -402,10 +431,6 @@ _iml_module_ = rule(
             default = Label("//prebuilts/tools/common/m2:jvm-abi-gen-plugin"),
             cfg = "host",
             allow_single_file = [".jar"],
-        ),
-        "_bootclasspath": attr.label(
-            default = Label("@bazel_tools//tools/jdk:platformclasspath"),
-            cfg = "host",
         ),
         "_kotlin": attr.label(
             default = Label("@maven//:org.jetbrains.kotlin.kotlin-stdlib"),

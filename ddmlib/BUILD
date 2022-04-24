@@ -10,6 +10,7 @@ iml_module(
     name = "studio.android.sdktools.ddmlib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ddmlib.iml"],
+    jvm_target = "8",
     lint_baseline = "lint_baseline.xml",
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],

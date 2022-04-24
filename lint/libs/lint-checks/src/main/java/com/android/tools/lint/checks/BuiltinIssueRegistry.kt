@@ -212,6 +212,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 InefficientWeightDetector.WRONG_0DP,
                 InstantAppDetector.ISSUE,
                 IntentDetector.ISSUE,
+                InternalInsetResourceDetector.ISSUE,
                 InteroperabilityDetector.KOTLIN_PROPERTY,
                 InteroperabilityDetector.LAMBDA_LAST,
                 InteroperabilityDetector.NO_HARD_KOTLIN_KEYWORDS,

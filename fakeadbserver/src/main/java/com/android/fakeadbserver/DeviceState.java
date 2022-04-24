@@ -23,9 +23,13 @@ import com.android.fakeadbserver.statechangehubs.ClientStateChangeHub;
 import com.android.fakeadbserver.statechangehubs.StateChangeQueue;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DeviceState {
@@ -38,6 +42,7 @@ public class DeviceState {
     private final Map<Integer, PortForwarder> mReversePortForwarders = new HashMap<>();
     private final FakeAdbServer mServer;
     private final HostConnectionType mHostConnectionType;
+    private final Set<String> mFeatures;
 
     private int myTransportId;
 
@@ -63,6 +68,7 @@ public class DeviceState {
         mModel = model;
         mBuildVersionRelease = release;
         mBuildVersionSdk = sdk;
+        mFeatures = initFeatures(sdk);
         mHostConnectionType = hostConnectionType;
         myTransportId = transportId;
         mDeviceStatus = DeviceStatus.OFFLINE;
@@ -266,6 +272,30 @@ public class DeviceState {
                     .map(clientState -> Integer.toString(clientState.getPid()))
                     .collect(Collectors.joining("\n"));
         }
+    }
+
+    private static Set<String> initFeatures(String sdk) {
+        Set<String> features = new HashSet<>(Arrays.asList("push_sync", "fixed_push_mkdir", "shell_v2", "apex,stat_v2"));
+        try {
+            int api = Integer.parseInt(sdk);
+            if (api >= 24) {
+                features.add("cmd");
+            }
+            if (api >= 30) {
+                features.add("abb");
+                features.add("abb_exec");
+            }
+        } catch (NumberFormatException e) {
+            // Cannot add more features based on API level since it is not the expected integer
+            // This is expected in many of our test that don't pass a correct value but instead
+            // pass "sdk". In such case, we return the default set of features.
+            // TODO: Fix adblist test to not send "sdk" and delete this catch.
+        }
+        return Collections.unmodifiableSet(features);
+    }
+
+    public Set<String> getFeatures() {
+        return mFeatures;
     }
 
     /**

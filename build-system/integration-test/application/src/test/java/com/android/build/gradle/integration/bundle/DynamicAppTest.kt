@@ -95,6 +95,7 @@ class DynamicAppTest {
         "/base/res/layout/base_layout.xml",
         "/base/resources.pb",
         "/base/root/com/example/localLibJavaRes.txt",
+        "/base/root/META-INF/com/android/build/gradle/app-metadata.properties",
         "/feature1/dex/classes.dex",
         "/feature1/dex/classes2.dex",
         "/feature1/manifest/AndroidManifest.xml",

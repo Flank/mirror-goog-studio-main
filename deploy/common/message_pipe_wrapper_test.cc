@@ -36,8 +36,8 @@ TEST_F(MessagePipeWrapperTest, HandleSmallMessage) {
 
   std::string message(1 << 8, '\xFF');
   std::string received;
-  EXPECT_TRUE(write.Write(message));
-  EXPECT_TRUE(read.Read(&received));
+  EXPECT_TRUE(write.WriteBlocking(message));
+  EXPECT_TRUE(read.ReadBlocking(&received));
   EXPECT_EQ(received, message);
 }
 
@@ -53,8 +53,9 @@ TEST_F(MessagePipeWrapperTest, HandleLargeMessage) {
 
   // Spawn another thread because the message is too big for the kernel to write
   // all at once; if there is not a simultaneous reader, the write will block.
-  std::thread write_thread([&]() { EXPECT_TRUE(write.Write(message)); });
-  EXPECT_TRUE(read.Read(&received));
+  std::thread write_thread(
+      [&]() { EXPECT_TRUE(write.WriteBlocking(message)); });
+  EXPECT_TRUE(read.ReadBlocking(&received));
 
   // Intentionally not using EXPECT_EQ, since on a failure EXPECT_EQ prints the
   // "expected" value to the screen, which in this case is roughly 17MB of data.
@@ -70,7 +71,7 @@ TEST_F(MessagePipeWrapperTest, HandleBadMessage) {
   write(pipe_fds[1], "xxxxxxxx", 8);
 
   std::string received;
-  EXPECT_FALSE(read.Read(&received));
+  EXPECT_FALSE(read.ReadBlocking(&received));
 }
 
 TEST_F(MessagePipeWrapperTest, HandleManyMessages) {
@@ -82,12 +83,12 @@ TEST_F(MessagePipeWrapperTest, HandleManyMessages) {
 
   int lengths[10] = {35, 23, 199, 3, 1000, 482, 1, 399, 0, 18};
   for (int i = 0; i < 10; ++i) {
-    EXPECT_TRUE(write.Write(std::string(lengths[i], '\xFF')));
+    EXPECT_TRUE(write.WriteBlocking(std::string(lengths[i], '\xFF')));
   }
 
   for (int i = 0; i < 10; ++i) {
     std::string received;
-    EXPECT_TRUE(read.Read(&received));
+    EXPECT_TRUE(read.ReadBlocking(&received));
     EXPECT_EQ(received, std::string(lengths[i], '\xFF'));
   }
 }
@@ -114,13 +115,13 @@ TEST_F(MessagePipeWrapperTest, TestPoll) {
   MessagePipeWrapper read_2(pipe_fds[0]);
   MessagePipeWrapper write_2(pipe_fds[1]);
 
-  write_1.Write("\xEE");
+  write_1.WriteBlocking("\xEE");
 
   auto ready = MessagePipeWrapper::Poll({&read_1, &read_2}, 1000);
   EXPECT_EQ(ready.size(), 1);
   EXPECT_EQ(ready[0], 0);  // First pipe is ready.
 
-  write_2.Write("\xFF");
+  write_2.WriteBlocking("\xFF");
 
   ready = MessagePipeWrapper::Poll({&read_1, &read_2}, 1000);
   EXPECT_EQ(ready.size(), 2);
@@ -128,9 +129,9 @@ TEST_F(MessagePipeWrapperTest, TestPoll) {
   EXPECT_EQ(ready[1], 1);  // Second pipe is ready.
 
   std::string received;
-  EXPECT_TRUE(read_1.Read(&received));
+  EXPECT_TRUE(read_1.ReadBlocking(&received));
   EXPECT_EQ(received, "\xEE");
-  EXPECT_TRUE(read_2.Read(&received));
+  EXPECT_TRUE(read_2.ReadBlocking(&received));
   EXPECT_EQ(received, "\xFF");
 
   ready = MessagePipeWrapper::Poll({&read_1, &read_2}, 1000);

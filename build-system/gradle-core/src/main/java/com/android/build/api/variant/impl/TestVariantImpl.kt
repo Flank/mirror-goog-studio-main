@@ -193,6 +193,9 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
+    override val useJacocoTransformInstrumentation: Boolean
+        get() = false
+
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, only present for old variant API.
     // ---------------------------------------------------------------------------------------------
