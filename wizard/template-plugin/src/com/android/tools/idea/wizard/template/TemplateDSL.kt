@@ -28,11 +28,8 @@ internal data class TemplateImpl(
   private val _thumb: () -> Thumb,
   override val recipe: Recipe,
   override val uiContexts: Collection<WizardUiContext>,
-  override val constraints: Collection<TemplateConstraint>,
-  override val useGenericInstrumentedTests: Boolean,
-  override val useGenericLocalTests: Boolean,
-
-    ) : Template {
+  override val constraints: Collection<TemplateConstraint>
+) : Template {
   override fun thumb(): Thumb = _thumb()
 }
 
@@ -56,8 +53,6 @@ class TemplateBuilder {
   var screens: Collection<WizardUiContext> = listOf()
   var widgets = listOf<Widget<*>>()
   var constraints = listOf<TemplateConstraint>()
-  var useGenericAndroidTests: Boolean = true
-  var useGenericLocalTests: Boolean = true
 
   fun widgets(vararg widgets: Widget<*>) {
     this.widgets = widgets.toList()
@@ -90,9 +85,7 @@ class TemplateBuilder {
       thumb,
       recipe!!,
       screens,
-      constraints,
-      useGenericAndroidTests,
-      useGenericLocalTests
+      constraints
     )
   }
 }

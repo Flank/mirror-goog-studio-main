@@ -56,6 +56,16 @@ open class VariantApiBaseTest(
         val agpVersion = System.getenv("API_TESTS_VERSION")
                 ?: com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 
+        /**
+         * If running within a build system, make sure to use the expected version when generating
+         * build.gradle.kts files.
+         */
+        val kotlinVersion: String by lazy {
+            System.getenv("KOTLIN_PLUGIN")?.split(':')?.last()
+            // fall back, use the version I am running against.
+                    ?: KotlinVersion.CURRENT.toString()
+        }
+
         val generalRepos = listOf(
                 "google()",
                 "jcenter()")
@@ -119,7 +129,7 @@ buildscript {
 ${addGlobalRepositories(repositories).prependIndent("    ")}
     dependencies {
         classpath("com.android.tools.build:gradle:${agpVersion}")
-        classpath(kotlin("gradle-plugin", version = "${TestUtils.KOTLIN_VERSION_FOR_TESTS}"))
+        classpath(kotlin("gradle-plugin", version = "$kotlinVersion"))
         ${addClasspath(additionalClasspath)}
     }
 }
@@ -135,7 +145,7 @@ allprojects {
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
+    kotlin("jvm") version "$kotlinVersion"
 }
 ${addRepositories(localRepos)}
 ${addGlobalRepositories(globalRepos)}

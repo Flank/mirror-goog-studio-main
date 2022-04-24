@@ -122,9 +122,7 @@ data class ModuleTemplateData(
   val apis: ApiTemplateData,
   val viewBindingSupport: ViewBindingSupport,
   val category: Category,
-  val isMaterial3: Boolean,
-  val useGenericLocalTests: Boolean,
-  val useGenericInstrumentedTests: Boolean
+  val isMaterial3: Boolean
 ): TemplateData() {
   val isDynamic: Boolean
     get() = baseFeature != null
