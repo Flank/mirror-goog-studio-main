@@ -20,7 +20,6 @@ import com.android.SdkConstants.ANDROID_PKG
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_THEME_PREFIX
 import com.android.SdkConstants.ANDROID_URI
-import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.ATTR_AUTOFILL_HINTS
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_FOREGROUND
@@ -84,7 +83,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
 import com.android.tools.lint.detector.api.ResourceFolderScanner
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -177,7 +175,6 @@ import org.w3c.dom.Node
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
-import java.lang.Boolean.TRUE
 import java.util.EnumSet
 import kotlin.math.max
 import kotlin.math.min
@@ -220,10 +217,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (name != ATTR_LAYOUT_WIDTH &&
                 name != ATTR_LAYOUT_HEIGHT &&
                 name != ATTR_ID &&
-                (
-                    (!isAttributeOfGradientOrGradientItem(attribute) && name != "fillType") ||
-                        !dependsOnAppCompat(context.project)
-                    )
+                (!isAttributeOfGradientOrGradientItem(attribute) && name != "fillType" || !context.project.dependsOnAppCompat())
             ) {
                 val owner = "android/R\$attr"
                 attributeApiLevel = apiDatabase.getFieldVersion(owner, name)
@@ -256,7 +250,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                         // Supported by appcompat
                         if ("fontFamily" == localName) {
-                            if (dependsOnAppCompat(context.project)) {
+                            if (context.project.dependsOnAppCompat()) {
                                 val prefix = XmlUtils.lookupNamespacePrefix(
                                     attribute, AUTO_URI, "app", false
                                 )
@@ -2554,9 +2548,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val psiClass = evaluator.findClass(tagName) ?: return defaultValue
             return evaluator.extendsClass(psiClass, FQCN_FRAME_LAYOUT, false)
         }
-
-        private fun dependsOnAppCompat(project: Project) =
-            TRUE == project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
 
         private fun apiLevelFix(api: Int): LintFix {
             return LintFix.create().data(KEY_REQUIRES_API, api)

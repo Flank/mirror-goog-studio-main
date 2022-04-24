@@ -67,8 +67,16 @@ abstract class UastParser {
         javaLanguageLevel: LanguageLevel? = null,
         kotlinLanguageLevel: LanguageVersionSettings? = null
     ): Boolean {
+        prepared = true
         return true
     }
+
+    /**
+     * Whether this parser has been prepared (with classpath
+     * initialization etc)
+     */
+    var prepared = false
+        protected set
 
     /**
      * Parse the file pointed to by the given context.

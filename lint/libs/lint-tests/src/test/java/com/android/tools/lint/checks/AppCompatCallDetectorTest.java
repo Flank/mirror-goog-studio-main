@@ -50,6 +50,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         // Stubs just to be able to do type resolution without needing the full
                         // appcompat jar
                         mActionBarActivity,
+                        mAppCompatActivity,
                         mActionMode)
                 .skipTestModes(ANDROIDX_TEST_MODE) // tested separately in testArgumentsAndroidX
                 .run()
@@ -115,7 +116,10 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         mapTestFileToAndroidX(mIntermediateActivity),
                         // Stubs just to be able to do type resolution without needing the full
                         // appcompat jar
-                        mapTestFileToAndroidX(mActionBarActivity),
+                        mapTestFileToAndroidX(
+                                java(
+                                        mActionBarActivity.contents.replace(
+                                                "AppCompatActivity", "Activity"))),
                         mapTestFileToAndroidX(mActionMode))
                 .skipTestModes(ANDROIDX_TEST_MODE) // already an AndroidX test
                 .run()
@@ -149,7 +153,12 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoWarningsWithoutAppCompat() {
-        lint().files(mAppCompatTest, mIntermediateActivity, mActionBarActivity, mActionMode)
+        lint().files(
+                        mAppCompatTest,
+                        mIntermediateActivity,
+                        mActionBarActivity,
+                        mAppCompatActivity,
+                        mActionMode)
                 .run()
                 .expectClean();
     }
@@ -180,6 +189,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         // Stubs just to be able to do type resolution without needing the full
                         // appcompat jar
                         mActionBarActivity,
+                        mAppCompatActivity,
                         mActionMode)
                 .run()
                 .expectClean();
@@ -202,7 +212,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                             + "/**\n"
                             + " * Just a stub for unit test\n"
                             + " */\n"
-                            + "public class ActionBarActivity extends Activity {\n"
+                            + "public class ActionBarActivity extends AppCompatActivity {\n"
                             + "    protected ActionBar getSupportActionBar() {\n"
                             + "        return null;\n"
                             + "    }\n"
@@ -223,6 +233,19 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                             + "\n"
                             + "    public void setSupportProgressBarIndeterminate(boolean indeterminate) {\n"
                             + "    }\n"
+                            + "}\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mAppCompatActivity =
+            java(
+                    ""
+                            + "package android.support.v7.app;\n"
+                            + "\n"
+                            + "import android.app.Activity;\n"
+                            + "/**\n"
+                            + " * Just a stub for unit test\n"
+                            + " */\n"
+                            + "public class AppCompatActivity extends Activity {\n"
                             + "}\n");
 
     private TestFile mapTestFileToAndroidX(TestFile file) {

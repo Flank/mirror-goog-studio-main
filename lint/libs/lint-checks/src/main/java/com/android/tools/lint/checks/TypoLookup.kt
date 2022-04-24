@@ -565,7 +565,7 @@ class TypoLookup private constructor(
             // This helps in scenarios where multiple simultaneous Gradle
             // threads are attempting to access the file before it's ready.
             val tmp = File(file.path + "." + Random().nextInt())
-            tmp.parentFile?.let { if (it.exists()) it.mkdirs() }
+            tmp.parentFile?.let { if (!it.exists()) it.mkdirs() }
             Files.asByteSink(tmp).write(b)
             if (!tmp.renameTo(file)) {
                 tmp.delete()

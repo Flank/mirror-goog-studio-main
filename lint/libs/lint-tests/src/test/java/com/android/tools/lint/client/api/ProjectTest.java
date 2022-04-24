@@ -172,7 +172,7 @@ public class ProjectTest extends AbstractCheckTest {
         assertThat(projects).hasSize(1);
         Project project1 = projects.get(0);
         assertNull(project1.dependsOn("unknown:library"));
-        assertTrue(project1.dependsOn("com.android.support:support-v4"));
+        assertTrue(project1.dependsOn("com.android.support:appcompat-v7"));
     }
 
     public void testDependsOn2() {
@@ -187,7 +187,7 @@ public class ProjectTest extends AbstractCheckTest {
         assertThat(projects).hasSize(1);
         Project project = projects.get(0);
         assertNull(project.dependsOn("unknown:library"));
-        assertTrue(project.dependsOn("com.android.support:support-v4"));
+        assertTrue(project.dependsOn("com.android.support:appcompat-v7"));
     }
 
     @Override

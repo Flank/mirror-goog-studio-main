@@ -18,7 +18,7 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants
 import com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
-import com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
+import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
 import com.android.support.AndroidxNameUtils
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.model.LintModelAndroidLibrary
@@ -209,17 +209,10 @@ open class LintModelModuleAndroidLibraryProject(
         @Suppress("MoveVariableDeclarationIntoWhen") // used in super call as well
         val id = AndroidxNameUtils.getCoordinateMapping(artifact)
         return when (id) {
-            ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
-                if (supportLib == null) {
-                    supportLib = dependency.hasDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) ||
-                        dependency.hasDependency("com.android.support:support-v4")
-                }
-                supportLib
-            }
             ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
                 if (appCompat == null) {
                     appCompat = dependency.hasDependency(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) ||
-                        dependency.hasDependency(SdkConstants.APPCOMPAT_LIB_ARTIFACT)
+                        dependency.hasDependency(APPCOMPAT_LIB_ARTIFACT)
                 }
                 appCompat
             }
@@ -230,7 +223,7 @@ open class LintModelModuleAndroidLibraryProject(
                 }
                 leanback
             }
-            else -> super.dependsOn(id)
+            else -> if (dependency.hasDependency(artifact)) true else super.dependsOn(id)
         }
     }
 }

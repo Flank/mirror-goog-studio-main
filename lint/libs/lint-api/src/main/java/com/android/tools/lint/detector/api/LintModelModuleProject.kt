@@ -17,7 +17,6 @@ package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT
-import com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT
 import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.LEANBACK_V17_ARTIFACT
 import com.android.sdklib.AndroidTargetHash
@@ -354,14 +353,6 @@ open class LintModelModuleProject(
         @Suppress("MoveVariableDeclarationIntoWhen") // also used in else
         val id = AndroidxNameUtils.getCoordinateMapping(artifact)
         return when (id) {
-            ANDROIDX_SUPPORT_LIB_ARTIFACT -> {
-                if (supportLib == null) {
-                    val a = variant.mainArtifact
-                    supportLib = a.findCompileDependency(ANDROIDX_SUPPORT_LIB_ARTIFACT) != null ||
-                        a.findCompileDependency("com.android.support:support-v4") != null
-                }
-                supportLib
-            }
             ANDROIDX_APPCOMPAT_LIB_ARTIFACT -> {
                 if (appCompat == null) {
                     val a = variant.mainArtifact
@@ -378,7 +369,7 @@ open class LintModelModuleProject(
                 }
                 leanback
             }
-            else -> super.dependsOn(id)
+            else -> if (variant.mainArtifact.findCompileDependency(artifact) != null) true else super.dependsOn(id)
         }
     }
 

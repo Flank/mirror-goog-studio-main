@@ -524,9 +524,10 @@ class TestLintRunner(private val task: TestLintTask) {
             for (dir in projectDirs) {
                 projects.add(lintClient.getProject(dir, rootDir))
             }
+            lintClient.initializeProjects(projects)
             projects
         } finally {
-            lintClient.setLintTask(task)
+            lintClient.setLintTask(null)
             if (!keepFiles) {
                 rootDir.deleteRecursively()
             }

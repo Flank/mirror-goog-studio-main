@@ -15,14 +15,13 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
+import static com.android.tools.lint.checks.AppCompatCustomViewDetectorKt.dependsOnAppCompat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -51,7 +50,8 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
                             Severity.WARNING,
                             new Implementation(AppCompatCallDetector.class, Scope.JAVA_FILE_SCOPE))
                     .addMoreInfo("https://developer.android.com/topic/libraries/support-library/")
-                    .setAndroidSpecific(true);
+                    .setAndroidSpecific(true)
+                    .setEnabledByDefault(false);
 
     private static final String GET_ACTION_BAR = "getActionBar";
     private static final String START_ACTION_MODE = "startActionMode";
@@ -60,15 +60,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
     private static final String SET_PROGRESS_BAR_INDETERMINATE = "setProgressBarIndeterminate";
     private static final String REQUEST_WINDOW_FEATURE = "requestWindowFeature";
 
-    private boolean mDependsOnAppCompat;
-
     public AppCompatCallDetector() {}
-
-    @Override
-    public void beforeCheckRootProject(@NonNull Context context) {
-        Boolean dependsOnAppCompat = context.getProject().dependsOn(APPCOMPAT_LIB_ARTIFACT);
-        mDependsOnAppCompat = dependsOnAppCompat != null && dependsOnAppCompat;
-    }
 
     @Nullable
     @Override
@@ -87,7 +79,8 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
-        if (mDependsOnAppCompat && isAppBarActivityCall(context, node, method)) {
+        if (dependsOnAppCompat(context.getProject(), false)
+                && isAppCompatActivityCall(context, node, method)) {
             String name = method.getName();
             String replace = null;
             if (GET_ACTION_BAR.equals(name)) {
@@ -118,7 +111,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
         }
     }
 
-    private static boolean isAppBarActivityCall(
+    private static boolean isAppCompatActivityCall(
             @NonNull JavaContext context,
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
@@ -132,7 +125,7 @@ public class AppCompatCallDetector extends Detector implements SourceCodeScanner
                     && (evaluator.extendsClass(
                                     cls, "androidx.appcompat.app.AppCompatActivity", false)
                             || evaluator.extendsClass(
-                                    cls, "android.support.v7.app.ActionBarActivity", false));
+                                    cls, "android.support.v7.app.AppCompatActivity", false));
         }
         return false;
     }

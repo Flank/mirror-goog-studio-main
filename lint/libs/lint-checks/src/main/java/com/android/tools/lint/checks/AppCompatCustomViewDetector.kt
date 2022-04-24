@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
+import com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.FQCN_AUTO_COMPLETE_TEXT_VIEW
 import com.android.SdkConstants.FQCN_BUTTON
@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -54,8 +55,7 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         val project = if (context.isGlobalAnalysis()) context.mainProject else context.project
-        val dependsOnAppCompat = project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
-        if (dependsOnAppCompat != null && dependsOnAppCompat != true) {
+        if (!project.dependsOnAppCompat()) {
             return
         }
 
@@ -175,4 +175,12 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
             return findAppCompatDelegate(context, widgetName) != null
         }
     }
+}
+
+/**
+ * Returns true if this project depends on app compat (whether the old
+ * android support library version, or the new AndroidX one).
+ */
+fun Project.dependsOnAppCompat(returnIfUnknown: Boolean = false): Boolean {
+    return dependsOn(ANDROIDX_APPCOMPAT_LIB_ARTIFACT) ?: return returnIfUnknown
 }

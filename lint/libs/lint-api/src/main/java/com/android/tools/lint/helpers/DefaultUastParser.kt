@@ -31,7 +31,6 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
-import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -41,7 +40,6 @@ import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
 import com.intellij.psi.impl.source.tree.TreeElement
-import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
 import org.jetbrains.kotlin.psi.KtFile
@@ -82,25 +80,6 @@ open class DefaultUastParser(
         p: com.intellij.openapi.project.Project
     ): DefaultJavaEvaluator =
         DefaultJavaEvaluator(p, project!!)
-
-    /**
-     * Prepare to parse the given contexts. This method will be called
-     * before a series of [.parse] calls, which allows some parsers
-     * to do up front global computation in case they want to more
-     * efficiently process multiple files at the same time. This allows
-     * a single type-attribution pass for example, which is a lot more
-     * efficient than performing global type analysis over and over
-     * again for each individual file
-     *
-     * @param contexts a list of contexts to be parsed
-     * @return true if the preparation succeeded; false if there were
-     *     errors
-     */
-    override fun prepare(
-        contexts: List<JavaContext>,
-        javaLanguageLevel: LanguageLevel?,
-        kotlinLanguageLevel: LanguageVersionSettings?
-    ): Boolean = true
 
     /**
      * Returns an evaluator which can perform various resolution tasks,
