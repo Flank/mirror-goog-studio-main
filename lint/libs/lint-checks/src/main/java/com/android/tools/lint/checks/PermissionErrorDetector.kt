@@ -37,65 +37,99 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.editDistance
-import org.w3c.dom.Element
+import com.android.utils.XmlUtils.getFirstSubTag
+import com.android.utils.XmlUtils.getNextTag
+import org.w3c.dom.Attr
+import org.w3c.dom.Document
 import java.util.Arrays
 
 /**
  * looks for obvious errors in the guarding of components with a permission via the android:permission attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
-    override fun getApplicableElements(): Collection<String> = listOf(
-        TAG_APPLICATION,
-        TAG_ACTIVITY,
-        TAG_ACTIVITY_ALIAS,
-        TAG_RECEIVER,
-        TAG_SERVICE,
-        TAG_PROVIDER,
-        TAG_PERMISSION,
-        TAG_USES_PERMISSION
-    )
+    override fun visitDocument(context: XmlContext, document: Document) {
+        val customPermissions = mutableSetOf<String>()
+        val potentialCustomPermissionUsages = mutableListOf<Attr>()
 
-    override fun visitElement(context: XmlContext, element: Element) {
-        getIncident(context, element)?.let { context.report(it) }
-    }
+        fun reportErrorOrAppendToCustomPermissionUsages(attr: Attr) {
+            val usageError = getPermissionError(context, attr)
+            if (usageError != null) context.report(usageError)
+            else potentialCustomPermissionUsages.add(attr)
+        }
 
-    private fun getIncident(context: XmlContext, element: Element): Incident? {
-        val tagName = element.tagName
-        if (tagName == TAG_PERMISSION) {
-            element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
-                if (isSystemPermission(it.value))
-                    return Incident(
-                        RESERVED_SYSTEM_PERMISSION,
-                        element,
-                        context.getValueLocation(it),
-                        "`${it.value}` is a reserved permission for the system"
-                    )
-            }
-        } else {
-            element
-                .getAttributeNodeNS(
-                    ANDROID_URI,
-                    if (tagName == TAG_USES_PERMISSION) ATTR_NAME else ATTR_PERMISSION
-                )?.let { attr ->
-                    if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
-                        return Incident(
-                            KNOWN_PERMISSION_ERROR,
-                            element,
-                            context.getValueLocation(attr),
-                            "`${attr.value}` is not a valid permission value"
+        val root = document.documentElement ?: return
+        var topLevel = getFirstSubTag(root)
+
+        while (topLevel != null) {
+            when (topLevel.tagName) {
+                TAG_PERMISSION -> {
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
+                        if (isSystemPermission(it.value)) context.report(
+                            RESERVED_SYSTEM_PERMISSION,
+                            topLevel,
+                            context.getValueLocation(it),
+                            "`${it.value}` is a reserved permission for the system"
                         )
-                    }
-
-                    findAlmostSystemPermission(attr.value)?.let {
-                        return Incident(
-                            SYSTEM_PERMISSION_TYPO,
-                            element,
-                            context.getValueLocation(attr),
-                            "Did you mean `$it`?",
-                            fix().replace().text(attr.value).with(it).build()
-                        )
+                        else customPermissions.add(it.value)
                     }
                 }
+                TAG_USES_PERMISSION -> {
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
+                        reportErrorOrAppendToCustomPermissionUsages(it)
+                    }
+                }
+                TAG_APPLICATION -> {
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let {
+                        reportErrorOrAppendToCustomPermissionUsages(it)
+                    }
+
+                    var componentLevel = getFirstSubTag(topLevel)
+                    while (componentLevel != null) {
+                        when (componentLevel.tagName) {
+                            in ANDROID_COMPONENT_TAGS -> {
+                                componentLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let {
+                                    reportErrorOrAppendToCustomPermissionUsages(it)
+                                }
+                            }
+                        }
+                        componentLevel = getNextTag(componentLevel)
+                    }
+                }
+            }
+            topLevel = getNextTag(topLevel)
+        }
+
+        for (potentialCustomPermissionUsage in potentialCustomPermissionUsages) {
+            val permissionName = potentialCustomPermissionUsage.value
+            findAlmostCustomPermission(permissionName, customPermissions)?.let {
+                context.report(
+                    CUSTOM_PERMISSION_TYPO,
+                    context.getValueLocation(potentialCustomPermissionUsage),
+                    "Did you mean `$it`?",
+                    fix().replace().text(permissionName).with(it).build()
+                )
+            }
+        }
+    }
+
+    private fun getPermissionError(context: XmlContext, attr: Attr): Incident? {
+        if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
+            return Incident(
+                KNOWN_PERMISSION_ERROR,
+                attr.ownerElement,
+                context.getValueLocation(attr),
+                "`${attr.value}` is not a valid permission value"
+            )
+        }
+
+        findAlmostSystemPermission(attr.value)?.let {
+            return Incident(
+                SYSTEM_PERMISSION_TYPO,
+                attr.ownerElement,
+                context.getValueLocation(attr),
+                "Did you mean `$it`?",
+                fix().replace().text(attr.value).with(it).build()
+            )
         }
 
         return null
@@ -161,11 +195,33 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             implementation = IMPLEMENTATION
         )
 
+        @JvmField
+        val CUSTOM_PERMISSION_TYPO: Issue = Issue.create(
+            id = "CustomPermissionTypo",
+            briefDescription = "Permission appears to be a custom permission with a typo",
+            explanation = """
+                This check looks for required permissions that *look* like custom permissions defined in the same \
+                 manifest, but aren't, and may be typos.
+
+                 Please double check the permission value you have supplied.
+                """,
+            category = Category.SECURITY,
+            priority = 5,
+            severity = Severity.WARNING,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
+        )
+
         // the edit distance at which we have reasonable confidence that there is a typo
         const val MAX_EDIT_DISTANCE = 4
 
         // purely to optimize the LintUtils.editDistance call
         const val EDIT_DISTANCE_ESCAPE = MAX_EDIT_DISTANCE + 1
+
+        fun findAlmostCustomPermission(requiredPermission: String, customPermissions: Set<String>): String? {
+            if (requiredPermission in customPermissions) return null
+            return customPermissions.firstOrNull { editDistance(requiredPermission, it, EDIT_DISTANCE_ESCAPE) in 1..MAX_EDIT_DISTANCE }
+        }
 
         val UNEXPECTED_CHAR_REGEX = Regex("[^a-zA-Z0-9_.]+")
 
@@ -208,5 +264,14 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
         fun isSystemPermission(permissionName: String): Boolean =
             Arrays.binarySearch(SYSTEM_PERMISSIONS, permissionName) >= 0
+
+        private val ANDROID_COMPONENT_TAGS = listOf(
+            TAG_APPLICATION,
+            TAG_ACTIVITY,
+            TAG_ACTIVITY_ALIAS,
+            TAG_RECEIVER,
+            TAG_SERVICE,
+            TAG_PROVIDER
+        )
     }
 }

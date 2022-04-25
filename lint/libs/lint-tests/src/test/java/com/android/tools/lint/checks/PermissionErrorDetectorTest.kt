@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostCustomPermission
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostSystemPermission
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.permissionToPrefixAndSuffix
 import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
@@ -323,5 +324,104 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
         val (prefix2, suffix2) = permissionToPrefixAndSuffix("android.permission.BIND_EUICC_SERVICE")
         assertEquals(prefix2, "android.permission")
         assertEquals(suffix2, "BIND_EUICC_SERVICE")
+    }
+
+    @Test
+    fun testDocumentationExampleCustomPermissionTypo() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools">
+                  <permission android:name="my.custom.permission.FOOBAR" />
+                  <permission android:name="my.custom.permission.FOOBAB" />
+                  <permission android:name="my.custom.permission.BAZQUXX" />
+                  <permission android:name="my.custom.permission.BAZQUZZ" />
+                  <application>
+                    <service android:permission="my.custom.permission.FOOBOB" />
+                    <service android:permission="my.custom.permission.FOOBAB" />
+                    <activity android:permission="my.custom.permission.BAZQXX" />
+                    <activity android:permission="my.custom.permission.BAZQUZZ" />
+                  </application>
+                </manifest>
+                """
+            ).indented()
+        )
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:8: Warning: Did you mean my.custom.permission.FOOBAR? [CustomPermissionTypo]
+                    <service android:permission="my.custom.permission.FOOBOB" />
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:10: Warning: Did you mean my.custom.permission.BAZQUXX? [CustomPermissionTypo]
+                    <activity android:permission="my.custom.permission.BAZQXX" />
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 8: Replace with my.custom.permission.FOOBAR:
+                @@ -8 +8
+                -     <service android:permission="my.custom.permission.FOOBOB" />
+                +     <service android:permission="my.custom.permission.FOOBAR" />
+                Fix for AndroidManifest.xml line 10: Replace with my.custom.permission.BAZQUXX:
+                @@ -10 +10
+                -     <activity android:permission="my.custom.permission.BAZQXX" />
+                +     <activity android:permission="my.custom.permission.BAZQUXX" />
+                """
+            )
+    }
+
+    @Test
+    fun testCustomPermissionTypoOk() {
+        lint().files(
+            manifest(
+                "bar",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools">
+                  <application>
+                    <service android:permission="my.custom.permission.FOOBAR" />
+                    <activity android:permission="my.custom.permission.BAZQUXX" />
+                  </application>
+                </manifest>
+                """
+            ).indented(),
+            manifest(
+                "foo",
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools">
+                  <permission android:name="my.custom.permission.FOOBAR" />
+                  <permission android:name="my.custom.permission.BAZQUXX" />
+                  <application>
+                  </application>
+                </manifest>
+                """
+            ).indented(),
+        )
+            .run().expectClean()
+    }
+
+    @Test
+    fun testFindAlmostCustomPermission() {
+        val customPermissions = setOf("my.custom.permission.FOO_BAR", "my.custom.permission.BAZ_QUXX")
+        assertEquals(
+            findAlmostCustomPermission("my.custom.permission.FOOB", customPermissions),
+            "my.custom.permission.FOO_BAR"
+        )
+        assertEquals(
+            findAlmostCustomPermission("my.custom.permission.QUXX", customPermissions),
+            "my.custom.permission.BAZ_QUXX"
+        )
+    }
+
+    @Test
+    fun testFindAlmostCustomPermission_noFalsePositives() {
+        val customPermissions = setOf("my.custom.permission.FOO_BAR", "my.custom.permission.FOO_BAZ")
+        customPermissions.forEach {
+            assertNull(findAlmostCustomPermission(it, customPermissions))
+        }
     }
 }

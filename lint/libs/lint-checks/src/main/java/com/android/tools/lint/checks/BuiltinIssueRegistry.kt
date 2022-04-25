@@ -319,6 +319,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ParcelDetector.ISSUE,
                 PendingIntentMutableFlagDetector.ISSUE,
                 PermissionDetector.MISSING_PERMISSION,
+                PermissionErrorDetector.CUSTOM_PERMISSION_TYPO,
                 PermissionErrorDetector.KNOWN_PERMISSION_ERROR,
                 PermissionErrorDetector.RESERVED_SYSTEM_PERMISSION,
                 PermissionErrorDetector.SYSTEM_PERMISSION_TYPO,
