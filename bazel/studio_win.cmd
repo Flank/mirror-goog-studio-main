@@ -151,11 +151,6 @@ if errorlevel 1 (
 @echo studio_win.cmd time: %time%
 call %SCRIPTDIR%bazel.cmd shutdown
 @echo studio_win.cmd time: %time%
-@rem We also must call the kill-processes.py python script and kill all processes still open
-@rem within the src directory.  This is due to the fact go/ab builds must be removable after
-@rem execution, and any open processes will prevent this removal on windows.
-call %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
-@echo studio_win.cmd time: %time%
 
 set /a BAZEL_EXITCODE_TEST_FAILURES=3
 
