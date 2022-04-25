@@ -204,7 +204,6 @@ maven_repository(
     name = "gradle_plugin_repo",
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     visibility = [
-        "//tools/vendor/google/android-ndk:__pkg__",
         "//tools/vendor/google/real-world-integration-test:__pkg__",
     ],
 )
@@ -275,7 +274,6 @@ maven_repository(
         "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
         "//tools/data-binding/compilationTests:__pkg__",
-        "//tools/vendor/google/android-ndk:__pkg__",
         "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )
