@@ -117,7 +117,7 @@ internal class PMClient(private val service : AdbDeviceServices, private val dev
 
         val cmd = "$PACKAGE_SERVICE_NAME install-write -S $size $sessionID $filename -"
         service.session.channelFactory.openFile(apk).use {
-            val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector(), it)
+            val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector(), it, shutdownOutput = false)
             parseInstallResult(flow.first())
         }
     }
