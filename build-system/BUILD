@@ -188,26 +188,6 @@ GRADLE_PLUGIN_ARTIFACTS = [
     "//tools/data-binding:tools.compiler",
 ]
 
-# Legacy maven repository representing what used to be packaged inside Studio
-#
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "gradle_plugin_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    visibility = [
-        "//tools/vendor/google/real-world-integration-test:__pkg__",
-    ],
-)
-
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
