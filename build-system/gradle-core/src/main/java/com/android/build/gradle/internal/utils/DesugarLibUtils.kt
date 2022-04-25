@@ -22,13 +22,13 @@ import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_CORE_LIBRARY_DESUGARING
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.builder.dexing.D8DesugaredMethodsGenerator
 import com.android.builder.packaging.JarFlinger
 import com.android.builder.utils.SynchronizedFile
 import com.android.sdklib.AndroidTargetHash
 import com.android.tools.r8.Version
 import com.google.common.io.ByteStreams
-import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -73,8 +73,8 @@ private val ATTR_LINT_COMPILE_SDK: Attribute<String> = Attribute.of("lint-compil
 /**
  * Returns a file collection which contains desugar lib jars
  */
-fun getDesugarLibJarFromMaven(project: Project): FileCollection {
-    val configuration = getDesugarLibConfiguration(project)
+fun getDesugarLibJarFromMaven(services: TaskCreationServices): FileCollection {
+    val configuration = getDesugarLibConfiguration(services)
     return getArtifactCollection(configuration)
 }
 
@@ -103,12 +103,12 @@ abstract class DesugarConfigJson: ValueSource<String, DesugarConfigJson.Paramete
  * Returns a provider which represents the content of desugar.json file extracted from
  * desugar lib configuration jars
  */
-fun getDesugarLibConfig(project: Project): Provider<String> {
-    val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
+fun getDesugarLibConfig(services: TaskCreationServices): Provider<String> {
+    val configuration = services.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
 
-    registerDesugarLibConfigTransform(project)
+    registerDesugarLibConfigTransform(services)
 
-    return project.providers.of(DesugarConfigJson::class.java) {
+    return services.providerOf(DesugarConfigJson::class.java) {
         it.parameters.desugarJson.setFrom(getDesugarLibConfigFromTransform(configuration))
     }
 }
@@ -118,36 +118,40 @@ fun getDesugarLibConfig(project: Project): Provider<String> {
  * library desugaring.
  */
 fun getDesugaredMethods(
-    project: Project,
+    services: TaskCreationServices,
     coreLibDesugar: Boolean,
     minSdkVersion: AndroidVersion,
     compileSdkVersion: String?,
     bootclasspath: Provider<List<RegularFile>>
 ): FileCollection {
-    val desugaredMethodsFiles = project.objects.fileCollection()
+    val desugaredMethodsFiles = services.fileCollection()
 
     val coreLibDesugarConfig =
-        project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
+        services.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
     if (coreLibDesugar && compileSdkVersion != null) {
         val minSdk = minSdkVersion.getFeatureLevel()
         val compileSdk = AndroidTargetHash.getPlatformVersion(compileSdkVersion)!!.featureLevel
-        registerDesugarLibLintTransform(project, minSdk, compileSdk)
+        registerDesugarLibLintTransform(services, minSdk, compileSdk)
         desugaredMethodsFiles.from(
             getDesugarLibLintFromTransform(coreLibDesugarConfig, minSdk, compileSdk))
     }
 
-    return SynchronizedFile.getInstanceWithMultiProcessLocking(project.gradle.gradleUserHomeDir.resolve(ANDROID_SUBDIR)).write {
+    return SynchronizedFile.getInstanceWithMultiProcessLocking(services.projectInfo.gradleUserHomeDir.resolve(ANDROID_SUBDIR)).write {
         val fakeJar = it.resolve(FAKE_DEPENDENCY_JAR)
         if (!fakeJar.exists()) {
             fakeJar.parentFile.mkdirs()
             JarFlinger(fakeJar.toPath()).use {}
         }
 
-        val fakeDependency = project.dependencies.create(project.files(fakeJar))
-        val adhocConfiguration = project.configurations.detachedConfiguration(fakeDependency)
+        val fakeDependency = services.dependencies.create(services.files(fakeJar))
+        val adhocConfiguration = services.configurations.detachedConfiguration(fakeDependency)
 
         registerD8BackportedMethodsTransform(
-            project, coreLibDesugar, project.files(bootclasspath), Version.getVersionString())
+            services,
+            coreLibDesugar,
+            services.files(bootclasspath),
+            Version.getVersionString()
+        )
         desugaredMethodsFiles.fromDisallowChanges(
             getD8DesugarMethodFileFromTransform(adhocConfiguration)
         )
@@ -162,8 +166,8 @@ fun getDesugaredMethods(
  *
  * Note: this method is only used when core library desugaring is enabled.
  */
-private fun getDesugarLibConfiguration(project: Project): Configuration {
-    val configuration = project.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
+private fun getDesugarLibConfiguration(services: TaskCreationServices): Configuration {
+    val configuration = services.configurations.findByName(CONFIG_NAME_CORE_LIBRARY_DESUGARING)!!
     if (configuration.dependencies.isEmpty()) {
         throw RuntimeException("$CONFIG_NAME_CORE_LIBRARY_DESUGARING configuration contains no " +
                 "dependencies. If you intend to enable core library desugaring, please add " +
@@ -193,15 +197,15 @@ private fun getArtifactCollection(configuration: Configuration): FileCollection 
         }
     }.artifacts.artifactFiles
 
-private fun registerDesugarLibConfigTransform(project: Project) {
-    project.dependencies.registerTransform(DesugarLibConfigExtractor::class.java) { spec ->
+private fun registerDesugarLibConfigTransform(services: TaskCreationServices) {
+    services.dependencies.registerTransform(DesugarLibConfigExtractor::class.java) { spec ->
         spec.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
         spec.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, DESUGAR_LIB_CONFIG)
     }
 }
 
-private fun registerDesugarLibLintTransform(project: Project, minSdkVersion: Int, compileSdkVersion: Int) {
-    project.dependencies.registerTransform(DesugarLibLintExtractor::class.java) { spec ->
+private fun registerDesugarLibLintTransform(services: TaskCreationServices, minSdkVersion: Int, compileSdkVersion: Int) {
+    services.dependencies.registerTransform(DesugarLibLintExtractor::class.java) { spec ->
         spec.parameters { parameters ->
             parameters.minSdkVersion.set(minSdkVersion)
             parameters.compileSdkVersion.set(compileSdkVersion)
@@ -216,17 +220,17 @@ private fun registerDesugarLibLintTransform(project: Project, minSdkVersion: Int
 }
 
 private fun registerD8BackportedMethodsTransform(
-        project: Project,
-        coreLibDesugar: Boolean,
-        bootclasspath: ConfigurableFileCollection,
-        d8Version: String
+    services: TaskCreationServices,
+    coreLibDesugar: Boolean,
+    bootclasspath: FileCollection,
+    d8Version: String
 ) {
-    project.dependencies.registerTransform(D8BackportedMethodsGenerator::class.java) { spec ->
+    services.dependencies.registerTransform(D8BackportedMethodsGenerator::class.java) { spec ->
         spec.parameters { parameters ->
             parameters.d8Version.set(d8Version)
 
             if (coreLibDesugar) {
-                parameters.coreLibDesugarConfig.set(getDesugarLibConfig(project))
+                parameters.coreLibDesugarConfig.set(getDesugarLibConfig(services))
                 parameters.bootclasspath.from(bootclasspath)
             }
         }

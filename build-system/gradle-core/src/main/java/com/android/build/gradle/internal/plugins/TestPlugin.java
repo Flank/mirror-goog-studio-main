@@ -121,7 +121,7 @@ public class TestPlugin
         BootClasspathConfigImpl bootClasspathConfig =
                 new BootClasspathConfigImpl(
                         project,
-                        dslServices,
+                        getProjectServices(),
                         versionedSdkLoaderService,
                         testExtension,
                         forUnitTesting);

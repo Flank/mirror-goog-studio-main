@@ -109,7 +109,7 @@ public class LibraryPlugin
         BootClasspathConfigImpl bootClasspathConfig =
                 new BootClasspathConfigImpl(
                         project,
-                        dslServices,
+                        getProjectServices(),
                         versionedSdkLoaderService,
                         libraryExtension,
                         forUnitTesting);

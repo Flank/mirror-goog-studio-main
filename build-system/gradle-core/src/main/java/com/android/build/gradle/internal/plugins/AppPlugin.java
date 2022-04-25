@@ -128,7 +128,7 @@ public class AppPlugin
         BootClasspathConfigImpl bootClasspathConfig =
                 new BootClasspathConfigImpl(
                         project,
-                        dslServices,
+                        getProjectServices(),
                         versionedSdkLoaderService,
                         applicationExtension,
                         forUnitTesting);

@@ -1402,7 +1402,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val usingKsp = isKspPluginApplied(project)
         taskFactory.register(JavaPreCompileTask.CreationAction(creationConfig, usingKapt, usingKsp))
         val javacTask: TaskProvider<out JavaCompile> =
-            taskFactory.register(JavaCompileCreationAction(creationConfig, usingKapt))
+            taskFactory.register(
+                JavaCompileCreationAction(
+                    creationConfig,
+                    project.objects,
+                    usingKapt
+                )
+            )
         postJavacCreation(creationConfig)
         return javacTask
     }

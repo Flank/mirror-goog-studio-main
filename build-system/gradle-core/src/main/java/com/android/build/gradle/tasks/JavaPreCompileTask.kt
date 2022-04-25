@@ -94,15 +94,13 @@ abstract class JavaPreCompileTask : NonIncrementalTask() {
 
         // Create the configuration early to avoid issues with composite builds (e.g., bug 183952598)
         private fun createKaptOrKspClassPath(kaptOrKsp: String): Configuration {
-            val project = creationConfig.services.projectInfo.getProject()
             val configurations = findKaptOrKspConfigurationsForVariant(
-                project,
                 this.creationConfig,
                 kaptOrKsp
             )
             // This is a private detail, so we want to use a detached configuration, but it's not
             // possible because of https://github.com/gradle/gradle/issues/6881.
-            return project.configurations
+            return creationConfig.services.configurations
                 .create("_agp_internal_${name}_${kaptOrKsp}Classpath")
                 .setExtendsFrom(configurations)
                 .apply {

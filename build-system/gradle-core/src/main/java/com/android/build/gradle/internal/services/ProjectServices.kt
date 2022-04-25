@@ -24,9 +24,12 @@ import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
+import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logger
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildServiceRegistry
@@ -57,6 +60,9 @@ class ProjectServices constructor(
     private val maxWorkerCount: Int,
     val projectInfo: ProjectInfo,
     val fileResolver: (Any) -> File,
+    val configurationContainer: ConfigurationContainer,
+    val dependencyHandler: DependencyHandler,
+    val extraProperties: ExtraPropertiesExtension
 ) {
     fun initializeAapt2Input(aapt2Input: Aapt2Input) {
         aapt2Input.buildService.setDisallowChanges(getBuildService(buildServiceRegistry))

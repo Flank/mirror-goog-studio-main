@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -574,7 +575,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.description = description
 
             task.initializeGlobalInputs(
-                project = creationConfig.services.projectInfo.getProject(),
                 isAndroid = true,
                 lintMode
             )
@@ -794,7 +794,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
     private fun initializeGlobalInputs(
-        project: Project,
         isAndroid: Boolean,
         lintMode: LintMode
     ) {
@@ -840,9 +839,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
-        val project = taskCreationServices.projectInfo.getProject()
+        val projectInfo = taskCreationServices.projectInfo
         initializeGlobalInputs(
-            project,
             isAndroid = false,
             lintMode
         )
@@ -880,7 +878,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             )
         this.lintRuleJars.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
+            projectInfo.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
         )
         this.partialResults.setDisallowChanges(partialResults)
         this.lintModelWriterTaskOutputPath.setDisallowChanges(

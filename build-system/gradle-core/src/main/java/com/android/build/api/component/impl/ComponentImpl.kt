@@ -635,7 +635,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
         // then add the fallbacks which contain the actual requested value
         DependencyConfigurator.addFlavorStrategy(
-            services.projectInfo.getProject().dependencies.attributesSchema,
+            services.dependencies.attributesSchema,
             dimension,
             ImmutableMap.of(requestedValue, alternatedValues)
         )

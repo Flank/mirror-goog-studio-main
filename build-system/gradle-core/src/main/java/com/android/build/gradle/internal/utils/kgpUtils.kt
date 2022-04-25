@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.utils.appendCapitalized
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -260,7 +261,6 @@ fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContaine
  * given variant. The returned list may be incomplete or empty if unsuccessful.
  */
 fun findKaptOrKspConfigurationsForVariant(
-    project: Project,
     creationConfig: ComponentCreationConfig,
     kaptOrKsp: String
 ): List<Configuration> {
@@ -269,6 +269,6 @@ fun findKaptOrKspConfigurationsForVariant(
             kaptOrKsp.appendCapitalized(sourceSet.name)
         else
             kaptOrKsp
-        project.configurations.findByName(configurationName)
+        creationConfig.services.configurations.findByName(configurationName)
     }
 }

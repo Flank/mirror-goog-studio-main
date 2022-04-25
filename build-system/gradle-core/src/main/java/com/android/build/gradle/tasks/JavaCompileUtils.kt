@@ -77,7 +77,7 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
         }
 
         val jdkImage = getJdkImageFromTransform(
-            creationConfig.services.projectInfo.getProject(),
+            creationConfig.services,
             task.javaCompiler.orNull
         )
 

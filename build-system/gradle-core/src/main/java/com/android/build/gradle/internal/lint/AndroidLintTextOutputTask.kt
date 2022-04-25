@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ma
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStderr
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStdout
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
@@ -165,7 +166,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             task.description = "Print text output from the corresponding lint report task"
             task.android.setDisallowChanges(true)
             task.initializeCommonInputs(
-                creationConfig.services.projectInfo.getProject(),
+                creationConfig.services,
                 creationConfig.artifacts,
                 creationConfig.global.lintOptions,
                 fatalOnly
@@ -174,7 +175,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
     }
 
     internal fun initializeCommonInputs(
-        project: Project,
+        services: TaskCreationServices,
         artifacts: ArtifactsImpl,
         lintOptions: Lint,
         fatalOnly: Boolean
@@ -207,7 +208,7 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             else -> outputStream.setDisallowChanges(OutputStream.ABBREVIATED)
         }
         val locationsBuildService =
-            getBuildService<AndroidLocationsBuildService>(project.gradle.sharedServices)
+            getBuildService<AndroidLocationsBuildService>(services.buildServiceRegistry)
     }
 
     internal fun configureForStandalone(
@@ -216,13 +217,13 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
         lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
-        analyticsService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
+        analyticsService.setDisallowChanges(getBuildService(taskCreationServices.buildServiceRegistry))
         group = JavaBasePlugin.VERIFICATION_GROUP
         description = "Print text output from the corresponding lint report task"
         android.setDisallowChanges(false)
         variantName = ""
         initializeCommonInputs(
-            taskCreationServices.projectInfo.getProject(),
+            taskCreationServices,
             artifacts,
             lintOptions,
             fatalOnly

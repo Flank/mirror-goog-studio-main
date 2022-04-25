@@ -314,16 +314,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                                 .get();
                                         return BootClasspathBuilder.INSTANCE
                                                 .computeAdditionalAndRequestedOptionalLibraries(
-                                                        creationConfig
-                                                                .getServices()
-                                                                .getProjectInfo()
-                                                                .getProject()
-                                                                .getLayout(),
-                                                        creationConfig
-                                                                .getServices()
-                                                                .getProjectInfo()
-                                                                .getProject()
-                                                                .getProviders(),
+                                                        creationConfig.getServices(),
                                                         versionedSdkLoader
                                                                 .getAdditionalLibrariesProvider()
                                                                 .get(),

@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -633,16 +634,20 @@ class DependencyConfigurator(
         if (allComponents.isNotEmpty()) {
             val bootClasspath = project.files(globalConfig.bootClasspath)
             if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
-                for (artifactConfiguration in getDexingArtifactConfigurations(
-                    allComponents
-                )) {
-                    artifactConfiguration.registerTransform(
-                        projectName,
-                        dependencies,
-                        bootClasspath,
-                        getDesugarLibConfig(project),
-                        SyncOptions.getErrorFormatMode(projectOptions),
-                    )
+                if (allComponents.isNotEmpty()) {
+                    val services = allComponents.first().services
+
+                    for (artifactConfiguration in getDexingArtifactConfigurations(
+                        allComponents
+                    )) {
+                        artifactConfiguration.registerTransform(
+                            projectName,
+                            dependencies,
+                            bootClasspath,
+                            getDesugarLibConfig(services),
+                            SyncOptions.getErrorFormatMode(projectOptions),
+                        )
+                    }
                 }
             }
         }

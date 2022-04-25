@@ -603,7 +603,7 @@ class ModelBuilder<
             testedTargetVariant = getTestTargetVariant(variant),
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
             desugaredMethods = getDesugaredMethods(
-                project,
+                variant.services,
                 variant.isCoreLibraryDesugaringEnabled,
                 variant.minSdkVersionForDexing,
                 variant.global.compileSdkHashString,

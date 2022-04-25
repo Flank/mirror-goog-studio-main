@@ -187,7 +187,6 @@ fun tryCreateConfigurationParameters(
 ): CxxConfigurationParameters? {
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
-    val project = projectInfo.getProject()
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
         getProjectPath(variant, globalConfig.externalNativeBuild) ?: return null
 
@@ -195,7 +194,7 @@ fun tryCreateConfigurationParameters(
         buildSystem,
         projectInfo.projectDirectory.asFile,
         buildStagingFolder,
-        project.buildDir
+        projectInfo.getBuildDir()
     )
     val cxxCacheFolder = join(projectInfo.getIntermediatesDir(), "cxx")
     fun option(option: BooleanOption) = variant.services.projectOptions.get(option)
@@ -220,10 +219,9 @@ fun tryCreateConfigurationParameters(
      */
     val enableProfileJson = option(ENABLE_PROFILE_JSON)
     val chromeTraceJsonFolder = if (enableProfileJson) {
-        val gradle = project.gradle
         val profileDir = option(PROFILE_OUTPUT_DIR)
-            ?.let { gradle.rootProject.file(it) }
-            ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
+            ?.let { variant.services.file(it) }
+            ?: variant.services.projectInfo.rootBuildDir.resolve(PROFILE_DIRECTORY)
         profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
     } else {
         null
@@ -254,9 +252,7 @@ fun tryCreateConfigurationParameters(
     }
 
     val prefabClassPath = if (variant.buildFeatures.prefab) {
-        getPrefabFromMaven(
-            projectOptions,
-            variant.services.projectInfo.getProject())
+        getPrefabFromMaven(projectOptions, variant.services)
     } else {
         null
     }
@@ -281,10 +277,10 @@ fun tryCreateConfigurationParameters(
         makeFile = makeFile,
         configureScript = configureScript,
         buildStagingFolder = buildStagingFolder,
-        moduleRootFolder = project.projectDir,
-        buildDir = project.buildDir,
-        rootDir = project.rootDir,
-        buildFile = project.buildFile,
+        moduleRootFolder = projectInfo.projectDirectory.asFile,
+        buildDir = projectInfo.getBuildDir(),
+        rootDir = projectInfo.rootDir,
+        buildFile = projectInfo.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
         compileSdkVersion = globalConfig.compileSdkHashString,
@@ -293,7 +289,7 @@ fun tryCreateConfigurationParameters(
         cmakeVersion = globalConfig.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = globalConfig.splits.abiFilters.toSet(),
         intermediatesFolder = projectInfo.getIntermediatesDir(),
-        gradleModulePathName = project.path,
+        gradleModulePathName = projectInfo.path,
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),

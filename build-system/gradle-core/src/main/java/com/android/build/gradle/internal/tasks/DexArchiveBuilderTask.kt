@@ -599,7 +599,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 }
             )
             if (libraryDesugaring) {
-                task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(task.project))
+                task.dexParams.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.services))
             }
 
             if (dexExternalLibsInArtifactTransform) {
@@ -612,12 +612,13 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
         /** Creates a detached configuration and sets up artifact transform for dexing. */
         private fun getDexForExternalLibs(task: DexArchiveBuilderTask, inputType: String): FileCollection {
-            val project = creationConfig.services.projectInfo.getProject()
-            project.dependencies.registerTransform(
+            val services = creationConfig.services
+
+            services.dependencies.registerTransform(
                 DexingExternalLibArtifactTransform::class.java
             ) {
                 it.parameters.run {
-                    this.projectName.set(project.name)
+                    this.projectName.set(services.projectInfo.name)
                     this.minSdkVersion.set(task.dexParams.minSdkVersion)
                     this.debuggable.set(task.dexParams.debuggable)
                     this.bootClasspath.from(task.dexParams.desugarBootclasspath)
@@ -636,8 +637,8 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 it.to.attribute(Attribute.of("artifactType", String::class.java), "ext-dex-$name")
             }
 
-            val detachedExtConf = project.configurations.detachedConfiguration()
-            detachedExtConf.dependencies.add(project.dependencies.create(externalLibraryClasses))
+            val detachedExtConf = services.configurations.detachedConfiguration()
+            detachedExtConf.dependencies.add(services.dependencies.create(externalLibraryClasses))
 
             return detachedExtConf.incoming.artifactView {
                 it.attributes.attribute(

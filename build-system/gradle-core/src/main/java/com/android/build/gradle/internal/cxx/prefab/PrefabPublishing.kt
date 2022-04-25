@@ -158,13 +158,9 @@ data class PrefabModuleTaskData(
  */
 fun LibraryCreationConfig.prefabPackageConfigurationData():
         List<PrefabModuleTaskData> {
-    val project = services.projectInfo.getProject()
     return global.prefab.map { options ->
         val headers = options.headers?.let { headers ->
-            project.layout
-                .projectDirectory
-                .dir(headers)
-                .asFile
+            services.projectInfo.projectDirectory.dir(headers).asFile
         }
         PrefabModuleTaskData(options.name, headers, options.libraryName)
     }

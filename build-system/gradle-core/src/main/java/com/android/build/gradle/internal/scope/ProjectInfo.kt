@@ -17,13 +17,15 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.SdkConstants
-import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.ide.dependencies.BuildMapping
+import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.builder.core.BuilderConstants
 import com.google.common.base.Preconditions
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.invocation.Gradle
 import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.resources.TextResource
@@ -62,11 +64,24 @@ class ProjectInfo(private val project: Project) {
     val projectDirectory: Directory
         get() = project.layout.projectDirectory
 
+    val buildFile: File
+        get() = project.buildFile
+
     val buildDirectory: DirectoryProperty
         get() = project.layout.buildDirectory
 
     val rootDir: File
         get() = project.rootDir
+
+    @Deprecated("Use rootBuildDirectory")
+    val rootBuildDir: File
+        get() = project.rootProject.buildDir
+
+    val rootBuildDirectory: DirectoryProperty
+        get() = project.rootProject.layout.buildDirectory
+
+    val gradleUserHomeDir: File
+            get() = project.gradle.gradleUserHomeDir
 
     val intermediatesDirectory: Provider<Directory>
         get() = project.layout.buildDirectory.dir(SdkConstants.FD_INTERMEDIATES)
@@ -128,4 +143,6 @@ class ProjectInfo(private val project: Project) {
     fun getJacocoAgent(): File {
         return File(getJacocoAgentOutputDirectory(), "jacocoagent.jar")
     }
+
+    fun computeBuildMapping(): BuildMapping = project.gradle.computeBuildMapping()
 }

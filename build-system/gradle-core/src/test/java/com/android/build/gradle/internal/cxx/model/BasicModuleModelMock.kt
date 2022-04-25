@@ -194,7 +194,7 @@ open class BasicModuleModelMock {
         ProjectOptions::class.java,
         throwUnmocked
     )
-    val project = mock(
+    private val project = mock(
         Project::class.java,
         throwUnmocked
     )
@@ -269,12 +269,11 @@ open class BasicModuleModelMock {
         val prefabArtifactCollection = mock(ArtifactCollection::class.java, throwUnmocked)
         val prefabFileCollection = mock(FileCollection::class.java, throwUnmocked)
 
-        doReturn(project).`when`(projectInfo).getProject()
         doReturn(intermediates).`when`(projectInfo).getIntermediatesDir()
-        doReturn(appFolder).`when`(project).projectDir
-        doReturn(buildDir).`when`(project).buildDir
-        doReturn(join(buildDir, "build.gradle")).`when`(project).buildFile
-        doReturn(projectRootDir).`when`(project).rootDir
+        doReturn(buildDir).`when`(projectInfo).getBuildDir()
+        doReturn(join(buildDir, "build.gradle")).`when`(projectInfo).buildFile
+        doReturn(projectRootDir).`when`(projectInfo).rootDir
+        doReturn(appName).`when`(projectInfo).path
 
         doReturn(appFolderDirectory).`when`(projectInfo).projectDirectory
 

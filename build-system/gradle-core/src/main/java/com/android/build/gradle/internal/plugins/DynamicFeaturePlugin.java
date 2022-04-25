@@ -130,7 +130,7 @@ public class DynamicFeaturePlugin
         BootClasspathConfigImpl bootClasspathConfig =
                 new BootClasspathConfigImpl(
                         project,
-                        dslServices,
+                        getProjectServices(),
                         versionedSdkLoaderService,
                         dynamicFeatureExtension,
                         forUnitTesting);

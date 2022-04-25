@@ -263,7 +263,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.description = description
 
             task.initializeGlobalInputs(
-                variant.main.services.projectInfo.getProject(),
+                services = variant.main.services,
                 isAndroid = true
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
@@ -303,7 +303,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.lintTool.initialize(creationConfig.services)
             task.desugaredMethodsFiles.from(
                 getDesugaredMethods(
-                    task.project,
+                    creationConfig.services,
                     creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
                     creationConfig.minSdkVersion,
                     creationConfig.global.compileSdkHashString,
@@ -315,10 +315,10 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     }
 
     private fun initializeGlobalInputs(
-        project: Project,
+        services: TaskCreationServices,
         isAndroid: Boolean
     ) {
-        val buildServiceRegistry = project.gradle.sharedServices
+        val buildServiceRegistry = services.buildServiceRegistry
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
@@ -361,7 +361,10 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
-        initializeGlobalInputs(project = project, isAndroid = false)
+        initializeGlobalInputs(
+            services = taskCreationServices,
+            isAndroid = false
+        )
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(taskCreationServices.buildServiceRegistry))

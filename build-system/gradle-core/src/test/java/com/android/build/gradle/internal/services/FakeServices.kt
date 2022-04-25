@@ -63,7 +63,10 @@ fun createProjectServices(
         aapt2FromMaven = Aapt2FromMaven(objectFactory.fileCollection().from(TestUtils.getAapt2().parent), "test-aapt2"),
         maxWorkerCount = 1,
         ProjectInfo(project),
-        fileResolver = fileResolver
+        fileResolver = fileResolver,
+        project.configurations,
+        project.dependencies,
+        project.extensions.extraProperties
     )
 
 @JvmOverloads

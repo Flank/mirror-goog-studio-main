@@ -34,6 +34,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -52,13 +53,13 @@ import org.gradle.process.CommandLineArgumentProvider
  * Kotlin-Java projects), [JavaCompile] performs compilation only, without annotation processing.
  */
 class JavaCompileCreationAction(
-    private val creationConfig: ComponentCreationConfig, private val usingKapt: Boolean
+    private val creationConfig: ComponentCreationConfig,
+    objectFactory: ObjectFactory,
+    private val usingKapt: Boolean
 ) : TaskCreationAction<JavaCompile>() {
 
-    private val project = creationConfig.services.projectInfo.getProject()
-
-    private val dataBindingArtifactDir = project.objects.directoryProperty()
-    private val dataBindingExportClassListFile = project.objects.fileProperty()
+    private val dataBindingArtifactDir = objectFactory.directoryProperty()
+    private val dataBindingExportClassListFile = objectFactory.fileProperty()
 
     override val name: String
         get() = creationConfig.computeTaskName("compile", "JavaWithJavac")

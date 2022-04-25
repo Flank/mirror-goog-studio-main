@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import org.gradle.api.Project
@@ -68,18 +69,18 @@ private fun getPrefabArtifact(configuration: Configuration): FileCollection =
 
 fun getPrefabFromMaven(
     projectOptions: ProjectOptions,
-    project: Project
+    services: TaskCreationServices
 ): FileCollection {
 
     projectOptions[StringOption.PREFAB_CLASSPATH]?.let {
-        return project.files(it)
+        return services.files(it)
     }
 
-    project.configurations.findByName(PREFAB_CONFIG_NAME)?.let {
+    services.configurations.findByName(PREFAB_CONFIG_NAME)?.let {
         return getPrefabArtifact(it)
     }
 
-    val config = project.configurations.create(PREFAB_CONFIG_NAME) {
+    val config = services.configurations.create(PREFAB_CONFIG_NAME) {
         it.isVisible = false
         it.isTransitive = false
         it.isCanBeConsumed = false
@@ -87,7 +88,7 @@ fun getPrefabFromMaven(
     }
 
     val version = projectOptions[StringOption.PREFAB_VERSION] ?: DEFAULT_PREFAB_VERSION
-    project.dependencies.add(
+    services.dependencies.add(
         config.name,
         mapOf(
             "group" to "com.google.prefab",

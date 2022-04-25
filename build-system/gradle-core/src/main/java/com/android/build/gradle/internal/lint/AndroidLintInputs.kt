@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.ide.dependencies.currentBuild
 import com.android.build.gradle.internal.ide.dependencies.getDependencyGraphBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
@@ -337,7 +338,7 @@ abstract class ProjectInputs {
         val creationConfig = variant.main
         val globalConfig = creationConfig.global
 
-        initializeFromProject(creationConfig.services.projectInfo.getProject(), lintMode)
+        initializeFromProject(creationConfig.services.projectInfo, lintMode)
         projectType.setDisallowChanges(creationConfig.componentType.toLintModelModuleType())
 
         lintOptions.initialize(globalConfig.lintOptions, lintMode)
@@ -358,7 +359,7 @@ abstract class ProjectInputs {
         dslLintOptions: Lint,
         lintMode: LintMode
     ) {
-        initializeFromProject(project, lintMode)
+        initializeFromProject(ProjectInfo(project), lintMode)
         projectType.setDisallowChanges(LintModelModuleType.JAVA_LIBRARY)
         lintOptions.initialize(dslLintOptions, lintMode)
         resourcePrefix.setDisallowChanges("")
@@ -374,12 +375,12 @@ abstract class ProjectInputs {
         neverShrinking.setDisallowChanges(true)
     }
 
-    private fun initializeFromProject(project: Project, lintMode: LintMode) {
-        projectDirectoryPath.setDisallowChanges(project.projectDir.absolutePath)
-        projectGradlePath.setDisallowChanges(project.path)
-        mavenGroupId.setDisallowChanges(project.group.toString())
-        mavenArtifactId.setDisallowChanges(project.name)
-        buildDirectoryPath.setDisallowChanges(project.layout.buildDirectory.map { it.asFile.absolutePath })
+    private fun initializeFromProject(projectInfo: ProjectInfo, lintMode: LintMode) {
+        projectDirectoryPath.setDisallowChanges(projectInfo.projectDirectory.toString())
+        projectGradlePath.setDisallowChanges(projectInfo.path)
+        mavenGroupId.setDisallowChanges(projectInfo.group)
+        mavenArtifactId.setDisallowChanges(projectInfo.name)
+        buildDirectoryPath.setDisallowChanges(projectInfo.buildDirectory.map { it.asFile.absolutePath })
         if (lintMode != LintMode.ANALYSIS) {
             projectDirectoryPathInput.set(projectDirectoryPath)
             buildDirectoryPathInput.set(buildDirectoryPath)
@@ -1398,7 +1399,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 projectPath = creationConfig.services.projectInfo.path,
                 variantName = creationConfig.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-                buildMapping = creationConfig.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                buildMapping = creationConfig.services.projectInfo.computeBuildMapping(),
             )
         )
         return this
@@ -1508,7 +1509,7 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 projectPath = creationConfig.services.projectInfo.path,
                 variantName = creationConfig.name,
                 runtimeType = ArtifactCollectionsInputs.RuntimeType.FULL,
-                buildMapping = creationConfig.services.projectInfo.getProject().gradle.computeBuildMapping(),
+                buildMapping = creationConfig.services.projectInfo.computeBuildMapping(),
             )
         )
         return this
