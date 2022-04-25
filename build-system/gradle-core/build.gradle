@@ -315,3 +315,18 @@ tasks.sourcesJar {
     }
 }
 
+def updatePseudoApi = tasks.register('updatePseudoApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.build.gradle.PseudoApiUpdater'
+}
+
+def updateUndecoratedApi = tasks.register('updateUndecoratedApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.build.gradle.DecoratedApiChangesUpdater'
+}
+
+def updateApi = tasks.register('updateApi') {
+    dependsOn(updatePseudoApi)
+    dependsOn(updateUndecoratedApi)
+}
+

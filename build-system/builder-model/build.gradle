@@ -51,3 +51,13 @@ sourceSets {
         }
     }
 }
+
+def updateToolingModelApi = tasks.register('updateToolingModelApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.builder.model.GradleToolingApiModelUpdater'
+}
+
+def updateApi = tasks.register('updateApi') {
+    dependsOn(updateToolingModelApi)
+}
+

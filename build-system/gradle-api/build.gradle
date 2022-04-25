@@ -101,3 +101,13 @@ task dackkaZip(type: Zip) {
     destinationDirectory.set(rootProject.ext.androidHostDist)
     archiveFileName = "documentation.zip"
 }
+
+def updateDeprecatedApi = tasks.register('updateDeprecatedApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.build.api.DeprecatedApiUpdater'
+}
+
+def updateApi = tasks.register('updateApi') {
+    dependsOn('updateMetalavaApi')
+    dependsOn(updateDeprecatedApi)
+}

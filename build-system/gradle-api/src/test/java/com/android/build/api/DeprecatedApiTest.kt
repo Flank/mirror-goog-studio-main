@@ -86,7 +86,11 @@ class DeprecatedApiTest {
                 The deprecated API has changed, if you're removing a previously deprecated API or
                 deprecating an API, make sure that you announce these updates on http://go/agp-api-updates
                 to be added on https://developer.android.com/studio/releases/gradle-plugin-api-updates
-                then run DeprecatedApiUpdater.main[] from the IDE to update the API file.
+                then run
+                    gradlew :base:gradle-api:updateDeprecatedApi
+
+                To update all the API expectation files, run
+                    gradlew updateApi
 
                 DeprecatedApiUpdater will apply the following changes if run:
 
