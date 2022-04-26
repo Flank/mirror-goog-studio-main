@@ -18,14 +18,18 @@ package com.android.tools.deploy.liveedit;
 import com.android.annotations.VisibleForTesting;
 import com.android.deploy.asm.Type;
 import com.android.deploy.asm.tree.AbstractInsnNode;
+import com.android.deploy.asm.tree.FieldNode;
 import com.android.deploy.asm.tree.LineNumberNode;
 import com.android.deploy.asm.tree.MethodNode;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +38,8 @@ import java.util.stream.Collectors;
  * class currently in the VM to ensure that all changes are supported.
  *
  * <p>The current set of checks ensures: - No methods have been added or removed - No method
- * signatures have been changed - No new classes have been added.
+ * signatures have been changed - No new classes have been added - No fields have been added or
+ * removed - the inheritance hierarchy has not been changed.
  */
 public class BytecodeValidator {
     static List<UnsupportedChange> validateBytecode(Interpretable bytecode, ClassLoader loader) {
@@ -56,9 +61,16 @@ public class BytecodeValidator {
 
     @VisibleForTesting
     static List<UnsupportedChange> validateBytecode(Interpretable bytecode, Class<?> original) {
-        String className = bytecode.getInternalName().replace('/', '.');
         ArrayList<UnsupportedChange> errors = new ArrayList<>();
+        validateMethods(bytecode, original, errors);
+        validateFields(bytecode, original, errors);
+        validateInheritance(bytecode, original, errors);
+        return errors;
+    }
 
+    private static void validateMethods(
+            Interpretable bytecode, Class<?> original, ArrayList<UnsupportedChange> errors) {
+        String className = bytecode.getInternalName().replace('/', '.');
         Map<String, Executable> originalMethods = new HashMap<>();
 
         Arrays.stream(original.getDeclaredMethods())
@@ -81,7 +93,7 @@ public class BytecodeValidator {
                 UnsupportedChange change = new UnsupportedChange();
                 change.type = UnsupportedChange.Type.REMOVED_METHOD.name();
                 change.className = className;
-                change.methodName = entry.getKey();
+                change.targetName = entry.getKey();
                 change.fileName = bytecode.getFilename();
                 errors.add(change);
             }
@@ -97,13 +109,108 @@ public class BytecodeValidator {
                 UnsupportedChange change = new UnsupportedChange();
                 change.type = UnsupportedChange.Type.ADDED_METHOD.name();
                 change.className = className;
-                change.methodName = method;
+                change.targetName = method;
                 change.fileName = bytecode.getFilename();
                 change.lineNumber = getLineNumber((newMethods.get(method)));
                 errors.add(change);
             }
         }
-        return errors;
+    }
+
+    private static void validateFields(
+            Interpretable bytecode, Class<?> original, ArrayList<UnsupportedChange> errors) {
+        String className = bytecode.getInternalName().replace('/', '.');
+
+        Map<String, Field> originalFields =
+                Arrays.stream(original.getDeclaredFields())
+                        .collect(Collectors.toMap(Field::getName, Function.identity()));
+
+        Map<String, FieldNode> newFields =
+                bytecode.getFields().stream()
+                        .collect(Collectors.toMap(f -> f.name, Function.identity()));
+
+        for (Map.Entry<String, Field> entry : originalFields.entrySet()) {
+            if (isLikelySynthetic(entry.getKey())) {
+                continue;
+            }
+
+            Field originalField = entry.getValue();
+            FieldNode newField = newFields.get(entry.getKey());
+            if (newField == null) {
+                UnsupportedChange change = new UnsupportedChange();
+                change.type = UnsupportedChange.Type.REMOVED_FIELD.name();
+                change.className = className;
+                change.targetName = entry.getKey();
+                change.fileName = bytecode.getFilename();
+                errors.add(change);
+                continue;
+            }
+
+            boolean isSameType = newField.desc.equals(Type.getDescriptor(originalField.getType()));
+            boolean hasSameAccess = newField.access == originalField.getModifiers();
+            if (!isSameType || !hasSameAccess) {
+                UnsupportedChange change = new UnsupportedChange();
+                change.type = UnsupportedChange.Type.MODIFIED_FIELD.name();
+                change.className = className;
+                change.targetName = entry.getKey();
+                change.fileName = bytecode.getFilename();
+                errors.add(change);
+            }
+        }
+
+        for (String field : newFields.keySet()) {
+            if (!originalFields.containsKey(field) && !isLikelySynthetic(field)) {
+                UnsupportedChange change = new UnsupportedChange();
+                change.type = UnsupportedChange.Type.ADDED_FIELD.name();
+                change.className = className;
+                change.targetName = field;
+                change.fileName = bytecode.getFilename();
+                errors.add(change);
+            }
+        }
+    }
+
+    private static void validateInheritance(
+            Interpretable bytecode, Class<?> clazz, ArrayList<UnsupportedChange> errors) {
+        String className = bytecode.getInternalName().replace('/', '.');
+
+        if (!Type.getInternalName(clazz.getSuperclass()).equals(bytecode.getSuperName())) {
+            UnsupportedChange change = new UnsupportedChange();
+            change.type = UnsupportedChange.Type.MODIFIED_SUPER.name();
+            change.className = className;
+            change.targetName = bytecode.getSuperName();
+            change.fileName = bytecode.getFilename();
+            errors.add(change);
+        }
+
+        Set<String> originalInterfaces =
+                Arrays.stream(clazz.getInterfaces())
+                        .map(Type::getInternalName)
+                        .collect(Collectors.toSet());
+        Set<String> newInterfaces =
+                Arrays.stream(bytecode.getInterfaces()).collect(Collectors.toSet());
+
+        for (String original : originalInterfaces) {
+            if (!newInterfaces.contains(original)) {
+                UnsupportedChange change = new UnsupportedChange();
+                change.type = UnsupportedChange.Type.REMOVED_INTERFACE.name();
+                change.className = className;
+                change.targetName = original;
+                change.fileName = bytecode.getFilename();
+                errors.add(change);
+            }
+        }
+
+        for (String next : newInterfaces) {
+            if (!originalInterfaces.contains(next)) {
+                UnsupportedChange change = new UnsupportedChange();
+                change.type = UnsupportedChange.Type.ADDED_INTERFACE.name();
+                change.className = className;
+                change.targetName = next;
+                change.fileName = bytecode.getFilename();
+                errors.add(change);
+            }
+        }
     }
 
     private static int getLineNumber(MethodNode node) {
@@ -133,11 +240,17 @@ public class BytecodeValidator {
             ADDED_METHOD,
             REMOVED_METHOD,
             ADDED_CLASS,
+            ADDED_FIELD,
+            REMOVED_FIELD,
+            MODIFIED_FIELD,
+            MODIFIED_SUPER,
+            ADDED_INTERFACE,
+            REMOVED_INTERFACE,
         }
 
         public String type;
         public String className;
-        public String methodName;
+        public String targetName;
         public String fileName;
         public int lineNumber;
     }

@@ -102,7 +102,27 @@ public class LiveUpdateDeployer {
      * agreed "best effort" nature of LL updates.
      */
     public static class UpdateLiveEditError {
-        public final String msg;
+        private static final String APP_RESTART_STR = "\nApplication must be restarted.";
+        private static final String ADDED_CLASS_STR =
+                "Unsupported addition of new class '%s' in file '%s'.";
+        private static final String ADDED_METHOD_STR =
+                "Unsupported addition of new method '%s.%s' in file '%s', line %d.";
+        private static final String REMOVED_METHOD_STR =
+                "Unsupported deletion of method '%s.%s' in file '%s'.";
+        private static final String ADDED_FIELD_STR =
+                "Unsupported addition of field '%s' in class '%s' in file '%s'.";
+        private static final String REMOVED_FIELD_STR =
+                "Unsupported deletion of field '%s' in class '%s' in file '%s'.";
+        private static final String MODIFIED_FIELD_STR =
+                "Unsupported change to field '%s' in class '%s' in file '%s'.";
+        private static final String MODIFIED_SUPER_STR =
+                "Unsupported change to superclass of class '%s' in file '%s'.";
+        private static final String ADDED_INTERFACE_STR =
+                "Unsupported change to interfaces of class '%s' in file '%s'.";
+        private static final String REMOVED_INTERFACE_STR =
+                "Unsupported change to interfaces of class '%s' in file '%s'.";
+
+        private final String msg;
 
         public UpdateLiveEditError(String msg) {
             this.msg = msg;
@@ -114,7 +134,7 @@ public class LiveUpdateDeployer {
                     msg =
                             String.format(
                                     Locale.US,
-                                    "Unsupported addition of new class '%s' in file '%s'.\nApplication must be restarted.",
+                                    ADDED_CLASS_STR,
                                     error.getClassName(),
                                     error.getFileName());
                     break;
@@ -122,9 +142,9 @@ public class LiveUpdateDeployer {
                     msg =
                             String.format(
                                     Locale.US,
-                                    "Unsupported addition of new method '%s.%s' in file '%s', line %d.\nApplication must be restarted.",
+                                    ADDED_METHOD_STR,
                                     error.getClassName(),
-                                    error.getMethodName(),
+                                    error.getTargetName(),
                                     error.getFileName(),
                                     error.getLineNumber());
                     break;
@@ -132,14 +152,69 @@ public class LiveUpdateDeployer {
                     msg =
                             String.format(
                                     Locale.US,
-                                    "Unsupported deletion of method '%s.%s' in file '%s'.\nApplication must be restarted.",
+                                    REMOVED_METHOD_STR,
                                     error.getClassName(),
-                                    error.getMethodName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case REMOVED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    REMOVED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case MODIFIED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    MODIFIED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case MODIFIED_SUPER:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    MODIFIED_SUPER_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_INTERFACE:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_INTERFACE_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case REMOVED_INTERFACE:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    REMOVED_INTERFACE_STR,
+                                    error.getClassName(),
                                     error.getFileName());
                     break;
                 default:
                     msg = "Unknown error";
             }
+        }
+
+        public String getMessage() {
+            return msg + APP_RESTART_STR;
         }
     }
 

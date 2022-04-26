@@ -129,9 +129,16 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
   // Must stay in sync with the enum in BytecodeValidator.UnsupportedChange
   static std::unordered_map<std::string, proto::UnsupportedChange::Type>
-      type_map({{"ADDED_METHOD", proto::UnsupportedChange::ADDED_METHOD},
-                {"REMOVED_METHOD", proto::UnsupportedChange::REMOVED_METHOD},
-                {"ADDED_CLASS", proto::UnsupportedChange::ADDED_CLASS}});
+      type_map(
+          {{"ADDED_METHOD", proto::UnsupportedChange::ADDED_METHOD},
+           {"REMOVED_METHOD", proto::UnsupportedChange::REMOVED_METHOD},
+           {"ADDED_CLASS", proto::UnsupportedChange::ADDED_CLASS},
+           {"ADDED_FIELD", proto::UnsupportedChange::ADDED_FIELD},
+           {"REMOVED_FIELD", proto::UnsupportedChange::REMOVED_FIELD},
+           {"MODIFIED_FIELD", proto::UnsupportedChange::MODIFIED_FIELD},
+           {"MODIFIED_SUPER", proto::UnsupportedChange::MODIFIED_SUPER},
+           {"ADDED_INTERFACE", proto::UnsupportedChange::ADDED_INTERFACE},
+           {"REMOVED_INTERFACE", proto::UnsupportedChange::REMOVED_INTERFACE}});
 
   if (err_count > 0) {
     resp.set_status(proto::AgentLiveEditResponse::UNSUPPORTED_CHANGE);
@@ -141,8 +148,8 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
       proto->set_class_name(
           error.GetJniObjectField("className", "Ljava/lang/String;")
               .ToString());
-      proto->set_method_name(
-          error.GetJniObjectField("methodName", "Ljava/lang/String;")
+      proto->set_target_name(
+          error.GetJniObjectField("targetName", "Ljava/lang/String;")
               .ToString());
       proto->set_file_name(
           error.GetJniObjectField("fileName", "Ljava/lang/String;").ToString());

@@ -327,11 +327,21 @@ message UnsupportedChange {
     ADDED_METHOD = 1;
     REMOVED_METHOD = 2;
     ADDED_CLASS = 3;
+    ADDED_FIELD = 4;
+    REMOVED_FIELD = 5;
+    MODIFIED_FIELD = 6;
+    MODIFIED_SUPER = 7;
+    ADDED_INTERFACE = 8;
+    REMOVED_INTERFACE = 9;
   }
   Type type = 1;
+  // Name of the class that contains the change.
   string class_name = 2;
-  string method_name = 3;
+  // Name of the method, class, field, or interface that was modified.
+  string target_name = 3;
+  // Name of the file that contains the change.
   string file_name = 4;
+  // Line number that the change occurred on (not set for all changes)
   int32 line_number = 5;
 }
 

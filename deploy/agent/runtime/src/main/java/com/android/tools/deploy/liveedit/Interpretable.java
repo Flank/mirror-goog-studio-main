@@ -21,6 +21,7 @@ import com.android.deploy.asm.FieldVisitor;
 import com.android.deploy.asm.MethodVisitor;
 import com.android.deploy.asm.Opcodes;
 import com.android.deploy.asm.commons.TryCatchBlockSorter;
+import com.android.deploy.asm.tree.FieldNode;
 import com.android.deploy.asm.tree.MethodNode;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,12 +37,14 @@ class Interpretable extends ClassVisitor {
     private String internalName;
 
     private final Map<String, MethodNode> declaredMethods;
+    private final Map<String, FieldNode> declaredFields;
     private final Map<String, Object> defaultFieldValues;
 
     Interpretable(byte[] classData) {
         super(Opcodes.ASM6);
 
         declaredMethods = new HashMap<>();
+        declaredFields = new HashMap<>();
         defaultFieldValues = new HashMap<>();
 
         if (classData.length > 0) {
@@ -69,7 +72,9 @@ class Interpretable extends ClassVisitor {
         if ((access & Opcodes.ACC_STATIC) == 0) {
             defaultFieldValues.put(name, defaultValue(desc));
         }
-        return null;
+        FieldNode node = new FieldNode(access, name, desc, signature, value);
+        declaredFields.put(name, node);
+        return node;
     }
 
     @Override
@@ -111,6 +116,10 @@ class Interpretable extends ClassVisitor {
 
     public Collection<MethodNode> getMethods() {
         return declaredMethods.values();
+    }
+
+    public Collection<FieldNode> getFields() {
+        return declaredFields.values();
     }
 
     public Map<String, Object> getDefaultFieldValues() {
