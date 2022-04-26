@@ -54,7 +54,6 @@ setlocal
   ) else if %BUILD_TYPE%==POSTSUBMIT (
     set NOCACHE=--nocache_test_results
     set FLAKY_ATTEMPTS=--flaky_test_attempts=2
-    set ANTS=--config=ants
     set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS!
   )
 
@@ -84,7 +83,7 @@ setlocal
   %BAZELRC_FLAGS% ^
   test ^
   --config=dynamic ^
-  --config=sponge ^
+  --config=sponge --config=ants ^
   --tool_tag=studio_win.cmd ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
