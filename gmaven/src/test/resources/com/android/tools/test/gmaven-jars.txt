@@ -1366,6 +1366,13 @@ com/android/tools/external/com-intellij/intellij-core
 com/android/tools/external/com-intellij/kotlin-compiler
   META-INF/
   META-INF/MANIFEST.MF
+  META-INF/analysis-api-fir.kotlin_module
+  META-INF/analysis-api-impl-barebone.kotlin_module
+  META-INF/analysis-api-impl-base.kotlin_module
+  META-INF/analysis-api-providers.kotlin_module
+  META-INF/analysis-api-standalone.kotlin_module
+  META-INF/analysis-api.kotlin_module
+  META-INF/analysis-internal-utils.kotlin_module
   META-INF/backend-common.kotlin_module
   META-INF/backend.common.jvm.kotlin_module
   META-INF/backend.jvm.codegen.kotlin_module
@@ -1437,10 +1444,12 @@ com/android/tools/external/com-intellij/kotlin-compiler
   META-INF/kotlin-util-io.kotlin_module
   META-INF/kotlin-util-klib-metadata.kotlin_module
   META-INF/kotlin-util-klib.kotlin_module
+  META-INF/kotlinx-collections-immutable.kotlin_module
   META-INF/kt-references.kotlin_module
   META-INF/light-classes-for-decompiled-fe10.kotlin_module
   META-INF/light-classes-for-decompiled.kotlin_module
   META-INF/light-classes.kotlin_module
+  META-INF/low-level-api-fir.kotlin_module
   META-INF/maven/
   META-INF/maven/com.google.protobuf/
   META-INF/maven/com.google.protobuf/protobuf-java/
@@ -1456,6 +1465,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   META-INF/metadata.jvm.kotlin_module
   META-INF/metadata.kotlin_module
   META-INF/plugin-api.kotlin_module
+  META-INF/project-structure.kotlin_module
   META-INF/providers.kotlin_module
   META-INF/psi.kotlin_module
   META-INF/psi2fir.kotlin_module
@@ -1475,6 +1485,7 @@ com/android/tools/external/com-intellij/kotlin-compiler
   META-INF/services/org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition
   META-INF/services/org.jetbrains.kotlin.resolve.jvm.jvmSignature.KotlinToJvmSignatureMapper
   META-INF/services/org.jetbrains.kotlin.util.ModuleVisibilityHelper
+  META-INF/symbol-light-classes.kotlin_module
   META-INF/tree.kotlin_module
   META-INF/util.kotlin_module
   META-INF/util.runtime.kotlin_module
@@ -1517,6 +1528,17 @@ com/android/tools/external/com-intellij/kotlin-compiler
   kotlin/script/templates/
   kotlin/script/templates/standard/
   kotlinManifest.properties
+  kotlinx/
+  kotlinx/collections/
+  kotlinx/collections/immutable/
+  kotlinx/collections/immutable/adapters/
+  kotlinx/collections/immutable/implementations/
+  kotlinx/collections/immutable/implementations/immutableList/
+  kotlinx/collections/immutable/implementations/immutableMap/
+  kotlinx/collections/immutable/implementations/immutableSet/
+  kotlinx/collections/immutable/implementations/persistentOrderedMap/
+  kotlinx/collections/immutable/implementations/persistentOrderedSet/
+  kotlinx/collections/immutable/internal/
   net/
   net/rubygrapefruit/
   net/rubygrapefruit/platform/
@@ -1561,6 +1583,39 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/annotations/
   org/jetbrains/kotlin/
   org/jetbrains/kotlin/analysis/
+  org/jetbrains/kotlin/analysis/api/
+  org/jetbrains/kotlin/analysis/api/annotations/
+  org/jetbrains/kotlin/analysis/api/base/
+  org/jetbrains/kotlin/analysis/api/calls/
+  org/jetbrains/kotlin/analysis/api/components/
+  org/jetbrains/kotlin/analysis/api/diagnostics/
+  org/jetbrains/kotlin/analysis/api/fir/
+  org/jetbrains/kotlin/analysis/api/fir/annotations/
+  org/jetbrains/kotlin/analysis/api/fir/components/
+  org/jetbrains/kotlin/analysis/api/fir/diagnostics/
+  org/jetbrains/kotlin/analysis/api/fir/evaluate/
+  org/jetbrains/kotlin/analysis/api/fir/renderer/
+  org/jetbrains/kotlin/analysis/api/fir/scopes/
+  org/jetbrains/kotlin/analysis/api/fir/symbols/
+  org/jetbrains/kotlin/analysis/api/fir/symbols/pointers/
+  org/jetbrains/kotlin/analysis/api/fir/types/
+  org/jetbrains/kotlin/analysis/api/fir/utils/
+  org/jetbrains/kotlin/analysis/api/impl/
+  org/jetbrains/kotlin/analysis/api/impl/barebone/
+  org/jetbrains/kotlin/analysis/api/impl/barebone/annotations/
+  org/jetbrains/kotlin/analysis/api/impl/base/
+  org/jetbrains/kotlin/analysis/api/impl/base/annotations/
+  org/jetbrains/kotlin/analysis/api/impl/base/components/
+  org/jetbrains/kotlin/analysis/api/impl/base/references/
+  org/jetbrains/kotlin/analysis/api/impl/base/scopes/
+  org/jetbrains/kotlin/analysis/api/impl/base/util/
+  org/jetbrains/kotlin/analysis/api/scopes/
+  org/jetbrains/kotlin/analysis/api/standalone/
+  org/jetbrains/kotlin/analysis/api/symbols/
+  org/jetbrains/kotlin/analysis/api/symbols/markers/
+  org/jetbrains/kotlin/analysis/api/symbols/pointers/
+  org/jetbrains/kotlin/analysis/api/tokens/
+  org/jetbrains/kotlin/analysis/api/types/
   org/jetbrains/kotlin/analysis/decompiled/
   org/jetbrains/kotlin/analysis/decompiled/light/
   org/jetbrains/kotlin/analysis/decompiled/light/classes/
@@ -1573,6 +1628,39 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/analysis/decompiler/stub/
   org/jetbrains/kotlin/analysis/decompiler/stub/file/
   org/jetbrains/kotlin/analysis/decompiler/stub/flags/
+  org/jetbrains/kotlin/analysis/low/
+  org/jetbrains/kotlin/analysis/low/level/
+  org/jetbrains/kotlin/analysis/low/level/api/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/api/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/api/services/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/diagnostics/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/diagnostics/fir/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/element/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/element/builder/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/file/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/file/builder/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/file/structure/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/fir/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/fir/caches/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/lazy/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/lazy/resolve/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/providers/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/resolver/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/sessions/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/state/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/transformers/
+  org/jetbrains/kotlin/analysis/low/level/api/fir/util/
+  org/jetbrains/kotlin/analysis/project/
+  org/jetbrains/kotlin/analysis/project/structure/
+  org/jetbrains/kotlin/analysis/project/structure/impl/
+  org/jetbrains/kotlin/analysis/providers/
+  org/jetbrains/kotlin/analysis/providers/impl/
+  org/jetbrains/kotlin/analysis/utils/
+  org/jetbrains/kotlin/analysis/utils/caches/
+  org/jetbrains/kotlin/analysis/utils/collections/
+  org/jetbrains/kotlin/analysis/utils/errors/
+  org/jetbrains/kotlin/analysis/utils/printer/
   org/jetbrains/kotlin/analyzer/
   org/jetbrains/kotlin/analyzer/common/
   org/jetbrains/kotlin/arguments/
@@ -1930,6 +2018,13 @@ com/android/tools/external/com-intellij/kotlin-compiler
   org/jetbrains/kotlin/library/metadata/
   org/jetbrains/kotlin/library/resolver/
   org/jetbrains/kotlin/library/resolver/impl/
+  org/jetbrains/kotlin/light/
+  org/jetbrains/kotlin/light/classes/
+  org/jetbrains/kotlin/light/classes/symbol/
+  org/jetbrains/kotlin/light/classes/symbol/caches/
+  org/jetbrains/kotlin/light/classes/symbol/classes/
+  org/jetbrains/kotlin/light/classes/symbol/decompiled/
+  org/jetbrains/kotlin/light/classes/symbol/elements/
   org/jetbrains/kotlin/load/
   org/jetbrains/kotlin/load/java/
   org/jetbrains/kotlin/load/java/components/
