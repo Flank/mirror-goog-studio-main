@@ -1387,6 +1387,142 @@ class LintModelSerializationTest {
             .isEqualTo(partialResultsDir)
     }
 
+    @Test
+    fun testCodenameApiLevelWithHeuristics() {
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        val mergedManifest = buildDirectory.resolve("intermediates/merged_manifest/debug").createDirectories()
+            .resolve("AndroidManifest.xml").apply { writeText("Merged manifest") }
+        val mergeReport = buildDirectory.resolve("outputs/reports/manifest/debug").createDirectories()
+            .resolve("ManifestMergeReport.xml").apply { writeText("Manifest merge report") }
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """<lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project-build"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project-build:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <lintOptions />
+                  <variant name="debug"/>
+                </lint-module>"""
+            )
+        val debugXml =
+            """<variant
+                    name="debug"
+                    minSdkVersion="TheCodeNameStartsWithT"
+                    targetSdkVersion="UKnowTheTargetStartsWithU"
+                    debuggable="true"
+                    mergedManifest="${mergedManifest.absolutePath}"
+                    manifestMergeReport="${mergeReport.absolutePath}">
+                  <buildFeatures />
+                  <mainArtifact applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>"""
+        modelsDir.resolve("debug.xml").writeText(debugXml)
+
+        val module = LintModelSerialization.readModule(
+            source = modelsDir,
+            readDependencies = false
+        )
+
+        val debugVariant = module.defaultVariant()!!
+
+        val minSdkVersion = debugVariant.minSdkVersion!!
+        assertEquals("API 32, TheCodeNameStartsWithT preview", minSdkVersion.toString())
+        assertEquals(33, minSdkVersion.featureLevel)
+        val targetSdkVersion = debugVariant.targetSdkVersion!!
+        assertEquals("API 33, UKnowTheTargetStartsWithU preview", targetSdkVersion.toString())
+        assertEquals(34, targetSdkVersion.featureLevel)
+    }
+
+    @Test
+    fun testCodenameApiLevelWithAndroidSdk() {
+        val codename = "Whatever"
+        val apiLevel = 42
+
+        val temp = temporaryFolder.newFolder()
+        val projectDirectory = temp.resolve("projectDir").createDirectories()
+        val buildDirectory = temp.resolve("buildDir").createDirectories()
+        val modelsDir = buildDirectory.resolve("intermediates/lint-models").createDirectories()
+        val mergedManifest = buildDirectory.resolve("intermediates/merged_manifest/debug").createDirectories()
+            .resolve("AndroidManifest.xml").apply { writeText("Merged manifest") }
+        val mergeReport = buildDirectory.resolve("outputs/reports/manifest/debug").createDirectories()
+            .resolve("ManifestMergeReport.xml").apply { writeText("Manifest merge report") }
+        modelsDir.resolve("module.xml")
+            .writeText(
+                """<lint-module
+                    format="1"
+                    dir="${projectDirectory.absolutePath}"
+                    name="test_project-build"
+                    type="APP"
+                    maven="com.android.tools.demo:test_project-build:"
+                    gradle="4.0.0-beta01"
+                    buildFolder="${buildDirectory.absolutePath}"
+                    javaSourceLevel="1.7"
+                    compileTarget="android-25"
+                    neverShrinking="true">
+                  <lintOptions />
+                  <variant name="debug"/>
+                </lint-module>"""
+            )
+        val debugXml =
+            """<variant
+                    name="debug"
+                    minSdkVersion="$codename"
+                    targetSdkVersion="$codename"
+                    debuggable="true"
+                    mergedManifest="${mergedManifest.absolutePath}"
+                    manifestMergeReport="${mergeReport.absolutePath}">
+                  <buildFeatures />
+                  <mainArtifact applicationId="com.android.tools.test">
+                  </mainArtifact>
+                </variant>"""
+        modelsDir.resolve("debug.xml").writeText(debugXml)
+
+        val sdkHome = temporaryFolder.newFolder("sdk")
+        val pkg = File(sdkHome, "platforms/android-$codename/package.xml")
+        pkg.parentFile.mkdirs()
+        pkg.writeText(
+            //language=XML
+            """
+            <ns2:repository xmlns:ns2="http://schemas.android.com/repository/android/common/02" xmlns:ns11="http://schemas.android.com/sdk/android/repo/repository2/03">
+                <license id="license-CF56B611" type="text"/>
+                <localPackage path="platforms;android-$codename" obsolete="false">
+                    <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns11:platformDetailsType">
+                        <api-level>$apiLevel</api-level>
+                        <codename>$codename</codename>
+                        <extension-level>1</extension-level>
+                        <base-extension>true</base-extension>
+                    </type-details>
+                    <revision>
+                        <major>3</major>
+                    </revision>
+                    <display-name>Android SDK Platform $codename, rev 3</display-name>
+                    <uses-license ref="license-CF56B611"/>
+                </localPackage>
+            </ns2:repository>
+            """.trimIndent()
+        )
+
+        val module = LintModelSerialization.readModule(
+            source = modelsDir,
+            pathVariables = PathVariables().apply { add("ANDROID_HOME", sdkHome) },
+            readDependencies = false
+        )
+
+        val debugVariant = module.defaultVariant()
+        val minSdkVersion = debugVariant?.minSdkVersion!!
+        assertEquals("API $apiLevel, $codename preview", minSdkVersion.toString())
+    }
+
     // ----------------------------------------------------------------------------------
     // Test infrastructure below this line
     // ----------------------------------------------------------------------------------
