@@ -1352,7 +1352,7 @@ class LintIssueDocGenerator constructor(
     }
 
     private fun createUastEnvironment(): UastEnvironment {
-        val config = UastEnvironment.Configuration.create()
+        val config = UastEnvironmentFactory.createConfiguration()
         config.addSourceRoots(testPath.values.flatten())
 
         val libs = mutableListOf<File>()
@@ -1370,7 +1370,7 @@ class LintIssueDocGenerator constructor(
         }
         config.addClasspathRoots(libs)
 
-        return UastEnvironment.create(config)
+        return UastEnvironmentFactory.create(config)
     }
 
     private fun disposeUastEnvironment() {

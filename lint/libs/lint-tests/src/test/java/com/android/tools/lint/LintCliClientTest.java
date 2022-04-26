@@ -92,7 +92,7 @@ public class LintCliClientTest extends AbstractCheckTest {
 
     public void testMissingExtensionPoints() {
         // Regression test for 37817771
-        UastEnvironment env = UastEnvironment.create(UastEnvironment.Configuration.create());
+        UastEnvironment env = UastEnvironmentFactory.INSTANCE.create(UastEnvironmentFactory.INSTANCE.createConfiguration());
         Extensions.getExtensions(CustomExceptionHandler.KEY);
         env.dispose();
     }
