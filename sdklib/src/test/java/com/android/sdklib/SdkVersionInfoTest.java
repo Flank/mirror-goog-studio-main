@@ -17,6 +17,7 @@ package com.android.sdklib;
 
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API;
+import static com.android.sdklib.SdkVersionInfo.HIGHEST_SUPPORTED_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.sdklib.SdkVersionInfo.RECOMMENDED_MIN_SDK_VERSION;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
@@ -51,6 +52,14 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 31: Android 12.0 (S)", SdkVersionInfo.getAndroidName(31));
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
+    }
+
+    public void testHighestSupportedVersion() {
+        // Make sure we keep HIGHEST_SUPPORTED_API up to date along with the stable
+        // SDKs. We should at least supported the latest stable known API; at times,
+        // we'll also support the current preview image.
+        assertTrue(HIGHEST_SUPPORTED_API >= HIGHEST_KNOWN_STABLE_API);
+        assertTrue(HIGHEST_SUPPORTED_API <= HIGHEST_KNOWN_API);
     }
 
     public void testGetVersionNameSanitized() {

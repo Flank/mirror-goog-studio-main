@@ -38,6 +38,25 @@ public class SdkVersionInfo {
     public static final int HIGHEST_KNOWN_STABLE_API = 32;
 
     /**
+     * The highest supported version of the Android platform (as an API level) that this version of
+     * the tools generally works with.
+     *
+     * <p>The intent is that this will be used to alert users that the version of the IDE they're
+     * using is too old to support a recently added platform and to encourage them to update.
+     *
+     * <p>For example, let's say Studio Dolphin has set this constant to Tiramisu/33. And let's say
+     * next year, some user is still using Dolphin and downloads the U/API 34 SDK. Dolphin should
+     * alert the user that the SDK they're using is not fully supported by the current version and
+     * that they should download. This isn't just about downloading SDKs; we may also warn when you
+     * load a project specifying a compileSdkVersion that's outside of the supported range, or even
+     * try to run/profile/debug on a device more recent than the known maximum supported version.
+     *
+     * <p>Generally we shouldn't <i>prevent</i> the user from proceeding; the intent is to make the
+     * user <b>aware</b> that the SDK may not work correctly without a newer version of the tools.
+     */
+    public static final int HIGHEST_SUPPORTED_API = 32; // b/230535497; this is not yet enforced
+
+    /**
      * The lowest active API level in the ecosystem. This number will change over time as the
      * distribution of older platforms decreases.
      */
