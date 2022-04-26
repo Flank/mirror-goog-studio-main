@@ -18,17 +18,10 @@ package com.android.tools.lint
 import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.DOT_SRCJAR
-import com.intellij.codeInsight.CustomExceptionHandler
-import com.intellij.codeInsight.ExternalAnnotationsManager
-import com.intellij.codeInsight.InferredAnnotationsManager
 import com.intellij.core.CoreApplicationEnvironment
 import com.intellij.mock.MockProject
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.diagnostic.DefaultLogger
-import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.pom.java.LanguageLevel
@@ -39,8 +32,6 @@ import com.intellij.util.io.URLUtil.JAR_SEPARATOR
 import org.jetbrains.kotlin.asJava.classes.FacadeCache
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.CompilerSystemProperties
-import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
-import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.CliModuleAnnotationsResolver
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles.JVM_CONFIG_FILES
@@ -48,29 +39,23 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.cli.jvm.config.JavaSourceRoot
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.diagnostics.Diagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.ModuleAnnotationsResolver
-import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
 import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.util.slicedMap.WritableSlice
 import org.jetbrains.uast.UastContext
 import org.jetbrains.uast.UastLanguagePlugin
-import org.jetbrains.uast.evaluation.UEvaluatorExtension
-import org.jetbrains.uast.java.JavaUastLanguagePlugin
 import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
-import org.jetbrains.uast.kotlin.evaluation.KotlinEvaluatorExtension
 import org.jetbrains.uast.kotlin.internal.CliKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
 import java.io.File
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
@@ -219,19 +204,9 @@ class Fe10UastEnvironment private constructor(
 }
 
 private fun createKotlinCompilerConfig(): CompilerConfiguration {
-    val config = CompilerConfiguration()
+    val config = UastEnvironmentFactory.createCommonKotlinCompilerConfig()
 
-    config.put(CommonConfigurationKeys.MODULE_NAME, "lint-module")
     config.put(JVMConfigurationKeys.NO_JDK, true)
-
-    // We're not running compiler checks, but we still want to register a logger
-    // in order to see warnings related to misconfiguration.
-    val logger = PrintingMessageCollector(System.err, GradleStyleMessageRenderer(), false)
-    config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, logger)
-
-    // The Kotlin compiler uses a fast, ASM-based class file reader.
-    // However, Lint still relies on representing class files with PSI.
-    config.put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
 
     // Registers the scripting compiler plugin to support build.gradle.kts files.
     config.add(
@@ -257,7 +232,7 @@ private fun createKotlinCompilerEnv(
 
     val env = KotlinCoreEnvironment
         .createForProduction(parentDisposable, config.kotlinCompilerConfig, JVM_CONFIG_FILES)
-    appLock.withLock { configureApplicationEnvironment(env.projectEnvironment.environment) }
+    appLock.withLock { configureFe10ApplicationEnvironment(env.projectEnvironment.environment) }
     configureFe10ProjectEnvironment(env.projectEnvironment.project, config)
 
     return env
@@ -279,76 +254,18 @@ private fun configureFe10ProjectEnvironment(
     // PsiNameHelper is used by Kotlin UAST.
     project.registerService(PsiNameHelper::class.java, PsiNameHelperImpl::class.java)
 
-    // Annotation support.
-    project.registerService(
-        ExternalAnnotationsManager::class.java,
-        LintExternalAnnotationsManager::class.java
-    )
-    project.registerService(
-        InferredAnnotationsManager::class.java,
-        LintInferredAnnotationsManager::class.java
-    )
-
-    // Java language level.
-    val javaLanguageLevel = config.javaLanguageLevel
-    if (javaLanguageLevel != null) {
-        LanguageLevelProjectExtension.getInstance(project).languageLevel = javaLanguageLevel
-    }
+    configureProjectEnvironment(project, config)
 }
 
-// In parallel builds the Kotlin compiler will reuse the application environment
-// (see KotlinCoreEnvironment.getOrCreateApplicationEnvironmentForProduction).
-// So we need a lock to ensure that we only configure the application environment once.
-private val appLock = ReentrantLock()
-private var appConfigured = false
+private fun configureFe10ApplicationEnvironment(appEnv: CoreApplicationEnvironment) {
+    configureApplicationEnvironment(appEnv) {
+        it.addExtension(UastLanguagePlugin.extensionPointName, KotlinUastLanguagePlugin())
 
-private fun configureApplicationEnvironment(appEnv: CoreApplicationEnvironment) {
-    check(appLock.isHeldByCurrentThread)
-
-    if (appConfigured) return
-
-    if (!Logger.isInitialized()) {
-        Logger.setFactory(::IdeaLoggerForLint)
+        it.application.registerService(
+            BaseKotlinUastResolveProviderService::class.java,
+            CliKotlinUastResolveProviderService::class.java
+        )
     }
-
-    // Mark the registry as loaded, otherwise there are warnings upon registry value lookup.
-    Registry.markAsLoaded()
-
-    // The Kotlin compiler does not use UAST, so we must configure it ourselves.
-    CoreApplicationEnvironment.registerApplicationExtensionPoint(
-        UastLanguagePlugin.extensionPointName,
-        UastLanguagePlugin::class.java
-    )
-    CoreApplicationEnvironment.registerApplicationExtensionPoint(
-        UEvaluatorExtension.EXTENSION_POINT_NAME,
-        UEvaluatorExtension::class.java
-    )
-    appEnv.addExtension(UastLanguagePlugin.extensionPointName, JavaUastLanguagePlugin())
-    appEnv.addExtension(UastLanguagePlugin.extensionPointName, KotlinUastLanguagePlugin())
-    appEnv.addExtension(UEvaluatorExtension.EXTENSION_POINT_NAME, KotlinEvaluatorExtension())
-    appEnv.application.registerService(
-        BaseKotlinUastResolveProviderService::class.java,
-        CliKotlinUastResolveProviderService::class.java
-    )
-
-    // These extensions points seem to be needed too, probably because Lint
-    // triggers different IntelliJ code paths than the Kotlin compiler does.
-    CoreApplicationEnvironment.registerApplicationExtensionPoint(
-        CustomExceptionHandler.KEY,
-        CustomExceptionHandler::class.java
-    )
-    CoreApplicationEnvironment.registerApplicationExtensionPoint(
-        DiagnosticSuppressor.EP_NAME,
-        DiagnosticSuppressor::class.java
-    )
-
-    appConfigured = true
-    Disposer.register(
-        appEnv.parentDisposable,
-        Disposable {
-            appConfigured = false
-        }
-    )
 }
 
 // A Kotlin compiler BindingTrace optimized for Lint.
@@ -368,18 +285,5 @@ private class CliBindingTraceForLint : CliBindingTrace() {
     override fun report(diagnostic: Diagnostic) {
         // Even with wantsDiagnostics=false, some diagnostics still come through. Ignore them.
         // Note: this is a great place to debug errors such as unresolved references.
-    }
-}
-
-// Most Logger.error() calls exist to trigger bug reports but are
-// otherwise recoverable. E.g. see commit 3260e41111 in the Kotlin compiler.
-// Thus we want to log errors to stderr but not throw exceptions (similar to the IDE).
-private class IdeaLoggerForLint(category: String) : DefaultLogger(category) {
-    override fun error(message: String?, t: Throwable?, vararg details: String?) {
-        if (IdeaLoggerForLint::class.java.desiredAssertionStatus()) {
-            throw AssertionError(message, t)
-        } else {
-            dumpExceptionsToStderr(message + attachmentsToString(t), t, *details)
-        }
     }
 }
