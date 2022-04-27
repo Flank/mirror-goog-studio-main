@@ -96,6 +96,23 @@ public class TraceUtils {
                         "%s@%08X", obj.getClass().getSimpleName(), System.identityHashCode(obj));
     }
 
+    /**
+     * Returns a string containing comma-separated simple IDs of the elements of the given
+     * iterable. Each simple ID is the object's class name without the package part, '@'
+     * separator, and the hexadecimal identity hash code, e.g. AndroidResGroupNode@5A1D1719.
+     */
+    @NonNull
+    public static String getSimpleIds(@NonNull Iterable<?> iterable) {
+        StringBuilder result = new StringBuilder();
+        for (Object element : iterable) {
+            if (result.length() > 0) {
+                result.append(", ");
+            }
+            result.append(getSimpleId(element));
+        }
+        return result.toString();
+    }
+
     /** Returns the current time as a yyyy-MM-dd HH:mm:ss.SSS string. */
     @NonNull
     public static String currentTime() {
