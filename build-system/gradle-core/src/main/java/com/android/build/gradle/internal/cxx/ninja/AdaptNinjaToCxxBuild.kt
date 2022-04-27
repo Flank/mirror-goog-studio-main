@@ -423,14 +423,14 @@ private data class CompileCommand(
  * Check whether the name of the file starts with [prefix]. Ignore case.
  */
 private fun String.fileNameStartsWith(prefix : String) : Boolean {
-    return File(toLowerCase()).name.startsWith(prefix.toLowerCase())
+    return File(lowercase()).name.startsWith(prefix.lowercase())
 }
 
 /**
  * Check whether the name of the file starts with any of [suffixes]. Ignore case.
  */
 private fun String.fileNameEndsWith(vararg suffixes : String) : Boolean {
-    val name = File(toLowerCase()).nameWithoutExtension
+    val name = File(lowercase()).nameWithoutExtension
     return suffixes.any { prefix -> name.endsWith(prefix) }
 }
 

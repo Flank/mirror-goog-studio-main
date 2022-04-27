@@ -96,7 +96,7 @@ fun snakeCase(value : String) : String {
     val sb = StringBuilder()
     value.onEach { ch ->
         if (sb.isNotEmpty() && ch.isUpperCase()) sb.append('_')
-        sb.append(ch.toLowerCase())
+        sb.append(ch.lowercase())
     }
     return "$sb"
 }

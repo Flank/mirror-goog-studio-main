@@ -257,7 +257,7 @@ fun tryCreateConfigurationParameters(
         null
     }
     val outputOptions = (option(NATIVE_BUILD_OUTPUT_LEVEL)?:"")
-        .toUpperCase(Locale.US)
+        .uppercase(Locale.US)
         .split(",")
         .map { it.trim() }
         .filter { it.isNotBlank() }

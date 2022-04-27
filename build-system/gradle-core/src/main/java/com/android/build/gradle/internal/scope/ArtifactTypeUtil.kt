@@ -35,10 +35,10 @@ import java.util.Locale
  * @param parentFile the parent directory.
  */
 fun Artifact<*>.getOutputDir(parentDir: File)=
-    FileUtils.join(parentDir, category.name.toLowerCase(Locale.US), getFolderName())
+    FileUtils.join(parentDir, category.name.lowercase(Locale.US), getFolderName())
 
 fun Artifact<*>.getIntermediateOutputDir(parentDir: File): File =
-    FileUtils.join(parentDir, Artifact.Category.INTERMEDIATES.name.toLowerCase(Locale.US), getFolderName())
+    FileUtils.join(parentDir, Artifact.Category.INTERMEDIATES.name.lowercase(Locale.US), getFolderName())
 
 /**
  * Returns a [File] representing the artifact type location (could be a directory or regular file).

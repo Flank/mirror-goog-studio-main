@@ -113,7 +113,7 @@ internal fun configDirMatchesVersion(
     dirName: String,
     versionedShrinker: VersionedCodeShrinker
 ): Boolean {
-    configDirRegex.matchEntire(dirName.toLowerCase(Locale.US))?.let { matchResult ->
+    configDirRegex.matchEntire(dirName.lowercase(Locale.US))?.let { matchResult ->
         val (from, upto) = matchResult.destructured
 
         if (from.isEmpty() && upto.isEmpty()) {

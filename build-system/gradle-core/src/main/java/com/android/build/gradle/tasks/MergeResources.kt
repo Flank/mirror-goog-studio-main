@@ -781,7 +781,7 @@ abstract class MergeResources : NewIncrementalTask() {
         }
 
         override val name: String
-            get() = computeTaskName(mergeType.name.toLowerCase(Locale.ENGLISH), "Resources")
+            get() = computeTaskName(mergeType.name.lowercase(Locale.ENGLISH), "Resources")
         override val type: Class<MergeResources>
             get() = MergeResources::class.java
 

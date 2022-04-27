@@ -59,7 +59,7 @@ abstract class ProjectOptionService : BuildService<ProjectOptionService.Params> 
     ) {
         override fun configure(parameters: Params) {
             val standardArgs = TestRunnerArguments.values().map {
-                it.toString().toLowerCase(Locale.US)
+                it.toString().lowercase(Locale.US)
             }
             val customArgs = mutableMapOf<String, String>()
             project.extensions.extraProperties.properties.entries.forEach {

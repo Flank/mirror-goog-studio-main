@@ -184,7 +184,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             }
             task.localAarDeps.from(
                 creationConfig.variantScope.getLocalFileDependencies {
-                    it.name.toLowerCase(Locale.US).endsWith(SdkConstants.DOT_AAR)
+                    it.name.lowercase(Locale.US).endsWith(SdkConstants.DOT_AAR)
                 }
             )
             task.projectPath = task.project.path

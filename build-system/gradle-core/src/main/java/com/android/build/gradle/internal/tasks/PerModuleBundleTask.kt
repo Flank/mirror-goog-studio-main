@@ -145,7 +145,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         // https://b.corp.google.com/issues/140219742
         val excludeJarManifest =
             Predicate { path: String ->
-                !path.toUpperCase(Locale.US).endsWith("MANIFEST.MF")
+                !path.uppercase(Locale.US).endsWith("MANIFEST.MF")
             }
 
         jarCreator.use {

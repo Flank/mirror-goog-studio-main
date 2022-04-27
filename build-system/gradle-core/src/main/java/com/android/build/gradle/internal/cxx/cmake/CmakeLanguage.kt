@@ -34,7 +34,7 @@ import java.util.Locale
  *
  */
 fun isCmakeConstantTruthy(value : String) : Boolean {
-    return when(val upper = value.toUpperCase(Locale.US)) {
+    return when(val upper = value.uppercase(Locale.US)) {
         "1", "ON", "YES", "TRUE", "Y" -> true
         "0", "OFF", "NO", "FALSE", "N", "IGNORE", "NOTFOUND", "" -> false
         else ->
