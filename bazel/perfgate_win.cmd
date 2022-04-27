@@ -31,7 +31,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --max_idle_secs=60 ^
  test ^
  --keep_going ^
- --config=remote --config=sponge --config=ants ^
+ --config=ci --config=ants ^
  --build_metadata=ab_build_id=%BUILDNUMBER% ^
  --build_metadata=ab_target=perfgate-win ^
  --build_tag_filters=-no_windows ^

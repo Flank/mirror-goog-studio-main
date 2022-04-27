@@ -9,7 +9,7 @@ readonly script_dir="$(dirname "$0")"
 readonly bazel_dir="${script_dir}/.."
 readonly script_name="$(basename "$0")"
 readonly invocation_id="$(uuidgen)"
-readonly config_options="--config=dynamic"
+readonly config_options="--config=ci"
 readonly bin_dir="$("${bazel_dir}"/bazel info ${config_options} bazel-bin)"
 readonly java="${script_dir}/../../../../prebuilts/studio/jdk/linux/jre/bin/java"
 

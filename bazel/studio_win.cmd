@@ -82,8 +82,8 @@ setlocal
   --max_idle_secs=60 ^
   %BAZELRC_FLAGS% ^
   test ^
-  --config=dynamic ^
-  --config=sponge --config=ants ^
+  --config=ci ^
+  --config=ants ^
   --tool_tag=studio_win.cmd ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
@@ -129,7 +129,7 @@ setlocal
   call %SCRIPTDIR%bazel.cmd ^
   --max_idle_secs=60 ^
   run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
-  --config=dynamic ^
+  --config=ci ^
   -- ^
   -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   -testlogs %DISTDIR%\logs\junit ^

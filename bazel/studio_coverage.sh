@@ -90,7 +90,7 @@ fi
 "${script_dir}/bazel" \
   "${bazelrc_flags[@]}" \
   test \
-  --config=dynamic --config=sponge --config=ants \
+  --config=ci --config=ants \
   --invocation_id=${invocation_id} \
   --tool_tag="studio_coverage.sh" \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
