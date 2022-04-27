@@ -972,7 +972,7 @@ allprojects { proj ->
     fun getBundleUniversalApk(apk: ApkType): Apk {
         return getOutputApk(
             ApkLocation.Output,
-            "universal_apk",
+            "apk_from_bundle",
             null,
             apk,
             ImmutableList.of(),

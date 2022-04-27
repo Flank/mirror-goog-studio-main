@@ -139,7 +139,7 @@ class AddJavaSourceTest: VariantApiBaseTest(TestType.Script) {
                     // language=markdown
                 """
 # Sources.java.getAll in Kotlin
-This sample show how to obtain the java sources and add a [Directory] to the list of java sources
+This sample shows how to obtain the java sources and add a [Directory] to the list of java sources
 that will be used for compilation.
 
 To access all java sources, you just need to use
@@ -279,7 +279,7 @@ where source files will be generated and added to the compilation task.
                     // language=markdown
                 """
 # artifacts.get in Kotlin
-This sample show how to obtain the java sources and add a [Directory] to the list of java sources
+This sample shows how to obtain the java sources and add a [Directory] to the list of java sources
 that will be used for compilation.
 
 To access all java sources, you just need to use

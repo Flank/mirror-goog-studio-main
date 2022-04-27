@@ -148,6 +148,10 @@ package com.android.build.api.artifact {
     field public static final com.android.build.api.artifact.SingleArtifact.APK INSTANCE;
   }
 
+  @org.gradle.api.Incubating public static final class SingleArtifact.APK_FROM_BUNDLE extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+    field public static final com.android.build.api.artifact.SingleArtifact.APK_FROM_BUNDLE INSTANCE;
+  }
+
   @org.gradle.api.Incubating public static final class SingleArtifact.ASSETS extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.SingleArtifact.ASSETS INSTANCE;
   }
