@@ -16,7 +16,9 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.UElementHandler
+import com.android.tools.lint.detector.api.BooleanOption
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -60,6 +62,22 @@ class IndentationDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
+        val ALWAYS_RUN_OPTION = BooleanOption(
+            "always-run",
+            "Whether this check should be included while editing",
+            false,
+            """
+                While you're editing, it's common to have a temporary situation where \
+                you have suspicious indentation scenarios -- e.g. you start typing an \
+                `if` statement on the line above something you want to make conditional, and \
+                you haven't indented it yet. It can be distracting and misleading to \
+                suddenly have both statements light up as errors. Therefore, lint will \
+                avoid including this check when running on the fly in the editor, unless \
+                it looks like the file has not been recently edited. With this option, you \
+                can turn it on in all cases.
+                """
+        )
+
         @JvmField
         val ISSUE = Issue.create(
             id = "SuspiciousIndentation",
@@ -79,14 +97,23 @@ class IndentationDetector : Detector(), SourceCodeScanner {
             priority = 6,
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION
-        ).setAliases(listOf("SuspiciousIndentAfterControlStatement"))
+        ).setAliases(listOf("SuspiciousIndentAfterControlStatement")).setOptions(listOf(ALWAYS_RUN_OPTION))
     }
 
     override fun getApplicableUastTypes(): List<Class<out UElement>> {
         return listOf(UBlockExpression::class.java)
     }
 
-    override fun createUastHandler(context: JavaContext): UElementHandler {
+    override fun createUastHandler(context: JavaContext): UElementHandler? {
+        // If single file analysis in the IDE, don't run this check. See https://issuetracker.google.com/230626781
+        // and the documentation for [IN_EDITOR_OPTION].
+        if (LintClient.isStudio && !ALWAYS_RUN_OPTION.getValue(context) && Scope.checkSingleFile(context.driver.scope) &&
+            context.client.isEdited(context.file, true)
+        ) {
+            // See if it looks like the file has not been modified
+            return null
+        }
+
         return IndentationVisitor(context)
     }
 
