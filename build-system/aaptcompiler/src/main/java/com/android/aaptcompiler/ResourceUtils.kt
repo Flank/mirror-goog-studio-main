@@ -435,10 +435,10 @@ fun verifyJavaStringFormat(string: String): Boolean {
   while (currentIndex < string.length) {
     val codePoint = string.codePointAt(currentIndex)
 
-    if (codePoint == '%'.toInt() && currentIndex + 1 < string.length) {
+    if (codePoint == '%'.code && currentIndex + 1 < string.length) {
       ++currentIndex
 
-      if (string.codePointAt(currentIndex) == '%'.toInt()) {
+      if (string.codePointAt(currentIndex) == '%'.code) {
         ++currentIndex
         continue
       }
@@ -448,18 +448,18 @@ fun verifyJavaStringFormat(string: String): Boolean {
       when {
         numDigits > 0 -> {
           currentIndex += numDigits
-          if (currentIndex < string.length && string.codePointAt(currentIndex) != '$'.toInt()) {
+          if (currentIndex < string.length && string.codePointAt(currentIndex) != '$'.code) {
             // The digits were a size, but not a positional argument
             nonpositionalArgs = true
           }
         }
-        currentIndex < string.length && string.codePointAt(currentIndex) == '<'.toInt() -> {
+        currentIndex < string.length && string.codePointAt(currentIndex) == '<'.code -> {
           // Reusing last argument, bad idea since positions can be moved around during translation
           nonpositionalArgs = true
           ++currentIndex
 
           // Optionally we can have a $ after
-          if (currentIndex < string.length && string.codePointAt(currentIndex) == '$'.toInt()) {
+          if (currentIndex < string.length && string.codePointAt(currentIndex) == '$'.code) {
             ++currentIndex
           }
         }
@@ -468,13 +468,13 @@ fun verifyJavaStringFormat(string: String): Boolean {
       // Ignore size, width, flags, etc.
       search@ while (currentIndex < string.length) {
         when (string.codePointAt(currentIndex)) {
-          '-'.toInt(),
-          '#'.toInt(),
-          '+'.toInt(),
-          ' '.toInt(),
-          ','.toInt(),
-          '('.toInt(),
-          in '0'.toInt()..'9'.toInt() -> ++currentIndex
+          '-'.code,
+          '#'.code,
+          '+'.code,
+          ' '.code,
+          ','.code,
+          '('.code,
+          in '0'.code..'9'.code -> ++currentIndex
           else -> break@search
         }
       }
@@ -493,17 +493,17 @@ fun verifyJavaStringFormat(string: String): Boolean {
        */
       if (currentIndex < string.length) {
         when (string.codePointAt(currentIndex)) {
-          'D'.toInt(),
-          'F'.toInt(),
-          'K'.toInt(),
-          'M'.toInt(),
-          'W'.toInt(),
-          'Z'.toInt(),
-          'k'.toInt(),
-          'm'.toInt(),
-          'w'.toInt(),
-          'y'.toInt(),
-          'z'.toInt() -> return true
+          'D'.code,
+          'F'.code,
+          'K'.code,
+          'M'.code,
+          'W'.code,
+          'Z'.code,
+          'k'.code,
+          'm'.code,
+          'w'.code,
+          'y'.code,
+          'z'.code -> return true
         }
       }
     }
@@ -545,12 +545,12 @@ fun parseStyleParentReference(str: String): ParsedParentInfo {
 
   // Skip over these identifiers. A style's parent is a normal reference.
   val nameStart = name.codePointAt(0)
-  if (nameStart == '@'.toInt() || nameStart == '?'.toInt()) {
+  if (nameStart == '@'.code || nameStart == '?'.code) {
     hasLeadingIdentifiers = true
     name = name.substring(1)
   }
 
-  if (name.codePointAt(0) == '*'.toInt()) {
+  if (name.codePointAt(0) == '*'.code) {
     privateRef = true
     name = name.substring(1)
   }
@@ -592,7 +592,7 @@ fun parseXmlAttributeName(str: String): Reference {
   val result = Reference()
 
   var startOffset = 0
-  if (name.isNotEmpty() && name.codePointAt(0) == '*'.toInt()) {
+  if (name.isNotEmpty() && name.codePointAt(0) == '*'.code) {
     ++startOffset
     result.isPrivate = true
   }
@@ -600,7 +600,7 @@ fun parseXmlAttributeName(str: String): Reference {
   var packageName = ""
   var entryName = ""
   for (i in startOffset..(name.length - 1)) {
-    if (name.codePointAt(i) == ':'.toInt()) {
+    if (name.codePointAt(i) == ':'.code) {
       packageName = name.substring(startOffset, i)
       entryName = name.substring(i+1)
     }
