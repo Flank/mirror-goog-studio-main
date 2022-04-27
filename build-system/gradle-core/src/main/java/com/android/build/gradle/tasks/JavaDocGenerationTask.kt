@@ -20,12 +20,15 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.DokkaParallelBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -36,6 +39,8 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkAction
+import org.gradle.workers.WorkParameters
 import org.jetbrains.dokka.DokkaBootstrapImpl
 import org.jetbrains.dokka.DokkaConfiguration.ExternalDocumentationLink
 import org.jetbrains.dokka.DokkaConfigurationImpl
@@ -79,97 +84,129 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
     @get:Classpath
     abstract val dokkaRuntimeClasspath: ConfigurableFileCollection
 
+    @get:Classpath
+    abstract val dokkaCoreClasspath: ConfigurableFileCollection
+
     @TaskAction
     override fun doTaskAction() {
-        val dokkaConfiguration =
-            buildDokkaConfiguration(
-                dokkaPlugins,
-                sources,
-                classpath,
-                outputDirectory,
-                path,
-                projectPath.get(),
-                moduleVersion.get())
-
-        getRuntimeClassLoader(dokkaRuntimeClasspath).use {
-            val bootstrapClass = it.loadClass(DokkaBootstrapImpl::class.qualifiedName)
-            val bootstrapInstance = bootstrapClass.constructors.first().newInstance()
-            val configureMethod =
-                bootstrapClass.getMethod("configure", String::class.java, BiConsumer::class.java)
-            val generateMethod = bootstrapClass.getMethod("generate")
-
-            configureMethod.invoke(
-                bootstrapInstance, dokkaConfiguration.toJsonString(), createProxyLogger())
-            generateMethod.invoke(bootstrapInstance)
+        workerExecutor.classLoaderIsolation{ it.classpath.from(dokkaCoreClasspath) }.submit(
+            DokkaWorkAction::class.java
+        ) {
+            it.dokkaPlugins.from(dokkaPlugins)
+            it.sources.from(sources)
+            it.classpath.from(classpath)
+            it.outputDirectory.set(outputDirectory)
+            it.path.set(path)
+            it.moduleVersion.set(moduleVersion)
+            it.dokkaRuntimeClasspath.from(dokkaRuntimeClasspath)
+            it.projectPath.set(this.projectPath)
         }
     }
 
-    /**
-     * Dokka needs a separate classpath because it not only uses classes bundled from the kotlin
-     * compiler, but also classes from intellij that would heavily interfere with other plugins
-     * when loaded directly.
-     *
-     * Given Gradle leaks kotlin-stdlib to classpath of workers running in classloader isolation
-     * and process isolation mode, we shouldn't launch Dokka via Gradle workers. Instead,
-     * we need to load Dokka runtime dependencies manually and launch it using reflection.
-     */
-    private fun getRuntimeClassLoader(runtime: ConfigurableFileCollection): URLClassLoader {
-        val runtimeJars = runtime.files
-        return URLClassLoader(
-            runtimeJars.map { it.toURI().toURL() }.toTypedArray(),
-            ClassLoader.getSystemClassLoader().parent
-        )
-    }
-
-    private fun buildDokkaConfiguration(
-        plugins: ConfigurableFileCollection,
-        sources: ConfigurableFileCollection,
-        classpath: ConfigurableFileCollection,
-        outputDirectory: DirectoryProperty,
-        taskPath: String,
-        moduleName: String,
-        moduleVersion: String
-    ): DokkaConfigurationImpl {
-        return DokkaConfigurationImpl(
-            moduleName = moduleName,
-            moduleVersion = moduleVersion.takeIf { it != "unspecified" },
-            outputDir = outputDirectory.asFile.get(),
-            pluginsClasspath = plugins.files.toList(),
-            sourceSets = listOf(buildDokkaSourceSetImpl(sources, classpath, taskPath))
-        )
-    }
-
-    private fun buildDokkaSourceSetImpl(
-        sources: ConfigurableFileCollection,
-        classpath: ConfigurableFileCollection,
-        taskPath: String
-    ): DokkaSourceSetImpl {
-
-        return DokkaSourceSetImpl(
-            sourceSetID = DokkaSourceSetID(scopeId = taskPath, sourceSetName = taskPath),
-            sourceRoots = sources.files ,
-            classpath = classpath.files.toList(),
-            externalDocumentationLinks = defaultExternalDocumentationLinks()
-        )
-    }
-
-    private fun createProxyLogger(): BiConsumer<String, String> = BiConsumer { level, message ->
-        when (level) {
-            "debug" -> logger.debug(message)
-            "info" -> logger.info(message)
-            "progress" -> logger.lifecycle(message)
-            "warn" -> logger.warn(message)
-            "error" -> logger.error(message)
+    abstract class DokkaWorkAction : WorkAction<DokkaWorkAction.Params> {
+        abstract class Params: WorkParameters {
+            abstract val dokkaPlugins: ConfigurableFileCollection
+            abstract val sources: ConfigurableFileCollection
+            abstract val classpath: ConfigurableFileCollection
+            abstract val outputDirectory: DirectoryProperty
+            abstract val path: Property<String>
+            abstract val moduleVersion: Property<String>
+            abstract val dokkaRuntimeClasspath: ConfigurableFileCollection
+            abstract val projectPath: Property<String>
         }
-    }
 
-    private fun defaultExternalDocumentationLinks(): Set<ExternalDocumentationLinkImpl> {
-        val links = mutableSetOf<ExternalDocumentationLinkImpl>()
-        links.add(ExternalDocumentationLink.Companion.jdk(DokkaDefaults.jdkVersion))
-        links.add(ExternalDocumentationLink.Companion.kotlinStdlib())
-        links.add(ExternalDocumentationLink.Companion.androidSdk())
-        links.add(ExternalDocumentationLink.Companion.androidX())
-        return links
+        override fun execute() {
+            val dokkaConfiguration =
+                buildDokkaConfiguration(
+                    parameters.dokkaPlugins,
+                    parameters.sources,
+                    parameters.classpath,
+                    parameters.outputDirectory,
+                    parameters.path.get(),
+                    parameters.projectPath.get(),
+                    parameters.moduleVersion.get())
+
+            getRuntimeClassLoader(parameters.dokkaRuntimeClasspath).use {
+                val bootstrapClass = it.loadClass(DokkaBootstrapImpl::class.qualifiedName)
+                val bootstrapInstance = bootstrapClass.constructors.first().newInstance()
+                val configureMethod =
+                    bootstrapClass.getMethod("configure", String::class.java, BiConsumer::class.java)
+                val generateMethod = bootstrapClass.getMethod("generate")
+
+                configureMethod.invoke(
+                    bootstrapInstance, dokkaConfiguration.toJsonString(), createProxyLogger())
+                generateMethod.invoke(bootstrapInstance)
+            }
+        }
+
+        /**
+         * Dokka needs a separate classpath because it not only uses classes bundled from the kotlin
+         * compiler, but also classes from intellij that would heavily interfere with other plugins
+         * when loaded directly.
+         *
+         * Given Gradle leaks kotlin-stdlib to classpath of workers running in classloader isolation
+         * and process isolation mode, we shouldn't launch Dokka via Gradle workers. Instead,
+         * we need to load Dokka runtime dependencies manually and launch it using reflection.
+         */
+        private fun getRuntimeClassLoader(runtime: ConfigurableFileCollection): URLClassLoader {
+            val runtimeJars = runtime.files
+            return URLClassLoader(
+                runtimeJars.map { it.toURI().toURL() }.toTypedArray(),
+                ClassLoader.getSystemClassLoader().parent
+            )
+        }
+
+        private fun buildDokkaConfiguration(
+            plugins: ConfigurableFileCollection,
+            sources: ConfigurableFileCollection,
+            classpath: ConfigurableFileCollection,
+            outputDirectory: DirectoryProperty,
+            taskPath: String,
+            moduleName: String,
+            moduleVersion: String
+        ): DokkaConfigurationImpl {
+            return DokkaConfigurationImpl(
+                moduleName = moduleName,
+                moduleVersion = moduleVersion.takeIf { it != "unspecified" },
+                outputDir = outputDirectory.asFile.get(),
+                pluginsClasspath = plugins.files.toList(),
+                sourceSets = listOf(buildDokkaSourceSetImpl(sources, classpath, taskPath))
+            )
+        }
+
+        private fun buildDokkaSourceSetImpl(
+            sources: ConfigurableFileCollection,
+            classpath: ConfigurableFileCollection,
+            taskPath: String
+        ): DokkaSourceSetImpl {
+
+            return DokkaSourceSetImpl(
+                sourceSetID = DokkaSourceSetID(scopeId = taskPath, sourceSetName = taskPath),
+                sourceRoots = sources.files ,
+                classpath = classpath.files.toList(),
+                externalDocumentationLinks = defaultExternalDocumentationLinks()
+            )
+        }
+
+        private fun createProxyLogger(): BiConsumer<String, String> = BiConsumer { level, message ->
+            val logger = Logging.getLogger("DokkaWorker")
+            when (level) {
+                "debug" -> logger.debug(message)
+                "info" -> logger.info(message)
+                "progress" -> logger.lifecycle(message)
+                "warn" -> logger.warn(message)
+                "error" -> logger.error(message)
+            }
+        }
+
+        private fun defaultExternalDocumentationLinks(): Set<ExternalDocumentationLinkImpl> {
+            val links = mutableSetOf<ExternalDocumentationLinkImpl>()
+            links.add(ExternalDocumentationLink.Companion.jdk(DokkaDefaults.jdkVersion))
+            links.add(ExternalDocumentationLink.Companion.kotlinStdlib())
+            links.add(ExternalDocumentationLink.Companion.androidSdk())
+            links.add(ExternalDocumentationLink.Companion.androidX())
+            return links
+        }
     }
 
     class CreationAction(
@@ -193,6 +230,10 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
         override fun configure(task: JavaDocGenerationTask) {
             super.configure(task)
 
+            val dokkaParallelBuildService = getBuildService<DokkaParallelBuildService>(
+                creationConfig.services.buildServiceRegistry)
+            task.usesService(dokkaParallelBuildService)
+
             task.moduleVersion.setDisallowChanges(task.project.version.toString())
 
             val dokkaPluginConfig = task.project.configurations.detachedConfiguration(
@@ -206,6 +247,11 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
                 task.project.dependencies.create(DOKKA_JAVADOC_PLUGIN)
             )
             task.dokkaRuntimeClasspath.fromDisallowChanges(runtimeConfig)
+
+            val dokkaCore = task.project.configurations.detachedConfiguration(
+                task.project.dependencies.create(DOKKA_CORE)
+            )
+            task.dokkaCoreClasspath.fromDisallowChanges(dokkaCore)
 
             task.sources.fromDisallowChanges(
                 creationConfig.sources.java.all,

@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.DokkaParallelBuildService;
 import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
@@ -369,6 +370,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                 taskFactory.register(new SourceJarTask.CreationAction(variant));
             }
             if (components.stream().anyMatch(ComponentPublishingInfo::getWithJavadocJar)) {
+                new DokkaParallelBuildService.RegistrationAction(project).execute();
                 taskFactory.register(new JavaDocGenerationTask.CreationAction(variant));
                 taskFactory.register(new JavaDocJarTask.CreationAction(variant));
             }
