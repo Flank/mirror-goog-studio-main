@@ -495,7 +495,6 @@ com.android.tools.build:gradle
     io.grpc:grpc-stub (runtime)
     com.google.crypto.tink:tink (runtime)
     com.google.testing.platform:core-proto (runtime)
-    org.jetbrains.dokka:dokka-core (runtime)
     com.google.flatbuffers:flatbuffers-java (runtime)
     org.tensorflow:tensorflow-lite-metadata (runtime)
 
