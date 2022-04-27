@@ -127,6 +127,14 @@ abstract class LintTool {
     @get:Input
     abstract val versionKey: Property<String>
 
+    /**
+     * Similar to [versionKey], without the hash for -dev or SNAPSHOT versions.
+     *
+     * We need this to check compatibility before passing command line flags to lint.
+     */
+    @get:Input
+    abstract val version: Property<String>
+
     @get:Input
     abstract val runInProcess: Property<Boolean>
 
@@ -176,6 +184,12 @@ abstract class LintTool {
         classpath.fromDisallowChanges(taskCreationServices.lintFromMaven.files)
         lintClassLoaderBuildService.setDisallowChanges(getBuildService(taskCreationServices.buildServiceRegistry))
         versionKey.setDisallowChanges(deriveVersionKey(taskCreationServices, lintClassLoaderBuildService))
+        version.setDisallowChanges(
+            getLintMavenArtifactVersion(
+                taskCreationServices.projectOptions[StringOption.LINT_VERSION_OVERRIDE]?.trim(),
+                null
+            )
+        )
         val projectOptions = taskCreationServices.projectOptions
         runInProcess.setDisallowChanges(projectOptions.getProvider(BooleanOption.RUN_LINT_IN_PROCESS))
         workerHeapSize.setDisallowChanges(projectOptions.getProvider(StringOption.LINT_HEAP_SIZE))

@@ -73,14 +73,17 @@ class AndroidLintTaskTest {
         task.checkDependencies.set(true)
         task.printStackTrace.set(false)
         task.lintTool.lintCacheDirectory.set(temporaryFolder.newFolder())
-        task.lintTool.versionKey.set("test-version")
+        task.lintTool.versionKey.set(Version.ANDROID_TOOLS_BASE_VERSION + "_foo")
+        task.lintTool.version.set(Version.ANDROID_TOOLS_BASE_VERSION)
         task.lintMode.set(LintMode.REPORTING)
         task.missingBaselineIsEmptyBaseline.set(true)
+        task.offline.set(true)
         val commandLineArguments = task.generateCommandLineArguments().joinToString(" ")
         assertThat(commandLineArguments).contains("--client-id gradle")
         assertThat(commandLineArguments).contains("--client-name AGP")
         assertThat(commandLineArguments)
             .contains("--client-version ${Version.ANDROID_GRADLE_PLUGIN_VERSION}")
         assertThat(commandLineArguments).contains("--missing-baseline-is-empty-baseline")
+        assertThat(commandLineArguments).contains("--offline")
     }
 }
