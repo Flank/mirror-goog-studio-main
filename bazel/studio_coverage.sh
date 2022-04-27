@@ -34,7 +34,7 @@ collect_and_exit() {
   if [[ -d "${dist_dir}" ]]; then
     "${script_dir}/bazel" \
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
-    --config=rcache --config=sponge \
+    --config=rcache \
     -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
@@ -118,7 +118,7 @@ fi
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
-  --config=rcache --config=sponge \
+  --config=rcache \
   --invocation_id=${report_invocation_id} \
   --jobs=HOST_CPUS*.5 \
   ${auth_options} \
