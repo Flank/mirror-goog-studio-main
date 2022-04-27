@@ -55,6 +55,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
@@ -93,15 +94,15 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         return testConfigInputs;
     }
 
-    @Internal
-    abstract RegularFileProperty getJacocoCoverageOutputFile();
+    @OutputFile
+    @Optional
+    public abstract RegularFileProperty getJacocoCoverageOutputFile();
 
     @Override
     @TaskAction
     public void executeTests() {
         // Get the Jacoco extension to determine later if we have cove coverage enabled.
         JacocoTaskExtension jcoExtension = getExtensions().findByType(JacocoTaskExtension.class);
-
         AndroidAnalyticsTestListener testListener =
                 new AndroidAnalyticsTestListener(
                         dependencies,
