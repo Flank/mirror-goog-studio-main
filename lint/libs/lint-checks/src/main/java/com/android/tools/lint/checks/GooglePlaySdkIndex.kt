@@ -36,7 +36,7 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
 ) {
     companion object {
         const val DEFAULT_SHOW_MESSAGES = true
-        const val DEFAULT_SHOW_LINKS = false
+        const val DEFAULT_SHOW_LINKS = true
         const val DEFAULT_SHOW_POLICY_ISSUES = false
         const val DEFAULT_SHOW_CRITICAL_ISSUES = false
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE = "snapshot.gz"
@@ -44,8 +44,7 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL = "https://dl.google.com/play-sdk/index/"
         const val GOOGLE_PLAY_SDK_INDEX_KEY = "sdk_index"
         const val GOOGLE_PLAY_SDK_CACHE_EXPIRY_INTERVAL_DAYS = 7L
-        // TODO: b/223240684 Update to final location, currently using play console
-        const val GOOGLE_PLAY_SDK_INDEX_URL = "https://play.google.com/console/about/"
+        const val GOOGLE_PLAY_SDK_INDEX_URL = "https://play.google.com/sdks"
     }
 
     private var initialized: Boolean = false

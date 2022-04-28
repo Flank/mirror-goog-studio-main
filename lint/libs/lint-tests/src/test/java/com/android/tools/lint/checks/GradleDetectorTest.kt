@@ -3131,6 +3131,15 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testSdkIndexLibrary() {
+        val expectedFixes = if (GooglePlaySdkIndex.DEFAULT_SHOW_LINKS)
+            """
+                Show URL for build.gradle line 5: View details in Google Play SDK Index:
+                http://index.example.url/
+                Show URL for build.gradle line 11: View details in Google Play SDK Index:
+                http://another.example.url/
+            """
+        else
+            ""
         lint().files(
             gradle(
                 """
@@ -3166,7 +3175,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     0 errors, 2 warnings
                 """
-            ).expectFixDiffs("")
+            ).expectFixDiffs(expectedFixes)
     }
 
     fun testAndroidxMixedDependencies() {
