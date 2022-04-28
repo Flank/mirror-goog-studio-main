@@ -1163,7 +1163,6 @@ class LintDriver(
 
         for (check in applicableDetectors) {
             check.beforeCheckRootProject(projectContext)
-            check.beforeCheckEachProject(projectContext)
         }
 
         val manifestContexts = initializeManifests(project, main)
@@ -1176,6 +1175,10 @@ class LintDriver(
             val libraries = project.directLibraries
             val seen = HashSet<Project>(project.allLibraries.size)
             analyzeDependencies(libraries, projectConfiguration, project, main, seen)
+        }
+
+        for (check in applicableDetectors) {
+            check.beforeCheckEachProject(projectContext)
         }
 
         currentProject = project
