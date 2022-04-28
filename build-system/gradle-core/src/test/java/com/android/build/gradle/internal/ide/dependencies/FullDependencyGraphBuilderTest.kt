@@ -186,6 +186,27 @@ internal class FullDependencyGraphBuilderTest {
             .assertThat(graphs.compileDependencies.map { it.key })
             .containsExactly("foo|bar-parent|1.0||", "foo|bar|1.0||")
     }
+
+    /** Regression test for http://b/230648123. */
+    @Test
+    fun testDependencyWithoutFileWithDependencies() {
+        val (graphs, _) = buildModelGraph {
+            module("foo", "bar", "1.0") {
+                file = null
+                // intentionally no file present, just a dependency on parent
+                dependency(
+                    module("foo", "bar-parent", "1.0") {
+                        file = File("path/to/bar-parent-1.0.jar")
+                    }
+                )
+            }
+        }
+
+        // Once b/230648123 is fixed, this should contain "foo|bar-parent|1.0||", "foo|bar|1.0||".
+        Truth
+            .assertThat(graphs.compileDependencies.map { it.key })
+            .isEmpty()
+    }
 }
 
 // -------------

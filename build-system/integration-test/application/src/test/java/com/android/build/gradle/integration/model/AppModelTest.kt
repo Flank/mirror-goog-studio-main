@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.model.ReferenceModelC
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
+import com.android.build.gradle.options.BooleanOption
 import com.android.builder.model.v2.ide.SyncIssue
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
@@ -708,5 +709,78 @@ class MinSdkViaSettingsInAppModelTest {
             .assertWithMessage("minSdkVersion.codename")
             .that(androidDsl.defaultConfig.minSdkVersion?.codename)
             .isNull()
+    }
+}
+
+/** Regression test for http://b/229298359. */
+class DependencyWithoutFileWithDependenciesTest: ModelComparator() {
+
+    @get:Rule
+    val project = createGradleProject {
+        subProject(":app") {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+            appendToBuildFile {
+                """
+                      repositories {
+                        maven {
+                          url { '../repo' }
+                        }
+                      }
+                      dependencies {
+                        testImplementation("com.foo:bar:1.0") {
+                          capabilities {
+                            requireCapability("com.foo:bar-custom:1.0")
+                          }
+                        }
+                      }
+                """.trimIndent()
+            }
+        }
+        subProject(":bar") {
+            plugins.add(PluginType.JAVA_LIBRARY)
+            plugins.add(PluginType.MAVEN_PUBLISH)
+            appendToBuildFile {
+                """
+                    group = "com.foo"
+                    version = "1.0"
+
+                    Configuration customCapability = configurations.create("customCapability")
+                    customCapability.setCanBeConsumed(true)
+                    customCapability.setCanBeResolved(false)
+                    customCapability.attributes.attribute(
+                      TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+                      objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM)
+                    )
+                    customCapability.outgoing.capability("com.foo:bar-custom:1.0")
+                    dependencies.add("customCapability", 'androidx.collection:collection:1.0.0')
+                    components.java.addVariantsFromConfiguration(customCapability) { mapToOptional() }
+
+                    publishing {
+                      repositories {
+                        maven { url = '../repo' }
+                      }
+                      publications {
+                        mavenJava(MavenPublication) {
+                          from components.java
+                        }
+                      }
+                    }
+                """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `test models`() {
+        project.executor().run(":bar:publish")
+        val result = project.modelV2()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels(variantName = "debug")
+
+        with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
     }
 }
