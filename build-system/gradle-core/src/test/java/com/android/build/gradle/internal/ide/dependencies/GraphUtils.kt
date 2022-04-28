@@ -65,7 +65,7 @@ interface DependencyBuilder {
 
 interface DependencyNodeBuilder: DependencyBuilder {
     var dependencyType: DependencyType
-    var file: File
+    var file: File?
 
     fun capability(group: String, name: String, version: String? = null)
     fun <T: Any> attribute(attribute: Attribute<T>, value: T)
@@ -158,9 +158,10 @@ open class DependencyBuilderImpl: DependencyBuilder {
             externalVariant = Optional.ofNullable(externalVariant)
         )
 
-        // if there's an external variant due to relocation then that particular module
-        // will not have a matching artifact.
-        if (externalVariant == null) {
+        // Module will not have a matching artifact:
+        //   - if there's an external variant due to relocation
+        //   - file is missing e.g. there are only dependencies on other modules
+        if (externalVariant == null && node.file != null) {
             artifacts.add(
                 ResolvedArtifact(
                     componentIdentifier = componentIdentifier,
@@ -217,7 +218,7 @@ abstract class DependencyNodeBuilderImpl: DependencyBuilderImpl(), DependencyNod
 
     abstract fun getComponentIdentifier(): ComponentIdentifier
 
-    override var file: File = File("")
+    override var file: File? = File("")
     override fun capability(group: String, name: String, version: String?) {
         capabilities.add(FakeCapability(group, name, version))
     }
