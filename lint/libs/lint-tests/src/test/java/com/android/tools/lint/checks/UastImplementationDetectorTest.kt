@@ -46,9 +46,9 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
                 import org.jetbrains.uast.UField
                 import org.jetbrains.uast.UImportStatement
                 import org.jetbrains.uast.UThisExpression
-                import org.jetbrains.uast.kotlin.KotlinUField
-                import org.jetbrains.uast.kotlin.KotlinUImportStatement // ERROR 1
-                import org.jetbrains.uast.kotlin.KotlinUThisExpression // ERROR 2
+                import org.jetbrains.uast.kotlin.KotlinUField // ERROR 1
+                import org.jetbrains.uast.kotlin.KotlinUImportStatement // ERROR 2
+                import org.jetbrains.uast.kotlin.KotlinUThisExpression // ERROR 3
                 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
                 import org.jetbrains.uast.kotlin.UnknownKotlinExpression
 
@@ -73,8 +73,7 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
 
                         private fun checkFieldSafety(field: UField) {
                           if (field.name.endsWith("delegate")) {
-                            // OK for now? hoist delegateExpression to UField?
-                            val delegateType = (field as? KotlinUField)?.delegateExpression?.getExpressionType() // OK 1
+                            val delegateType = (field as? KotlinUField)?.type // ERROR 4
                             assert (delegateType != null)
                           }
                         }
@@ -86,13 +85,13 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
                     override fun createUastHandler(context: JavaContext): UElementHandler? {
                       return object : UElementHandler() {
                         override fun visitImportStatement(node: UImportStatement) {
-                          val alias = (node as? KotlinUImportStatement)?.sourcePsi?.alias // ERROR 3
+                          val alias = (node as? KotlinUImportStatement)?.sourcePsi?.alias // ERROR 5
                         }
                       }
                     }
                   }
 
-                  class MockKtThisChecker : AbstractDetector(KotlinUThisExpression::class) { // ERROR 4
+                  class MockKtThisChecker : AbstractDetector(KotlinUThisExpression::class) { // ERROR 6
                     override fun createUastHandler(context: JavaContext): UElementHandler? {
                       return object : UElementHandler() {
                         override fun visitElement(node: UElement) {
@@ -105,7 +104,7 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
                     var firstElement = expr
 
                     return when {
-                      firstElement is KotlinUThisExpression && firstElement.label != null -> { // ERROR 5
+                      firstElement is KotlinUThisExpression && firstElement.label != null -> { // ERROR 7
                         expr
                       }
                       firstElement is UThisExpression -> null
@@ -116,14 +115,14 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
                   fun KtElement.getBindingContext(): BindingContext {
                     // OK to retrieve a service
                     val service =
-                      ServiceManager.getService(this.project, KotlinUastResolveProviderService::class.java) // OK 2
+                      ServiceManager.getService(this.project, KotlinUastResolveProviderService::class.java) // OK 1
                     return service?.getBindingContext(this) ?: BindingContext.EMPTY
                   }
 
                   internal val UElement.realUastParent: UElement?
                     get() {
                       // OK for now? Introduce a common interface?
-                      return if (this !is UnknownKotlinExpression) this else null // OK 3
+                      return if (this !is UnknownKotlinExpression) this else null // OK 2
                     }
                 }
                 """
@@ -134,22 +133,28 @@ class UastImplementationDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
+                src/test/pkg/UastImplementationDetectorTestInput.kt:18: Warning: org.jetbrains.uast.kotlin.KotlinUField is UAST implementation. Consider using one of its corresponding UAST interfaces: UVariableEx, UVariable, UDeclaration, UAnnotated, UDeclarationEx, UAnchorOwner, UFieldEx, UField [UastImplementation]
+                import org.jetbrains.uast.kotlin.KotlinUField // ERROR 1
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/UastImplementationDetectorTestInput.kt:19: Warning: org.jetbrains.uast.kotlin.KotlinUImportStatement is UAST implementation. Consider using one of its corresponding UAST interfaces: UImportStatement, UResolvable [UastImplementation]
-                import org.jetbrains.uast.kotlin.KotlinUImportStatement // ERROR 1
+                import org.jetbrains.uast.kotlin.KotlinUImportStatement // ERROR 2
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 src/test/pkg/UastImplementationDetectorTestInput.kt:20: Warning: org.jetbrains.uast.kotlin.KotlinUThisExpression is UAST implementation. Consider using one of its corresponding UAST interfaces: UExpression, UAnnotated, UThisExpression, UInstanceExpression, ULabeled, UResolvable [UastImplementation]
-                import org.jetbrains.uast.kotlin.KotlinUThisExpression // ERROR 2
+                import org.jetbrains.uast.kotlin.KotlinUThisExpression // ERROR 3
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/UastImplementationDetectorTestInput.kt:58: Warning: org.jetbrains.uast.kotlin.KotlinUImportStatement is UAST implementation. Consider using one of its corresponding UAST interfaces: UImportStatement, UResolvable [UastImplementation]
-                          val alias = (node as? KotlinUImportStatement)?.sourcePsi?.alias // ERROR 3
+                src/test/pkg/UastImplementationDetectorTestInput.kt:45: Warning: org.jetbrains.uast.kotlin.KotlinUField is UAST implementation. Consider using one of its corresponding UAST interfaces: UVariableEx, UVariable, UDeclaration, UAnnotated, UDeclarationEx, UAnchorOwner, UFieldEx, UField [UastImplementation]
+                            val delegateType = (field as? KotlinUField)?.type // ERROR 4
+                                                          ~~~~~~~~~~~~
+                src/test/pkg/UastImplementationDetectorTestInput.kt:57: Warning: org.jetbrains.uast.kotlin.KotlinUImportStatement is UAST implementation. Consider using one of its corresponding UAST interfaces: UImportStatement, UResolvable [UastImplementation]
+                          val alias = (node as? KotlinUImportStatement)?.sourcePsi?.alias // ERROR 5
                                                 ~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/UastImplementationDetectorTestInput.kt:64: Warning: org.jetbrains.uast.kotlin.KotlinUThisExpression is UAST implementation. Consider using one of its corresponding UAST interfaces: UExpression, UAnnotated, UThisExpression, UInstanceExpression, ULabeled, UResolvable [UastImplementation]
-                  class MockKtThisChecker : AbstractDetector(KotlinUThisExpression::class) { // ERROR 4
+                src/test/pkg/UastImplementationDetectorTestInput.kt:63: Warning: org.jetbrains.uast.kotlin.KotlinUThisExpression is UAST implementation. Consider using one of its corresponding UAST interfaces: UExpression, UAnnotated, UThisExpression, UInstanceExpression, ULabeled, UResolvable [UastImplementation]
+                  class MockKtThisChecker : AbstractDetector(KotlinUThisExpression::class) { // ERROR 6
                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/UastImplementationDetectorTestInput.kt:77: Warning: org.jetbrains.uast.kotlin.KotlinUThisExpression is UAST implementation. Consider using one of its corresponding UAST interfaces: UExpression, UAnnotated, UThisExpression, UInstanceExpression, ULabeled, UResolvable [UastImplementation]
-                      firstElement is KotlinUThisExpression && firstElement.label != null -> { // ERROR 5
+                src/test/pkg/UastImplementationDetectorTestInput.kt:76: Warning: org.jetbrains.uast.kotlin.KotlinUThisExpression is UAST implementation. Consider using one of its corresponding UAST interfaces: UExpression, UAnnotated, UThisExpression, UInstanceExpression, ULabeled, UResolvable [UastImplementation]
+                      firstElement is KotlinUThisExpression && firstElement.label != null -> { // ERROR 7
                                       ~~~~~~~~~~~~~~~~~~~~~
-                0 errors, 5 warnings
+                0 errors, 7 warnings
                 """
             )
     }
