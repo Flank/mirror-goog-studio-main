@@ -633,7 +633,6 @@ coverage_report(
     srcpath_exclude = [
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanel.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanelSplitter.java",
-        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/LintIssueProvider.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/FixEntry.form",
     ],
     srcpath_include = [
@@ -875,6 +874,7 @@ combine_report_definitions(
         "upgrade-assistant",
         "utp",
         "validation",
+        "visual-lint",
         "wear-pairing-assistant",
         "workmanager-inspector",
     ],
