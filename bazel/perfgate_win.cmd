@@ -60,10 +60,6 @@ set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 :ENDSCRIPT
 @rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
 CALL %SCRIPTDIR%bazel.cmd shutdown
-@rem We also must call the kill-processes.py python script and kill all processes still open
-@rem within the src directory.  This is due to the fact go/ab builds must be removable after
-@rem execution, and any open processes will prevent this removal on windows.
-CALL %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
 
 set /a BAZEL_EXITCODE_TEST_FAILURES=3
 
