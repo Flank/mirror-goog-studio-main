@@ -123,12 +123,15 @@ public class LiveUpdateDeployer {
                 "Unsupported change to interfaces of class '%s' in file '%s'.";
 
         private final String msg;
+        private final Deploy.UnsupportedChange.Type type;
 
         public UpdateLiveEditError(String msg) {
             this.msg = msg;
+            this.type = Deploy.UnsupportedChange.Type.UNKNOWN;
         }
 
         public UpdateLiveEditError(Deploy.UnsupportedChange error) {
+            this.type = error.getType();
             switch (error.getType()) {
                 case ADDED_CLASS:
                     msg =
@@ -215,6 +218,10 @@ public class LiveUpdateDeployer {
 
         public String getMessage() {
             return msg + APP_RESTART_STR;
+        }
+
+        public Deploy.UnsupportedChange.Type getType() {
+            return type;
         }
     }
 
