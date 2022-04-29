@@ -153,9 +153,9 @@ maven_repository(
         "//tools/base/utp/android-test-plugin-host-logcat:android-test-plugin-host-logcat",
         "//tools/base/utp/android-test-plugin-host-retention:android-test-plugin-host-retention",
         "//tools/base/utp/android-test-plugin-result-listener-gradle:android-test-plugin-result-listener-gradle",
-        "@maven//:com.google.testing.platform.android-driver-instrumentation_0.0.8-alpha07",
-        "@maven//:com.google.testing.platform.android-test-plugin_0.0.8-alpha07",
-        "@maven//:com.google.testing.platform.core_0.0.8-alpha07",
+        "@maven//:com.google.testing.platform.android-driver-instrumentation_0.0.8-alpha08",
+        "@maven//:com.google.testing.platform.android-test-plugin_0.0.8-alpha08",
+        "@maven//:com.google.testing.platform.core_0.0.8-alpha08",
     ],
     visibility = ["__subpackages__"],
 )
