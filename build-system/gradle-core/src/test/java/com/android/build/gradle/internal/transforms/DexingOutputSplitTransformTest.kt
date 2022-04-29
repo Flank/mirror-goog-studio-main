@@ -40,7 +40,8 @@ class DexingOutputSplitTransformTest {
 
         val transform = TestDexingOutputSplitTransform(
             FakeGradleProvider(FakeGradleDirectory(input)),
-            parameters = TestDexingOutputSplitTransform.TestParameters(false)
+            parameters = TestDexingOutputSplitTransform.TestParameters(
+                DexingOutputSplitTransform.DexOutput.KEEP_RULES)
         )
 
         val output = FakeTransformOutputs(tmp)
@@ -55,10 +56,10 @@ private class TestDexingOutputSplitTransform(
 ) : DexingOutputSplitTransform() {
 
     class TestParameters(
-      toDex: Boolean
-    ) : DexingOutputSplitTransform.Parameters {
+      dexOutput: DexOutput
+    ) : Parameters {
         override var projectName = FakeGradleProperty(":test")
-        override var toDex = FakeGradleProperty(toDex)
+        override val dexOutput = FakeGradleProperty(dexOutput)
     }
 
     override fun getParameters(): Parameters {
