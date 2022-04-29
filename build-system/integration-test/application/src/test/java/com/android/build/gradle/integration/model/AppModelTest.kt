@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.integration.model
 
+
+import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.build.gradle.integration.common.fixture.model.ReferenceModelComparator
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
@@ -26,6 +29,7 @@ import com.android.builder.model.v2.ide.SyncIssue
 import com.android.testutils.MavenRepoGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.generateAarWithContent
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 
@@ -637,7 +641,7 @@ class DependencyWithoutFileWithDependenciesTest: ModelComparator() {
                       objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM)
                     )
                     customCapability.outgoing.capability("com.foo:bar-custom:1.0")
-                    dependencies.add("customCapability", 'androidx.collection:collection:1.0.0')
+                    dependencies.add("customCapability", 'androidx.annotation:annotation:$ANDROIDX_VERSION')
                     components.java.addVariantsFromConfiguration(customCapability) { mapToOptional() }
 
                     publishing {

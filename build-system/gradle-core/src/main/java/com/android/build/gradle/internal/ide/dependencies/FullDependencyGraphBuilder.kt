@@ -129,20 +129,23 @@ class FullDependencyGraphBuilder(
 
         val variantKey = variant.toKey()
         val artifact = artifactMap[variantKey]
+        val variantDependencies by lazy {
+            dependency.selected.getDependenciesForVariant(variant)
+        }
 
         val library = if (artifact == null) {
-            // There are 2 (currently known) reasons this can happen:
-            // - when resolving a test graph, as one of the roots will be the same module and this
-            //   is not included in the other artifact-based API.
-            // - when an artifact is relocated via Gradle's module "available-at" feature.
-            //
-            // In both case, there are still dependencies, so we need to create a library object,
-            // and traverse the dependencies.
             val owner = variant.owner
 
+            // There are 3 (currently known) reasons this can happen:
+            // 1. when an artifact is relocated via Gradle's module "available-at" feature.
+            // 2. when resolving a test graph, as one of the roots will be the same module and this
+            //   is not included in the other artifact-based API.
+            // 3. when dependency is without artifact file, but with transitive dependencies
+            //
+            // In all cases, there are still dependencies, so we need to create a library object,
+            // and traverse the dependencies.
             if (variant.externalVariant.isPresent) {
-                // The presence of an external variant indicates that this is a relocation. We
-                // don't need to point to the relocation, we just need to process this node as is
+                // Scenario 1
                 libraryService.getLibrary(
                     ResolvedArtifact(
                         owner,
@@ -158,6 +161,7 @@ class FullDependencyGraphBuilder(
                     )
                 )
             } else if (owner is ProjectComponentIdentifier && inputs.projectPath == owner.projectPath) {
+                // Scenario 2
                 // create on the fly a ResolvedArtifact around this project
                 // and get the matching library item
                 libraryService.getLibrary(
@@ -175,6 +179,22 @@ class FullDependencyGraphBuilder(
                         extractedFolder = null,
                         publishedLintJar = null,
                         dependencyType = ResolvedArtifact.DependencyType.ANDROID,
+                        isWrappedModule = false,
+                        buildMapping = inputs.buildMapping
+                    )
+                )
+            } else if (variantDependencies.isNotEmpty()) {
+                // Scenario 3
+                libraryService.getLibrary(
+                    ResolvedArtifact(
+                        owner,
+                        variant,
+                        variantName = "unknown",
+                        artifactFile = null,
+                        isTestFixturesArtifact = false,
+                        extractedFolder = null,
+                        publishedLintJar = null,
+                        dependencyType = ResolvedArtifact.DependencyType.NO_ARTIFACT_FILE,
                         isWrappedModule = false,
                         buildMapping = inputs.buildMapping
                     )
@@ -198,7 +218,7 @@ class FullDependencyGraphBuilder(
             }
 
             // Now visit children, and add them as dependencies
-            dependency.selected.getDependenciesForVariant(variant).forEach {
+            variantDependencies.forEach {
                 handleDependency(it, visited, artifactMap)?.let { childGraphItem ->
                     libraryGraphItem.addDependency(childGraphItem)
                 }
