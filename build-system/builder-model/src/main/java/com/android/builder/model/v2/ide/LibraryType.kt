@@ -40,5 +40,11 @@ enum class LibraryType {
      * The dependency is an external dependency with no artifact, pointing to a different artifact
      * (via Gradle's available-at feature, and possibly via POM's relocation feature.)
      */
-    RELOCATED;
+    RELOCATED,
+
+    /**
+     * The dependency is an external dependency with no artifact, but it may depend on other
+     * libraries.
+     */
+    NO_ARTIFACT_FILE;
 }

@@ -12,14 +12,23 @@
       - runtimeDependencies    = []
       - unresolvedDependencies = []
    > unitTestArtifact:
-      - compileDependencies:
+      > compileDependencies:
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
+         - com.foo|bar|1.0|org.gradle.jvm.environment>standard-jvm, org.gradle.status>release|com.foo:bar-custom:1.0:
+            - requestedCoordinates = (null)
+            - dependencies:
+               - androidx.annotation|annotation|1.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.0.0:
+                  - requestedCoordinates = (null)
+                  - dependencies         = []
+      < compileDependencies
       - runtimeDependencies:
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
+         - com.foo|bar|1.0|org.gradle.jvm.environment>standard-jvm, org.gradle.status>release|com.foo:bar-custom:1.0:
+            - dependencies = "*visited*"
       - unresolvedDependencies = []
    < unitTestArtifact
    - testFixturesArtifact = (null)
@@ -65,5 +74,69 @@
          - lintJar            = (null)
          - androidLibraryData = (null)
       < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
+      > androidx.annotation|annotation|1.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.0.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/annotation/annotation/1.0.0/annotation-1.0.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.annotation"
+            - name           = "annotation"
+            - version        = "1.0.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-api"
+            - capabilities:
+               * "androidx.annotation:annotation:1.0.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.annotation|annotation|1.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-api|androidx.annotation:annotation:1.0.0
+      > androidx.annotation|annotation|1.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.0.0:
+         - type               = JAVA_LIBRARY
+         - artifact           = {LOCAL_REPO}/androidx/annotation/annotation/1.0.0/annotation-1.0.0.jar{F}
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "androidx.annotation"
+            - name           = "annotation"
+            - version        = "1.0.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.category -> library"
+               * "org.gradle.libraryelements -> jar"
+               * "org.gradle.status -> release"
+               * "org.gradle.usage -> java-runtime"
+            - capabilities:
+               * "androidx.annotation:annotation:1.0.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < androidx.annotation|annotation|1.0.0|org.gradle.category>library, org.gradle.libraryelements>jar, org.gradle.status>release, org.gradle.usage>java-runtime|androidx.annotation:annotation:1.0.0
+      > com.foo|bar|1.0|org.gradle.jvm.environment>standard-jvm, org.gradle.status>release|com.foo:bar-custom:1.0:
+         - type               = NO_ARTIFACT_FILE
+         - artifact           = (null)
+         - projectInfo        = (null)
+         > libraryInfo:
+            - group          = "com.foo"
+            - name           = "bar"
+            - version        = "1.0"
+            - isTestFixtures = false
+            - buildType      = (null)
+            - productFlavors = []
+            - attributes:
+               * "org.gradle.jvm.environment -> standard-jvm"
+               * "org.gradle.status -> release"
+            - capabilities:
+               * "com.foo:bar-custom:1.0"
+         < libraryInfo
+         - lintJar            = (null)
+         - androidLibraryData = (null)
+      < com.foo|bar|1.0|org.gradle.jvm.environment>standard-jvm, org.gradle.status>release|com.foo:bar-custom:1.0
    < libraries
 < VariantDependencies
