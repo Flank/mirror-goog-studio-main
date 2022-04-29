@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
-import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -7825,7 +7824,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n")
                                 .indented())
-                .testModes(TestMode.DEFAULT)
                 .run()
                 .expect(
                         ""
@@ -7925,6 +7923,60 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "        test.instanceMethod2();         // ERROR 10\n"
                                 + "             ~~~~~~~~~~~~~~~\n"
                                 + "10 errors, 0 warnings");
+    }
+
+    public void testPackageInfoMinSdk() {
+        // Regression test for b/228443895
+        lint().files(
+                        manifest().minSdk(14),
+                        java(
+                                "src/test/pkg/package-info.java",
+                                ""
+                                        + "@RequiresApi(28)\n"
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;"),
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi;\n"
+                                        + "\n"
+                                        + "public class JavaTest {\n"
+                                        + "    @RequiresApi(28)\n"
+                                        + "    public static void requires28() {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public void test() {\n"
+                                        + "        requires28();\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
+    public void testFileAnnotation() {
+        lint().files(
+                        manifest().minSdk(14),
+                        kotlin(
+                                ""
+                                        + "@file:RequiresApi(29)\n"
+                                        + "\n"
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import androidx.annotation.RequiresApi\n"
+                                        + "\n"
+                                        + "fun test() {\n"
+                                        + "    requires29()\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "@RequiresApi(29)\n"
+                                        + "fun requires29() {\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
     }
 
     @Override

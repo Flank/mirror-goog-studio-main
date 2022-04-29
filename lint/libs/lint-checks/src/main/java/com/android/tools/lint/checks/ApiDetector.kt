@@ -90,6 +90,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
+import com.android.tools.lint.detector.api.VersionChecks
 import com.android.tools.lint.detector.api.VersionChecks.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.detector.api.VersionChecks.Companion.SDK_INT
 import com.android.tools.lint.detector.api.VersionChecks.Companion.getTargetApiAnnotation
@@ -684,6 +685,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val api = getApiLevel(context, annotation, annotationInfo.qualifiedName)
         if (api == -1) return
         val minSdk = getMinSdk(context)
+        val evaluator = context.evaluator
         if (usageInfo.type == AnnotationUsageType.DEFINITION) {
             val fix = fix()
                 .replace().all().with("")
@@ -691,7 +693,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 .name("Delete @RequiresApi")
                 .build()
 
-            val (targetAnnotation, target) = getTargetApiAnnotation(element.uastParent?.uastParent)
+            val (targetAnnotation, target) = getTargetApiAnnotation(evaluator, element.uastParent?.uastParent)
             if (target > api) {
                 val outerAnnotation = "@${targetAnnotation?.qualifiedName?.substringAfterLast('.')}($target)"
                 val message = "Unnecessary; SDK_INT is always >= $target from outer annotation (`$outerAnnotation`)"
@@ -709,7 +711,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // These two annotations do not propagate the requirement outwards to callers
             return
         }
-        val (targetAnnotation, target) = getTargetApiAnnotation(element)
+        val (targetAnnotation, target) = getTargetApiAnnotation(evaluator, element)
         if (target == -1 || api > target) {
             if (isWithinVersionCheckConditional(context, element, api)) {
                 return
@@ -717,7 +719,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (isPrecededByVersionCheckExit(context, element, api)) {
                 return
             }
-            if (isSurroundedByHigherTargetAnnotation(targetAnnotation, api)) {
+            if (isSurroundedByHigherTargetAnnotation(evaluator, targetAnnotation, api)) {
                 // Make sure we aren't interpreting a redundant local @RequireApi(x) annotation
                 // as implying the API level can be x here if there is an *outer* annotation
                 // with a higher API level (we flag those above using [OBSOLETE_SDK_LEVEL] but
@@ -775,13 +777,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
      * an api level requirement of [atLeast]?
      */
     private fun isSurroundedByHigherTargetAnnotation(
+        evaluator: JavaEvaluator,
         annotation: UAnnotation?,
         atLeast: Int,
-        isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+        isApiLevelAnnotation: (String) -> Boolean = VersionChecks.Companion::isTargetAnnotation
     ): Boolean {
         var curr = annotation ?: return false
         while (true) {
-            val (outer, target) = getTargetApiAnnotation(curr.uastParent?.uastParent, isApiLevelAnnotation)
+            val (outer, target) = getTargetApiAnnotation(evaluator, curr.uastParent?.uastParent, isApiLevelAnnotation)
             if (target >= atLeast) {
                 return true
             }

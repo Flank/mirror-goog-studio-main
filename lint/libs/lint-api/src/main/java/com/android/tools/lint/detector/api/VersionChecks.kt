@@ -155,8 +155,9 @@ class VersionChecks(
         @JvmOverloads
         @JvmStatic
         fun getTargetApiAnnotation(
+            evaluator: JavaEvaluator,
             scope: UElement?,
-            isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+            isApiLevelAnnotation: (String) -> Boolean = Companion::isTargetAnnotation
         ): Pair<UAnnotation?, Int> {
             var current = scope
             while (current != null) {
@@ -170,6 +171,18 @@ class VersionChecks(
                     }
                 }
                 if (current is UFile) {
+                    // Also consult any package annotations
+                    val pkg = evaluator.getPackage(current.javaPsi ?: current.sourcePsi)
+                    if (pkg != null) {
+                        for (psiAnnotation in pkg.annotations) {
+                            val annotation = UastFacade.convertElement(psiAnnotation, null) as? UAnnotation ?: continue
+                            val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
+                            if (target != -1) {
+                                return annotation to target
+                            }
+                        }
+                    }
+
                     break
                 }
                 current = current.uastParent
@@ -557,7 +570,7 @@ class VersionChecks(
                                 apiLevels.add(getApiLevel(case, apiLookup))
                             }
                         }
-                        val (_, target) = getTargetApiAnnotation(switch)
+                        val (_, target) = getTargetApiAnnotation(evaluator, switch)
                         val min = kotlin.math.max(target, project?.minSdk ?: -1)
                         var firstMissing = min + 1
                         while (true) {
