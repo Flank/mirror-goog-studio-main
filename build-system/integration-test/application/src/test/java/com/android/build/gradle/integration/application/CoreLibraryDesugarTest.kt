@@ -523,7 +523,7 @@ class CoreLibraryDesugarTest {
     }
 
     @Test
-    fun testArtProfileDexNaming() {
+    fun testArtProfileDexNamingForApk() {
       TestFileUtils.appendToFile(
             FileUtils.join(app .getMainSrcDir(""),"baseline-prof.txt"),
           programClass + "\n" + usedDesugarClass +"\n")
@@ -533,6 +533,24 @@ class CoreLibraryDesugarTest {
         val apkFile = app.getApk(GradleTestProject.ApkType.RELEASE).file.toFile()
         val zip = ZipFile(apkFile)
         val entry = zip.entries().asSequence().first { it.name == "assets/dexopt/baseline.prof" }
+        zip.getInputStream(entry)
+        val profile = ArtProfile(zip.getInputStream(entry))
+        Truth.assertThat(profile!!.profileData.keys.map { it.name })
+            .containsExactly("classes.dex","classes2.dex")
+    }
+
+    @Test
+    fun testArtProfileDexNamingForAab() {
+        TestFileUtils.appendToFile(
+            FileUtils.join(app .getMainSrcDir(""),"baseline-prof.txt"),
+            programClass + "\n" + usedDesugarClass +"\n")
+
+        executor().run(":app:bundleRelease")
+
+        val apkFile = app.getBundle(GradleTestProject.ApkType.RELEASE).file.toFile()
+        val zip = ZipFile(apkFile)
+        val entry = zip.entries().asSequence()
+            .first { it.name == "BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof" }
         zip.getInputStream(entry)
         val profile = ArtProfile(zip.getInputStream(entry))
         Truth.assertThat(profile!!.profileData.keys.map { it.name })

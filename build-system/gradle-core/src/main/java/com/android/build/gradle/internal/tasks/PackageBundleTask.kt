@@ -340,7 +340,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             if (parameters.binaryArtProfiler.isPresent
                 && parameters.binaryArtProfiler.get().asFile.exists()) {
                 command.addMetadataFile(
-                        SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.'),
+                        SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_AAB,
                         SdkConstants.FN_BINARY_ART_PROFILE,
                         parameters.binaryArtProfiler.get().asFile.toPath(),
                 )
@@ -349,7 +349,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
             if (parameters.binaryArtProfilerMetadata.isPresent
                 && parameters.binaryArtProfilerMetadata.get().asFile.exists()) {
                 command.addMetadataFile(
-                    SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.'),
+                    SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_AAB,
                     SdkConstants.FN_BINARY_ART_PROFILE_METADATA,
                     parameters.binaryArtProfilerMetadata.get().asFile.toPath(),
                 )

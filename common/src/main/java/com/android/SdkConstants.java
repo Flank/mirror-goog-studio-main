@@ -230,6 +230,8 @@ public final class SdkConstants {
     public static final String FN_ART_PROFILE = "baseline-prof.txt";
 
     public static final String FN_BINART_ART_PROFILE_FOLDER_IN_APK = "assets/dexopt";
+    public static final String FN_BINART_ART_PROFILE_FOLDER_IN_AAB =
+            "com.android.tools.build.profiles";
     public static final String FN_BINARY_ART_PROFILE = "baseline.prof";
     public static final String FN_BINARY_ART_PROFILE_METADATA = "baseline.profm";
 
