@@ -726,6 +726,7 @@ com.android.tools.utp:android-device-provider-ddmlib
     com.android.tools.utp:android-device-provider-ddmlib-proto (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm (runtime)
+    com.google.testing.platform:core-proto (runtime)
     com.google.testing.platform:android-device-provider-local (runtime)
 
 com.android.tools.utp:android-device-provider-ddmlib-proto
@@ -742,6 +743,7 @@ com.android.tools.utp:android-device-provider-gradle
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     com.google.protobuf:protobuf-java (runtime)
     com.android.tools.utp:android-device-provider-gradle-proto (runtime)
+    com.google.testing.platform:core-proto (runtime)
     com.google.testing.platform:android-device-provider-local (runtime)
 
 com.android.tools.utp:android-device-provider-gradle-proto
@@ -848,6 +850,7 @@ com.android.tools.utp:android-test-plugin-result-listener-gradle
     io.grpc:grpc-netty (runtime)
     com.google.protobuf:protobuf-java (runtime)
     com.google.guava:guava (runtime)
+    com.google.testing.platform:core-proto (runtime)
     com.google.testing.platform:android-device-provider-local (runtime)
 
 com.android.tools.utp:android-test-plugin-result-listener-gradle-proto

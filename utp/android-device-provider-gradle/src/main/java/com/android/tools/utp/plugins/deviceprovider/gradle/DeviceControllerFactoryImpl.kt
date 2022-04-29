@@ -19,6 +19,7 @@ package com.android.tools.utp.plugins.deviceprovider.gradle
 import com.google.testing.platform.api.config.AndroidSdk
 import com.google.testing.platform.api.config.Environment
 import com.google.testing.platform.api.config.Setup
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.proto.api.config.AdbConfigProto
 import com.google.testing.platform.proto.api.config.RuntimeProto
@@ -34,12 +35,14 @@ class DeviceControllerFactoryImpl : DeviceControllerFactory {
             environment: Environment,
             testSetup: Setup,
             androidSdk: AndroidSdk,
-            adbConfig: AdbConfigProto.AdbConfig
+            adbConfig: AdbConfigProto.AdbConfig,
+            context: Context,
     ): DeviceController = provider.loadAndConfigureAndroidDeviceController(
             environment,
             testSetup,
             androidSdk,
             adbConfig,
-            RuntimeProto.AndroidInstrumentationRuntime.newBuilder().build()
+            RuntimeProto.AndroidInstrumentationRuntime.newBuilder().build(),
+            context
     )
 }

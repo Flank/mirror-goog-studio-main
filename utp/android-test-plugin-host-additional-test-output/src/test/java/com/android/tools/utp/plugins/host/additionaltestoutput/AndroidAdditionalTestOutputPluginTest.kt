@@ -23,6 +23,7 @@ import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAddi
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.config.ProtoConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
@@ -103,8 +104,10 @@ class AndroidAdditionalTestOutputPluginTest {
             override val configResource: ExtensionProto.ConfigResource?
                 get() = null
         }
+        val context = mock<Context>()
+        `when`(context[Context.CONFIG_KEY]).thenReturn(protoConfig)
         return AndroidAdditionalTestOutputPlugin(mockLogger).apply {
-            configure(protoConfig)
+            configure(context)
         }
     }
 

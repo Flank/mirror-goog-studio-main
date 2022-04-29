@@ -19,6 +19,7 @@ import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConf
 import com.android.tools.utp.plugins.host.coverage.proto.AndroidTestCoverageConfigProto.AndroidTestCoverageConfig.TestCoveragePathOnDeviceCase
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugin.HostPlugin
@@ -58,8 +59,8 @@ class AndroidTestCoveragePlugin(
     private lateinit var testCoverageConfig: AndroidTestCoverageConfig
     private var useTestStorageService: Boolean = false
 
-    override fun configure(config: Config) {
-        config as ProtoConfig
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as ProtoConfig
         testCoverageConfig = AndroidTestCoverageConfig.parseFrom(
             config.configProto!!.value
         )
@@ -128,12 +129,14 @@ class AndroidTestCoveragePlugin(
 
     override fun afterEach(
         testResult: TestResult,
-        deviceController: DeviceController
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestResult = testResult
 
     override fun afterAll(
         testSuiteResult: TestSuiteResult,
-        deviceController: DeviceController
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestSuiteResult {
         try {
             if (testSuiteResult.testResultCount > 0) {
@@ -211,8 +214,6 @@ class AndroidTestCoveragePlugin(
     }
 
     override fun canRun(): Boolean = true
-
-    override fun cancel(): Boolean = false
 
     /**
      * Executes adb shell command wrapped with run-as command if runAsPackageName

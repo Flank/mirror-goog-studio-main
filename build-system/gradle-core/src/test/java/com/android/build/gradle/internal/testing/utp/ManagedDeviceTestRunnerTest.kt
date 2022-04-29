@@ -168,7 +168,7 @@ class ManagedDeviceTestRunnerTest {
         return TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
             if (hasEmulatorTimeoutException) {
                 platformErrorBuilder.apply {
-                    errorDetailBuilder.apply {
+                    addErrorsBuilder().apply {
                         causeBuilder.apply {
                             summaryBuilder.apply {
                                 stackTrace = "EmulatorTimeoutException"

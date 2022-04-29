@@ -176,6 +176,8 @@ class EmulatorHandleTest {
 
                 override fun isAlive(): Boolean = isRunning
 
+                override fun pid(): Long = 0L
+
                 override fun waitFor(timeout: Long?) = destroy()
             }
         }

@@ -39,6 +39,7 @@ TEST_DEPS = [
     "//tools/base/sdk-common:tools.sdk-common",
     "//tools/base/sdklib:tools.sdklib",
     "//tools/base/testutils:tools.testutils",
+    "//tools/base/utp/android-test-plugin-host-device-info-proto",
     "//tools/base/zipflinger",
     "@maven//:com.google.guava.guava",
     "@maven//:com.google.protobuf.protobuf-java",

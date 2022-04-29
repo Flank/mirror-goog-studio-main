@@ -21,6 +21,7 @@ import com.android.tools.utp.plugins.host.device.info.proto.AndroidTestDeviceInf
 import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugin.HostPlugin
 import com.google.testing.platform.proto.api.core.TestArtifactProto
@@ -48,7 +49,8 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
      *
      * @param config: a configuration.
      */
-    override fun configure(config: Config) {
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as Config
         outputDir = File(config.environment.outputDirectory)
         deviceMemInfoFile = File(outputDir, "meminfo")
         deviceCpuInfoFile = File(outputDir, "cpuinfo")
@@ -130,8 +132,9 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
      *         "cpuinfo".
      */
     override fun afterEach(
-            testResult: TestResult,
-            deviceController: DeviceController
+        testResult: TestResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestResult {
         return testResult.toBuilder().apply {
             addOutputArtifact(
@@ -160,13 +163,12 @@ class AndroidTestDeviceInfoPlugin : HostPlugin {
 
     /** No-op */
     override fun afterAll(
-            testSuiteResult: TestSuiteResult,
-            deviceController: DeviceController
+        testSuiteResult: TestSuiteResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestSuiteResult = testSuiteResult
 
     override fun canRun(): Boolean = true
-
-    override fun cancel(): Boolean = false
 }
 
 private fun Double.fromKilobytesToLong() = (this * 1000L).toLong()
@@ -177,7 +179,7 @@ private fun Double.fromTerabytesToLong() = (this * 1000L * 1000L * 1000L * 1000L
 // Parse memory from string. Return 0 if parser fails.
 @VisibleForTesting
 fun List<String>.getDeviceMemory(): Long {
-    this.forEach {
+    for (it in this) {
         val (key, value) = it.split(':', ignoreCase = true, limit = 2) + listOf("", "")
         if (key.trim() == "MemTotal") {
             val (ramSize, unit) = value.trim().split(' ', ignoreCase = true, limit = 2)

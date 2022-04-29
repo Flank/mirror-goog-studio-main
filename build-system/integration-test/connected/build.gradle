@@ -30,6 +30,7 @@ dependencies {
     testImplementation libs.apache_commons_io
     testImplementation libs.apache_commons_lang
     testImplementation libs.apache_compress
+    testImplementation libs.com.android.tools.utp.androidTestPluginHostDeviceInfoProto
     testImplementation libs.google_api_client
     testImplementation libs.google_storage_client
     testImplementation libs.junit

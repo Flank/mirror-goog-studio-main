@@ -189,6 +189,8 @@ class GradleAdbManagerTest {
                     isRunning = false
                 }
 
+                override fun pid(): Long = 0L
+
                 override fun isAlive(): Boolean = isRunning
 
                 override fun waitFor(timeout: Long?) = destroy()

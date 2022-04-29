@@ -18,10 +18,12 @@ package com.android.tools.utp.plugins.deviceprovider.gradle
 
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
+import com.android.testutils.MockitoKt.mock
 import com.android.tools.utp.plugins.deviceprovider.gradle.GradleManagedAndroidDeviceLauncher.Companion.MANAGED_DEVICE_NAME_KEY
 import com.android.tools.utp.plugins.deviceprovider.gradle.proto.GradleManagedAndroidDeviceProviderProto.GradleManagedAndroidDeviceProviderConfig
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.provider.DeviceProviderConfigImpl
@@ -112,7 +114,8 @@ class GradleManagedAndroidDeviceLauncherTest {
                         any(),
                         any(),
                         any(),
-                        any()
+                        any(),
+                        any(),
                 )
         ).thenReturn(deviceController)
         `when`(deviceController.setDevice(any())).thenAnswer {
@@ -138,12 +141,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(true)
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
 
@@ -171,12 +176,14 @@ class GradleManagedAndroidDeviceLauncherTest {
                     build()
                 }
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        enableDisplayConfig,
-                        makeConfigFromDeviceProviderConfig(enableDisplayConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                enableDisplayConfig,
+                makeConfigFromDeviceProviderConfig(enableDisplayConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
 
@@ -199,12 +206,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getId("emulator-5556")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
 
@@ -227,12 +236,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         // emulator-5558 skipped: correct device already found.
         `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
 
@@ -258,12 +269,14 @@ class GradleManagedAndroidDeviceLauncherTest {
             throw DeviceProviderException("")
         }
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         assertThrows(DeviceProviderException::class.java) {
             managedDeviceLauncher.provideDevice()
@@ -275,12 +288,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getAllSerials()).thenReturn(listOf("emulator-5554"))
         `when`(adbManager.getId("emulator-5554")).thenReturn("some-other-id")
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         assertThrows(GradleManagedAndroidDeviceLauncher.EmulatorTimeoutException::class.java) {
             managedDeviceLauncher.provideDevice()
@@ -294,12 +309,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getId("emulator-5554")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5554")).thenReturn(false)
 
-        managedDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        deviceProviderConfig,
-                        makeConfigFromDeviceProviderConfig(deviceProviderConfig)
-                )
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
+            GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                deviceProviderConfig,
+                makeConfigFromDeviceProviderConfig(deviceProviderConfig)
+            )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         assertThrows(GradleManagedAndroidDeviceLauncher.EmulatorTimeoutException::class.java) {
             managedDeviceLauncher.provideDevice()
@@ -313,12 +330,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getId("emulator-5558")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5558")).thenReturn(true)
 
-        managedDeviceLauncher.configure(
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
             GradleManagedAndroidDeviceLauncher.DataBoundArgs(
                 deviceProviderConfig,
                 makeConfigFromDeviceProviderConfig(deviceProviderConfig)
             )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         val device = managedDeviceLauncher.provideDevice().getDevice() as AndroidDevice
 
@@ -346,12 +365,14 @@ class GradleManagedAndroidDeviceLauncherTest {
         `when`(adbManager.getId("emulator-5556")).thenReturn(deviceId)
         `when`(adbManager.isBootLoaded("emulator-5556")).thenReturn(true)
 
-        managedDeviceLauncher.configure(
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(
             GradleManagedAndroidDeviceLauncher.DataBoundArgs(
                 deviceProviderConfig,
                 makeConfigFromDeviceProviderConfig(deviceProviderConfig)
             )
         )
+        managedDeviceLauncher.configure(mockContext)
 
         managedDeviceLauncher.provideDevice()
 

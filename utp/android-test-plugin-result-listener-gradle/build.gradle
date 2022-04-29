@@ -34,6 +34,7 @@ dependencies {
     implementation libs.grpc_netty
     implementation libs.protobuf
     implementation libs.guava
+    implementation libs.unified_test_platform
     implementation libs.unified_test_platform_device_provider
     compileOnly libs.unified_test_platform_launcher
 

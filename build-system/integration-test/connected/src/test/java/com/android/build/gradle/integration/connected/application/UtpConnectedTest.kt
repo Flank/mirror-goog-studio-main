@@ -22,8 +22,8 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.connected.utils.getEmulator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
+import com.android.tools.utp.plugins.host.device.info.proto.AndroidTestDeviceInfoProto.AndroidTestDeviceInfo
 import com.google.common.truth.Truth.assertThat
-import com.google.testing.platform.plugin.android.info.host.proto.AndroidTestDeviceInfoProto.AndroidTestDeviceInfo
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import java.io.File
 import java.io.IOException

@@ -24,6 +24,7 @@ import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDevicePr
 import com.google.common.truth.Truth.assertThat
 import com.google.common.util.concurrent.Futures
 import com.google.protobuf.Any
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.provider.DeviceProviderConfigImpl
 import com.google.testing.platform.core.device.DeviceProviderException
 import com.google.testing.platform.proto.api.config.AndroidSdkProto
@@ -68,8 +69,10 @@ class DdmlibAndroidDeviceProviderTest {
             uninstallIncompatibleApks = false
         }.build()
         val provider = DdmlibAndroidDeviceProvider(mockDeviceFinder)
-        provider.configure(DeviceProviderConfigImpl(
-                environmentProto, testSetupProto, androidSdkProto, Any.pack(config)))
+        val mockContext = mock<Context>()
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(DeviceProviderConfigImpl(
+            environmentProto, testSetupProto, androidSdkProto, Any.pack(config)))
+        provider.configure(mockContext)
         return provider
     }
 

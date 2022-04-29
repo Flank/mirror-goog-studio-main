@@ -30,6 +30,7 @@ dependencies {
     implementation libs.com.android.tools.utp.androidDeviceProviderDdmlibProto
     implementation libs.kotlin_stdlib
     implementation libs.kotlin_coroutines_core
+    implementation libs.unified_test_platform
     implementation libs.unified_test_platform_device_provider
     compileOnly libs.unified_test_platform_launcher
 
