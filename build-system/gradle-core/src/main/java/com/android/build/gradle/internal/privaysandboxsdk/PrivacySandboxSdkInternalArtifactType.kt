@@ -55,6 +55,7 @@ PrivacySandboxSdkInternalArtifactType<T : FileSystemLocation>(
     object DEX_ARCHIVE_INPUT_JAR_HASHES: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
 
     object DESUGAR_GRAPH: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
+    object GLOBAL_SYNTHETICS_ARCHIVE: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
 
     object DEX: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object R_PACKAGE_DEX: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable

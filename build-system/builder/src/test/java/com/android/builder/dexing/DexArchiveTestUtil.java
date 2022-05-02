@@ -29,6 +29,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -43,20 +44,28 @@ public final class DexArchiveTestUtil {
 
     /** Converts all class files in the input path the to the dex archive. */
     public static void convertClassesToDexArchive(
-            @NonNull Path classesInput, @NonNull Path dexArchiveOutput) throws IOException {
-        convertClassesToDexArchive(classesInput, dexArchiveOutput, 1);
+            @NonNull Path classesInput,
+            @NonNull Path dexArchiveOutput,
+            @NonNull Path globalSyntheticsOutput)
+            throws IOException {
+        convertClassesToDexArchive(classesInput, dexArchiveOutput, globalSyntheticsOutput, 1);
     }
 
     /** Converts all class files in the input path the to the dex archive. */
     public static void convertClassesToDexArchive(
-            @NonNull Path classesInput, @NonNull Path dexArchiveOutput, int minSdkVersion)
+            @NonNull Path classesInput,
+            @NonNull Path dexArchiveOutput,
+            @NonNull Path globalSynthetics,
+            int minSdkVersion)
             throws IOException {
-        convertClassesToDexArchive(classesInput, dexArchiveOutput, minSdkVersion, true);
+        convertClassesToDexArchive(
+                classesInput, dexArchiveOutput, globalSynthetics, minSdkVersion, true);
     }
 
     public static void convertClassesToDexArchive(
             @NonNull Path classesInput,
             @NonNull Path dexArchiveOutput,
+            @NonNull Path globalSyntheticsOutput,
             int minSdkVersion,
             boolean isDebuggable)
             throws IOException {
@@ -83,6 +92,7 @@ public final class DexArchiveTestUtil {
             dexArchiveBuilder.convert(
                     inputs.entries((x, y) -> true),
                     dexArchiveOutput,
+                    globalSyntheticsOutput,
                     null /* desugarGraphUpdater */);
         }
     }
@@ -98,7 +108,8 @@ public final class DexArchiveTestUtil {
         Path classesInput = emptyDir.resolve("input");
         createClasses(classesInput, Sets.newHashSet(classes));
         Path dexArchive = emptyDir.resolve("dex_archive.jar");
-        convertClassesToDexArchive(classesInput, dexArchive);
+        Path globalSynthetics = emptyDir.resolve("global_synthetics");
+        convertClassesToDexArchive(classesInput, dexArchive, globalSynthetics);
         return dexArchive;
     }
 
@@ -209,6 +220,7 @@ public final class DexArchiveTestUtil {
         Files.createDirectory(outputDir);
         merger.mergeDexArchives(
                 DexArchives.getAllEntriesFromArchives(inputs),
+                new ArrayList<>(),
                 outputDir,
                 null,
                 mainDexListRules,

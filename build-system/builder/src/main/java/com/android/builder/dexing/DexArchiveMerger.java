@@ -46,6 +46,8 @@ public interface DexArchiveMerger {
      *
      * @param dexArchiveEntries the dex archive entries to merge
      * @param outputDir directory where merged dex file(s) will be written, must exist
+     * @param globalSynthetics the global synthetics files to be merged with or without dex archive
+     *     entries
      * @param mainDexRulesFiles files containing the Proguard rules
      * @param mainDexRules Proguard rules written as strings
      * @param userMultidexKeepFile a user specified file containing classes to be kept in the main
@@ -56,6 +58,7 @@ public interface DexArchiveMerger {
      */
     void mergeDexArchives(
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
+            @NonNull List<Path> globalSynthetics,
             @NonNull Path outputDir,
             @Nullable List<Path> mainDexRulesFiles,
             @Nullable List<String> mainDexRules,

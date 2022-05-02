@@ -69,6 +69,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.files.IncrementalChanges;
@@ -1382,13 +1383,17 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     && ((ApplicationCreationConfig) creationConfig).getConsumesFeatureJars()) {
                 return creationConfig
                         .getServices()
-                        .fileCollection(artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE))
-                        .plus(getDesugarLibDexIfExists(creationConfig));
+                        .fileCollection(
+                                artifacts.get(InternalArtifactType.BASE_DEX.INSTANCE),
+                                getDesugarLibDexIfExists(creationConfig),
+                                getGlobalSyntheticsDex(creationConfig));
             } else {
                 return creationConfig
                         .getServices()
-                        .fileCollection(artifacts.getAll(InternalMultipleArtifactType.DEX.INSTANCE))
-                        .plus(getDesugarLibDexIfExists(creationConfig));
+                        .fileCollection(
+                                artifacts.getAll(InternalMultipleArtifactType.DEX.INSTANCE),
+                                getDesugarLibDexIfExists(creationConfig),
+                                getGlobalSyntheticsDex(creationConfig));
             }
         }
 
@@ -1468,6 +1473,31 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             creationConfig
                                     .getArtifacts()
                                     .get(InternalArtifactType.DESUGAR_LIB_DEX.INSTANCE));
+        }
+
+        @NonNull
+        private static FileCollection getGlobalSyntheticsDex(
+                @NonNull ApkCreationConfig creationConfig) {
+            // No need to collect global synthetics in three cases:
+            //   1. Global synthetics generation is disabled
+            //   2. R8 is used and global synthetics are not generated
+            //   3. In mono dex and legacy multidex where global synthetics are already merged into
+            //      dex files in dex merging tasks
+            if (!creationConfig
+                            .getServices()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_GLOBAL_SYNTHETICS)
+                    || creationConfig.getDexingCreationConfig().getDexingType()
+                            != DexingType.NATIVE_MULTIDEX
+                    || creationConfig.getMinifiedEnabled()) {
+                return creationConfig.getServices().fileCollection();
+            }
+            return creationConfig
+                    .getServices()
+                    .fileCollection(
+                            creationConfig
+                                    .getArtifacts()
+                                    .get(InternalArtifactType.GLOBAL_SYNTHETICS_DEX.INSTANCE));
         }
 
         // We always write new APK entries in a deterministic order except for debug builds invoked

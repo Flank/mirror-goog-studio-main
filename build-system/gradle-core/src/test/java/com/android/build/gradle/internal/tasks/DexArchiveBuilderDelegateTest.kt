@@ -417,7 +417,8 @@ class DexArchiveBuilderDelegateTest {
         projectOutputKeepRules: File? = null,
         externalLibsOutputKeepRules: File? = null,
         numberOfBuckets: Int = 1,
-        inputJarHashesFile: File = tmpDir.newFile()
+        inputJarHashesFile: File = tmpDir.newFile(),
+        enableGlobalSynthetics: Boolean = true,
     ): DexArchiveBuilderTaskDelegate {
         return DexArchiveBuilderTaskDelegate(
             isIncremental = isIncremental,
@@ -429,10 +430,10 @@ class DexArchiveBuilderDelegateTest {
             externalLibChangedClasses = externalLibChanges,
             mixedScopeClasses = emptySet(),
             mixedScopeChangedClasses = emptySet(),
-            projectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(projectOutput, projectOutputKeepRules),
-            subProjectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
-            externalLibsOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(externalLibsOutput, externalLibsOutputKeepRules),
-            mixedScopeOutputs =  DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
+            projectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(projectOutput, projectOutputKeepRules, tmpDir.newFolder()),
+            subProjectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null, tmpDir.newFolder()),
+            externalLibsOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(externalLibsOutput, externalLibsOutputKeepRules, tmpDir.newFolder()),
+            mixedScopeOutputs =  DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null, tmpDir.newFolder()),
             inputJarHashesFile = inputJarHashesFile,
             desugarClasspathChangedClasses = emptySet(),
             desugarGraphDir =  tmpDir.newFolder().takeIf { java8Desugaring == Java8LangSupport.D8 },
@@ -445,7 +446,7 @@ class DexArchiveBuilderDelegateTest {
                 desugarBootclasspath = emptyList(),
                 desugarClasspath = desugaringClasspath.toList(),
                 coreLibDesugarConfig = libConfiguration,
-                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
+                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             ),
             projectPath = FakeProviderFactory.factory.provider { "" },
             taskPath = "",

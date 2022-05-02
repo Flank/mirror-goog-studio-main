@@ -27,7 +27,10 @@ class IncrementalDexSpec(
     val inputClassFiles: ClassBucket,
 
     /** The path to a directory or jar file containing output dex files. */
-    val outputPath: File,
+    val dexOutputPath: File,
+
+    /** The path to a directory containing output global synthetics files. */
+    val globalSyntheticsOutput: File?,
 
     /** Parameters for dexing. */
     val dexParams: DexParametersForWorkers,
@@ -54,6 +57,6 @@ class IncrementalDexSpec(
     }
 
     companion object {
-        private const val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 2L
     }
 }

@@ -75,7 +75,8 @@ class DexingTransformTest {
         val outputs = FakeTransformOutputs(tmp)
         TestInputsGenerator.jarWithEmptyClasses(input.toPath(), listOf("test/A"))
         dexingTransform.transform(outputs)
-        assertThatDex(outputs.outputDirectory.resolve("classes.dex"))
+        assertThatDex(outputs.outputDirectory.resolve(
+            "${computeDexDirName(outputs.outputDirectory)}/classes.dex"))
             .containsExactlyClassesIn(listOf("Ltest/A;"))
     }
 
@@ -93,7 +94,8 @@ class DexingTransformTest {
         dexingTransform.transform(outputs)
 
         val dexFiles = FileUtils.getAllFiles(outputs.outputDirectory)
-        assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve("test/A.dex"))
+        assertThat(dexFiles).containsExactly(outputs.outputDirectory.resolve(
+            "${computeDexDirName(outputs.outputDirectory)}/test/A.dex"))
         val dexClasses = dexFiles.flatMap { Dex(it).classes.keys }
         assertThat(dexClasses).containsExactly("Ltest/A;")
     }
@@ -127,8 +129,10 @@ class DexingTransformTest {
         transform.transform(outputs)
 
         assertThat(
-            Dex(outputs.outputDirectory.resolve("classes.dex")).classes.size +
-                    Dex(outputs.outputDirectory.resolve("classes2.dex")).classes.size
+            Dex(outputs.outputDirectory.resolve(
+                "${computeDexDirName(outputs.outputDirectory)}/classes.dex")).classes.size +
+                    Dex(outputs.outputDirectory.resolve(
+                        "${computeDexDirName(outputs.outputDirectory)}/classes2.dex")).classes.size
         ).isEqualTo(totalMethods / methodsPerClass)
     }
 
@@ -178,7 +182,8 @@ class DexingTransformTest {
         val outputs = FakeTransformOutputs(tmp)
         dexingTransform.transform(outputs)
 
-        val dex = Dex(outputs.outputDirectory.resolve("classes.dex"))
+        val dex = Dex(outputs.outputDirectory.resolve(
+            "${computeDexDirName(outputs.outputDirectory)}/classes.dex"))
         assertThat(dex).containsClassesIn(classes.map { Type.getDescriptor(it) })
         assertThat(dex.classes).hasSize(classes.size + 1)
 
@@ -228,10 +233,10 @@ class DexingTransformTest {
         val standAloneClass = TestInputsGenerator.getPath(StandAloneClass::class.java)
 
         val interfaceWithDefaultMethodDex =
-            interfaceWithDefaultMethodClass.replace(".class", ".dex")
+            "${computeDexDirName(outputs.outputDirectory)}/${interfaceWithDefaultMethodClass.replace(".class", ".dex")}"
         val classUsingInterfaceWithDefaultMethodDex =
-            classUsingInterfaceWithDefaultMethodClass.replace(".class", ".dex")
-        val standAloneClassDex = standAloneClass.replace(".class", ".dex")
+            "${computeDexDirName(outputs.outputDirectory)}/${classUsingInterfaceWithDefaultMethodClass.replace(".class", ".dex")}"
+        val standAloneClassDex = "${computeDexDirName(outputs.outputDirectory)}/${standAloneClass.replace(".class", ".dex")}"
 
         val interfaceWithDefaultMethodTimestampBefore = Files.getLastModifiedTime(
             outputs.outputDirectory.resolve(interfaceWithDefaultMethodDex).toPath()
@@ -307,6 +312,7 @@ class DexingTransformTest {
             bootClasspath: List<File> = listOf(),
             desugaring: Boolean = false,
             errorFormat: SyncOptions.ErrorFormatMode = SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
+            enableGlobalSynthetics: Boolean = true,
         ) : Parameters {
             override var projectName = FakeGradleProperty(":test")
             override var debuggable = FakeGradleProperty(debuggable)
@@ -315,6 +321,7 @@ class DexingTransformTest {
             override val errorFormat = FakeGradleProperty(errorFormat)
             override val enableDesugaring = FakeGradleProperty(desugaring)
             override val libConfiguration: Property<String> = FakeGradleProperty()
+            override val enableGlobalSynthetics = FakeGradleProperty(enableGlobalSynthetics)
         }
 
         override fun getParameters(): Parameters {

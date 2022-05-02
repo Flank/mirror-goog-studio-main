@@ -16,6 +16,7 @@
 
 package com.android.builder.dexing
 
+import com.android.SdkConstants
 import com.android.tools.r8.OutputMode
 import java.io.File
 
@@ -23,7 +24,7 @@ import java.io.File
  * Output mode for dexing.
  *
  * Each mode should map to [com.android.tools.r8.OutputMode]. It may also provide additional
- * information (e.g., [DexFilePerClassFile.getOutputRelativePathsOfClassFile] is needed for
+ * information (e.g., [DexFilePerClassFile.getDexOutputRelativePathsOfClassFile] is needed for
  * incremental dexing).
  */
 interface DexOutputMode {
@@ -36,12 +37,12 @@ object DexFilePerClassFile : DexOutputMode {
         get() = OutputMode.DexFilePerClassFile
 
     /**
-     * Returns the Unix-style relative paths of all the possible outputs under the dex output
+     * Returns the Unix-style relative paths of all the possible dex outputs under the dex output
      * directory or jar when D8 processes the class file with the given relative path.
      *
      * (If the given relative path is not in Unix style, it will be converted to that first.)
      */
-    fun getOutputRelativePathsOfClassFile(classFileRelativePath: String): Set<String> {
+    fun getDexOutputRelativePathsOfClassFile(classFileRelativePath: String): Set<String> {
         // Given a class file, `OutputMode.DexFilePerClassFile` will produce 1 dex file + additional
         // synthetic files if necessary.
         // For example, given the following class files:
@@ -63,6 +64,14 @@ object DexFilePerClassFile : DexOutputMode {
             // There is currently 1 output file / class file, but there may be more in the future.
             ClassFileEntry.withDexExtension(File(classFileRelativePath).invariantSeparatorsPath)
         )
+    }
+
+    /**
+     * Returns the global synthetics output relative path of a class file.
+     */
+    fun getGlobalOutputRelativePathOfClassFile(classFileRelativePath: String): String {
+        return classFileRelativePath.substring(
+            0, classFileRelativePath.length - SdkConstants.DOT_CLASS.length) + globalSyntheticsFileExtension
     }
 }
 

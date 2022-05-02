@@ -57,7 +57,8 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     @Override
     public void convert(
             @NonNull Stream<ClassFileEntry> input,
-            @NonNull Path output,
+            @NonNull Path dexOutput,
+            @Nullable Path globalSyntheticsOutput,
             @Nullable DependencyGraphUpdater<File> desugarGraphUpdater)
             throws DexArchiveBuilderException {
         InterceptingDiagnosticsHandler diagnosticsHandler = new InterceptingDiagnosticsHandler();
@@ -83,7 +84,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                     .setMinApiLevel(dexParams.getMinSdkVersion())
                     .setIntermediate(true)
                     .setOutput(
-                            output,
+                            dexOutput,
                             (dexParams.getDexPerClass()
                                             ? DexFilePerClassFile.INSTANCE
                                             : DexIndexed.INSTANCE)
@@ -93,6 +94,13 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             if (dexParams.getDebuggable()) {
                 builder.addAssertionsConfiguration(
                         AssertionsConfiguration.Builder::compileTimeEnableAllAssertions);
+            }
+
+            if (globalSyntheticsOutput != null) {
+                builder.setGlobalSyntheticsConsumer(
+                        new D8GlobalSyntheticsConsumer(globalSyntheticsOutput));
+                // Enable this flag along with the support for global synthetics (b/231547906)
+                builder.setEnableExperimentalMissingLibraryApiModeling(true);
             }
 
             if (dexParams.getWithDesugaring()) {

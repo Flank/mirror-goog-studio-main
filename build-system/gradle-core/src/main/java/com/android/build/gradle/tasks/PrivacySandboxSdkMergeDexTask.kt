@@ -50,6 +50,10 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val dexDirs: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val globalSynthetics: ConfigurableFileCollection
+
     @get:Nested
     abstract val sharedParams: DexMergingTask.SharedParams
 
@@ -63,6 +67,7 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
                 sharedParams = sharedParams,
                 numberOfBuckets = 1,
                 dexDirsOrJars = dexDirs.files.toList(),
+                globalSynthetics = globalSynthetics,
                 outputDir = outputDir,
                 incremental = inputChanges.isIncremental,
                 fileChanges = if (inputChanges.isIncremental) {
@@ -108,6 +113,9 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
 
             task.dexDirs.fromDisallowChanges(
                 creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.DEX_ARCHIVE)
+            )
+            task.globalSynthetics.fromDisallowChanges(
+                creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.GLOBAL_SYNTHETICS_ARCHIVE)
             )
         }
     }

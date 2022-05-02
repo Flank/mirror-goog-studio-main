@@ -32,6 +32,7 @@ import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
+import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidVersion
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
@@ -58,6 +59,10 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
     @get:Optional
     @get:OutputFile
     abstract val outputKeepRules: DirectoryProperty
+
+    @get:Optional
+    @get:OutputDirectory
+    abstract val outputGlobalSynthetics: DirectoryProperty
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -98,6 +103,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 it.errorFormatMode.set(errorFormatMode)
                 it.libConfiguration.set(libConfiguration)
                 it.outputKeepRules.set(outputKeepRules.dir("${index}_${input.name}"))
+                it.outputGlobalSynthetics.set(outputGlobalSynthetics.dir("${index}_${input.name}"))
             }
         }
     }
@@ -112,6 +118,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
         abstract val libConfiguration: Property<String>
         abstract val outputKeepRules: DirectoryProperty
+        abstract val outputGlobalSynthetics: DirectoryProperty
     }
 
     abstract class DexFileDependenciesWorkerAction : ProfileAwareWorkAction<WorkerActionParams>() {
@@ -146,7 +153,8 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                     classFileInput.entries { _, _ -> true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,
-                            parameters.outputFile.asFile.get().toPath()
+                            parameters.outputFile.asFile.get().toPath(),
+                            parameters.outputGlobalSynthetics.asFile.orNull?.toPath()
                         )
                     }
                 }
@@ -176,6 +184,11 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 creationConfig.artifacts
                     .setInitialProvider(taskProvider, DexFileDependenciesTask::outputKeepRules)
                     .on(InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES)
+            }
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_GLOBAL_SYNTHETICS]) {
+                creationConfig.artifacts
+                    .setInitialProvider(taskProvider, DexFileDependenciesTask::outputGlobalSynthetics)
+                    .on(InternalArtifactType.GLOBAL_SYNTHETICS_FILE_LIB)
             }
         }
 

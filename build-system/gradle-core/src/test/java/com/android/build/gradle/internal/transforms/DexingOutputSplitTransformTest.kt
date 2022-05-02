@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.build.gradle.internal.dependency.DEX_DIR_NAME
 import com.android.build.gradle.internal.dependency.DexingOutputSplitTransform
+import com.android.build.gradle.internal.dependency.computeDexDirName
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
@@ -36,7 +36,7 @@ class DexingOutputSplitTransformTest {
     @Test
     fun testInputWithoutKeepRulesFile() {
         val input = tmp.newFolder()
-        input.resolve(DEX_DIR_NAME).mkdir()
+        input.resolve(computeDexDirName(input)).mkdir()
 
         val transform = TestDexingOutputSplitTransform(
             FakeGradleProvider(FakeGradleDirectory(input)),

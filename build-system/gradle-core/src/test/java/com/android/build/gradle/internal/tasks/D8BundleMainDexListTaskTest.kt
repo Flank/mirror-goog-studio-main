@@ -182,11 +182,12 @@ class D8BundleMainDexListTaskTest {
         val emptyClassesDir = tmpDir.newFolder().also {
             TestInputsGenerator.dirWithEmptyClasses(it.toPath(), emptyClassNames)
         }
-        generateDexArchive(emptyClassesDir, dexArchivePath)
+        val globalSyntheticsPath = tmpDir.newFile()
+        generateDexArchive(emptyClassesDir, dexArchivePath, globalSyntheticsPath)
         return dexArchivePath
     }
 
-    private fun generateDexArchive(classesDirOrJar: File, dexArchivePath: File) {
+    private fun generateDexArchive(classesDirOrJar: File, dexArchivePath: File, globalSyntheticsFile: File) {
         val builder = DexArchiveBuilder.createD8DexBuilder(
             DexParameters(
                 minSdkVersion = 1,
@@ -203,7 +204,8 @@ class D8BundleMainDexListTaskTest {
         ClassFileInputs.fromPath(classesDirOrJar.toPath()).use { input ->
             builder.convert(
                 input.entries { _, _ -> true },
-                dexArchivePath.toPath()
+                dexArchivePath.toPath(),
+                globalSyntheticsFile.toPath()
             )
         }
     }

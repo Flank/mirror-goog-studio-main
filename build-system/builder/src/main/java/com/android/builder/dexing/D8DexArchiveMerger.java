@@ -69,6 +69,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
     @Override
     public void mergeDexArchives(
             @NonNull List<DexArchiveEntry> dexArchiveEntries,
+            @NonNull List<Path> globalSynthetics,
             @NonNull Path outputDir,
             @Nullable List<Path> mainDexRulesFiles,
             @Nullable List<String> mainDexRules,
@@ -89,9 +90,14 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                                                             .getRootPath()
                                                             .toAbsolutePath()
                                                             .toString())
+                                    .collect(Collectors.joining(", "))
+                            + ", and from all global synthetics files in "
+                            + globalSynthetics.stream()
+                                    .map(Path::toString)
                                     .collect(Collectors.joining(", ")));
         }
-        if (dexArchiveEntries.isEmpty()) {
+
+        if (dexArchiveEntries.isEmpty() && globalSynthetics.isEmpty()) {
             return;
         }
 
@@ -105,6 +111,9 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     dexArchiveEntry.getDexFileContent(),
                     D8DiagnosticsHandler.getOrigin(dexArchiveEntry));
         }
+
+        builder.addGlobalSyntheticsFiles(globalSynthetics);
+
         try {
             // Tracing for legacy multi dex is enabled by setting mainDexRules or mainDexRulesFiles
             if (mainDexRules != null) {
@@ -135,14 +144,13 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     forkJoinPool != null ? forkJoinPool : MoreExecutors.newDirectExecutorService();
             D8.run(builder.build(), executorService);
         } catch (CompilationFailedException e) {
-            throw getExceptionToRethrow(e, d8DiagnosticsHandler);
+            throw getMergingExceptionToRethrow(e, d8DiagnosticsHandler);
         }
     }
 
     @NonNull
-    private DexArchiveMergerException getExceptionToRethrow(
-            @NonNull Throwable t,
-            D8DiagnosticsHandler d8DiagnosticsHandler) {
+    private DexArchiveMergerException getMergingExceptionToRethrow(
+            @NonNull CompilationFailedException t, D8DiagnosticsHandler d8DiagnosticsHandler) {
         StringBuilder msg = new StringBuilder("Error while merging dex archives: ");
         for (String hint : d8DiagnosticsHandler.getPendingHints()) {
             msg.append(System.lineSeparator());

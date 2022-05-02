@@ -29,14 +29,15 @@ class DexParameters(
     val desugarBootclasspath: List<File>,
     val desugarClasspath: List<File>,
     val coreLibDesugarConfig: String?,
-    val errorFormatMode: SyncOptions.ErrorFormatMode
+    val errorFormatMode: SyncOptions.ErrorFormatMode,
 ) {
 
     fun toDexParametersForWorkers(
             dexPerClass: Boolean,
             bootClasspath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
             classpath: DexArchiveBuilderTaskDelegate.ClasspathServiceKey,
-            coreLibDesugarOutputKeepRuleFile: File?): DexParametersForWorkers {
+            coreLibDesugarOutputKeepRuleFile: File?,
+    ): DexParametersForWorkers {
         return DexParametersForWorkers(
             minSdkVersion = minSdkVersion,
             debuggable = debuggable,

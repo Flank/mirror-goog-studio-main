@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.dependency.KEEP_RULES_FILE_NAME
+import com.android.build.gradle.internal.dependency.computeKeepRulesFileName
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
@@ -54,6 +54,7 @@ class CopyDexOutputTest {
                     override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
                     override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(output)
                     override val outputKeepRules = FakeObjectFactory.factory.directoryProperty()
+                    override val outputGlobalSynthetics = FakeObjectFactory.factory.directoryProperty().fileValue(tmp.newFolder())
                     override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")
@@ -73,7 +74,7 @@ class CopyDexOutputTest {
             it.resolve("do_not_copy").createNewFile()
         }
         val inputB = tmp.newFolder().also { dir ->
-            dir.resolve(KEEP_RULES_FILE_NAME).createNewFile()
+            dir.resolve(computeKeepRulesFileName(dir)).createNewFile()
             dir.resolve("classes.dex").createNewFile()
         }
         val outputDex = tmp.newFolder()
@@ -84,6 +85,7 @@ class CopyDexOutputTest {
                     override val inputDirs = FakeConfigurableFileCollection(inputA, inputB)
                     override val outputDexDir = FakeObjectFactory.factory.directoryProperty().fileValue(outputDex)
                     override val outputKeepRules = FakeObjectFactory.factory.directoryProperty().fileValue(outputKeepRules)
+                    override val outputGlobalSynthetics = FakeObjectFactory.factory.directoryProperty().fileValue(tmp.newFolder())
                     override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")

@@ -75,7 +75,9 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, BIG_CLASS, 65524);
 
         bigDexArchive = allTestsTemporaryFolder.getRoot().toPath().resolve("big_dex_archive");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, bigDexArchive);
+        Path globalSynthetics =
+                allTestsTemporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, bigDexArchive, globalSynthetics);
     }
 
     @Test
@@ -121,7 +123,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "A", 9);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
@@ -137,7 +140,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "B", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         try {
@@ -201,7 +205,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "B", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeLegacyDex(
@@ -240,7 +245,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "A", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
@@ -273,7 +279,8 @@ public class DexArchiveMergerTest {
         }
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
@@ -336,7 +343,8 @@ public class DexArchiveMergerTest {
         Path classesInput = fs.getPath("tmp\\input_classes");
         DexArchiveTestUtil.createClasses(classesInput, classNames);
         Path dexArchive = fs.getPath("tmp\\dex_archive");
-        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, dexArchive);
+        Path globalSynthetics = fs.getPath("tmp\\global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, dexArchive, globalSynthetics);
 
         Path output = fs.getPath("tmp\\out");
         DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive), output);
@@ -362,7 +370,8 @@ public class DexArchiveMergerTest {
         }
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, globalSynthetics);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
@@ -373,11 +382,15 @@ public class DexArchiveMergerTest {
         // create 2 classes with the same name and package
         int numClasses = 2;
         List<Path> dexArchives = new ArrayList<>();
+        List<Path> globalSynthetics = new ArrayList<>();
         for (int i = 0; i < numClasses; i++) {
             Path classes = temporaryFolder.newFolder("classes" + i).toPath();
             TestInputsGenerator.dirWithEmptyClasses(classes, Collections.singletonList("test/A"));
             dexArchives.add(temporaryFolder.getRoot().toPath().resolve("output" + i));
-            DexArchiveTestUtil.convertClassesToDexArchive(classes, dexArchives.get(i));
+            globalSynthetics.add(
+                    temporaryFolder.getRoot().toPath().resolve("global_synthetics" + i));
+            DexArchiveTestUtil.convertClassesToDexArchive(
+                    classes, dexArchives.get(i), globalSynthetics.get(i));
         }
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
@@ -406,14 +419,18 @@ public class DexArchiveMergerTest {
         crc.update(Files.readAllBytes(classFile));
         String crcHexMatcher = ".*" + Long.toHexString(crc.getValue()) + ".*";
         Path fstArchive = firstDir.resolve("dex_archive.jar");
-        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, fstArchive);
+        Path fstGlobalSynthetics = firstDir.resolve("globalSynthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(
+                classesInput, fstArchive, fstGlobalSynthetics);
 
         // Compile B.class.
         Path sndDir = temporaryFolder.getRoot().toPath().resolve("snd");
         classesInput = sndDir.resolve("input");
         createClasses(classesInput, Sets.newHashSet("B"));
         Path sndArchive = sndDir.resolve("dex_archive.jar");
-        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, sndArchive);
+        Path sndGlobalSynthetics = sndDir.resolve("globalSynthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(
+                classesInput, sndArchive, sndGlobalSynthetics);
 
         // The combined dex file should contains the checksum.
         Path output = temporaryFolder.getRoot().toPath().resolve("output");

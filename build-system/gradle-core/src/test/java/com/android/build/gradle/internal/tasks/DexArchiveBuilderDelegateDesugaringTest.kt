@@ -454,7 +454,8 @@ class DexArchiveBuilderDelegateDesugaringTest {
         externalLibClasses: Set<File> = emptySet(),
         desugaringClasspath: Set<File> = emptySet(),
         inputJarHashes: File = tmpDir.newFile(),
-        libConfiguration: String? = null
+        libConfiguration: String? = null,
+        enableGlobalSynthetics: Boolean = true,
     ): DexArchiveBuilderTaskDelegate {
 
         val bootClasspath = if (includeAndroidJar) {
@@ -474,10 +475,10 @@ class DexArchiveBuilderDelegateDesugaringTest {
             externalLibChangedClasses = emptySet(),
             mixedScopeClasses = emptySet(),
             mixedScopeChangedClasses = emptySet(),
-            projectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(projectOutput, null),
-            subProjectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
-            externalLibsOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
-            mixedScopeOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
+            projectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(projectOutput, null, tmpDir.newFolder()),
+            subProjectOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null, tmpDir.newFolder()),
+            externalLibsOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null, tmpDir.newFolder()),
+            mixedScopeOutputs = DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null, tmpDir.newFolder()),
             dexParams = DexParameters(
                 minSdkVersion = minSdkVersion,
                 debuggable = isDebuggable,
@@ -485,7 +486,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
                 desugarBootclasspath = bootClasspath.toList(),
                 desugarClasspath = desugaringClasspath.toList(),
                 coreLibDesugarConfig = libConfiguration,
-                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE
+                errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
             ),
             desugarClasspathChangedClasses = emptySet(),
             desugarGraphDir =  desugarGraphDir.toFile(),

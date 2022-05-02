@@ -218,7 +218,7 @@ fun setDesugarLibKeepRules(
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.REVERSE_METADATA_VALUES,
-                AndroidArtifacts.ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES
             )
         )

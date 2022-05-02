@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_NAME
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_SET_METADATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FULL_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.GLOBAL_SYNTHETICS_MERGED
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_ASSETS
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_JAVA_RES
@@ -201,6 +202,7 @@ class PublishingSpecs {
                 reverseMetadata(NATIVE_DEBUG_METADATA, ArtifactType.REVERSE_METADATA_NATIVE_DEBUG_METADATA)
                 reverseMetadata(NATIVE_SYMBOL_TABLES, ArtifactType.REVERSE_METADATA_NATIVE_SYMBOL_TABLES)
                 reverseMetadata(DESUGAR_LIB_MERGED_KEEP_RULES, ArtifactType.DESUGAR_LIB_MERGED_KEEP_RULES)
+                reverseMetadata(GLOBAL_SYNTHETICS_MERGED, ArtifactType.GLOBAL_SYNTHETICS_MERGED)
                 reverseMetadata(FEATURE_PUBLISHED_DEX, ArtifactType.FEATURE_PUBLISHED_DEX)
                 reverseMetadata(LINT_MODEL, ArtifactType.LINT_MODEL)
                 reverseMetadata(LINT_VITAL_LINT_MODEL, ArtifactType.LINT_VITAL_LINT_MODEL)

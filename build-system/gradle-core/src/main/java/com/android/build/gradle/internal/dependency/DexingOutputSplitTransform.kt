@@ -42,6 +42,7 @@ abstract class DexingOutputSplitTransform : TransformAction<DexingOutputSplitTra
     enum class DexOutput {
         DEX,
         KEEP_RULES,
+        GLOBAL_SYNTHETICS,
     }
 
     interface Parameters: GenericTransformParameters {
@@ -54,14 +55,21 @@ abstract class DexingOutputSplitTransform : TransformAction<DexingOutputSplitTra
     abstract val primaryInput: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
-        if (parameters.dexOutput.get() == DexOutput.DEX) {
-            outputs.dir(File(primaryInput.get().asFile, DEX_DIR_NAME))
-        } else {
-            val keepRulesFile = File(primaryInput.get().asFile, KEEP_RULES_FILE_NAME)
-            if (!keepRulesFile.exists()) {
-                keepRulesFile.createNewFile()
+        val inputDir = primaryInput.get().asFile
+        when (parameters.dexOutput.get()) {
+            DexOutput.DEX -> {
+                outputs.dir(File(inputDir, computeDexDirName(inputDir)))
             }
-            outputs.file(keepRulesFile)
+            DexOutput.KEEP_RULES -> {
+                val keepRulesFile = File(inputDir, computeKeepRulesFileName(inputDir))
+                if (!keepRulesFile.exists()) {
+                    keepRulesFile.createNewFile()
+                }
+                outputs.file(keepRulesFile)
+            }
+            DexOutput.GLOBAL_SYNTHETICS -> {
+                outputs.dir(File(inputDir, computeGlobalSyntheticsDirName(inputDir)))
+            }
         }
     }
 }
@@ -71,6 +79,7 @@ fun registerDexingOutputSplitTransform(dependencyHandler: DependencyHandler) {
     // even if R8 is not used.
     registerTransformWithOutputType(dependencyHandler, DexingOutputSplitTransform.DexOutput.DEX)
     registerTransformWithOutputType(dependencyHandler, DexingOutputSplitTransform.DexOutput.KEEP_RULES)
+    registerTransformWithOutputType(dependencyHandler, DexingOutputSplitTransform.DexOutput.GLOBAL_SYNTHETICS)
 }
 
 private fun registerTransformWithOutputType(
@@ -81,14 +90,29 @@ private fun registerTransformWithOutputType(
         spec.parameters { parameters ->
             parameters.dexOutput.set(dexOutput)
         }
-        spec.from.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.DEX_AND_KEEP_RULES.type)
-        if (dexOutput == DexingOutputSplitTransform.DexOutput.DEX) {
-            spec.to.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.DEX.type)
-        } else {
-            spec.to.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.KEEP_RULES.type)
+        spec.from.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.D8_OUTPUTS.type)
+        when (dexOutput) {
+            DexingOutputSplitTransform.DexOutput.DEX -> {
+                spec.to.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.DEX.type)
+            }
+            DexingOutputSplitTransform.DexOutput.KEEP_RULES -> {
+                spec.to.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.KEEP_RULES.type)
+            }
+            DexingOutputSplitTransform.DexOutput.GLOBAL_SYNTHETICS -> {
+                spec.to.attribute(ARTIFACT_TYPE_ATTRIBUTE, AndroidArtifacts.ArtifactType.GLOBAL_SYNTHETICS.type)
+            }
         }
     }
 }
 
-const val DEX_DIR_NAME = SdkConstants.FD_DEX
-const val KEEP_RULES_FILE_NAME = "keep_rules"
+private const val DEX_DIR_NAME = SdkConstants.FD_DEX
+private const val KEEP_RULES_FILE_NAME = "keep_rules"
+private const val GLOBAL_SYNTHETICS_DIR_NAME = "global-synthetics"
+
+// Gradle identifies ResolvedArtifactResult by ComponentIdentifier and the file name of output file
+// or output directory. When test fixtures feature is enabled, there could be two
+// ResolvedArtifactResult with same ComponentIdentifier, so we need to make the file name different
+// (e.g. prefix dexOutput name) to avoid collision of identification.
+fun computeDexDirName(dexOutput: File): String = dexOutput.name + "_" + DEX_DIR_NAME
+fun computeKeepRulesFileName(dexOutput: File): String = dexOutput.name + "_" + KEEP_RULES_FILE_NAME
+fun computeGlobalSyntheticsDirName(dexOutput: File): String = dexOutput.name + "_" + GLOBAL_SYNTHETICS_DIR_NAME

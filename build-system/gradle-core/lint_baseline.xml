@@ -14,10 +14,10 @@
         message="Suspicious indentation: This is indented but is not nested under the previous expression (`if (configurationPar`...)">
         <location
             file="src/main/java/com/android/build/gradle/internal/cxx/configure/CxxCreateGradleTasks.kt"
-            line="132"/>
+            line="95"/>
         <location
             file="src/main/java/com/android/build/gradle/internal/cxx/configure/CxxCreateGradleTasks.kt"
-            line="131"/>
+            line="94"/>
     </issue>
 
     <issue
@@ -201,7 +201,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="131"/>
+            line="132"/>
     </issue>
 
     <issue
@@ -209,7 +209,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="139"/>
+            line="140"/>
     </issue>
 
     <issue
@@ -217,7 +217,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="167"/>
+            line="168"/>
     </issue>
 
     <issue
@@ -225,7 +225,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="214"/>
+            line="215"/>
     </issue>
 
     <issue
@@ -473,7 +473,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="365"/>
+            line="377"/>
     </issue>
 
     <issue
@@ -481,7 +481,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="373"/>
+            line="385"/>
     </issue>
 
     <issue
@@ -489,7 +489,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="404"/>
+            line="416"/>
     </issue>
 
     <issue
@@ -609,7 +609,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/factory/GlobalTaskCreationConfigImpl.kt"
-            line="95"/>
+            line="92"/>
     </issue>
 
     <issue
@@ -617,7 +617,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/factory/GlobalTaskCreationConfigImpl.kt"
-            line="181"/>
+            line="178"/>
     </issue>
 
     <issue
@@ -625,7 +625,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/factory/GlobalTaskCreationConfigImpl.kt"
-            line="224"/>
+            line="221"/>
     </issue>
 
     <issue
@@ -633,7 +633,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/factory/GlobalTaskCreationConfigImpl.kt"
-            line="231"/>
+            line="228"/>
     </issue>
 
     <issue
@@ -713,7 +713,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/PrivacySandboxSdkPlugin.kt"
-            line="93"/>
+            line="96"/>
     </issue>
 
     <issue
@@ -769,7 +769,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/SdkComponents.kt"
-            line="91"/>
+            line="93"/>
     </issue>
 
     <issue
@@ -929,7 +929,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="139"/>
+            line="140"/>
     </issue>
 
     <issue
@@ -937,7 +937,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="223"/>
+            line="224"/>
     </issue>
 
     <issue
@@ -1073,7 +1073,7 @@
         message="This reference is unused: isMinifyEnabled">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/factory/GlobalTaskCreationConfigImpl.kt"
-            line="189"/>
+            line="186"/>
     </issue>
 
     <issue
@@ -1121,7 +1121,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/featuresplit/FeatureSetMetadataWriterTask.kt"
-            line="130"/>
+            line="131"/>
     </issue>
 
     <issue
@@ -1129,23 +1129,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
-            line="867"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="60"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="62"/>
+            line="866"/>
     </issue>
 
     <issue
@@ -1297,7 +1281,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleToStandaloneApkTask.kt"
-            line="126"/>
+            line="125"/>
     </issue>
 
     <issue
@@ -1321,7 +1305,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
-            line="804"/>
+            line="832"/>
     </issue>
 
 </issues>

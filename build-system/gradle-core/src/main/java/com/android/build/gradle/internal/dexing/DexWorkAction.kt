@@ -118,7 +118,8 @@ private fun processIncrementally(
             dexArchiveBuilder = dexArchiveBuilder,
             inputClassFiles = inputClassFiles,
             inputFilter = filter,
-            outputPath = outputPath,
+            dexOutputPath = dexOutputPath,
+            globalSyntheticsOutput = globalSyntheticsOutput,
             desugarGraphUpdater = desugarGraph
         )
 
@@ -146,7 +147,8 @@ private fun processNonIncrementally(
             dexArchiveBuilder = dexArchiveBuilder,
             inputClassFiles = inputClassFiles,
             inputFilter = { _, _ -> true },
-            outputPath = outputPath,
+            dexOutputPath = dexOutputPath,
+            globalSyntheticsOutput = globalSyntheticsOutput,
             desugarGraphUpdater = desugarGraph
         )
 
@@ -164,15 +166,21 @@ private fun process(
     dexArchiveBuilder: DexArchiveBuilder,
     inputClassFiles: ClassBucket,
     inputFilter: (File, String) -> Boolean,
-    outputPath: File,
+    dexOutputPath: File,
+    globalSyntheticsOutput: File?,
     desugarGraphUpdater: DependencyGraphUpdater<File>?
 ) {
     val inputRoots = inputClassFiles.bucketGroup.getRoots()
-    inputRoots.forEach { loggerWrapper.verbose("Dexing '${it.path}' to '${outputPath.path}'") }
+    inputRoots.forEach { loggerWrapper.verbose("Dexing '${it.path}' to '${dexOutputPath.path}'") }
     try {
         Closer.create().use { closer ->
             inputClassFiles.getClassFiles(filter = inputFilter, closer = closer).use {
-                dexArchiveBuilder.convert(it, outputPath.toPath(), desugarGraphUpdater)
+                dexArchiveBuilder.convert(
+                    it,
+                    dexOutputPath.toPath(),
+                    globalSyntheticsOutput?.toPath(),
+                    desugarGraphUpdater
+                )
             }
         }
     } catch (ex: DexArchiveBuilderException) {

@@ -27,6 +27,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.dexing.testdata.ClassWithAssertions;
 import com.android.builder.dexing.testdata.DebugInfoClass;
+import com.android.testutils.TestResources;
 import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
@@ -96,7 +97,8 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
@@ -104,10 +106,27 @@ public class DexArchiveBuilderTest {
     }
 
     @Test
+    public void testGlobalSynthetics() throws Exception {
+        Assume.assumeTrue(inputFormat == ClassesInputFormat.JAR);
+        // input is a Person class using Record which would trigger the generation of globals
+        Path input =
+                TestResources.getFile(
+                                DexArchiveBuilderTest.class,
+                                "/testData/globalSynthetics/record.jar")
+                        .toPath();
+        Path output = createOutput();
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        // suppose it is running in dexPerClass mode
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
+        assertThat(globalSynthetics.resolve("com/example/Person.globals")).exists();
+    }
+
+    @Test
     public void checkEmptyInput() throws Exception {
         Path emptyInput = writeToInput(ImmutableList.of());
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output, globalSynthetics);
 
         if (outputFormat == DexArchiveFormat.JAR) {
             assertThat(output).doesNotExist();
@@ -122,13 +141,14 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
 
         // add new file
         writeToInput(ImmutableList.of("D"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D"));
         }
@@ -137,7 +157,7 @@ public class DexArchiveBuilderTest {
         writeToInput(ImmutableList.of("F"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D", "F"));
         }
@@ -151,7 +171,8 @@ public class DexArchiveBuilderTest {
         }
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
@@ -188,7 +209,8 @@ public class DexArchiveBuilderTest {
 
         Path output = fs.getPath("tmp\\output");
         Files.createDirectories(output);
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        Path globalSynthetics = fs.getPath("tmp\\global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
     }
 
     @Test
@@ -200,9 +222,10 @@ public class DexArchiveBuilderTest {
         crc.update(cfInput.entries((x, y) -> true).findFirst().get().readAllBytes());
         String crcHexMatcher = ".*" + Long.toHexString(crc.getValue()) + ".*";
         Path output = createOutput();
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
 
         // DexArchiveTestUtil always do debug build which should contains the checksums.
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, globalSynthetics);
         Dex dex = null;
 
         // Look into the string contend of the dex file. It should have at least one string
@@ -236,7 +259,8 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, globalSynthetics);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -271,7 +295,9 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, true);
+        Path globalSynthetics = temporaryFolder.getRoot().toPath().resolve("global_synthetics");
+        DexArchiveTestUtil.convertClassesToDexArchive(
+                classesDir, output, globalSynthetics, 24, true);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -284,7 +310,8 @@ public class DexArchiveBuilderTest {
 
         // now build for release
         FileUtils.cleanOutputDir(output.toFile());
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, false);
+        DexArchiveTestUtil.convertClassesToDexArchive(
+                classesDir, output, globalSynthetics, 24, false);
         assertThat(new Dex(dexFile))
                 .containsClass(dexClassName)
                 .that()
@@ -352,4 +379,3 @@ public class DexArchiveBuilderTest {
         return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
     }
 }
-

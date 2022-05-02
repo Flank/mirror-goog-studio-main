@@ -20,12 +20,10 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.fixtures.FakeInputChanges
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.ProjectFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
@@ -41,8 +39,8 @@ import com.android.testutils.TestUtils
 import com.android.testutils.truth.DexSubject.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.work.ChangeType
 import org.gradle.work.InputChanges
@@ -50,6 +48,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.nio.file.Path
 
 class DexMergingTaskTest {
 
@@ -383,6 +382,8 @@ class DexMergingTaskTest {
                     override val dexDirsOrJars =
                             FakeObjectFactory.factory.listProperty(File::class.java)
                                     .value(inputDirsOrJars)
+                    override val globalSynthetics: ConfigurableFileCollection
+                        get() = FakeConfigurableFileCollection()
                     override val outputDir =
                             FakeObjectFactory.factory.directoryProperty().fileValue(outputDir)
                     override val mainDexListOutput =
@@ -413,18 +414,27 @@ class DexMergingTaskTest {
         } else {
             tmp.newFolder().resolve("file.jar")
         }
-        generateDexArchive(emptyClassNames, dexArchivePath)
+        val globalSyntheticsOutput = tmp.newFolder().toPath()
+        generateDexArchive(emptyClassNames, dexArchivePath, globalSyntheticsOutput)
         return dexArchivePath
     }
 
-    private fun generateDexArchive(emptyClassNames: List<String>, dexArchivePath: File) {
+    private fun generateDexArchive(
+        emptyClassNames: List<String>,
+        dexArchivePath: File,
+        globalSyntheticsOutput: Path
+    ) {
         val emptyClassesDir = tmp.newFolder().also {
             TestInputsGenerator.dirWithEmptyClasses(it.toPath(), emptyClassNames)
         }
-        generateDexArchive(emptyClassesDir, dexArchivePath)
+        generateDexArchive(emptyClassesDir, dexArchivePath, globalSyntheticsOutput)
     }
 
-    private fun generateDexArchive(classesDirOrJar: File, dexArchivePath: File) {
+    private fun generateDexArchive(
+        classesDirOrJar: File,
+        dexArchivePath: File,
+        globalSyntheticsOutput: Path
+    ) {
         val builder = DexArchiveBuilder.createD8DexBuilder(
                 DexParameters(
                         minSdkVersion = 1,
@@ -441,7 +451,8 @@ class DexMergingTaskTest {
         ClassFileInputs.fromPath(classesDirOrJar.toPath()).use { input ->
             builder.convert(
                     input.entries { _, _ -> true },
-                    dexArchivePath.toPath()
+                    dexArchivePath.toPath(),
+                    globalSyntheticsOutput
             )
         }
     }

@@ -34,7 +34,8 @@ abstract class DexArchiveBuilder {
      * not exist, it will be created. If it exists, entries will be added or replaced.
      *
      * @param input a [Stream] of input class files
-     * @param output the path to the directory or jar containing output dex files
+     * @param dexOutput the path to the directory or jar containing output dex files
+     * @param globalSyntheticsOutput the path to the directory containing output global synthetics files
      * @param desugarGraphUpdater the dependency graph for desugaring to be updated. It could be
      *     `null` if the dependency graph is not required or is computed by the Android Gradle
      *     plugin.
@@ -42,7 +43,8 @@ abstract class DexArchiveBuilder {
     @Throws(DexArchiveBuilderException::class)
     abstract fun convert(
         input: Stream<ClassFileEntry>,
-        output: Path,
+        dexOutput: Path,
+        globalSyntheticsOutput: Path?,
         desugarGraphUpdater: DependencyGraphUpdater<File>? = null
     )
 

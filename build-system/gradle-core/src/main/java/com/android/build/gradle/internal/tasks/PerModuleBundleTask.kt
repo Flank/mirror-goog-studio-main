@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.dexing.DexingType
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarFlinger
@@ -343,6 +344,13 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             if (creationConfig.dexingCreationConfig.shouldPackageDesugarLibDex) {
                 task.dexFiles.from(
                     artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
+                )
+            }
+            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_GLOBAL_SYNTHETICS]
+                && creationConfig.dexingCreationConfig.dexingType == DexingType.NATIVE_MULTIDEX
+                && !creationConfig.minifiedEnabled) {
+                task.dexFiles.from(
+                    artifacts.get(InternalArtifactType.GLOBAL_SYNTHETICS_DEX)
                 )
             }
 

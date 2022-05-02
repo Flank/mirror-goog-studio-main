@@ -168,6 +168,7 @@ class DexArchiveBuilderTaskDelegate(
                                          changedClasses: Set<FileChange>,
                                          outputDir: File,
                                          outputKeepRules: File?,
+                                         globalSynthetics: File?,
                                          // Not null iff desugaring is enabled
                                          desugarGraphDir: File? ->
                     processClassFromInput(
@@ -175,6 +176,7 @@ class DexArchiveBuilderTaskDelegate(
                         inputFileChanges = changedClasses,
                         outputDir = outputDir,
                         outputKeepRules = outputKeepRules,
+                        globalSyntheticsDir = globalSynthetics,
                         desugarGraphDir = desugarGraphDir,
                         bootClasspathKey = bootclasspathServiceKey,
                         classpathKey = classpathServiceKey
@@ -185,6 +187,7 @@ class DexArchiveBuilderTaskDelegate(
                     projectChangedClasses,
                     projectOutputs.dex,
                     projectOutputs.keepRules,
+                    projectOutputs.globalSynthetics,
                     desugarGraphDir?.resolve("currentProject")
                 )
                 subProjectOutputs?.let {
@@ -193,6 +196,7 @@ class DexArchiveBuilderTaskDelegate(
                         subProjectChangedClasses,
                         subProjectOutputs.dex,
                         subProjectOutputs.keepRules,
+                        subProjectOutputs.globalSynthetics,
                         desugarGraphDir?.resolve("otherProjects")
                     )
                 }
@@ -202,6 +206,7 @@ class DexArchiveBuilderTaskDelegate(
                         mixedScopeChangedClasses,
                         mixedScopeOutputs.dex,
                         mixedScopeOutputs.keepRules,
+                        mixedScopeOutputs.globalSynthetics,
                         desugarGraphDir?.resolve("mixedScopes")
                     )
                 }
@@ -211,6 +216,7 @@ class DexArchiveBuilderTaskDelegate(
                         externalLibChangedClasses,
                         externalLibsOutputs.dex,
                         externalLibsOutputs.keepRules,
+                        externalLibsOutputs.globalSynthetics,
                         desugarGraphDir?.resolve("externalLibs")
                     )
                 }
@@ -233,17 +239,19 @@ class DexArchiveBuilderTaskDelegate(
         inputFileChanges: Set<FileChange>,
         outputDir: File,
         outputKeepRules: File?,
+        globalSyntheticsDir: File?,
         desugarGraphDir: File?, // Not null iff desugaring is enabled
         bootClasspathKey: ClasspathServiceKey,
         classpathKey: ClasspathServiceKey
     ) {
         if (!isIncremental) {
             FileUtils.cleanOutputDir(outputDir)
+            globalSyntheticsDir?.let { FileUtils.cleanOutputDir(it) }
             outputKeepRules?.let { FileUtils.cleanOutputDir(it) }
             desugarGraphDir?.let { FileUtils.cleanOutputDir(it) }
         } else {
-            removeChangedJarOutputs(inputFileChanges, outputDir)
-            deletePreviousOutputsFromDirs(inputFileChanges, outputDir)
+            removeChangedJarOutputs(inputFileChanges, outputDir, globalSyntheticsDir)
+            deletePreviousOutputsFromDirs(inputFileChanges, outputDir, globalSyntheticsDir)
         }
 
         val (directoryInputs, jarInputs) =
@@ -261,7 +269,8 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpathKey,
                 changedFiles = changedFiles,
                 desugarGraphDir = desugarGraphDir,
-                outputKeepRulesDir = outputKeepRules
+                outputKeepRulesDir = outputKeepRules,
+                globalSyntheticsDir = globalSyntheticsDir
             )
         }
 
@@ -277,37 +286,62 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpathKey,
                 changedFiles = changedFiles,
                 desugarGraphDir = desugarGraphDir,
-                outputKeepRulesDir = outputKeepRules
+                outputKeepRulesDir = outputKeepRules,
+                globalSyntheticsDir = globalSyntheticsDir
             )
         }
     }
 
     @Suppress("UnstableApiUsage")
-    private fun deletePreviousOutputsFromDirs(inputFileChanges: Set<FileChange>, outputDir: File) {
-        // Handle dir/file deletions only. We rewrite modified files, so no need to delete those.
+    private fun deletePreviousOutputsFromDirs(
+        inputFileChanges: Set<FileChange>,
+        outputDir: File,
+        globalSyntheticsDir: File?
+    ) {
+        // Remove outputs of removed, modified class files
+        // TODO(b/246955560) remove outputs of impacted classes
         inputFileChanges
-            .filter { it.changeType == ChangeType.REMOVED }
+            .filter { it.changeType == ChangeType.REMOVED || it.changeType == ChangeType.MODIFIED}
             .forEach {
                 when {
                     it.fileType == FileType.DIRECTORY -> {
                         FileUtils.deleteRecursivelyIfExists(outputDir.resolve(it.normalizedPath))
+                        globalSyntheticsDir?.let { globalSyntheticsDir ->
+                            globalSyntheticsDir.resolve(it.normalizedPath)
+                        }
                     }
                     ClassFileInput.CLASS_MATCHER.test(it.normalizedPath) -> {
                         // We are in DexFilePerClassFile output mode
-                        DexFilePerClassFile.getOutputRelativePathsOfClassFile(
+                        DexFilePerClassFile.getDexOutputRelativePathsOfClassFile(
                             classFileRelativePath = it.normalizedPath
                         ).forEach { outputRelativePath ->
                             FileUtils.deleteIfExists(outputDir.resolve(outputRelativePath))
+                        }
+                        globalSyntheticsDir?.let {globalSyntheticsDir ->
+                            DexFilePerClassFile.getGlobalOutputRelativePathOfClassFile(
+                                it.normalizedPath
+                            ).let { outputRelativePath ->
+                                FileUtils.deleteIfExists(globalSyntheticsDir.resolve(outputRelativePath))
+                            }
                         }
                     }
                 }
             }
     }
 
-    private fun removeChangedJarOutputs(changes: Set<FileChange>, output: File) {
+    private fun removeChangedJarOutputs(
+        changes: Set<FileChange>,
+        dexOutput: File,
+        globalSyntheticsDir: File?
+    ) {
         changes.filter { it.file.extension == SdkConstants.EXT_JAR }.forEach {
-            outputMapping.getPreviousDexOutputsForJar(it.file, output).forEach {
+            outputMapping.getPreviousOutputsForJar(it.file, dexOutput).forEach {
                 FileUtils.deleteIfExists(it)
+            }
+            globalSyntheticsDir?.let { globalSyntheticsDir ->
+                outputMapping.getPreviousOutputsForJar(it.file, globalSyntheticsDir).forEach {
+                    FileUtils.deleteIfExists(it)
+                }
             }
         }
     }
@@ -320,7 +354,8 @@ class DexArchiveBuilderTaskDelegate(
         classpath: ClasspathServiceKey,
         changedFiles: Set<File>,
         desugarGraphDir: File?, // Not null iff desugaring is enabled
-        outputKeepRulesDir: File?
+        outputKeepRulesDir: File?,
+        globalSyntheticsDir: File?
     ) {
         if (dexParams.withDesugaring) {
             convertToDexArchive(
@@ -331,7 +366,8 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpath,
                 changedFiles = changedFiles,
                 desugarGraphDir = desugarGraphDir!!,
-                outputKeepRulesDir = outputKeepRulesDir
+                outputKeepRulesDir = outputKeepRulesDir,
+                globalSyntheticsDir = globalSyntheticsDir
             )
         } else {
             if (isIncremental && jarInput !in changedFiles) {
@@ -346,7 +382,8 @@ class DexArchiveBuilderTaskDelegate(
                 classpath = classpath,
                 changedFiles = setOf(),
                 desugarGraphDir = null,
-                outputKeepRulesDir = outputKeepRulesDir
+                outputKeepRulesDir = outputKeepRulesDir,
+                globalSyntheticsDir = globalSyntheticsDir
             )
         }
     }
@@ -354,10 +391,14 @@ class DexArchiveBuilderTaskDelegate(
     /**  Output directories for dex files and keep rules. */
     class DexingOutputs(
         val dex: File,
-        val keepRules: File?
+        val keepRules: File?,
+        val globalSynthetics: File?
     ) {
-        constructor(outputs: DexArchiveBuilderTask.DexingOutputs)
-                : this(outputs.dex.asFile.get(), outputs.keepRules.asFile.orNull)
+        constructor(outputs: DexArchiveBuilderTask.DexingOutputs) : this(
+            outputs.dex.asFile.get(),
+            outputs.keepRules.asFile.orNull,
+            outputs.globalSynthetics.asFile.orNull
+        )
     }
 
     private fun convertToDexArchive(
@@ -368,7 +409,8 @@ class DexArchiveBuilderTaskDelegate(
         classpath: ClasspathServiceKey,
         changedFiles: Set<File>,
         desugarGraphDir: File?, // Not null iff desugaring is enabled
-        outputKeepRulesDir: File?
+        outputKeepRulesDir: File?,
+        globalSyntheticsDir: File?
     ) {
         inputs.getRoots().forEach { loggerWrapper.verbose("Dexing ${it.absolutePath}") }
 
@@ -378,27 +420,44 @@ class DexArchiveBuilderTaskDelegate(
             // core library desugaring
             val dexPerClass = inputs is DirectoryBucketGroup && outputKeepRulesDir == null
 
-            val preDexOutputFile = when (inputs) {
-                is DirectoryBucketGroup -> {
-                    if (dexPerClass) {
-                        outputDir.also { FileUtils.mkdirs(it) }
-                    } else {
-                        // running in dexIndexMode, dex output location is determined by bucket and
-                        // outputDir
-                        outputDir.resolve(bucketId.toString()).also { FileUtils.mkdirs(it) }
+            fun computeOutputPath(outputDir: File, dexOutput: Boolean): File {
+                return when(inputs) {
+                    is DirectoryBucketGroup -> {
+                        if (dexPerClass) {
+                            outputDir.also { FileUtils.mkdirs(it) }
+                        } else {
+                            // running in dexIndexMode, dex output location is determined by
+                            // bucket and outputDir
+                            outputDir.resolve(bucketId.toString()).also { FileUtils.mkdirs(it) }
+                        }
+                    }
+                    is JarBucketGroup -> {
+                        outputMapping.getOutputForJar(
+                            inputs.jarFile,
+                            outputDir,
+                            bucketId,
+                            dexOutput
+                        ).also { FileUtils.mkdirs(it.parentFile) }
                     }
                 }
-                is JarBucketGroup -> {
-                    outputMapping.getDexOutputForJar(inputs.jarFile, outputDir, bucketId)
-                        .also { FileUtils.mkdirs(it.parentFile) }
-                }
             }
+
+            val preDexOutputFile = computeOutputPath(outputDir, true)
+
+            val globalSyntheticsOutput: File? = if (globalSyntheticsDir != null) {
+                computeOutputPath(globalSyntheticsDir, false)
+            } else null
 
             val outputKeepRuleFile = outputKeepRulesDir?.let { outputKeepRuleDir ->
                 when (inputs) {
                     is DirectoryBucketGroup -> outputKeepRuleDir.resolve(bucketId.toString())
                     is JarBucketGroup ->
-                        getKeepRulesOutputForJar(inputs.jarFile, outputKeepRuleDir, bucketId)
+                        outputMapping.getOutputForJar(
+                            inputs.jarFile,
+                            outputKeepRuleDir,
+                            bucketId,
+                            false
+                        )
                 }.also {
                     FileUtils.mkdirs(it.parentFile)
                     it.createNewFile()
@@ -411,12 +470,13 @@ class DexArchiveBuilderTaskDelegate(
                 params.dexSpec.set(
                         IncrementalDexSpec(
                         inputClassFiles = classBucket,
-                        outputPath = preDexOutputFile,
+                        dexOutputPath = preDexOutputFile,
+                        globalSyntheticsOutput = globalSyntheticsOutput,
                         dexParams = dexParams.toDexParametersForWorkers(
                                 dexPerClass,
                                 bootClasspath,
                                 classpath,
-                                outputKeepRuleFile
+                                outputKeepRuleFile,
                         ),
                         isIncremental = isIncremental,
                         changedFiles = changedFiles,
@@ -456,11 +516,6 @@ class DexArchiveBuilderTaskDelegate(
             return emptyList()
         }
         return androidJarClasspath.map { it.toPath() }
-    }
-
-    private fun getKeepRulesOutputForJar(input: File, outputDir: File, bucketId: Int): File {
-        val hash = outputMapping.getCurrentHash(input)
-        return outputDir.resolve("${hash}_$bucketId")
     }
 
     /** Returns the file containing the desugaring graph when processing a [ClassBucket]. */
@@ -566,15 +621,20 @@ class DexArchiveBuilderTaskDelegate(
          * hash of the file content to determine the final output path, and this makes sure the task is
          * relocatable.
          */
-        fun getDexOutputForJar(input: File, outputDir: File, bucketId: Int?): File {
+        fun getOutputForJar(
+            input: File,
+            outputDir: File,
+            bucketId: Int,
+            withJarExtension: Boolean = true
+        ): File {
             val hash = getCurrentHash(input)
-            return computeOutputPath(outputDir, hash, bucketId)
+            return computeOutputPath(outputDir, hash, bucketId, withJarExtension)
         }
 
         /**
          * Get the output path for a jar in the previous run
          */
-        fun getPreviousDexOutputsForJar(input: File, outputDir: File): List<File> {
+        fun getPreviousOutputsForJar(input: File, outputDir: File): List<File> {
             val hash = previousFileHashes.getValue(input)
 
             return Lists.newArrayListWithCapacity<File>(numberOfBuckets + 1).also {
@@ -601,12 +661,19 @@ class DexArchiveBuilderTaskDelegate(
             mixedScopeClasses
         ).flatten().filter { it.extension == SdkConstants.EXT_JAR }
 
-        private fun computeOutputPath(outputDir: File, hash: String, bucketId: Int?): File =
-            if (bucketId != null) {
-                outputDir.resolve("${hash}_$bucketId.jar")
+        private fun computeOutputPath(
+            outputDir: File,
+            hash: String,
+            bucketId: Int?,
+            withJarExtension: Boolean = true
+        ): File {
+            val jarExtension = if(withJarExtension) ".jar" else ""
+            return if (bucketId != null) {
+                outputDir.resolve("${hash}_$bucketId$jarExtension")
             } else {
-                outputDir.resolve("$hash.jar")
+                outputDir.resolve("$hash$jarExtension")
             }
+        }
     }
 }
 
