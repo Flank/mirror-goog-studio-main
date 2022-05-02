@@ -22,7 +22,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options="--config=local --config=rcache --config=sponge --config=ants"
+readonly config_options="--config=local --config=rcache --config=ants"
 
 # The BAZEL_* variable is configured on the Mac Host.
 export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
