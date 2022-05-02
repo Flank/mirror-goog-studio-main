@@ -26,12 +26,35 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.registry.Registry
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.messages.GradleStyleMessageRenderer
+import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.resolve.diagnostics.DiagnosticSuppressor
 import org.jetbrains.uast.UastLanguagePlugin
 import org.jetbrains.uast.evaluation.UEvaluatorExtension
 import org.jetbrains.uast.java.JavaUastLanguagePlugin
 import org.jetbrains.uast.kotlin.evaluation.KotlinEvaluatorExtension
 import java.util.concurrent.locks.ReentrantLock
+
+internal fun createCommonKotlinCompilerConfig(): CompilerConfiguration {
+    val config = CompilerConfiguration()
+
+    config.put(CommonConfigurationKeys.MODULE_NAME, "lint-module")
+
+    // We're not running compiler checks, but we still want to register a logger
+    // in order to see warnings related to misconfiguration.
+    val logger = PrintingMessageCollector(System.err, GradleStyleMessageRenderer(), false)
+    config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, logger)
+
+    // The Kotlin compiler uses a fast, ASM-based class file reader.
+    // However, Lint still relies on representing class files with PSI.
+    config.put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
+
+    return config
+}
 
 internal fun configureProjectEnvironment(
     project: MockProject,

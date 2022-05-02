@@ -31,14 +31,18 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.config.languageVersionSettings
 import java.io.File
 
+const val FIR_UAST_KEY = "lint.use.fir.uast"
+private fun useFirUast(): Boolean =
+    System.getProperty(FIR_UAST_KEY, "false").toBoolean()
+
 /**
  * This interface provides the setup and configuration needed to use
  * VFS/PSI/UAST on the command line.
  *
  * Basic usage:
- * 1. Create a configuration via [UastEnvironmentFactory.createConfiguration]
+ * 1. Create a configuration via [UastEnvironment.Configuration.create]
  *    and mutate it as needed.
- * 2. Create a project environment via [UastEnvironmentFactory.create]. You can
+ * 2. Create a project environment via [UastEnvironment.create]. You can
  *    create multiple environments in the
  *    same process (one for each "module").
  * 3. Call [analyzeFiles] to initialize PSI machinery and
@@ -63,6 +67,20 @@ interface UastEnvironment {
      * flags, etc.
      */
     interface Configuration {
+        companion object {
+            /**
+             * Creates a new [Configuration] that specifies
+             * project structure, classpath, compiler flags, etc.
+             */
+            @JvmStatic
+            fun create(): Configuration {
+                return if (useFirUast())
+                    FirUastEnvironment.Configuration.create()
+                else
+                    Fe10UastEnvironment.Configuration.create()
+            }
+        }
+
         val kotlinCompilerConfig: CompilerConfiguration
 
         fun addSourceRoots(sourceRoots: List<File>) {
@@ -97,6 +115,22 @@ interface UastEnvironment {
     }
 
     companion object {
+        /**
+         * Creates a new [UastEnvironment] suitable for analyzing both
+         * Java and Kotlin code. You must still call [UastEnvironment.analyzeFiles]
+         * before doing anything with PSI/UAST. When finished using the
+         * environment, call [UastEnvironment.dispose].
+         */
+        @JvmStatic
+        fun create(
+            config: Configuration,
+        ): UastEnvironment {
+            return if (useFirUast())
+                FirUastEnvironment.create(config)
+            else
+                Fe10UastEnvironment.create(config)
+        }
+
         /**
          * Disposes the global application environment, which is created
          * implicitly by the first [UastEnvironment]. Only call this

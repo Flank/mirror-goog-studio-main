@@ -24,7 +24,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.UastEnvironment;
-import com.android.tools.lint.UastEnvironmentFactory;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.utils.SdkUtils;
 import com.google.common.base.CharMatcher;
@@ -307,7 +306,7 @@ public class ExtractAnnotationsDriver {
 
         LintClient.setClientName(LintClient.CLIENT_CLI);
 
-        UastEnvironment.Configuration config = UastEnvironmentFactory.INSTANCE.createConfiguration();
+        UastEnvironment.Configuration config = UastEnvironment.Configuration.create();
         if (sourceRoots == null) {
             sourceRoots = findSourceRoots(sources);
             if (sourceRoots == null) {
@@ -317,7 +316,7 @@ public class ExtractAnnotationsDriver {
         config.addSourceRoots(sourceRoots);
         config.addClasspathRoots(classpath);
 
-        UastEnvironment env = UastEnvironmentFactory.INSTANCE.create(config);
+        UastEnvironment env = UastEnvironment.create(config);
         MockProject project = env.getIdeaProject();
 
         List<File> allSourceFiles = Extractor.gatherSources(sources);

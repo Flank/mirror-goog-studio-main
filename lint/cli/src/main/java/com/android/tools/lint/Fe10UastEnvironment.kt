@@ -204,7 +204,7 @@ class Fe10UastEnvironment private constructor(
 }
 
 private fun createKotlinCompilerConfig(): CompilerConfiguration {
-    val config = UastEnvironmentFactory.createCommonKotlinCompilerConfig()
+    val config = createCommonKotlinCompilerConfig()
 
     config.put(JVMConfigurationKeys.NO_JDK, true)
 

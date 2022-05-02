@@ -34,8 +34,6 @@ import org.jetbrains.uast.kotlin.internal.FirCliKotlinUastResolveProviderService
 import java.io.File
 import kotlin.concurrent.withLock
 
-const val FIR_UAST_KEY = "lint.use.fir.uast"
-
 /**
  * This class is FIR version of [UastEnvironment]
  */
@@ -82,7 +80,7 @@ class FirUastEnvironment private constructor(
 }
 
 private fun createKotlinCompilerConfig(): CompilerConfiguration {
-    val config = UastEnvironmentFactory.createCommonKotlinCompilerConfig()
+    val config = createCommonKotlinCompilerConfig()
 
     // TODO: NO_JDK ?
 

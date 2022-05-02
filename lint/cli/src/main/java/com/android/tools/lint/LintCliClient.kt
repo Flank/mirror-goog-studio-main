@@ -1461,7 +1461,7 @@ open class LintCliClient : LintClient {
             require(file.isAbsolute) { "Relative Path found: $file. All paths should be absolute." }
         }
 
-        val config = UastEnvironmentFactory.createConfiguration()
+        val config = UastEnvironment.Configuration.create()
         config.javaLanguageLevel = maxLevel
         config.addSourceRoots(sourceRoots.toList())
         config.addClasspathRoots(classpathRoots.toList())
@@ -1471,7 +1471,7 @@ open class LintCliClient : LintClient {
             config.kotlinCompilerConfig.put(JVMConfigurationKeys.NO_JDK, false)
         }
 
-        val env = UastEnvironmentFactory.create(config)
+        val env = UastEnvironment.create(config)
         uastEnvironment = env
         kotlinPerformanceManager?.notifyCompilerInitialized(-1, -1, "Android Lint")
 
