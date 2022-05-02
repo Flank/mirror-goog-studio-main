@@ -35,7 +35,7 @@ target_filters=qa_fast,qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
 readonly bazel_status_no_emu=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 #
 ## Debug for b/184062875, skip running emulator tests
 ##

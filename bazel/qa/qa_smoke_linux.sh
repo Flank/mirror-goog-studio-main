@@ -18,7 +18,7 @@ readonly crostini_timestamp_file="/buildbot/lastrun.out"
 #Have crostini tests run locally and one at a time
 if [[ $lsb_release == "crostini" ]]; then
   # don't use any remote cached items, some items built on Linux may not be compatible. b/172365127
-  config_options="--config=resultstore"
+  config_options="--config=_remote_base --config=sponge"
   # Crostini will continue to use checked in credentials, refer b/196437640
   bazel_flags="--google_credentials=tools/vendor/adt_infra_internal/rbe/data/studio-alphasource-credentials.json"
   target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-no_crostini
@@ -146,7 +146,7 @@ else #Executes normally on linux as before
   readonly bazel_status_no_emu=$?
 
   if [[ -d "${dist_dir}" ]]; then
-    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+    echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
   fi
 
   if [[ -d "${dist_dir}" ]]; then
