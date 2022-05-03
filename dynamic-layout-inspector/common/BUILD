@@ -5,6 +5,7 @@ iml_module(
     name = "studio.dynamic-layout-inspector.common",
     srcs = ["src/main"],
     iml_files = ["dynamic-layout-inspector.common.iml"],
+    jvm_target = "8",
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
