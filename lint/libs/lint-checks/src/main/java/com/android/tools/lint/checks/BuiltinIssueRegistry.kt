@@ -245,6 +245,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 LintDetectorDetector.UNEXPECTED_DOMAIN,
                 LintDetectorDetector.USE_KOTLIN,
                 LintDetectorDetector.USE_UAST,
+                LocaleConfigDetector.ISSUE,
                 LocaleDetector.FINAL_LOCALE,
                 LocaleDetector.STRING_LOCALE,
                 LocaleFolderDetector.DEPRECATED_CODE,
