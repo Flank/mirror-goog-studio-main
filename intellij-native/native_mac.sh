@@ -19,5 +19,32 @@ declare exit_code=0
   ${script_dir}/build-mac-touchbar.sh -o ${out_dir}/MacTouchBar -d ${dist_dir} || ((exit_code++))
 )
 
+(
+  echo "Building MacEnvReader..."
+  ${script_dir}/build-mac-envreader.sh -o ${out_dir}/MacEnvReader -d ${dist_dir} || ((exit_code++))
+)
+
+(
+  echo "Building MacLauncher..."
+  ${script_dir}/build-mac-launcher.sh -o ${out_dir}/MacLauncher -d ${dist_dir} || ((exit_code++))
+)
+
+(
+  echo "Building MacRestarter..."
+  ${script_dir}/build-mac-restarter.sh -o ${out_dir}/MacRestarter -d ${dist_dir} || ((exit_code++))
+)
+
+(
+  echo "Building MacScreenMenu..."
+  ${script_dir}/build-mac-screenmenu.sh -o ${out_dir}/MacScreenMenu -d ${dist_dir} || ((exit_code++))
+)
+
+(
+  echo "Building fsNotifier..."
+  ${script_dir}/build-mac-fsNotifier.sh -o ${out_dir}/fsNotifier -d ${dist_dir} || ((exit_code++))
+)
+
+ls -lha $dist_dir
+
 echo "All Done."
 exit $exit_code

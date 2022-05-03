@@ -5,9 +5,9 @@ function usage() {
   cat <<EOF
 Usage:
     $prog [-o <out_dit>] [-d <dist_dir>]
-Builds libnst64.dylib - library for Mac Touchbar support.
+Builds mac fsNotifier.
 Library is built in <out_dir>  (or "out" if unset).
-If <dist_dir> is set,  `libnst64.dylib` artifact is created there.
+If <dist_dir> is set, `fsnotifier` artifact is created there.
 EOF
   exit 1
 }
@@ -17,13 +17,13 @@ source $(dirname $0)/build-mac-common.sh
 # Make
 (
   cd "$out_dir"
-  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$script_dir/MacTouchBar"
+  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$script_dir/fsNotifier/mac"
   "$cmake_bin" --build .
 )
 
-verifyArchs "$out_dir/libnst64.dylib"
+verifyArchs "$out_dir/fsnotifier"
 
 # Copy to Dist
 [[ -n "${dist_dir:-}" ]] || exit 0
-cp "$out_dir/libnst64.dylib"  "$dist_dir"
-echo "Built $dist_dir/libnst64.dylib"
+cp "$out_dir/fsnotifier"  "$dist_dir"
+echo "Built $dist_dir/fsnotifier"
