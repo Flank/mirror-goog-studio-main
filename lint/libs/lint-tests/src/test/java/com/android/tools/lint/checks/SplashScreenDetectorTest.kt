@@ -100,6 +100,15 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
 
                 class SplashScreen : Fragment() {
                 }
+
+                class LaunchScreen : Fragment() {
+                }
+
+                class MyLaunchActivity : android.app.Activity {
+                }
+
+                class MyRoutingActivity : android.app.Activity { // OK: RoutingActivity too generic of a name
+                }
                 """
             ).indented(),
             fragmentStub,
@@ -110,8 +119,14 @@ class SplashScreenDetectorTest : AbstractCheckTest() {
                 src/test/pkg/SplashScreen.kt:6: Warning: The application should not provide its own launch screen [CustomSplashScreen]
                 class SplashScreen : Fragment() {
                       ~~~~~~~~~~~~
-                0 errors, 1 warnings
-            """
+                src/test/pkg/SplashScreen.kt:9: Warning: The application should not provide its own launch screen [CustomSplashScreen]
+                class LaunchScreen : Fragment() {
+                      ~~~~~~~~~~~~
+                src/test/pkg/SplashScreen.kt:12: Warning: The application should not provide its own launch screen [CustomSplashScreen]
+                class MyLaunchActivity : android.app.Activity {
+                      ~~~~~~~~~~~~~~~~
+                0 errors, 3 warnings
+                """
             )
     }
 
