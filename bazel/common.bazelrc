@@ -144,6 +144,10 @@ build:_rcache --bes_upload_mode=NOWAIT_FOR_UPLOAD_COMPLETE
 build:rcache --config=_rcache
 build:rcache --config=sponge
 
+## Enables the remote cache, but without uploading to Sponge (for hosts with
+## poor uplink).
+build:rcache_no_sponge --config=_rcache
+
 ## Enables remote execution so actions are performed on the remote systems.
 build:remote-exec --remote_executor=remotebuildexecution.googleapis.com
 build:remote-exec --remote_timeout=3600
