@@ -116,7 +116,7 @@ InternalArtifactType<T : FileSystemLocation>(
     // are for the external libraries that are dex'ed using Gradle artifact transforms.
     object DESUGAR_LIB_EXTERNAL_LIBS_ARTIFACT_TRANSFORM_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     object DESUGAR_LIB_MIXED_SCOPE_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    object DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable
+    object DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // Keep rules for core library desugaring that are generated and merged from dynamic feature
     // modules
     object DESUGAR_LIB_MERGED_KEEP_RULES: InternalArtifactType<RegularFile>(FILE), Replaceable

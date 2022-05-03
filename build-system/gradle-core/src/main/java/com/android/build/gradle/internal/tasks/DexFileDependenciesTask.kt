@@ -55,7 +55,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
     @get:Optional
     @get:OutputFile
-    abstract val outputKeepRules: RegularFileProperty
+    abstract val outputKeepRules: DirectoryProperty
 
     @get:Classpath
     abstract val classes: ConfigurableFileCollection
@@ -95,7 +95,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 it.outputFile.set(outputDirectory.dir("${index}_${input.name}"))
                 it.errorFormatMode.set(errorFormatMode)
                 it.libConfiguration.set(libConfiguration)
-                it.outputKeepRules.set(outputKeepRules)
+                it.outputKeepRules.set(outputKeepRules.dir("${index}_${input.name}"))
             }
         }
     }
@@ -109,7 +109,7 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
         abstract val outputFile: DirectoryProperty
         abstract val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
         abstract val libConfiguration: Property<String>
-        abstract val outputKeepRules: RegularFileProperty
+        abstract val outputKeepRules: DirectoryProperty
     }
 
     abstract class DexFileDependenciesWorkerAction : ProfileAwareWorkAction<WorkerActionParams>() {
