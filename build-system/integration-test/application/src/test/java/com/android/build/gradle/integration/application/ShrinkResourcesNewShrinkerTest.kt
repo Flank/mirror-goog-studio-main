@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
@@ -25,9 +26,12 @@ import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PNG
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_CONVERTED_TO_BINARY_XML
 import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_XML
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
+import com.android.tools.apk.analyzer.AaptInvoker
 import com.android.utils.FileUtils
+import com.android.utils.StdLogger
 import com.google.common.io.ByteStreams
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -47,6 +51,8 @@ class ShrinkResourcesNewShrinkerTest {
     @get:Rule
     var projectWithDynamicFeatureModules =
         builder().fromTestProject("shrinkDynamicFeatureModules").create()
+
+    private val testAapt2 = TestUtils.getAapt2().toFile().absoluteFile
 
     @Test
     fun `shrink resources for APKs with R8`() {
@@ -429,6 +435,80 @@ class ShrinkResourcesNewShrinkerTest {
             projectWithDynamicFeatureModules.getSubproject("base")
                 .file("build/outputs/mapping/release/resources.txt")
         ).exists()
+    }
+
+    @Test
+    fun `shrink resources with splits`() {
+        val abiSplitsSubproject = project.getSubproject("abisplits")
+        FileUtils.createFile(
+                FileUtils.join(
+                        abiSplitsSubproject.mainResDir,
+                        SdkConstants.FD_RES_XML,
+                        "signing_certificates.xml"),
+                """<?xml version="1.0" encoding="utf-8"?>
+                <parent_tag>
+                    <signing_certificate
+                        name="Resource 1">
+                        Line One
+                        Line Two
+                        Line Three
+                    </signing_certificate>
+                </parent_tag>
+                """
+        )
+
+        // Use the signing configuration xml resource, to replacing with empty contents
+        // during resource shrinking.
+        val usedActivity = FileUtils.join(
+                abiSplitsSubproject.mainSrcDir,
+                "com", "android", "tests", "shrink", "UsedActivity.java"
+        )
+        val usedActivtyContentsWithXmlUsage =
+                usedActivity.readText().replace("setContentView(R.layout.used);",
+                        "setContentView(R.layout.used);\n" +
+                                "getApplicationContext().getResources().getXml(R.xml.signing_certificates);"
+                )
+        usedActivity.writeText(usedActivtyContentsWithXmlUsage)
+
+        abiSplitsSubproject.buildFile.appendText(
+                "android {\n" +
+                        "    splits {\n" +
+                        "        abi {\n" +
+                        "            enable true\n" +
+                        "            reset()\n" +
+                        "            include \"x86\", \"x86_64\", \"armeabi-v7a\", \"arm64-v8a\"\n" +
+                        "            universalApk true\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "  }\n"
+        )
+
+
+        project.executor()
+                .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, true)
+                .run("clean", "abisplits:assembleRelease")
+        val shrunkUniversalApk =
+                FileUtils.join(abiSplitsSubproject.outputDir,
+                        "apk",
+                        "release",
+                        "abisplits-universal-release-unsigned.apk")
+
+        assertThat(shrunkUniversalApk.exists()).isTrue()
+
+       // Regression test for b/22833352 (Check signing cert content is correctly compiled)
+        val logger = StdLogger(StdLogger.Level.VERBOSE)
+        val result = AaptInvoker(testAapt2.toPath(), logger)
+                .getXmlStrings(shrunkUniversalApk, "res/ul.xml")
+        assertThat(result.map(String::trim)).containsExactly(
+                "String pool of 5 unique UTF-8 non-sorted strings, 5 entries and 0 styles using 184 bytes:",
+                "String #0 :  Line One",
+                "Line Two",
+                "Line Three",
+                "String #1 : Resource 1",
+                "String #2 : name",
+                "String #3 : parent_tag",
+                "String #4 : signing_certificate"
+        )
     }
 
     private fun diffFiles(

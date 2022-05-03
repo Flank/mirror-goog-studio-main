@@ -6,6 +6,7 @@ TEST_DEPS = [
     "//tools/analytics-library/protos/src/main/proto",
     "//tools/apksig",
     "//tools/apkzlib",
+    "//tools/base/apkparser/analyzer:tools.analyzer",
     "//tools/base/annotations",
     "//tools/base/build-system:gradle-api",
     "//tools/base/build-system/builder",

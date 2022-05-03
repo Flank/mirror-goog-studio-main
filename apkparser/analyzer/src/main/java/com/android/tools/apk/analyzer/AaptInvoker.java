@@ -46,6 +46,10 @@ public class AaptInvoker {
         this(getPathToAapt(sdkHandler, logger), logger);
     }
 
+    private boolean isAapt2() {
+        return aapt.endsWith("aapt2") || aapt.endsWith("aapt2.exe");
+    }
+
     @NonNull
     private List<String> invokeAaptWithParameters(
             @NonNull File apkFile, @NonNull String resource, @NonNull String... parameters)
@@ -80,9 +84,25 @@ public class AaptInvoker {
     }
 
     @NonNull
+    public List<String> getXmlStrings(@NonNull File apk, @NonNull String xmlResourcePath)
+            throws ProcessException {
+        if (isAapt2()) {
+            return invokeAaptWithParameters(
+                    "dump", "xmlstrings", apk.getPath(), "--file", xmlResourcePath);
+        }
+        return invokeAaptWithParameters(
+                "dump", "xmlstrings", apk.getPath(), xmlResourcePath);
+    }
+
+    @NonNull
     public List<String> getXmlTree(@NonNull File apk, @NonNull String xmlResourcePath)
             throws ProcessException {
-        return invokeAaptWithParameters(apk, xmlResourcePath, "dump", "xmltree");
+        if (isAapt2()) {
+            return invokeAaptWithParameters(
+                    apk.getPath(), "--file " + xmlResourcePath, "dump", "xmltree");
+        }
+        return invokeAaptWithParameters(
+                apk, xmlResourcePath, "dump", "xmltree");
     }
 
     @NonNull
