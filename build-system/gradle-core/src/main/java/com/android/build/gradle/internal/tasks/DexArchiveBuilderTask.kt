@@ -280,7 +280,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         private val dexExternalLibsInArtifactTransform: Boolean
 
         init {
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             val classesFilter =
                 StreamFilter { types, _ -> com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES in types }
 
@@ -321,21 +321,21 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 )
             }
             else if (jacocoTransformWithLegacyTransformsRegistered) {
-                // Legacy support (b/195153220)
+                // Legacy support
                 // Do not pass project classes if transform code coverage
                 // is enabled and a legacy transform is applied, the legacy transform supported
                 // JacocoTask artifacts will be passed via the mixed scope classes.
                 creationConfig.services.fileCollection()
             }
             else {
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 transformManager.getPipelineOutputAsFileCollection(
                     StreamFilter { _, scopes -> scopes == setOf(QualifiedContent.Scope.PROJECT) },
                     classesFilter
                 )
             }
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             val desugaringClasspathScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
                 mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
@@ -344,7 +344,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 mixedScopeClasses = creationConfig.services.fileCollection()
                 dexExternalLibsInArtifactTransform = false
 
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 run {
                     desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                     desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
@@ -364,7 +364,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     },
                     classesFilter
                 )
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 run {
                     desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE)
                     desugaringClasspathScopes.add(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
@@ -390,13 +390,13 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             }
             else {
                 // legacy Transform API
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 subProjectsClasses =
                     transformManager.getPipelineOutputAsFileCollection(
                         { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS) },
                         classesFilter
                     )
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 externalLibraryClasses =
                     transformManager.getPipelineOutputAsFileCollection(
                         { _, scopes -> scopes == setOf(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES) },
@@ -447,7 +447,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 creationConfig.services.fileCollection()
             }
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             desugaringClasspathClasses =
                 creationConfig.transformManager.getPipelineOutputAsFileCollection(
                     { _, scopes ->
@@ -457,7 +457,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                     classesFilter
                 )
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             transformManager.consumeStreams(
                 TransformManager.SCOPE_FULL_WITH_FEATURES,
                 TransformManager.CONTENT_CLASS

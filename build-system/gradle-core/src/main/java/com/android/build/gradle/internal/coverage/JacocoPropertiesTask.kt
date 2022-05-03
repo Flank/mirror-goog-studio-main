@@ -83,7 +83,7 @@ abstract class JacocoPropertiesTask : NonIncrementalTask() {
             if (creationConfig.variantScope.needsJavaResStreams) {
                 val taskOutput =
                     creationConfig.artifacts.get(InternalArtifactType.JACOCO_CONFIG_RESOURCES_JAR)
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 creationConfig.transformManager.addStream(
                     OriginalStream.builder("jacoco-properties-file")
                         .addContentType(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)

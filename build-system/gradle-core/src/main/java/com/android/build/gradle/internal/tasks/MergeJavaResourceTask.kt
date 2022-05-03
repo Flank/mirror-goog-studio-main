@@ -91,7 +91,7 @@ abstract class MergeJavaResourceTask
     abstract val featureJavaRes: ConfigurableFileCollection
 
     @get:Input
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     lateinit var mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>
         private set
 
@@ -193,7 +193,7 @@ abstract class MergeJavaResourceTask
     }
 
     class CreationAction(
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         private val mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>,
         creationConfig: ConsumableCreationConfig
     ) : VariantTaskCreationAction<MergeJavaResourceTask, ConsumableCreationConfig>(
@@ -217,7 +217,7 @@ abstract class MergeJavaResourceTask
                         .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
                 // We must also consume corresponding streams to avoid duplicates; any downstream
                 // transforms will use the merged-java-res stream instead.
-                @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                @Suppress("DEPRECATION") // Legacy support
                 creationConfig.transformManager
                     .consumeStreams(mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT), setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
             } else {
@@ -258,7 +258,7 @@ abstract class MergeJavaResourceTask
             }
             task.projectJavaRes.disallowChanges()
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             run {
                 if (mergeScopes.contains(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)) {
                     task.subProjectJavaRes.fromDisallowChanges(
@@ -360,11 +360,11 @@ fun getProjectJavaRes(
 
 private fun getExternalLibJavaRes(
     creationConfig: ComponentCreationConfig,
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     mergeScopes: Collection<com.android.build.api.transform.QualifiedContent.ScopeType>
 ): FileCollection {
     val externalLibJavaRes = creationConfig.services.fileCollection()
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     if (mergeScopes.contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
         externalLibJavaRes.from(
             creationConfig.variantDependencies.getArtifactFileCollection(

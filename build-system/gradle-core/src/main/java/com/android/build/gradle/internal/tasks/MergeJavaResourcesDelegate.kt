@@ -41,7 +41,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.function.Predicate
 
-@Suppress("DEPRECATION") // Legacy support (b/195153220)
+@Suppress("DEPRECATION") // Legacy support
 private fun isHighPriorityScope(scope: com.android.build.api.transform.QualifiedContent.ScopeType?): Boolean {
     return scope == com.android.build.api.transform.QualifiedContent.Scope.PROJECT || scope == InternalScope.FEATURES
 }
@@ -53,7 +53,7 @@ private fun isHighPriorityScope(scope: com.android.build.api.transform.Qualified
 class MergeJavaResourcesDelegate(
     inputs: List<IncrementalFileMergerInput>,
     private val outputFile: File,
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     private val scopeMap: MutableMap<IncrementalFileMergerInput, com.android.build.api.transform.QualifiedContent.ScopeType>,
     private val packagingOptions: ParsedPackagingOptions,
     private val incrementalStateFile: File,
@@ -111,7 +111,7 @@ class MergeJavaResourcesDelegate(
          */
 
         // Sort inputs to move project scopes to the start.
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         inputs.sortBy { if (scopeMap[it] == com.android.build.api.transform.QualifiedContent.Scope.PROJECT) 0 else 1 }
 
         // Filter inputs.

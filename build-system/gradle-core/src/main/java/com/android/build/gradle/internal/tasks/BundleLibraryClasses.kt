@@ -163,7 +163,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
         init {
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             inputs =
                 creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
@@ -228,7 +228,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
             ) { "Library classes bundling is supported only for api and runtime." }
             // Because ordering matters for TransformAPI, we need to fetch classes from the
             // transform pipeline as soon as this creation action is instantiated.
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             inputs = if (publishedType == PublishedConfigType.RUNTIME_ELEMENTS) {
                 creationConfig.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
                     types.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)

@@ -336,7 +336,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_CLASSES)
                 } else {
-                    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                    @Suppress("DEPRECATION") // Legacy support
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(
                             { contentTypes, scopes ->
@@ -358,7 +358,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     creationConfig.artifacts
                         .get(InternalArtifactType.SHRUNK_JAVA_RES)
                 } else {
-                    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+                    @Suppress("DEPRECATION") // Legacy support
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                             contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
@@ -368,7 +368,7 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
             task.mainScopeResourceFiles.disallowChanges()
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             task.localScopeInputFiles.from(
                 creationConfig.transformManager
                     .getPipelineOutputAsFileCollection { contentTypes, scopes ->

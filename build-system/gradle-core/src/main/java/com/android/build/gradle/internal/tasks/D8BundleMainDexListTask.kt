@@ -151,13 +151,13 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
         private val libraryClasses: FileCollection
 
         init {
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             val libraryScopes = setOf(
                 com.android.build.api.transform.QualifiedContent.Scope.PROVIDED_ONLY,
                 com.android.build.api.transform.QualifiedContent.Scope.TESTED_CODE
             )
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             libraryClasses = creationConfig.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(

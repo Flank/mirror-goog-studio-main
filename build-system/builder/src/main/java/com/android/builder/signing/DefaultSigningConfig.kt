@@ -121,7 +121,7 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
         if (storeType != that.storeType) {
             return false
         }
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         run {
             if (isV1SigningEnabled != that.isV1SigningEnabled) return false
             if (isV2SigningEnabled != that.isV2SigningEnabled) return false
@@ -141,7 +141,7 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
         result = 31 * result + (keyAlias?.hashCode() ?: 0)
         result = 31 * result + (keyPassword?.hashCode() ?: 0)
         result = 31 * result + (storeType?.hashCode() ?: 0)
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         run {
             result = 31 * result + (if (isV1SigningEnabled) 17 else 0)
             result = 31 * result + (if (isV2SigningEnabled) 17 else 0)
@@ -154,7 +154,7 @@ abstract class DefaultSigningConfig constructor(private val mName: String) : Sig
     }
 
     override fun toString(): String {
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         return MoreObjects.toStringHelper(this)
             .add("storeFile", storeFile?.absolutePath)
             .add("storePassword", storePassword)

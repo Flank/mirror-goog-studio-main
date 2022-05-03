@@ -181,7 +181,7 @@ abstract class ProguardConfigurableTask(
 
         private val resources: FileCollection
 
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         protected val inputScopes: MutableSet<com.android.build.api.transform.QualifiedContent.ScopeType> =
             when {
                 componentType.isAar -> mutableSetOf(
@@ -202,7 +202,7 @@ abstract class ProguardConfigurableTask(
             }
 
         init {
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             val referencedScopes: Set<com.android.build.api.transform.QualifiedContent.Scope> = run {
                 val set = Sets.newHashSetWithExpectedSize<com.android.build.api.transform.QualifiedContent.Scope>(5)
                 if (componentType.isAar) {
@@ -230,25 +230,25 @@ abstract class ProguardConfigurableTask(
             )
 
             val transformManager = creationConfig.transformManager
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             classes = transformManager
                 .getPipelineOutputAsFileCollection(createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, inputScopes))
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             resources = transformManager
                 .getPipelineOutputAsFileCollection(createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES, inputScopes))
 
             // Consume non referenced inputs
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             transformManager.consumeStreams(inputScopes, setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             referencedClasses = transformManager
                 .getPipelineOutputAsFileCollection(
                     createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES, referencedScopes.toMutableSet())
                 )
 
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             referencedResources = transformManager
                 .getPipelineOutputAsFileCollection(
                     createStreamFilter(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES, referencedScopes.toMutableSet())
@@ -442,7 +442,7 @@ abstract class ProguardConfigurableTask(
          *  Convenience function. Returns a StreamFilter that checks for the given contentType and a
          *  nonempty intersection with the given set of Scopes .
          */
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         private fun createStreamFilter(
             desiredType: com.android.build.api.transform.QualifiedContent.ContentType,
             desiredScopes: MutableSet<in com.android.build.api.transform.QualifiedContent.ScopeType>

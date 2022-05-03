@@ -636,7 +636,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             }
     }
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
         if (!component.buildFeatures.androidResources) {
             return
@@ -804,7 +804,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected open fun createDependencyStreams(creationConfig: ComponentCreationConfig) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -1161,7 +1161,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                             useAaptToGenerateLegacyMultidexMainDexProguardRules)
             val rFiles: FileCollection = project.files(
                     creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             creationConfig
                     .transformManager
                     .addStream(
@@ -1265,7 +1265,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      * @param contentType the contentType of java resources, must be RESOURCES or NATIVE_LIBS
      * @return the list of scopes for which to merge the java resources.
      */
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected abstract fun getJavaResMergingScopes(
             creationConfig: ComponentCreationConfig,
             contentType: com.android.build.api.transform.QualifiedContent.ContentType): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
@@ -1293,7 +1293,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // create the stream generated from this task, but only if a library with custom transforms,
         // in which case the custom transforms must be applied before java res merging.
         if (creationConfig.variantScope.needsJavaResStreams) {
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             creationConfig
                     .transformManager
                     .addStream(
@@ -1321,7 +1321,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val transformManager = creationConfig.transformManager
 
         // Compute the scopes that need to be merged.
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         val mergeScopes = getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
         taskFactory.register(MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig))
 
@@ -1427,7 +1427,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      *
      * This should not be called for classes that will also be compiled from source by jack.
      */
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun addJavacClassesStream(creationConfig: ComponentCreationConfig) {
         // create separate streams for all the classes coming from javac, pre/post hooks and R.
         val transformManager = creationConfig.transformManager
@@ -2348,7 +2348,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         creationConfig
             .transformManager
             .consumeStreams(
@@ -2375,7 +2375,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 )
             }
 
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         creationConfig
             .transformManager
             .addStream(
@@ -3265,7 +3265,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     private fun getDeviceGroups(): Collection<DeviceGroup> =
         globalConfig.testOptions.managedDevices.groups
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun maybeCreateTransformClassesWithAsmTask(
         creationConfig: ComponentCreationConfig
     ) {

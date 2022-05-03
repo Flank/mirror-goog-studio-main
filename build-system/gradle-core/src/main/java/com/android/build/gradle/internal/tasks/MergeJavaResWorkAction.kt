@@ -48,12 +48,12 @@ abstract class MergeJavaResWorkAction : ProfileAwareWorkAction<MergeJavaResWorkA
 
         val zipCache = KeyedFileCache(cacheDir, KeyedFileCache::fileNameKey)
         val cacheUpdates = mutableListOf<Runnable>()
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         val scopeMap = mutableMapOf<IncrementalFileMergerInput, com.android.build.api.transform.QualifiedContent.ScopeType>()
 
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         val inputMap = mutableMapOf<File, com.android.build.api.transform.QualifiedContent.ScopeType>()
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         run {
             parameters.projectJavaRes.forEach { inputMap[it] = com.android.build.api.transform.QualifiedContent.Scope.PROJECT }
             parameters.subProjectJavaRes.forEach { inputMap[it] = com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS }
