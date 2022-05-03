@@ -17,6 +17,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.ATTR_PERMISSION
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_ACTIVITY_ALIAS
@@ -28,10 +29,12 @@ import com.android.SdkConstants.TAG_SERVICE
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
 import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.LocationType
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
@@ -41,55 +44,62 @@ import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
+import org.w3c.dom.Element
 import java.util.Arrays
 
 /**
  * looks for obvious errors in the guarding of components with a permission via the android:permission attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
+    override fun checkMergedProject(context: Context) {
+        val root = context.mainProject.mergedManifest?.documentElement ?: return
+        checkDocument(context, root, true)
+    }
     override fun visitDocument(context: XmlContext, document: Document) {
-        val customPermissions = mutableSetOf<String>()
-        val potentialCustomPermissionUsages = mutableListOf<Attr>()
+        val root = document.documentElement ?: return
+        checkDocument(context, root, false)
+    }
 
-        fun reportErrorOrAppendToCustomPermissionUsages(attr: Attr) {
-            val usageError = getPermissionError(context, attr)
-            if (usageError != null) context.report(usageError)
-            else potentialCustomPermissionUsages.add(attr)
+    private fun checkDocument(context: Context, root: Element, isMergedManifest: Boolean) {
+        var customPermissions: MutableList<String>? = null
+        var customPermissionUsages: MutableList<Attr>? = null
+
+        fun reportOrAddCustomPermissions(attr: Attr) {
+            val evaluateCustomPermission = reportPermissionDefinitionIncidents(context, attr, isMergedManifest)
+            if (evaluateCustomPermission)
+                (customPermissions ?: mutableListOf<String>().also { customPermissions = it })
+                    .add(attr.value)
         }
 
-        val root = document.documentElement ?: return
-        var topLevel = getFirstSubTag(root)
+        fun reportOrAddPermissionUsages(attr: Attr) {
+            val evaluateCustomPermissionUsage = reportPermissionUsageIncidents(context, attr, isMergedManifest)
+            if (evaluateCustomPermissionUsage)
+                (customPermissionUsages ?: mutableListOf<Attr>().also { customPermissionUsages = it })
+                    .add(attr)
+        }
 
+        var topLevel = getFirstSubTag(root)
         while (topLevel != null) {
             when (topLevel.tagName) {
                 TAG_PERMISSION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
-                        if (isSystemPermission(it.value)) context.report(
-                            RESERVED_SYSTEM_PERMISSION,
-                            topLevel,
-                            context.getValueLocation(it),
-                            "`${it.value}` is a reserved permission for the system"
-                        )
-                        else customPermissions.add(it.value)
-                    }
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::reportOrAddCustomPermissions)
                 }
                 TAG_USES_PERMISSION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let {
-                        reportErrorOrAppendToCustomPermissionUsages(it)
-                    }
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::reportOrAddPermissionUsages)
                 }
                 TAG_APPLICATION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let {
-                        reportErrorOrAppendToCustomPermissionUsages(it)
-                    }
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::reportOrAddPermissionUsages)
 
                     var componentLevel = getFirstSubTag(topLevel)
                     while (componentLevel != null) {
                         when (componentLevel.tagName) {
-                            in ANDROID_COMPONENT_TAGS -> {
-                                componentLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let {
-                                    reportErrorOrAppendToCustomPermissionUsages(it)
-                                }
+                            TAG_APPLICATION,
+                            TAG_ACTIVITY,
+                            TAG_ACTIVITY_ALIAS,
+                            TAG_RECEIVER,
+                            TAG_SERVICE,
+                            TAG_PROVIDER -> {
+                                componentLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::reportOrAddPermissionUsages)
                             }
                         }
                         componentLevel = getNextTag(componentLevel)
@@ -99,40 +109,93 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             topLevel = getNextTag(topLevel)
         }
 
-        for (potentialCustomPermissionUsage in potentialCustomPermissionUsages) {
-            val permissionName = potentialCustomPermissionUsage.value
-            findAlmostCustomPermission(permissionName, customPermissions)?.let {
-                context.report(
-                    CUSTOM_PERMISSION_TYPO,
-                    context.getValueLocation(potentialCustomPermissionUsage),
-                    "Did you mean `$it`?",
-                    fix().replace().text(permissionName).with(it).build()
-                )
+        if (customPermissions != null && customPermissionUsages != null) {
+            for (potentialCustomPermissionUsage in customPermissionUsages ?: emptyList()) {
+                val permissionName = potentialCustomPermissionUsage.value
+                findAlmostCustomPermission(permissionName, customPermissions ?: emptyList())?.let {
+                    context.report(
+                        Incident(
+                            CUSTOM_PERMISSION_TYPO,
+                            potentialCustomPermissionUsage.ownerElement,
+                            context.getLocation(potentialCustomPermissionUsage, LocationType.VALUE),
+                            "Did you mean `$it`?",
+                            fix().replace().text(permissionName).with(it).build()
+                        )
+                    )
+                }
             }
         }
     }
 
-    private fun getPermissionError(context: XmlContext, attr: Attr): Incident? {
-        if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
-            return Incident(
-                KNOWN_PERMISSION_ERROR,
-                attr.ownerElement,
-                context.getValueLocation(attr),
-                "`${attr.value}` is not a valid permission value"
+    /**
+     * report incidents related to permission definitions that are NOT related to custom permission typos
+     * @return boolean representing whether this attribute should be evaluated for a custom permission typo
+     */
+    private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
+        val packageName =
+            (context.project.buildVariant?.`package` ?: attr.ownerDocument.documentElement?.getAttribute(ATTR_PACKAGE))
+                .orEmpty()
+
+        if (isSystemPermission(attr.value)) {
+            if (!isMergedManifest) context.report(
+                Incident(
+                    RESERVED_SYSTEM_PERMISSION,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "`${attr.value}` is a reserved permission for the system"
+                )
             )
+            if (context.isEnabled(RESERVED_SYSTEM_PERMISSION)) return false
+        }
+
+        if (!followsCustomPermissionNamingConvention(packageName, attr.value)) {
+            if (!isMergedManifest) context.report(
+                Incident(
+                    PERMISSION_NAMING_CONVENTION,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "`${attr.value} does not follow recommended naming convention`"
+                )
+            )
+            if (context.isEnabled(PERMISSION_NAMING_CONVENTION)) return false
+        }
+
+        return isMergedManifest
+    }
+
+    /**
+     * report incidents related to permission usages that are NOT related to custom permission typos
+     * @return boolean representing whether this attribute should be evaluated for a custom permission typo
+     */
+    private fun reportPermissionUsageIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
+        if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
+            if (!isMergedManifest) context.report(
+                Incident(
+                    KNOWN_PERMISSION_ERROR,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "`${attr.value}` is not a valid permission value"
+                )
+            )
+            // signal that the attribute would have already been reported
+            if (context.isEnabled(KNOWN_PERMISSION_ERROR)) return false
         }
 
         findAlmostSystemPermission(attr.value)?.let {
-            return Incident(
-                SYSTEM_PERMISSION_TYPO,
-                attr.ownerElement,
-                context.getValueLocation(attr),
-                "Did you mean `$it`?",
-                fix().replace().text(attr.value).with(it).build()
+            if (!isMergedManifest) context.report(
+                Incident(
+                    SYSTEM_PERMISSION_TYPO,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "Did you mean `$it`?",
+                    fix().replace().text(attr.value).with(it).build()
+                )
             )
+            // signal that the attribute would have already been reported
+            if (context.isEnabled(SYSTEM_PERMISSION_TYPO)) return false
         }
 
-        return null
+        return isMergedManifest
     }
 
     companion object {
@@ -141,7 +204,39 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             Scope.MANIFEST_SCOPE
         )
 
-        private val KNOWN_PERMISSION_ERROR_VALUES = listOf("true", "false") // TODO: additional obvious values?
+        @JvmField
+        val PERMISSION_NAMING_CONVENTION: Issue = Issue.create(
+            id = "PermissionNamingConvention",
+            briefDescription = "Permission name does not follow recommended convention",
+            explanation = """
+                Permissions should be prefixed with an app's package name, using \
+                reverse-domain-style naming. This prefix should be followed by `.permission.`, \
+                and then a description of the capability that the permission represents, in \
+                upper SNAKE_CASE. For example, `com.example.myapp.permission.ENGAGE_HYPERSPACE`.
+
+                Following this recommendation avoids naming collisions, and helps clearly \
+                identify the owner and intention of a custom permission.
+                """,
+            category = Category.SECURITY,
+            priority = 5,
+            severity = Severity.WARNING,
+            enabledByDefault = false,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
+        )
+
+        private val PERMISSION_SUFFIX_REGEX = Regex("[A-Z0-9_]+")
+
+        fun followsCustomPermissionNamingConvention(packageName: String, permissionName: String): Boolean {
+            if (packageName.isEmpty()) return true
+
+            val (prefix, suffix) = permissionToPrefixAndSuffix(permissionName)
+            return (
+                prefix.startsWith(packageName) &&
+                    prefix.endsWith("permission") &&
+                    suffix.matches(PERMISSION_SUFFIX_REGEX)
+                )
+        }
 
         @JvmField
         val KNOWN_PERMISSION_ERROR: Issue = Issue.create(
@@ -161,6 +256,8 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             implementation = IMPLEMENTATION
         )
 
+        private val KNOWN_PERMISSION_ERROR_VALUES = listOf("true", "false") // TODO: additional obvious values?
+
         val RESERVED_SYSTEM_PERMISSION: Issue = Issue.create(
             id = "ReservedSystemPermission",
             briefDescription = "Permission name is a reserved system permission",
@@ -173,7 +270,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                 """,
             category = Category.SECURITY,
             priority = 5,
-            severity = Severity.WARNING,
+            severity = Severity.ERROR,
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
@@ -213,17 +310,17 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         )
 
         // the edit distance at which we have reasonable confidence that there is a typo
-        const val MAX_EDIT_DISTANCE = 4
+        private const val MAX_EDIT_DISTANCE = 4
 
         // purely to optimize the LintUtils.editDistance call
-        const val EDIT_DISTANCE_ESCAPE = MAX_EDIT_DISTANCE + 1
+        private const val EDIT_DISTANCE_ESCAPE = MAX_EDIT_DISTANCE + 1
 
-        fun findAlmostCustomPermission(requiredPermission: String, customPermissions: Set<String>): String? {
-            if (requiredPermission in customPermissions) return null
+        fun findAlmostCustomPermission(requiredPermission: String, customPermissions: List<String>): String? {
+            if (customPermissions.contains(requiredPermission)) return null
             return customPermissions.firstOrNull { editDistance(requiredPermission, it, EDIT_DISTANCE_ESCAPE) in 1..MAX_EDIT_DISTANCE }
         }
 
-        val UNEXPECTED_CHAR_REGEX = Regex("[^a-zA-Z0-9_.]+")
+        private val UNEXPECTED_CHAR_REGEX = Regex("[^a-zA-Z0-9_.]+")
 
         /**
          * Crude implementation to detect an incorrectly specified system permission
@@ -257,21 +354,12 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             }
         }
 
-        fun permissionToPrefixAndSuffix(permission: String): Pair<String, String> = Pair(
-            permission.split(".").dropLast(1).joinToString("."),
-            permission.split(".").last()
-        )
-
         fun isSystemPermission(permissionName: String): Boolean =
             Arrays.binarySearch(SYSTEM_PERMISSIONS, permissionName) >= 0
 
-        private val ANDROID_COMPONENT_TAGS = listOf(
-            TAG_APPLICATION,
-            TAG_ACTIVITY,
-            TAG_ACTIVITY_ALIAS,
-            TAG_RECEIVER,
-            TAG_SERVICE,
-            TAG_PROVIDER
+        fun permissionToPrefixAndSuffix(permission: String): Pair<String, String> = Pair(
+            permission.split(".").dropLast(1).joinToString("."),
+            permission.split(".").last()
         )
     }
 }

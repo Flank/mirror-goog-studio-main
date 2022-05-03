@@ -15,15 +15,66 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.CUSTOM_PERMISSION_TYPO
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.KNOWN_PERMISSION_ERROR
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.PERMISSION_NAMING_CONVENTION
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.RESERVED_SYSTEM_PERMISSION
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.SYSTEM_PERMISSION_TYPO
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostCustomPermission
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostSystemPermission
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.permissionToPrefixAndSuffix
 import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
+import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.detector.api.Detector
 import org.junit.Test
 
 class PermissionErrorDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = PermissionErrorDetector()
+
+    @Test
+    fun testDocumentationExamplePermissionNamingConvention() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
+                  <permission android:name="com.example.helloworld.permission.FOO_BAR" />
+                  <permission android:name="com.example.helloworld.specific.path.permission.FOO_BAR" />
+                  <permission android:name="com.example.helloworld.permission.FOO_BAR_123" />
+                  <permission android:name="com.example.helloworld.FOO_BAR" />
+                  <permission android:name="com.example.helloworld.permission.FOO-BAR" />
+                  <permission android:name="com.example.helloworld.permission.foo_bar" />
+                  <permission android:name="android.permission.FOO_BAR" />
+                  <permission android:name="FOO_BAR" />
+                </manifest>
+                """
+            ).indented()
+        )
+            .issues(PERMISSION_NAMING_CONVENTION)
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:7: Warning: com.example.helloworld.FOO_BAR does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="com.example.helloworld.FOO_BAR" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:8: Warning: com.example.helloworld.permission.FOO-BAR does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="com.example.helloworld.permission.FOO-BAR" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:9: Warning: com.example.helloworld.permission.foo_bar does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="com.example.helloworld.permission.foo_bar" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:10: Warning: android.permission.FOO_BAR does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="android.permission.FOO_BAR" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:11: Warning: FOO_BAR does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="FOO_BAR" />
+                                            ~~~~~~~
+                0 errors, 5 warnings
+                """
+            )
+            .expectFixDiffs("")
+    }
 
     @Test
     fun testDocumentationExampleKnownPermissionError() {
@@ -44,6 +95,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(KNOWN_PERMISSION_ERROR)
             .run()
             .expect(
                 """
@@ -86,6 +138,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(KNOWN_PERMISSION_ERROR)
             .run()
             .expectClean()
     }
@@ -106,14 +159,15 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(RESERVED_SYSTEM_PERMISSION)
             .run()
             .expect(
                 """
-                AndroidManifest.xml:4: Warning: android.permission.BIND_APPWIDGET is a reserved permission for the system [ReservedSystemPermission]
+                AndroidManifest.xml:4: Error: android.permission.BIND_APPWIDGET is a reserved permission for the system [ReservedSystemPermission]
                   <permission android:name="android.permission.BIND_APPWIDGET" />
                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                0 errors, 1 warnings
-                """.trimIndent()
+                1 errors, 0 warnings
+                """
             )
     }
 
@@ -133,6 +187,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(RESERVED_SYSTEM_PERMISSION)
             .run()
             .expectClean()
     }
@@ -145,7 +200,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 <manifest
                   xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:tools="http://schemas.android.com/tools"
-                >
+                  package="com.example.helloworld">
                   <uses-permission android:name="android.permission.BIND_EIUCC_SERVICE" />
                   <application android:name="App" android:permission="android.permission.BIND_EIUCC_SERVICE">
                     <activity />
@@ -160,6 +215,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                   """
             ).indented()
         )
+            .issues(SYSTEM_PERMISSION_TYPO)
             .run()
             .expect(
                 """
@@ -227,7 +283,8 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:tools="http://schemas.android.com/tools">
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
                   <application>
                     <activity />
                     <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
@@ -236,10 +293,11 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(SYSTEM_PERMISSION_TYPO)
             .run()
             .expect(
                 """
-                AndroidManifest.xml:5: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
+                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
                     <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
@@ -248,7 +306,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             .expectFixDiffs(
                 """
                 Fix for AndroidManifest.xml line 5: Replace with android.permission.BIND_EUICC_SERVICE:
-                @@ -5 +5
+                @@ -6 +6
                 -     <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
                 +     <service android:permission="android.permission.BIND_EUICC_SERVICE" />
                 """
@@ -261,7 +319,8 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:tools="http://schemas.android.com/tools">
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
                   <application>
                     <activity />
                     <service android:permission="android.permission.ACCESS_AMBIENT_LIGHT_STATS" />
@@ -270,6 +329,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(SYSTEM_PERMISSION_TYPO)
             .run()
             .expectClean()
     }
@@ -332,7 +392,8 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             manifest(
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:tools="http://schemas.android.com/tools">
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
                   <permission android:name="my.custom.permission.FOOBAR" />
                   <permission android:name="my.custom.permission.FOOBAB" />
                   <permission android:name="my.custom.permission.BAZQUXX" />
@@ -347,26 +408,27 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         )
+            .issues(CUSTOM_PERMISSION_TYPO)
             .run()
             .expect(
                 """
-                AndroidManifest.xml:8: Warning: Did you mean my.custom.permission.FOOBAR? [CustomPermissionTypo]
+                AndroidManifest.xml:9: Warning: Did you mean my.custom.permission.FOOBAR? [CustomPermissionTypo]
                     <service android:permission="my.custom.permission.FOOBOB" />
-                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:10: Warning: Did you mean my.custom.permission.BAZQUXX? [CustomPermissionTypo]
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:11: Warning: Did you mean my.custom.permission.BAZQUXX? [CustomPermissionTypo]
                     <activity android:permission="my.custom.permission.BAZQXX" />
-                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 2 warnings
                 """
             )
             .expectFixDiffs(
                 """
                 Fix for AndroidManifest.xml line 8: Replace with my.custom.permission.FOOBAR:
-                @@ -8 +8
+                @@ -9 +9
                 -     <service android:permission="my.custom.permission.FOOBOB" />
                 +     <service android:permission="my.custom.permission.FOOBAR" />
                 Fix for AndroidManifest.xml line 10: Replace with my.custom.permission.BAZQUXX:
-                @@ -10 +10
+                @@ -11 +11
                 -     <activity android:permission="my.custom.permission.BAZQXX" />
                 +     <activity android:permission="my.custom.permission.BAZQUXX" />
                 """
@@ -377,36 +439,87 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
     fun testCustomPermissionTypoOk() {
         lint().files(
             manifest(
-                "bar",
                 """
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:tools="http://schemas.android.com/tools">
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
+                  <permission android:name="my.custom.permission.FOOBAR" />
+                  <permission android:name="my.custom.permission.BAZQUXX" />
                   <application>
                     <service android:permission="my.custom.permission.FOOBAR" />
                     <activity android:permission="my.custom.permission.BAZQUXX" />
                   </application>
                 </manifest>
                 """
-            ).indented(),
-            manifest(
-                "foo",
-                """
-                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:tools="http://schemas.android.com/tools">
-                  <permission android:name="my.custom.permission.FOOBAR" />
-                  <permission android:name="my.custom.permission.BAZQUXX" />
-                  <application>
-                  </application>
-                </manifest>
-                """
-            ).indented(),
+            ).indented()
         )
+            .issues(CUSTOM_PERMISSION_TYPO)
             .run().expectClean()
     }
 
     @Test
+    fun testCustomPermissionTypoWithMergedManifest() {
+        val library = project(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.lib"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk android:minSdkVersion="14" />
+                    <permission android:name="my.custom.permission.FOOBAR"
+                        android:label="@string/foo"
+                        android:description="@string/foo" />
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).type(ProjectDescription.Type.LIBRARY).name("Library")
+        val main = project(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.helloworld.app"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk android:minSdkVersion="14" />
+                    <uses-permission android:name="my.custom.permission.FOOBOB" />
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:label="@string/app_name" >
+                    </application>
+                </manifest>
+                """
+            ).indented()
+        ).name("App").dependsOn(library)
+
+        lint().projects(main, library)
+            .issues(CUSTOM_PERMISSION_TYPO)
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:6: Warning: Did you mean my.custom.permission.FOOBAR? [CustomPermissionTypo]
+                    <uses-permission android:name="my.custom.permission.FOOBOB" />
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 1 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 6: Replace with my.custom.permission.FOOBAR:
+                @@ -6 +6
+                -     <uses-permission android:name="my.custom.permission.FOOBOB" />
+                +     <uses-permission android:name="my.custom.permission.FOOBAR" />
+                """
+            )
+    }
+
+    @Test
     fun testFindAlmostCustomPermission() {
-        val customPermissions = setOf("my.custom.permission.FOO_BAR", "my.custom.permission.BAZ_QUXX")
+        val customPermissions = listOf("my.custom.permission.FOO_BAR", "my.custom.permission.BAZ_QUXX")
         assertEquals(
             findAlmostCustomPermission("my.custom.permission.FOOB", customPermissions),
             "my.custom.permission.FOO_BAR"
@@ -419,7 +532,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
 
     @Test
     fun testFindAlmostCustomPermission_noFalsePositives() {
-        val customPermissions = setOf("my.custom.permission.FOO_BAR", "my.custom.permission.FOO_BAZ")
+        val customPermissions = listOf("my.custom.permission.FOO_BAR", "my.custom.permission.FOO_BAZ")
         customPermissions.forEach {
             assertNull(findAlmostCustomPermission(it, customPermissions))
         }

@@ -4,6 +4,18 @@ This chapter lists recent changes to lint that affect users of lint.
 For information about internal improvements and API changes affecting
 lint check authors, see the API Guide.
 
+**7.4**
+
+* New built-in lint-checks:
+
+  Issue ID                    | Summary
+  ----------------------------|-----------------------------------
+  `PermissionNamingConvention`| Custom permissions not following naming convention
+  `KnownPermissionError`      | Well-known permission errors, e.g. `android:permission="true"`
+  `SystemPermissionTypo`      | Usage of permissions that look like system permissions, but have typos
+  `CustomPermissionTypo`      | Usage of permissions that look like custom permissions from the same project, but have typos
+  `ReservedSystemPermission`  | Accidental redefining of a framework permission
+
 **7.3**
 
 * New built-in lint-checks:
