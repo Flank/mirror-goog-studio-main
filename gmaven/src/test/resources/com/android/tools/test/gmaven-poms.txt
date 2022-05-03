@@ -462,6 +462,7 @@ com.android.tools.build:gradle
     com.android.tools.build:builder (compile)
     com.android.tools.build:builder-model (compile)
     com.android.tools.build:gradle-api (compile)
+    com.android.tools.build:gradle-settings-api (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     com.android.tools:repository (runtime)
@@ -524,7 +525,6 @@ com.android.tools.build:gradle-settings
   description=Gradle Settings plug-in to build Android applications.
   dependencies:
     com.android.tools.build:gradle-settings-api (compile)
-    com.android.tools.build:gradle-api (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.build:gradle-settings-api

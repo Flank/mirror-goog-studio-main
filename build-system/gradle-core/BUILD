@@ -62,6 +62,7 @@ maven_library(
         "//tools/base/build-system/aapt2-proto",
         "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
+        "//tools/base/build-system/gradle-settings-api",
         "//tools/base/common:tools.common",  # TODO: Not in the pom, but required to compile (?)
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

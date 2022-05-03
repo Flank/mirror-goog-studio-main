@@ -801,6 +801,11 @@ interface CommonExtension<
      */
     var compileSdk: Int?
 
+    /**
+     * Specifies the SDK Extension level to compile your project against. This value is optional.
+     *
+     * When not provided the base extension for the given `compileSdk` API level will be selected.
+     */
     var compileSdkExtension: Int?
 
     /**

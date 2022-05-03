@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.SdkConstants
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SettingsExtension
 import com.android.build.api.dsl.SingleVariant
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidComponentsExtension
@@ -787,6 +788,40 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
      */
     protected open fun isPackagePublished(): Boolean {
         return false
+    }
+
+    protected fun initExtensionFromSettings(extension: AndroidT) {
+        // Query for the settings extension via extra properties.
+        // This is deposited here by the SettingsPlugin
+        val properties = project?.extensions?.extraProperties ?: return
+        if (properties.has("_android_settings")) {
+            val settings = properties.get("_android_settings") as? SettingsExtension
+            settings?.let {
+                extension.doInitExtensionFromSettings(it)
+            }
+        }
+    }
+
+    protected open fun AndroidT.doInitExtensionFromSettings(settings: SettingsExtension) {
+        settings.compileSdk?.let { compileSdk ->
+            this.compileSdk = compileSdk
+
+            settings.compileSdkExtension?.let { compileSdkExtension ->
+                this.compileSdkExtension = compileSdkExtension
+            }
+        }
+
+        settings.compileSdkPreview?.let { compileSdkPreview ->
+            this.compileSdkPreview = compileSdkPreview
+        }
+
+        settings.minSdk?.let { minSdk ->
+            this.defaultConfig.minSdk = minSdk
+        }
+
+        settings.minSdkPreview?.let { minSdkPreview ->
+            this.defaultConfig.minSdkPreview = minSdkPreview
+        }
     }
 
     // Create the "special" configuration for test buddy APKs. It will be resolved by the test

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.google.common.truth.ComparableSubject
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
@@ -23,83 +24,124 @@ internal class SettingsExtensionImplTest {
     private val settings = SettingsExtensionImpl()
 
     @Test
+    fun testDefaults() {
+        testCompileValues()
+        testMinSdkValues()
+    }
+
+    @Test
     fun compileSdk() {
         settings.compileSdk = 12
+        testCompileValues(compileSdk = 12)
 
-        assertWithMessage("compileSdk")
-            .that(settings.compileSdk)
-            .isEqualTo(12)
+        settings.compileSdkExtension = 2
+        testCompileValues(compileSdk = 12, compileSdkExtension = 2)
 
-        assertWithMessage("compileSdkPreview")
-            .that(settings.compileSdkPreview)
-            .isNull()
+        // test reset to null from other values
+        settings.compileSdkPreview = "Foo"
+        testCompileValues(compileSdkPreview = "Foo")
 
-        assertWithMessage("hasAddOn")
-            .that(settings.hasAddOn)
-            .isFalse()
-
-        assertWithMessage("addOnVendor")
-            .that(settings.addOnVendor)
-            .isNull()
-        assertWithMessage("addOnName")
-            .that(settings.addOnName)
-            .isNull()
-        assertWithMessage("addOnApiLevel")
-            .that(settings.addOnApiLevel)
-            .isNull()
+        settings.compileSdk = 12
+        settings.compileSdkAddon("foo", "bar", 42)
+        testCompileValues(addOnVendor = "foo", addOnName = "bar", addOnVersion = 42)
     }
 
     @Test
     fun compileSdkPreview() {
         settings.compileSdkPreview = "S"
+        testCompileValues(compileSdkPreview = "S")
 
-        assertWithMessage("compileSdk")
-            .that(settings.compileSdk)
-            .isNull()
+        // test reset to null from other values
+        settings.compileSdk = 12
+        testCompileValues(compileSdk = 12)
 
-        assertWithMessage("compileSdkPreview")
-            .that(settings.compileSdkPreview)
-            .isEqualTo("S")
-
-        assertWithMessage("hasAddOn")
-            .that(settings.hasAddOn)
-            .isFalse()
-
-        assertWithMessage("addOnVendor")
-            .that(settings.addOnVendor)
-            .isNull()
-        assertWithMessage("addOnName")
-            .that(settings.addOnName)
-            .isNull()
-        assertWithMessage("addOnApiLevel")
-            .that(settings.addOnApiLevel)
-            .isNull()
+        settings.compileSdkPreview = "S"
+        settings.compileSdkAddon("foo", "bar", 42)
+        testCompileValues(addOnVendor = "foo", addOnName = "bar", addOnVersion = 42)
     }
 
     @Test
     fun compileSdkAddon() {
         settings.compileSdkAddon("foo", "bar", 42)
+        testCompileValues(addOnVendor = "foo", addOnName = "bar", addOnVersion = 42)
 
+        // test reset to null from other values
+        settings.compileSdk = 12
+        testCompileValues(compileSdk = 12)
+
+        settings.compileSdkAddon("foo", "bar", 42)
+        settings.compileSdkPreview = "S"
+        testCompileValues(compileSdkPreview = "S")
+    }
+
+    @Test
+    fun minSdk() {
+        settings.minSdk = 12
+        testMinSdkValues(minSdk = 12)
+
+        // test reset to null from other values
+        settings.minSdkPreview = "S"
+        testMinSdkValues(minSdkPreview = "S")
+    }
+
+    @Test
+    fun minSdkPreview() {
+        settings.minSdkPreview = "S"
+        testMinSdkValues(minSdkPreview = "S")
+
+        // test reset to null from other values
+        settings.minSdk = 12
+        testMinSdkValues(minSdk = 12)
+    }
+
+    private fun testCompileValues(
+        compileSdk: Int? = null,
+        compileSdkExtension: Int? = null,
+        compileSdkPreview: String? = null,
+        addOnVendor: String? = null,
+        addOnName: String? = null,
+        addOnVersion: Int? = null,
+    ) {
         assertWithMessage("compileSdk")
             .that(settings.compileSdk)
-            .isNull()
+            .compareTo(compileSdk)
+
+        assertWithMessage("compileSdkExtension")
+            .that(settings.compileSdkExtension)
+            .compareTo(compileSdkExtension)
 
         assertWithMessage("compileSdkPreview")
             .that(settings.compileSdkPreview)
-            .isNull()
-
-        assertWithMessage("hasAddOn")
-            .that(settings.hasAddOn)
-            .isTrue()
+            .compareTo(compileSdkPreview)
 
         assertWithMessage("addOnVendor")
             .that(settings.addOnVendor)
-            .isEqualTo("foo")
+            .compareTo(addOnVendor)
         assertWithMessage("addOnName")
             .that(settings.addOnName)
-            .isEqualTo("bar")
-        assertWithMessage("addOnApiLevel")
-            .that(settings.addOnApiLevel)
-            .isEqualTo(42)
+            .compareTo(addOnName)
+        assertWithMessage("addOnVersion")
+            .that(settings.addOnVersion)
+            .compareTo(addOnVersion)
     }
+
+    private fun testMinSdkValues(
+        minSdk: Int? = null,
+        minSdkPreview: String? = null
+    ) {
+        assertWithMessage("minSdk")
+            .that(settings.minSdk)
+            .compareTo(minSdk)
+
+        assertWithMessage("minSdkPreview")
+            .that(settings.minSdkPreview)
+            .compareTo(minSdkPreview)
+    }
+
+    private fun <TypeT, SubjectT : ComparableSubject<SubjectT, TypeT>> SubjectT.compareTo(value: TypeT?) =
+        if (value == null) {
+            this.isNull()
+        } else {
+            this.isEqualTo(value)
+        }
 }

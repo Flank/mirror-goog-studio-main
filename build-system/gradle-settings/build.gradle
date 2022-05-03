@@ -43,7 +43,6 @@ dependencies {
     api project(':base:build-system:gradle-settings-api')
 
     implementation gradleApi()
-    implementation project(':base:gradle-api')
     implementation libs.kotlin_stdlib
 
     testImplementation libs.junit

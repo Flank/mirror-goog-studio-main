@@ -49,6 +49,13 @@ interface SettingsExtension {
     var compileSdk: Int?
 
     /**
+     * Specifies the SDK Extension level to compile your project against. This value is optional.
+     *
+     * When not provided the base extension for the given `compileSdk` API level will be selected.
+     */
+    var compileSdkExtension: Int?
+
+    /**
      * Specify a preview API to compile your project against.
      *
      * For example, to try out the Android S preview,
@@ -59,6 +66,13 @@ interface SettingsExtension {
     var compileSdkPreview: String?
 
     fun compileSdkAddon(vendor: String, name: String, version: Int)
+
+    /** Value set via `compileSdkAddon` */
+    val addOnVendor: String?
+    /** Value set via `compileSdkAddon` */
+    val addOnName: String?
+    /** Value set via `compileSdkAddon` */
+    val addOnVersion: Int?
 
     /**
      * The minimum SDK version.

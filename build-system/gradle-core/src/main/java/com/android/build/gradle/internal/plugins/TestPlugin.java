@@ -145,10 +145,12 @@ public class TestPlugin
                                             testExtension);
             project.getExtensions()
                     .add(TestExtension.class, "_internal_legacy_android_extension", android);
+
+            initExtensionFromSettings(testExtension);
             return new ExtensionData<>(android, testExtension, bootClasspathConfig);
         }
 
-        return new ExtensionData<>(
+        TestExtension android =
                 project.getExtensions()
                         .create(
                                 "android",
@@ -158,9 +160,9 @@ public class TestPlugin
                                 buildOutputs,
                                 dslContainers.getSourceSetManager(),
                                 extraModelInfo,
-                                testExtension),
-                testExtension,
-                bootClasspathConfig);
+                                testExtension);
+        initExtensionFromSettings(android);
+        return new ExtensionData<>(android, testExtension, bootClasspathConfig);
     }
 
     /**

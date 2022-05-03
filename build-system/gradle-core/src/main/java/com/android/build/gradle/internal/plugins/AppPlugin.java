@@ -153,10 +153,13 @@ public class AppPlugin
                             BaseAppModuleExtension.class,
                             "_internal_legacy_android_extension",
                             android);
+
+            initExtensionFromSettings(applicationExtension);
+
             return new ExtensionData<>(android, applicationExtension, bootClasspathConfig);
         }
 
-        return new ExtensionData<>(
+        BaseAppModuleExtension android =
                 project.getExtensions()
                         .create(
                                 "android",
@@ -166,9 +169,9 @@ public class AppPlugin
                                 buildOutputs,
                                 dslContainers.getSourceSetManager(),
                                 extraModelInfo,
-                                applicationExtension),
-                applicationExtension,
-                bootClasspathConfig);
+                                applicationExtension);
+        initExtensionFromSettings(android);
+        return new ExtensionData<>(android, applicationExtension, bootClasspathConfig);
     }
 
     /**

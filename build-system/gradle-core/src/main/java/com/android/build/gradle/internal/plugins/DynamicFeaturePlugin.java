@@ -158,10 +158,12 @@ public class DynamicFeaturePlugin
                             DynamicFeatureExtension.class,
                             "_internal_legacy_android_extension",
                             android);
+
+            initExtensionFromSettings(dynamicFeatureExtension);
             return new ExtensionData<>(android, dynamicFeatureExtension, bootClasspathConfig);
         }
 
-        return new ExtensionData<>(
+        DynamicFeatureExtension android =
                 project.getExtensions()
                         .create(
                                 "android",
@@ -171,9 +173,11 @@ public class DynamicFeaturePlugin
                                 buildOutputs,
                                 dslContainers.getSourceSetManager(),
                                 extraModelInfo,
-                                dynamicFeatureExtension),
-                dynamicFeatureExtension,
-                bootClasspathConfig);
+                                dynamicFeatureExtension);
+
+        initExtensionFromSettings(android);
+
+        return new ExtensionData<>(android, dynamicFeatureExtension, bootClasspathConfig);
     }
 
     /**

@@ -26,9 +26,20 @@ internal open class SettingsExtensionImpl: SettingsExtension {
         set(value) {
             _compileSdk = value
             _compileSdkPreview = null
-            addOnName = null
-            addOnVendor = null
-            addOnApiLevel = null
+            _addOnVendor = null
+            _addOnName = null
+            _addOnVersion = null
+        }
+
+    private var _compileSdkExtension: Int? = null
+    override var compileSdkExtension: Int?
+        get() = _compileSdkExtension
+        set(value) {
+            _compileSdkExtension = value
+            _compileSdkPreview = null
+            _addOnVendor = null
+            _addOnName = null
+            _addOnVersion = null
         }
 
     private var _compileSdkPreview: String? = null
@@ -37,25 +48,32 @@ internal open class SettingsExtensionImpl: SettingsExtension {
         set(value) {
             _compileSdkPreview = value
             _compileSdk = null
-            addOnName = null
-            addOnVendor = null
-            addOnApiLevel = null
+            _compileSdkExtension = null
+            _addOnVendor = null
+            _addOnName = null
+            _addOnVersion = null
         }
 
-    internal val hasAddOn: Boolean
-        get() = addOnName != null && addOnVendor != null && addOnApiLevel != null
-
-    internal var addOnName: String? = null
-    internal var addOnVendor: String? = null
-    internal var addOnApiLevel: Int? = null
 
     override fun compileSdkAddon(vendor: String, name: String, version: Int) {
-        addOnVendor = vendor
-        addOnName = name
-        addOnApiLevel = version
+        _addOnVendor = vendor
+        _addOnName = name
+        _addOnVersion = version
         _compileSdk = null
+        _compileSdkExtension = null
         _compileSdkPreview = null
     }
+
+    private var _addOnVendor: String? = null
+    private var _addOnName: String? = null
+    private var _addOnVersion: Int? = null
+
+    override val addOnVendor: String?
+        get() = _addOnVendor
+    override val addOnName: String?
+        get() = _addOnName
+    override val addOnVersion: Int?
+        get() = _addOnVersion
 
     private var _minSdk: Int? = null
     override var minSdk: Int?
