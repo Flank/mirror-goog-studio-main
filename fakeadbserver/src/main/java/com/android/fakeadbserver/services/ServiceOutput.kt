@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver
+package com.android.fakeadbserver.services
 
+import com.android.fakeadbserver.ShellV2Protocol
 import com.google.common.base.Charsets
 import java.io.EOFException
 import java.net.Socket

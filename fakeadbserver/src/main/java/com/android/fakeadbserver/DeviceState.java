@@ -18,6 +18,7 @@ package com.android.fakeadbserver;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.fakeadbserver.services.ServiceManager;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHandlerFactory;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHub;
 import com.android.fakeadbserver.statechangehubs.StateChangeQueue;
@@ -52,6 +53,7 @@ public class DeviceState {
     private final String mBuildVersionRelease;
     private final String mBuildVersionSdk;
     private DeviceStatus mDeviceStatus;
+    private final ServiceManager mServiceManager;
 
     DeviceState(
             @NonNull FakeAdbServer server,
@@ -72,6 +74,7 @@ public class DeviceState {
         mHostConnectionType = hostConnectionType;
         myTransportId = transportId;
         mDeviceStatus = DeviceStatus.OFFLINE;
+        mServiceManager = new ServiceManager();
     }
 
     public void stop() {
@@ -296,6 +299,10 @@ public class DeviceState {
 
     public Set<String> getFeatures() {
         return mFeatures;
+    }
+
+    public ServiceManager getServiceManager() {
+        return mServiceManager;
     }
 
     /**

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver
+package com.android.fakeadbserver.services
 
 // TODO: Add all package management app (create,write,commit,abandon) and list here.
 class PackageManager {
@@ -45,7 +45,7 @@ class PackageManager {
             }
 
             cmd.startsWith("install-create") -> {
-                if (args.contains(PackageManager.BAD_FLAG)) {
+                if (args.contains(BAD_FLAG)) {
                     serviceOutput.writeStderr("Error: (requested to fail via flag))")
                     serviceOutput.writeExitCode(1)
                     return;

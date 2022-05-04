@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.fakeadbserver
+package com.android.fakeadbserver.services
 
-class AbbManager {
+class ServiceManager {
+
+    private val packageManager = PackageManager()
+    private val log = java.util.Collections.synchronizedList(mutableListOf<String>())
 
     fun processCommand(args: String, output: ServiceOutput) {
+        // We log received commands to allow tests to inspect call history
+        log.add(args)
+
         val parameters = args.split(("\u0000"))
         val service = parameters[0]
 
         if (service == "package") {
-            PackageManager().processPackageCommand(
+            packageManager.processPackageCommand(
                 parameters.slice(1 until parameters.size),
                 output
             )

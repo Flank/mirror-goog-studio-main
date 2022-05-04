@@ -18,7 +18,7 @@ package com.android.fakeadbserver.shellcommandhandlers
 import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
-import com.android.fakeadbserver.PackageManager
+import com.android.fakeadbserver.services.PackageManager
 import java.io.IOException
 import java.net.Socket
 

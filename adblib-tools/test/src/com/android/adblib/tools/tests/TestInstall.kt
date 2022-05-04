@@ -21,7 +21,7 @@ import com.android.adblib.tools.InstallException
 import com.android.adblib.tools.PMClient
 import com.android.adblib.tools.PMClient.Companion.cleanFilename
 import com.android.adblib.tools.install
-import com.android.fakeadbserver.PackageManager
+import com.android.fakeadbserver.services.PackageManager
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Test
