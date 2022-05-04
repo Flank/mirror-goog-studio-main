@@ -62,6 +62,14 @@ class ForegroundProcessTracker {
   }
 
   static void Initialize(profiler::Daemon* daemon) {
+    auto daemon_config = daemon->config()->GetConfig();
+
+    bool is_autoconnect_enabled =
+        daemon_config.layout_inspector_config().autoconnect_enabled();
+    if (!is_autoconnect_enabled) {
+      return;
+    }
+
     daemon->RegisterCommandHandler(
         profiler::proto::Command::START_TRACKING_FOREGROUND_PROCESS,
         &StartTrackingForegroundProcess::Create);

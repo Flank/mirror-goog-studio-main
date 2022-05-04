@@ -197,6 +197,11 @@ message DaemonConfig {
     // equivalent to StudioFlags.PROFILER_USE_PERFETTO
     bool use_perfetto = 2 [deprecated = true];
   }
+  message LayoutInspectorConfig {
+    // equivalent to StudioFlags.LAYOUT_INSPECTOR_AUTOCONNECT_ENABLED
+    bool autoconnect_enabled = 1;
+  }
   CommonConfig common = 1;
   CpuConfig cpu = 2;
+  LayoutInspectorConfig layout_inspector_config = 3;
 }

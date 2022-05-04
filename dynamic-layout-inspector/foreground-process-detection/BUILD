@@ -59,6 +59,17 @@ cc_binary(
     ],
 )
 
+transport_test(
+    name = "ForegroundProcessTrackerTest",
+    srcs = glob(["test/ForegroundProcessTrackerTest.java"]),
+    app_dexes = ["//tools/base/transport/test-framework/test-app:test-app"],
+    tags = ["no_windows"],
+    transport_main = ":mock_transport_main",
+    deps = [
+        "@maven//:com.google.truth.truth",
+    ],
+)
+
 cc_test(
     name = "foreground_process_tracker_test",
     srcs = [

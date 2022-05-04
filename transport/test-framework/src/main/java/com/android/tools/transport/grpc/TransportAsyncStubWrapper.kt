@@ -34,7 +34,7 @@ import java.util.function.Predicate
  * for multiple events to arrive. You may also want to see [TransportStubWrapper] if you are
  * testing blocking APIs.
  */
-class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
+class TransportAsyncStubWrapper(val transportStub: TransportServiceStub, val timeoutTimeSeconds: Long = 30) {
     companion object {
         /**
          * Convenience method for creating a wrapper when you don't need to create the underlying
@@ -43,6 +43,11 @@ class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
         @JvmStatic
         fun create(grpc: Grpc): TransportAsyncStubWrapper {
             return TransportAsyncStubWrapper(TransportServiceGrpc.newStub(grpc.channel))
+        }
+
+        @JvmStatic
+        fun create(grpc: Grpc, timeoutTimeSeconds: Long = 30): TransportAsyncStubWrapper {
+            return TransportAsyncStubWrapper(TransportServiceGrpc.newStub(grpc.channel), timeoutTimeSeconds)
         }
     }
 
@@ -83,7 +88,7 @@ class TransportAsyncStubWrapper(val transportStub: TransportServiceStub) {
         }
 
         // Wait for the events to come through.
-        stopLatch.await(30, TimeUnit.SECONDS)
+        stopLatch.await(timeoutTimeSeconds, TimeUnit.SECONDS)
         context.cancel(null)
         return events
     }

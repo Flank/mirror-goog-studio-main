@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.*;
 import com.android.annotations.NonNull;
 import com.android.tools.profiler.proto.Commands;
 import com.android.tools.profiler.proto.Common;
+import com.android.tools.profiler.proto.Transport;
+import com.android.tools.profiler.proto.Transport.DaemonConfig.LayoutInspectorConfig;
 import com.android.tools.profiler.proto.Transport.ExecuteRequest;
 import com.android.tools.profiler.proto.TransportServiceGrpc;
 import com.android.tools.transport.TransportRule;
@@ -45,13 +47,55 @@ public class ForegroundProcessTrackerTest {
 
     public static final String ACTIVITY_CLASS = "com.activity.SimpleActivity";
     @Rule public final TransportRule myTransportRule;
+    @Rule public final TransportRule myTransportRuleFlagOff;
 
     public ForegroundProcessTrackerTest(@NonNull SdkLevel sdkLevel) {
-        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel);
+        TransportRule.Config configFlagOn =
+                new TransportRule.Config() {
+                    @Override
+                    public void initLayoutInspectorConfig(LayoutInspectorConfig.Builder config) {
+                        config.setAutoconnectEnabled(true);
+                    }
+                };
+
+        TransportRule.Config configFlagOff =
+                new TransportRule.Config() {
+                    @Override
+                    public void initLayoutInspectorConfig(LayoutInspectorConfig.Builder config) {
+                        config.setAutoconnectEnabled(false);
+                    }
+                };
+
+        myTransportRule = new TransportRule(ACTIVITY_CLASS, sdkLevel, configFlagOn);
+        myTransportRuleFlagOff = new TransportRule(ACTIVITY_CLASS, sdkLevel, configFlagOff);
     }
 
     @Test
-    public void verifyBehaviorByUsingGrpcApis() {
+    public void testFeatureDoesntWorkWithFlagOff() {
+        TransportAsyncStubWrapper transportWrapper =
+                TransportAsyncStubWrapper.create(myTransportRuleFlagOff.getGrpc(), 5);
+        TransportServiceGrpc.TransportServiceBlockingStub transportStub =
+                TransportServiceGrpc.newBlockingStub(myTransportRuleFlagOff.getGrpc().getChannel());
+
+        sendStartPollingCommand(transportStub);
+
+        final int[] count = {0};
+
+        transportWrapper.getEvents(
+                event -> {
+                    if (event.getKind() == Common.Event.Kind.LAYOUT_INSPECTOR_FOREGROUND_PROCESS) {
+                        count[0] += 1;
+                    }
+                    return count[0] == 2;
+                },
+                event -> (event.getKind() == Common.Event.Kind.LAYOUT_INSPECTOR_FOREGROUND_PROCESS),
+                () -> {});
+
+        assertThat(count[0]).isEqualTo(0);
+    }
+
+    @Test
+    public void testForegroundProcessTracker() {
         TransportAsyncStubWrapper transportWrapper =
                 TransportAsyncStubWrapper.create(myTransportRule.getGrpc());
         TransportServiceGrpc.TransportServiceBlockingStub transportStub =
@@ -107,6 +151,7 @@ public class ForegroundProcessTrackerTest {
                 Commands.Command.newBuilder().setType(commandType).setStreamId(1234).build();
 
         ExecuteRequest executeRequest = ExecuteRequest.newBuilder().setCommand(command).build();
-        transportStub.execute(executeRequest);
+        // TODO can we check the respose?
+        Transport.ExecuteResponse response = transportStub.execute(executeRequest);
     }
 }
