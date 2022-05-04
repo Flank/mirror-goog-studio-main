@@ -59,6 +59,7 @@
       <module fileurl="file://$PROJECT_DIR$/signflinger/android.sdktools.signflinger.iml" filepath="$PROJECT_DIR$/signflinger/android.sdktools.signflinger.iml" />
       <module fileurl="file://$PROJECT_DIR$/signflinger/tools/android.sdktools.signflinger_tools.iml" filepath="$PROJECT_DIR$/signflinger/tools/android.sdktools.signflinger_tools.iml" />
       <module fileurl="file://$PROJECT_DIR$/testutils/android.sdktools.testutils.iml" filepath="$PROJECT_DIR$/testutils/android.sdktools.testutils.iml" />
+      <module fileurl="file://$PROJECT_DIR$/threading-agent/android.sdktools.threading-agent.iml" filepath="$PROJECT_DIR$/threading-agent/android.sdktools.threading-agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" filepath="$PROJECT_DIR$/tracer/agent/android.sdktools.trace_agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" filepath="$PROJECT_DIR$/tracer/android.sdktools.tracer.iml" />
       <module fileurl="file://$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" filepath="$PROJECT_DIR$/zipflinger/android.sdktools.zipflinger.iml" />
