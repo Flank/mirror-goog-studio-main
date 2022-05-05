@@ -28,6 +28,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
+            - applicationId                 = "pkg.name.test"
             - sourceGenTaskName             = "generateDebugSources"
             - resGenTaskName                = "generateDebugResources"
             - generatedResourceFolders:

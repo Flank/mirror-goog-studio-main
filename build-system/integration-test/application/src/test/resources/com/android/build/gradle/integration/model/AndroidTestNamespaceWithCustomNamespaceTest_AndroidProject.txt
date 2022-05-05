@@ -1,3 +1,13 @@
-- AndroidProject:
+> AndroidProject:
    - namespace            = "com.custom.namespace"
    - androidTestNamespace = "com.custom.namespace.test"
+   - variants:
+      - debug:
+         - mainArtifact:
+            - applicationId = "com.custom.namespace"
+         - androidTestArtifact:
+            - applicationId = "com.custom.namespace.test"
+      - release:
+         - mainArtifact:
+            - applicationId = "com.custom.namespace"
+< AndroidProject

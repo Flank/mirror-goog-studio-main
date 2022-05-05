@@ -28,6 +28,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
+            - applicationId                 = "pkg.name"
             - sourceGenTaskName             = "generateProDebugSources"
             - resGenTaskName                = "generateProDebugResources"
             - generatedResourceFolders:
@@ -62,6 +63,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
+            - applicationId                 = "pkg.name.test"
             - sourceGenTaskName             = "generateProDebugAndroidTestSources"
             - resGenTaskName                = "generateProDebugAndroidTestResources"
             - generatedResourceFolders:

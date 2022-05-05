@@ -688,6 +688,7 @@ class ModelBuilder<
             signingConfigName = signingConfig?.name,
             isSigned = signingConfig?.hasConfig() ?: false,
 
+            applicationId = getApplicationId(component),
 
             abiFilters = component.supportedAbis,
             testInfo = testInfo,
@@ -711,6 +712,23 @@ class ModelBuilder<
                 null,
             modelSyncFiles = modelSyncFiles,
         )
+    }
+
+    private fun getApplicationId(component: ComponentCreationConfig): String? {
+        if (!component.componentType.isApk || component.componentType.isDynamicFeature) {
+            return null
+        }
+        return try {
+            component.applicationId.orNull ?: ""
+        } catch (e: Exception) {
+            variantModel.syncIssueReporter.reportWarning(
+                    IssueReporter.Type.APPLICATION_ID_MUST_NOT_BE_DYNAMIC,
+                    RuntimeException("Failed to read applicationId for ${component.name}.\n" +
+                            "Setting the application ID to the output of a task in the variant " +
+                            "api is not supported",
+                            e))
+            ""
+        }
     }
 
     private fun createJavaArtifact(component: ComponentCreationConfig): JavaArtifact {

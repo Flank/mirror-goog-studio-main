@@ -36,6 +36,8 @@ data class AndroidArtifactImpl(
     override val signingConfigName: String?,
     override val isSigned: Boolean,
 
+    override val applicationId: String?,
+
     override val abiFilters: Set<String>?,
     override val testInfo: TestInfo?,
     override val bundleInfo: BundleInfo?,
@@ -55,6 +57,6 @@ data class AndroidArtifactImpl(
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic
-        private val serialVersionUID: Long = 1L
+        private val serialVersionUID: Long = 2L
     }
 }
