@@ -69,7 +69,7 @@ interface HttpConnectionTracker {
      *
      * @param fields   HTTP response header fields
      */
-    fun trackResponseHeaders(fields: Map<String, List<String>>)
+    fun trackResponseHeaders(fields: Map<String?, List<String>>)
 
     /**
      * Tracks an optional response body after the response is received

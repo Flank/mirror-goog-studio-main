@@ -142,7 +142,7 @@ class InterceptionRuleTest {
     @Test
     fun changeStatusCode() {
         val response = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200 OK")),
+            mapOf(null to listOf("HTTP/1.0 200 OK"), "response-status-code" to listOf("200")),
             "Body".byteInputStream()
         )
         val proto = StatusCodeReplaced.newBuilder().apply {
@@ -153,22 +153,22 @@ class InterceptionRuleTest {
             newCode = "404"
         }.build()
         var transformedResponse = StatusCodeReplacedTransformation(proto).transform(response)
-        assertThat(transformedResponse.responseHeaders["null"]!![0]).isEqualTo("HTTP/1.0 404 OK")
+        assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404 OK")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
         val responseWithoutMessage = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200")),
+            mapOf(null to listOf("HTTP/1.0 200"), "response-status-code" to listOf("200")),
             "Body".byteInputStream()
         )
         transformedResponse =
             StatusCodeReplacedTransformation(proto).transform(responseWithoutMessage)
-        assertThat(transformedResponse.responseHeaders["null"]!![0]).isEqualTo("HTTP/1.0 404")
+        assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
     }
 
     @Test
     fun addResponseHeader() {
         val response = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200 OK")),
+            mapOf(null to listOf("HTTP/1.0 200 OK")),
             "Body".byteInputStream()
         )
         val addingNewHeaderAndValue = HeaderAdded.newBuilder().apply {
@@ -240,7 +240,7 @@ class InterceptionRuleTest {
     fun modifyResponseBody() {
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "BodyXBodyXBodyXBoody".byteInputStream()
@@ -258,7 +258,7 @@ class InterceptionRuleTest {
 
         val responseWithJsonContent = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("application/json")
             ),
             "Body".byteInputStream()
@@ -273,7 +273,7 @@ class InterceptionRuleTest {
     fun modifyResponseBodyWithRegex() {
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "BodyXBodyXBodyXBoody".byteInputStream()
@@ -299,7 +299,7 @@ class InterceptionRuleTest {
         }
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html"),
                 "content-encoding" to listOf("gzip")
             ),
@@ -326,7 +326,7 @@ class InterceptionRuleTest {
         }
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html"),
                 "content-encoding" to listOf("gzip")
             ),
@@ -345,14 +345,14 @@ class InterceptionRuleTest {
     fun replaceTwoResponseBody() {
         val response1 = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "Body1".toByteArray().inputStream()
         )
         val response2 = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "Body2".toByteArray().inputStream()

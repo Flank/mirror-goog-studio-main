@@ -185,7 +185,7 @@ class HttpsURLConnectionWrapper(
         return trackedConnection.getHeaderField(name)
     }
 
-    override fun getHeaderFields(): Map<String, List<String>> {
+    override fun getHeaderFields(): Map<String?, List<String>> {
         return trackedConnection.headerFields
     }
 

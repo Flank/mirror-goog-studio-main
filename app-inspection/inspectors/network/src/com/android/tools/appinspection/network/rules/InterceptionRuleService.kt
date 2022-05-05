@@ -24,7 +24,7 @@ class NetworkConnection(
 )
 
 data class NetworkResponse(
-    val responseHeaders: Map<String, List<String>>,
+    val responseHeaders: Map<String?, List<String>>,
     val body: InputStream
 )
 

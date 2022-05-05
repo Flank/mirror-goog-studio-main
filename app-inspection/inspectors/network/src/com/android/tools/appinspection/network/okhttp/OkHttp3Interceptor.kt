@@ -78,7 +78,7 @@ class OkHttp3Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
     }
 
     private fun trackResponse(tracker: HttpConnectionTracker, response: Response): Response {
-        val fields = mutableMapOf<String, List<String>>()
+        val fields = mutableMapOf<String?, List<String>>()
         fields.putAll(response.headers().toMultimap())
         fields["response-status-code"] = listOf(response.code().toString())
         tracker.trackResponseHeaders(fields)
