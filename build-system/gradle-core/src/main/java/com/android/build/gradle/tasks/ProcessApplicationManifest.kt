@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier
+import com.android.build.gradle.internal.ide.dependencies.getIdString
+import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -30,13 +32,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
-import com.android.build.gradle.internal.ide.dependencies.getIdString
-import com.android.build.gradle.internal.profile.ProfilingMode
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.dexing.DexingType
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.Invoker
@@ -70,7 +70,6 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 import java.io.File
 import java.io.IOException
 import java.io.UncheckedIOException
-import java.util.ArrayList
 import java.util.EnumSet
 
 /** A task that processes the manifest  */
@@ -203,10 +202,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
         val providers = mutableListOf<ManifestProvider>()
         for (artifact in artifacts) {
             providers.add(
-                ManifestProviderImpl(
-                    artifact.file,
-                    getArtifactName(artifact)
-                )
+                    ManifestProviderImpl(
+                            artifact.file,
+                            getArtifactName(artifact)
+                    )
             )
         }
         if (microApkManifest.isPresent) {
@@ -216,9 +215,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             val microManifest = microApkManifest.get().asFile
             if (microManifest.isFile) {
                 providers.add(
-                    ManifestProviderImpl(
-                        microManifest, WEAR_APP_SUB_MANIFEST
-                    )
+                        ManifestProviderImpl(
+                                microManifest, WEAR_APP_SUB_MANIFEST
+                        )
                 )
             }
         }
@@ -448,24 +447,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task.projectBuildFile.set(task.project.buildFile)
             task.projectBuildFile.disallowChanges()
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
-        }
-
-        /**
-         * Implementation of AndroidBundle that only contains a manifest.
-         *
-         * This is used to pass to the merger manifest snippet that needs to be added during
-         * merge.
-         */
-        class ManifestProviderImpl(private val manifest: File, private val name: String) :
-            ManifestProvider {
-            override fun getManifest(): File {
-                return manifest
-            }
-
-            override fun getName(): String {
-                return name
-            }
-
         }
 
     }

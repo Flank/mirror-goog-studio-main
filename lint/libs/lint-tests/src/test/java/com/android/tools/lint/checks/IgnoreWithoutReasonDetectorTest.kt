@@ -83,7 +83,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 class MyTest {
-                  @Test @Ignore("reason") void something() {
+                  @Test @Ignore("reason") public void something() {
                   }
                 }"""
                 ).indented()
@@ -107,7 +107,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 @Ignore("reason") class MyTest {
-                  @Test void something() {
+                  @Test public void something() {
                   }
                 }"""
                 ).indented()
@@ -131,7 +131,7 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings("ClassNameDiffersFromFileName")
                 @Ignore class MyTest {
-                  @Test void something() {
+                  @Test public void something() {
                   }
                 }"""
                 ).indented()
@@ -195,13 +195,13 @@ class IgnoreWithoutReasonDetectorTest {
 
                 @SuppressWarnings({"ClassNameDiffersFromFileName", "DefaultAnnotationParam"})
                 class MyTest {
-                  @Test @Ignore void something() {
+                  @Test @Ignore public void something() {
                   }
 
-                  @Test @Ignore("") void something() {
+                  @Test @Ignore("") public void something() {
                   }
 
-                  @Test @Ignore("TODO") void something() {
+                  @Test @Ignore("TODO") public void something() {
                   }
                 }
                 """
@@ -212,13 +212,13 @@ class IgnoreWithoutReasonDetectorTest {
             .expect(
                 """
                 src/foo/MyTest.java:8: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore void something() {
+                  @Test @Ignore public void something() {
                         ~~~~~~~
                 src/foo/MyTest.java:11: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore("") void something() {
+                  @Test @Ignore("") public void something() {
                         ~~~~~~~~~~~
                 src/foo/MyTest.java:14: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
-                  @Test @Ignore("TODO") void something() {
+                  @Test @Ignore("TODO") public void something() {
                         ~~~~~~~~~~~~~~~
                 0 errors, 3 warnings
                 """
@@ -227,8 +227,117 @@ class IgnoreWithoutReasonDetectorTest {
                 """
                 Fix for src/foo/MyTest.java line 8: Give reason:
                 @@ -8 +8
-                -   @Test @Ignore void something() {
-                +   @Test @Ignore("[TODO]|") void something() {
+                -   @Test @Ignore public void something() {
+                +   @Test @Ignore("[TODO]|") public void something() {
+                """
+            )
+    }
+
+    @Test
+    fun testIgnoredWithComment() {
+        lint()
+            .files(
+                stubJUnitTest,
+                stubJUnitIgnore,
+                java(
+                    """
+                    package test.pkg;
+
+                    import org.junit.Ignore;
+                    import org.junit.Test;
+
+                    class MyJavaTest {
+                      @Ignore // comment after
+                      @Test public void test1() {
+                      }
+
+                      // comment before
+                      @Ignore @Test public void test2() {
+                      }
+
+                      /* comment before */
+                      @Ignore @Test public void test3() {
+                      }
+                    }
+                    """
+                ).indented(),
+                kotlin(
+                    """
+                    package test.pkg
+
+                    import org.junit.Ignore
+                    import org.junit.Test
+
+                    class MyKotlinTest {
+                      @Ignore // comment after
+                      @Test fun test1() {
+                      }
+
+                      // comment before
+                      @Ignore @Test fun test2() {
+                      }
+
+                      /* comment before */
+                      @Ignore @Test fun test3() {
+                      }
+
+                      @Ignore /* comment inline */ @Test fun test4() {
+                      }
+
+                      // Comment a blank line above doesn't count
+
+                      @Ignore
+                      // comment on the next line doesn't count
+                      @Test fun testError() {
+                      }
+
+                    }
+                    """
+                ).indented()
+            )
+            .issues(IgnoreWithoutReasonDetector.ISSUE)
+            .configureOption(IgnoreWithoutReasonDetector.ALLOW_COMMENT, true)
+            .run()
+            .expect(
+                """
+                src/test/pkg/MyKotlinTest.kt:24: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
+                  @Ignore
+                  ~~~~~~~
+                0 errors, 1 warnings
+                """.trimIndent()
+            )
+    }
+
+    @Test
+    fun testIgnoredWithCommentDisabled() {
+        lint()
+            .files(
+                stubJUnitTest,
+                stubJUnitIgnore,
+                java(
+                    """
+                    package test.pkg;
+
+                    import org.junit.Ignore;
+                    import org.junit.Test;
+
+                    class MyJavaTest {
+                      @Ignore // comment after
+                      @Test public void test1() {
+                      }
+                    }
+                    """
+                ).indented(),
+            )
+            .issues(IgnoreWithoutReasonDetector.ISSUE)
+            .configureOption(IgnoreWithoutReasonDetector.ALLOW_COMMENT, false)
+            .run()
+            .expect(
+                """
+                src/test/pkg/MyJavaTest.java:7: Warning: Test is ignored without giving any explanation [IgnoreWithoutReason]
+                  @Ignore // comment after
+                  ~~~~~~~
+                0 errors, 1 warnings
                 """
             )
     }

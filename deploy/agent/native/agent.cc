@@ -57,6 +57,10 @@ void SendResponse(const deploy::Socket& socket,
              response.live_literal_response().status() !=
                  proto::AgentLiveLiteralUpdateResponse::OK) {
     response.set_status(proto::AgentResponse::LITERAL_FAILURE);
+  } else if (response.has_le_response() &&
+             response.le_response().status() !=
+                 proto::AgentLiveEditResponse::OK) {
+    response.set_status(proto::AgentResponse::LIVE_EDIT_FAILURE);
   } else {
     response.set_status(proto::AgentResponse::OK);
   }

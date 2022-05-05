@@ -1,0 +1,2 @@
+apply from: "../commonLocalRepo.gradle", to: pluginManagement
+include 'app', 'mock-processor'

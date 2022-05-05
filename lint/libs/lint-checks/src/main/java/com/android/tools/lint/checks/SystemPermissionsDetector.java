@@ -29,7 +29,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.detector.api.XmlScanner;
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -56,8 +55,7 @@ public class SystemPermissionsDetector extends Detector implements XmlScanner {
     // List of permissions have the protection levels signature, privileged or systemOrSignature.
     // This list must be sorted alphabetically.
     @SuppressWarnings("WrongTerminology") // external constants: can't rename
-    @VisibleForTesting
-    static final String[] SYSTEM_PERMISSIONS =
+    protected static final String[] SYSTEM_PERMISSIONS =
             new String[] {
                 "android.intent.category.MASTER_CLEAR.permission.C2D_MESSAGE",
                 "android.permission.ACCESS_ALL_EXTERNAL_STORAGE",

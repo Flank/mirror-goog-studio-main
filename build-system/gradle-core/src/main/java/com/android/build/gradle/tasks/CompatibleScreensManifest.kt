@@ -23,6 +23,7 @@ import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.dirName
 import com.android.build.api.variant.impl.getApiString
+import com.android.build.api.variant.impl.getFilter
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.tasks.NonIncrementalTask

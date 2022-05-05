@@ -1,0 +1,8 @@
+- AndroidDsl:
+   - defaultConfig:
+      - resValues = (null)
+   - buildTypes:
+      - debug:
+         - resValues = (null)
+      - release:
+         - resValues = (null)

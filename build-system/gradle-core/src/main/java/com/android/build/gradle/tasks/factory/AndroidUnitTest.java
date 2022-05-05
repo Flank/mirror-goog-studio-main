@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.tasks.factory;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,6 +41,9 @@ import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.ComponentType;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
+import java.io.Serializable;
+import java.util.concurrent.Callable;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -48,6 +55,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
@@ -55,14 +63,6 @@ import org.gradle.api.tasks.testing.TestTaskReports;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
-import java.io.Serializable;
-import java.util.concurrent.Callable;
-
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
@@ -94,15 +94,15 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         return testConfigInputs;
     }
 
-    @Internal
-    abstract RegularFileProperty getJacocoCoverageOutputFile();
+    @OutputFile
+    @Optional
+    public abstract RegularFileProperty getJacocoCoverageOutputFile();
 
     @Override
     @TaskAction
     public void executeTests() {
         // Get the Jacoco extension to determine later if we have cove coverage enabled.
         JacocoTaskExtension jcoExtension = getExtensions().findByType(JacocoTaskExtension.class);
-
         AndroidAnalyticsTestListener testListener =
                 new AndroidAnalyticsTestListener(
                         dependencies,
@@ -153,7 +153,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void configure(@NonNull AndroidUnitTest task) {
             super.configure(task);
-            unitTestCreationConfig.onTestedConfig(
+            unitTestCreationConfig.onTestedVariant(
                     testedConfig -> {
                         if (unitTestCreationConfig.isTestCoverageEnabled()) {
                             task.getProject()
@@ -173,7 +173,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                         return null;
                     });
 
-            VariantCreationConfig testedVariant = creationConfig.getTestedConfig();
+            VariantCreationConfig testedVariant = unitTestCreationConfig.getMainVariant();
 
             TestOptions testOptions = creationConfig.getGlobal().getTestOptions();
 
@@ -314,16 +314,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                                                                 .get();
                                         return BootClasspathBuilder.INSTANCE
                                                 .computeAdditionalAndRequestedOptionalLibraries(
-                                                        creationConfig
-                                                                .getServices()
-                                                                .getProjectInfo()
-                                                                .getProject()
-                                                                .getLayout(),
-                                                        creationConfig
-                                                                .getServices()
-                                                                .getProjectInfo()
-                                                                .getProject()
-                                                                .getProviders(),
+                                                        creationConfig.getServices(),
                                                         versionedSdkLoader
                                                                 .getAdditionalLibrariesProvider()
                                                                 .get(),

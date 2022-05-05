@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.fixture.testprojects
 
+import com.android.Version
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.testutils.MavenRepoGenerator
 import com.android.utils.FileUtils
@@ -47,10 +49,15 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
     override val includedBuilds: List<TestProjectBuilderImpl>
         get() = _includedBuilds
 
-    val rootProject = SubProjectBuilderImpl(":")
-    val subprojects = mutableMapOf<String, SubProjectBuilderImpl>()
+    private val settingsBuilder = SettingsBuilderImpl()
+    internal val rootProject = SubProjectBuilderImpl(":")
+    internal val subprojects = mutableMapOf<String, SubProjectBuilderImpl>()
 
     override var buildFileType: BuildFileType = BuildFileType.GROOVY
+
+    override fun settings(action: SettingsBuilder.() -> Unit) {
+        action(settingsBuilder)
+    }
 
     override fun rootProject(action: SubProjectBuilder.() -> Unit) {
         action(rootProject)
@@ -76,7 +83,7 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
 
     // --- TestProject ---
 
-    override fun write(projectDir: File, buildScriptContent: String?) {
+    override fun write(projectDir: File, buildScriptContent: String?, projectRepoScript: String) {
         FileUtils.mkdirs(projectDir)
         rootProject.write(projectDir, buildFileType, buildScriptContent)
 
@@ -88,12 +95,37 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
         }
 
         // write settings.gradle
-        if (subprojects.isNotEmpty() || includedBuilds.isNotEmpty()) {
+        if (subprojects.isNotEmpty() || includedBuilds.isNotEmpty()  || settingsBuilder.plugins.isNotEmpty()) {
             val file = File(projectDir, "settings.gradle")
             val sb = StringBuilder()
 
+            // setup repositories inside pluginManagement
+            sb.append("pluginManagement {\n").append(projectRepoScript).append("\n}\n\n")
+
+            // write customization
+            sb.append("plugins {\n")
+            for (plugin in settingsBuilder.plugins) {
+                if (plugin.isAndroid) {
+                    sb.append("id('${plugin.id}') version \"${Version.ANDROID_GRADLE_PLUGIN_VERSION}\"\n")
+                } else {
+                    sb.append("id('${plugin.id}')\n")
+                }
+            }
+            sb.append("}\n\n")
+
             for (build in includedBuilds) {
                 sb.append("includeBuild(\"${build.name}\")\n")
+            }
+
+            if (settingsBuilder.plugins.contains(PluginType.ANDROID_SETTINGS)) {
+                val android = settingsBuilder.android
+                sb.append("\n")
+                sb.append("android {\n")
+
+                android.compileSdk?.let { sb.append("  compileSdk = $it\n") }
+                android.minSdk?.let { sb.append("  minSdk = $it\n") }
+
+                sb.append("}\n\n")
             }
 
             for (project in subprojects.keys) {
@@ -105,11 +137,25 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
 
         // write the included builds
         for (build in includedBuilds) {
-            build.write(File(projectDir, build.name), buildScriptContent)
+            build.write(File(projectDir, build.name), buildScriptContent, projectRepoScript)
         }
     }
 
     override fun containsFullBuildScript(): Boolean {
         return subprojects[":"]?.plugins?.isNotEmpty() ?: false
     }
+}
+
+internal class SettingsBuilderImpl: SettingsBuilder {
+    override val plugins: MutableList<PluginType> = mutableListOf()
+    internal val android = AndroidSettingsBuilderImpl()
+
+    override fun android(action: AndroidSettingsBuilder.() -> Unit) {
+        action(android)
+    }
+}
+
+internal class AndroidSettingsBuilderImpl: AndroidSettingsBuilder {
+    override var compileSdk: Int? = null
+    override var minSdk: Int? = null
 }

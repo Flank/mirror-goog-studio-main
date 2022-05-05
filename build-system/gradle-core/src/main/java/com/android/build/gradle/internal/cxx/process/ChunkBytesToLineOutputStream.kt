@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.process
 
 import java.io.OutputStream
 import java.nio.charset.Charset
-import java.util.Arrays
 
 /**
  * This OutputStream receives bytes and splits them into lines which are then sent to the 'print'
@@ -38,7 +37,7 @@ class ChunkBytesToLineOutputStream(
             // in the \r\n case writeBufferToInfo() exits without emitting a linebreak
             // when byteCount accumulated by writeByteToBuffer() is still zero. However,
             // a single \r or \n will still emit a linebreak.
-            if (value == '\r'.toInt() || value == '\n'.toInt()) {
+            if (value == '\r'.code || value == '\n'.code) {
                 writeBufferToInfo()
             } else {
                 writeByteToBuffer(value)

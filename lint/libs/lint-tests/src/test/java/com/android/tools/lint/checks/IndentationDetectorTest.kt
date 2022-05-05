@@ -16,9 +16,12 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.checks.infrastructure.TestMode
+import com.android.tools.lint.client.api.LintClient.Companion.CLIENT_STUDIO
 import com.android.tools.lint.detector.api.Detector
+import java.io.File
 
 class IndentationDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
@@ -32,7 +35,7 @@ class IndentationDetectorTest : AbstractCheckTest() {
     }
 
     fun testDocumentationExample() {
-        @Suppress("UseWithIndex", "ControlFlowWithEmptyBody")
+        @Suppress("UseWithIndex", "ControlFlowWithEmptyBody", "SuspiciousIndentAfterControlStatement")
         lint().files(
             java(
                 """
@@ -128,7 +131,7 @@ class IndentationDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).testModes(TestMode.DEFAULT).run().expect(
+        ).skipTestModes(TestMode.PARENTHESIZED, TestMode.WHITESPACE).run().expect(
             """
             src/Java.java:4: Error: Suspicious indentation: This is conditionally executed; expected it to be indented [SuspiciousIndentation]
                 System.out.println("test"); // WARN 1
@@ -233,7 +236,10 @@ class IndentationDetectorTest : AbstractCheckTest() {
     }
 
     fun testNoFalsePositives() {
-        @Suppress("ResultOfMethodCallIgnored", "UnusedAssignment", "RedundantIfStatement", "ConstantConditions")
+        @Suppress(
+            "ResultOfMethodCallIgnored", "UnusedAssignment", "RedundantIfStatement", "ConstantConditions",
+            "SuspiciousIndentAfterControlStatement"
+        )
         lint().files(
             kotlin(
                 """
@@ -469,10 +475,11 @@ class IndentationDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).testModes(TestMode.DEFAULT).run().expectClean()
+        ).skipTestModes(TestMode.PARENTHESIZED).run().expectClean()
     }
 
     fun testCommentedOut() {
+        @Suppress("SuspiciousIndentAfterControlStatement")
         lint().files(
             java(
                 """
@@ -576,5 +583,63 @@ class IndentationDetectorTest : AbstractCheckTest() {
                 """
             ).indented()
         ).run().expectClean()
+    }
+
+    @Suppress("SuspiciousIndentAfterControlStatement")
+    fun testIdeHandling() {
+        val clientFactory = { TestLintClient(CLIENT_STUDIO) }
+
+        val testFile = java(
+            """
+                class Java {
+                  public void test(Object context) {
+                    if (context == null)
+                    System.out.println("test"); // WARN
+                  }
+                }
+                """
+        ).indented()
+
+        // Option off, IDE, incremental/on the fly mode: no warnings
+        lint().files(testFile)
+            .clientFactory(clientFactory)
+            .incremental()
+            .configureOption(IndentationDetector.ALWAYS_RUN_OPTION, false)
+            .run().expectClean()
+
+        val warnings = """
+                src/Java.java:4: Error: Suspicious indentation: This is conditionally executed; expected it to be indented [SuspiciousIndentation]
+                    System.out.println("test"); // WARN
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    src/Java.java:3: Previous statement here
+                    if (context == null)
+                    ~~~~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+
+        // Option off, IDE, batch mode: warn
+        lint().files(testFile)
+            .clientFactory(clientFactory)
+            .configureOption(IndentationDetector.ALWAYS_RUN_OPTION, false)
+            .run().expect(warnings)
+
+        // Option on, IDE, incremental/on the fly mode: warn
+        lint().files(testFile)
+            .incremental()
+            .clientFactory(clientFactory)
+            .configureOption(IndentationDetector.ALWAYS_RUN_OPTION, true)
+            .run().expect(warnings)
+
+        // Option off, IDE, incremental/on the fly mode but with the file not having been edited: warn
+        lint().files(testFile)
+            .clientFactory {
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient(CLIENT_STUDIO) {
+                    override fun isEdited(file: File, returnIfUnknown: Boolean, savedSinceMsAgo: Long): Boolean {
+                        return false
+                    }
+                }
+            }
+            .configureOption(IndentationDetector.ALWAYS_RUN_OPTION, false)
+            .run().expect(warnings)
     }
 }

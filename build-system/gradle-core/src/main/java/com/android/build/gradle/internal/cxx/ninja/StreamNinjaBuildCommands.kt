@@ -87,7 +87,7 @@ fun streamNinjaBuildCommands(
                         orderOnlyInputs = node.orderOnlyInputs.map { unescape(it) },
                         implicitOutputs = node.implicitOutputs.map { unescape(it) },
                         explicitOutputs = node.explicitOutputs.map { unescape(it) },
-                        unexpandedRuleProperties = rule.properties.map { it.key.toLowerCase() to it.value }.toMap(),
+                        unexpandedRuleProperties = rule.properties.map { it.key.lowercase() to it.value }.toMap(),
                         getProperty = { s -> state.getPropertyValue(s) }
                     )
                     action(unexpanded)

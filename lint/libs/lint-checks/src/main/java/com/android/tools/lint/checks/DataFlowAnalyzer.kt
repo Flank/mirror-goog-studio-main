@@ -42,6 +42,7 @@ import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULabeledExpression
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UPostfixExpression
@@ -99,6 +100,36 @@ abstract class DataFlowAnalyzer(
     ) {
     }
 
+    /** Whether there were one or more resolve failures */
+    var failedResolve = false
+
+    /**
+     * We failed to resolve a reference; this means the code can
+     * be invalid or the environment incorrect and we should draw
+     * conclusions very carefully.
+     */
+    open fun failedResolve(reference: UElement) {
+        // If it's a standalone unresolved call (whose value is not assigned, and which we're not making further calls on),
+        // ignore the failure.
+        // E.g. if we have
+        //    val cursor = createCursor()
+        //    unresolved()
+        //    cursor.close()
+        // we don't need to give up on our analysis here since unresolved() is unlikely to affect the result.
+        var curr: UElement = skipParenthesizedExprUp(reference.uastParent) ?: return
+        if (curr is UQualifiedReferenceExpression && skipParenthesizedExprUp(curr.uastParent) is UQualifiedReferenceExpression) {
+            failedResolve = true
+            return
+        }
+        while (curr !is UMethod) {
+            if (curr is UDeclarationsExpression || curr is UBinaryExpression && curr.isAssignment()) {
+                failedResolve = true
+                return
+            }
+            curr = curr.uastParent ?: break
+        }
+    }
+
     /**
      * If a tracked element is passed as an argument, [argument] will
      * be invoked unless this method returns true. This lets you exempt
@@ -124,7 +155,11 @@ abstract class DataFlowAnalyzer(
      * foo().bar().baz() is still invoking methods on the foo instance.
      */
     open fun returnsSelf(call: UCallExpression): Boolean {
-        val resolvedCall = call.resolve() ?: return false
+        val resolvedCall = call.resolve() ?: run {
+            failedResolve(call)
+            return false
+        }
+
         if (call.returnType is PsiPrimitiveType) {
             return false
         }
@@ -406,7 +441,6 @@ abstract class DataFlowAnalyzer(
                     // that other scope will take over.
                     val parent = skipParenthesizedExprUp(node.uastParent) as? UCallExpression
                     val typeClass = (parent?.getExpressionType() as? PsiClassType)?.resolve()
-                    instances.contains(lambda)
                     if (isMatchingType(typeClass)) {
                         // type matches; don't visit the lambda body since it hides this
                         if (parent != null && isScopingThis(parent)) {
@@ -874,4 +908,28 @@ abstract class DataFlowAnalyzer(
         // See libraries/stdlib/jvm/build/stdlib-declarations.json
         return called.containingClass?.qualifiedName == "kotlin.StandardKt__StandardKt"
     }
+}
+
+/**
+ * Returns true if the given method contains at least one call which
+ * [filter] returns true for. Typically used in conjunction with
+ * [DataFlowAnalyzer] is [DataFlowAnalyzer.failedResolve] is true; in
+ * that case, we can't confidently follow the flow from the initial
+ * expression to a target method call on the right instance, but we can
+ * quickly check if the target call is never called on *any* instance,
+ * and if so we're still sure there's a problem.
+ *
+ * TODO: Consider whether escape analysis is correct in this case...
+ */
+fun UMethod.anyCall(filter: (UCallExpression) -> Boolean): Boolean {
+    var found = false
+    accept(object : AbstractUastVisitor() {
+        override fun visitCallExpression(node: UCallExpression): Boolean {
+            if (filter(node)) {
+                found = true
+            }
+            return super.visitCallExpression(node)
+        }
+    })
+    return found
 }

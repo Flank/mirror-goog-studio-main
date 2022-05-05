@@ -40,7 +40,7 @@ private val LOG = Logger.getLogger("IceboxConfigUtils")
  * Returns the Emulator registration directory.
  */
 private fun computeRegistrationDirectoryContainer(): Path? {
-    val os = System.getProperty("os.name").toLowerCase(Locale.ROOT)
+    val os = System.getProperty("os.name").lowercase(Locale.ROOT)
     when {
         os.startsWith("mac") -> {
             return Paths.get(

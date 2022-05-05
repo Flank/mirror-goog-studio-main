@@ -324,8 +324,6 @@ interface VariantServices : BaseServices {
 
     fun <T : Named> named(type: Class<T>, name: String): T
 
-    fun file(file: Any): File
-
     fun fileCollection(): ConfigurableFileCollection
     fun fileCollection(vararg files: Any): ConfigurableFileCollection
     fun fileTree(dir: Any): ConfigurableFileTree

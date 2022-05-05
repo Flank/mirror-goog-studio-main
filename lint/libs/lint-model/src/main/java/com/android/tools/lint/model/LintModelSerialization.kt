@@ -19,9 +19,14 @@
 package com.android.tools.lint.model
 
 import com.android.SdkConstants.DOT_XML
+import com.android.SdkConstants.FD_PLATFORMS
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.ide.common.repository.GradleVersion
+import com.android.repository.impl.manager.LocalRepoLoaderImpl.PACKAGE_XML_FN
+import com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX
 import com.android.sdklib.AndroidVersion
+import com.android.sdklib.SdkVersionInfo
+import com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API
 import com.android.tools.lint.model.LintModelSerialization.LintModelSerializationAdapter
 import com.android.tools.lint.model.LintModelSerialization.TargetFile
 import com.android.tools.lint.model.LintModelSerialization.readDependencies
@@ -39,6 +44,7 @@ import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.Closeable
 import java.io.File
+import java.io.File.separator
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -1111,7 +1117,57 @@ private abstract class LintModelReader(
         parser.setInput(reader)
     }
 
+    private fun String.isNumber(): Boolean {
+        return this.first().isDigit()
+    }
+
     protected fun String.toApiVersion(): AndroidVersion {
+        if (!isNumber()) {
+            // We only have an API level code name (such as "Tiramisu").
+            // We need to also infer an API level for this, since lint will be using
+            // both the codename and the API level from the AndroidVersion.
+            //
+            // We'll try to infer this in two ways. First, by looking at the SDK
+            // and reading it from there:
+            adapter.pathVariables["ANDROID_HOME"]?.let { home ->
+                val descriptorFile = File(home, FD_PLATFORMS + separator + PLATFORM_HASH_PREFIX + this + separator + PACKAGE_XML_FN)
+                if (descriptorFile.isFile) {
+                    val descriptor = descriptorFile.readText()
+                    val begin = descriptor.indexOf("<api-level>")
+                    if (begin != -1) {
+                        val levelBegin = descriptor.indexOf('>', begin) + 1
+                        val levelEnd = descriptor.indexOf("</api-level>", levelBegin)
+                        if (levelEnd != -1) {
+                            try {
+                                val apiLevel = descriptor.substring(levelBegin, levelEnd).trim().toInt()
+                                return AndroidVersion(apiLevel, this)
+                            } catch (ignore: NumberFormatException) {
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If that failed, we'll try to guess the API level based on the first letter of
+            // the codename and its distance from our most recently known highest API level
+            // and its codename; e.g. if all we know is that "S" is 32 and we're asked for the
+            // API level for "U", we'll see that it's 2 letters above S so we'll assume it
+            // will eventually be API level 34. This doesn't work well when we do multiple API
+            // levels per letter (as we actually did for S) but hopefully that's an anomaly and
+            // it's the best heuristic we can do.
+            val buildCode = SdkVersionInfo.getBuildCode(HIGHEST_KNOWN_API)
+            if (buildCode != null) { // should always be true
+                val delta = Character.toUpperCase(this.first()) - Character.toUpperCase(buildCode.first())
+                // We only trust this heuristic for a few API levels
+                if (delta in 0..4) {
+                    // -1: codename platforms use the previous API level; usages of this API version
+                    // will check if the codename is set and if so will add 1 when checking feature
+                    // levels
+                    return AndroidVersion(HIGHEST_KNOWN_API + delta - 1, this)
+                }
+            }
+        }
+
         return AndroidVersion(this)
     }
 

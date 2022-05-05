@@ -19,12 +19,12 @@ package com.android.build.api.component.impl
 import com.android.build.api.variant.ComponentBuilder
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.services.VariantBuilderServices
 
 abstract class ComponentBuilderImpl(
     protected val globalVariantBuilderConfig: GlobalVariantBuilderConfig,
-    protected val variantDslInfo: VariantDslInfo,
+    protected val dslInfo: ComponentDslInfo,
     variantConfiguration: ComponentIdentity,
     protected val variantBuilderServices: VariantBuilderServices
 ) : ComponentBuilder, ComponentIdentity by variantConfiguration {

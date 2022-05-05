@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.component
 
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
@@ -24,7 +23,11 @@ import org.gradle.api.provider.Provider
  */
 interface TestCreationConfig: ComponentCreationConfig {
 
-    val instrumentationRunner: Provider<out String>
+    /**
+     * In unit tests, there is no dexing. However aapt2 requires the instrumentation tag to be
+     * present in the merged manifest to process android resources.
+     */
+    val instrumentationRunner: Provider<String>
 
     /**
      * The application of the app under tests

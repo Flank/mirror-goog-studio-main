@@ -34,6 +34,8 @@ def swap_test(name, srcs):
             "-Dapk2.location=$(location //tools/base/deploy/test/data/apk2:apk)",
         ],
         deps = [
+            ":original_java",
+            ":original_kotlin",
             "//tools/base/bazel:langtools",
             "//tools/base/bazel:studio-proto",
             "//tools/base/deploy/deployer:tools.deployer",

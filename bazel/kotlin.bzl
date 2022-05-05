@@ -50,7 +50,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
     args.add("-nowarn")  # Mirrors the default javac opts.
     args.add("-api-version", "1.5")
     args.add("-language-version", "1.5")
-    args.add("-Xjvm-default=enable")
+    args.add("-Xjvm-default=all-compatibility")
     args.add("-no-stdlib")
     args.add("-Xsam-conversions=class")  # Needed for Gradle configuration caching (see b/202512551).
 
@@ -92,7 +92,7 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
         mnemonic = "kotlinc",
         arguments = [args],
         executable = ctx.executable._kotlinc,
-        execution_requirements = {"supports-workers": "1"},
+        execution_requirements = {"supports-multiplex-workers": "1"},
     )
 
     return JavaInfo(output_jar = out, compile_jar = out_ijar or out)

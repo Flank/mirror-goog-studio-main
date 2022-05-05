@@ -180,71 +180,18 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
+GRADLE_PLUGIN_ARTIFACTS = [
     "//tools/base/build-system/aapt2:aapt2",
     "//tools/base/build-system/gradle-core:gradle-core",
     "//tools/base/lint:tools.lint-gradle",
     "@maven//:com.github.javaparser.javaparser-core",
-]
-
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "gradle_plugin_no_databinding_repo",
-    artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
-    visibility = [
-        "//tools/base/build-system/integration-test/application:__pkg__",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/gradlecompat:__pkg__",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/sdk:__pkg__",
-        "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:__pkg__",
-        "//tools/base/build-system/integration-test/connected:__pkg__",
-        "//tools/base/build-system/integration-test/lint:__pkg__",
-        "//tools/base/build-system/integration-test/managed-devices:__pkg__",
-        "//tools/base/build-system/integration-test/native:__pkg__",
-    ],
-)
-
-GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
     "//tools/data-binding:tools.compiler",
 ]
-
-# Legacy maven repository representing what used to be packaged inside Studio
-#
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "gradle_plugin_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    visibility = [
-        "//tools/base/build-system/integration-test/connected:__pkg__",
-        "//tools/base/build-system/integration-test/databinding:__pkg__",
-        "//tools/base/build-system/integration-test/databinding/incremental:__pkg__",
-        "//tools/data-binding:__pkg__",
-        "//tools/vendor/google/android-ndk:__pkg__",
-        "//tools/vendor/google/real-world-integration-test:__pkg__",
-    ],
-)
 
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
+    artifacts = [
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.10",
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.20",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.10",
@@ -307,7 +254,6 @@ maven_repository(
         "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
         "//tools/data-binding/compilationTests:__pkg__",
-        "//tools/vendor/google/android-ndk:__pkg__",
         "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )
@@ -321,9 +267,19 @@ filegroup(
         "manifest-merger/src/main/**/*.java",
         "manifest-merger/src/main/**/*.kt",
         "manifest-merger/src/main/resources/**",
+        "gradle-settings/src/main/**/*.java",
+        "gradle-settings/src/main/**/*.kt",
+        "gradle-settings/src/main/resources/**",
+        "gradle-settings-api/src/main/**/*.java",
+        "gradle-settings-api/src/main/**/*.kt",
+        "gradle-settings-api/src/main/resources/**",
     ]) + [
         "manifest-merger/build.gradle",
         "manifest-merger/NOTICE",
+        "gradle-settings/build.gradle",
+        "gradle-settings/NOTICE",
+        "gradle-settings-api/build.gradle",
+        "gradle-settings-api/NOTICE",
     ],
     visibility = ["//tools/base/build-system:__pkg__"],
 )

@@ -287,7 +287,7 @@ class CxxRegularBuilder(val abi: CxxAbiModel) : CxxBuilder {
         if (implicitTargets.isNotEmpty()) {
             errorln(
                 CxxDiagnosticCode.REQUIRED_BUILD_TARGETS_MISSING,
-                "did not find implicitly required targets: ${implicitTargets.joinToString(", ")}"
+                "did not find implicitly required targets: ${implicitTargets.joinToString(", ")}. Valid targets are: ${librariesToBuild.map { it.artifactName }.toSet().joinToString(", ")}"
             )
         }
         return librariesToBuild

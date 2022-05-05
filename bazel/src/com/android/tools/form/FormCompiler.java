@@ -16,7 +16,7 @@
 
 package com.android.tools.form;
 
-import com.android.tools.utils.BazelWorker;
+import com.android.tools.utils.BazelMultiplexWorker;
 import com.android.tools.utils.JarOutputCompiler;
 import com.android.tools.utils.Unzipper;
 import com.intellij.compiler.instrumentation.InstrumentationClassFinder;
@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -44,21 +45,20 @@ import java.util.regex.Pattern;
 import org.jetbrains.org.objectweb.asm.ClassWriter;
 
 public class FormCompiler extends JarOutputCompiler implements NestedFormLoader {
-
     private File mOutDir;
     private InstrumentationClassFinder mFinder;
     private final HashMap<String, LwRootContainer> mCache = new HashMap<>();
     private final List<File> mForms = new ArrayList<>();
     private final Map<String, File> mOtherForms = new HashMap<>();
 
-    public FormCompiler() {
-        super("formc");
+    public FormCompiler(PrintStream err) {
+        super("formc", err);
     }
 
     public static void main(String[] args) throws Exception {
         // Radar #5755208: Command line Java applications need a way to launch without a Dock icon.
         System.setProperty("apple.awt.UIElement", "true");
-        BazelWorker.run(args, compilerArgs -> new FormCompiler().run(compilerArgs));
+        BazelMultiplexWorker.run(args, (compilerArgs, out) -> new FormCompiler(out).run(compilerArgs));
     }
 
     @Override
@@ -88,11 +88,10 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
 
         mFinder = new InstrumentationClassFinder(urls.toArray(new URL[0]));
         try {
-            instrumentForms(mFinder, mForms);
+            return instrumentForms(mFinder, mForms);
         } finally {
             mFinder.releaseResources();
         }
-        return true;
     }
 
     private void addUrlsTo(String classPath, ArrayList<URL> urls) throws MalformedURLException {
@@ -101,7 +100,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         }
     }
 
-    private void instrumentForms(final InstrumentationClassFinder finder, List<File> forms) {
+    private boolean instrumentForms(final InstrumentationClassFinder finder, List<File> forms) {
         if (forms.isEmpty()) {
             throw new IllegalArgumentException("No forms to instrument found");
         }
@@ -132,7 +131,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
 
             final File alreadyProcessedForm = class2form.get(classToBind);
             if (alreadyProcessedForm != null) {
-                System.err.println(String.format(
+                err.println(String.format(
                         "%s: The form is bound to the class %s.\n" +
                         "Another form %s is also bound to this class.",
                         form.getAbsolutePath(),
@@ -150,16 +149,17 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
             final FormErrorInfo[] warnings = codeGenerator.getWarnings();
 
             for (FormErrorInfo warning : warnings) {
-                System.err.println(form.getAbsolutePath() + ": " + warning.getErrorMessage());
+                err.println(form.getAbsolutePath() + ": " + warning.getErrorMessage());
             }
             final FormErrorInfo[] errors = codeGenerator.getErrors();
             for (FormErrorInfo error : errors) {
-                System.err.println(form.getAbsolutePath() + ": " + error.getErrorMessage());
+                err.println(form.getAbsolutePath() + ": " + error.getErrorMessage());
             }
             if (errors.length > 0) {
-                throw new RuntimeException("Errors found during form compilation");
+                return false;
             }
         }
+        return true;
     }
 
     /**

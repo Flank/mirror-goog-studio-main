@@ -50,9 +50,12 @@ class GradleToolingApiModelTest {
                 classes,
                 ApiTester.Filter.ALL,
                 "The Android Gradle Plugin Tooling Model API."
-                        + " API has changed, either revert "
-                        + "the api change or re-run GradleToolingApiModelUpdater.main[] from the "
-                        + "IDE to update the API file.\n"
+                        + " API has changed, either revert the api change or run\n"
+                        + "gradlew :base:builder-model:updateToolingModelApi\n"
+                        + "\n"
+                        + "To update all the API expectation files, run \n"
+                        + "    gradlew updateApi\n"
+                        + "\n"
                         + "GradleToolingApiModelUpdater will apply the following changes if run:\n",
                 STABLE_API_URL
             )

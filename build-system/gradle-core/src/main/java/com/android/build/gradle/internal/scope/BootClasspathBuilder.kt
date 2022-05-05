@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.errors.IssueReporter
 import com.android.sdklib.AndroidVersion
@@ -24,7 +25,6 @@ import com.google.common.base.Verify
 import com.google.common.collect.ImmutableList
 import java.io.File
 import java.util.Objects
-import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
@@ -52,10 +52,8 @@ object BootClasspathBuilder {
      * @return a classpath as a [FileCollection]
      */
     fun computeClasspath(
-        projectLayout: ProjectLayout,
-        providerFactory: ProviderFactory,
+        services: TaskCreationServices,
         objects: ObjectFactory,
-        issueReporter: IssueReporter,
         targetBootClasspath: Provider<List<File>>,
         targetAndroidVersion: Provider<AndroidVersion>,
         additionalLibraries: Provider<List<OptionalLibrary>>,
@@ -69,7 +67,7 @@ object BootClasspathBuilder {
             val target = targetAndroidVersion.get()
             val key = CacheKey(target, addAllOptionalLibraries, libraryRequests)
 
-            providerFactory.provider {
+            services.provider {
                 classpathCache.getOrPut(key) {
                     val files = objects.listProperty(RegularFile::class.java)
                     files.addAll(bootClasspath.map {
@@ -79,20 +77,19 @@ object BootClasspathBuilder {
                     // add additional and requested optional libraries if any
                     files.addAll(
                         computeAdditionalAndRequestedOptionalLibraries(
-                            projectLayout,
-                            providerFactory,
+                            services,
                             additionalLibraries.get(),
                             optionalLibraries.get(),
                             addAllOptionalLibraries,
                             libraryRequests,
-                            issueReporter
+                            services.issueReporter
                         )
                     )
 
                     // add annotations.jar if needed.
                     if (target.apiLevel <= 15) {
                         files.add(annotationsJar.flatMap { it: File ->
-                            projectLayout.buildDirectory.file(it.absolutePath)
+                            services.projectInfo.buildDirectory.file(it.absolutePath)
                         })
                     }
 
@@ -115,8 +112,7 @@ object BootClasspathBuilder {
      * @return a list of File to add to the classpath.
      */
     fun computeAdditionalAndRequestedOptionalLibraries(
-        projectLayout: ProjectLayout,
-        providerFactory: ProviderFactory,
+        services: TaskCreationServices,
         additionalLibraries: List<OptionalLibrary>,
         optionalLibraries: List<OptionalLibrary>,
         addAllOptionalLibraries: Boolean,
@@ -131,7 +127,7 @@ object BootClasspathBuilder {
         additionalLibraries
             .stream()
             .map<RegularFile> { lib ->
-                projectLayout.file(providerFactory.provider {
+                services.fileProvider(services.provider {
                     val jar = lib.jar
                     Verify.verify(
                         jar != null,
@@ -152,7 +148,7 @@ object BootClasspathBuilder {
         optionalLibraries
             .stream()
             .map<RegularFile> { lib ->
-                projectLayout.file(providerFactory.provider {
+                services.fileProvider(services.provider {
                     // add to jar and remove from requests
                     val libraryRequested = libraryRequests.contains(lib.name)
                     if (addAllOptionalLibraries || libraryRequested) {

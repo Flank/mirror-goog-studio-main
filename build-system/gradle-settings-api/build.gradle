@@ -1,0 +1,18 @@
+plugins {
+    id 'com.android.tools.java-library'
+    id 'com.android.tools.kotlin'
+    id 'com.android.tools.publish'
+    id 'license-report'
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation libs.kotlin_stdlib
+}
+
+group = 'com.android.tools.build'
+version = rootProject.ext.buildVersion
+
+project.ext.pomName = 'Gradle Settings API for Android'
+project.ext.pomDesc = 'Gradle Settings API to build Android applications.'
+

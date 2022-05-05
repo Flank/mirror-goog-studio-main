@@ -374,11 +374,22 @@ abstract class LintPlugin : Plugin<Project> {
         val projectInfo = ProjectInfo(project)
         val lintFromMaven = LintFromMaven.from(project, projectOptions, syncIssueReporter)
         projectServices = ProjectServices(
-            syncIssueReporter, deprecationReporter, objectFactory, project.logger,
-            project.providers, project.layout, projectOptions, project.gradle.sharedServices,
+            syncIssueReporter,
+            deprecationReporter,
+            objectFactory,
+            project.logger,
+            project.providers,
+            project.layout,
+            projectOptions,
+            project.gradle.sharedServices,
             lintFromMaven,
-            maxWorkerCount = project.gradle.startParameter.maxWorkerCount, projectInfo = projectInfo
-        ) { o: Any -> project.file(o) }
+            maxWorkerCount = project.gradle.startParameter.maxWorkerCount,
+            projectInfo = projectInfo,
+            fileResolver = { o: Any -> project.file(o) },
+            configurationContainer = project.configurations,
+            dependencyHandler = project.dependencies,
+            extraProperties = project.extensions.extraProperties
+        )
         projectOptions
             .allOptions
             .forEach { (option: Option<*>, value: Any) ->

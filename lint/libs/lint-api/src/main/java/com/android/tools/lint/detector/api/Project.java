@@ -17,11 +17,11 @@
 package com.android.tools.lint.detector.api;
 
 import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
-import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ANDROID_LIBRARY;
 import static com.android.SdkConstants.ANDROID_LIBRARY_REFERENCE_FORMAT;
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
@@ -57,9 +57,11 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.model.LintModelAndroidLibrary;
 import com.android.tools.lint.model.LintModelLibrary;
 import com.android.tools.lint.model.LintModelMavenName;
@@ -73,6 +75,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.intellij.pom.java.LanguageLevel;
+import com.intellij.psi.PsiClass;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -147,7 +150,6 @@ public class Project {
     protected List<Project> allLibraries;
     protected boolean reportIssues = true;
     public Boolean gradleProject;
-    protected Boolean supportLib;
     protected Boolean appCompat;
     protected Boolean leanback;
     protected Set<Desugaring> desugaring;
@@ -1273,7 +1275,12 @@ public class Project {
     /**
      * Returns true if this project depends on the given artifact. Note that the project doesn't
      * have to be a Gradle project; the artifact is just an identifier for name a specific library,
-     * such as com.android.support:support-v4 to identify the support library
+     * such as com.android.support:support-v4 to identify the support library.
+     *
+     * <p>Note that for an AndroidX library, this method will treat both the pre-AndroidX and the
+     * post-AndroidX package migration as the same, so this method cannot be used to distinguish
+     * between depending on an old support library artifact or the corresponding new AndroidX
+     * artifact.
      *
      * @param artifact the Gradle/Maven name of a library
      * @return true if the library is installed, false if it is not, and null if we're not sure
@@ -1282,52 +1289,41 @@ public class Project {
     public Boolean dependsOn(@NonNull String artifact) {
         artifact = AndroidxNameUtils.getCoordinateMapping(artifact);
 
-        if (ANDROIDX_SUPPORT_LIB_ARTIFACT.equals(artifact)) {
-            if (supportLib == null) {
-                for (File file : getJavaLibraries(true)) {
-                    String name = file.getName();
-                    if (name.equals("android-support-v4.jar")
-                            || name.startsWith("support-v4-")
-                            || name.startsWith("legacy-support-")) {
-                        supportLib = true;
-                        break;
-                    }
-                }
-                if (supportLib == null) {
-                    for (Project dependency : getDirectLibraries()) {
-                        Boolean b = dependency.dependsOn(artifact);
-                        if (b != null && b) {
-                            supportLib = true;
-                            break;
-                        }
-                    }
-                }
-                if (supportLib == null) {
-                    supportLib = false;
-                }
-            }
-
-            return supportLib;
-        } else if (ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
+        if (ANDROIDX_APPCOMPAT_LIB_ARTIFACT.equals(artifact)
+                || APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
             if (appCompat == null) {
-                for (File file : getJavaLibraries(true)) {
-                    String name = file.getName();
-                    if (name.startsWith("appcompat")) {
+                UastParser parser = client.getUastParser(this);
+                // Using classpath is most accurate, but isn't available until parsing services have
+                // been initialized
+                if (parser.getPrepared()) {
+                    JavaEvaluator evaluator = parser.getEvaluator();
+                    PsiClass activity =
+                            evaluator.findClass("androidx.appcompat.app.AppCompatActivity");
+                    if (activity != null) {
                         appCompat = true;
-                        break;
+                    } else {
+                        activity = evaluator.findClass("android.support.v7.app.AppCompatActivity");
+                        appCompat = activity != null;
                     }
-                }
-                if (appCompat == null) {
+                } else {
+                    for (File file : getJavaLibraries(true)) {
+                        String name = file.getName();
+                        if (name.startsWith("appcompat")
+                                || name.equals("android-support-v4.jar")
+                                || name.startsWith("support-v4-")
+                                || name.startsWith("legacy-support-")) {
+                            // Not cached; we want accurate result from code lookup once it's
+                            // available: appCompat = true; break;
+                            return true;
+                        }
+                    }
                     for (Project dependency : getDirectLibraries()) {
                         Boolean b = dependency.dependsOn(artifact);
                         if (b != null && b) {
-                            appCompat = true;
-                            break;
+                            return true;
                         }
                     }
-                }
-                if (appCompat == null) {
-                    appCompat = false;
+                    return false;
                 }
             }
 

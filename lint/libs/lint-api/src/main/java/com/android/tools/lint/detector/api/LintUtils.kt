@@ -121,21 +121,19 @@ import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
-import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UExpressionList
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
-import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
@@ -717,32 +715,6 @@ internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
     val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
     return resolvedCall.resultingDescriptor.toSource()
         ?: LintJavaUtils.resolveToPsiMethod(ktElement, resolvedCall.resultingDescriptor, null)
-}
-
-/**
- * Workaround for UAST not returning the parameter types for delegated
- * properties
- */
-fun getKotlinDelegatePropertyType(sourcePsi: PsiElement?, element: UVariable): PsiType? {
-    val ktElement = sourcePsi as? KtElement ?: return null
-    val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
-        ?: return null
-    val bindingContext = service.getBindingContext(ktElement)
-
-    if (ktElement is KtProperty) {
-        val delegate = ktElement.delegate
-        if (delegate != null) {
-            val expression = delegate.expression
-            if (expression != null) {
-                val newType: KotlinType? = bindingContext.getType(expression)
-                if (newType != null) {
-                    return LintJavaUtils.getType(newType, element, ktElement, false)
-                }
-            }
-        }
-    }
-
-    return element.type
 }
 
 // See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
@@ -2299,53 +2271,20 @@ fun computeKotlinArgumentMapping(call: UCallExpression, method: PsiMethod):
     }
 
     // Kotlin? If not, mapping is trivial
-    val receiver = call.psi as? KtElement ?: return null
+    if (call.psi !is KtElement) return null
 
-    val service = receiver.project.getService(KotlinUastResolveProviderService::class.java) ?: return null
-    val bindingContext = service.getBindingContext(receiver)
     val parameters = method.parameterList.parameters
-    val resolvedCall = receiver.getResolvedCall(bindingContext) ?: return null
-    val valueArguments = resolvedCall.valueArguments
-    val elementMap = mutableMapOf<PsiElement, UExpression>()
-    for (parameter in call.valueArguments) {
-        elementMap[parameter.psi ?: continue] = parameter
-    }
     if (parameters.isNotEmpty()) {
         val mapping = mutableMapOf<UExpression, PsiParameter>()
 
-        var firstParameterIndex = 0
-
-        // Kotlin extension method? Not included in valueArguments indices.
-        // check if "$self" for UltraLightParameter
-        val firstParameter = parameters.first()
-        if (firstParameter.isReceiver()) {
-            val callReceiver = call.receiver
-            if (callReceiver != null) {
-                mapping[callReceiver] = firstParameter
-            }
-            firstParameterIndex++
-        }
-
-        for ((parameterDescriptor, valueArgument) in valueArguments) {
-            for (argument in valueArgument.arguments) {
-                val expression = argument.getArgumentExpression() ?: continue
-                // cast only needed to avoid Kotlin compiler frontend bug KT-24309.
-                @Suppress("USELESS_CAST")
-                val arg = elementMap[expression as PsiElement]
-                val index = firstParameterIndex + parameterDescriptor.index
-                if (index < parameters.size) {
-                    if (arg != null) {
-                        mapping[arg] = parameters[index]
-                    } else {
-                        // Somehow the argument we received as the argument child isn't present;
-                        // try to find it in some other way
-                        for ((a, b) in elementMap) {
-                            if (mapping[b] == null && a.parent === expression) {
-                                mapping[b] = parameters[index]
-                                break
-                            }
-                        }
+        parameters.forEachIndexed { index, psiParameter ->
+            call.getArgumentForParameter(index)?.let { argument ->
+                if (argument is UExpressionList) { // vararg
+                    argument.expressions.forEach {
+                        mapping[it] = psiParameter
                     }
+                } else {
+                    mapping[argument] = psiParameter
                 }
             }
         }

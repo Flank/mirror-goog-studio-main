@@ -28,10 +28,15 @@ public interface TestProject {
 
     /**
      * Creates all the project files
+     *
      * @param projectDir Directory to create the project files in.
      * @param buildScriptContent the buildScript content to add to the build.gradle if applicable.
      */
-    void write(@NonNull File projectDir, @Nullable String buildScriptContent) throws IOException;
+    void write(
+            @NonNull File projectDir,
+            @Nullable String buildScriptContent,
+            @NonNull String projectRepoScript)
+            throws IOException;
 
     /**
      * Returns whether the project contains a complete build.gradle.

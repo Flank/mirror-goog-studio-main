@@ -17,6 +17,7 @@ package com.android.sdklib;
 
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API;
+import static com.android.sdklib.SdkVersionInfo.HIGHEST_SUPPORTED_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.sdklib.SdkVersionInfo.RECOMMENDED_MIN_SDK_VERSION;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
@@ -49,8 +50,24 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 29: Android 10.0 (Q)", SdkVersionInfo.getAndroidName(29));
         assertEquals("API 30: Android 11.0 (R)", SdkVersionInfo.getAndroidName(30));
         assertEquals("API 31: Android 12.0 (S)", SdkVersionInfo.getAndroidName(31));
+        assertEquals("API 32: Android 12L (Sv2)", SdkVersionInfo.getAndroidName(32));
+        assertEquals(
+                // "13.0" here is a future guess to make the test likely to continue passing
+                // after whoever updates HIGHEST_KNOWN_STABLE_API, not an exclusive announcement :-)
+                HIGHEST_KNOWN_STABLE_API < 33 ? "API 33: Android Tiramisu" : "API 33: Android 13.0 (T)",
+                SdkVersionInfo.getAndroidName(33)
+        );
+
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
+    }
+
+    public void testHighestSupportedVersion() {
+        // Make sure we keep HIGHEST_SUPPORTED_API up to date along with the stable
+        // SDKs. We should at least supported the latest stable known API; at times,
+        // we'll also support the current preview image.
+        assertTrue(HIGHEST_SUPPORTED_API >= HIGHEST_KNOWN_STABLE_API);
+        assertTrue(HIGHEST_SUPPORTED_API <= HIGHEST_KNOWN_API);
     }
 
     public void testGetVersionNameSanitized() {
@@ -76,6 +93,8 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(28, getApiByPreviewName("Pie", false));
         assertEquals(29, getApiByPreviewName("Q", false));
         assertEquals(30, getApiByPreviewName("R", true));
+        assertEquals(32, getApiByPreviewName("S_V2", true));
+        assertEquals(32, getApiByPreviewName("Sv2", true));
 
         assertEquals(-1, getApiByPreviewName("UnknownName", false));
         assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("UnknownName", true));
@@ -90,6 +109,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(28, getApiByBuildCode("P", true));
         assertEquals(29, getApiByBuildCode("Q", true));
         assertEquals(30, getApiByBuildCode("R", true));
+        assertEquals(32, getApiByBuildCode("S_V2", true));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));

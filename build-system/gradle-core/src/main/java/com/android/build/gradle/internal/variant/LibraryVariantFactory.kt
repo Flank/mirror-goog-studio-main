@@ -21,13 +21,15 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.LibraryBuildFeatures
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.LibraryVariantBuilderImpl
 import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -54,16 +56,16 @@ import org.gradle.api.Project
 
 class LibraryVariantFactory(
     projectServices: ProjectServices,
-) : BaseVariantFactory<LibraryVariantBuilderImpl, LibraryVariantImpl>(
+) : BaseVariantFactory<LibraryVariantBuilder, LibraryVariantDslInfo, LibraryCreationConfig>(
     projectServices,
 ) {
 
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
-    ): LibraryVariantBuilderImpl {
+    ): LibraryVariantBuilder {
         return projectServices
                 .objectFactory
                 .newInstance(
@@ -75,10 +77,10 @@ class LibraryVariantFactory(
     }
 
     override fun createVariant(
-        variantBuilder: LibraryVariantBuilderImpl,
+        variantBuilder: LibraryVariantBuilder,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -89,7 +91,7 @@ class LibraryVariantFactory(
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-        ): LibraryVariantImpl {
+        ): LibraryCreationConfig {
         val libVariant = projectServices
                 .objectFactory
                 .newInstance(
@@ -160,7 +162,7 @@ class LibraryVariantFactory(
 
     override fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: LibraryVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,

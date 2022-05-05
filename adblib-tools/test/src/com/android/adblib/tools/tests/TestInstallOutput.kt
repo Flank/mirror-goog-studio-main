@@ -81,4 +81,15 @@ class TestInstallOutput {
             Assert.assertEquals(e.errorCode, errorCode)
         }
     }
+
+    /**
+     * Test that [CommitResult] properly parse lines with Line Feed ('\n').
+     */
+    @Test
+    fun testCommitResultWithLF() {
+        // Get the Success message
+        val sessionID = "1741914381"
+        var id = parseSessionID("Success: created install session [$sessionID]\n")
+        Assert.assertEquals(sessionID, id)
+    }
 }

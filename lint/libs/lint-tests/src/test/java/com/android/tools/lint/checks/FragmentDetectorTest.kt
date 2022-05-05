@@ -16,11 +16,18 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Detector
 
 class FragmentDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
         return FragmentDetector()
+    }
+
+    override fun lint(): TestLintTask {
+        // Note: We are deliberately NOT requiring this for androidx;
+        // androidx Fragments are allowed to use non-default constructors (see issue 119675579)
+        return super.lint().skipTestModes(ANDROIDX_TEST_MODE)
     }
 
     fun testBasic() {

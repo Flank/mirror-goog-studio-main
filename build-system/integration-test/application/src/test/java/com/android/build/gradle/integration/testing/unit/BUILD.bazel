@@ -61,8 +61,11 @@ gradle_integration_test(
         ],
     ),
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test/application/src/test/java/com/android/build/gradle/integration/testing/unit:prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:androidx_latest",

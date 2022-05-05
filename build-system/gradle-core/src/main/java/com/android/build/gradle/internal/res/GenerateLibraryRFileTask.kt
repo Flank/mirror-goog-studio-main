@@ -21,6 +21,7 @@ import com.android.build.api.variant.impl.BuiltArtifactImpl
 import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -53,7 +54,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.InputChanges
 import java.io.File
-import java.io.IOException
 import javax.inject.Inject
 
 @CacheableTask
@@ -293,8 +293,8 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
         }
     }
 
-    internal class TestRuntimeStubRClassCreationAction(creationConfig: ComponentCreationConfig) :
-        VariantTaskCreationAction<GenerateLibraryRFileTask, ComponentCreationConfig>(
+    internal class TestRuntimeStubRClassCreationAction(creationConfig: UnitTestCreationConfig) :
+        VariantTaskCreationAction<GenerateLibraryRFileTask, UnitTestCreationConfig>(
             creationConfig
         ) {
 
@@ -337,7 +337,7 @@ abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
             task.useConstantIds.setDisallowChanges(false)
             task.symbolTableBuildService.setDisallowChanges(getBuildService(creationConfig.services.buildServiceRegistry))
 
-            creationConfig.onTestedConfig {
+            creationConfig.onTestedVariant {
                 it.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.PACKAGED_MANIFESTS, task.manifestFiles
                 )

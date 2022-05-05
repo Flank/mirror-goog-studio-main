@@ -116,7 +116,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     if (mainManifest.isPresent()) {
                         mainManifest.get()
                     } else {
-                        createTempLibraryManifest()
+                        createTempLibraryManifest(tmpDir.get().asFile, namespace.orNull)
                     }
             )
             it.manifestOverlays.set(manifestOverlays)
@@ -134,20 +134,6 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             it.tmpDir.set(tmpDir.get())
             it.disableMinSdkversionCheck.set(disableMinSdkVersionCheck)
         }
-    }
-
-    private fun createTempLibraryManifest(): File {
-        Preconditions.checkNotNull(
-                namespace.get(),
-                "namespace cannot be null."
-        )
-        val manifestFile = File.createTempFile("tempAndroidManifest", ".xml", FileUtils.mkdirs(tmpDir.get().asFile))
-        val content = """<?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-               package="${namespace.get()}" />
-            """.trimIndent()
-        manifestFile.writeText(content)
-        return manifestFile
     }
 
     abstract class ProcessLibParams: ProfileAwareWorkAction.Parameters() {
@@ -365,4 +351,15 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                     creationConfig.services.projectOptions[BooleanOption.DISABLE_MINSDKLIBRARY_CHECK])
         }
     }
+}
+
+fun createTempLibraryManifest(tempDir: File, namespace: String?): File {
+    Preconditions.checkNotNull(namespace, "namespace cannot be null.")
+    val manifestFile = File.createTempFile("tempAndroidManifest", ".xml", FileUtils.mkdirs(tempDir))
+    val content = """<?xml version="1.0" encoding="utf-8"?>
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+               package="$namespace" />
+            """.trimIndent()
+    manifestFile.writeText(content)
+    return manifestFile
 }

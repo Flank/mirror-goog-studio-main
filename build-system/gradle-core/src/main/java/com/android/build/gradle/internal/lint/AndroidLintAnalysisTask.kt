@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.getDesugaredMethods
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.repository.GradleVersion
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -182,6 +183,14 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
+        // Pass --offline flag only if lint version is 30.3.0-beta01 or higher because earlier
+        // versions of lint don't accept that flag.
+        if (offline.get()
+            && GradleVersion.tryParse(lintTool.version.get())
+                ?.isAtLeast(30, 3, 0, "beta", 1, false) == true) {
+            arguments += "--offline"
+        }
+
         return Collections.unmodifiableList(arguments)
     }
 
@@ -254,7 +263,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.description = description
 
             task.initializeGlobalInputs(
-                variant.main.services.projectInfo.getProject(),
+                services = variant.main.services,
                 isAndroid = true
             )
             task.lintModelDirectory.set(variant.main.paths.getIncrementalDir(task.name))
@@ -294,7 +303,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
             task.lintTool.initialize(creationConfig.services)
             task.desugaredMethodsFiles.from(
                 getDesugaredMethods(
-                    task.project,
+                    creationConfig.services,
                     creationConfig.global.compileOptions.isCoreLibraryDesugaringEnabled,
                     creationConfig.minSdkVersion,
                     creationConfig.global.compileSdkHashString,
@@ -306,10 +315,10 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
     }
 
     private fun initializeGlobalInputs(
-        project: Project,
+        services: TaskCreationServices,
         isAndroid: Boolean
     ) {
-        val buildServiceRegistry = project.gradle.sharedServices
+        val buildServiceRegistry = services.buildServiceRegistry
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
             getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
@@ -352,7 +361,10 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         lintOptions: Lint,
         fatalOnly: Boolean = false
     ) {
-        initializeGlobalInputs(project = project, isAndroid = false)
+        initializeGlobalInputs(
+            services = taskCreationServices,
+            isAndroid = false
+        )
         this.group = JavaBasePlugin.VERIFICATION_GROUP
         this.variantName = ""
         this.analyticsService.setDisallowChanges(getBuildService(taskCreationServices.buildServiceRegistry))

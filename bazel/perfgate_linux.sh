@@ -17,7 +17,7 @@ fi
 build_tag_filters=-no_linux
 test_tag_filters=perfgate,-no_linux,-no_test_linux
 
-config_options="--config=remote"
+config_options="--config=ci"
 
 # Generate a UUID for use as the bazel invocation id
 readonly invocation_id="$(uuidgen)"
@@ -27,7 +27,7 @@ readonly invocation_id="$(uuidgen)"
   --max_idle_secs=60 \
   test \
   --keep_going \
-  ${config_options} --config=sponge --config=ants \
+  ${config_options} --config=ants \
   --build_metadata=ab_build_id="${BUILD_NUMBER}" \
   --build_metadata=ab_target=perfgate-linux \
   --invocation_id=${invocation_id} \

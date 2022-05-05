@@ -22,8 +22,8 @@ readonly BUILD_TARGETS="//tools/... -//tools/adt/idea/studio/..."
 "${SCRIPT_DIR}/bazel" \
   --max_idle_secs=60 \
   test \
-  --config=dynamic \
-  --config=sponge --config=ants \
+  --config=ci \
+  --config=ants \
   --invocation_id=${INVOCATION_ID} \
   --build_tag_filters=${BUILD_TAG_FILTERS} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \

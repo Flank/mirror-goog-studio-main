@@ -92,7 +92,12 @@ fun getApiTester(): ApiTester {
             The undecorated dsl methods have changed. If you are adding a new property or block,
             add it to AGP_SUPPORTED_PROPERTY_TYPES to be automatically implemented with locking
             support by AndroidPluginDslDecorator. If it is not possible to decorate the property,
-            run DecoratedApiChangesUpdater.main[] from the IDE to update the API file.
+            run
+                gradlew :base:build-system:gradle-core:updateUndecoratedApi
+            to update the API file.
+
+            To update all the API expectation files, run
+                gradlew updateApi
 
             DecoratedApiChangesUpdater will apply the following changes if run:
 

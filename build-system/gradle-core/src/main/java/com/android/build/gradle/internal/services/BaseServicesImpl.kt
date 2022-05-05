@@ -26,6 +26,7 @@ import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildServiceRegistry
+import java.io.File
 
 /**
  * Impl for BaseScope over a [ProjectServices]
@@ -34,6 +35,8 @@ open class BaseServicesImpl(protected val projectServices: ProjectServices):
     BaseServices {
 
     final override fun <T> newInstance(type: Class<T>, vararg args: Any?): T = projectServices.objectFactory.newInstance(type, *args)
+
+    final override fun file(file: Any): File = projectServices.fileResolver.invoke(file)
 
     final override val issueReporter: IssueReporter
         get() = projectServices.issueReporter

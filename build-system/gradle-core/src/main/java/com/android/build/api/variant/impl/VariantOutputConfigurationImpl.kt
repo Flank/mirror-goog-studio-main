@@ -29,7 +29,7 @@ import java.util.Locale
 
 data class VariantOutputConfigurationImpl(
     @get:Input
-    private val isUniversal: Boolean = false,
+    val isUniversal: Boolean = false,
     @get:Nested
     override val filters: Collection<FilterConfigurationImpl> = listOf()
 ) : VariantOutputConfiguration, Serializable {
@@ -41,20 +41,20 @@ data class VariantOutputConfigurationImpl(
             return if (filters.isEmpty()) OutputType.SINGLE
             else OutputType.ONE_OF_MANY
         }
-
-    /**
-     * Returns the [FilterConfiguration] for a particular [FilterConfiguration.FilterType] or null
-     * if not such filter is configured on this variant output
-     */
-    fun getFilter(type: FilterConfiguration.FilterType)
-            : FilterConfiguration? = filters.firstOrNull { it.filterType == type }
 }
+
+/**
+ * Returns the [FilterConfiguration] for a particular [FilterConfiguration.FilterType] or null
+ * if not such filter is configured on this variant output
+ */
+fun VariantOutputConfiguration.getFilter(type: FilterConfiguration.FilterType)
+        : FilterConfiguration? = filters.firstOrNull { it.filterType == type }
 
 fun VariantOutputConfiguration.baseName(component: ComponentCreationConfig): String =
         when(this.outputType) {
             OutputType.SINGLE -> component.baseName
             OutputType.UNIVERSAL -> component.paths.computeBaseNameWithSplits(
-                OutputType.UNIVERSAL.name.toLowerCase(Locale.US)
+                OutputType.UNIVERSAL.name.lowercase(Locale.US)
             )
             OutputType.ONE_OF_MANY ->
                 component.paths.computeBaseNameWithSplits(this.filters.getFilterName())
@@ -63,7 +63,7 @@ fun VariantOutputConfiguration.baseName(component: ComponentCreationConfig): Str
 
 fun VariantOutputConfiguration.dirName(): String {
     return when (this.outputType) {
-        OutputType.UNIVERSAL -> outputType.name.toLowerCase(Locale.US)
+        OutputType.UNIVERSAL -> outputType.name.lowercase(Locale.US)
         OutputType.SINGLE -> ""
         OutputType.ONE_OF_MANY ->
             filters.map(FilterConfiguration::identifier).joinToString(File.separator)
@@ -75,7 +75,7 @@ fun VariantOutputConfiguration.fullName(component: ComponentCreationConfig): Str
     return when (this.outputType) {
         OutputType.UNIVERSAL ->
             component.paths.computeFullNameWithSplits(
-                OutputType.UNIVERSAL.name.toLowerCase(Locale.US))
+                OutputType.UNIVERSAL.name.lowercase(Locale.US))
         OutputType.SINGLE ->
             component.name
         OutputType.ONE_OF_MANY -> {

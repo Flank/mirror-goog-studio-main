@@ -28,7 +28,7 @@ public class SdkVersionInfo {
      * updated for a new release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 32;
+    public static final int HIGHEST_KNOWN_API = 33;
 
     /**
      * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
@@ -36,6 +36,25 @@ public class SdkVersionInfo {
      * <p>Make sure to keep this in sync with the value in TestUtils.
      */
     public static final int HIGHEST_KNOWN_STABLE_API = 32;
+
+    /**
+     * The highest supported version of the Android platform (as an API level) that this version of
+     * the tools generally works with.
+     *
+     * <p>The intent is that this will be used to alert users that the version of the IDE they're
+     * using is too old to support a recently added platform and to encourage them to update.
+     *
+     * <p>For example, let's say Studio Dolphin has set this constant to Tiramisu/33. And let's say
+     * next year, some user is still using Dolphin and downloads the U/API 34 SDK. Dolphin should
+     * alert the user that the SDK they're using is not fully supported by the current version and
+     * that they should download. This isn't just about downloading SDKs; we may also warn when you
+     * load a project specifying a compileSdkVersion that's outside of the supported range, or even
+     * try to run/profile/debug on a device more recent than the known maximum supported version.
+     *
+     * <p>Generally we shouldn't <i>prevent</i> the user from proceeding; the intent is to make the
+     * user <b>aware</b> that the SDK may not work correctly without a newer version of the tools.
+     */
+    public static final int HIGHEST_SUPPORTED_API = 33; // b/230535497; this is not yet enforced
 
     /**
      * The lowest active API level in the ecosystem. This number will change over time as the
@@ -63,6 +82,13 @@ public class SdkVersionInfo {
      * as the distribution of older platforms decreases.
      */
     public static final int LOWEST_ACTIVE_API_WEAR = 23;
+
+    /**
+     * The highest known API level for desktop. Note the tools at the
+     * downloadable system images for desktop to see if there are more recent
+     * versions.
+     */
+    public static final int HIGHEST_KNOWN_API_DESKTOP = 32;
 
     /**
      * The highest known API level for Android TV. Note the tools at the
@@ -104,6 +130,8 @@ public class SdkVersionInfo {
         String versionString = getVersionStringSanitized(api);
         if (codeName == null) {
             return versionString;
+        } else if (versionString.contains(codeName)) {
+            return String.format(Locale.US, "API %1$d: Android %2$s", api, versionString);
         } else {
             return String.format(Locale.US, "API %1$d: Android %2$s (%3$s)", api, versionString, codeName);
         }
@@ -151,8 +179,15 @@ public class SdkVersionInfo {
             case 28: return "9.0";
             case 29: return "10.0";
             case 30: return "11.0";
-            case 31:
-                return "12.0";
+            case 31: return "12.0";
+            case 32: return "12L";
+            case 33:
+                // In preview form, just use the codename; this matches how the SDK
+                // describes itself, e.g. S (stable) is
+                //    Pkg.Desc=Android SDK Platform 12
+                // and T (preview) is
+                //    Pkg.Desc=Android SDK Platform Tiramisu
+                return getCodeName(api);
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -215,6 +250,8 @@ public class SdkVersionInfo {
                 return "S";
             case 32:
                 return "Sv2";
+            case 33:
+                return "Tiramisu";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -266,8 +303,9 @@ public class SdkVersionInfo {
             case 29: return "Q";
             case 30: return "R";
             case 31: return "S";
-            case 32:
-                return "Sv2";
+            case 32: return "S_V2";
+            case 33:
+                return "TIRAMISU";
                 // If you add more versions here, also update #getCodeName and
                 // #HIGHEST_KNOWN_API
         }
@@ -321,7 +359,7 @@ public class SdkVersionInfo {
             codeName = codeName.replace("KIT_KAT", "KITKAT");
         }
 
-        int code = getApiByBuildCode(codeName, recognizeUnknowns);
+        int code = getApiByBuildCode(codeName, false);
         if (code == -1) {
             for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
                 String c = getCodeName(api);
@@ -332,6 +370,11 @@ public class SdkVersionInfo {
             if (previewName.equalsIgnoreCase("KeyLimePie")) {
                 return 19;
             }
+
+            if (recognizeUnknowns) {
+                code = getApiByBuildCode(codeName, true);
+            }
+
         }
         return code;
     }

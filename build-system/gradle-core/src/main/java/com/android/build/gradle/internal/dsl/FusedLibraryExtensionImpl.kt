@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.FusedLibraryExtension
+import com.android.build.api.variant.AndroidVersion
+import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.gradle.internal.services.DslServices
 import javax.inject.Inject
 
@@ -25,4 +27,6 @@ abstract class FusedLibraryExtensionImpl @Inject constructor(
 ): FusedLibraryExtension{
 
     abstract override var namespace: String?
+
+    abstract override var minSdk: Int?
 }

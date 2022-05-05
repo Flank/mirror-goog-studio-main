@@ -33,9 +33,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
-import com.android.build.gradle.tasks.ProcessApplicationManifest.CreationAction.ManifestProviderImpl
 import com.android.builder.internal.InstrumentedTestManifestGenerator
 import com.android.builder.internal.UnitTestManifestGenerator
 import com.android.manifmerger.ManifestMerger2

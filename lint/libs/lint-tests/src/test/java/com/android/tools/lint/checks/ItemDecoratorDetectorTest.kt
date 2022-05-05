@@ -15,11 +15,17 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestLintTask
 import com.android.tools.lint.detector.api.Detector
 
 class ItemDecoratorDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector {
         return ItemDecoratorDetector()
+    }
+
+    override fun lint(): TestLintTask {
+        // This check only applies to older versions of the RecyclerView library
+        return super.lint().skipTestModes(ANDROIDX_TEST_MODE)
     }
 
     fun test() {

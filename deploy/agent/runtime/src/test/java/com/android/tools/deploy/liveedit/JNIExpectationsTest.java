@@ -43,7 +43,7 @@ public class JNIExpectationsTest {
         Class[] parameters = addClassMethod.getParameterTypes();
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", 3, parameters.length);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[0], String.class);
-        Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[1], byte[].class);
+        Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[1], Interpretable.class);
         Assert.assertEquals("Bad " + ADD_NAME + "parameter", parameters[2], boolean.class);
     }
 

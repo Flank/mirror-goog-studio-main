@@ -59,7 +59,5 @@ interface DslServices: BaseServices {
 
     fun <T> provider(type: Class<T>, value: T?): Provider<T>
 
-    fun file(file: Any): File
-
     fun <T: Any> newDecoratedInstance(dslClass: Class<T>, vararg args: Any) : T
 }

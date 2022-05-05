@@ -302,7 +302,7 @@ public class DeviceManager {
      * Vendor-provided device files to parse. See {@link #initVendorDevices()}. Each entry
      * corresponds to an ".xml" file located in this same package.
      */
-    private static final String[] DEVICE_FILES = {"nexus", "wear", "tv", "automotive"};
+    private static final String[] DEVICE_FILES = {"nexus", "wear", "tv", "automotive", "desktop"};
 
     /**
      * Initializes all vendor-provided {@link Device}s: the bundled nexus.xml devices

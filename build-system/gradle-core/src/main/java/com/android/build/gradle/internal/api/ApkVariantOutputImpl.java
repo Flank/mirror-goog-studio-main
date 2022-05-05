@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.api.BaseVariantImpl.TASK_ACCESS_
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentUtils;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
@@ -113,7 +113,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.getVersionCodeOverride() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return -1;
         }
@@ -145,7 +145,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.getVersionNameOverride() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionName\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return null;
         }
@@ -161,7 +161,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to deprecated legacy com.android.build.gradle.api.ApkVariantOutput.versionCode requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return -1;
         }

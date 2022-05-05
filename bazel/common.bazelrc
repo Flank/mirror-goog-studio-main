@@ -1,7 +1,3 @@
-import %workspace%/tools/base/bazel/platform_specific.bazelrc
-# User-specific .bazelrc
-try-import %workspace%/user.bazelrc
-
 # Enables the use of native symlinks in worker sandboxes,
 # required for dynamic scheduling. This has no effect on non-windows platforms.
 startup --windows_enable_symlinks
@@ -22,6 +18,7 @@ test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
 test --jvmopt='-Xmx4G'
 test --jvmopt='-XX:+UseConcMarkSweepGC'
+test --jvmopt='-XX:ErrorFile=$TEST_UNDECLARED_OUTPUTS_DIR/jvm_crash.log'
 test --verbose_failures
 
 # Local runs require longer timeouts.
@@ -111,18 +108,6 @@ build:_remote_base --nobuild_runfile_links
 # locally (b/198297058#comment42)
 build:_remote_base --strategy=zipper=local
 
-## Base config to upload build results to ResultStore.
-build:_resultstore --bes_backend=buildeventservice.googleapis.com
-build:_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools,https://www.googleapis.com/auth/cloud-platform
-build:_resultstore --bes_results_url=https://source.cloud.google.com/results/invocations/
-
-## Enables ResultStore, but does not use the remote cache.
-## This is useful for sharing bazel invocations using the ResultStore link.
-build:resultstore --config=_remote_base
-build:resultstore --config=_resultstore
-build:resultstore --noremote_upload_local_results
-build:resultstore --noremote_accept_cached
-
 # Publish to the private BES backend.
 build:sponge --bes_backend=buildeventservice-pa.googleapis.com
 build:sponge --bes_results_url=https://fusion2.corp.google.com/invocations/
@@ -153,35 +138,44 @@ build:_rcache --remote_local_fallback
 # until the BES upload times out (10 seconds).
 build:_rcache --bes_upload_mode=NOWAIT_FOR_UPLOAD_COMPLETE
 
-## Enables the remote cache, and uploading results to ResultStore.
+## Enables the remote cache and uploading to Sponge.
 ## This config should be commonly used to avoid building outputs that
-## already exist in the cache. Uploading to ResultStore is important
-## because it lets build results be easily shared in case of failure.
+## already exist in the cache.
 build:rcache --config=_rcache
-build:rcache --config=_resultstore
-
-## Enables the remote cache, but without ResultStore.
-build:rcache_no_resultstore --config=_rcache
+build:rcache --config=sponge
 
 ## Enables remote execution so actions are performed on the remote systems.
-build:remote --remote_executor=remotebuildexecution.googleapis.com
-build:remote --config=_remote_base
-build:remote --config=_resultstore
-# Mimics the release config to report accurate performance numbers in tests.
-build:remote --config=release
-build:remote --remote_timeout=3600
-build:remote --strategy=CppCompile=remote
-build:remote --strategy=CppLink=remote
-build:remote --show_timestamps
+build:remote-exec --remote_executor=remotebuildexecution.googleapis.com
+build:remote-exec --remote_timeout=3600
+build:remote-exec --strategy=CppCompile=remote
+build:remote-exec --strategy=CppLink=remote
+build:remote-exec --show_timestamps
 # Depending on how many machines are in the remote execution instance, setting
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:remote --jobs=250
+build:remote-exec --jobs=250
+
+## Remote combines all the configs used for remote execution.
+build:remote --config=_remote_base
+build:remote --config=remote-exec
+build:remote --config=release
+build:remote --config=sponge
+
+## Config used for continous integration testing scripts.
+build:ci --config=_remote_base
+build:ci --config=dynamic
+build:ci --config=sponge
+build:ci --config=release
+# Increase worker visibility in case there are issues.
+build:ci --worker_verbose
+# Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
+# so there is no need to keep workers alive after the build.
+build:ci --worker_quit_after_build
 
 ## Enables dynamic scheduling. This will run some actions locally
 ## as well as remotely, choosing whichever finishes first.
-build:dynamic --config=remote
+build:dynamic --config=remote-exec
 build:dynamic --internal_spawn_scheduler
 build:dynamic --strategy=Javac=dynamic
 build:dynamic --strategy=kotlinc=dynamic
@@ -200,11 +194,6 @@ build:dynamic --strategy=zipmerger=dynamic
 build:dynamic --strategy=chkplugin=dynamic
 build:dynamic --strategy=stamper=dynamic
 build:dynamic --strategy=PythonZipper=dynamic
-# Increase worker visibility in case there are issues.
-build:dynamic --worker_verbose
-# Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
-# so there is no need to keep workers alive after the build.
-build:dynamic --worker_quit_after_build
 # Disables verbose failures to avoid triggering --materialize_param_files, see
 # b/160150358#comment30
 build:dynamic --noverbose_failures

@@ -55,7 +55,12 @@ open class BuildFeatureValuesImpl constructor(
     override val renderScript: Boolean
         get() = androidResources && _renderScript
 
-    override val resValues: Boolean = buildFeatures.resValues ?: projectOptions[BooleanOption.BUILD_FEATURE_RESVALUES]
+
+    private val _resValues: Boolean =
+        buildFeatures.resValues ?: projectOptions[BooleanOption.BUILD_FEATURE_RESVALUES]
+
+    override val resValues: Boolean
+        get() = androidResources && _resValues
 
     override val shaders: Boolean = buildFeatures.shaders ?: projectOptions[BooleanOption.BUILD_FEATURE_SHADERS]
 

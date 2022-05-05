@@ -18,8 +18,6 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -27,15 +25,12 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
-import com.android.build.api.variant.Variant
-import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
-import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
@@ -44,15 +39,12 @@ import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
-import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
-import com.android.build.gradle.internal.core.MergedNdkConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.core.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.PublishableVariantDslInfo
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -63,14 +55,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
-import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
@@ -86,14 +76,9 @@ import com.android.builder.model.VectorDrawablesOptions
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Preconditions
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -102,12 +87,11 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
-import java.util.concurrent.Callable
 
-abstract class ComponentImpl(
+abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     open val componentIdentity: ComponentIdentity,
     final override val buildFeatures: BuildFeatureValues,
-    protected val variantDslInfo: VariantDslInfo,
+    protected val dslInfo: DslInfoT,
     final override val variantDependencies: VariantDependencies,
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
@@ -126,7 +110,7 @@ abstract class ComponentImpl(
     override val namespace: Provider<String> =
         internalServices.providerOf(
             type = String::class.java,
-            value = variantDslInfo.namespace
+            value = dslInfo.namespace
         )
 
     override fun <ParamT : InstrumentationParameters> transformClassesWith(
@@ -147,7 +131,7 @@ abstract class ComponentImpl(
 
     override val javaCompilation: JavaCompilation =
         JavaCompilationImpl(
-            variantDslInfo.javaCompileOptions,
+            dslInfo.javaCompileOptions,
             buildFeatures.dataBinding,
             internalServices)
 
@@ -209,7 +193,7 @@ abstract class ComponentImpl(
     override val taskContainer = variantData.taskContainer
 
     override val componentType: ComponentType
-        get() = variantDslInfo.componentType
+        get() = dslInfo.componentType
 
     override val dirName: String
         get() = paths.dirName
@@ -218,12 +202,12 @@ abstract class ComponentImpl(
         get() = paths.baseName
 
     override val resourceConfigurations: ImmutableSet<String>
-        get() = variantDslInfo.resourceConfigurations
+        get() = dslInfo.resourceConfigurations
 
     override val description: String
         get() = variantData.description
 
-    override val productFlavorList: List<ProductFlavor> = variantDslInfo.productFlavorList.map {
+    override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
     }
 
@@ -277,34 +261,8 @@ abstract class ComponentImpl(
         get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
                 (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
 
-    /**
-     * Returns the tested variant. This is null for [VariantImpl] instances
-     *
-
-     * This declares is again, even though the public interfaces only have it via
-     * [TestComponentProperties]. This is to facilitate places where one cannot use
-     * [TestComponentImpl].
-     *
-     * see [onTestedConfig] for a utility function helping deal with nullability
-     */
-    override val testedConfig: VariantCreationConfig? = null
-
-    /**
-     * Runs an action on the tested variant and return the results of the action.
-     *
-     * if there is no tested variant this does nothing and returns null.
-     */
-    override fun <T> onTestedConfig(action: (VariantCreationConfig) -> T?): T? {
-        if (componentType.isTestComponent) {
-            val tested = testedConfig ?: throw RuntimeException("testedVariant null with type $componentType")
-            return action(tested)
-        }
-
-        return null
-    }
-
     override fun useResourceShrinker(): Boolean {
-        if (componentType.isForTesting || !variantDslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
+        if (componentType.isForTesting || !dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
             return false
         }
         val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
@@ -332,7 +290,7 @@ abstract class ComponentImpl(
                 .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
             return false
         }
-        if (!variantDslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
+        if (!dslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
             internalServices
                 .issueReporter
                 .reportError(
@@ -350,14 +308,12 @@ abstract class ComponentImpl(
     // by default, we delegate to the build features flags.
     override val buildConfigEnabled: Boolean
         get() = buildFeatures.buildConfig
-    override val externalNativeExperimentalProperties: Map<String, Any>
-        get() = variantDslInfo.externalNativeExperimentalProperties
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(
             String::class.java,
             String::class.java,
-            variantDslInfo.manifestPlaceholders
+            dslInfo.manifestPlaceholders
         )
     }
 
@@ -367,30 +323,28 @@ abstract class ComponentImpl(
 
     private val variantOutputs = mutableListOf<VariantOutputImpl>()
 
-    // FIXME make internal
-    fun addVariantOutput(
-            variantOutputConfiguration: VariantOutputConfigurationImpl,
-            outputFileName: String? = null
-    ): VariantOutputImpl {
-
-        return VariantOutputImpl(
-            createVersionCodeProperty(),
-            createVersionNameProperty(),
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
-            variantOutputConfiguration,
-            variantOutputConfiguration.baseName(this),
-            variantOutputConfiguration.fullName(this),
-            internalServices.newPropertyBackingDeprecatedApi(
-                String::class.java,
-                outputFileName
-                    ?: paths.getOutputFileName(
-                        internalServices.projectInfo.getProjectBaseName(),
-                        variantOutputConfiguration.baseName(this)
-                    ),
+    override fun addVariantOutput(
+        variantOutputConfiguration: VariantOutputConfiguration,
+        outputFileName: String?
+    ) {
+        variantOutputs.add(
+            VariantOutputImpl(
+                createVersionCodeProperty(),
+                createVersionNameProperty(),
+                internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, true),
+                variantOutputConfiguration,
+                variantOutputConfiguration.baseName(this),
+                variantOutputConfiguration.fullName(this),
+                internalServices.newPropertyBackingDeprecatedApi(
+                    String::class.java,
+                    outputFileName
+                        ?: paths.getOutputFileName(
+                            internalServices.projectInfo.getProjectBaseName(),
+                            variantOutputConfiguration.baseName(this)
+                        ),
+                )
             )
-        ).also {
-            variantOutputs.add(it)
-        }
+        )
     }
 
     // default impl for variants that don't actually have versionName
@@ -409,7 +363,7 @@ abstract class ComponentImpl(
         }
     }
 
-    fun computeTaskName(prefix: String): String =
+    override fun computeTaskName(prefix: String): String =
         prefix.appendCapitalized(name)
 
     override fun computeTaskName(prefix: String, suffix: String): String =
@@ -456,67 +410,16 @@ abstract class ComponentImpl(
         return mainCollection
     }
 
-    fun getJavaClasspathArtifacts(
-        configType: ConsumedConfigType,
-        classesType: AndroidArtifacts.ArtifactType,
-        generatedBytecodeKey: Any?
-    ): ArtifactCollection {
-        val mainCollection =
-            variantDependencies.getArtifactCollection(configType, ArtifactScope.ALL, classesType)
-        val extraArtifact = internalServices.provider(Callable {
-            variantData.getGeneratedBytecode(generatedBytecodeKey);
-        })
-        val combinedCollection = internalServices.fileCollection(
-            mainCollection.artifactFiles, extraArtifact
-        )
-        val extraCollection = ArtifactCollectionWithExtraArtifact.makeExtraCollection(
-            mainCollection,
-            combinedCollection,
-            extraArtifact,
-            internalServices.projectInfo.path
-        )
-
-        return onTestedConfig { testedVariant ->
-            // This is required because of http://b/150500779. Kotlin Gradle plugin relies on
-            // TestedComponentIdentifierImpl being present in the returned artifact collection, as
-            // artifacts with that identifier type are added to friend paths to kotlinc invocation.
-            // Because jar containing all classes of the main artifact is in the classpath when
-            // compiling test, we need to add TestedComponentIdentifierImpl artifact with that file.
-            // This is needed when compiling test variants that access internal members.
-            val internalArtifactType = testedVariant.variantScope.publishingSpec
-                .getSpec(classesType, configType.publishedTo)!!.outputType
-
-            @Suppress("USELESS_CAST") // Explicit cast needed here.
-            val testedAllClasses: Provider<FileCollection> =
-                internalServices.provider(Callable {
-                    internalServices.fileCollection(
-                        testedVariant.artifacts.get(internalArtifactType)
-                    ) as FileCollection
-                })
-            val combinedCollectionForTest = internalServices.fileCollection(
-                combinedCollection, testedAllClasses, testedAllClasses
-            )
-
-            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
-                extraCollection,
-                combinedCollectionForTest,
-                testedAllClasses,
-                internalServices.projectInfo.path,
-                null
-            )
-        } ?: extraCollection
-    }
-
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
 
     override val manifestArtifactType: InternalArtifactType<Directory>
         get() = if (internalServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
-            InternalArtifactType.INSTANT_APP_MANIFEST
+            INSTANT_APP_MANIFEST
         else
-            InternalArtifactType.PACKAGED_MANIFESTS
+            PACKAGED_MANIFESTS
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
-    open fun publishBuildArtifacts() {
+    override fun publishBuildArtifacts() {
         for (outputSpec in variantScope.publishingSpec.outputs) {
             val buildArtifactType = outputSpec.outputType
             // Gradle only support publishing single file.  Therefore, unless Gradle starts
@@ -534,7 +437,7 @@ abstract class ComponentImpl(
                     outputSpec.publishedConfigTypes.any { it.isPublicationConfig }
 
                 if (isPublicationConfigs) {
-                    val components = variantDslInfo.publishInfo!!.components
+                    val components = (dslInfo as PublishableVariantDslInfo).publishInfo!!.components
                     for(component in components) {
                         variantScope
                             .publishIntermediateArtifact(
@@ -564,53 +467,10 @@ abstract class ComponentImpl(
         }
     }
 
-    // Deprecated, DO NOT USE, this will be removed once we can remove the old variant API.
-    // TODO : b/214316660
-    internal val allRawAndroidResources: FileCollection by lazy {
-        val allRes: ConfigurableFileCollection = services.fileCollection()
-
-        allRes.from(
-            variantDependencies
-                .getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.ANDROID_RES
-                )
-                .artifactFiles
-        )
-
-        allRes.from(
-            services.fileCollection(
-                variantData.extraGeneratedResFolders
-            ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
-        )
-
-        taskContainer.generateApkDataTask?.let {
-            allRes.from(artifacts.get(MICRO_APK_RES))
-        }
-
-        allRes.from(sources.res.getVariantSources().map { allRes ->
-            allRes.map { directoryEntries ->
-                directoryEntries.directoryEntries
-                    .map { it.asFiles(services::directoryProperty) }
-            }
-        })
-        allRes
-    }
-
-    /**
-     * adds renderscript sources if present.
-     */
-    open fun addRenderscriptSources(
-        sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        // not active by default, only sub types will have renderscript enabled.
-    }
-
     /**
      * adds databinding sources to the list of sources.
      */
-    open fun addDataBindingSources(
+    override fun addDataBindingSources(
         sourceSets: MutableList<DirectoryEntry>
     ) {
         sourceSets.add(
@@ -624,7 +484,7 @@ abstract class ComponentImpl(
     /**
      * Returns the path(s) to compiled R classes (R.jar).
      */
-    fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
+    override fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
         return if (global.namespacedAndroidResources) {
             internalServices.fileCollection().also { fileCollection ->
                 val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
@@ -635,14 +495,14 @@ abstract class ComponentImpl(
                         configType, ArtifactScope.ALL, AndroidArtifacts.ArtifactType.SHARED_CLASSES
                     )
                 )
-                testedConfig?.let {
+                (this as? TestComponentCreationConfig)?.mainVariant?.let {
                     fileCollection.from(it.artifacts.get(COMPILE_R_CLASS_JAR).get())
                 }
             }
         } else {
-            val componentType = variantDslInfo.componentType
+            val componentType = dslInfo.componentType
 
-            if (testedConfig == null) {
+            if (this !is TestComponentCreationConfig) {
                 // TODO(b/138780301): Also use it in android tests.
                 val useCompileRClassInApp = (internalServices
                     .projectOptions[BooleanOption
@@ -686,13 +546,13 @@ abstract class ComponentImpl(
      *
      * This can be null for unit tests without resource support.
      */
-    fun getCompiledRClassArtifact(): Provider<RegularFile>? {
+    override fun getCompiledRClassArtifact(): Provider<RegularFile>? {
         return if (global.namespacedAndroidResources) {
             artifacts.get(COMPILE_R_CLASS_JAR)
         } else {
-            val componentType = variantDslInfo.componentType
+            val componentType = dslInfo.componentType
 
-            if (testedConfig == null) {
+            if (this !is TestComponentCreationConfig) {
                 // TODO(b/138780301): Also use it in android tests.
                 val useCompileRClassInApp = (internalServices
                     .projectOptions[BooleanOption
@@ -726,16 +586,14 @@ abstract class ComponentImpl(
         }
     }
 
-     fun getCompiledBuildConfig(): FileCollection {
+    override fun getCompiledBuildConfig(): FileCollection {
         val isBuildConfigJar = getBuildConfigType() == BuildConfigType.JAR
-        val isAndroidTest = variantDslInfo.componentType == ComponentTypeImpl.ANDROID_TEST
-        val isUnitTest = variantDslInfo.componentType == ComponentTypeImpl.UNIT_TEST
         // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
         // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
-        return if (isBuildConfigJar && !isAndroidTest && !isUnitTest && testedConfig == null) {
+        return if (isBuildConfigJar && this !is TestComponentCreationConfig) {
             internalServices.fileCollection(
                 artifacts.get(
-                    InternalArtifactType.COMPILE_BUILD_CONFIG_JAR
+                    COMPILE_BUILD_CONFIG_JAR
                 )
             )
         } else {
@@ -744,18 +602,21 @@ abstract class ComponentImpl(
     }
 
     private fun getCompiledManifest(): FileCollection {
-        val manifestClassRequired = variantDslInfo.componentType.requiresManifest &&
+        val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
-        val isTest = variantDslInfo.componentType.isForTesting
-        val isAar = variantDslInfo.componentType.isAar
-        return if (manifestClassRequired && !isAar && !isTest && testedConfig == null) {
+        val isTest = dslInfo.componentType.isForTesting
+        val isAar = dslInfo.componentType.isAar
+        return if (manifestClassRequired && !isAar && !isTest) {
             internalServices.fileCollection(artifacts.get(COMPILE_MANIFEST_JAR))
         } else {
             internalServices.fileCollection()
         }
     }
 
-    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: ImmutableList<String>) {
+    override fun handleMissingDimensionStrategy(
+        dimension: String,
+        alternatedValues: List<String>
+    ) {
 
         // First, setup the requested value, which isn't the actual requested value, but
         // the variant name, modified
@@ -774,19 +635,19 @@ abstract class ComponentImpl(
 
         // then add the fallbacks which contain the actual requested value
         DependencyConfigurator.addFlavorStrategy(
-            services.projectInfo.getProject().dependencies.attributesSchema,
+            services.dependencies.attributesSchema,
             dimension,
             ImmutableMap.of(requestedValue, alternatedValues)
         )
     }
 
-    fun getBuildConfigType() : BuildConfigType {
+    override fun getBuildConfigType() : BuildConfigType {
         return if (!buildConfigEnabled) {
             BuildConfigType.NONE
         } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
             // TODO(b/224758957): This is wrong we need to check the final build config fields from
             //  the variant API
-            && variantDslInfo.getBuildConfigFields().none()
+            && dslInfo.getBuildConfigFields().none()
         ) {
             BuildConfigType.JAR
         } else {
@@ -797,12 +658,6 @@ abstract class ComponentImpl(
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
-
-    abstract fun <T: Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?
-    ): T
 
     override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
         return if (dependenciesClassesAreInstrumented) {
@@ -833,43 +688,23 @@ abstract class ComponentImpl(
     override val packageJacocoRuntime: Boolean
         get() = false
 
-    override val isUnitTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isUnitTestCoverageEnabled
     override val isAndroidTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled
-    override val publishInfo: VariantPublishingInfo?
-        get() = variantDslInfo.publishInfo
-    override val supportedAbis: Set<String>
-        get() = variantDslInfo.supportedAbis
+        get() = dslInfo.isAndroidTestCoverageEnabled
+
     override val vectorDrawables: VectorDrawablesOptions
-        get() = variantDslInfo.vectorDrawables
-    override val ndkConfig: MergedNdkConfig
-        get() = variantDslInfo.ndkConfig
-    override val renderscriptNdkModeEnabled: Boolean
-        get() = variantDslInfo.renderscriptNdkModeEnabled
-    override val isJniDebuggable: Boolean
-        get() = variantDslInfo.isJniDebuggable
-    override val defaultGlslcArgs: List<String>
-        get() = variantDslInfo.defaultGlslcArgs
-    override val scopedGlslcArgs: Map<String, List<String>>
-        get() = variantDslInfo.scopedGlslcArgs
-    override val isWearAppUnbundled: Boolean?
-        get() = variantDslInfo.isWearAppUnbundled
+        get() = dslInfo.vectorDrawables
 
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        variantDslInfo.javaCompileOptions.annotationProcessorOptions
+        dslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
     }
 
     override val modelV1LegacySupport =
-        ModelV1LegacySupportImpl(variantDslInfo as VariantDslInfoImpl)
-    override val oldVariantApiLegacySupport =
-        OldVariantApiLegacySupportImpl(variantDslInfo as VariantDslInfoImpl)
-
-    companion object {
-        // String to
-        final val ENABLE_LEGACY_API: String =
-            "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'\n" +
-                    "Using this deprecated API may still fail, depending on usage of the new Variant API, like computing applicationId via a task output."
+        ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
+    override val oldVariantApiLegacySupport by lazy {
+        OldVariantApiLegacySupportImpl(
+            this,
+            dslInfo as VariantDslInfoImpl
+        )
     }
 }

@@ -37,7 +37,6 @@ class TestApplicationTestData constructor(
 ) : AbstractTestDataImpl(
     namespace,
     creationConfig,
-    creationConfig,
     testApkDir,
     testedApksDir
 ) {

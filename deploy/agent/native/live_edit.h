@@ -24,8 +24,8 @@
 
 namespace deploy {
 
-proto::LiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
-                                 const proto::LiveEditRequest&);
+proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
+                                      const proto::LiveEditRequest&);
 }
 
 #endif  // DEPLOY_LIVE_EDIT_H

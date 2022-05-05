@@ -52,7 +52,7 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
     }
 
     protected val hostTag: String by lazy {
-        val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
+        val osName = System.getProperty("os.name").lowercase(Locale.ENGLISH)
         val osType = when {
             osName.contains("windows") -> "windows"
             osName.contains("mac") -> "darwin"

@@ -175,6 +175,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 GradleDetector.MIN_SDK_TOO_LOW,
                 GradleDetector.NOT_INTERPOLATED,
                 GradleDetector.PATH,
+                GradleDetector.PLAY_SDK_INDEX_NON_COMPLIANT,
                 GradleDetector.PLUS,
                 GradleDetector.REMOTE_VERSION,
                 GradleDetector.RISKY_LIBRARY,
@@ -318,6 +319,10 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 ParcelDetector.ISSUE,
                 PendingIntentMutableFlagDetector.ISSUE,
                 PermissionDetector.MISSING_PERMISSION,
+                PermissionErrorDetector.CUSTOM_PERMISSION_TYPO,
+                PermissionErrorDetector.KNOWN_PERMISSION_ERROR,
+                PermissionErrorDetector.RESERVED_SYSTEM_PERMISSION,
+                PermissionErrorDetector.SYSTEM_PERMISSION_TYPO,
                 PluralsDetector.EXTRA,
                 PluralsDetector.IMPLIED_QUANTITY,
                 PluralsDetector.MISSING,
@@ -543,7 +548,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
             when {
                 scope.contains(Scope.JAVA_FILE) -> initialSize += 180
                 scope.contains(Scope.CLASS_FILE) -> initialSize += 16
-                scope.contains(Scope.MANIFEST) -> initialSize += 70
+                scope.contains(Scope.MANIFEST) -> initialSize += 80
                 scope.contains(Scope.GRADLE_FILE) -> initialSize += 24
             }
             initialSize

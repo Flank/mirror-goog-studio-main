@@ -42,7 +42,7 @@ class ArtProfileSingleLibraryTest {
     companion object {
         const val aarEntryName = SdkConstants.FN_ART_PROFILE
         const val apkEntryName = "${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK}/${SdkConstants.FN_BINARY_ART_PROFILE}"
-        val aabEntryName = "BUNDLE-METADATA/${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_APK.replace('/', '.')}/${SdkConstants.FN_BINARY_ART_PROFILE}"
+        val aabEntryName = "BUNDLE-METADATA/${SdkConstants.FN_BINART_ART_PROFILE_FOLDER_IN_AAB}/${SdkConstants.FN_BINARY_ART_PROFILE}"
 
         fun checkAndroidArtifact(
                 tempFolder: TemporaryFolder,

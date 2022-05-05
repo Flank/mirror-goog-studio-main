@@ -64,6 +64,6 @@ class JavaPreCompileTest(private val useKapt: Boolean) {
             ANNOTATION_PROCESSOR_LIST.getOutputDir(project.getSubproject("app").buildDir)
                 .resolve("debug/$ANNOTATION_PROCESSOR_LIST_FILE_NAME").readText()
         assertThat(annotationProcessorList).isEqualTo(
-            "{\"auto-service-1.0-rc2.jar (com.google.auto.service:auto-service:1.0-rc2)\":false}")
+            "{\"auto-service-1.0-rc2.jar (com.google.auto.service:auto-service:1.0-rc2)\":\"NON_INCREMENTAL_AP\"}")
     }
 }

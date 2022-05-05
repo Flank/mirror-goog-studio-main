@@ -119,7 +119,7 @@ class GetPublicTxtTest: VariantApiBaseTest(TestType.Script){
                 """
 # Public txt get in Kotlin
 
-This sample show how to obtain the file listing the public artifacts from the Android Gradle Plugin.
+This sample shows how to obtain the file listing the public artifacts from the Android Gradle Plugin.
 The [onVariants] block will wire the [PublicResourcesValidatorTask] input property
 (publicAndroidResources) by using
 the [Artifacts.get] call with the right [SingleArtifact..

@@ -11,7 +11,7 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/debugTestFixtures/out{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -37,7 +37,7 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/ap_generated_sources/releaseTestFixtures/out{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)

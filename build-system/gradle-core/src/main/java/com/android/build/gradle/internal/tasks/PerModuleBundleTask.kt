@@ -24,6 +24,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
@@ -144,7 +145,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         // https://b.corp.google.com/issues/140219742
         val excludeJarManifest =
             Predicate { path: String ->
-                !path.toUpperCase(Locale.US).endsWith("MANIFEST.MF")
+                !path.uppercase(Locale.US).endsWith("MANIFEST.MF")
             }
 
         jarCreator.use {

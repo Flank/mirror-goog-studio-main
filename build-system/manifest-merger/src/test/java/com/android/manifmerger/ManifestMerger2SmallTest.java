@@ -16,6 +16,38 @@
 
 package com.android.manifmerger;
 
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.manifmerger.MergingReport.MergedManifestKind;
+import com.android.testutils.MockLog;
+import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.truth.Truth;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.logging.Logger;
+
 import static com.android.SdkConstants.ATTR_ON_DEMAND;
 import static com.android.SdkConstants.DIST_URI;
 import static com.android.SdkConstants.MANIFEST_ATTR_TITLE;
@@ -29,37 +61,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.manifmerger.MergingReport.MergedManifestKind;
-import com.android.testutils.MockLog;
-import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.truth.Truth;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 /**
  * Tests for the {@link ManifestMergerTestUtil} class
@@ -2828,6 +2829,31 @@ public class ManifestMerger2SmallTest {
         } finally {
             assertThat(appFile.delete()).named("appFile was deleted").isTrue();
             assertThat(libFile.delete()).named("libFile was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testSingleWordAppPackageNamesNotAllowed() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"foo\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile(
+                "ManifestMerger2Test_testSingleWordAppPackageNamesNotAllowed", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
+        } finally {
+            assertTrue(tmpFile.delete());
         }
     }
 

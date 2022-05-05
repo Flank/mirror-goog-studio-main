@@ -94,7 +94,10 @@ class AssetPackBundlePlugin : Plugin<Project> {
             create(project, projectOptions),
             project.gradle.startParameter.maxWorkerCount,
             ProjectInfo(project),
-            project::file
+            project::file,
+            project.configurations,
+            project.dependencies,
+            project.extensions.extraProperties
         )
         registerServices(project, projectOptions)
 

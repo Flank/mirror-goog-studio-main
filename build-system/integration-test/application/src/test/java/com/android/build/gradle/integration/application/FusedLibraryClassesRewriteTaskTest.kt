@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
+import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -32,6 +33,7 @@ internal class FusedLibraryClassesRewriteTaskTest {
         subProject(":androidLib1") {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                defaultCompileSdk()
                 namespace = "com.example.androidLib1"
             }
             addFile(
@@ -46,6 +48,7 @@ internal class FusedLibraryClassesRewriteTaskTest {
         subProject(":androidLib2") {
             plugins.add(PluginType.ANDROID_LIB)
             android {
+                defaultCompileSdk()
                 namespace = "com.example.androidLib2"
             }
             addFile(

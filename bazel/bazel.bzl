@@ -195,7 +195,7 @@ def _iml_module_jar_impl(
                 mnemonic = "formc",
                 arguments = [args],
                 executable = ctx.executable._formc,
-                execution_requirements = {"supports-workers": "1"},
+                execution_requirements = {"supports-multiplex-workers": "1"},
             )
 
         jars += [java_jar]

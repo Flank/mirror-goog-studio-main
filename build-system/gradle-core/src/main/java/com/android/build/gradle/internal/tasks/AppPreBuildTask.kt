@@ -80,14 +80,14 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
     }
 
     private class EmptyCreationAction(creationConfig: ComponentCreationConfig) :
-        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask>(creationConfig) {
+        TaskManager.AbstractPreBuildCreationAction<AndroidVariantTask, ComponentCreationConfig>(creationConfig) {
 
         override val type: Class<AndroidVariantTask>
             get() = AndroidVariantTask::class.java
     }
 
     private class CheckCreationAction(creationConfig: ComponentCreationConfig) :
-        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(creationConfig) {
+        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask, ComponentCreationConfig>(creationConfig) {
 
         override val type: Class<AppPreBuildTask>
             get() = AppPreBuildTask::class.java
@@ -113,7 +113,7 @@ abstract class AppPreBuildTask : NonIncrementalTask() {
         @JvmStatic
         fun getCreationAction(
             creationConfig: ComponentCreationConfig
-        ): TaskManager.AbstractPreBuildCreationAction<*> {
+        ): TaskManager.AbstractPreBuildCreationAction<*, *> {
             return if (creationConfig.componentType.isBaseModule && creationConfig.global.hasDynamicFeatures) {
                 CheckCreationAction(creationConfig)
             } else EmptyCreationAction(creationConfig)

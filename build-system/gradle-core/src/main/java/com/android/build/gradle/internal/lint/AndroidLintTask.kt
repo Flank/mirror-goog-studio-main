@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -34,6 +35,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.repository.GradleVersion
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -409,6 +411,14 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         arguments.add("--client-name", "AGP")
         arguments.add("--client-version", Version.ANDROID_GRADLE_PLUGIN_VERSION)
 
+        // Pass --offline flag only if lint version is 30.3.0-beta01 or higher because earlier
+        // versions of lint don't accept that flag.
+        if (offline.get()
+            && GradleVersion.tryParse(lintTool.version.get())
+                ?.isAtLeast(30, 3, 0, "beta", 1, false) == true) {
+            arguments += "--offline"
+        }
+
         return Collections.unmodifiableList(arguments)
     }
 
@@ -565,7 +575,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.description = description
 
             task.initializeGlobalInputs(
-                project = creationConfig.services.projectInfo.getProject(),
                 isAndroid = true,
                 lintMode
             )
@@ -785,7 +794,6 @@ abstract class AndroidLintTask : NonIncrementalTask() {
     }
 
     private fun initializeGlobalInputs(
-        project: Project,
         isAndroid: Boolean,
         lintMode: LintMode
     ) {
@@ -831,9 +839,8 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         fatalOnly: Boolean = false,
         autoFix: Boolean = false,
     ) {
-        val project = taskCreationServices.projectInfo.getProject()
+        val projectInfo = taskCreationServices.projectInfo
         initializeGlobalInputs(
-            project,
             isAndroid = false,
             lintMode
         )
@@ -871,7 +878,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             )
         this.lintRuleJars.fromDisallowChanges(customLintChecksConfig)
         this.lintModelDirectory.setDisallowChanges(
-            project.layout.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
+            projectInfo.buildDirectory.dir("intermediates/${this.name}/android-lint-model")
         )
         this.partialResults.setDisallowChanges(partialResults)
         this.lintModelWriterTaskOutputPath.setDisallowChanges(

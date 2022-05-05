@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.SdkConstants
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.SingleVariant
@@ -27,8 +25,6 @@ import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ArtifactMetadataProcessor.Companion.wireAllFinalizedBy
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.android.build.gradle.internal.ApiObjectFactory
@@ -42,6 +38,10 @@ import com.android.build.gradle.internal.SdkLocator.sdkTestDirectory
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.crash.afterEvaluate
 import com.android.build.gradle.internal.crash.runAction
 import com.android.build.gradle.internal.dependency.CONFIG_NAME_ANDROID_JDK_IMAGE
@@ -140,8 +140,10 @@ abstract class BasePlugin<
                                 in AndroidT,
                                 in VariantBuilderT,
                                 in VariantT>,
-                VariantBuilderT: VariantBuilderImpl,
-                VariantT: VariantImpl>(
+                VariantBuilderT: VariantBuilder,
+                VariantDslInfoT: VariantDslInfo,
+                CreationConfigT: VariantCreationConfig,
+                VariantT: Variant>(
     val registry: ToolingModelBuilderRegistry,
     val componentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry
@@ -196,13 +198,6 @@ abstract class BasePlugin<
         )
     }
 
-    private val androidComponentsExtension: AndroidComponentsT by lazy {
-        createComponentExtension(
-            dslServices, variantApiOperations,
-            bootClasspathConfig
-        )
-    }
-
     private val globalConfig by lazy {
         withProject("globalConfig") { project ->
             @Suppress("DEPRECATION")
@@ -222,7 +217,7 @@ abstract class BasePlugin<
 
 
     @get:VisibleForTesting
-    val variantManager: VariantManager<AndroidT, AndroidComponentsT, VariantBuilderT, VariantT> by lazy {
+    val variantManager: VariantManager<AndroidT, VariantBuilderT, VariantDslInfoT, CreationConfigT> by lazy {
         withProject("variantManager") { project ->
             @Suppress("DEPRECATION", "UNCHECKED_CAST")
             VariantManager(
@@ -230,7 +225,6 @@ abstract class BasePlugin<
                 dslServices,
                 extension,
                 newExtension,
-                androidComponentsExtension,
                 variantApiOperations as VariantApiOperationsRegistrar<AndroidT, VariantBuilder, Variant>,
                 variantFactory,
                 variantInputModel,
@@ -297,7 +291,7 @@ abstract class BasePlugin<
         extensionData.bootClasspathConfig
     }
 
-    private val variantFactory: VariantFactory<VariantBuilderT, VariantT> by lazy {
+    private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT> by lazy {
         createVariantFactory(projectServices)
     }
 
@@ -324,17 +318,17 @@ abstract class BasePlugin<
 
     protected abstract fun createVariantFactory(
         projectServices: ProjectServices
-    ): VariantFactory<VariantBuilderT, VariantT>
+    ): VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT>
 
     protected abstract fun createTaskManager(
         project: Project,
-        variants: Collection<ComponentInfo<VariantBuilderT, VariantT>>,
-        testComponents: Collection<TestComponentImpl>,
-        testFixturesComponents: Collection<TestFixturesImpl>,
+        variants: Collection<ComponentInfo<VariantBuilderT, CreationConfigT>>,
+        testComponents: Collection<TestComponentCreationConfig>,
+        testFixturesComponents: Collection<TestFixturesCreationConfig>,
         globalTaskCreationConfig: GlobalTaskCreationConfig,
         localConfig: TaskManagerConfig,
         extension: BaseExtension,
-    ): TaskManager<VariantBuilderT, VariantT>
+    ): TaskManager<VariantBuilderT, CreationConfigT>
 
     protected abstract fun getProjectType(): Int
 
@@ -477,6 +471,12 @@ abstract class BasePlugin<
     }
 
     override fun configureExtension(project: Project) {
+        // Create components extension
+        createComponentExtension(
+            dslServices,
+            variantApiOperations,
+            bootClasspathConfig
+        )
         project.extensions.add("buildOutputs", buildOutputs)
         registerModels(
             project,

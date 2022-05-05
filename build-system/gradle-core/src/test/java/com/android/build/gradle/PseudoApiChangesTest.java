@@ -76,9 +76,12 @@ public class PseudoApiChangesTest {
                 classes,
                 ApiTester.Filter.ALL,
                 "The internal implementation classes"
-                        + " have changed, either revert "
-                        + "the change or re-run PseudoApiUpdater.main[] from the IDE "
-                        + "to update the API file.\n"
+                        + " have changed, either revert the api change or run\n"
+                        + "gradlew :base:builder-model:updateToolingModelApi\n"
+                        + "\n"
+                        + "To update all the API expectation files, run \n"
+                        + "    gradlew updateApi\n"
+                        + "\n"
                         + "PseudoApiUpdater will apply the following changes if run:\n",
                 API_LIST_URL,
                 ApiTester.Flag.OMIT_HASH);

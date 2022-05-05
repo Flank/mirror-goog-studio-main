@@ -18,10 +18,11 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentImpl;
+import com.android.build.api.component.impl.ComponentUtils;
 import com.android.build.gradle.api.AndroidArtifactVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.services.VariantServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -38,7 +39,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
         implements AndroidArtifactVariant {
 
     protected AndroidArtifactVariantImpl(
-            @NonNull ComponentImpl component,
+            @NonNull ComponentCreationConfig component,
             @NonNull VariantServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
@@ -77,7 +78,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to deprecated legacy com.android.build.gradle.api.VersionedVariant.getVersionName() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionName\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return null;
         }
@@ -98,7 +99,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl
                             IssueReporter.Type.GENERIC,
                             new RuntimeException(
                                     "Access to deprecated legacy com.android.build.gradle.api.VersionedVariant.getVersionCode() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode\n"
-                                            + ComponentImpl.Companion.getENABLE_LEGACY_API()));
+                                            + ComponentUtils.getENABLE_LEGACY_API()));
             // return default value during sync
             return -1;
         }

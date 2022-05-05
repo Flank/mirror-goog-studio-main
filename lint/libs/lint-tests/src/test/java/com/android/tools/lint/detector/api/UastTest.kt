@@ -205,22 +205,14 @@ class UastTest : TestCase() {
         ).indented()
 
         check(source) { file ->
-            try {
-                file.accept(object : AbstractUastVisitor() {
-                    override fun visitMethod(node: UMethod): Boolean {
-                        if (node.sourcePsi is KtConstructor<*>) {
-                            assertTrue("`${node.name}` is not marked as a UAST constructor", node.isConstructor)
-                        }
-                        return super.visitMethod(node)
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitMethod(node: UMethod): Boolean {
+                    if (node.sourcePsi is KtConstructor<*>) {
+                        assertTrue("`${node.name}` is not marked as a UAST constructor", node.isConstructor)
                     }
-                })
-                fail("Expected incorrect node.isConstructor or secondary constructor: see KTIJ-20200; has bug been fixed?")
-            } catch (failure: AssertionFailedError) {
-                assertEquals(
-                    "`Test` is not marked as a UAST constructor",
-                    failure.message
-                )
-            }
+                    return super.visitMethod(node)
+                }
+            })
         }
     }
 
@@ -463,6 +455,10 @@ class UastTest : TestCase() {
                                 UAnnotation (fqName = null) [@null]
                                 USimpleNameReferenceExpression (identifier = Direction) [Direction]
                             UMethod (name = Direction) [private fun Direction() = UastEmptyExpression]
+                            UMethod (name = values) [public static fun values() : test.pkg.FooAnnotation.Direction[] = UastEmptyExpression] : PsiType:Direction[]
+                            UMethod (name = valueOf) [public static fun valueOf(@org.jetbrains.annotations.NotNull name: java.lang.String) : test.pkg.FooAnnotation.Direction = UastEmptyExpression] : PsiType:Direction
+                                UParameter (name = name) [@org.jetbrains.annotations.NotNull var name: java.lang.String] : PsiType:String
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                         UClass (name = Bar) [public static abstract annotation Bar {...}]
                         UClass (name = Companion) [public static final class Companion {...}]
                             UField (name = bar) [@org.jetbrains.annotations.NotNull private static final var bar: int = 42] : PsiType:int

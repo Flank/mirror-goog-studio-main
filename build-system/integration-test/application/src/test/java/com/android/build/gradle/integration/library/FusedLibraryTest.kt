@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
@@ -25,6 +26,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import java.util.zip.ZipFile
 
 @RunWith(Parameterized::class)
 class FusedLibraryTest(
@@ -46,6 +48,12 @@ class FusedLibraryTest(
             implementation 'junit:junit:4.12'
         }
         """.trimIndent())
+        it.addFile(
+                "src/main/res/values/strings.xml",
+                """<resources>
+                <string name="string_from_android_lib_1">androidLib2</string>
+              </resources>"""
+        )
     }
     private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2")
     private val fusedLibrary = MinimalSubProject.fusedLibrary("com.example.fusedLib1").also {
@@ -59,6 +67,13 @@ class FusedLibraryTest(
                 }
                 """.trimIndent())
         }
+        it.appendToBuild(
+                """
+                android {
+                    minSdk = $DEFAULT_MIN_SDK_VERSION
+                }
+                """.trimIndent()
+        )
     }
 
     @JvmField
@@ -82,9 +97,16 @@ class FusedLibraryTest(
             project.execute(":fusedLib1:assemble")
         }
         val fusedLib1BuildDir = project.getSubproject(":fusedLib1").buildDir
-        File(fusedLib1BuildDir,"bundle/bundle.aar").also { builtJarFile ->
-            println("Testing ${builtJarFile.absolutePath}")
-            Truth.assertThat(builtJarFile.exists()).isTrue()
+        File(fusedLib1BuildDir, "bundle/bundle.aar").also { aarFile ->
+            println("Testing ${aarFile.absolutePath}")
+            Truth.assertThat(aarFile.exists()).isTrue()
+            if (includePublishing) {
+                ZipFile(aarFile).use { aarZip ->
+                    val valuesXml = aarZip.getEntry("res/values/values.xml")
+                    Truth.assertThat(valuesXml).isNotNull()
+                    Truth.assertThat(valuesXml.size).isGreaterThan(0)
+                }
+            }
         }
         if (includePublishing) {
             File(fusedLib1BuildDir, "publications/maven").also { publicationDir ->

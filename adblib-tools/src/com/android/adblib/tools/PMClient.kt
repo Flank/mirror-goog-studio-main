@@ -117,7 +117,7 @@ internal class PMClient(private val service : AdbDeviceServices, private val dev
 
         val cmd = "$PACKAGE_SERVICE_NAME install-write -S $size $sessionID $filename -"
         service.session.channelFactory.openFile(apk).use {
-            val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector(), it)
+            val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector(), it, shutdownOutput = false)
             parseInstallResult(flow.first())
         }
     }
@@ -147,7 +147,7 @@ internal class PMClient(private val service : AdbDeviceServices, private val dev
         // Error message vary from properly formatted output to Java StackTrace
         private val createSessionPattern = Pattern.compile("""Success: .*\[(\d*)\].*""")
         internal fun parseSessionID(output: String): String {
-            val matcher: Matcher = createSessionPattern.matcher(output)
+            val matcher: Matcher = createSessionPattern.matcher(output.trim())
             if (matcher.matches()) {
                 return matcher.group(1)
             } else {

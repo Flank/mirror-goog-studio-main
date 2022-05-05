@@ -40,7 +40,7 @@ target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-require
 readonly bazel_status_smoke_longrunning=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id_smoke_longrunning}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id_smoke_longrunning}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/../bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs

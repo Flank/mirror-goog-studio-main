@@ -64,6 +64,46 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testVisibleForTestingOnEnum() {
+        lint().files(
+            kotlin(
+                """
+                import com.google.common.annotations.VisibleForTesting
+
+                class ProductionCode {
+                    @VisibleForTesting
+                    enum class COLOR {
+                        RED,
+                        GREEN,
+                        BLUE
+                    }
+
+                    fun render() {
+                        COLOR.values().forEach { println(it.name) } // OK
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                class Code {
+                    fun test() {
+                        ProductionCode.COLOR.values().map { it.name to it.ordinal } // Not allowed
+                    }
+                }
+                """
+            ),
+            guavaVisibleForTestingAnnotation
+        ).run().expect(
+            """
+            src/Code.kt:4: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                                    ProductionCode.COLOR.values().map { it.name to it.ordinal } // Not allowed
+                                                         ~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     fun testRestrictToSubClass() {
         val expected =
             """

@@ -27,7 +27,7 @@ if exist %DISTDIR%\ (
 call %BASEDIR%\tools\base\bazel\bazel.cmd ^
   --max_idle_secs=10 ^
   build ^
-  --config=dynamic ^
+  --config=ci ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^

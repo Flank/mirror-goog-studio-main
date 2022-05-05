@@ -346,6 +346,7 @@ class LeakDetector : Detector(), SourceCodeScanner {
         private val SUPER_CLASSES = listOf(
             "android.content.Loader",
             "android.support.v4.content.Loader",
+            "androidx.loader.content.Loader",
             "android.os.AsyncTask",
             "android.arch.lifecycle.ViewModel",
             "androidx.lifecycle.ViewModel"
@@ -383,6 +384,8 @@ class LeakDetector : Detector(), SourceCodeScanner {
                 ) ||
                 evaluator.extendsClass(cls, CLASS_VIEW, false) ||
                 evaluator.extendsClass(cls, CLASS_FRAGMENT, false) ||
+                // TODO: Include androidx fragments here?
+
                 // From https://developer.android.com/topic/libraries/architecture/viewmodel:
                 // Caution: A ViewModel must never reference a view, Lifecycle, or any
                 // class that may hold a reference to the activity context

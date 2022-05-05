@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.component
 
+import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.variant.impl.DirectoryEntry
+import com.android.build.gradle.internal.core.MergedNdkConfig
+import com.android.builder.core.ComponentType
 import org.gradle.api.provider.MapProperty
 
 interface VariantCreationConfig: ConsumableCreationConfig {
@@ -23,4 +27,20 @@ interface VariantCreationConfig: ConsumableCreationConfig {
     val maxSdkVersion: Int?
 
     val experimentalProperties: MapProperty<String, Any>
+
+    val externalNativeExperimentalProperties: Map<String, Any>
+
+    val ndkConfig: MergedNdkConfig
+
+    val isJniDebuggable: Boolean
+
+    val testComponents: MutableMap<ComponentType, TestComponentCreationConfig>
+
+    val nestedComponents: List<ComponentCreationConfig>
+
+    var unitTest: UnitTestImpl?
+
+    var testFixturesComponent: TestFixturesCreationConfig?
+
+    fun addRenderscriptSources(sourceSets: MutableList<DirectoryEntry>)
 }

@@ -123,7 +123,7 @@ internal class ListingFileRedirectTaskTest {
         spyTask.taskAction()
         // test edge case when redirectFile and listingFile has different roots
         Truth.assertThat(redirectFile.readLines()[1])
-            .isEqualTo("listingFile=" + listingFile.absolutePath.replace("\\","/"))
+            .isEqualTo("listingFile=" + listingFile.canonicalPath.replace("\\","/"))
     }
 
     @Test

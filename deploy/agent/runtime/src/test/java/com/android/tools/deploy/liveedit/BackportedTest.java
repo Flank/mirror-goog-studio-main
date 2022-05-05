@@ -41,11 +41,11 @@ public class BackportedTest {
 
     private static String className = "BackportedInvoke";
     private static Class<BackportedInvoke> clazz = BackportedInvoke.class;
-    private static byte[] byteCode;
+    private static Interpretable byteCode;
 
     static {
         try {
-            byteCode = buildClass(clazz);
+            byteCode = new Interpretable(buildClass(clazz));
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

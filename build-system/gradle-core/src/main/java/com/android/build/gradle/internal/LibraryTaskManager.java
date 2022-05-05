@@ -26,17 +26,16 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
-import com.android.build.api.variant.impl.LibraryVariantBuilderImpl;
-import com.android.build.api.variant.impl.LibraryVariantImpl;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.LibraryVariantBuilder;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.LibraryCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
 import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -49,6 +48,7 @@ import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
 import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.services.DokkaParallelBuildService;
 import com.android.build.gradle.internal.tasks.AarMetadataTask;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
 import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
@@ -96,13 +96,18 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 
 /** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, LibraryVariantImpl> {
+public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, LibraryCreationConfig> {
 
     public LibraryTaskManager(
             @NonNull Project project,
-            @NonNull Collection<? extends ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl>> variants,
-            @NonNull Collection<? extends TestComponentImpl> testComponents,
-            @NonNull Collection<? extends TestFixturesImpl> testFixturesComponents,
+            @NonNull
+                    Collection<
+                                    ? extends
+                                            ComponentInfo<
+                                                    LibraryVariantBuilder, LibraryCreationConfig>>
+                            variants,
+            @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
+            @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
             @NonNull GlobalTaskCreationConfig globalConfig,
             @NonNull TaskManagerConfig localConfig,
             @NonNull BaseExtension extension) {
@@ -118,9 +123,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
 
     @Override
     protected void doCreateTasksForVariant(
-            @NotNull ComponentInfo<LibraryVariantBuilderImpl, LibraryVariantImpl> variantInfo) {
+            @NotNull ComponentInfo<LibraryVariantBuilder, LibraryCreationConfig> variantInfo) {
 
-        LibraryVariantImpl libraryVariant = variantInfo.getVariant();
+        LibraryCreationConfig libraryVariant = variantInfo.getVariant();
         BuildFeatureValues buildFeatures = libraryVariant.getBuildFeatures();
 
         createAnchorTasks(libraryVariant);
@@ -349,7 +354,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         createBundleTask(libraryVariant);
     }
 
-    private void createBundleTask(@NonNull VariantImpl variant) {
+    private void createBundleTask(@NonNull LibraryCreationConfig variant) {
         taskFactory.register(new BundleAar.LibraryCreationAction(variant));
 
         variant.getTaskContainer()
@@ -369,6 +374,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                 taskFactory.register(new SourceJarTask.CreationAction(variant));
             }
             if (components.stream().anyMatch(ComponentPublishingInfo::getWithJavadocJar)) {
+                new DokkaParallelBuildService.RegistrationAction(project).execute();
                 taskFactory.register(new JavaDocGenerationTask.CreationAction(variant));
                 taskFactory.register(new JavaDocJarTask.CreationAction(variant));
             }
@@ -381,7 +387,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     private void createComponent(
-            @NonNull VariantImpl variant,
+            @NonNull LibraryCreationConfig variant,
             @NonNull String componentName,
             boolean isClassifierRequired) {
         final VariantDependencies variantDependencies = variant.getVariantDependencies();
@@ -445,9 +451,9 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
     }
 
     private static class MergeResourceCallback implements TaskProviderCallback<MergeResources> {
-        @NonNull private final VariantImpl variant;
+        @NonNull private final LibraryCreationConfig variant;
 
-        private MergeResourceCallback(@NonNull VariantImpl variant) {
+        private MergeResourceCallback(@NonNull LibraryCreationConfig variant) {
             this.variant = variant;
         }
 
@@ -460,7 +466,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         }
     }
 
-    private void createMergeResourcesTasks(@NonNull VariantImpl variant) {
+    private void createMergeResourcesTasks(@NonNull LibraryCreationConfig variant) {
         ImmutableSet<MergeResources.Flag> flags;
         if (globalConfig.getNamespacedAndroidResources()) {
             flags =
@@ -495,7 +501,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         taskFactory.register(new GenerateApiPublicTxtTask.CreationAction(variant));
     }
 
-    private void createCompileLibraryResourcesTask(@NonNull VariantImpl variant) {
+    private void createCompileLibraryResourcesTask(@NonNull LibraryCreationConfig variant) {
         if (variant.isPrecompileDependenciesResourcesEnabled()) {
             taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variant));
         }
@@ -518,7 +524,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
                         creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
     }
 
-    public void createLibraryAssetsTask(@NonNull VariantImpl variant) {
+    public void createLibraryAssetsTask(@NonNull LibraryCreationConfig variant) {
         taskFactory.register(new MergeSourceSetFolders.LibraryAssetCreationAction(variant));
     }
 
@@ -541,7 +547,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilderImpl, L
         // publish the local lint.jar to all the variants.
         // This takes the global jar (output of PrepareLintJar) and publishes to each variants
         // as we don't have variant-free publishing at the moment.
-        for (LibraryVariantImpl variant : variantPropertiesList) {
+        for (LibraryCreationConfig variant : variantPropertiesList) {
             variant.getArtifacts()
                     .copy(
                             InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,

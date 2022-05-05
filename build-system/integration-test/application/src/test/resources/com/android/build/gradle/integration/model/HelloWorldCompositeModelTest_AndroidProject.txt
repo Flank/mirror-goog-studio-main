@@ -22,7 +22,7 @@
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/renderscript_source_output_dir/debug/out{!}
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/source/buildConfig/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -52,7 +52,7 @@
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/source/buildConfig/androidTest/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -106,7 +106,7 @@
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/renderscript_source_output_dir/release/out{!}
                * {INCLUDED_BUILD(other-build)}/lib/build/generated/source/buildConfig/release{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)

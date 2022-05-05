@@ -633,7 +633,6 @@ coverage_report(
     srcpath_exclude = [
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanel.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanelSplitter.java",
-        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/LintIssueProvider.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/FixEntry.form",
     ],
     srcpath_include = [
@@ -827,6 +826,18 @@ coverage_report(
     ],
 )
 
+# Coverage report for Google Play SDK Index lint checks
+coverage_report(
+    name = "play-sdk-index",
+    srcpath_include = [
+        "tools/base/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/GooglePlaySdkIndex.kt",
+        "tools/adt/idea/project-system-gradle/src/com/android/tools/idea/projectsystem/gradle/IdeGooglePlaySdkIndex.kt",
+    ],
+    tests = [
+        "//tools/base/lint/libs/lint-tests:tests.test",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -860,6 +871,7 @@ combine_report_definitions(
         "navigationsafeargs",
         "network-inspector",
         "parallel-device-test-report",
+        "play-sdk-index",
         "profileable-ui",
         "profilers",
         "projectsystem",
@@ -875,6 +887,7 @@ combine_report_definitions(
         "upgrade-assistant",
         "utp",
         "validation",
+        "visual-lint",
         "wear-pairing-assistant",
         "workmanager-inspector",
     ],

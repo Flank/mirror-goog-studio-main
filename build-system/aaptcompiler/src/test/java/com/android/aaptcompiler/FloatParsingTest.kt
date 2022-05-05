@@ -3,7 +3,6 @@ package com.android.aaptcompiler
 import com.google.common.truth.Truth
 import org.junit.Ignore
 import org.junit.Test
-import kotlin.math.exp
 
 class FloatParsingTest {
 
@@ -259,7 +258,7 @@ class FloatParsingTest {
     }
 
     private fun needsModificationForKotlin(hexText: String): Boolean {
-        return !hexText.toLowerCase().contains('p') && hexText.all {
+        return !hexText.lowercase().contains('p') && hexText.all {
             when (it) {
                 in '0'..'9' -> true
                 in 'a'..'f' -> true

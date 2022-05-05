@@ -24,8 +24,11 @@ gradle_integration_test(
     name = "GradleVersionCheckTest",
     srcs = ["GradleVersionCheckTest.java"],
     data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     tags = ["no_test_windows"],  # b/77288863

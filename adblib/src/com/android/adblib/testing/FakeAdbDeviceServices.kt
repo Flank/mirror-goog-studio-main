@@ -20,23 +20,44 @@ import com.android.adblib.AdbDeviceSyncServices
 import com.android.adblib.AdbInputChannel
 import com.android.adblib.AdbLibSession
 import com.android.adblib.DeviceSelector
+import com.android.adblib.INFINITE_DURATION
 import com.android.adblib.ProcessIdList
 import com.android.adblib.ReverseSocketList
 import com.android.adblib.ShellCollector
 import com.android.adblib.ShellV2Collector
 import com.android.adblib.SocketSpec
+import com.android.adblib.utils.AdbProtocolUtils.ADB_CHARSET
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
+import java.nio.ByteBuffer
 import java.time.Duration
+import java.util.concurrent.LinkedBlockingDeque
+import kotlin.math.min
 
 /**
  * A fake implementation of [AdbDeviceServices] for tests.
  */
 class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServices {
 
-    private val shellCommands = mutableMapOf<String, MutableMap<String, Any>>()
+    /**
+     * Maps device -> ShellCommands
+     */
+    private val shellCommands = mutableMapOf<String, ShellCommands>()
 
-    private val shellV2Commands = mutableMapOf<String, MutableMap<String, Any>>()
+    /**
+     * Maps device -> ShellV2Commands
+     */
+    private val shellV2Commands = mutableMapOf<String, ShellV2Commands>()
+
+    /**
+     * A record of all calls to [shell]
+     */
+    val shellRequests = LinkedBlockingDeque<ShellRequest>()
+
+    /**
+     * A record of all calls to [shellV2]
+     */
+    val shellV2Requests = LinkedBlockingDeque<ShellRequest>()
 
     /**
      * Configure a [shell] service request.
@@ -45,19 +66,29 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
      * @param command a command executed on a device
      * @param result the result of a command
      */
-    fun <T> configureShellCommand(deviceSelector: DeviceSelector, command: String, result: T) {
-        shellCommands.configureCommand(deviceSelector, command, result as Any)
+    fun configureShellCommand(deviceSelector: DeviceSelector, command: String, result: String) {
+        shellCommands.getOrPut(deviceSelector.transportPrefix) { ShellCommands() }
+            .add(command, result)
     }
 
     /**
-     * Configure a [shell] service request.
+     * Configure a [shellV2] service request.
      *
      * @param deviceSelector A device the command is executed on
      * @param command a command executed on a device
-     * @param result the result of a command
+     * @param stdout the standard output of a command
+     * @param stderr the standard error of a command
+     * @param exitCode the exit code of a command
      */
-    fun <T> configureShellV2Command(deviceSelector: DeviceSelector, command: String, result: T) {
-        shellV2Commands.configureCommand(deviceSelector, command, result as Any)
+    fun configureShellV2Command(
+        deviceSelector: DeviceSelector,
+        command: String,
+        stdout: String,
+        stderr: String = "",
+        exitCode: Int = 0,
+    ) {
+        shellV2Commands.getOrPut(deviceSelector.transportPrefix) { ShellV2Commands() }
+            .add(command, stdout, stderr, exitCode)
     }
 
     override fun <T> shell(
@@ -67,11 +98,16 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
         bufferSize: Int,
+        shutdownOutput : Boolean
     ): Flow<T> {
-        val result = (shellCommands[device.transportPrefix]?.get(command)
-            ?: throw IllegalStateException("""Command not setup for $device: "$command""""))
-        @Suppress("UNCHECKED_CAST")
-        return flowOf(result as T)
+        shellRequests.add(ShellRequest(device.toString(), command, commandTimeout, bufferSize))
+        val output = shellCommands[device.transportPrefix]?.get(command)
+            ?: throw IllegalStateException("""Command not setup for $device: "$command"""")
+        return flow {
+            shellCollector.start(this)
+            output.split(bufferSize) { shellCollector.collect(this, it) }
+            shellCollector.end(this)
+        }
     }
 
     override fun <T> exec(
@@ -80,7 +116,8 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
         shellCollector: ShellCollector<T>,
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
-        bufferSize: Int
+        bufferSize: Int,
+        shutdownOutput : Boolean
     ): Flow<T> {
         TODO("Not yet implemented")
     }
@@ -93,10 +130,15 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
         commandTimeout: Duration,
         bufferSize: Int,
     ): Flow<T> {
-        val result = (shellV2Commands[device.transportPrefix]?.get(command)
-            ?: throw IllegalStateException("""Command not setup for $device: "$command""""))
-        @Suppress("UNCHECKED_CAST")
-        return flowOf(result as T)
+        shellV2Requests.add(ShellRequest(device.toString(), command, commandTimeout, bufferSize))
+        val output = shellV2Commands[device.transportPrefix]?.get(command)
+            ?: throw IllegalStateException("""Command not setup for $device: "$command"""")
+        return flow {
+            shellCollector.start(this)
+            output.stdout.split(bufferSize) { shellCollector.collectStdout(this, it) }
+            output.stderr.split(bufferSize) { shellCollector.collectStderr(this, it) }
+            shellCollector.end(this, output.exitCode)
+        }
     }
 
     override fun <T> abb_exec(
@@ -105,7 +147,8 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
         shellCollector: ShellCollector<T>,
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
-        bufferSize: Int
+        bufferSize: Int,
+        shutdownOutput : Boolean
     ): Flow<T> {
         TODO("Not yet implemented")
     }
@@ -149,12 +192,62 @@ class FakeAdbDeviceServices(override val session: AdbLibSession) : AdbDeviceServ
     override fun trackJdwp(device: DeviceSelector): Flow<ProcessIdList> {
         TODO("Not yet implemented")
     }
+
+    private class ShellCommands {
+
+        private val commands = mutableMapOf<String, ByteBuffer>()
+
+        fun add(command: String, stdout: ByteBuffer) {
+            commands[command] = stdout
+        }
+
+        fun add(command: String, stdout: String) {
+            add(command, stdout.toByteBuffer())
+        }
+
+        fun get(command: String): ByteBuffer? = commands[command]
+    }
+
+    class ShellV2Output(val stdout: ByteBuffer, val stderr: ByteBuffer, val exitCode: Int)
+
+    private class ShellV2Commands {
+
+        private val commands = mutableMapOf<String, ShellV2Output>()
+        fun add(command: String, stdout: ByteBuffer, stderr: ByteBuffer, exitCode: Int) {
+            commands[command] = ShellV2Output(stdout, stderr, exitCode)
+        }
+
+        fun add(command: String, stdout: String, stderr: String, exitCode: Int) {
+            add(command, stdout.toByteBuffer(), stderr.toByteBuffer(), exitCode)
+        }
+
+        fun get(command: String): ShellV2Output? = commands[command]
+    }
+
+    /**
+     * Details of a call to [shell] or [shellV2]
+     */
+    data class ShellRequest(
+        val deviceSelector: String,
+        val command: String,
+        val commandTimeout: Duration = INFINITE_DURATION,
+        val bufferSize: Int = DEFAULT_BUFFER_SIZE,
+    )
 }
 
-private fun <T> MutableMap<String, MutableMap<String, T>>.configureCommand(
-    deviceSelector: DeviceSelector,
-    command: String,
-    result: T
-) {
-    getOrPut(deviceSelector.transportPrefix) { mutableMapOf() }[command] = result
+private fun String.toByteBuffer() = ByteBuffer.wrap(toByteArray(ADB_CHARSET))
+
+/**
+ * split the [ByteBuffer.remaining] bytes of this buffer into array chunks of [chunkSize] bytes. The
+ * buffer position and limit remain unchanged on exit.
+ */
+private suspend fun ByteBuffer.split(chunkSize: Int, processChunk: suspend (ByteBuffer) -> Unit) {
+    val pos = position()
+    while (hasRemaining()) {
+        val remaining = remaining()
+        val bytes = ByteArray(min(remaining, chunkSize))
+        get(bytes)
+        processChunk(ByteBuffer.wrap(bytes))
+    }
+    position(pos)
 }

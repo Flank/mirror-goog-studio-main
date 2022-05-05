@@ -31,7 +31,7 @@ public final class FragmentWrapper {
         try {
             Method method = fragment.getClass().getMethod("getActivity");
             Object activity = method.invoke(fragment);
-            int activityCode = (activity != null ? activity.hashCode() : 0);
+            int activityCode = (activity != null ? activity.hashCode() : -1);
             sendFragmentAdded(
                     fragment.getClass().getSimpleName(), fragment.hashCode(), activityCode);
         } catch (NoSuchMethodException e) {

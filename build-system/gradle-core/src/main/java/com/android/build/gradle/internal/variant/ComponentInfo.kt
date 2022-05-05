@@ -16,34 +16,27 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.api.component.impl.ComponentBuilderImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.api.variant.ComponentBuilder
+import com.android.build.api.variant.VariantBuilder
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 open class ComponentInfo<
-        ComponentBuilderT : ComponentBuilderImpl,
-        ComponentT : ComponentImpl>(
+        ComponentBuilderT : ComponentBuilder,
+        ComponentT : ComponentCreationConfig>(
     val variantBuilder: ComponentBuilderT,
     val variant: ComponentT,
     val stats: GradleBuildVariant.Builder?
 )
 
 class VariantComponentInfo<
-        CommonExtensionT: CommonExtension<*, *, *, *>,
-        VariantBuilderT : VariantBuilderImpl,
-        VariantT : VariantImpl> (
+        VariantBuilderT : VariantBuilder,
+        VariantDslInfoT: VariantDslInfo,
+        VariantT : VariantCreationConfig> (
     variantBuilder: VariantBuilderT,
     variant: VariantT,
     stats: GradleBuildVariant.Builder?,
-    val variantApiOperationsRegistrar: VariantApiOperationsRegistrar<
-            in CommonExtensionT,
-            in VariantBuilderT,
-            in VariantT,
-            >,
-    val variantDslInfo: VariantDslInfo
+    val variantDslInfo: VariantDslInfoT
 ) : ComponentInfo<VariantBuilderT, VariantT>(variantBuilder, variant, stats)

@@ -18,9 +18,6 @@ package com.android.build.gradle.internal.plugins;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.api.component.impl.TestComponentImpl;
-import com.android.build.api.component.impl.TestFixturesImpl;
-import com.android.build.api.dsl.BuildFeatures;
 import com.android.build.api.dsl.DynamicFeatureBuildFeatures;
 import com.android.build.api.dsl.SdkComponents;
 import com.android.build.api.extension.impl.DynamicFeatureAndroidComponentsExtensionImpl;
@@ -29,12 +26,14 @@ import com.android.build.api.variant.AndroidComponentsExtension;
 import com.android.build.api.variant.DynamicFeatureAndroidComponentsExtension;
 import com.android.build.api.variant.DynamicFeatureVariant;
 import com.android.build.api.variant.DynamicFeatureVariantBuilder;
-import com.android.build.api.variant.impl.DynamicFeatureVariantBuilderImpl;
-import com.android.build.api.variant.impl.DynamicFeatureVariantImpl;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig;
+import com.android.build.gradle.internal.component.TestComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.DynamicFeatureExtension;
@@ -55,9 +54,7 @@ import com.android.build.gradle.internal.variant.DynamicFeatureVariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
-
 import java.util.Collection;
-import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -65,7 +62,6 @@ import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.reflect.TypeOf;
 import org.gradle.build.event.BuildEventsListenerRegistry;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-import org.jetbrains.annotations.NotNull;
 
 /** Gradle plugin class for 'application' projects, applied on an optional APK module */
 public class DynamicFeaturePlugin
@@ -76,8 +72,10 @@ public class DynamicFeaturePlugin
                 com.android.build.api.dsl.DynamicFeatureProductFlavor,
                 com.android.build.api.dsl.DynamicFeatureExtension,
                 DynamicFeatureAndroidComponentsExtension,
-                DynamicFeatureVariantBuilderImpl,
-                DynamicFeatureVariantImpl> {
+                DynamicFeatureVariantBuilder,
+                DynamicFeatureVariantDslInfo,
+                DynamicFeatureCreationConfig,
+                DynamicFeatureVariant> {
     @Inject
     public DynamicFeaturePlugin(
             ToolingModelBuilderRegistry registry,
@@ -132,7 +130,7 @@ public class DynamicFeaturePlugin
         BootClasspathConfigImpl bootClasspathConfig =
                 new BootClasspathConfigImpl(
                         project,
-                        dslServices,
+                        getProjectServices(),
                         versionedSdkLoaderService,
                         dynamicFeatureExtension,
                         forUnitTesting);
@@ -194,15 +192,15 @@ public class DynamicFeaturePlugin
                     DynamicFeatureAndroidComponentsExtension {
 
         public DynamicFeatureAndroidComponentsExtensionImplCompat(
-                @NotNull DslServices dslServices,
-                @NotNull SdkComponents sdkComponents,
-                @NotNull
+                @NonNull DslServices dslServices,
+                @NonNull SdkComponents sdkComponents,
+                @NonNull
                         VariantApiOperationsRegistrar<
                                         com.android.build.api.dsl.DynamicFeatureExtension,
                                         DynamicFeatureVariantBuilder,
                                         DynamicFeatureVariant>
                                 variantApiOperations,
-                @NotNull DynamicFeatureExtension DynamicFeatureExtension) {
+                @NonNull DynamicFeatureExtension DynamicFeatureExtension) {
             super(dslServices, sdkComponents, variantApiOperations, DynamicFeatureExtension);
         }
     }
@@ -214,8 +212,8 @@ public class DynamicFeaturePlugin
             @NonNull
                     VariantApiOperationsRegistrar<
                                     com.android.build.api.dsl.DynamicFeatureExtension,
-                                    DynamicFeatureVariantBuilderImpl,
-                                    DynamicFeatureVariantImpl>
+                                    DynamicFeatureVariantBuilder,
+                                    DynamicFeatureVariant>
                             variantApiOperationsRegistrar,
             @NonNull BootClasspathConfig bootClasspathConfig) {
         SdkComponents sdkComponents =
@@ -248,17 +246,24 @@ public class DynamicFeaturePlugin
         return extension;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    protected TaskManager<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>
-    createTaskManager(
-            @NotNull Project project,
-            @NotNull Collection<? extends ComponentInfo<DynamicFeatureVariantBuilderImpl, DynamicFeatureVariantImpl>> variants,
-            @NotNull Collection<? extends TestComponentImpl> testComponents,
-            @NotNull Collection<? extends TestFixturesImpl> testFixturesComponents,
-            @NotNull GlobalTaskCreationConfig globalTaskCreationConfig,
-            @NotNull TaskManagerConfig localConfig,
-            @NotNull BaseExtension extension) {
+    protected TaskManager<DynamicFeatureVariantBuilder, DynamicFeatureCreationConfig>
+            createTaskManager(
+                    @NonNull Project project,
+                    @NonNull
+                            Collection<
+                                            ? extends
+                                                    ComponentInfo<
+                                                            DynamicFeatureVariantBuilder,
+                                                            DynamicFeatureCreationConfig>>
+                                    variants,
+                    @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
+                    @NonNull
+                            Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
+                    @NonNull GlobalTaskCreationConfig globalTaskCreationConfig,
+                    @NonNull TaskManagerConfig localConfig,
+                    @NonNull BaseExtension extension) {
         return new DynamicFeatureTaskManager(
                 project,
                 variants,

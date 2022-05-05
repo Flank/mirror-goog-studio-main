@@ -147,5 +147,15 @@ iml_module(
         "//tools/base/common:studio.android.sdktools.common.testfixtures[module, test]",
         "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
         "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+        "//tools/base/lint/libs/lint-tests:liblint-checks-proto",
     ],
+)
+
+load("//tools/base/bazel:jvm_import.bzl", "jvm_import")
+
+# managed by go/iml_to_build
+jvm_import(
+    name = "liblint-checks-proto",
+    jars = ["//tools/base/lint:liblint-checks-proto.lib.jar"],
+    visibility = ["//visibility:public"],
 )

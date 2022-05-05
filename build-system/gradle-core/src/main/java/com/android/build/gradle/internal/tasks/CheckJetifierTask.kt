@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -72,8 +72,8 @@ abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
         creationConfig: GlobalTaskCreationConfig,
         private val checkJetifierBuildService: Provider<CheckJetifierBuildService>,
         variants: Collection<ComponentInfo<*, *>>,
-        testComponents: Collection<TestComponentImpl>,
-        testFixturesComponents: Collection<TestFixturesImpl>
+        testComponents: Collection<TestComponentCreationConfig>,
+        testFixturesComponents: Collection<TestFixturesCreationConfig>
     ) : GlobalTaskCreationAction<CheckJetifierTask>(creationConfig) {
 
         override val name = "checkJetifier"

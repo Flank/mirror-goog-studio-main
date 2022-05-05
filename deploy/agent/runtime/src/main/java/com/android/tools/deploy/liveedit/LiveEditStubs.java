@@ -16,9 +16,9 @@
 
 package com.android.tools.deploy.liveedit;
 
-import static com.android.tools.deploy.instrument.ReflectionHelpers.*;
-
 import com.android.annotations.VisibleForTesting;
+import com.android.tools.deploy.liveedit.BytecodeValidator.UnsupportedChange;
+import java.util.List;
 
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class LiveEditStubs {
@@ -39,7 +39,25 @@ public final class LiveEditStubs {
         }
     }
 
-    public static void addClass(String internalName, byte[] bytecode, boolean isProxyClass) {
+    public static UnsupportedChange[] addClasses(byte[] primaryClass, byte[][] proxyClasses) {
+        Interpretable primary = new Interpretable(primaryClass);
+        List<UnsupportedChange> errors =
+                BytecodeValidator.validateBytecode(primary, context.getClassLoader());
+
+        if (!errors.isEmpty()) {
+            return errors.toArray(new UnsupportedChange[0]);
+        }
+
+        addClass(primary.getInternalName(), primary, false);
+        for (byte[] proxyBytes : proxyClasses) {
+            Interpretable proxy = new Interpretable(proxyBytes);
+            addClass(proxy.getInternalName(), proxy, true);
+        }
+
+        return new UnsupportedChange[0];
+    }
+
+    public static void addClass(String internalName, Interpretable bytecode, boolean isProxyClass) {
         LiveEditClass clazz = context.getClass(internalName);
         if (clazz == null) {
             context.addClass(internalName, bytecode, isProxyClass);

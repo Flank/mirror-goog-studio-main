@@ -140,6 +140,12 @@ com.android.fused-library:com.android.fused-library.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.internal.settings:com.android.internal.settings.gradle.plugin
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings ()
+
 com.android.library:com.android.library.gradle.plugin
   pomName=com.android.tools.build.gradle
   description=Gradle plug-in to build Android applications.
@@ -151,6 +157,12 @@ com.android.lint:com.android.lint.gradle.plugin
   description=Gradle plug-in to build Android applications.
   dependencies:
     com.android.tools.build:gradle ()
+
+com.android.settings:com.android.settings.gradle.plugin
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings ()
 
 com.android.test:com.android.test.gradle.plugin
   pomName=com.android.tools.build.gradle
@@ -186,6 +198,12 @@ com.android.tools:ninepatch
   description=draws a bitmap in nine or more sections
   dependencies:
     com.google.guava:guava (runtime)
+
+com.android.tools:play-sdk-proto
+  pomName=com.android.tools.play-sdk-proto
+  description=A protobuf message used for Google Play SDK Index
+  dependencies:
+    com.google.protobuf:protobuf-java (runtime)
 
 com.android.tools:repository
   pomName=com.android.tools.repository
@@ -483,7 +501,6 @@ com.android.tools.build:gradle
     io.grpc:grpc-stub (runtime)
     com.google.crypto.tink:tink (runtime)
     com.google.testing.platform:core-proto (runtime)
-    org.jetbrains.dokka:dokka-core (runtime)
     com.google.flatbuffers:flatbuffers-java (runtime)
     org.tensorflow:tensorflow-lite-metadata (runtime)
 
@@ -494,6 +511,20 @@ com.android.tools.build:gradle-api
     org.ow2.asm:asm (compile)
     com.android.tools.build:builder-test-api (runtime)
     com.google.guava:guava (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+
+com.android.tools.build:gradle-settings
+  pomName=com.android.tools.build.gradle-settings
+  description=Gradle Settings plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle-settings-api (compile)
+    com.android.tools.build:gradle-api (runtime)
+    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
+
+com.android.tools.build:gradle-settings-api
+  pomName=com.android.tools.build.gradle-settings-api
+  description=Gradle Settings API to build Android applications.
+  dependencies:
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.build:manifest-merger
@@ -620,6 +651,7 @@ com.android.tools.lint:lint-checks
     com.android.tools.external.org-jetbrains:uast (runtime)
     com.android.tools:common (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
+    com.android.tools:play-sdk-proto (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     com.google.code.gson:gson (runtime)

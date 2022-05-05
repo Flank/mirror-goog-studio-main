@@ -34,30 +34,27 @@ void LiveEditCommand::ParseParameters(const proto::InstallerRequest& request) {
 }
 
 void LiveEditCommand::Run(proto::InstallerResponse* response) {
-  response->set_status(proto::InstallerResponse_Status_ERROR_CMD);
+  proto::LiveEditResponse* le_response = response->mutable_le_response();
 
   if (!PrepareInteraction(request_.arch())) {
     ErrEvent("Unable to prepare interaction");
     return;
   }
 
-  proto::LiveEditResponse* le_resp = response->mutable_le_response();
-
-  auto listen_resp = ListenForAgents();
-  if (listen_resp == nullptr) {
-    response->set_status(proto::InstallerResponse_Status_ERROR_CMD);
-    ErrEvent("ListenForAgents: Empty response");
+  auto listen_response = ListenForAgents();
+  if (listen_response == nullptr) {
+    le_response->set_status(proto::LiveEditResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
-  if (listen_resp->status() != proto::OpenAgentSocketResponse::OK) {
-    response->set_status(proto::InstallerResponse_Status_ERROR_CMD);
-    ErrEvent("ListenForAgents: AppServer Comm error");
+  if (listen_response->status() != proto::OpenAgentSocketResponse::OK) {
+    le_response->set_status(
+        proto::LiveEditResponse::READY_FOR_AGENTS_NOT_RECEIVED);
     return;
   }
 
   if (!Attach(process_ids_)) {
-    ErrEvent("Unable to Attach()");
+    le_response->set_status(proto::LiveEditResponse::AGENT_ATTACH_FAILED);
     return;
   }
 
@@ -67,25 +64,25 @@ void LiveEditCommand::Run(proto::InstallerResponse* response) {
   *req.mutable_agent_request()->mutable_le_request() = request_;
   auto resp = client_->SendAgentMessage(req);
   if (!resp) {
-    ErrEvent("No response from SendAgentMessage");
+    le_response->set_status(proto::LiveEditResponse::INSTALL_SERVER_COM_ERR);
     return;
   }
 
   // Retrieve foreign processes events
   for (const auto& agent_response : resp->agent_responses()) {
     ConvertProtoEventsToEvents(agent_response.events());
-  }
-
-  // Check that all agents succeeded
-  for (const auto& agent_response : resp->agent_responses()) {
     if (agent_response.status() != proto::AgentResponse::OK) {
-      auto failed_agent = le_resp->add_failed_agents();
+      auto failed_agent = le_response->add_failed_agents();
       *failed_agent = agent_response;
     }
   }
 
-  if (le_resp->failed_agents_size() == 0) {
-    response->set_status(proto::InstallerResponse_Status_OK);
+  if (resp->status() == proto::SendAgentMessageResponse::OK) {
+    if (le_response->failed_agents_size() == 0) {
+      le_response->set_status(proto::LiveEditResponse::OK);
+    } else {
+      le_response->set_status(proto::LiveEditResponse::AGENT_ERROR);
+    }
   }
 }
 

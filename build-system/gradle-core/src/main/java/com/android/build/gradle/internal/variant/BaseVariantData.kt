@@ -19,14 +19,9 @@ import com.android.build.VariantOutput
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.Splits
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.api.AndroidSourceSet
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
@@ -43,7 +38,7 @@ import java.util.Collections
 abstract class BaseVariantData(
     // Variant specific Data
     protected val componentIdentity: ComponentIdentity,
-    protected val variantDslInfo: VariantDslInfo,
+    protected val dslInfo: ComponentDslInfo,
     val variantDependencies: VariantDependencies,
     protected val variantSources: VariantSources,
     protected val paths: VariantPathHelper,

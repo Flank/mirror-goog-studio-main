@@ -102,7 +102,6 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(cmake).`when`(externalNativeBuild).cmake
     Mockito.doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
     Mockito.doReturn(join(moduleDir, "src", "CMakeLists.txt")).`when`(cmake).path
-    Mockito.doReturn(projectInfo).`when`(projectInfo).getProject()
     Mockito.doReturn(projectDir).`when`(project).rootDir
     Mockito.doReturn(moduleDir).`when`(project).projectDir
     Mockito.doReturn("app:").`when`(project).path

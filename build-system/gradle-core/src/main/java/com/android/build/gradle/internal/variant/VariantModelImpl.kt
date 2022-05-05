@@ -17,10 +17,10 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestComponentImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
@@ -43,8 +43,8 @@ import java.util.Comparator
 class VariantModelImpl(
     override val inputs: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>,
     private val testBuilderTypeProvider: () -> String?,
-    private val variantProvider: () -> List<ComponentImpl>,
-    private val testComponentProvider: () -> List<TestComponentImpl>,
+    private val variantProvider: () -> List<VariantCreationConfig>,
+    private val testComponentProvider: () -> List<TestComponentCreationConfig>,
     private val buildFeaturesProvider: () -> BuildFeatureValues,
     override val projectTypeV1: Int,
     override val projectType: ProjectType,
@@ -57,10 +57,10 @@ class VariantModelImpl(
     override val syncIssueReporter: SyncIssueReporter
         get() = globalConfig.services.issueReporter as SyncIssueReporter
 
-    override val variants: List<ComponentImpl>
+    override val variants: List<VariantCreationConfig>
         get() = variantProvider()
 
-    override val testComponents: List<TestComponentImpl>
+    override val testComponents: List<TestComponentCreationConfig>
         get() = testComponentProvider()
 
     override val defaultVariant: String?
@@ -115,7 +115,7 @@ class VariantModelImpl(
         val chosenBuildType: String? = getBuildAuthorSpecifiedDefaultBuildType()
         val chosenFlavors: Map<String, String> = getBuildAuthorSpecifiedDefaultFlavors()
         val fallbackDefaultBuildType: String = testBuilderTypeProvider() ?: "debug"
-        val preferredDefaultVariantScopeComparator: Comparator<ComponentImpl> =
+        val preferredDefaultVariantScopeComparator: Comparator<ComponentCreationConfig> =
             BuildAuthorSpecifiedDefaultBuildTypeComparator(chosenBuildType)
                 .thenComparing(BuildAuthorSpecifiedDefaultsFlavorComparator(chosenFlavors))
                 .thenComparing(DefaultBuildTypeComparator(fallbackDefaultBuildType))
@@ -124,7 +124,7 @@ class VariantModelImpl(
         // Ignore test, base feature and feature variants.
         // * Test variants have corresponding production variants
         // * Hybrid feature variants have corresponding library variants.
-        val defaultComponent: ComponentImpl? = variants.minWithOrNull(preferredDefaultVariantScopeComparator)
+        val defaultComponent = variants.minWithOrNull(preferredDefaultVariantScopeComparator)
 
         return defaultComponent?.name
     }
@@ -237,8 +237,8 @@ Please only set `isDefault = true` for one product flavor in each flavor dimensi
  */
 private class BuildAuthorSpecifiedDefaultBuildTypeComparator constructor(
     private val chosen: String?
-) : Comparator<ComponentImpl> {
-    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
+) : Comparator<ComponentCreationConfig> {
+    override fun compare(v1: ComponentCreationConfig, v2: ComponentCreationConfig): Int {
         if (chosen == null) {
             return 0
         }
@@ -262,8 +262,8 @@ private class BuildAuthorSpecifiedDefaultBuildTypeComparator constructor(
  */
 private class BuildAuthorSpecifiedDefaultsFlavorComparator constructor(
     private val defaultFlavors: Map<String, String>
-) : Comparator<ComponentImpl> {
-    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
+) : Comparator<ComponentCreationConfig> {
+    override fun compare(v1: ComponentCreationConfig, v2: ComponentCreationConfig): Int {
         var f1Score = 0
         var f2Score = 0
         for (flavor in v1.productFlavorList) {
@@ -292,8 +292,8 @@ private class BuildAuthorSpecifiedDefaultsFlavorComparator constructor(
  */
 private class DefaultBuildTypeComparator constructor(
     private val preferredBuildType: String
-) : Comparator<ComponentImpl> {
-    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
+) : Comparator<ComponentCreationConfig> {
+    override fun compare(v1: ComponentCreationConfig, v2: ComponentCreationConfig): Int {
         val b1 = v1.buildType
         val b2 = v2.buildType
         return if (b1 == b2) {
@@ -314,8 +314,8 @@ private class DefaultBuildTypeComparator constructor(
  *
  * The best match is the *minimum* element.
  */
-private class DefaultFlavorComparator : Comparator<ComponentImpl> {
-    override fun compare(v1: ComponentImpl, v2: ComponentImpl): Int {
+private class DefaultFlavorComparator : Comparator<ComponentCreationConfig> {
+    override fun compare(v1: ComponentCreationConfig, v2: ComponentCreationConfig): Int {
         // Compare flavors left-to right.
         for (i in v1.productFlavorList.indices) {
             val f1 = v1.productFlavorList[i].name

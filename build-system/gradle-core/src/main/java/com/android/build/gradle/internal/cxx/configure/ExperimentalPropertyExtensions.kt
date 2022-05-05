@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import java.io.File
 
 /**
@@ -73,7 +73,7 @@ data class CoreExternalNativeNinjaOptions(
 /**
  * Planned as field in  com.android.build.api.dsl.ExternalNativeBuild
  */
-val ComponentCreationConfig.ninja : Ninja get() = externalNativeExperimentalProperties.ninja
+val VariantCreationConfig.ninja : Ninja get() = externalNativeExperimentalProperties.ninja
 
 val Map<String, Any>.ninja : Ninja get() = Ninja(
     path = propertyAsFile("ninja.path"),
@@ -84,7 +84,7 @@ val Map<String, Any>.ninja : Ninja get() = Ninja(
 /**
  * Planned as field in com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
  */
-val ComponentCreationConfig.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
+val VariantCreationConfig.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
     abiFilters = externalNativeExperimentalProperties.propertyAsSet("ninja.abiFilters"),
     arguments = externalNativeExperimentalProperties.propertyAsList("ninja.arguments"),
     cFlags = externalNativeExperimentalProperties.propertyAsList("ninja.cFlags"),

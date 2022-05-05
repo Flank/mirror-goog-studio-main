@@ -62,7 +62,6 @@ import com.android.tools.lint.detector.api.UastLintUtils.Companion.getDoubleAttr
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
 import com.android.tools.lint.detector.api.VersionChecks.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.detector.api.getAutoBoxedType
-import com.android.tools.lint.detector.api.getKotlinDelegatePropertyType
 import com.android.tools.lint.detector.api.isKotlin
 import com.google.common.collect.Lists
 import com.google.common.collect.Maps
@@ -77,7 +76,6 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiReferenceExpression
 import com.intellij.psi.PsiType
-import com.intellij.psi.impl.source.PsiImmediateClassType
 import org.jetbrains.kotlin.asJava.elements.KtLightField
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
@@ -508,27 +506,19 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
             var type = parentType ?: return
             var originalType = type
 
-            // Workaround for b/132782238: Property delegates in UAST sometimes do not contain
-            // the type variables; in that case we'll have false positives. Try to find the
-            // actual type variables, and if they can't be found, don't check type compatibility.
-            if (type is PsiImmediateClassType &&
-                type.getCanonicalText() == "kotlin.properties.ReadWriteProperty"
+            if (type is PsiClassType &&
+                type.getCanonicalText().startsWith("kotlin.properties.ReadWriteProperty")
             ) {
                 var unknownDelegateType = true
                 if (parent is UVariable) {
-                    val accurateType = getKotlinDelegatePropertyType(
-                        parent.sourcePsi, (parent as UVariable?)!!
-                    )
-                    if (accurateType is PsiClassType) {
-                        val parameters = accurateType.parameters
-                        if (parameters.isNotEmpty()) {
-                            type = parameters[parameters.size - 1]
-                            unknownDelegateType = false
-                            // Normally we use originalType in the error message, but here since
-                            // it's
-                            // misleading use the actual type instead
-                            originalType = type
-                        }
+                    val parameters = type.parameters
+                    if (parameters.isNotEmpty()) {
+                        type = parameters[parameters.size - 1]
+                        unknownDelegateType = false
+                        // Normally we use originalType in the error message, but here since
+                        // it's
+                        // misleading use the actual type instead
+                        originalType = type
                     }
                 }
                 if (unknownDelegateType) {

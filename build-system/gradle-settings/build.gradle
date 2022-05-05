@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.tools.java-library'
+    id 'com.android.tools.kotlin'
+    id 'com.android.tools.publish'
+    id 'java-gradle-plugin'
+    id 'license-report'
+}
+
+gradlePlugin {
+    plugins {
+        // even though this public plugin is located in the api artifact,
+        // it must be declared here so that the main artifact is put on the classpath.
+        comAndroidSettings {
+            id = "com.android.settings"
+            implementationClass = "com.android.build.gradle.SettingsPlugin"
+        }
+        comAndroidInternalSettings {
+            id = "com.android.internal.settings"
+            implementationClass = "com.android.build.gradle.internal.plugins.SettingsPlugin"
+        }
+    }
+}
+
+validatePlugins {
+    // Enable strict mode so we can see more warnings
+    enableStricterValidation = true
+}
+
+// create an empty jar.
+// Need to use a classifier to make it unique for publishing
+// (since the name is specific to the artifactId)
+project.tasks.register("apiJar", org.gradle.jvm.tasks.Jar) {
+    from(file('NOTICE'))
+    archiveClassifier.set("api")
+}
+
+// replace the api publication with the empty jar
+configurations.apiElements.outgoing.artifacts.clear()
+configurations.apiElements.outgoing.artifact(apiJar)
+
+dependencies {
+    // Only gradle-settings-api should be declared as `api`.
+    api project(':base:build-system:gradle-settings-api')
+
+    implementation gradleApi()
+    implementation project(':base:gradle-api')
+    implementation libs.kotlin_stdlib
+
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.truth_java8_extension
+    testImplementation libs.kotlin_test
+    testImplementation libs.mockito_core
+}
+
+group = 'com.android.tools.build'
+version = rootProject.ext.buildVersion
+
+project.ext.pomName = 'Gradle Settings Plug-in for Android'
+project.ext.pomDesc = 'Gradle Settings plug-in to build Android applications.'

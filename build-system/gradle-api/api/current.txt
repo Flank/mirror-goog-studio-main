@@ -148,6 +148,10 @@ package com.android.build.api.artifact {
     field public static final com.android.build.api.artifact.SingleArtifact.APK INSTANCE;
   }
 
+  @org.gradle.api.Incubating public static final class SingleArtifact.APK_FROM_BUNDLE extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.RegularFile> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
+    field public static final com.android.build.api.artifact.SingleArtifact.APK_FROM_BUNDLE INSTANCE;
+  }
+
   @org.gradle.api.Incubating public static final class SingleArtifact.ASSETS extends com.android.build.api.artifact.SingleArtifact<org.gradle.api.file.Directory> implements com.android.build.api.artifact.Artifact.Replaceable com.android.build.api.artifact.Artifact.Transformable {
     field public static final com.android.build.api.artifact.SingleArtifact.ASSETS INSTANCE;
   }
@@ -1026,9 +1030,15 @@ package com.android.build.api.dsl {
   }
 
   @org.gradle.api.Incubating public interface FusedLibraryExtension {
+    method @org.gradle.api.Incubating public Integer? getMinSdk();
     method @org.gradle.api.Incubating public String? getNamespace();
+    method @org.gradle.api.Incubating public Integer? getTargetSdk();
+    method @org.gradle.api.Incubating public void setMinSdk(Integer? minSdk);
     method @org.gradle.api.Incubating public void setNamespace(String? namespace);
+    method @org.gradle.api.Incubating public void setTargetSdk(Integer? targetSdk);
+    property @org.gradle.api.Incubating public abstract Integer? minSdk;
     property @org.gradle.api.Incubating public abstract String? namespace;
+    property @org.gradle.api.Incubating public abstract Integer? targetSdk;
   }
 
   @org.gradle.api.Incubating public interface HasInitWith<T> {

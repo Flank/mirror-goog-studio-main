@@ -20,8 +20,11 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl
+import com.android.build.gradle.internal.services.createProjectServices
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.Project
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -37,7 +40,8 @@ class BootClasspathBuilderTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    private val projectLayout: ProjectLayout = ProjectBuilder.builder().build().layout
+    private val project: Project = ProjectBuilder.builder().build()
+    private val projectLayout: ProjectLayout = project.layout
 
     private val issueReporter = FakeSyncIssueReporter()
 
@@ -65,11 +69,11 @@ class BootClasspathBuilderTest {
         androidVersion: AndroidVersion,
         androidJar: File
     ): Provider<List<RegularFile>> {
+        val projectServices = createProjectServices(project)
+
         return BootClasspathBuilder.computeClasspath(
-            projectLayout = projectLayout,
-            providerFactory = FakeProviderFactory.factory,
+            services = TaskCreationServicesImpl(projectServices),
             objects = FakeObjectFactory.factory,
-            issueReporter = issueReporter,
             targetBootClasspath = FakeGradleProvider(listOf(androidJar)),
             targetAndroidVersion = FakeGradleProvider(androidVersion),
             additionalLibraries = FakeGradleProvider(listOf()),

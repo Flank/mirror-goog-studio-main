@@ -58,7 +58,8 @@ public class UnmarshalTest extends TestCase {
                                 xmlStream,
                                 ImmutableList.of(repoEx, addonEx, RepoManager.getGenericModule()),
                                 true,
-                                progress);
+                                progress,
+                                filename);
         progress.assertNoErrorsOrWarnings();
         List<? extends License> licenses = repo.getLicense();
         assertEquals(licenses.size(), 2);
@@ -144,7 +145,8 @@ public class UnmarshalTest extends TestCase {
                                 xmlStream,
                                 ImmutableList.of(repoEx, addonEx, RepoManager.getGenericModule()),
                                 true,
-                                progress);
+                                progress,
+                                filename);
         progress.assertNoErrorsOrWarnings();
         List<? extends License> licenses = repo.getLicense();
         assertEquals(licenses.size(), 2);
@@ -210,7 +212,8 @@ public class UnmarshalTest extends TestCase {
                                 xmlStream,
                                 ImmutableList.of(repoEx, addonEx, RepoManager.getGenericModule()),
                                 true,
-                                progress);
+                                progress,
+                                filename);
         progress.assertNoErrorsOrWarnings();
         List<? extends License> licenses = repo.getLicense();
         assertEquals(licenses.size(), 2);
@@ -255,7 +258,7 @@ public class UnmarshalTest extends TestCase {
         assertEquals("sha-1", checksum.getType());
 
         // TODO: add other extension types as below
-/*
+        /*
         filename = "/com/android/sdklib/testdata/addon2_sample_1.xml";
         xmlStream = getClass().getResourceAsStream(filename);
         repo = SchemaModule.unmarshal(xmlStream, ImmutableList.of(repoEx, addonEx));
@@ -288,7 +291,8 @@ public class UnmarshalTest extends TestCase {
                                 new ByteArrayInputStream(INVALID_XML.getBytes()),
                                 ImmutableList.of(RepoManager.getGenericModule()),
                                 false,
-                                progress);
+                                progress,
+                                "Xml");
         assertFalse(progress.getWarnings().isEmpty());
         LocalPackage local = repo.getLocalPackage();
         assertEquals("sample;foo", local.getPath());
@@ -299,7 +303,8 @@ public class UnmarshalTest extends TestCase {
                     new ByteArrayInputStream(INVALID_XML.getBytes()),
                     ImmutableList.of(RepoManager.getGenericModule()),
                     true,
-                    progress);
+                    progress,
+                    "Xml");
             fail();
         }
         catch (Exception e) {
@@ -334,7 +339,8 @@ public class UnmarshalTest extends TestCase {
                                         RepoManager.getGenericModule(),
                                         RepoManager.getCommonModule()),
                                 false,
-                                progress);
+                                progress,
+                                "Xml");
         assertFalse(progress.getWarnings().isEmpty());
         LocalPackage local = repo.getLocalPackage();
         assertEquals("sample;foo", local.getPath());
@@ -345,7 +351,8 @@ public class UnmarshalTest extends TestCase {
                     new ByteArrayInputStream(FUTURE_XML.getBytes()),
                     ImmutableList.of(RepoManager.getCommonModule(), RepoManager.getGenericModule()),
                     true,
-                    progress);
+                    progress,
+                    "Xml");
             fail();
         }
         catch (Exception e) {

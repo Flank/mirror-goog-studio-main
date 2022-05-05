@@ -1163,7 +1163,6 @@ class LintDriver(
 
         for (check in applicableDetectors) {
             check.beforeCheckRootProject(projectContext)
-            check.beforeCheckEachProject(projectContext)
         }
 
         val manifestContexts = initializeManifests(project, main)
@@ -1176,6 +1175,10 @@ class LintDriver(
             val libraries = project.directLibraries
             val seen = HashSet<Project>(project.allLibraries.size)
             analyzeDependencies(libraries, projectConfiguration, project, main, seen)
+        }
+
+        for (check in applicableDetectors) {
+            check.beforeCheckEachProject(projectContext)
         }
 
         currentProject = project
@@ -2944,6 +2947,10 @@ class LintDriver(
         override fun getRootDir(): File? = delegate.getRootDir()
 
         override val pathVariables: PathVariables get() = delegate.pathVariables
+
+        override fun isEdited(file: File, returnIfUnknown: Boolean, savedSinceMsAgo: Long): Boolean {
+            return delegate.isEdited(file, returnIfUnknown, savedSinceMsAgo)
+        }
     }
 
     private val runLaterOutsideReadActionList = mutableListOf<Runnable>()

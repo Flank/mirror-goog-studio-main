@@ -16,23 +16,24 @@
 package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.component.impl.TestFixturesImpl
-import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.component.UnitTestCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -59,12 +60,12 @@ import org.gradle.api.Project
  * While VariantManager is the general variant management, implementation of this interface
  * provides variant type (app, lib) specific implementation.
  */
-interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl> {
+interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: VariantDslInfo, VariantT : VariantCreationConfig> {
 
     fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfoT,
         variantBuilderServices: VariantBuilderServices
     ): VariantBuilderT
 
@@ -72,7 +73,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
         variantBuilder: VariantBuilderT,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfoT,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -88,57 +89,57 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     fun createTestFixtures(
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        dslInfo: TestFixturesComponentDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: TestFixturesVariantData,
-        mainVariant: VariantImpl,
+        mainVariant: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig
-    ): TestFixturesImpl
+    ): TestFixturesCreationConfig
 
     fun createUnitTest(
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        dslInfo: UnitTestComponentDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: TestVariantData,
-        testedVariantProperties: VariantImpl,
+        testedVariantProperties: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-    ): UnitTestImpl
+    ): UnitTestCreationConfig
 
     fun createAndroidTest(
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        dslInfo: AndroidTestComponentDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
         artifacts: ArtifactsImpl,
         variantScope: VariantScope,
         variantData: TestVariantData,
-        testedVariantProperties: VariantImpl,
+        testedVariantProperties: VariantCreationConfig,
         transformManager: TransformManager,
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-    ): AndroidTestImpl
+    ): AndroidTestCreationConfig
 
     fun createVariantData(
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: VariantDslInfoT,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -164,7 +165,7 @@ interface VariantFactory<VariantBuilderT : VariantBuilderImpl, VariantT : Varian
     val variantImplementationClass: Class<out BaseVariantImpl?>
 
     fun createVariantApi(
-            component: ComponentImpl,
+            component: ComponentCreationConfig,
             variantData: BaseVariantData,
             readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
 

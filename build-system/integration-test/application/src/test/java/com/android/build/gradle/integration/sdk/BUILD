@@ -18,8 +18,11 @@ gradle_integration_test(
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
     ],
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
     maven_repos = [
-        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     tags = [

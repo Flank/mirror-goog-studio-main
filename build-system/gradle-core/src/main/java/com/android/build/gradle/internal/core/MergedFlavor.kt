@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.core
 
-import com.android.build.api.component.impl.ComponentImpl
+import com.android.build.api.component.impl.ENABLE_LEGACY_API
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.android.build.gradle.internal.dsl.VectorDrawablesOptions
 import com.android.build.gradle.internal.errors.DeprecationReporter
@@ -72,7 +72,7 @@ class MergedFlavor(
                         RuntimeException(
                             """
                                 Access to deprecated legacy com.android.builder.model.ProductFlavor.getApplicationId() requires compatibility mode for Property values in new com.android.build.api.variant.VariantOutput.versionCode
-                                $ComponentImpl.ENABLE_LEGACY_API
+                                $ENABLE_LEGACY_API
                                 """.trimIndent()
                         )
                     )

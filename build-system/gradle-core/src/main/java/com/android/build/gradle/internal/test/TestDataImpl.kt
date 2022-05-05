@@ -39,7 +39,6 @@ class TestDataImpl(
 ) : AbstractTestDataImpl(
     namespace,
     testConfig,
-    testConfig,
     testApkDir,
     testedApksDir
 ) {
@@ -54,10 +53,10 @@ class TestDataImpl(
     }
 
     override val libraryType =
-        testConfig.services.provider { testConfig.testedConfig.componentType.isAar }
+        testConfig.services.provider { testConfig.mainVariant.componentType.isAar }
 
     @get:Input
-    val supportedAbis: Set<String> = testConfig.testedConfig.supportedAbis
+    val supportedAbis: Set<String> = testConfig.supportedAbis
 
     override fun findTestedApks(
         deviceConfigProvider: DeviceConfigProvider, logger: ILogger

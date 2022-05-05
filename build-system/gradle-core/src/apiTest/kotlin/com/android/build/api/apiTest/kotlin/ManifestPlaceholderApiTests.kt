@@ -91,7 +91,7 @@ class ManifestPlaceholderApiTests: VariantApiBaseTest(
 # Adding a manifest file placeholder in Kotlin.
 
 See [manifest placeholder documentation](https://developer.android.com/studio/build/manifest-build-variables) for details
-This sample show how to add a manifest placeholder value through the variant API. The value is
+This sample shows how to add a manifest placeholder value through the variant API. The value is
 known at configuration time.
             """.trimIndent()
         }
@@ -183,7 +183,7 @@ known at configuration time.
                 """
 # Adding a BuildConfig field in Kotlin
 
-This sample show how to add a field in the BuildConfig class for which the value is not known at
+This sample shows how to add a field in the BuildConfig class for which the value is not known at
 configuration time.
 
 The added field is used in the MainActivity.kt file.

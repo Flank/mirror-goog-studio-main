@@ -48,8 +48,13 @@ TEST_DATA = downloaded_sdk + [
 ]
 
 #keep sorted
+MAVEN_REPO_ZIPS = [
+    "//tools/base/build-system:android_gradle_plugin",
+]
+
+#keep sorted
 TEST_MAVEN_REPOS = [
-    "//tools/base/build-system:gradle_plugin_no_databinding_repo",
+    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
     "//tools/base/build-system/integration-test:androidx_latest",
     "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     "//tools/base/build-system/integration-test:support_library_latest",
@@ -62,7 +67,9 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/manageddevice/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/utp"],
     jvm_flags = sdk_jvm_flags,
+    maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = TEST_MAVEN_REPOS,
+
     # b/219103375
     tags = ["very_flaky"],
     deps = TEST_DEPS,
@@ -73,7 +80,9 @@ gradle_connected_test(
     srcs = "src/test/java/com/android/build/gradle/integration/manageddevice/application/",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/utp"],
     jvm_flags = sdk_jvm_flags,
+    maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = TEST_MAVEN_REPOS,
+
     # b/219103375
     tags = ["very_flaky"],
     deps = TEST_DEPS,

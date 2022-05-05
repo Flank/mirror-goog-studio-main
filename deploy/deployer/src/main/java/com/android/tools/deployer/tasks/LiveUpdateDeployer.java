@@ -21,9 +21,11 @@ import com.android.tools.deployer.AdbClient;
 import com.android.tools.deployer.Installer;
 import com.android.tools.idea.protobuf.ByteString;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -100,10 +102,126 @@ public class LiveUpdateDeployer {
      * agreed "best effort" nature of LL updates.
      */
     public static class UpdateLiveEditError {
-        public final String msg;
+        private static final String APP_RESTART_STR = "\nApplication must be restarted.";
+        private static final String ADDED_CLASS_STR =
+                "Unsupported addition of new class '%s' in file '%s'.";
+        private static final String ADDED_METHOD_STR =
+                "Unsupported addition of new method '%s.%s' in file '%s', line %d.";
+        private static final String REMOVED_METHOD_STR =
+                "Unsupported deletion of method '%s.%s' in file '%s'.";
+        private static final String ADDED_FIELD_STR =
+                "Unsupported addition of field '%s' in class '%s' in file '%s'.";
+        private static final String REMOVED_FIELD_STR =
+                "Unsupported deletion of field '%s' in class '%s' in file '%s'.";
+        private static final String MODIFIED_FIELD_STR =
+                "Unsupported change to field '%s' in class '%s' in file '%s'.";
+        private static final String MODIFIED_SUPER_STR =
+                "Unsupported change to superclass of class '%s' in file '%s'.";
+        private static final String ADDED_INTERFACE_STR =
+                "Unsupported change to interfaces of class '%s' in file '%s'.";
+        private static final String REMOVED_INTERFACE_STR =
+                "Unsupported change to interfaces of class '%s' in file '%s'.";
+
+        private final String msg;
+        private final Deploy.UnsupportedChange.Type type;
 
         public UpdateLiveEditError(String msg) {
             this.msg = msg;
+            this.type = Deploy.UnsupportedChange.Type.UNKNOWN;
+        }
+
+        public UpdateLiveEditError(Deploy.UnsupportedChange error) {
+            this.type = error.getType();
+            switch (error.getType()) {
+                case ADDED_CLASS:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_CLASS_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_METHOD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_METHOD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName(),
+                                    error.getLineNumber());
+                    break;
+                case REMOVED_METHOD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    REMOVED_METHOD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case REMOVED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    REMOVED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case MODIFIED_FIELD:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    MODIFIED_FIELD_STR,
+                                    error.getClassName(),
+                                    error.getTargetName(),
+                                    error.getFileName());
+                    break;
+                case MODIFIED_SUPER:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    MODIFIED_SUPER_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case ADDED_INTERFACE:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    ADDED_INTERFACE_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                case REMOVED_INTERFACE:
+                    msg =
+                            String.format(
+                                    Locale.US,
+                                    REMOVED_INTERFACE_STR,
+                                    error.getClassName(),
+                                    error.getFileName());
+                    break;
+                default:
+                    msg = "Unknown error";
+            }
+        }
+
+        public String getMessage() {
+            return msg + APP_RESTART_STR;
+        }
+
+        public Deploy.UnsupportedChange.Type getType() {
+            return type;
         }
     }
 
@@ -152,6 +270,12 @@ public class LiveUpdateDeployer {
     public List<UpdateLiveEditError> updateLiveEdit(
             Installer installer, AdbClient adb, String packageName, UpdateLiveEditsParam param) {
 
+        // Sometimes we get a PSI event for a top-level file when no top-level class exists. In this
+        // case, just treat it as a no-op success.
+        if (param.classData.length == 0) {
+            return new ArrayList<>();
+        }
+
         List<Integer> pids = adb.getPids(packageName);
         Deploy.Arch arch = adb.getArch(pids);
 
@@ -192,8 +316,15 @@ public class LiveUpdateDeployer {
 
         try {
             Deploy.LiveEditResponse response = installer.liveEdit(request);
-            for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
-                errors.add(new UpdateLiveEditError(failure.getLiveLiteralResponse().getExtra()));
+            if (response.getStatus() == Deploy.LiveEditResponse.Status.AGENT_ERROR) {
+                for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
+                    failure.getLeResponse()
+                            .getErrorsList()
+                            .forEach(error -> errors.add(new UpdateLiveEditError(error)));
+                }
+            }
+            if (response.getStatus() != Deploy.LiveEditResponse.Status.OK) {
+                errors.add(new UpdateLiveEditError(response.getStatus().toString()));
             }
         } catch (IOException e) {
             e.printStackTrace();

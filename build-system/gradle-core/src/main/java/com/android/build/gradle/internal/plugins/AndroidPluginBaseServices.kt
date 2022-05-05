@@ -87,8 +87,11 @@ abstract class AndroidPluginBaseServices(
                 from(project, projectOptions, syncIssueReporter),
                 create(project, projectOptions),
                 project.gradle.startParameter.maxWorkerCount,
-                ProjectInfo(project)
-            ) { o: Any -> project.file(o) }
+                ProjectInfo(project),
+                { o: Any -> project.file(o) },
+                project.configurations,
+                project.dependencies,
+                project.extensions.extraProperties)
         }
     }
 

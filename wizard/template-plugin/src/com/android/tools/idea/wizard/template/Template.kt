@@ -55,7 +55,7 @@ enum class TemplateConstraint {
   AndroidX,
   Kotlin,
   Material3,
-  // Compose is used as a Constrain since it implies the need of a specific Kotlin Compiler version
+  // Compose is used as a Constraint since it implies the need of a specific Kotlin Compiler version
   Compose,
 }
 
@@ -120,6 +120,10 @@ interface Template {
   /** Conditions under which the template may be rendered. For example, some templates only support AndroidX */
   val constraints: Collection<TemplateConstraint>
 
+  val useGenericInstrumentedTests: Boolean
+
+  val useGenericLocalTests: Boolean
+
   /**
    * Represent absence of a [Template] (null object pattern).
    */
@@ -134,6 +138,8 @@ interface Template {
     override val minSdk: Int = 1
     override val category: Category = Category.Activity
     override val formFactor: FormFactor = FormFactor.Mobile
+    override val useGenericInstrumentedTests = true
+    override val useGenericLocalTests = true
     override fun thumb() = Thumb.NoThumb
   }
 }

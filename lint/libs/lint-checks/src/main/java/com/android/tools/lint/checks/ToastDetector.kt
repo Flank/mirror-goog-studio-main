@@ -82,6 +82,8 @@ class ToastDetector : Detector(), SourceCodeScanner {
         }
     }
 
+    private fun isShowCall(call: UCallExpression): Boolean = getMethodName(call) == "show"
+
     private fun checkShown(
         context: JavaContext,
         node: UCallExpression,
@@ -92,7 +94,7 @@ class ToastDetector : Detector(), SourceCodeScanner {
         val escapes = AtomicBoolean(false)
         val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
             override fun receiver(call: UCallExpression) {
-                if (getMethodName(call) == "show") {
+                if (isShowCall(call)) {
                     shown.set(true)
                     return
                 }
@@ -112,7 +114,7 @@ class ToastDetector : Detector(), SourceCodeScanner {
             }
         }
         method.accept(visitor)
-        if (!shown.get() && !escapes.get()) {
+        if (!shown.get() && !escapes.get() && !(visitor.failedResolve && method.anyCall(::isShowCall))) {
             val fix =
                 if (CheckResultDetector.isExpressionValueUnused(node)) {
                     fix().replace()

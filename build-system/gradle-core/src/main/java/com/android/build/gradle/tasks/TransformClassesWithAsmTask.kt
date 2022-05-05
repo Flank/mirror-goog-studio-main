@@ -20,10 +20,10 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JSON
 import com.android.build.api.artifact.MultipleArtifact
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
 import com.android.build.gradle.internal.instrumentation.ClassesHierarchyResolver
 import com.android.build.gradle.internal.instrumentation.loadClassData
@@ -453,8 +453,8 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
     }
 
     class CreationAction(
-        component: ComponentImpl
-    ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentImpl>(
+        component: ComponentCreationConfig
+    ) : VariantTaskCreationAction<TransformClassesWithAsmTask, ComponentCreationConfig>(
         component
     ) {
 

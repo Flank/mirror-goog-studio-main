@@ -26,6 +26,7 @@ import com.android.tools.lint.checks.AccessibilityDetector
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.IconDetector
+import com.android.tools.lint.checks.LayoutConsistencyDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.PxUsageDetector
 import com.android.tools.lint.checks.RangeDetector
@@ -1579,6 +1580,46 @@ class LintBaselineTest {
         )
 
         PathSubject.assertThat(baseline).doesNotExist()
+    }
+
+    @Test
+    fun testLocationMessage() {
+        // Makes sure that if there's a location specific message, it doesn't override the incident message
+        @Language("XML")
+        val baselineContents = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <issues format="6" by="lint 7.3.0-dev" type="baseline" client="gradle" dependencies="false" name="AGP (7.3.0-dev)" variant="all" version="7.3.0-dev">
+
+                <issue
+                    id="InconsistentLayout"
+                    message="The id &quot;hello1&quot; in layout &quot;activity_main&quot; is missing from the following layout configurations: layout (present in layout-sw600dp)"
+                    errorLine1="        android:id=&quot;@+id/hello1&quot;"
+                    errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~">
+                    <location
+                        file="src/main/res/layout-sw600dp/activity_main.xml"
+                        line="19"
+                        column="9"
+                        message="Occurrence in layout-sw600dp"/>
+                </issue>
+
+            </issues>
+        """.trimIndent()
+
+        // Test 1: Test matching where we look at the wrong file and return instead of getting to the next one
+        val baselineFile = temporaryFolder.newFile("baseline.xml")
+        baselineFile.writeText(baselineContents)
+        assertNotNull(XmlUtils.parseDocumentSilently(baselineContents, false))
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
+        assertTrue(
+            baseline.findAndMark(
+                LayoutConsistencyDetector.INCONSISTENT_IDS,
+                Location.create(File("src/main/res/layout-sw600dp/activity_main.xml")),
+                "The id \"hello1\" in layout \"activity_main\" is missing from the following layout configurations: layout (present in layout-sw600dp)",
+                Severity.WARNING,
+                null
+            )
+        )
+        baseline.close()
     }
 
     @Test

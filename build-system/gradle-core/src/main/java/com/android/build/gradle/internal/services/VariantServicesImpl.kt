@@ -325,8 +325,6 @@ class VariantServicesImpl(
     override fun <T : Named> named(type: Class<T>, name: String): T =
         projectServices.objectFactory.named(type, name)
 
-    override fun file(file: Any): File = projectServices.fileResolver.invoke(file)
-
     override fun fileCollection(): ConfigurableFileCollection =
         projectServices.objectFactory.fileCollection()
 

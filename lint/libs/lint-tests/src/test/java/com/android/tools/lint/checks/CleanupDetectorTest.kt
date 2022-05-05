@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.detector.api.Detector
 
 class CleanupDetectorTest : AbstractCheckTest() {
@@ -2726,6 +2727,64 @@ class CleanupDetectorTest : AbstractCheckTest() {
 
                     public static void doAnims() {
                         createVideoViewAlphaAnimator(true).start();
+
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun test224869924() {
+        // Regression test for 224869924: CommitTransaction Lint False Positive
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.content.pm.PackageManager;
+                import android.os.Bundle;
+
+                import android.support.v7.app.AppCompatActivity;
+                import android.support.v4.app.FragmentTransaction;
+
+                public class EngineSettings extends AppCompatActivity {
+                    @Override
+                    protected void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+                        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
+                            FragmentTransaction transaction =
+                                    getSupportFragmentManager()
+                                            .beginTransaction()
+                                            // nonexistent, simulating broken classpath here (should be just "replace")
+                                            .replaceUnresolvable(
+                                                    R.id.content_frame,
+                                                    new AaeGeneralSettingsFragment(),
+                                                    AaeGeneralSettingsFragment.class.getSimpleName());
+                            // The above method is unresolved so we can't really be sure here that
+                            // transaction is still the right instance. Since we *do* se a
+                            // commitNow, we'll stay silent.
+                            transaction.commitNow();
+                        }
+                    }
+
+                    public static class AaeGeneralSettingsFragment extends android.support.v4.app.Fragment {
+                    }
+                }
+                """
+            ).indented(),
+            rClass("test.pkg", "@id/content_frame"),
+            fragment,
+            fragmentManager,
+            fragmentTransaction,
+            // Stubs
+            java(
+                """
+                package android.support.v7.app;
+                import android.support.v4.app.FragmentManager;
+                public class AppCompatActivity extends android.app.Activity {
+                    public FragmentManager getSupportFragmentManager() {
+                        return null;
                     }
                 }
                 """
@@ -2793,6 +2852,7 @@ class CleanupDetectorTest : AbstractCheckTest() {
             public abstract FragmentTransaction disallowAddToBackStack();
             public abstract FragmentTransaction setBreadCrumbShortTitle(int res);
             public abstract FragmentTransaction setCustomAnimations(int enter, int exit);
+            public abstract FragmentTransaction replace(int containerViewId, Fragment fragment, String tag);
         }
         """
     ).indented()
@@ -2857,4 +2917,209 @@ class CleanupDetectorTest : AbstractCheckTest() {
         }
         """
     ).indented()
+
+    fun testUnresolvableFragmentTransactions() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.app.FragmentManager
+                import android.app.FragmentTransaction
+
+                lateinit var fragmentManager: FragmentManager
+                lateinit var unrelated: FragmentTransaction
+
+                fun select() {
+                    val transaction = fragmentManager.beginTransaction() // OK
+                    transaction.commitNow()
+                }
+
+                fun test1a() {
+                    // Don't flag a commit call if there's an unresolvable reference *and* we have
+                    // a commit call (even if we're not certain which instance it's on)
+                    val transaction = fragmentManager.beginTransaction().unknown() // OK
+                    unrelated.commitNow()
+                }
+
+                fun test1b() {
+                    // Like 1a, but using assignment instead of declaration initialization
+                    val transaction: FragmentTransaction
+                    transaction = fragmentManager.beginTransaction().unknown() // OK
+                    unrelated.commitNow()
+                }
+
+                fun test2(fragmentManager: FragmentManager) {
+                    // If there's an unresolvable reference, DO complain if there's *no* commit call anywhere
+                    fragmentManager.beginTransaction().unknown() // ERROR 1
+                }
+
+                fun test3a() {
+                    // If the unresolved call has nothing to do with updating the
+                    // transaction instance (e.g. is not associated with an
+                    // assignment and has no further chained calls) don't revert to
+                    // non-instance checking
+                    val transaction = fragmentManager.beginTransaction() // ERROR 2
+                    transaction.unknown()
+                    unrelated.commitNow()
+                }
+
+                fun test3b() {
+                    // Like 3a, but here we're making calls on the result of the
+                    // unresolved call; those could be cleanup calls, so in that case
+                    // we're not confident enough
+                    val transaction = fragmentManager.beginTransaction() // OK
+                    transaction.unknown().something()
+                    unrelated.commitNow()
+                }
+
+                //private fun FragmentTransaction.unknown(): FragmentTransaction = error("not yet implemented")
+                //private fun FragmentTransaction.something(): Unit = error("not yet implemented")
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:30: Warning: This transaction should be completed with a commit() call [CommitTransaction]
+                fragmentManager.beginTransaction().unknown() // ERROR 1
+                                ~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:38: Warning: This transaction should be completed with a commit() call [CommitTransaction]
+                val transaction = fragmentManager.beginTransaction() // ERROR 2
+                                                  ~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testUnresolvableSharedPrefsEditors() {
+        // Like testUnresolvableFragmentTransactions but for SharedPreference editors
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.SharedPreferences
+                lateinit var webViewUrlSharedPrefs: SharedPreferences
+                lateinit var unrelated: SharedPreferences.Editor
+
+                fun test1a() {
+                    // Don't flag a apply call if there's an unresolvable reference *and* we have
+                    // a apply call (even if we're not certain which instance it's on)
+                    val edits = webViewUrlSharedPrefs.edit().unknown() // OK
+                    unrelated.apply()
+                }
+
+                fun test1b() {
+                    // Like 1a, but using assignment instead of declaration initialization
+                    val edits: SharedPreferences.Editor
+                    edits = webViewUrlSharedPrefs.edit().unknown() // OK
+                    unrelated.apply()
+                }
+
+                fun test2() {
+                    // If there's an unresolvable reference, DO complain if there's *no* apply call anywhere
+                    webViewUrlSharedPrefs.edit().unknown() // ERROR 1
+                }
+
+                fun test3a() {
+                    // If the unresolved call has nothing to do with updating
+                    // the shared prefs editor instance (e.g. is not associated with an
+                    // assignment and has no further chained calls) don't revert to
+                    // non-instance checking
+                    val edits = webViewUrlSharedPrefs.edit() // ERROR 2
+                    edits.unknown()
+                    unrelated.apply()
+                }
+
+                fun test3b() {
+                    // Like 3a, but here we're making calls on the result of the
+                    // unresolved call; those could be cleanup calls, so in that case
+                    // we're not confident enough
+                    val edits = webViewUrlSharedPrefs.edit() // OK
+                    edits.unknown().something()
+                    unrelated.apply()
+                }
+
+                //private fun SharedPreferences.Editor.unknown(): SharedPreferences.Editor = error("not yet implemented")
+                //private fun SharedPreferences.Editor.something(): Unit = error("not yet implemented")
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:23: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
+                webViewUrlSharedPrefs.edit().unknown() // ERROR 1
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:31: Warning: SharedPreferences.edit() without a corresponding commit() or apply() call [CommitPrefEdits]
+                val edits = webViewUrlSharedPrefs.edit() // ERROR 2
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
+
+    fun testUnresolvableRecycle() {
+        // Like testUnresolvableFragmentTransactions but for the recycle scenarios (animations/typed arrays/cursors, etc)
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.animation.AnimatorSet
+                import android.view.ViewPropertyAnimator
+
+                lateinit var unrelated: AnimatorSet
+
+                fun test1a() {
+                    // Don't flag a start call if there's an unresolvable reference *and* we have
+                    // a start call (even if we're not certain which instance it's on)
+                    val animations = AnimatorSet().unknown() // OK
+                    unrelated.start()
+                }
+
+                fun test1b() {
+                    // Like 1a, but using assignment instead of declaration initialization
+                    val animations: AnimatorSet
+                    animations = AnimatorSet().unknown() // OK
+                    unrelated.start()
+                }
+
+                fun test2() {
+                    // If there's an unresolvable reference, DO complain if there's *no* start call anywhere
+                    AnimatorSet().unknown() // ERROR 1
+                }
+
+                fun test3a() {
+                    // If the unresolved call has nothing to do with updating
+                    // the animation set instance (e.g. is not associated with an
+                    // assignment and has no further chained calls) don't revert to
+                    // non-instance checking
+                    val animations = AnimatorSet() // ERROR 2
+                    animations.unknown()
+                    unrelated.start()
+                }
+
+                fun test3b() {
+                    // Like 3a, but here we're making calls on the result of the
+                    // unresolved call; those could be cleanup calls, so in that case
+                    // we're not confident enough
+                    val animations = AnimatorSet() // OK
+                    animations.unknown().something()
+                    unrelated.start()
+                }
+
+                //private fun AnimatorSet.unknown(): AnimatorSet = error("not yet implemented")
+                //private fun AnimatorSet.something(): Unit = error("not yet implemented")
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:24: Warning: This animation should be started with #start() [Recycle]
+                AnimatorSet().unknown() // ERROR 1
+                ~~~~~~~~~~~
+            src/test/pkg/test.kt:32: Warning: This animation should be started with #start() [Recycle]
+                val animations = AnimatorSet() // ERROR 2
+                                 ~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
 }

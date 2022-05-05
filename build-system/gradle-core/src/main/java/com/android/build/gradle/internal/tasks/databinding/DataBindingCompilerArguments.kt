@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
@@ -270,9 +271,8 @@ class DataBindingCompilerArguments constructor(
          */
         @JvmStatic
         fun getModuleType(creationConfig: ComponentCreationConfig): CompilerArguments.Type {
-            val component = creationConfig.onTestedConfig {
-                it
-            } ?: creationConfig
+            val component = (creationConfig as? TestComponentCreationConfig)?.mainVariant
+                ?: creationConfig
 
             return if (component.componentType.isAar) {
                 CompilerArguments.Type.LIBRARY

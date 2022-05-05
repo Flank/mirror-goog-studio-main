@@ -20,7 +20,7 @@ import com.android.build.api.component.analytics.AnalyticsEnabledTestVariantBuil
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.TestVariantBuilder
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -28,12 +28,12 @@ import javax.inject.Inject
 
 open class TestVariantBuilderImpl @Inject constructor(
     globalVariantBuilderConfig: GlobalVariantBuilderConfig,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: TestProjectVariantDslInfo,
     componentIdentity: ComponentIdentity,
     variantBuilderServices: VariantBuilderServices
 ) : VariantBuilderImpl(
     globalVariantBuilderConfig,
-    variantDslInfo,
+    dslInfo,
     componentIdentity,
     variantBuilderServices
 ), TestVariantBuilder {

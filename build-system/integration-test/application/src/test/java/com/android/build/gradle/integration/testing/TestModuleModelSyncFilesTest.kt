@@ -38,6 +38,7 @@ class TestModuleModelSyncFilesTest {
         subProject(":test") {
             plugins.add(PluginType.ANDROID_TEST)
             android {
+                defaultCompileSdk()
                 targetProjectPath = ":"
             }
         }

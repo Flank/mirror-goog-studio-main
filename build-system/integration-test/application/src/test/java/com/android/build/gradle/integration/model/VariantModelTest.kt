@@ -378,6 +378,7 @@ class NoVariantModelTest: ModelComparator() {
         rootProject {
             plugins.add(PluginType.ANDROID_APP)
             android {
+                defaultCompileSdk()
             }
             androidComponents {
                 disableVariant("debug")

@@ -159,16 +159,14 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val packageNameOfFinalRClass: Provider<String>
 
         init {
-            val testedVariant = creationConfig.testedConfig
-
             isUseRelativePathEnabled = creationConfig.services.projectOptions.get(
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
-            mergedAssets = testedVariant.artifacts.get(SingleArtifact.ASSETS)
-            mergedManifest = testedVariant.artifacts.get(PACKAGED_MANIFESTS)
-            mainVariantOutput = testedVariant.outputs.getMainSplit()
-            packageNameOfFinalRClass = testedVariant.namespace
+            mergedAssets = creationConfig.mainVariant.artifacts.get(SingleArtifact.ASSETS)
+            mergedManifest = creationConfig.mainVariant.artifacts.get(PACKAGED_MANIFESTS)
+            mainVariantOutput = creationConfig.mainVariant.outputs.getMainSplit()
+            packageNameOfFinalRClass = creationConfig.mainVariant.namespace
             buildDirectoryPath =
                     creationConfig.services.projectInfo.buildDirectory.get().asFile.toRelativeString(
                             creationConfig.services.projectInfo.projectDirectory.asFile)

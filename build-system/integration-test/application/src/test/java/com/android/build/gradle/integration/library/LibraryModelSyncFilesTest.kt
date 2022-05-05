@@ -37,7 +37,9 @@ class LibraryModelSyncFilesTest {
         }
         subProject(":lib") {
             plugins.add(PluginType.ANDROID_LIB)
-            android {}
+            android {
+                defaultCompileSdk()
+            }
         }
     }
 

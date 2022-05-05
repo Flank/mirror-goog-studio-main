@@ -242,7 +242,8 @@ public class InstallerUtil {
                                     CancellableFileIo.newInputStream(xmlFile),
                                     manager.getSchemaModules(),
                                     false,
-                                    progress);
+                                    progress,
+                                    xmlFile.getFileName().toString());
         } catch (JAXBException e) {
             throw new IOException("Failed to parse pending package xml", e);
         }

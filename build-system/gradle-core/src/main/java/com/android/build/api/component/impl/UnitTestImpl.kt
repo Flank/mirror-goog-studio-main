@@ -28,11 +28,11 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.DirectoryEntry
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -50,22 +50,22 @@ import javax.inject.Inject
 open class UnitTestImpl @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: UnitTestComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    testedVariant: VariantImpl,
+    testedVariant: VariantCreationConfig,
     transformManager: TransformManager,
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig
-) : TestComponentImpl(
+) : TestComponentImpl<UnitTestComponentDslInfo>(
     componentIdentity,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -88,40 +88,40 @@ open class UnitTestImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val minSdkVersion: AndroidVersion
-        get() = testedVariant.minSdkVersion
+        get() = mainVariant.minSdkVersion
 
     override val targetSdkVersion: AndroidVersion
-        get() = testedVariant.targetSdkVersion
+        get() = mainVariant.targetSdkVersion
 
     override val dslAndroidResources: AndroidResources
-        get() = variantDslInfo.androidResources
+        get() = dslInfo.testedVariant!!.androidResources
 
     override val applicationId: Provider<String> =
-        internalServices.providerOf(String::class.java, variantDslInfo.applicationId)
+        internalServices.providerOf(String::class.java, dslInfo.applicationId)
 
     override val targetSdkVersionOverride: AndroidVersion?
-        get() = testedVariant.targetSdkVersionOverride
+        get() = mainVariant.targetSdkVersionOverride
 
     /**
      * Return the default runner as with unit tests, there is no dexing. However aapt2 requires
      * the instrumentation tag to be present in the merged manifest to process android resources.
      */
-    override val instrumentationRunner: Provider<out String>
+    override val instrumentationRunner: Provider<String>
         get() = services.provider { VariantDslInfoImpl.DEFAULT_TEST_RUNNER }
 
     override val testedApplicationId: Provider<String>
-        get() = testedConfig.applicationId
+        get() = mainVariant.applicationId
 
     override val debuggable: Boolean
-        get() = testedConfig.debuggable
+        get() = mainVariant.debuggable
 
     override val profileable: Boolean
-        get() = testedConfig.profileable
+        get() = mainVariant.profileable
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
-        get() = variantDslInfo.isUnitTestCoverageEnabled
+        get() = dslInfo.isUnitTestCoverageEnabled
 
     override fun addDataBindingSources(
         sourceSets: MutableList<DirectoryEntry>
@@ -146,4 +146,8 @@ open class UnitTestImpl @Inject constructor(
      * There is no build config fields for unit tests.
      */
     override val buildConfigEnabled: Boolean = false
+
+    // TODO: Remove
+    override val isUnitTestCoverageEnabled: Boolean
+        get() = dslInfo.isUnitTestCoverageEnabled
 }

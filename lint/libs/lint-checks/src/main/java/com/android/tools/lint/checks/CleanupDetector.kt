@@ -281,42 +281,45 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val method = node.getParentOfType(UMethod::class.java) ?: return
         var recycled = false
         var escapes = false
+
+        fun isCleanup(call: UCallExpression): Boolean {
+            val methodName = getMethodName(call)
+            if ("use" == methodName) {
+                // Kotlin: "use" calls close; see issue 62377185
+                // Ensure that "use" call accepts a single lambda parameter, so that it would
+                // loosely match kotlin.io.use() signature and at the same time allow custom
+                // overloads for types not extending Closeable
+                if (call.valueArgumentCount == 1) {
+                    val argumentType = call.valueArguments.first().getExpressionType()
+                    if (argumentType != null && LambdaUtil.isFunctionalType(argumentType)) {
+                        return true
+                    }
+                }
+            }
+
+            if (methodName !in recycleNames) {
+                return false
+            }
+            val resolved = call.resolve()
+            if (resolved != null) {
+                val containingClass = resolved.containingClass
+                val targetName = containingClass?.qualifiedName ?: return true
+                if (targetName == recycleType) {
+                    return true
+                }
+                val recycleClass = context.evaluator.findClass(recycleType) ?: return true
+                return context.evaluator.extendsClass(recycleClass, targetName, false)
+            } else {
+                // Unresolved method call -- assume it's okay
+                return true
+            }
+        }
+
         val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
             override fun receiver(call: UCallExpression) {
                 if (isCleanup(call)) {
                     recycled = true
                 }
-            }
-
-            private fun isCleanup(call: UCallExpression): Boolean {
-                val methodName = getMethodName(call)
-                if ("use" == methodName) {
-                    // Kotlin: "use" calls close; see issue 62377185
-                    // Ensure that "use" call accepts a single lambda parameter, so that it would
-                    // loosely match kotlin.io.use() signature and at the same time allow custom
-                    // overloads for types not extending Closeable
-                    if (call.valueArgumentCount == 1) {
-                        val argumentType = call.valueArguments.first().getExpressionType()
-                        if (argumentType != null && LambdaUtil.isFunctionalType(argumentType)) {
-                            return true
-                        }
-                    }
-                }
-
-                if (methodName !in recycleNames) {
-                    return false
-                }
-                val resolved = call.resolve()
-                if (resolved != null) {
-                    val containingClass = resolved.containingClass
-                    val targetName = containingClass?.qualifiedName ?: return true
-                    if (targetName == recycleType) {
-                        return true
-                    }
-                    val recycleClass = context.evaluator.findClass(recycleType) ?: return true
-                    return context.evaluator.extendsClass(recycleClass, targetName, false)
-                }
-                return false
             }
 
             override fun field(field: UElement) {
@@ -356,33 +359,34 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         }
         method.accept(visitor)
 
-        if (!recycled && !escapes) {
-            val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
-            val message = when (val recycleName = recycleNames.first()) {
-                RECYCLE -> {
-                    String.format(
-                        "This `%1\$s` should be recycled after use with `#recycle()`",
-                        className
-                    )
-                }
-                START -> {
-                    "This animation should be started with `#start()`"
-                }
-                else -> {
-                    String.format(
-                        "This `%1\$s` should be freed up after use with `#%2\$s()`",
-                        className, recycleName
-                    )
-                }
-            }
+        if (recycled || escapes) return
+        if (visitor.failedResolve && method.anyCall(::isCleanup)) return
 
-            var locationNode: UElement? = node.methodIdentifier
-            if (locationNode == null) {
-                locationNode = node
+        val className = recycleType.substring(recycleType.lastIndexOf('.') + 1)
+        val message = when (val recycleName = recycleNames.first()) {
+            RECYCLE -> {
+                String.format(
+                    "This `%1\$s` should be recycled after use with `#recycle()`",
+                    className
+                )
             }
-            val location = context.getLocation(locationNode)
-            context.report(RECYCLE_RESOURCE, node, location, message)
+            START -> {
+                "This animation should be started with `#start()`"
+            }
+            else -> {
+                String.format(
+                    "This `%1\$s` should be freed up after use with `#%2\$s()`",
+                    className, recycleName
+                )
+            }
         }
+
+        var locationNode: UElement? = node.methodIdentifier
+        if (locationNode == null) {
+            locationNode = node
+        }
+        val location = context.getLocation(locationNode)
+        context.report(RECYCLE_RESOURCE, node, location, message)
     }
 
     private fun checkTransactionCommits(
@@ -394,11 +398,14 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             val method = node.getParentOfType(UMethod::class.java) ?: return
             var committed = false
             var escaped = false
+
+            fun isCleanupCall(call: UCallExpression): Boolean =
+                isTransactionCommitMethodCall(context, call) || isShowFragmentMethodCall(context, call)
+
             val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
+
                 override fun receiver(call: UCallExpression) {
-                    if (isTransactionCommitMethodCall(context, call) ||
-                        isShowFragmentMethodCall(context, call)
-                    ) {
+                    if (isCleanupCall(call)) {
                         committed = true
                     }
                 }
@@ -420,7 +427,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
             method.accept(visitor)
 
-            if (!committed && !escaped) {
+            if (!committed && !escaped && !(visitor.failedResolve && method.anyCall(::isCleanupCall))) {
                 val message = "This transaction should be completed with a `commit()` call"
                 context.report(COMMIT_FRAGMENT, node, context.getNameLocation(node), message)
             }
@@ -438,7 +445,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 COMMIT_NOW_ALLOWING_LOSS == methodName ||
                 COMMIT_NOW == methodName
             ) && isMethodOnFragmentClass(
-            context, call, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
+            context, call, FRAGMENT_TRANSACTION_ANDROIDX_CLS, FRAGMENT_TRANSACTION_CLS, FRAGMENT_TRANSACTION_V4_CLS, true
         )
     }
 
@@ -448,7 +455,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
     ): Boolean {
         val methodName = getMethodName(call)
         return SHOW == methodName && isMethodOnFragmentClass(
-            context, call, DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true
+            context, call, DIALOG_ANDROIDX_FRAGMENT, DIALOG_FRAGMENT, DIALOG_V4_FRAGMENT, true
         )
     }
 
@@ -456,6 +463,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         call: UCallExpression,
         fragmentClass: String,
+        platformFragmentClass: String,
         v4FragmentClass: String,
         returnForUnresolved: Boolean
     ): Boolean {
@@ -465,6 +473,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         val containingClass = method.containingClass
         val evaluator = context.evaluator
         return evaluator.extendsClass(containingClass, fragmentClass, false) ||
+            evaluator.extendsClass(containingClass, platformFragmentClass, false) ||
             evaluator.extendsClass(containingClass, v4FragmentClass, false)
     }
 
@@ -484,14 +493,15 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 return
             }
 
+            fun isSharedPrefsCleanup(call: UCallExpression) =
+                isEditorApplyMethodCall(context, call) || isEditorCommitMethodCall(context, call)
+
             val method = node.getParentOfType(UMethod::class.java) ?: return
             var applied = false
             var escaped = false
             val visitor = object : DataFlowAnalyzer(setOf(node), emptyList()) {
                 override fun receiver(call: UCallExpression) {
-                    if (isEditorApplyMethodCall(context, call) ||
-                        isEditorCommitMethodCall(context, call)
-                    ) {
+                    if (isSharedPrefsCleanup(call)) {
                         applied = true
                     }
                 }
@@ -513,7 +523,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
             }
             method.accept(visitor)
 
-            if (!applied && !escaped) {
+            if (!applied && !escaped && !(visitor.failedResolve && method.anyCall(::isSharedPrefsCleanup))) {
                 val message = "`SharedPreferences.edit()` without a corresponding `commit()` or `apply()` call"
                 context.report(SHARED_PREF, node, context.getLocation(node), message)
             }
@@ -649,11 +659,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         if (BEGIN_TRANSACTION == methodName) {
             val containingClass = method.containingClass
             val evaluator = context.evaluator
-            if (evaluator.extendsClass(
-                    containingClass,
-                    FRAGMENT_MANAGER_CLS,
-                    false
-                ) || evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
+            if (evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_ANDROIDX_CLS, false) ||
+                evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_CLS, false) ||
+                evaluator.extendsClass(containingClass, FRAGMENT_MANAGER_V4_CLS, false)
             ) {
                 return true
             }
@@ -774,10 +782,13 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         private const val VELOCITY_TRACKER_CLS = "android.view.VelocityTracker"
         private const val DIALOG_FRAGMENT = "android.app.DialogFragment"
         private const val DIALOG_V4_FRAGMENT = "android.support.v4.app.DialogFragment"
+        private const val DIALOG_ANDROIDX_FRAGMENT = "androidx.fragment.app.DialogFragment"
         private const val FRAGMENT_MANAGER_CLS = "android.app.FragmentManager"
         private const val FRAGMENT_MANAGER_V4_CLS = "android.support.v4.app.FragmentManager"
+        private const val FRAGMENT_MANAGER_ANDROIDX_CLS = "androidx.fragment.app.FragmentManager"
         private const val FRAGMENT_TRANSACTION_CLS = "android.app.FragmentTransaction"
         private const val FRAGMENT_TRANSACTION_V4_CLS = "android.support.v4.app.FragmentTransaction"
+        private const val FRAGMENT_TRANSACTION_ANDROIDX_CLS = "androidx.fragment.app.FragmentTransaction"
         private const val VALUE_ANIMATOR_CLS = "android.animation.ValueAnimator"
         private const val OBJECT_ANIMATOR_CLS = "android.animation.ObjectAnimator"
         private const val ANIMATOR_SET_CLS = "android.animation.AnimatorSet"

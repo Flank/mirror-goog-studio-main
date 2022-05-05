@@ -42,8 +42,10 @@ class StableApiTest {
                     Either:
                       * revert the api change
                       * or apply the below changes by running the updateApi task:
-                            gradle :base:gradle-api:updateApi
+                            gradle :base:gradle-api:updateMetalavaApi
 
+                    To update all the API expectation files, run
+                        gradlew updateApi
                     """.trimIndent() +
                         TestUtils.getDiff(expected.toTypedArray(), actual.toTypedArray())
             )

@@ -1,0 +1,2 @@
+- AndroidDsl:
+   - compileTarget = DEFAULT_COMPILE_SDK_VERSION

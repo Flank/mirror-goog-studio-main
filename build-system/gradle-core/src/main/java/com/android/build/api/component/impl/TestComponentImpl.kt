@@ -19,11 +19,10 @@ package com.android.build.api.component.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.TestComponent
-import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.TestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -34,28 +33,27 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
-abstract class TestComponentImpl @Inject constructor(
+abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constructor(
     componentIdentity: ComponentIdentity,
     buildFeatureValues: BuildFeatureValues,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: DslInfoT,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     variantScope: VariantScope,
     variantData: BaseVariantData,
-    val testedVariant: VariantImpl,
+    override val mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
     global: GlobalTaskCreationConfig,
-) : ComponentImpl(
+) : ComponentImpl<DslInfoT>(
     componentIdentity,
     buildFeatureValues,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -68,17 +66,18 @@ abstract class TestComponentImpl @Inject constructor(
     global
 ), TestComponent, TestComponentCreationConfig {
 
-    // map the internal getter to the impl of the external variant object
-    override val testedConfig: VariantCreationConfig
-        get() = testedVariant
-
     // Only include the jacoco agent if coverage is enabled in library test components
     // as in apps it will have already been included in the tested application.
     override val packageJacocoRuntime: Boolean
-        get() = variantDslInfo.isAndroidTestCoverageEnabled && testedVariant.componentType.isAar
-
-    override val namespaceForR: Provider<String> = variantDslInfo.namespaceForR
+        get() = dslInfo.isAndroidTestCoverageEnabled && mainVariant.componentType.isAar
 
     override val pseudoLocalesEnabled: Property<Boolean> =
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
+            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, dslInfo.isPseudoLocalesEnabled)
+
+    override fun <T> onTestedVariant(action: (VariantCreationConfig) -> T): T {
+        return action(mainVariant)
+    }
+
+    override val supportedAbis: Set<String>
+        get() = mainVariant.supportedAbis
 }

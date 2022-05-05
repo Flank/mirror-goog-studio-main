@@ -62,6 +62,8 @@ interface TestProjectBuilder {
 
     var buildFileType: BuildFileType
 
+    fun settings(action: SettingsBuilder.() -> Unit)
+
     /**
      * Configures the root project
      */
@@ -81,7 +83,7 @@ interface SubProjectBuilder {
     val path: String
     var group: String?
     var version: String?
-    var plugins: MutableList<PluginType>
+    val plugins: MutableList<PluginType>
 
     /**
      * Adds a file to the given location with the given content.
@@ -146,11 +148,17 @@ interface AndroidProjectBuilder {
     var packageName: String
     var applicationId: String?
     var namespace: String?
+    var compileSdk: Int?
     var minSdk: Int?
-    var minSdkCodename: String?
+    var minSdkPreview: String?
     var targetProjectPath: String?
 
     val dynamicFeatures: MutableSet<String>
+
+    /**
+     * Sets up a default compile Sdk Value
+     */
+    fun defaultCompileSdk()
 
     fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit)
 
@@ -317,4 +325,20 @@ interface ProjectDependencyBuilder {
 interface ExternalDependencyBuilder {
     val coordinate: String
     val testFixtures: Boolean
+}
+
+interface AndroidSettingsBuilder {
+    var compileSdk: Int?
+    var minSdk: Int?
+}
+
+interface SettingsBuilder {
+    val plugins: MutableList<PluginType>
+
+    /**
+     * Configures the android section of the project.
+     *
+     * This will fails if no android plugins were added.
+     */
+    fun android(action: AndroidSettingsBuilder.() -> Unit)
 }

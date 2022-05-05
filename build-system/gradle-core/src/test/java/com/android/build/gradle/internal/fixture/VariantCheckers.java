@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.ApkVariant;
@@ -30,6 +29,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
 import com.google.common.truth.Correspondence;
@@ -62,8 +62,8 @@ public class VariantCheckers {
         return variants.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    public static void checkDefaultVariants(List<ComponentImpl> components) {
-        assertThat(Lists.transform(components, ComponentImpl::getName))
+    public static void checkDefaultVariants(List<ComponentCreationConfig> components) {
+        assertThat(Lists.transform(components, ComponentCreationConfig::getName))
                 .containsExactly(
                         "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
@@ -115,9 +115,9 @@ public class VariantCheckers {
      * @param name the name of the item to return
      * @return the found variant
      */
-    public static ComponentImpl findComponent(
-            @NonNull Collection<ComponentImpl> components, @NonNull String name) {
-        Optional<ComponentImpl> result =
+    public static ComponentCreationConfig findComponent(
+            @NonNull Collection<ComponentCreationConfig> components, @NonNull String name) {
+        Optional<ComponentCreationConfig> result =
                 components.stream().filter(t -> t.getName().equals(name)).findAny();
         return result.orElseThrow(
                 () -> new AssertionError("Component for " + name + " not found."));

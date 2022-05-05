@@ -22,7 +22,7 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/proPlayDebug/out{!}
                * {PROJECT}/build/generated/source/buildConfig/proPlay/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -56,7 +56,7 @@
                * {PROJECT}/build/generated/renderscript_source_output_dir/proPlayDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/source/buildConfig/androidTest/proPlay/debug{!}
             - minSdkVersion:
-               - apiLevel = 14
+               - apiLevel = 1
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)

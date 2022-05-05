@@ -119,9 +119,9 @@ data class ResValue(val dataType: DataType, val data: Int, val size: Short = 0) 
     INT_COLOR_RGB4(0x1f);
 
     companion object {
-      val FIRST_INT = DataType.INT_DEC
-      val FIRST_COLOR_INT = DataType.INT_COLOR_ARGB8
-      val LAST_COLOR_INT = DataType.INT_COLOR_RGB4
+      val FIRST_INT = INT_DEC
+      val FIRST_COLOR_INT = INT_COLOR_ARGB8
+      val LAST_COLOR_INT = INT_COLOR_RGB4
       val LAST_INT = LAST_COLOR_INT
     }
   }
@@ -454,9 +454,9 @@ class ResStringPool private constructor(
 
 fun parseHex(codePoint: Int) =
   when(codePoint) {
-    in '0'.toInt()..'9'.toInt() -> codePoint - '0'.toInt()
-    in 'A'.toInt()..'F'.toInt() -> codePoint - 'A'.toInt() + 10
-    in 'a'.toInt()..'f'.toInt() -> codePoint - 'a'.toInt() + 10
+    in '0'.code..'9'.code -> codePoint - '0'.code
+    in 'A'.code..'F'.code -> codePoint - 'A'.code + 10
+    in 'a'.code..'f'.code -> codePoint - 'a'.code + 10
     else -> -1
   }
 
@@ -472,21 +472,22 @@ fun stringToInt(string: String): ResValue? {
   var value = 0L
   var isNegative = false
 
-  if (trimmedString.codePointAt(0) == '-'.toInt()) {
+  if (trimmedString.codePointAt(0) == '-'.code) {
     ++index
     isNegative = true
   }
 
   if (codePointCount == index
-    || trimmedString.codePointAt(index) !in '0'.toInt()..'9'.toInt()) {
+    || trimmedString.codePointAt(index) !in '0'.code..'9'.code
+  ) {
 
     return null
   }
 
   val isHex: Boolean
   if (codePointCount >= index + 2
-    && trimmedString.codePointAt(index) == '0'.toInt()
-    && trimmedString.codePointAt(index+1) == 'x'.toInt()) {
+    && trimmedString.codePointAt(index) == '0'.code
+    && trimmedString.codePointAt(index+1) == 'x'.code) {
     isHex = true
     index += 2
 
@@ -518,12 +519,12 @@ fun stringToInt(string: String): ResValue? {
 
     while (index < codePointCount) {
       val codePoint = trimmedString.codePointAt(index)
-      if (codePoint !in '0'.toInt()..'9'.toInt()) {
+      if (codePoint !in '0'.code..'9'.code) {
         return null
       }
       ++index
 
-      val decValue = codePoint - '0'.toInt()
+      val decValue = codePoint - '0'.code
       value = (value*10) + decValue
 
       val outOfBounds =

@@ -19,13 +19,13 @@ import com.android.SdkConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.support.AndroidxName
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.above
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atLeast
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atMost
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.below
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.range
-import com.android.tools.lint.client.api.JavaEvaluator
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.VersionChecks.SdkIntAnnotation.Companion.findSdkIntAnnotation
 import com.android.utils.SdkUtils
 import com.google.common.annotations.VisibleForTesting
@@ -155,8 +155,9 @@ class VersionChecks(
         @JvmOverloads
         @JvmStatic
         fun getTargetApiAnnotation(
+            evaluator: JavaEvaluator,
             scope: UElement?,
-            isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+            isApiLevelAnnotation: (String) -> Boolean = Companion::isTargetAnnotation
         ): Pair<UAnnotation?, Int> {
             var current = scope
             while (current != null) {
@@ -170,6 +171,18 @@ class VersionChecks(
                     }
                 }
                 if (current is UFile) {
+                    // Also consult any package annotations
+                    val pkg = evaluator.getPackage(current.javaPsi ?: current.sourcePsi)
+                    if (pkg != null) {
+                        for (psiAnnotation in pkg.annotations) {
+                            val annotation = UastFacade.convertElement(psiAnnotation, null) as? UAnnotation ?: continue
+                            val target = getTargetApiForAnnotation(annotation, isApiLevelAnnotation)
+                            if (target != -1) {
+                                return annotation to target
+                            }
+                        }
+                    }
+
                     break
                 }
                 current = current.uastParent
@@ -557,7 +570,7 @@ class VersionChecks(
                                 apiLevels.add(getApiLevel(case, apiLookup))
                             }
                         }
-                        val (_, target) = getTargetApiAnnotation(switch)
+                        val (_, target) = getTargetApiAnnotation(evaluator, switch)
                         val min = kotlin.math.max(target, project?.minSdk ?: -1)
                         var firstMissing = min + 1
                         while (true) {

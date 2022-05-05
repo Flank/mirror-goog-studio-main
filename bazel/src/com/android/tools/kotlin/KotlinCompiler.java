@@ -16,27 +16,36 @@
 
 package com.android.tools.kotlin;
 
-import static org.jetbrains.kotlin.cli.common.CompilerSystemProperties.KOTLIN_COLORS_ENABLED_PROPERTY;
-
-import com.android.tools.utils.BazelWorker;
-import java.util.List;
-import org.jetbrains.kotlin.cli.common.CLICompiler;
+import com.android.tools.utils.BazelMultiplexWorker;
 import org.jetbrains.kotlin.cli.common.ExitCode;
 import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
+
+import java.io.PrintStream;
+import java.util.List;
+
+import static org.jetbrains.kotlin.cli.common.CompilerSystemProperties.KOTLIN_COLORS_ENABLED_PROPERTY;
+import static org.jetbrains.kotlin.cli.common.CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY;
+import static org.jetbrains.kotlin.cli.jvm.compiler.CompatKt.setupIdeaStandaloneExecution;
 
 /** A wrapper for the Kotlin compiler. */
 public class KotlinCompiler {
 
     public static void main(String[] args) throws Exception {
-        BazelWorker.run(args, KotlinCompiler::compile);
-    }
-
-    private static int compile(List<String> args) {
         // Extracted from CLITool.doMain:
         System.setProperty("java.awt.headless", "true");
         KOTLIN_COLORS_ENABLED_PROPERTY.setValue("true");
+        setupIdeaStandaloneExecution();
 
-        ExitCode exit = CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[0]));
+        // In order to support parallel builds in the same process, we prevent
+        // the Kotlin environment from being disposed after each job.
+        // This matches the behavior of JPS (see JpsKotlinCompilerRunner).
+        KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.setValue("true");
+
+        BazelMultiplexWorker.run(args, KotlinCompiler::compile);
+    }
+
+    private static int compile(List<String> args, PrintStream out) {
+        ExitCode exit = new K2JVMCompiler().exec(out, args.toArray(new String[0]));
         if (exit.equals(ExitCode.INTERNAL_ERROR)) {
             // The Kotlin compiler could be in a bad state, e.g. out of memory.
             // Throw an exception to kill the Bazel persistent worker.

@@ -23,7 +23,7 @@ fun parseBoolean(propertyName: String, value: Any): Boolean {
     return when (value) {
         is Boolean -> value
         is CharSequence ->
-            when (value.toString().toLowerCase(Locale.US)) {
+            when (value.toString().lowercase(Locale.US)) {
                 "true" -> true
                 "false" -> false
                 else -> parseBooleanFailure(propertyName, value)

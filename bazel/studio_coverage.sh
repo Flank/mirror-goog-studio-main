@@ -34,7 +34,7 @@ collect_and_exit() {
   if [[ -d "${dist_dir}" ]]; then
     "${script_dir}/bazel" \
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
-    --config=rcache --config=sponge \
+    --config=rcache \
     -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -testlogs "${dist_dir}/logs/junit"
@@ -74,7 +74,6 @@ fi
 declare -a extra_test_flags
 if [[ $postsubmit ]]; then
     extra_test_flags+=(--nocache_test_results)
-    extra_test_flags+=(--config=ants)
     extra_test_flags+=(--flaky_test_attempts=2)
 fi
 
@@ -91,7 +90,7 @@ fi
 "${script_dir}/bazel" \
   "${bazelrc_flags[@]}" \
   test \
-  --config=dynamic --config=sponge \
+  --config=ci --config=ants \
   --invocation_id=${invocation_id} \
   --tool_tag="studio_coverage.sh" \
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
@@ -119,7 +118,7 @@ fi
 # Build the lcov file
 "${script_dir}/bazel" \
   build \
-  --config=rcache --config=sponge \
+  --config=rcache \
   --invocation_id=${report_invocation_id} \
   --jobs=HOST_CPUS*.5 \
   ${auth_options} \

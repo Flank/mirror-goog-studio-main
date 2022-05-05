@@ -26,4 +26,6 @@ interface UnitTestCreationConfig: TestComponentCreationConfig {
      * to the DSL-set values.
      */
     val dslAndroidResources: AndroidResources
+
+    val isUnitTestCoverageEnabled: Boolean
 }

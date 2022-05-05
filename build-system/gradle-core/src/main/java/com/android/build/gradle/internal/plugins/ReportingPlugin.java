@@ -87,7 +87,10 @@ class ReportingPlugin implements org.gradle.api.Plugin<Project> {
                         null,
                         project.getGradle().getStartParameter().getMaxWorkerCount(),
                         new ProjectInfo(project),
-                        project::file);
+                        project::file,
+                        project.getConfigurations(),
+                        project.getDependencies(),
+                        project.getExtensions().getExtraProperties());
 
         DslServices dslServices =
                 new DslServicesImpl(

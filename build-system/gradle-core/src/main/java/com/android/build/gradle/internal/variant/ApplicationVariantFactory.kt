@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.ApplicationBuildFeatures
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.DataBinding
+import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.FilterConfiguration
 import com.android.build.api.variant.impl.ApplicationVariantBuilderImpl
@@ -30,9 +31,9 @@ import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
-import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfo
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -60,14 +61,14 @@ import java.util.function.Consumer
 
 class ApplicationVariantFactory(
     projectServices: ProjectServices,
-) : AbstractAppVariantFactory<ApplicationVariantBuilderImpl, ApplicationVariantImpl>(
+) : AbstractAppVariantFactory<ApplicationVariantBuilder, ApplicationVariantDslInfo, ApplicationCreationConfig>(
     projectServices,
 ) {
 
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: ApplicationVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): ApplicationVariantBuilderImpl {
 
@@ -83,10 +84,10 @@ class ApplicationVariantFactory(
     }
 
     override fun createVariant(
-        variantBuilder: ApplicationVariantBuilderImpl,
+        variantBuilder: ApplicationVariantBuilder,
         componentIdentity: ComponentIdentity,
         buildFeatures: BuildFeatureValues,
-        variantDslInfo: VariantDslInfo,
+        variantDslInfo: ApplicationVariantDslInfo,
         variantDependencies: VariantDependencies,
         variantSources: VariantSources,
         paths: VariantPathHelper,
@@ -97,7 +98,7 @@ class ApplicationVariantFactory(
         variantServices: VariantServices,
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
-        ): ApplicationVariantImpl {
+        ): ApplicationCreationConfig {
         val appVariant = projectServices
             .objectFactory
             .newInstance(
@@ -172,7 +173,7 @@ class ApplicationVariantFactory(
         get() = ComponentTypeImpl.BASE_APK
 
     private fun computeOutputs(
-        appVariant: ApplicationVariantImpl,
+        appVariant: ApplicationCreationConfig,
         variant: ApplicationVariantData,
         globalConfig: GlobalTaskCreationConfig,
     ) {
@@ -273,7 +274,7 @@ class ApplicationVariantFactory(
     }
 
     private fun checkSplitsConflicts(
-        component: ComponentCreationConfig,
+        component: ApplicationCreationConfig,
         abiFilters: Set<String?>,
         globalConfig: GlobalTaskCreationConfig,
     ) { // if we don't have any ABI splits, nothing is conflicting.
@@ -302,7 +303,7 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        component: ComponentCreationConfig,
+        component: ApplicationCreationConfig,
         variantOutputs: VariantOutputList,
         globalConfig: GlobalTaskCreationConfig
     ) {

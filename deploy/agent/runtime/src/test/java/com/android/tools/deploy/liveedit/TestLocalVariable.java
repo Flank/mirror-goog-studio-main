@@ -37,7 +37,7 @@ public class TestLocalVariable {
         long v0 = 1;
         long v1 = 2;
         try {
-            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addClass(className, new Interpretable(byteCode), false);
             LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
             Object[] parameters = {null, null, v0, v1};
             Long l = (Long) LiveEditStubs.stubL(className, methodName, methodDesc, parameters);
@@ -59,7 +59,7 @@ public class TestLocalVariable {
         double v0 = 1;
         double v1 = 2;
         try {
-            LiveEditStubs.addClass(className, byteCode, false);
+            LiveEditStubs.addClass(className, new Interpretable(byteCode), false);
             LiveEditStubs.addLiveEditedMethod(className, methodName, methodDesc);
             Object[] parameters = {null, null, v0, v1};
             Double d = (Double) LiveEditStubs.stubL(className, methodName, methodDesc, parameters);

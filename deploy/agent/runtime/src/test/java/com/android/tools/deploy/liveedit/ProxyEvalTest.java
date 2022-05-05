@@ -61,8 +61,8 @@ public class ProxyEvalTest {
         String driverName = "com/android/tools/deploy/liveedit/ProxyTestClasses$Driver";
         String implName = "com/android/tools/deploy/liveedit/ProxyTestClasses$Pythagorean";
 
-        LiveEditStubs.addClass(driverName, buildClass(Driver.class), false);
-        LiveEditStubs.addClass(implName, buildClass(Pythagorean.class), true);
+        LiveEditStubs.addClass(driverName, new Interpretable(buildClass(Driver.class)), false);
+        LiveEditStubs.addClass(implName, new Interpretable(buildClass(Pythagorean.class)), true);
 
         // Interpreted result w/ proxies should be the same as non-interpreted result.
         long actual = new ProxyTestClasses.Driver().liveEditedMethod(6L, 8L);
@@ -83,8 +83,8 @@ public class ProxyEvalTest {
 
         // Change Pythagorean from Function2 to Function3, and change Pythagorean.apply(Long, Long)
         // to apply(Long, Long, String)
-        LiveEditStubs.addClass(driverName, getNewClassData(driverName), false);
-        LiveEditStubs.addClass(implName, getNewClassData(implName), true);
+        LiveEditStubs.addClass(driverName, new Interpretable(getNewClassData(driverName)), false);
+        LiveEditStubs.addClass(implName, new Interpretable(getNewClassData(implName)), true);
 
         Assert.assertEquals(
                 16,
@@ -95,8 +95,8 @@ public class ProxyEvalTest {
                         new Object[] {null, null, 6L, 8L}));
 
         // Change back to original signature.
-        LiveEditStubs.addClass(driverName, buildClass(Driver.class), false);
-        LiveEditStubs.addClass(implName, buildClass(Pythagorean.class), true);
+        LiveEditStubs.addClass(driverName, new Interpretable(buildClass(Driver.class)), false);
+        LiveEditStubs.addClass(implName, new Interpretable(buildClass(Pythagorean.class)), true);
 
         long actual = new ProxyTestClasses.Driver().liveEditedMethod(6L, 8L);
         Assert.assertEquals(
@@ -116,7 +116,7 @@ public class ProxyEvalTest {
         Assert.assertEquals(0, ProxyTestClasses.AddedMethods.callsAddedMethod());
 
         // Add new static to AddedMethods and update AddedMethods.callsAddedMethod() to call it.
-        LiveEditStubs.addClass(driverName, getNewClassData(driverName), false);
+        LiveEditStubs.addClass(driverName, new Interpretable(getNewClassData(driverName)), false);
 
         Assert.assertEquals(
                 1, LiveEditStubs.stubI(driverName, "callsAddedMethod", "()I", new Object[2]));
@@ -128,14 +128,14 @@ public class ProxyEvalTest {
         String driverName = "com/android/tools/deploy/liveedit/ProxyTestClasses$Driver";
         String implName = "com/android/tools/deploy/liveedit/ProxyTestClasses$ModifyStatic";
 
-        LiveEditStubs.addClass(driverName, buildClass(Driver.class), false);
-        LiveEditStubs.addClass(implName, buildClass(ModifyStatic.class), true);
+        LiveEditStubs.addClass(driverName, new Interpretable(buildClass(Driver.class)), false);
+        LiveEditStubs.addClass(implName, new Interpretable(buildClass(ModifyStatic.class)), true);
 
         Assert.assertEquals(
                 0, LiveEditStubs.stubI(driverName, "liveEditedMethod", "()I", new Object[2]));
 
-        LiveEditStubs.addClass(driverName, getNewClassData(driverName), false);
-        LiveEditStubs.addClass(implName, getNewClassData(implName), true);
+        LiveEditStubs.addClass(driverName, new Interpretable(getNewClassData(driverName)), false);
+        LiveEditStubs.addClass(implName, new Interpretable(getNewClassData(implName)), true);
 
         Assert.assertEquals(
                 5, LiveEditStubs.stubI(driverName, "liveEditedMethod", "()I", new Object[2]));

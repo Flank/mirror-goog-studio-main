@@ -401,4 +401,65 @@ class ToastDetectorTest : AbstractCheckTest() {
             *snackbarStubs
         ).run().expectClean()
     }
+
+    fun testUnresolvable() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.content.Context
+                import android.widget.Toast
+
+                fun test1a(context: Context, unrelated: Toast) {
+                    // Don't flag a show call if there's an unresolvable reference *and* we have
+                    // a show call (even if we're not certain which instance it's on)
+                    val toast = Toast.makeText(context, "Test", Toast.LENGTH_SHORT).unknown() // OK
+                    unrelated.show()
+                }
+
+                fun test1b(context: Context, unrelated: Toast) {
+                    // Like 1a, but using assignment instead of declaration initialization
+                    val toast: Toast
+                    toast = Toast.makeText(context, "Test", Toast.LENGTH_SHORT).unknown() // OK
+                    unrelated.show()
+                }
+
+                fun test2(context: Context) {
+                    // If there's an unresolvable reference, DO complain if there's *no* show call anywhere
+                    Toast.makeText(context, "Test", Toast.LENGTH_SHORT).unknown() // ERROR 1
+                }
+
+                fun test3a(context: Context, unrelated: Toast) {
+                    // If the unresolved call has nothing to do with updating the
+                    // toast instance (e.g. is not associated with an
+                    // assignment and has no further chained calls) don't revert to
+                    // non-instance checking
+                    val toast = Toast.makeText(context, "Test", Toast.LENGTH_SHORT) // ERROR 2
+                    toast.unknown()
+                    unrelated.show()
+                }
+
+                fun test3b(context: Context, unrelated: Toast) {
+                    // Like 3a, but here we're making calls on the result of the
+                    // unresolved call; those could be cleanup calls, so in that case
+                    // we're not confident enough
+                    val toast = Toast.makeText(context, "Test", Toast.LENGTH_SHORT) // OK
+                    toast.unknown().something()
+                    unrelated.show()
+                }
+                """
+            )
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:23: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
+                                Toast.makeText(context, "Test", Toast.LENGTH_SHORT).unknown() // ERROR 1
+                                ~~~~~~~~~~~~~~
+            src/test/pkg/test.kt:31: Warning: Toast created but not shown: did you forget to call show()? [ShowToast]
+                                val toast = Toast.makeText(context, "Test", Toast.LENGTH_SHORT) // ERROR 2
+                                            ~~~~~~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
+    }
 }

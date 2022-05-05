@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.impl.LibraryVariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.prefab.PrefabModuleTaskData
@@ -99,8 +99,8 @@ abstract class PrefabPackageConfigurationTask : NonIncrementalTask() {
         private val location : String,
         private val modules : List<PrefabModuleTaskData>,
         private val config : CxxConfigurationModel,
-        componentProperties: LibraryVariantImpl
-    ) : VariantTaskCreationAction<PrefabPackageConfigurationTask, LibraryVariantImpl>(
+        componentProperties: LibraryCreationConfig
+    ) : VariantTaskCreationAction<PrefabPackageConfigurationTask, LibraryCreationConfig>(
         componentProperties
     ) {
         override val name: String

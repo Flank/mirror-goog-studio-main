@@ -18,6 +18,7 @@ package com.android.tools.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -25,16 +26,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class JarOutputCompiler {
-
     private final String name;
+    protected final PrintStream err;
 
-    protected JarOutputCompiler(String name) {
+    protected JarOutputCompiler(String name, PrintStream err) {
         this.name = name;
+        this.err = err;
     }
 
     private void usage(String message) {
-        System.err.println("Error: " + message);
-        System.err.println("Usage: " + name + " [-cp class_path|@<file>] -o jar_file <forwardedArgs>");
+        err.println("Error: " + message);
+        err.println("Usage: " + name + " [-cp class_path|@<file>] -o jar_file <forwardedArgs>");
     }
 
     protected int run(List<String> args) throws IOException {

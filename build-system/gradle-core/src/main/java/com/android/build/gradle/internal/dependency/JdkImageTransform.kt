@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.utils.FileUtils
 import org.gradle.api.Project
@@ -91,12 +92,12 @@ const val JDK_IMAGE_OUTPUT_DIR = "jdkImage"
 private val ATTR_JDK_ID: Attribute<String> = Attribute.of("jdk-id", String::class.java)
 
 fun getJdkImageFromTransform(
-    project: Project,
+    services: TaskCreationServices,
     javaCompiler: JavaCompiler?
 ): FileCollection {
-    registerJdkImageTransform(project, javaCompiler)
+    registerJdkImageTransform(services, javaCompiler)
 
-    val configuration = project.configurations.getByName(CONFIG_NAME_ANDROID_JDK_IMAGE)
+    val configuration = services.configurations.getByName(CONFIG_NAME_ANDROID_JDK_IMAGE)
     return configuration.incoming.artifactView { config ->
         config.attributes {
             it.attribute(
@@ -108,20 +109,20 @@ fun getJdkImageFromTransform(
     }.artifacts.artifactFiles
 }
 
-private fun registerJdkImageTransform(project: Project, javaCompiler: JavaCompiler?) {
-    val extraProperties = project.extensions.extraProperties
+private fun registerJdkImageTransform(services: TaskCreationServices, javaCompiler: JavaCompiler?) {
+    val extraProperties = services.extraProperties
     if (extraProperties.has(JDK_IMAGE_TRANSFORM_REGISTERER)) {
         return
     }
 
     // transform to create the JDK image from core-for-system-modules.jar
-    project.dependencies.registerTransform(
+    services.dependencies.registerTransform(
         JdkImageTransform::class.java
     ) { spec: TransformSpec<JdkImageTransform.Parameters> ->
         // Query for JAR instead of PROCESSED_JAR as core-for-system-modules.jar doesn't need processing
         spec.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.JAR.type)
         spec.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ANDROID_JDK_IMAGE)
-        spec.parameters.projectName.setDisallowChanges(project.name)
+        spec.parameters.projectName.setDisallowChanges(services.projectInfo.name)
         spec.parameters.jdkId.setDisallowChanges(getJdkId(javaCompiler))
         spec.parameters.javaHome.setDisallowChanges(getJavaHome(javaCompiler))
     }

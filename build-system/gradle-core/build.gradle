@@ -169,11 +169,11 @@ dependencies {
     implementation libs.grpc_stub
     implementation libs.tink
     implementation libs.unified_test_platform
-    implementation libs.dokka_core
 
     compileOnly libs.kotlin_gradle_plugin
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report
+    compileOnly libs.dokka_core
     // already packaged in (':base:builder')
     compileOnly project(':base:profile')
 
@@ -258,12 +258,6 @@ clean {
 }
 
 apiTest {
-    // Gradle embeds kotlin when dealing with kts files and that version can be different from
-    // the version Android Studio bundles. This is usually not an issue, but when generating
-    // build.gradle.kts files, we need to use the bundled Android Studio version so all dependencies
-    // are present in prebuilts.
-    environment("KOTLIN_PLUGIN", libs.kotlin_gradle_plugin)
-
     maxParallelForks = Runtime.runtime.availableProcessors()
 
     environment("API_TESTS_OUTDIR", apiTestsOutDir.toString())
@@ -319,5 +313,20 @@ tasks.sourcesJar {
     from {
         configurations.includeInJarSources.collect({zipTree(it)})
     }
+}
+
+def updatePseudoApi = tasks.register('updatePseudoApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.build.gradle.PseudoApiUpdater'
+}
+
+def updateUndecoratedApi = tasks.register('updateUndecoratedApi', JavaExec) {
+    classpath(sourceSets['test'].output.classesDirs, sourceSets['test'].runtimeClasspath)
+    mainClass = 'com.android.build.gradle.DecoratedApiChangesUpdater'
+}
+
+def updateApi = tasks.register('updateApi') {
+    dependsOn(updatePseudoApi)
+    dependsOn(updateUndecoratedApi)
 }
 

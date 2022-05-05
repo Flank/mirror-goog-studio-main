@@ -89,6 +89,8 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
     public static AndroidPlatformAnnotationsTestMode PLATFORM_ANNOTATIONS_TEST_MODE =
             new AndroidPlatformAnnotationsTestMode();
 
+    public static AndroidxTestMode ANDROIDX_TEST_MODE = new AndroidxTestMode();
+
     @Override
     @NonNull
     protected TestLintTask lint() {
@@ -97,6 +99,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         TestLintTask task = TestLintTask.lint();
 
         task.addTestModes(PLATFORM_ANNOTATIONS_TEST_MODE);
+        task.addTestModes(ANDROIDX_TEST_MODE);
 
         // Make sure we have access to compileSdkVersions specified by tests; if not,
         // there's potential flakiness differences based on which SDKs are available

@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantDslInfo
 import com.android.build.gradle.internal.core.VariantSources
+import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
@@ -28,7 +28,7 @@ import com.android.utils.capitalizeAndAppend
 
 class TestFixturesVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: VariantDslInfo,
+    dslInfo: TestFixturesComponentDslInfo,
     variantDependencies: VariantDependencies,
     variantSources: VariantSources,
     paths: VariantPathHelper,
@@ -37,7 +37,7 @@ class TestFixturesVariantData(
     taskContainer: MutableTaskContainer
 ): BaseVariantData(
     componentIdentity,
-    variantDslInfo,
+    dslInfo,
     variantDependencies,
     variantSources,
     paths,
@@ -47,13 +47,13 @@ class TestFixturesVariantData(
 ) {
 
     override val description: String
-        get() = if (variantDslInfo.hasFlavors()) {
+        get() = if (dslInfo.hasFlavors()) {
             val sb = StringBuilder(50)
-            variantDslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            dslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
             sb.append(" build for flavor ")
-            variantDslInfo.componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
+            dslInfo.componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
             sb.toString()
         } else {
-            variantDslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
+            dslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
         }
 }

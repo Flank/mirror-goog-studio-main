@@ -19,11 +19,10 @@ package com.android.build.gradle.internal
 import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
-import com.android.build.api.component.impl.ComponentImpl
-import com.android.build.api.variant.impl.VariantBuilderImpl
-import com.android.build.api.variant.impl.VariantImpl
+import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.coverage.JacocoConfigurations
 import com.android.build.gradle.internal.coverage.JacocoOptions
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform
@@ -65,6 +64,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
 import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -607,10 +607,10 @@ class DependencyConfigurator(
     }
 
     /** Configure artifact transforms that require variant-specific attribute information.  */
-    fun <VariantBuilderT : VariantBuilderImpl, VariantT : VariantImpl>
+    fun <VariantBuilderT : VariantBuilder, VariantT : VariantCreationConfig>
             configureVariantTransforms(
         variants: List<ComponentInfo<VariantBuilderT, VariantT>>,
-        nestedComponents: List<ComponentImpl>
+        nestedComponents: List<ComponentCreationConfig>
     ): DependencyConfigurator {
         val allComponents: List<ComponentCreationConfig> =
             variants.map { it.variant }.plus(nestedComponents)
@@ -622,7 +622,7 @@ class DependencyConfigurator(
             registerAsmTransformForComponent(
                 projectName,
                 dependencies,
-                component as ComponentImpl
+                component
             )
 
             registerRecalculateStackFramesTransformForComponent(
@@ -634,16 +634,20 @@ class DependencyConfigurator(
         if (allComponents.isNotEmpty()) {
             val bootClasspath = project.files(globalConfig.bootClasspath)
             if (projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]) {
-                for (artifactConfiguration in getDexingArtifactConfigurations(
-                    allComponents
-                )) {
-                    artifactConfiguration.registerTransform(
-                        projectName,
-                        dependencies,
-                        bootClasspath,
-                        getDesugarLibConfig(project),
-                        SyncOptions.getErrorFormatMode(projectOptions),
-                    )
+                if (allComponents.isNotEmpty()) {
+                    val services = allComponents.first().services
+
+                    for (artifactConfiguration in getDexingArtifactConfigurations(
+                        allComponents
+                    )) {
+                        artifactConfiguration.registerTransform(
+                            projectName,
+                            dependencies,
+                            bootClasspath,
+                            getDesugarLibConfig(services),
+                            SyncOptions.getErrorFormatMode(projectOptions),
+                        )
+                    }
                 }
             }
         }

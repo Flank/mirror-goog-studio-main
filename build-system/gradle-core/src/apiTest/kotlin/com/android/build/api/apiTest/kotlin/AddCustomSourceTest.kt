@@ -63,7 +63,7 @@ class AddCustomSourceTest: VariantApiBaseTest(TestType.Script) {
                     // language=markdown
                 """
 # Add custom source folders in Kotlin
-This sample show how to add a new custom source folders to all source sets. The source folder will
+This sample shows how to add a new custom source folders to all source sets. The source folder will
 not be used by any AGP tasks (since we do no know about it), however, it can be used by plugins and
 tasks participating into the Variant API callbacks.
 
@@ -168,7 +168,7 @@ To register the custom sources, you just need to use
                     // language=markdown
                 """
 # Add custom source folders in Kotlin
-This sample show how to add a new custom source folders to the Variant. Note the sources will not
+This sample shows how to add a new custom source folders to the Variant. Note the sources will not
 be added to the DSL and therefore to the usual src/ locations. The source folder will
 not be used by any AGP tasks (since we do not know about it), however, it can be used by plugins and
 tasks participating into the Variant API callbacks.
@@ -294,7 +294,7 @@ where source files will be generated and added to the compilation task.
                     // language=markdown
                 """
 # Add custom source folders in Kotlin
-This sample show how to add a new custom source folders to the Variant. The source folder will
+This sample shows how to add a new custom source folders to the Variant. The source folder will
 not be used by any AGP tasks, however, it can be used by plugins and tasks participating into the
 Variant API callbacks.
 
@@ -429,7 +429,7 @@ where source files will be generated and added to the compilation task.
                     // language=markdown
                 """
 # Add custom source folders in Kotlin
-This sample show how to add a new custom source folders to all source sets. The source folder will
+This sample shows how to add a new custom source folders to all source sets. The source folder will
 by any AGP tasks (since we do no know about it), however, it can be used by plugins and
 tasks participating into the Variant API callbacks.
 

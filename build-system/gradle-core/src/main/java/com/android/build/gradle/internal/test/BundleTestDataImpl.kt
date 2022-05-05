@@ -53,7 +53,6 @@ internal class BundleTestDataImpl constructor(
 ) : AbstractTestDataImpl(
     namespace,
     creationConfig,
-    creationConfig,
     testApkDir,
     null
 ) {

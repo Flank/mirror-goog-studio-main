@@ -60,9 +60,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test
     fun testSet() {
-        val artifact= SingleArtifactContainer {
-            allocateProperty()
-        }
+        val artifact = SingleArtifactContainer { allocateProperty() }
 
         val initialized= AtomicBoolean(false)
         val value = allocateValue("firstProduced")
@@ -82,9 +80,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test
     fun testFileReset() {
-        val artifact= SingleArtifactContainer {
-            allocateProperty()
-        }
+        val artifact = SingleArtifactContainer { allocateProperty() }
 
         val firstInitialized= AtomicBoolean(false)
         val secondInitialized= AtomicBoolean(false)
@@ -115,9 +111,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test
     fun testGetCurrent() {
-        val artifact= SingleArtifactContainer {
-            allocateProperty()
-        }
+        val artifact = SingleArtifactContainer { allocateProperty() }
 
         val firstInitialized= AtomicBoolean(false)
         val secondInitialized= AtomicBoolean(false)
@@ -148,7 +142,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test(expected = RuntimeException::class)
     fun testChangesDisallowed() {
-        val artifact= SingleArtifactContainer { allocateProperty() }
+        val artifact = SingleArtifactContainer { allocateProperty() }
 
         val outputFile = allocateValue("finalProduced")
         val finalProducer= allocateTask("finalProducer")
@@ -170,7 +164,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test
     fun testAgpProducer() {
-        val artifact= SingleArtifactContainer { allocateProperty() }
+        val artifact = SingleArtifactContainer { allocateProperty() }
         abstract class ConsumerTask<T>: DefaultTask() {
             @InputFile abstract fun getInputFile(): Property<T>
         }
@@ -197,7 +191,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
     @Test
     fun testAgpProducerReplaced() {
-        val artifact= SingleArtifactContainer { allocateProperty() }
+        val artifact = SingleArtifactContainer { allocateProperty() }
 
         abstract class ConsumerTask<T>: DefaultTask() {
             @InputFile abstract fun getInputFile(): Property<T>

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -189,7 +190,7 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
                 BundleToStandaloneApkTask::outputFile
             )
                 .withName("${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}-universal$suffix")
-                .on(InternalArtifactType.UNIVERSAL_APK)
+                .on(SingleArtifact.APK_FROM_BUNDLE)
         }
 
         override fun configure(

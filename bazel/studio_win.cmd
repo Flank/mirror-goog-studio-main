@@ -54,7 +54,6 @@ setlocal
   ) else if %BUILD_TYPE%==POSTSUBMIT (
     set NOCACHE=--nocache_test_results
     set FLAKY_ATTEMPTS=--flaky_test_attempts=2
-    set ANTS=--config=ants
     set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS!
   )
 
@@ -83,8 +82,8 @@ setlocal
   --max_idle_secs=60 ^
   %BAZELRC_FLAGS% ^
   test ^
-  --config=dynamic ^
-  --config=sponge ^
+  --config=ci ^
+  --config=ants ^
   --tool_tag=studio_win.cmd ^
   --build_tag_filters=-no_windows ^
   --invocation_id=%INVOCATIONID% ^
@@ -130,7 +129,7 @@ setlocal
   call %SCRIPTDIR%bazel.cmd ^
   --max_idle_secs=60 ^
   run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
-  --config=dynamic ^
+  --config=ci ^
   -- ^
   -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   -testlogs %DISTDIR%\logs\junit ^
@@ -151,11 +150,6 @@ if errorlevel 1 (
 @rem On windows we must explicitly shut down bazel. Otherwise file handles remain open.
 @echo studio_win.cmd time: %time%
 call %SCRIPTDIR%bazel.cmd shutdown
-@echo studio_win.cmd time: %time%
-@rem We also must call the kill-processes.py python script and kill all processes still open
-@rem within the src directory.  This is due to the fact go/ab builds must be removable after
-@rem execution, and any open processes will prevent this removal on windows.
-call %BASEDIR%\tools\vendor\adt_infra_internal\build\scripts\slave\kill-processes.cmd %BASEDIR%
 @echo studio_win.cmd time: %time%
 
 set /a BAZEL_EXITCODE_TEST_FAILURES=3

@@ -78,7 +78,7 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Gro
                     // language=markdown
                 """
 # artifacts.getAll in Groovy
-This sample show how to obtain all the classes that will be used to create the dex files.
+This sample shows how to obtain all the classes that will be used to create the dex files.
 There are two lists that need to be used to obtain the complete set of classes because some
 classes are present as .class files in directories and others are present in jar files.
 Therefore, you must query both [ListProperty] of [Directory] and [RegularFile] to get the full list.
@@ -203,7 +203,7 @@ expected result : a list of classes and jar files.
                     // language=markdown
                 """
 # artifacts.transform MultipleArtifact in Kotlin
-This sample show how to transform all the classes that will be used to create the dex files.
+This sample shows how to transform all the classes that will be used to create the dex files.
 There are two lists that need to be used to obtain the complete set of classes because some
 classes are present as .class files in directories and others are present in jar files.
 Therefore, you must query both [ListProperty] of [Directory] and [RegularFile] to get the full list.
@@ -323,7 +323,7 @@ expected result : a list of classes and jar files.
                     // language=markdown
                 """
 # artifacts.transform MultipleArtifact in Kotlin
-This sample show how to transform all the classes that will be used to create the dex files.
+This sample shows how to transform all the classes that will be used to create the dex files.
 There are two lists that need to be used to obtain the complete set of classes because some
 classes are present as .class files in directories and others are present in jar files.
 Therefore, you must query both [ListProperty] of [Directory] and [RegularFile] to get the full list.

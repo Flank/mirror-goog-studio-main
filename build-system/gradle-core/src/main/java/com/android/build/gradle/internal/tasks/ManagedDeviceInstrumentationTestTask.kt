@@ -18,10 +18,10 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_EMULATOR
-import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
@@ -386,7 +386,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
             val globalConfig = creationConfig.global
             val projectOptions = creationConfig.services.projectOptions
 
-            val testedConfig = creationConfig.testedConfig
+            val testedConfig = (creationConfig as? AndroidTestCreationConfig)?.mainVariant
 
             val variantName = testedConfig?.name ?: creationConfig.name
 
@@ -496,9 +496,9 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
 
             task.classes.from(creationConfig.artifacts.getAllClasses())
             task.classes.disallowChanges()
-            task.buildConfigClasses.from((creationConfig as ComponentImpl).getCompiledBuildConfig())
+            task.buildConfigClasses.from(creationConfig.getCompiledBuildConfig())
             task.buildConfigClasses.disallowChanges()
-            task.rClasses.from((creationConfig as ComponentImpl).getCompiledRClasses(
+            task.rClasses.from(creationConfig.getCompiledRClasses(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH))
             task.rClasses.disallowChanges()
         }

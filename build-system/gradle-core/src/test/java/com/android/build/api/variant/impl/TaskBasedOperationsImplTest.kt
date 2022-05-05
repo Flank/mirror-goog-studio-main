@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.FilterConfiguration
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.profile.ProjectData
@@ -122,7 +123,7 @@ class TaskBasedOperationsImplTest {
             }
         }
 
-        class CreationAction(val component: VariantImpl): VariantTaskCreationAction<SynchronousTask, VariantImpl>(component) {
+        class CreationAction(val component: VariantCreationConfig): VariantTaskCreationAction<SynchronousTask, VariantCreationConfig>(component) {
             override val name: String
                 get() = component.computeTaskName("foo", "bar")
             override val type: Class<SynchronousTask>
@@ -230,7 +231,7 @@ class TaskBasedOperationsImplTest {
             }
         }
 
-        class CreationAction(val component: VariantImpl): VariantTaskCreationAction<InternalApiTask, VariantImpl>(component) {
+        class CreationAction(val component: VariantCreationConfig): VariantTaskCreationAction<InternalApiTask, VariantCreationConfig>(component) {
             override val name: String
                 get() = component.computeTaskName("foo", "bar")
             override val type: Class<InternalApiTask>

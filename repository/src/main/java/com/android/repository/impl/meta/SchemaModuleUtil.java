@@ -179,6 +179,7 @@ public class SchemaModuleUtil {
      * @param xml The XML to read. The stream will be closed after being read.
      * @param possibleModules The {@link SchemaModule}s that are available to parse the XML.
      * @param progress For logging.
+     * @param fileDescription Xml file name to make log messages concrete.
      * @return The unmarshalled object.
      * @throws JAXBException if there is an error during unmarshalling.
      *     <p>TODO: maybe templatize and return a nicer type.
@@ -188,9 +189,10 @@ public class SchemaModuleUtil {
             @NonNull InputStream xml,
             @NonNull Collection<SchemaModule<?>> possibleModules,
             boolean strict,
-            @NonNull ProgressIndicator progress)
+            @NonNull ProgressIndicator progress,
+            @NonNull String fileDescription)
             throws JAXBException {
-        Unmarshaller u = setupUnmarshaller(possibleModules, strict, progress);
+        Unmarshaller u = setupUnmarshaller(xml, possibleModules, strict, progress, fileDescription);
         SAXSource source = setupSource(xml, possibleModules, strict, progress);
         return ((JAXBElement) u.unmarshal(source)).getValue();
     }
@@ -198,19 +200,23 @@ public class SchemaModuleUtil {
     /**
      * Creates an {@link Unmarshaller} for the given {@link SchemaModule}s.
      *
+     * @param xml The XML to read.
      * @param possibleModules The schemas we should use to unmarshal.
      * @param strict Whether we should do strict validation.
      * @param progress For logging.
+     * @param fileDescription Xml file name to make log messages concrete.
      */
     @NonNull
     private static Unmarshaller setupUnmarshaller(
+            @NonNull InputStream xml,
             @NonNull Collection<SchemaModule<?>> possibleModules,
             boolean strict,
-            @NonNull ProgressIndicator progress)
+            @NonNull ProgressIndicator progress,
+            @NonNull String fileDescription)
             throws JAXBException {
         JAXBContext context = getContext(possibleModules);
         Unmarshaller u = context.createUnmarshaller();
-        u.setEventHandler(createValidationEventHandler(progress, strict));
+        u.setEventHandler(createValidationEventHandler(progress, strict, fileDescription));
         return u;
     }
 
@@ -261,7 +267,7 @@ public class SchemaModuleUtil {
         JAXBContext context = getContext(possibleModules);
         try {
             Marshaller marshaller = context.createMarshaller();
-            marshaller.setEventHandler(createValidationEventHandler(progress, true));
+            marshaller.setEventHandler(createValidationEventHandler(progress, true, "N/A"));
             Schema schema = getSchema(possibleModules, resourceResolver, progress);
             marshaller.setSchema(schema);
             marshaller.marshal(element, out);
@@ -272,18 +278,22 @@ public class SchemaModuleUtil {
     }
 
     /**
-     * Creates a {@link ValidationEventHandler} that delegates logging to the given
-     * {@link ProgressIndicator}.
+     * Creates a {@link ValidationEventHandler} that delegates logging to the given {@link
+     * ProgressIndicator}.
      */
     @NonNull
     private static ValidationEventHandler createValidationEventHandler(
-            @NonNull final ProgressIndicator progress, final boolean strict) {
+            @NonNull final ProgressIndicator progress,
+            final boolean strict,
+            @NonNull final String fileDescription) {
+
         return event -> {
+            String prefix = fileDescription + " parsing problem. ";
             //noinspection ThrowableResultOfMethodCallIgnored
             if (event.getLinkedException() != null) {
-                progress.logWarning(event.getMessage(), event.getLinkedException());
+                progress.logWarning(prefix + event.getMessage(), event.getLinkedException());
             } else {
-                progress.logWarning(event.getMessage());
+                progress.logWarning(prefix + event.getMessage());
             }
             return !strict;
         };

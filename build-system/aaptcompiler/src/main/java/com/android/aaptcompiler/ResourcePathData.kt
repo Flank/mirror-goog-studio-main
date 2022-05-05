@@ -48,7 +48,7 @@ data class ResourcePathData(
 }
 
 fun extractPathData(file: File, sourcePath: String = file.absolutePath) : ResourcePathData {
-  val extension = if (file.name.toLowerCase().endsWith(".9.png")) {
+  val extension = if (file.name.lowercase().endsWith(".9.png")) {
     "9.png"
   } else {
     file.name.substringAfterLast(".", "")

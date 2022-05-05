@@ -23,6 +23,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.IssueReporter
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildServiceRegistry
+import java.io.File
 
 /**
  * Interface providing services useful everywhere.
@@ -37,4 +38,6 @@ interface BaseServices {
     val projectInfo: ProjectInfo
 
     fun <T> newInstance(type: Class<T>, vararg args: Any?): T
+
+    fun file(file: Any): File
 }

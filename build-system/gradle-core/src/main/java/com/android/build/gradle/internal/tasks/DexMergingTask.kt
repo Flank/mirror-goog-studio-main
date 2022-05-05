@@ -22,6 +22,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -53,7 +54,6 @@ import com.android.builder.dexing.getSortedFilesInDir
 import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
-import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
@@ -396,9 +396,8 @@ abstract class DexMergingTask : NewIncrementalTask() {
                                 creationConfig.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
 
-                        val componentType = creationConfig.componentType
-                        if (componentType.isApk) {
-                            creationConfig.onTestedConfig {
+                        if (creationConfig is AndroidTestCreationConfig) {
+                            creationConfig.onTestedVariant {
                                 if (dexingUsingArtifactTransforms && it.componentType.isAar) {
                                     // If dexing using artifact transforms, library production code will
                                     // be dex'ed in a task, so we need to fetch the output directly.

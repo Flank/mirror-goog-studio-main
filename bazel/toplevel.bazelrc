@@ -1,0 +1,5 @@
+import %workspace%/tools/base/bazel/common.bazelrc
+import %workspace%/tools/base/bazel/platform_specific.bazelrc
+
+# User-specific .bazelrc
+try-import %workspace%/user.bazelrc

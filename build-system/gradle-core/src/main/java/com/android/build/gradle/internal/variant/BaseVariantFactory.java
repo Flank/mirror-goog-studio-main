@@ -21,20 +21,26 @@ import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.impl.ArtifactsImpl;
 import com.android.build.api.component.impl.AndroidTestImpl;
-import com.android.build.api.component.impl.ComponentImpl;
 import com.android.build.api.component.impl.TestFixturesImpl;
 import com.android.build.api.component.impl.UnitTestImpl;
 import com.android.build.api.dsl.CommonExtension;
 import com.android.build.api.variant.ComponentIdentity;
-import com.android.build.api.variant.impl.VariantBuilderImpl;
-import com.android.build.api.variant.impl.VariantImpl;
+import com.android.build.api.variant.VariantBuilder;
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
-import com.android.build.gradle.internal.core.VariantDslInfo;
+import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
+import com.android.build.gradle.internal.component.ComponentCreationConfig;
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
+import com.android.build.gradle.internal.component.UnitTestCreationConfig;
+import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.VariantSources;
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo;
+import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo;
+import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo;
+import com.android.build.gradle.internal.core.dsl.VariantDslInfo;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DefaultConfig;
@@ -59,8 +65,10 @@ import org.gradle.api.Project;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory<
-                VariantBuilderT extends VariantBuilderImpl, VariantT extends VariantImpl>
-        implements VariantFactory<VariantBuilderT, VariantT> {
+                VariantBuilderT extends VariantBuilder,
+                VariantDslInfoT extends VariantDslInfo,
+                VariantT extends VariantCreationConfig>
+        implements VariantFactory<VariantBuilderT, VariantDslInfoT, VariantT> {
 
     private static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 
@@ -75,17 +83,17 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public TestFixturesImpl createTestFixtures(
+    public TestFixturesCreationConfig createTestFixtures(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull TestFixturesComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestFixturesVariantData variantData,
-            @NonNull VariantImpl mainVariant,
+            @NonNull VariantCreationConfig mainVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
@@ -97,7 +105,7 @@ public abstract class BaseVariantFactory<
                                 TestFixturesImpl.class,
                                 componentIdentity,
                                 buildFeatures,
-                                variantDslInfo,
+                                dslInfo,
                                 variantDependencies,
                                 variantSources,
                                 paths,
@@ -123,17 +131,17 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public UnitTestImpl createUnitTest(
+    public UnitTestCreationConfig createUnitTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull UnitTestComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariant,
+            @NonNull VariantCreationConfig testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
@@ -145,7 +153,7 @@ public abstract class BaseVariantFactory<
                                 UnitTestImpl.class,
                                 componentIdentity,
                                 createUnitTestBuildFeatures(buildFeatures),
-                                variantDslInfo,
+                                dslInfo,
                                 variantDependencies,
                                 variantSources,
                                 paths,
@@ -166,17 +174,17 @@ public abstract class BaseVariantFactory<
 
     @NonNull
     @Override
-    public AndroidTestImpl createAndroidTest(
+    public AndroidTestCreationConfig createAndroidTest(
             @NonNull ComponentIdentity componentIdentity,
             @NonNull BuildFeatureValues buildFeatures,
-            @NonNull VariantDslInfo variantDslInfo,
+            @NonNull AndroidTestComponentDslInfo dslInfo,
             @NonNull VariantDependencies variantDependencies,
             @NonNull VariantSources variantSources,
             @NonNull VariantPathHelper paths,
             @NonNull ArtifactsImpl artifacts,
             @NonNull VariantScope variantScope,
             @NonNull TestVariantData variantData,
-            @NonNull VariantImpl testedVariant,
+            @NonNull VariantCreationConfig testedVariant,
             @NonNull TransformManager transformManager,
             @NonNull VariantServices variantServices,
             @NonNull TaskCreationServices taskCreationServices,
@@ -188,7 +196,7 @@ public abstract class BaseVariantFactory<
                                 AndroidTestImpl.class,
                                 componentIdentity,
                                 buildFeatures,
-                                variantDslInfo,
+                                dslInfo,
                                 variantDependencies,
                                 variantSources,
                                 paths,
@@ -207,10 +215,10 @@ public abstract class BaseVariantFactory<
         return androidTestProperties;
     }
 
-    @Override
     @Nullable
+    @Override
     public BaseVariantImpl createVariantApi(
-            @NonNull ComponentImpl component,
+            @NonNull ComponentCreationConfig component,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         Class<? extends BaseVariantImpl> implementationClass =

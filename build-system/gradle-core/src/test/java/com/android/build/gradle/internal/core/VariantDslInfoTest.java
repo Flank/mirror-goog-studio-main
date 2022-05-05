@@ -286,7 +286,7 @@ public class VariantDslInfoTest {
     private VariantDslInfo createVariant(SigningConfig signingOverride) {
 
         List<Pair<String, String>> flavors = ImmutableList.of(new Pair<>("dimension1", "flavor"));
-        VariantDslInfoBuilder<?> builder =
+        VariantDslInfoBuilder<?, ?> builder =
                 VariantDslInfoBuilder.getBuilder(
                         new DimensionCombinationImpl("debug", flavors),
                         ComponentTypeImpl.BASE_APK,
@@ -306,7 +306,7 @@ public class VariantDslInfoTest {
 
         builder.addProductFlavor(flavorConfig, new MockSourceProvider("custom"));
 
-        return builder.createVariantDslInfo(Mockito.mock(DirectoryProperty.class));
+        return (VariantDslInfo) builder.createVariantDslInfo(Mockito.mock(DirectoryProperty.class));
     }
 
     private void initWithInjectedDeviceApi(int deviceApi) {

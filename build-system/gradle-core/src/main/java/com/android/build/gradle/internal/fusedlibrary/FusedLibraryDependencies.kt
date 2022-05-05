@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryConfigurations
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import org.gradle.api.Action
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.attributes.AttributeContainer
@@ -34,7 +35,16 @@ class FusedLibraryDependencies(private val fusedLibsConfigurations: FusedLibrary
         artifactType: AndroidArtifacts.ArtifactType,
         attributes: AndroidAttributes? = null
     ) : FileCollection {
-        return getArtifactView(usage, spec, artifactType, attributes).artifacts.artifactFiles
+        return getArtifactCollection(usage, spec, artifactType, attributes).artifactFiles
+    }
+
+    fun getArtifactCollection(
+            usage: String,
+            spec: Spec<ComponentIdentifier>,
+            artifactType: AndroidArtifacts.ArtifactType,
+            attributes: AndroidAttributes? = null
+    ) : ArtifactCollection {
+        return getArtifactView(usage, spec, artifactType, attributes).artifacts
     }
 
     private fun getArtifactView(

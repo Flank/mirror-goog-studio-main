@@ -27,7 +27,7 @@ readonly script_name="$(basename "$0")"
 # Invocation ID must be lower case in Upsalite URL
 readonly invocation_id=$(uuidgen | tr A-F a-f)
 
-readonly config_options="--config=local --config=release --config=resultstore"
+readonly config_options="--config=local --config=_remote_base --config=sponge"
 readonly target_filters="qa_smoke,ui_test,-qa_unreliable,-no_mac,-no_test_mac,-requires_emulator"
 
 # The BAZEL_* variable is configured on the Mac Host.
@@ -53,7 +53,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
 readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/../bazel" info --config=release bazel-testlogs)"
   mkdir "${dist_dir}"/testlogs

@@ -67,8 +67,6 @@ class DslServicesImpl constructor(
     override val logger: Logger
         get() = projectServices.logger
 
-    override fun file(file: Any): File = projectServices.fileResolver(file)
-
     override fun <T: Any> newDecoratedInstance(dslClass: Class<T>, vararg args: Any) : T {
         return newInstance(androidPluginDslDecorator.decorate(dslClass), *args)
     }

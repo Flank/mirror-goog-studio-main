@@ -370,7 +370,7 @@ abstract class R8Task @Inject constructor(
                     )
                 }
                 if (creationConfig.isCoreLibraryDesugaringEnabled) {
-                    task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.services.projectInfo.getProject()))
+                    task.coreLibDesugarConfig.set(getDesugarLibConfig(creationConfig.services))
                 }
             }
             task.baseJar.disallowChanges()

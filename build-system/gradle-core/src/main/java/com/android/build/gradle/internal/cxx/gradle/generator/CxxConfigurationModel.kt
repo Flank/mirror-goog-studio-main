@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.gradle.generator
 import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
-import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
@@ -183,11 +183,10 @@ data class CxxConfigurationParameters(
  */
 fun tryCreateConfigurationParameters(
     projectOptions: ProjectOptions,
-    variant: VariantImpl
+    variant: VariantCreationConfig
 ): CxxConfigurationParameters? {
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
-    val project = projectInfo.getProject()
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
         getProjectPath(variant, globalConfig.externalNativeBuild) ?: return null
 
@@ -195,7 +194,7 @@ fun tryCreateConfigurationParameters(
         buildSystem,
         projectInfo.projectDirectory.asFile,
         buildStagingFolder,
-        project.buildDir
+        projectInfo.getBuildDir()
     )
     val cxxCacheFolder = join(projectInfo.getIntermediatesDir(), "cxx")
     fun option(option: BooleanOption) = variant.services.projectOptions.get(option)
@@ -220,10 +219,9 @@ fun tryCreateConfigurationParameters(
      */
     val enableProfileJson = option(ENABLE_PROFILE_JSON)
     val chromeTraceJsonFolder = if (enableProfileJson) {
-        val gradle = project.gradle
         val profileDir = option(PROFILE_OUTPUT_DIR)
-            ?.let { gradle.rootProject.file(it) }
-            ?: gradle.rootProject.buildDir.resolve(PROFILE_DIRECTORY)
+            ?.let { variant.services.file(it) }
+            ?: variant.services.projectInfo.rootBuildDir.resolve(PROFILE_DIRECTORY)
         profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
     } else {
         null
@@ -254,14 +252,12 @@ fun tryCreateConfigurationParameters(
     }
 
     val prefabClassPath = if (variant.buildFeatures.prefab) {
-        getPrefabFromMaven(
-            projectOptions,
-            variant.services.projectInfo.getProject())
+        getPrefabFromMaven(projectOptions, variant.services)
     } else {
         null
     }
     val outputOptions = (option(NATIVE_BUILD_OUTPUT_LEVEL)?:"")
-        .toUpperCase(Locale.US)
+        .uppercase(Locale.US)
         .split(",")
         .map { it.trim() }
         .filter { it.isNotBlank() }
@@ -281,10 +277,10 @@ fun tryCreateConfigurationParameters(
         makeFile = makeFile,
         configureScript = configureScript,
         buildStagingFolder = buildStagingFolder,
-        moduleRootFolder = project.projectDir,
-        buildDir = project.buildDir,
-        rootDir = project.rootDir,
-        buildFile = project.buildFile,
+        moduleRootFolder = projectInfo.projectDirectory.asFile,
+        buildDir = projectInfo.getBuildDir(),
+        rootDir = projectInfo.rootDir,
+        buildFile = projectInfo.buildFile,
         isDebuggable = variant.debuggable,
         minSdkVersion = variant.minSdkVersion.toSharedAndroidVersion(),
         compileSdkVersion = globalConfig.compileSdkHashString,
@@ -293,7 +289,7 @@ fun tryCreateConfigurationParameters(
         cmakeVersion = globalConfig.externalNativeBuild.cmake.version,
         splitsAbiFilterSet = globalConfig.splits.abiFilters.toSet(),
         intermediatesFolder = projectInfo.getIntermediatesDir(),
-        gradleModulePathName = project.path,
+        gradleModulePathName = projectInfo.path,
         isBuildOnlyTargetAbiEnabled = option(BUILD_ONLY_TARGET_ABI),
         ideBuildTargetAbi = option(IDE_BUILD_TARGET_ABI),
         isCmakeBuildCohabitationEnabled = option(ENABLE_CMAKE_BUILD_COHABITATION),
@@ -304,7 +300,10 @@ fun tryCreateConfigurationParameters(
         prefabPackageConfigurationList = prefabPackageConfigurationList,
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
-        nativeVariantConfig = createNativeBuildSystemVariantConfig(buildSystem, variant),
+        nativeVariantConfig = createNativeBuildSystemVariantConfig(
+            buildSystem,
+            variant as VariantImpl<*>
+        ),
         outputOptions = outputOptions
     )
 }
@@ -316,7 +315,7 @@ fun tryCreateConfigurationParameters(
  *   ndkBuild in the same project.
  */
 private fun getProjectPath(
-    component: ComponentCreationConfig,
+    component: VariantCreationConfig,
     config: ExternalNativeBuild
 ): NativeProjectPath? {
     val externalProjectPaths = listOfNotNull(

@@ -174,7 +174,7 @@ abstract class FinalizeBundleTask : NonIncrementalTask() {
                         )
                     AabFlinger(
                         outputFile = parameters.finalBundleFile.asFile.get(),
-                        signerName = it.keyAlias.toUpperCase(Locale.US),
+                        signerName = it.keyAlias.uppercase(Locale.US),
                         privateKey = certificateInfo.key,
                         certificates = listOf(certificateInfo.certificate),
                         minSdkVersion = 18 // So that RSA + SHA256 are used

@@ -22,7 +22,7 @@ import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.testingutils.TestingAdbLibHost
 import com.android.adblib.testingutils.TestingAdbLogger
 import com.android.adblib.utils.AdbProtocolUtils
-import com.android.adblib.utils.MultiLineShellCollector
+import com.android.adblib.utils.LineShellCollector
 import com.android.adblib.utils.ResizableBuffer
 import com.android.adblib.utils.TextShellCollector
 import com.android.adblib.utils.TextShellV2Collector
@@ -224,6 +224,29 @@ class AdbDeviceServicesTest {
 
         // Assert
         Assert.assertEquals(input, commandOutput)
+    }
+
+    @Test
+    fun testShellWithNoShutdownOutput() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+        val input = "foo"
+
+        // Act
+        runBlocking {
+            val collector = TextShellCollector()
+            val stdinChannel =  input.asAdbInputChannel(deviceServices.session)
+            stdinChannel.use {
+                val timeout = Duration.ofSeconds(2)
+                val flow = deviceServices.shell(deviceSelector, "cat", collector, stdinChannel = it, timeout, shutdownOutput = false )
+                exceptionRule.expect(TimeoutException::class.java)
+                flow.first()
+                Assert.fail("Call to 'cat' should have timed out")
+            }
+        }
     }
 
     @Test
@@ -452,7 +475,7 @@ class AdbDeviceServicesTest {
             deviceServices.shellWithIdleMonitoring(
                 deviceSelector,
                 "cat",
-                MultiLineShellCollector(),
+                LineShellCollector(),
                 slowInputChannel,
                 commandTimeout = INFINITE_DURATION,
                 commandOutputTimeout = Duration.ofMillis(100)

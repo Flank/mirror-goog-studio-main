@@ -20,7 +20,6 @@ import com.android.SdkConstants.ANDROID_PKG
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_THEME_PREFIX
 import com.android.SdkConstants.ANDROID_URI
-import com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT
 import com.android.SdkConstants.ATTR_AUTOFILL_HINTS
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_FOREGROUND
@@ -84,7 +83,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
 import com.android.tools.lint.detector.api.ResourceFolderScanner
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -92,6 +90,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getLongAttribute
+import com.android.tools.lint.detector.api.VersionChecks
 import com.android.tools.lint.detector.api.VersionChecks.Companion.REQUIRES_API_ANNOTATION
 import com.android.tools.lint.detector.api.VersionChecks.Companion.SDK_INT
 import com.android.tools.lint.detector.api.VersionChecks.Companion.getTargetApiAnnotation
@@ -177,7 +176,6 @@ import org.w3c.dom.Node
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
-import java.lang.Boolean.TRUE
 import java.util.EnumSet
 import kotlin.math.max
 import kotlin.math.min
@@ -220,10 +218,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (name != ATTR_LAYOUT_WIDTH &&
                 name != ATTR_LAYOUT_HEIGHT &&
                 name != ATTR_ID &&
-                (
-                    (!isAttributeOfGradientOrGradientItem(attribute) && name != "fillType") ||
-                        !dependsOnAppCompat(context.project)
-                    )
+                (!isAttributeOfGradientOrGradientItem(attribute) && name != "fillType" || !context.project.dependsOnAppCompat())
             ) {
                 val owner = "android/R\$attr"
                 attributeApiLevel = apiDatabase.getFieldVersion(owner, name)
@@ -256,7 +251,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                         // Supported by appcompat
                         if ("fontFamily" == localName) {
-                            if (dependsOnAppCompat(context.project)) {
+                            if (context.project.dependsOnAppCompat()) {
                                 val prefix = XmlUtils.lookupNamespacePrefix(
                                     attribute, AUTO_URI, "app", false
                                 )
@@ -690,6 +685,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val api = getApiLevel(context, annotation, annotationInfo.qualifiedName)
         if (api == -1) return
         val minSdk = getMinSdk(context)
+        val evaluator = context.evaluator
         if (usageInfo.type == AnnotationUsageType.DEFINITION) {
             val fix = fix()
                 .replace().all().with("")
@@ -697,7 +693,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 .name("Delete @RequiresApi")
                 .build()
 
-            val (targetAnnotation, target) = getTargetApiAnnotation(element.uastParent?.uastParent)
+            val (targetAnnotation, target) = getTargetApiAnnotation(evaluator, element.uastParent?.uastParent)
             if (target > api) {
                 val outerAnnotation = "@${targetAnnotation?.qualifiedName?.substringAfterLast('.')}($target)"
                 val message = "Unnecessary; SDK_INT is always >= $target from outer annotation (`$outerAnnotation`)"
@@ -715,7 +711,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // These two annotations do not propagate the requirement outwards to callers
             return
         }
-        val (targetAnnotation, target) = getTargetApiAnnotation(element)
+        val (targetAnnotation, target) = getTargetApiAnnotation(evaluator, element)
         if (target == -1 || api > target) {
             if (isWithinVersionCheckConditional(context, element, api)) {
                 return
@@ -723,7 +719,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (isPrecededByVersionCheckExit(context, element, api)) {
                 return
             }
-            if (isSurroundedByHigherTargetAnnotation(targetAnnotation, api)) {
+            if (isSurroundedByHigherTargetAnnotation(evaluator, targetAnnotation, api)) {
                 // Make sure we aren't interpreting a redundant local @RequireApi(x) annotation
                 // as implying the API level can be x here if there is an *outer* annotation
                 // with a higher API level (we flag those above using [OBSOLETE_SDK_LEVEL] but
@@ -781,13 +777,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
      * an api level requirement of [atLeast]?
      */
     private fun isSurroundedByHigherTargetAnnotation(
+        evaluator: JavaEvaluator,
         annotation: UAnnotation?,
         atLeast: Int,
-        isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+        isApiLevelAnnotation: (String) -> Boolean = VersionChecks.Companion::isTargetAnnotation
     ): Boolean {
         var curr = annotation ?: return false
         while (true) {
-            val (outer, target) = getTargetApiAnnotation(curr.uastParent?.uastParent, isApiLevelAnnotation)
+            val (outer, target) = getTargetApiAnnotation(evaluator, curr.uastParent?.uastParent, isApiLevelAnnotation)
             if (target >= atLeast) {
                 return true
             }
@@ -2554,9 +2551,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val psiClass = evaluator.findClass(tagName) ?: return defaultValue
             return evaluator.extendsClass(psiClass, FQCN_FRAME_LAYOUT, false)
         }
-
-        private fun dependsOnAppCompat(project: Project) =
-            TRUE == project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
 
         private fun apiLevelFix(api: Int): LintFix {
             return LintFix.create().data(KEY_REQUIRES_API, api)
