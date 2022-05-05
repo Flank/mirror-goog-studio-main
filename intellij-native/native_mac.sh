@@ -41,7 +41,7 @@ declare exit_code=0
 
 (
   echo "Building fsNotifier..."
-  ${script_dir}/build-mac-fsNotifier.sh -o ${out_dir}/fsNotifier -d ${dist_dir} || ((exit_code++))
+  ${script_dir}/build-mac-fsnotifier.sh -o ${out_dir}/fsNotifier -d ${dist_dir} || ((exit_code++))
 )
 
 ls -lha $dist_dir
