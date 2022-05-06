@@ -16,17 +16,38 @@
 
 package com.android.tools.instrumentation.threading.agent;
 
+import com.android.annotations.NonNull;
 import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 
+/**
+ * The main entry point of the threading annotations agent.
+ *
+ * <p>Instruments code by installing the {@link Transformer} that inject runtime checks for
+ * threading annotations.
+ */
 public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
+
     static Instrumentation instrumentation;
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         Agent.instrumentation = instrumentation;
+        instrumentation.addTransformer(new Transformer(createMappingRules()));
         LOGGER.info("Threading agent has been loaded.");
-        // TODO: add transformer
+    }
+
+    @NonNull
+    static AnnotationMappings createMappingRules() {
+        return AnnotationMappings.newBuilder()
+                .addThreadingAnnotationWithCheckerMethod(
+                        "Lcom/android/annotations/concurrency/UiThread;",
+                        "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
+                        "verifyOnUiThread")
+                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/AnyThread;")
+                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/Slow;")
+                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/WorkerThread;")
+                .build();
     }
 }
