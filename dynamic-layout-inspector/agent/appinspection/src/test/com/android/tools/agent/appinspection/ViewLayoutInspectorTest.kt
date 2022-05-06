@@ -54,6 +54,7 @@ import com.android.tools.layoutinspector.toBytes
 import com.google.common.truth.Truth.assertThat
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
+import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorCode
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
 import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
@@ -1760,6 +1761,35 @@ abstract class ViewLayoutInspectorTestBase {
                 .isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
             assertThat(response.startFetchResponse.error)
                 .isEqualTo("Activity must be hardware accelerated for live inspection")
+            assertThat(response.startFetchResponse.code)
+                .isEqualTo(ErrorCode.NO_HARDWARE_ACCELERATION)
+        }
+    }
+
+    @Test
+    fun noRootViewsReturnError() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(1)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase)
+                .isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error)
+                .isEqualTo("Unable to find any root Views")
+            assertThat(response.startFetchResponse.code)
+                .isEqualTo(ErrorCode.NO_ROOT_VIEWS_FOUND)
         }
     }
 

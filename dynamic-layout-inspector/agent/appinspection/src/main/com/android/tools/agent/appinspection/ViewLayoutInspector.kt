@@ -42,6 +42,9 @@ import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
+import com.android.tools.layoutinspector.errors.errorCode
+import com.android.tools.layoutinspector.errors.noHardwareAcceleration
+import com.android.tools.layoutinspector.errors.noRootViews
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -71,7 +74,6 @@ import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEv
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.PrintStream
-import java.util.Random
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.Callable
@@ -297,9 +299,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         if (params is WindowManager.LayoutParams) {
             if (params.flags and WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED == 0) {
                 rootsDetector.stop()
-                throw UnsupportedOperationException(
-                    "Activity must be hardware accelerated for live inspection"
-                )
+                throw noHardwareAcceleration()
             }
         }
 
@@ -665,8 +665,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 }.get()
                 when {
                     result -> break
-                    tries == MAX_START_FETCH_RETRIES ->
-                        throw Exception(Exception("Unable to find any root Views"))
+                    tries == MAX_START_FETCH_RETRIES -> throw Exception(noRootViews())
                     else -> Thread.sleep(300)
                 }
             }
@@ -676,6 +675,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             callback.reply {
                 startFetchResponse = StartFetchResponse.newBuilder().apply {
                     error = exception.cause?.message ?: "Unknown error"
+                    code = exception.cause?.errorCode
                 }.build()
             }
             return

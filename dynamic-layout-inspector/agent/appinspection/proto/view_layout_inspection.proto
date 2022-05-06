@@ -223,6 +223,16 @@ message PropertyGroup {
     repeated Property property = 3;
 }
 
+// An error code to include in error events and responses
+// These should be a subset of the error codes defined in studio_stats.proto
+enum ErrorCode {
+    UNKNOWN_ERROR_CODE = 0;
+    // The platform relies on the hardware renderer to provide rendering update callbacks and SKPs
+    NO_HARDWARE_ACCELERATION = 1;
+    // The app seems to have no UI
+    NO_ROOT_VIEWS_FOUND = 2;
+}
+
 // ======= COMMANDS, RESPONSES, AND EVENTS =======
 
 // Tells the inspector to start sending |LayoutEvent|s asynchronously
@@ -234,6 +244,8 @@ message StartFetchCommand {
 message StartFetchResponse {
     // Empty if start is successful, otherwise an appropriate error message.
     string error = 1;
+    // An error code if applicable
+    ErrorCode code = 2;
 }
 
 // Command to fire to stop |LayoutEvent|s from being returned.
