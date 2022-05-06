@@ -280,6 +280,91 @@ class CheckAarMetadataTaskTest {
     }
 
     @Test
+    fun testFailsOnMinCompileSdkVersionAboveMaxAgp_unknownPreviewCompileSdk() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 47,
+                                minCompileSdkExtension = 0,
+                                minAgpVersion = "3.0.0"
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-Unknown")
+        task.platformSdkApiLevel.set(46)
+        task.agpVersion.set("7.2.0")
+        task.maxRecommendedStableCompileSdkVersionForThisAgp.set(30)
+        task.projectPath.set(":app")
+        try {
+            task.taskAction()
+            fail("Expected RuntimeException")
+        } catch (e: RuntimeException) {
+            assertThat(e.message).isEqualTo("""
+                An issue was found when checking AAR metadata:
+
+                  1.  Dependency 'displayName' requires libraries and applications that
+                      depend on it to compile against version 47 or later of the
+                      Android APIs.
+
+                      :app is currently compiled against android-Unknown.
+
+                      Also, the maximum recommended compile SDK version for Android Gradle
+                      plugin 7.2.0 is 30.
+
+                      Recommended action: Update this project's version of the Android Gradle
+                      plugin to one that supports 47, then update this project to use
+                      compileSdkVerion of at least 47.
+
+                      Note that updating a library or application's compileSdkVersion (which
+                      allows newer APIs to be used) can be done separately from updating
+                      targetSdkVersion (which opts the app in to new runtime behavior) and
+                      minSdkVersion (which determines which devices the app can be installed
+                      on).
+            """.trimIndent())
+        }
+    }
+
+    @Test
+    fun testPassing_unknownPreviewCompileSdk() {
+        task.aarMetadataArtifacts =
+            FakeArtifactCollection(
+                mutableSetOf(
+                    FakeResolvedArtifactResult(
+                        file = temporaryFolder.newFile().also {
+                            writeAarMetadataFile(
+                                file = it,
+                                aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
+                                aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
+                                minCompileSdk = 47,
+                                minCompileSdkExtension = 0,
+                                minAgpVersion = "3.0.0"
+                            )
+                        },
+                        identifier = FakeComponentIdentifier("displayName")
+                    )
+                )
+            )
+        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
+        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
+        task.compileSdkVersion.set("android-Unknown")
+        task.platformSdkApiLevel.set(47)
+        task.agpVersion.set(Version.ANDROID_GRADLE_PLUGIN_VERSION)
+        task.projectPath.set(":app")
+        task.taskAction()
+    }
+
+    @Test
     fun testFailsOnMinAgpVersion() {
         task.aarMetadataArtifacts =
             FakeArtifactCollection(
