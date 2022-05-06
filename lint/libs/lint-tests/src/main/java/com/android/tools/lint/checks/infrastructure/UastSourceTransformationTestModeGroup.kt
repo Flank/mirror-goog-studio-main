@@ -31,7 +31,7 @@ import java.io.File
  * parentheses) often test modes don't overlap and so we don't need to
  * run through all the machinery twice.
  */
-internal class TestModeGroup(vararg modes: TestMode) : UastSourceTransformationTestMode(
+internal class UastSourceTransformationTestModeGroup(vararg modes: TestMode) : UastSourceTransformationTestMode(
     "Source code transformations",
     "TestMode.SOURCE_CODE_TRANSFORMATIONS",
     "default"
