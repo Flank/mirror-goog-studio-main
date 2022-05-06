@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -390,24 +389,10 @@ abstract class DexMergingTask : NewIncrementalTask() {
                         }
                     }
                     MERGE_PROJECT -> {
-                        val files =
-                            creationConfig.services.fileCollection(
-                                creationConfig.artifacts.get(InternalArtifactType.PROJECT_DEX_ARCHIVE),
-                                creationConfig.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
-                            )
-
-                        if (creationConfig is AndroidTestCreationConfig) {
-                            creationConfig.onTestedVariant {
-                                if (dexingUsingArtifactTransforms && it.componentType.isAar) {
-                                    // If dexing using artifact transforms, library production code will
-                                    // be dex'ed in a task, so we need to fetch the output directly.
-                                    // Otherwise, it will be in the dex'ed in the dex builder transform.
-                                    files.from(it.artifacts.getAll(InternalMultipleArtifactType.DEX))
-                                }
-                            }
-                        }
-
-                        return files
+                        return creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(InternalArtifactType.PROJECT_DEX_ARCHIVE),
+                            creationConfig.artifacts.get(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
+                        )
                     }
                     MERGE_ALL -> {
                         // technically, the Provider<> may not be needed, but the code would
