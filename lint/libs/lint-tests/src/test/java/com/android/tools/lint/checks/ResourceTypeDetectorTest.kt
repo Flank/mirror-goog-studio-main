@@ -16,9 +16,12 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.bytecode
+import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.rClass
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
+import org.junit.Test
 
 class ResourceTypeDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ResourceTypeDetector()
@@ -2391,5 +2394,74 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    @Test
+    fun testBinaryDimension() {
+        // Regression test for https://issuetracker.google.com/231344506
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import androidx.annotation.Dimension;
+
+                import test.pkg2.Api;
+
+                public class Test {
+                    public void test(@Dimension(unit = Dimension.SP) int textSize, @Dimension(unit = Dimension.DP) int dp, @Dimension(unit = Dimension.PX) int w) {
+                        Api api = new Api();
+                        api.api(textSize, dp, w); // OK
+                        api.api(w,        // ERROR 1
+                                textSize, // ERROR 2
+                                dp);      // ERROR 3
+
+                    }
+                }
+                """
+            ).indented(),
+            bytecode(
+                "libs/api.jar",
+                java(
+                    """
+                    package test.pkg2;
+
+                    import androidx.annotation.Dimension;
+
+                    public class Api {
+                        public void api(@Dimension(unit = Dimension.SP) int textSize,
+                                        @Dimension(unit = Dimension.DP) int dp,
+                                        @Dimension(unit = Dimension.PX) int w) {
+                        }
+                    }
+                    """
+                ).indented(),
+                0x37117cd1,
+                """
+                test/pkg2/Api.class:
+                H4sIAAAAAAAAAF1OTUvDQBB906RNG1tbvw4eRBQP1UMXvHhQhKAIgaKi4n3T
+                LGVrswnJpvi3PAke/AH+KHG2ggUP8+brvXnz9f3xCeAMOyE8bAbYCrBNaF1o
+                o+0lwRsePxP8qzxVhP5YG3VbZ4kqn2Qy54knC83sYRzHjnf0UBurMxWbha40
+                M+5lKTNlVRkZk1tpdW4qwv5YmrTMdfoq5N9cXLPQVFyds2HN9h4/1nAAB0QI
+                H/O6nKgb7azbUaFHM7mQXfhoEnpWVVYUL9NTEbmnBm4n5tJMxV0yUxOLAzSW
+                l/gqyIkYW9ztcSbOzZN30JuzQsDY+h0yttFhiaPucviO8Z/WQch46HGzxtGN
+                0VuV66uyz2mw/GDjBxc+8B57AQAA
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Test.java:11: Error: Mismatched @Dimension units here; expected a scale-independent (sp) integer but received a pixel integer [ResourceType]
+                    api.api(w,        // ERROR 1
+                            ~
+            src/test/pkg/Test.java:12: Error: Mismatched @Dimension units here; expected density-independent (dp) integer but received a scale-independent (sp) integer [ResourceType]
+                            textSize, // ERROR 2
+                            ~~~~~~~~
+            src/test/pkg/Test.java:13: Error: Mismatched @Dimension units here; expected a pixel integer but received density-independent (dp) integer [ResourceType]
+                            dp);      // ERROR 3
+                            ~~
+            3 errors, 0 warnings
+            """
+        )
     }
 }
