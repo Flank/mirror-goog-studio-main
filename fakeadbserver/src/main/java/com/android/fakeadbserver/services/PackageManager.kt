@@ -15,8 +15,10 @@
  */
 package com.android.fakeadbserver.services
 
+import com.android.fakeadbserver.shellcommandhandlers.ShellConstants
+
 // TODO: Add all package management app (create,write,commit,abandon) and list here.
-class PackageManager {
+class PackageManager : Service {
     companion object {
 
         const val BAD_FLAG = "-BAD_FLAG"
@@ -32,12 +34,31 @@ class PackageManager {
             FAIL_ME_SESSION to "Failure [REQUESTED_FAILURE_VIA_SESSION]",
             FAIL_ME_SESSION_TEST_ONLY to "Failure [$SESSION_TEST_ONLY_CODE: $SESSION_TEST_ONLY_MSG]",
         )
+
+        const val SERVICE_NAME = "package"
     }
 
-    fun processPackageCommand(args: List<String>, serviceOutput: ServiceOutput) {
+    override fun process(args: List<String>, serviceOutput: ServiceOutput) {
         val cmd = args[0]
 
         return when {
+            cmd == "list users" -> {
+                serviceOutput.writeStdout("Users:\n\tUserInfo{0:Owner:13} running\n")
+                serviceOutput.writeExitCode(0)
+            }
+            cmd.startsWith("uninstall") -> {
+                if (args.size == 1) {
+                    serviceOutput.writeStdout("Error: package name not specified")
+                    serviceOutput.writeExitCode(1)
+                    return
+                }
+                val applicationId = args.last()
+                if (applicationId == ShellConstants.NON_INSTALLED_APP_ID) {
+                    serviceOutput.writeStdout("Failure [DELETE_FAILED_INTERNAL_ERROR]")
+                } else {
+                    serviceOutput.writeStdout("Success")
+                }
+            }
             cmd == "path" -> {
                 val appId = args[1]
                 serviceOutput.writeStdout("/data/app/$appId/base.apk")

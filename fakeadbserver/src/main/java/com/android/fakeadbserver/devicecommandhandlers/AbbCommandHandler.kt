@@ -38,6 +38,6 @@ class AbbCommandHandler : DeviceCommandHandler(COMMAND) {
 
         // Wrap stdin/stdout and execute abb command
         val serviceOutput = ShellProtocolServiceOutput(socket)
-        device.serviceManager.processCommand(args, serviceOutput)
+        device.serviceManager.processCommand(args.split("\u0000"), serviceOutput)
     }
 }

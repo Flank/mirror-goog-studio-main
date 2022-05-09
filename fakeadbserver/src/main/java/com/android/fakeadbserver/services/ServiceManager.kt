@@ -15,27 +15,34 @@
  */
 package com.android.fakeadbserver.services
 
+import com.google.common.collect.ImmutableCollection
+import java.util.Collections
+
 class ServiceManager {
 
     private val packageManager = PackageManager()
-    private val log = java.util.Collections.synchronizedList(mutableListOf<String>())
+    private val log = java.util.Collections.synchronizedList(mutableListOf<List<String>>())
 
-    fun processCommand(args: String, output: ServiceOutput) {
+    fun processCommand(args: List<String>, output: ServiceOutput) {
         // We log received commands to allow tests to inspect call history
-        log.add(args)
+        log.add(Collections.unmodifiableList(args))
 
-        val parameters = args.split(("\u0000"))
-        val service = parameters[0]
+        val serviceName = args[0]
+        val service = getService(serviceName)
 
-        if (service == "package") {
-            packageManager.processPackageCommand(
-                parameters.slice(1 until parameters.size),
-                output
-            )
-            return
+        if (service == null) {
+            output.writeStderr("Error: Service '$serviceName' is not supported")
+            output.writeExitCode(5)
+            return;
         }
 
-        output.writeStderr("Error: Service '$service' is not supported")
-        output.writeExitCode(5)
+        service.process(args.slice(1 until args.size), output)
+    }
+
+    private fun getService(name : String) : Service? {
+        if (name == PackageManager.SERVICE_NAME) {
+            return packageManager
+        }
+        return null
     }
 }
