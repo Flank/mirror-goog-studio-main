@@ -35,8 +35,8 @@ public class ImlToBazelTest {
             config.dryRun = true;
             ImlToBazel.run(
                     config,
-                    Paths.get("tools/base/bazel/test/iml_to_bazel").toAbsolutePath(),
-                    ".",
+                    Paths.get("tools/base"),
+                    "bazel/test/iml_to_bazel",
                     logger);
             fail("Expected a failure.");
         } catch (ImlToBazel.ProjectLoadingException e) {

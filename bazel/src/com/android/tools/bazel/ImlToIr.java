@@ -80,11 +80,11 @@ public class ImlToIr {
     // mock it or write another implementation.
     @SuppressWarnings("MethodMayBeStatic")
     public IrProject convert(
-            Configuration config, Path workspace, String projectPath, BazelToolsLogger logger)
+            Configuration config, Path workspace, String projectPathString, BazelToolsLogger logger)
             throws IOException {
-        projectPath = workspace.resolve(projectPath).toString();
+        Path projectPath = workspace.resolve(projectPathString);
         // Depending on class initialization order this property will be read, so it needs to be set.
-        System.setProperty("idea.home.path", projectPath);
+        System.setProperty("idea.home.path", projectPath.toString());
 
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
         JpsProjectLoader.loadProject(project, new HashMap<>(), projectPath);
@@ -92,7 +92,7 @@ public class ImlToIr {
                 "Loaded project %s with %d modules.",
                 project.getName(), project.getModules().size());
 
-        IrProject irProject = new IrProject(workspace.toFile(), projectPath);
+        IrProject irProject = new IrProject(workspace.toFile(), projectPath.toString());
 
         JpsCompilerExcludes excludes =
                 JpsJavaExtensionService.getInstance()
