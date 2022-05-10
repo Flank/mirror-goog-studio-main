@@ -157,6 +157,26 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
     }
 
     /**
+     * Does this library have blocking issues?
+     *
+     * @param groupId: group id for library coordinates
+     * @param artifactId: artifact id for library coordinates
+     * @param versionString: version to check
+     *
+     * @return true if the index has information about this particular version, and it has been labeled with blocking severity.
+     */
+    fun hasLibraryBlockingIssues(groupId: String, artifactId: String, versionString: String): Boolean {
+        val labels = getLabels(groupId, artifactId, versionString) ?: return false
+        val severity = labels.severity
+        if (severity != null && severity == LibraryVersionLabels.Severity.BLOCKING_SEVERITY) {
+            return true
+        }
+        // Non-compliant issues are always blocking
+        val isLibraryNonCompliant = getLabels(groupId, artifactId, versionString)?.hasNonCompliantIssueInfo() ?: false
+        return showPolicyIssues && isLibraryNonCompliant
+    }
+
+    /**
      * Get URL for the SDK associated to this library
      *
      * @param groupId: group id for library coordinates
