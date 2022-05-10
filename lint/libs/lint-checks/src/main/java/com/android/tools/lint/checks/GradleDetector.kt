@@ -3331,9 +3331,13 @@ open class GradleDetector : Detector(), GradleScanner {
 
         @JvmStatic
         var playSdkIndexFactory: (Path?, LintClient) -> GooglePlaySdkIndex = { path: Path?, client: LintClient ->
-            val index = object : GooglePlaySdkIndex(client, path) {
+            val index = object : GooglePlaySdkIndex(path) {
                 public override fun readUrlData(url: String, timeout: Int) =
                     readUrlData(client, url, timeout)
+
+                override fun error(throwable: Throwable, message: String?) {
+                    client.log(throwable, message)
+                }
             }
             index.initialize()
             index

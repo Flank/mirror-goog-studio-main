@@ -15,20 +15,17 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.LintFix
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
 class GooglePlaySdkIndexTest {
     private lateinit var proto: Index
     private lateinit var index: GooglePlaySdkIndex
-    private lateinit var mockedClient: LintClient
 
     @Before
     fun prepareIndex() {
@@ -138,8 +135,7 @@ class GooglePlaySdkIndexTest {
                     )
             )
             .build()
-        mockedClient = mock(LintClient::class.java);
-        index = object: GooglePlaySdkIndex(mockedClient) {
+        index = object: GooglePlaySdkIndex() {
             override fun readUrlData(url: String, timeout: Int): ByteArray? {
                 fail("Trying to read proto from the network!")
                 return null
