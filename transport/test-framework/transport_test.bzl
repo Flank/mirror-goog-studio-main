@@ -52,20 +52,23 @@ def _targets_to_paths(targets):
 #                    will be re-used.
 # app_runtime_deps: A list of zero or more targets to .so files or jar libraries needed
 #                   by the app at at runtime.
+# transport_main: The target that builds the transport binary. It's passed from outisde to allow the use of mocks.
 #
 # The rest of the arguments are standard parameters.
-def transport_test(name,
-                   srcs,
-                   app_dexes,
-                   app_dexes_nojvmti = [],
-                   deps = [],
-                   runtime_deps = [],
-                   app_runtime_deps = [],
-                   jvm_flags = [],
-                   data = [],
-                   tags = [],
-                   shard_count = None,
-                   size = None):
+def transport_test(
+        name,
+        srcs,
+        app_dexes,
+        app_dexes_nojvmti = [],
+        deps = [],
+        runtime_deps = [],
+        app_runtime_deps = [],
+        jvm_flags = [],
+        data = [],
+        tags = [],
+        shard_count = None,
+        size = None,
+        transport_main = "//tools/base/transport:transport_main"):
     app_runtime_deps = app_runtime_deps + [
         "//tools/base/profiler/app:perfa",
         "//tools/base/transport/native/agent:libjvmtiagent.so",
@@ -81,20 +84,19 @@ def transport_test(name,
     fake_android_test(
         name = name,
         srcs = srcs,
-        deps = deps + [
+        deps = deps + [transport_main] + [
             "//tools/base/transport/test-framework:test-framework",
             "//tools/base/fakeandroid",
             "//tools/base/transport/proto:transport_java_proto",
             "//tools/base/bazel:studio-grpc",
             "//tools/base/bazel:studio-proto",
-            "//tools/base/transport:transport_main",
         ],
         runtime_deps = runtime_deps,
         tags = tags,
         shard_count = shard_count,
         size = size,
         jvm_flags = jvm_flags + [
-            "-Dtransport.daemon.location=$(location //tools/base/transport:transport_main)",
+            "-Dtransport.daemon.location=$(location %s)" % transport_main,
             "-Dtransport.agent.location=$(location //tools/base/transport/native/agent:libjvmtiagent.so)",
             "-Dapp.libs=" + _targets_to_paths(app_runtime_deps),
             "-Dapp.dexes.jvmti=" + _targets_to_paths(app_dexes),
