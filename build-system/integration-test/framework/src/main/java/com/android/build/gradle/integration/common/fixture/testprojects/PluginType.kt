@@ -81,6 +81,9 @@ enum class PluginType(
     JAVA_TEST_FIXTURES(
         id = "java-test-fixtures",
         useNewDsl = true
+    ),
+    MAVEN_PUBLISH(
+        id= "maven-publish",
     )
 }
 
