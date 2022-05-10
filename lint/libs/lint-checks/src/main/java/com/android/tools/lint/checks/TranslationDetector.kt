@@ -161,22 +161,24 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
 
             // Map from key name to error message to show at that location
             val localeCount = allLocales.size
-            val nonTranslatable = nonTranslatable ?: emptySet<String>()
-            for (key in baseNames[STRING] ?: return) {
-                val locales = nameToLocales[key] ?: emptySet<String>()
-                if (locales.size < localeCount) {
-                    // Missing translations!
-                    if (nonTranslatable.contains(key)) {
-                        // ...but that's fine for non-translatable strings!
-                        continue
+            val nonTranslatable = nonTranslatable ?: emptySet()
+            for (type in baseNames.keys) {
+                for (key in baseNames[type] ?: return) {
+                    val locales = nameToLocales[key] ?: emptySet()
+                    if (locales.size < localeCount) {
+                        // Missing translations!
+                        if (nonTranslatable.contains(key)) {
+                            // ...but that's fine for non-translatable strings!
+                            continue
+                        }
+                        val missing = Sets.difference(allLocales, locales)
+                        val map = missingMap ?: run {
+                            val map = HashMap<String, Set<String>>()
+                            missingMap = map
+                            map
+                        }
+                        map[key] = missing
                     }
-                    val missing = Sets.difference(allLocales, locales)
-                    val map = missingMap ?: run {
-                        val map = HashMap<String, Set<String>>()
-                        missingMap = map
-                        map
-                    }
-                    map[key] = missing
                 }
             }
 
@@ -190,7 +192,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         if (nonBaseNames.isNotEmpty()) {
             // See if we have any strings that aren't translated
             for (type in nonBaseNames.keys) {
-                val base = baseNames[type] ?: emptySet<String>()
+                val base = baseNames[type] ?: emptySet()
                 for (name in nonBaseNames[type]!!) {
                     if (!base.contains(name)) {
                         // Found at least one resource in the non-base folders that
@@ -382,7 +384,9 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
         // Incremental mode
         val client = context.client
         // TODO: Get rid of the non-incremental version! One complication is how to flag
-        // collate results and how to avoid repeatedly reporting them
+        // collate results and how to avoid repeatedly reporting them. There's also
+        // a difference in how batch treats non-value locales; e.g. if you have layout-ja,
+        // the resource repository includes "ja" as one of the targeted languages.
         if (!context.isGlobalAnalysis()) {
             return
         }
@@ -495,7 +499,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
                 }
                 names.add(name)
 
-                if (type == STRING && element != null && context is XmlContext) {
+                if ((type == STRING || type == PLURALS) && element != null && context is XmlContext) {
                     if (handleNonTranslatable(name, element, context, false)) {
                         return
                     }
@@ -700,7 +704,7 @@ class TranslationDetector : Detector(), XmlScanner, ResourceFolderScanner, Binar
             // Offer quickfix only for resource item values for now, not whole files
             // (which would require additional to LintFix infrastructure)
             val fix = if (context.resourceFolderType == VALUES) {
-                val fixLabel = if (type == STRING) {
+                val fixLabel = if (type == STRING || type == PLURALS) {
                     "Remove translation"
                 } else {
                     "Remove resource override"
