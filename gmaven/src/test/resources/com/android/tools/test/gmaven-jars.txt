@@ -288,10 +288,6 @@ com/android/tools/build/builder
   META-INF/services/
   META-INF/services/com.android.tools.r8
   NOTICE
-  api_database/
-  api_database/api_database_ambiguous.txt
-  api_database/api_database_api_level.ser
-  api_database/api_database_hash_lookup.ser
   com/
   com/android/
   com/android/builder/
@@ -326,6 +322,8 @@ com/android/tools/build/builder
   com/android/tools/
   com/android/tools/r8/
   r8-version.properties
+  resources/
+  resources/new_api_database.ser
 
 com/android/tools/build/builder-model
   META-INF/
