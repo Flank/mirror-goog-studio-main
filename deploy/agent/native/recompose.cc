@@ -37,7 +37,6 @@ jobject Recompose::GetComposeHotReload() const {
   if (klass == nullptr) {
     return nullptr;
   }
-  Log::V("GetComposeHotReload found. Starting JetPack Compose HotReload");
   JniClass reloaderClass(jni_, klass);
   return reloaderClass.GetStaticObjectField("Companion", HOT_RELOADER_VMTYPE);
 }
@@ -74,6 +73,7 @@ jobject Recompose::SaveStateAndDispose(jobject reloader) const {
 }
 
 void Recompose::LoadStateAndCompose(jobject reloader, jobject state) const {
+  Log::V("Performing LoadStateAndCompose.");
   if (state == nullptr) {
     ErrEvent("Unable to LoadStateAndCompose. state is null.");
     return;
@@ -102,15 +102,15 @@ void Recompose::LoadStateAndCompose(jobject reloader, jobject state) const {
 }
 
 bool Recompose::InvalidateGroupsWithKey(jobject reloader, jstring className,
-                                        jint offsetStart, jint offsetEnd,
+                                        jint groupId,
                                         std::string& error) const {
   JniClass support(jni_, Recompose::kComposeSupportClass);
   JniObject reloader_jnio(jni_, reloader);
 
   jstring jresult = (jstring)support.CallStaticObjectMethod(
       "recomposeFunction",
-      "(Ljava/lang/Object;Ljava/lang/String;II)Ljava/lang/String;", reloader,
-      className, offsetStart, offsetEnd);
+      "(Ljava/lang/Object;Ljava/lang/String;I)Ljava/lang/String;", reloader,
+      className, groupId);
 
   if (jni_->ExceptionCheck()) {
     jni_->ExceptionDescribe();

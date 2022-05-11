@@ -44,8 +44,7 @@ class Recompose {
   // Reference to the error string is changed to the error message or
   // empty string should there be no error messages.
   bool InvalidateGroupsWithKey(jobject reloader, jstring className,
-                               jint offsetStart, jint offsetEnd,
-                               std::string& error) const;
+                               jint groupId, std::string& error) const;
 
   // Create ComposeHotReload object if needed.
   jobject GetComposeHotReload() const;

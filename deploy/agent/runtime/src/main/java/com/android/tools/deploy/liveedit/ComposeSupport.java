@@ -15,15 +15,8 @@
  */
 package com.android.tools.deploy.liveedit;
 
-import android.util.Log;
-import android.util.Pair;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /** Support class to invoke Compose API functions. */
 public class ComposeSupport {
@@ -34,144 +27,8 @@ public class ComposeSupport {
     public static final String KEY_META_NAME = "androidx.compose.runtime.internal.FunctionKeyMeta";
 
     // Return empty string if success. Otherwise, an error message is returned.
-    public static String recomposeFunction(
-            Object reloader, String className, int offsetStart, int offSetEnd) {
-        ClassLoader classLoader = reloader.getClass().getClassLoader();
-
-        Class<?> keyMeta = null;
-        String metaClassName = className.replaceAll("/", ".") + "$KeyMeta";
-        try {
-            keyMeta = Class.forName(metaClassName, true, classLoader);
-        } catch (ClassNotFoundException e) {
-            return metaClassName + " class not found.";
-        }
-
-        Annotation[] annotations = keyMeta.getAnnotations();
-        boolean isMetaClass = false;
-        for (Annotation annotation : annotations) {
-            if (annotation.annotationType().getName().equals(KEY_META_CLASS_NAME)) {
-                isMetaClass = true;
-                break;
-            }
-        }
-
-        if (!isMetaClass) {
-            return metaClassName + " is not annotated with " + KEY_META_CLASS_NAME;
-        }
-
-        boolean found = false;
-        int key = Integer.MIN_VALUE;
-        for (Annotation annotationContainer : annotations) {
-            if (annotationContainer.annotationType().getName().equals(KEY_META_NAME)) {
-                try {
-                    Method startOffsetMethod =
-                            annotationContainer.annotationType().getMethod("startOffset");
-                    Method endOffsetMethod =
-                            annotationContainer.annotationType().getMethod("endOffset");
-                    Method groupMethod = annotationContainer.annotationType().getMethod("key");
-                    int curStartOffset = (Integer) startOffsetMethod.invoke(annotationContainer);
-                    int curEndOffset = (Integer) endOffsetMethod.invoke(annotationContainer);
-
-                    if (curStartOffset != offsetStart || curEndOffset != offSetEnd) {
-                        continue;
-                    }
-
-                    found = true;
-                    key = (Integer) groupMethod.invoke(annotationContainer);
-                    String log =
-                            String.format(
-                                    "Found matching MetaKey start=%d, end=%d, key=%d",
-                                    curStartOffset, curStartOffset, key);
-                    Log.v("studio.deploy", log);
-                    break;
-
-                } catch (NoSuchMethodException
-                        | InvocationTargetException
-                        | IllegalAccessException e) {
-                    // Very unlikely scenario that only happens if Compose changed their API.
-                    e.printStackTrace();
-                    return e.getMessage();
-                }
-
-            } else if (annotationContainer
-                    .annotationType()
-                    .getName()
-                    .equals(KEY_META_CONTAINER_NAME)) {
-                try {
-                    Method valueMethod = annotationContainer.annotationType().getMethod("value");
-                    Annotation[] keymetas = (Annotation[]) valueMethod.invoke(annotationContainer);
-
-                    for (Annotation annotation : keymetas) {
-                        Method startOffsetMethod =
-                                annotation.annotationType().getMethod("startOffset");
-                        Method endOffsetMethod = annotation.annotationType().getMethod("endOffset");
-                        Method groupMethod = annotation.annotationType().getMethod("key");
-                        int curStartOffset = (Integer) startOffsetMethod.invoke(annotation);
-                        int curEndOffset = (Integer) endOffsetMethod.invoke(annotation);
-
-                        if (curStartOffset != offsetStart || curEndOffset != offSetEnd) {
-                            continue;
-                        }
-                        found = true;
-                        key = (Integer) groupMethod.invoke(annotation);
-                        String log =
-                                String.format(
-                                        "Found matching MetaKey start=%d, end=%d, key=%d",
-                                        curStartOffset, curStartOffset, key);
-                        Log.v("studio.deploy", log);
-                        break;
-                    }
-                } catch (NoSuchMethodException
-                        | InvocationTargetException
-                        | IllegalAccessException e) {
-                    // Very unlikely scenario that only happens if Compose changed their API.
-                    e.printStackTrace();
-                    return e.getMessage();
-                }
-            }
-        }
-
-        if (!found) {
-            // Very unlikely scenario that only happens if Compose Group ID key look up is out of
-            // sync with Android Studio.
-            String errorMessage =
-                    String.format(
-                            "Compose Group not found for class %s with"
-                                    + " offsetStart = %d and offSetEnd = %d.",
-                            metaClassName, offsetStart, offSetEnd);
-
-            // Print everything in logcat since this is a rare occurrence and all the offset
-            // information is going to be useful in the bug report.
-            Log.e("studio.deploy", errorMessage);
-
-            List<Pair<Integer, Integer>> ranges = new ArrayList<>(annotations.length);
-
-            for (Annotation annotation : annotations) {
-                if (!annotation.annotationType().getName().equals(KEY_META_NAME)) {
-                    continue;
-                }
-                try {
-                    Method startOffsetMethod = annotation.annotationType().getMethod("startOffset");
-                    Method endOffsetMethod = annotation.annotationType().getMethod("endOffset");
-                    int curStartOffset = (Integer) startOffsetMethod.invoke(annotation);
-                    int curEndOffset = (Integer) endOffsetMethod.invoke(annotation);
-                    ranges.add(new Pair(curStartOffset, curEndOffset));
-                } catch (NoSuchMethodException
-                        | InvocationTargetException
-                        | IllegalAccessException e) {
-                    // Would have been caught in the previous step.
-                }
-            }
-            Collections.sort(ranges, Comparator.comparing(a -> a.first));
-            ranges.stream()
-                    .forEach(
-                            pair -> {
-                                Log.e("studio.deploy", "(" + pair.first + "," + pair.second + ") ");
-                            });
-        }
-
+    public static String recomposeFunction(Object reloader, String className, int groupId) {
         Method invalidateGroupsWithKey = null;
-
         try {
             invalidateGroupsWithKey =
                     reloader.getClass().getMethod("invalidateGroupsWithKey", int.class);
@@ -188,8 +45,7 @@ public class ComposeSupport {
         }
 
         try {
-            Log.v("studio.deploy", "invalidateGroupsWithKey key = " + key);
-            invalidateGroupsWithKey.invoke(reloader, key);
+            invalidateGroupsWithKey.invoke(reloader, groupId);
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
             return e.getMessage(); // Very unlikely.

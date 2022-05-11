@@ -64,23 +64,17 @@ public class LiveUpdateDeployer {
         public final String methodName;
         public final String methodDesc;
         public final boolean isComposable;
-        public final int startOffSet;
-        public final int endOffSet;
+        public final int groupId;
         public final byte[] classData;
         public final Map<String, byte[]> supportClasses;
         final boolean debugModeEnabled;
 
-        /**
-         * @param startOffSet The starting PSI index of that function node.
-         * @param endOffSet The ending PSI index of that function node.
-         */
         public UpdateLiveEditsParam(
                 String className,
                 String methodName,
                 String methodDesc,
                 boolean isComposable,
-                int startOffSet,
-                int endOffSet,
+                int groupId,
                 byte[] classData,
                 Map<String, byte[]> supportClasses,
                 boolean debugModeEnabled) {
@@ -88,8 +82,7 @@ public class LiveUpdateDeployer {
             this.methodName = methodName;
             this.methodDesc = methodDesc;
             this.isComposable = isComposable;
-            this.startOffSet = startOffSet;
-            this.endOffSet = endOffSet;
+            this.groupId = groupId;
             this.classData = classData;
             this.supportClasses = supportClasses;
             this.debugModeEnabled = debugModeEnabled;
@@ -285,8 +278,7 @@ public class LiveUpdateDeployer {
         requestBuilder.setArch(arch);
         requestBuilder.setPackageName(packageName);
         requestBuilder.setComposable(param.isComposable);
-        requestBuilder.setStartOffset(param.startOffSet);
-        requestBuilder.setEndOffset(param.endOffSet);
+        requestBuilder.setGroupId(param.groupId);
         requestBuilder.setTargetClass(
                 Deploy.LiveEditClass.newBuilder()
                         .setClassName(param.className)
