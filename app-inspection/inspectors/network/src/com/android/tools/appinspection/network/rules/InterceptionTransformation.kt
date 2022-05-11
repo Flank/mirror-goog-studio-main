@@ -43,7 +43,7 @@ class StatusCodeReplacedTransformation(
     private val replacingCode = statusCodeReplaced.newCode
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        val statusHeader = response.responseHeaders["null"] ?: return response
+        val statusHeader = response.responseHeaders[null] ?: return response
         val statusLine = statusHeader.getOrNull(0) ?: return response
         if (statusLine.startsWith("HTTP/1.")) {
             val codePos = statusLine.indexOf(' ')
@@ -57,8 +57,10 @@ class StatusCodeReplacedTransformation(
                     val prefix = statusLine.substring(0, codePos)
                     val suffix = statusLine.substring(phrasePos)
                     val newHeaders = response.responseHeaders.toMutableMap()
-                    newHeaders["null"] = listOf("$prefix $replacingCode$suffix")
-                    newHeaders[FIELD_RESPONSE_STATUS_CODE] = listOf(replacingCode)
+                    newHeaders[null] = listOf("$prefix $replacingCode$suffix")
+                    if (newHeaders.containsKey(FIELD_RESPONSE_STATUS_CODE)) {
+                        newHeaders[FIELD_RESPONSE_STATUS_CODE] = listOf(replacingCode)
+                    }
                     return response.copy(responseHeaders = newHeaders)
                 }
             }

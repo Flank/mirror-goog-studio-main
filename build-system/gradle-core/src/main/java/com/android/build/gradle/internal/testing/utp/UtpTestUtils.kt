@@ -289,7 +289,7 @@ fun shouldEnableUtp(
  */
 fun hasEmulatorTimeoutException(resultsProto: TestSuiteResultProto.TestSuiteResult?): Boolean {
     resultsProto ?: return false
-    return hasEmulatorTimeoutException(resultsProto.platformError.errorDetail)
+    return resultsProto.platformError.errorsList.any(::hasEmulatorTimeoutException)
 }
 
 private fun hasEmulatorTimeoutException(error: ErrorDetailProto.ErrorDetail): Boolean {
@@ -306,7 +306,8 @@ private fun hasEmulatorTimeoutException(error: ErrorDetailProto.ErrorDetail): Bo
  */
 fun getPlatformErrorMessage(resultsProto: TestSuiteResultProto.TestSuiteResult?): String {
     resultsProto ?: return UNKNOWN_PLATFORM_ERROR_MESSAGE
-    return getPlatformErrorMessage(resultsProto.platformError.errorDetail).toString()
+    return resultsProto.platformError.errorsList.joinToString(
+        "\n", transform = ::getPlatformErrorMessage)
 }
 
 /**

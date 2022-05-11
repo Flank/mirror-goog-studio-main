@@ -909,7 +909,10 @@ abstract class VariantInputs {
 
         targetSdkVersion.initialize(creationConfig.targetSdkVersion)
 
-        resValues.setDisallowChanges(creationConfig.resValues)
+        resValues.setDisallowChanges(
+            creationConfig.resValuesCreationConfig?.resValues,
+            handleNullable = { empty() }
+        )
 
         if (creationConfig is ApkCreationConfig) {
             manifestPlaceholders.setDisallowChanges(
@@ -917,7 +920,9 @@ abstract class VariantInputs {
             )
         }
 
-        resourceConfigurations.setDisallowChanges(creationConfig.resourceConfigurations)
+        resourceConfigurations.setDisallowChanges(
+            creationConfig.androidResourcesCreationConfig?.resourceConfigurations ?: emptyList()
+        )
 
         sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
             creationConfig.services
@@ -1353,7 +1358,8 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             creationConfig is ConsumableCreationConfig && creationConfig.minifiedEnabled
         )
         useSupportLibraryVectorDrawables.setDisallowChanges(
-            creationConfig.vectorDrawables.useSupportLibrary ?: false
+            creationConfig.androidResourcesCreationConfig?.vectorDrawables?.useSupportLibrary
+                ?: false
         )
         if (includeClassesOutputDirectories) {
             classesOutputDirectories.from(creationConfig.artifacts.get(InternalArtifactType.JAVAC))
@@ -1362,12 +1368,13 @@ abstract class AndroidArtifactInput : ArtifactInput() {
                 creationConfig.variantData.allPreJavacGeneratedBytecode
             )
             classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
-            classesOutputDirectories.from(
-                creationConfig
-                    .getCompiledRClasses(
+            creationConfig.androidResourcesCreationConfig?.let {
+                classesOutputDirectories.from(
+                    it.getCompiledRClasses(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
                     )
-            )
+                )
+            }
         }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)
@@ -1473,12 +1480,13 @@ abstract class JavaArtifactInput : ArtifactInput() {
                 creationConfig.variantData.allPreJavacGeneratedBytecode
             )
             classesOutputDirectories.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
-            classesOutputDirectories.from(
-                creationConfig
-                    .getCompiledRClasses(
+            creationConfig.androidResourcesCreationConfig?.let {
+                classesOutputDirectories.from(
+                    it.getCompiledRClasses(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
                     )
-            )
+                )
+            }
         }
         classesOutputDirectories.disallowChanges()
         this.warnIfProjectTreatedAsExternalDependency.setDisallowChanges(warnIfProjectTreatedAsExternalDependency)

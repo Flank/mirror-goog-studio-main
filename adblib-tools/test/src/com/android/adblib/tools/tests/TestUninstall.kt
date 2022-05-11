@@ -36,7 +36,7 @@ class TestUninstall : TestInstallBase() {
 
         var r : UninstallResult
         runBlocking {
-           r = deviceServices.uninstall(deviceSelector, 0, "com.foo.bar" )
+           r = deviceServices.uninstall(deviceSelector, applicationID = "com.foo.bar" )
         }
 
         Assert.assertEquals("Success", r.output)
@@ -51,10 +51,31 @@ class TestUninstall : TestInstallBase() {
 
         var r : UninstallResult
         runBlocking {
-            r = deviceServices.uninstall(deviceSelector, 0, ShellConstants.NON_INSTALLED_APP_ID)
+            r = deviceServices.uninstall(deviceSelector, applicationID = ShellConstants.NON_INSTALLED_APP_ID)
         }
 
         Assert.assertEquals(UninstallResult.Status.FAILURE, r.status)
+    }
+
+    @Test
+    fun testUninstallOptions() {
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb, 30)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+        val options = listOf("-myOptions", "-r", "-t")
+        val applicationID = "foo.bar"
+
+        runBlocking {
+            deviceServices.uninstall(deviceSelector, applicationID, options)
+        }
+
+        // This should be the uninstall command
+        val cmd = fakeDevice.serviceManager.getLogs().first()
+        var expected = mutableListOf<String>("package", "uninstall")
+        expected.addAll(options)
+        expected.add(applicationID)
+        Assert.assertArrayEquals("Unexpected command '$cmd'", cmd.toTypedArray(), expected.toTypedArray())
     }
 
 }

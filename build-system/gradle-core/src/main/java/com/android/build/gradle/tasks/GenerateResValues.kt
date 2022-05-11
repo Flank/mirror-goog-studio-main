@@ -15,13 +15,14 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.HasAndroidResources
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.generators.ResValueGenerator
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.features.ResValuesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.ResValuesTaskCreationActionImpl
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
@@ -65,7 +66,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
         creationConfig: ComponentCreationConfig
     ) : VariantTaskCreationAction<GenerateResValues, ComponentCreationConfig>(
         creationConfig
-    ) {
+    ), ResValuesTaskCreationAction by ResValuesTaskCreationActionImpl(creationConfig) {
 
         override val name = computeTaskName("generate", "ResValues")
         override val type = GenerateResValues::class.java
@@ -86,11 +87,7 @@ abstract class GenerateResValues : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            if (creationConfig is HasAndroidResources) {
-                task.items.set(creationConfig.resValues)
-            } else {
-                task.items.empty()
-            }
+            task.items.set(resValuesCreationConfig.resValues)
         }
 
         // use the old generated res output dir since some released plugins are directly referencing

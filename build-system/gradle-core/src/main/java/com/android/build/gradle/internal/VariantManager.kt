@@ -789,14 +789,16 @@ class VariantManager<
                 artifacts,
                 variantPropertiesApiServices,
                 taskContainer)
-        val testBuildFeatureValues = variantFactory.createTestBuildFeatureValues(
-                dslExtension.buildFeatures, dslExtension.dataBinding, dslServices.projectOptions)
 
         // this is ANDROID_TEST
         val testComponent = if (componentType.isApk) {
             val androidTest = variantFactory.createAndroidTest(
                 variantDslInfo.componentIdentity,
-                testBuildFeatureValues,
+                variantFactory.createAndroidTestBuildFeatureValues(
+                    dslExtension.buildFeatures,
+                    dslExtension.dataBinding,
+                    dslServices.projectOptions
+                ),
                 variantDslInfo as AndroidTestComponentDslInfo,
                 variantDependencies,
                 variantSources,
@@ -815,7 +817,12 @@ class VariantManager<
             // this is UNIT_TEST
             val unitTest = variantFactory.createUnitTest(
                 variantDslInfo.componentIdentity,
-                testBuildFeatureValues,
+                variantFactory.createUnitTestBuildFeatureValues(
+                    dslExtension.buildFeatures,
+                    dslExtension.dataBinding,
+                    dslServices.projectOptions,
+                    globalTaskCreationConfig.testOptions.unitTests.isIncludeAndroidResources
+                ),
                 variantDslInfo as UnitTestComponentDslInfo,
                 variantDependencies,
                 variantSources,

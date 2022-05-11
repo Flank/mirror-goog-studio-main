@@ -18,6 +18,9 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
+import com.android.build.api.component.impl.features.AssetsCreationConfigImpl
+import com.android.build.api.component.impl.features.ResValuesCreationConfigImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.instrumentation.InstrumentationParameters
@@ -40,6 +43,9 @@ import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
+import com.android.build.gradle.internal.component.features.AssetsCreationConfig
+import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
@@ -70,23 +76,15 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
-import com.android.builder.core.ComponentTypeImpl
-import com.android.builder.errors.IssueReporter
-import com.android.builder.model.VectorDrawablesOptions
-import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.io.File
 
 abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     open val componentIdentity: ComponentIdentity,
@@ -201,22 +199,12 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val baseName: String
         get() = paths.baseName
 
-    override val resourceConfigurations: ImmutableSet<String>
-        get() = dslInfo.resourceConfigurations
-
     override val description: String
         get() = variantData.description
 
     override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
     }
-
-    // Resource shrinker expects MergeResources task to have all the resources merged and with
-    // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
-    // enabled, see b/134766811.
-    override val isPrecompileDependenciesResourcesEnabled: Boolean
-        get() = internalServices.projectOptions[BooleanOption.PRECOMPILE_DEPENDENCIES_RESOURCES] &&
-                !useResourceShrinker()
 
     override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
         get() = instrumentation.registeredProjectClassesVisitors
@@ -260,50 +248,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val dependenciesClassesAreInstrumented: Boolean
         get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
                 (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
-
-    override fun useResourceShrinker(): Boolean {
-        if (componentType.isForTesting || !dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
-            return false
-        }
-        val newResourceShrinker = services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
-        if (componentType.isDynamicFeature) {
-            internalServices
-                .issueReporter
-                .reportError(
-                        IssueReporter.Type.GENERIC,
-                        "Resource shrinking must be configured for base module.")
-            return false
-        }
-        if (!newResourceShrinker && global.hasDynamicFeatures) {
-            val message = String.format(
-                "Resource shrinker for multi-apk applications can be enabled via " +
-                        "experimental flag: '%s'.",
-                BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER.propertyName)
-            internalServices
-                    .issueReporter
-                    .reportError(IssueReporter.Type.GENERIC, message)
-            return false
-        }
-        if (componentType.isAar) {
-            internalServices
-                .issueReporter
-                .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
-            return false
-        }
-        if (!dslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
-            internalServices
-                .issueReporter
-                .reportError(
-                        IssueReporter.Type.GENERIC,
-                        "Removing unused resources requires unused code shrinking to be turned on. See "
-                                + "http://d.android.com/r/tools/shrink-resources.html "
-                                + "for more information.")
-            return false
-        }
-        return true
-    }
-
-    override val androidResourcesEnabled = buildFeatures.androidResources
 
     // by default, we delegate to the build features flags.
     override val buildConfigEnabled: Boolean
@@ -373,18 +317,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     // File location computation. Previously located in VariantScope, these are here
     // temporarily until we fully move away from them.
 
-    val generatedResOutputDir: File
-        get() = getGeneratedResourcesDir("resValues")
-
-    private fun getGeneratedResourcesDir(name: String): File {
-        return FileUtils.join(
-            paths.generatedDir().get().asFile,
-            listOf("res", name) + paths.directorySegments
-        )
-    }
-
     // Precomputed file paths.
-    @JvmOverloads
     final override fun getJavaClasspath(
         configType: ConsumedConfigType,
         classesType: AndroidArtifacts.ArtifactType,
@@ -402,10 +335,12 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         // artifact for each publication.
         mainCollection =
             internalServices.fileCollection(
-                getCompiledRClasses(configType),
-                getCompiledBuildConfig(),
-                getCompiledManifest(),
-                mainCollection
+                *listOfNotNull(
+                    androidResourcesCreationConfig?.getCompiledRClasses(configType),
+                    getCompiledBuildConfig(),
+                    getCompiledManifest(),
+                    mainCollection
+                ).toTypedArray()
             )
         return mainCollection
     }
@@ -479,111 +414,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                 artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT),
             )
         )
-    }
-
-    /**
-     * Returns the path(s) to compiled R classes (R.jar).
-     */
-    override fun getCompiledRClasses(configType: ConsumedConfigType): FileCollection {
-        return if (global.namespacedAndroidResources) {
-            internalServices.fileCollection().also { fileCollection ->
-                val namespacedRClassJar = artifacts.get(COMPILE_R_CLASS_JAR)
-                val fileTree = internalServices.fileTree(namespacedRClassJar).builtBy(namespacedRClassJar)
-                fileCollection.from(fileTree)
-                fileCollection.from(
-                    variantDependencies.getArtifactFileCollection(
-                        configType, ArtifactScope.ALL, AndroidArtifacts.ArtifactType.SHARED_CLASSES
-                    )
-                )
-                (this as? TestComponentCreationConfig)?.mainVariant?.let {
-                    fileCollection.from(it.artifacts.get(COMPILE_R_CLASS_JAR).get())
-                }
-            }
-        } else {
-            val componentType = dslInfo.componentType
-
-            if (this !is TestComponentCreationConfig) {
-                // TODO(b/138780301): Also use it in android tests.
-                val useCompileRClassInApp = (internalServices
-                    .projectOptions[BooleanOption
-                    .ENABLE_APP_COMPILE_TIME_R_CLASS]
-                        && !componentType.isForTesting)
-                if (componentType.isAar || useCompileRClassInApp) {
-                    if (androidResourcesEnabled) {
-                        internalServices.fileCollection(artifacts.get(COMPILE_R_CLASS_JAR)
-                        )
-                    } else {
-                        internalServices.fileCollection()
-                    }
-                } else {
-                    Preconditions.checkState(
-                        componentType.isApk,
-                        "Expected APK type but found: $componentType"
-                    )
-
-                    internalServices.fileCollection(
-                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-                    )
-                }
-            } else { // Android test or unit test
-                if (componentType === ComponentTypeImpl.ANDROID_TEST) {
-                    internalServices.fileCollection(
-                        artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-                    )
-                } else {
-                    if (androidResourcesEnabled) {
-                        internalServices.fileCollection(variantScope.rJarForUnitTests)
-                    } else {
-                        internalServices.fileCollection()
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the artifact for the compiled R class
-     *
-     * This can be null for unit tests without resource support.
-     */
-    override fun getCompiledRClassArtifact(): Provider<RegularFile>? {
-        return if (global.namespacedAndroidResources) {
-            artifacts.get(COMPILE_R_CLASS_JAR)
-        } else {
-            val componentType = dslInfo.componentType
-
-            if (this !is TestComponentCreationConfig) {
-                // TODO(b/138780301): Also use it in android tests.
-                val useCompileRClassInApp = (internalServices
-                    .projectOptions[BooleanOption
-                    .ENABLE_APP_COMPILE_TIME_R_CLASS]
-                        && !componentType.isForTesting)
-                if (componentType.isAar || useCompileRClassInApp) {
-                    if (androidResourcesEnabled) {
-                        artifacts.get(COMPILE_R_CLASS_JAR)
-                    } else {
-                        null
-                    }
-                } else {
-                    Preconditions.checkState(
-                        componentType.isApk,
-                        "Expected APK type but found: $componentType"
-                    )
-
-                    artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-                }
-            } else { // Android test or unit test
-                if (componentType === ComponentTypeImpl.ANDROID_TEST) {
-                    artifacts.get(COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-                } else {
-                    if (androidResourcesEnabled) {
-                        variantScope.rJarForUnitTests
-                    } else {
-                        null
-                    }
-                }
-            }
-        }
     }
 
     override fun getCompiledBuildConfig(): FileCollection {
@@ -691,9 +521,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val isAndroidTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
 
-    override val vectorDrawables: VectorDrawablesOptions
-        get() = dslInfo.vectorDrawables
-
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
         dslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
@@ -706,5 +533,35 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             this,
             dslInfo as VariantDslInfoImpl
         )
+    }
+
+    override val assetsCreationConfig: AssetsCreationConfig by lazy {
+        AssetsCreationConfigImpl(
+            dslInfo,
+            internalServices
+        ) { androidResourcesCreationConfig }
+    }
+
+    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy {
+        if (buildFeatures.androidResources) {
+            AndroidResourcesCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+            )
+        } else {
+            null
+        }
+    }
+
+    override val resValuesCreationConfig: ResValuesCreationConfig? by lazy {
+        if (buildFeatures.resValues) {
+            ResValuesCreationConfigImpl(
+                dslInfo,
+                internalServices
+            )
+        } else {
+            null
+        }
     }
 }

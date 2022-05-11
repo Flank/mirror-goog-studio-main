@@ -27,6 +27,7 @@ import com.google.testing.platform.api.error.ErrorSummary
 import com.google.testing.platform.core.error.ErrorType
 import com.google.testing.platform.core.error.UtpException
 import com.google.testing.platform.lib.logging.jvm.getLogger
+import com.google.testing.platform.proto.api.core.LogMessageProto
 import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
 import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType.ANDROID_APK
 import com.google.testing.platform.runtime.android.device.AndroidDevice
@@ -35,6 +36,8 @@ import java.util.logging.Logger
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 
@@ -86,7 +89,11 @@ class DdmlibAndroidDeviceController(
         )
     }
 
-    override fun install(artifact: Artifact): Int {
+    override fun streamLogs(): Flow<LogMessageProto.LogMessage> {
+        return emptyFlow()
+    }
+
+    override fun install(artifact: Artifact): CommandResult {
         require(ANDROID_APK == artifact.type) {
             "Artifact needs to be of type: $ANDROID_APK, but was ${artifact.type}"
         }
@@ -102,7 +109,7 @@ class DdmlibAndroidDeviceController(
                         "-g".takeIf { controlledDevice.version.apiLevel >= 23 }
                 ).toTypedArray()
         )
-        return 0
+        return CommandResult(0, listOf())
     }
 
     override fun execute(args: List<String>, timeout: Long?): CommandResult {

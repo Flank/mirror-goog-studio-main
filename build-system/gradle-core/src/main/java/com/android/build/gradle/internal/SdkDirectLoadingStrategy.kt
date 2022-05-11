@@ -312,16 +312,24 @@ private class PlatformComponents(
                 return null;
             }
 
-            val platformVersion = AndroidTargetHash.getVersionFromHash(targetHash)
+            val platformVersionFromHash = AndroidTargetHash.getVersionFromHash(targetHash)
                 ?: return null // We are not sure which version this hash maps to.
 
-            val platformId = DetailsTypes.getPlatformPath(platformVersion)
+            val platformId = DetailsTypes.getPlatformPath(platformVersionFromHash)
             val platformBase = sdkDirectory.resolve(platformId.replace(';', '/'))
             val platformXml = platformBase.resolve("package.xml")
             val platformPackage =
                 parsePackage(platformXml)
             if (platformPackage == null || !platformId.equals(platformPackage.path)) {
                 return null
+            }
+            val platformVersionFromPlatformXml = parseAndroidVersion(platformPackage)
+            // Use platformVersionFromPlatformXml if it has a non-null extensionLevel because
+            // platformVersionFromHash might have a null extensonLevel
+            val platformVersion = if (platformVersionFromPlatformXml?.extensionLevel == null) {
+                platformVersionFromHash
+            } else {
+                platformVersionFromPlatformXml
             }
             // Building a whole PlatformTarget is expensive, since it tries to parse everything.
             // So we build manually the fields we need.

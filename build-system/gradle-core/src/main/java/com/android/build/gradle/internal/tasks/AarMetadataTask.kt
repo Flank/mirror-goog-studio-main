@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_EXTENSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
 import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
@@ -74,6 +75,13 @@ abstract class AarMetadataTask : NonIncrementalTask() {
     @get:Optional
     abstract val forceCompileSdkPreview: Property<String>
 
+    /**
+     * The minimum SDK extension version any consuming module must be compiled against to use this
+     * library.
+     */
+    @get:Input
+    abstract val minCompileSdkExtension: Property<Int>
+
     @get:Input
     abstract val minAgpVersion: Property<String>
 
@@ -86,6 +94,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             it.minCompileSdk.set(minCompileSdk)
             it.minAgpVersion.set(minAgpVersion)
             it.forceCompileSdkPreview.set(forceCompileSdkPreview)
+            it.minCompileSdkExtension.set(minCompileSdkExtension)
         }
     }
 
@@ -120,6 +129,9 @@ abstract class AarMetadataTask : NonIncrementalTask() {
             task.forceCompileSdkPreview.setDisallowChanges(
                 parseTargetHash(creationConfig.global.compileSdkHashString).codeName
             )
+            task.minCompileSdkExtension.setDisallowChanges(
+                creationConfig.aarMetadata.minCompileSdkExtension
+            )
         }
     }
 
@@ -130,6 +142,7 @@ abstract class AarMetadataTask : NonIncrementalTask() {
         const val AAR_FORMAT_VERSION = "1.0"
         const val AAR_METADATA_VERSION = "1.0"
         const val DEFAULT_MIN_AGP_VERSION = "1.0.0"
+        const val DEFAULT_MIN_COMPILE_SDK_EXTENSION = 0
     }
 }
 
@@ -156,6 +169,7 @@ abstract class AarMetadataWorkAction: ProfileAwareWorkAction<AarMetadataWorkPara
             parameters.aarFormatVersion.get(),
             parameters.aarMetadataVersion.get(),
             parameters.minCompileSdk.get(),
+            parameters.minCompileSdkExtension.get(),
             parameters.minAgpVersion.get(),
             parameters.forceCompileSdkPreview.orNull
         )
@@ -170,6 +184,7 @@ abstract class AarMetadataWorkParameters: ProfileAwareWorkAction.Parameters() {
     abstract val minCompileSdk: Property<Int>
     abstract val minAgpVersion: Property<String>
     abstract val forceCompileSdkPreview: Property<String>
+    abstract val minCompileSdkExtension: Property<Int>
 }
 
 /** Writes an AAR metadata file with the given parameters */
@@ -178,6 +193,7 @@ fun writeAarMetadataFile(
     aarFormatVersion: String,
     aarMetadataVersion: String,
     minCompileSdk: Int,
+    minCompileSdkExtension: Int,
     minAgpVersion: String,
     forceCompileSdkPreview: String? = null
 ) {
@@ -188,6 +204,7 @@ fun writeAarMetadataFile(
         writer.appendLine("$AAR_FORMAT_VERSION_PROPERTY=$aarFormatVersion")
         writer.appendLine("$AAR_METADATA_VERSION_PROPERTY=$aarMetadataVersion")
         writer.appendLine("$MIN_COMPILE_SDK_PROPERTY=$minCompileSdk")
+        writer.appendLine("$MIN_COMPILE_SDK_EXTENSION_PROPERTY=$minCompileSdkExtension")
         writer.appendLine("$MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY=$minAgpVersion")
         forceCompileSdkPreview?.let { writer.appendLine("$FORCE_COMPILE_SDK_PREVIEW_PROPERTY=$it") }
     }

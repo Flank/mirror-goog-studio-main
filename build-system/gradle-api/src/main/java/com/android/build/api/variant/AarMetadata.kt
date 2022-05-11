@@ -31,6 +31,15 @@ interface AarMetadata {
     val minCompileSdk: Property<Int>
 
     /**
+     * Minimum compileSdkExtension needed to consume this library. This is the minimum sdk extension
+     * version a module must use in order to import this library.
+     *
+     * The default value of [minCompileSdkExtension] is 0 if not set via the DSL.
+     */
+    @get:Incubating
+    val minCompileSdkExtension: Property<Int>
+
+    /**
      * Minimum Android Gradle Plugin version needed to consume this library. This is the minimum AGP
      * version a module must use in order to import this library.
      *

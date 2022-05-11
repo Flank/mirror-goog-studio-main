@@ -623,7 +623,7 @@ class ModelBuilder<
         classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
         classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
         classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
-        component.getCompiledRClassArtifact()?.get()?.asFile?.let {
+        component.androidResourcesCreationConfig?.compiledRClassArtifact?.get()?.asFile?.let {
             classesFolders.add(it)
         }
 
@@ -731,7 +731,7 @@ class ModelBuilder<
         }
         // TODO(b/111168382): When namespaced resources is on, then the provider returns null, so let's skip for now and revisit later
         if (!extension.androidResources.namespaced) {
-            component.getCompiledRClassArtifact()?.get()?.asFile?.let {
+            component.androidResourcesCreationConfig?.compiledRClassArtifact?.get()?.asFile?.let {
                 classesFolders.add(it)
             }
         }

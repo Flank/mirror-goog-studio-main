@@ -17,6 +17,7 @@ package com.android.tools.utp.plugins.host.logcat
 
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugin.HostPlugin
@@ -50,7 +51,8 @@ class AndroidTestLogcatPlugin(
     private var logcatFilePaths: MutableList<String> = Collections.synchronizedList(mutableListOf())
     private var logcatOptions: List<String> = mutableListOf()
 
-    override fun configure(config: Config) {
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as Config
         outputDir = config.environment.outputDirectory
     }
 
@@ -65,8 +67,9 @@ class AndroidTestLogcatPlugin(
     ) {}
 
     override fun afterEach(
-            testResult: TestResult,
-            deviceController: DeviceController
+        testResult: TestResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestResult {
         val testCase = testResult.testCase
         val packageName = testCase.testPackage
@@ -91,16 +94,15 @@ class AndroidTestLogcatPlugin(
     }
 
     override fun afterAll(
-            testSuiteResult: TestSuiteResult,
-            deviceController: DeviceController
+        testSuiteResult: TestSuiteResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestSuiteResult {
         stopLogcat()
         return testSuiteResult
     }
 
     override fun canRun(): Boolean = true
-
-    override fun cancel(): Boolean = false
 
     /**
      * Generates the logcat file name using the output directory and test class and test method.

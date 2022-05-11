@@ -51,12 +51,10 @@ abstract class PackageApplication : PackageAndroidArtifact() {
     class CreationAction(
         creationConfig: ApkCreationConfig,
         private val outputDirectory: File,
-        useResourceShrinker: Boolean,
         manifests: Provider<Directory>,
         manifestType: Artifact<Directory>
     ) : PackageAndroidArtifact.CreationAction<PackageApplication>(
         creationConfig,
-        useResourceShrinker,
         manifests,
         manifestType
     ) {
@@ -76,6 +74,9 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             val useOptimizedResources = !creationConfig.debuggable &&
                     !creationConfig.componentType.isForTesting &&
                     creationConfig.services.projectOptions[BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS]
+            val useResourcesShrinker = creationConfig
+                .androidResourcesCreationConfig
+                ?.useResourceShrinker == true
             val operationRequest = creationConfig.artifacts.use(taskProvider)
                     .wiredWithDirectories(
                             PackageAndroidArtifact::getResourceFiles,
@@ -86,7 +87,7 @@ abstract class PackageApplication : PackageAndroidArtifact() {
                         InternalArtifactType.OPTIMIZED_PROCESSED_RES,
                         SingleArtifact.APK,
                         outputDirectory.absolutePath)
-                useResourceShrinker -> operationRequest.toTransformMany(
+                useResourcesShrinker -> operationRequest.toTransformMany(
                         InternalArtifactType.SHRUNK_PROCESSED_RES,
                         SingleArtifact.APK,
                         outputDirectory.absolutePath)

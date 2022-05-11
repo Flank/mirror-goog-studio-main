@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.desugar.resources.ClassWithDesugarApi
+import com.android.build.gradle.integration.desugar.resources.ClassWithDesugarApi2
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
@@ -245,20 +246,24 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesGenerationFromFileDependencies() {
-        addFileDependency(app)
+        addFileDependencies(app)
 
         executor().run("app:assembleRelease")
         val out = InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES
             .getOutputDir(app.buildDir)
-        val expectedKeepRules = "-keep class j\$.time.LocalTime {$lineSeparator" +
+        val expectedKeepRule1 = "-keep class j\$.time.LocalTime {$lineSeparator" +
                 "    j\$.time.LocalTime MIDNIGHT;$lineSeparator" +
                 "}$lineSeparator"
-        assertTrue { collectKeepRulesUnderDirectory(out) == expectedKeepRules }
+        val expectedKeepRule2 = "-keep class j\$.time.LocalTime {$lineSeparator" +
+                "    j\$.time.LocalTime NOON;$lineSeparator" +
+                "}$lineSeparator"
+        assertTrue { collectKeepRulesUnderDirectory(out).contains(expectedKeepRule1) }
+        assertTrue { collectKeepRulesUnderDirectory(out).contains(expectedKeepRule2) }
     }
 
     @Test
     fun testKeepRulesConsumptionWithArtifactTransform() {
-        addFileDependency(app)
+        addFileDependencies(app)
 
         executor().run("app:assembleRelease")
         val apk = app.getApk(GradleTestProject.ApkType.RELEASE)
@@ -281,7 +286,7 @@ class CoreLibraryDesugarTest {
 
     @Test
     fun testKeepRulesConsumptionWithoutArtifactTransform() {
-        addFileDependency(app)
+        addFileDependencies(app)
 
         executor()
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
@@ -585,16 +590,20 @@ class CoreLibraryDesugarTest {
         assertNotNull(getDexWithSpecificClass(usedDesugarClass2, apk.allDexes))
     }
 
-    private fun addFileDependency(project: GradleTestProject) {
-        val fileDependencyName = "withDesugarApi.jar"
+    private fun addFileDependencies(project: GradleTestProject) {
+        val fileDep = "withDesugarApi.jar"
+        val fileDep2 = "withDesugarApi2.jar"
         project.buildFile.appendText("""
 
             dependencies {
-                implementation files('$fileDependencyName')
+                implementation files('$fileDep')
+                implementation files('$fileDep2')
             }
         """.trimIndent())
-        val fileLib = project.file(fileDependencyName).toPath()
+        val fileLib = project.file(fileDep).toPath()
         TestInputsGenerator.pathWithClasses(fileLib, listOf(ClassWithDesugarApi::class.java))
+        val fileLib2 = project.file(fileDep2).toPath()
+        TestInputsGenerator.pathWithClasses(fileLib2, listOf(ClassWithDesugarApi2::class.java))
     }
 
     private fun addExternalDependency(project: GradleTestProject) {

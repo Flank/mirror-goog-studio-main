@@ -19,6 +19,7 @@ import com.android.tools.utp.plugins.host.additionaltestoutput.proto.AndroidAddi
 import com.google.common.io.Files
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugin.HostPlugin
@@ -61,8 +62,8 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
 
     lateinit var config: AndroidAdditionalTestOutputConfig
 
-    override fun configure(config: Config) {
-        config as ProtoConfig
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as ProtoConfig
         this.config = AndroidAdditionalTestOutputConfig.parseFrom(config.configProto!!.value)
     }
 
@@ -116,7 +117,11 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     override fun beforeEach(testCase: TestCase?, deviceController: DeviceController) {
     }
 
-    override fun afterEach(testResult: TestResult, deviceController: DeviceController): TestResult {
+    override fun afterEach(
+        testResult: TestResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
+    ): TestResult {
         val builder = testResult.toBuilder()
         addBenchmarkOutput(testResult, deviceController, builder)
         return builder.build()
@@ -167,7 +172,7 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
 
         val benchmarkFileRelativePaths = benchmarkMessage.split("\n")
             .flatMap { line ->
-                benchmarkUrlRegex.findAll(line).asIterable()
+                benchmarkUrlRegex.findAll(line)
             }
             .map { matchResult ->
                 matchResult.groups.get(BENCHMARK_LINK_REGEX_GROUP_INDEX)?.value
@@ -223,7 +228,8 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
 
     override fun afterAll(
         testSuiteResult: TestSuiteResult,
-        deviceController: DeviceController
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestSuiteResult {
         // TODO: Currently, this plugin copies additional test outputs after all test cases.
         //       It can be moved to afterEach method and include them in the TestResult so that
@@ -294,8 +300,6 @@ class AndroidAdditionalTestOutputPlugin(private val logger: Logger = getLogger()
     }
 
     override fun canRun(): Boolean = true
-
-    override fun cancel(): Boolean = false
 
     private fun DeviceController.deviceShellAndCheckSuccess(vararg commands: String): CommandResult {
         val result = deviceShell(commands.toList())

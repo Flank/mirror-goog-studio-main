@@ -137,6 +137,9 @@ fun parseOptionalLibraries(localPackage: LocalPackage): List<OptionalLibrary> {
     return emptyList()
 }
 
+fun parseAndroidVersion(localPackage: LocalPackage): AndroidVersion? =
+    (localPackage.typeDetails as? DetailsTypes.ApiDetailsType)?.androidVersion
+
 fun warnIfCompileSdkTooNew(version: AndroidVersion, issueReporter: IssueReporter, suppressWarningIfTooNewForVersions: String?) {
     warnIfCompileSdkTooNew(
         version = version,

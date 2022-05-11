@@ -22,6 +22,7 @@ import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.transform.Transform
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
@@ -118,6 +119,17 @@ interface ComponentDslInfo: DimensionCombination {
 
     @Deprecated("Can be removed once the AaptOptions crunch method is removed.")
     val isCrunchPngsDefault: Boolean
+
+    /**
+     * Returns a list of generated resource values.
+     *
+     *
+     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
+     * comments (instance of String).
+     *
+     * @return a list of items.
+     */
+    fun getResValues(): Map<ResValue.Key, ResValue>
 
     /**
      * Returns the merged manifest placeholders. All product flavors are merged first, then build

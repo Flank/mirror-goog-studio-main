@@ -30,6 +30,10 @@ DOLPHIN = [
     "//prebuilts/studio/buildbenchmarks/dolphin.3627ef8a:dolphin.3627ef8a",
 ]
 
+ABSEIL = [
+    "//prebuilts/studio/buildbenchmarks/abseil-cpp.731689ff:abseil-cpp.731689ff",
+]
+
 ANDROID_23 = ["//prebuilts/studio/sdk:platforms/android-23_build_only"]
 
 #keep sorted
@@ -476,6 +480,17 @@ single_gradle_integration_test(
     maven_repos = MAVEN_REPOS,
     shard_count = 2,
     tags = ["no_test_windows"],
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
+    name = "AbseilTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK + ABSEIL + ["//tools/buildSrc/base:version.properties"],
+    maven_repo_zips = MAVEN_REPO_ZIPS,
+    maven_repos = MAVEN_REPOS,
+    shard_count = 1,
+    tags = [],
     deps = DEPS,
 )
 

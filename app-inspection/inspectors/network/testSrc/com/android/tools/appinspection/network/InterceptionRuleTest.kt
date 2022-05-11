@@ -20,6 +20,8 @@ import com.android.tools.appinspection.network.rules.BodyModifiedTransformation
 import com.android.tools.appinspection.network.rules.BodyReplacedTransformation
 import com.android.tools.appinspection.network.rules.HeaderAddedTransformation
 import com.android.tools.appinspection.network.rules.HeaderReplacedTransformation
+import com.android.tools.appinspection.network.rules.InterceptionCriteria
+import com.android.tools.appinspection.network.rules.NetworkConnection
 import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.rules.StatusCodeReplacedTransformation
 import com.android.tools.appinspection.network.rules.matches
@@ -27,6 +29,7 @@ import com.android.tools.appinspection.network.rules.wildCardMatches
 import com.android.tools.idea.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import studio.network.inspection.NetworkInspectorProtocol
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyModified
 import studio.network.inspection.NetworkInspectorProtocol.Transformation.BodyReplaced
@@ -42,6 +45,12 @@ class InterceptionRuleTest {
     @Test
     fun matchingTextMatchesTargets() {
         assertThat(wildCardMatches("", null)).isTrue()
+
+        val matchesAll = MatchingText.newBuilder().apply {
+            type = MatchingText.Type.PLAIN
+            text = ""
+        }.build()
+        assertThat(matchesAll.matches(null)).isTrue()
 
         val plainMatchingText = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
@@ -65,9 +74,75 @@ class InterceptionRuleTest {
     }
 
     @Test
+    fun interceptionCriteriaMatchesConnections() {
+        val emptyCriteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.getDefaultInstance()
+        )
+        val connection = NetworkConnection("https://www.google.com", "GET")
+        assertThat(emptyCriteria.appliesTo(connection)).isTrue()
+
+        val criteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
+                protocol = "https"
+                host = "www.google.com"
+                port = ""
+                query = ""
+                path = ""
+                method = "GET"
+            }.build()
+        )
+        assertThat(criteria.appliesTo(connection)).isTrue()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("https://www.google.com:8080", "POST"))
+        ).isFalse()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("http://www.google.com", "GET"))
+        ).isFalse()
+        assertThat(
+            criteria.appliesTo(NetworkConnection("https://www.google.com", "POST"))
+        ).isFalse()
+
+        val detailedCriteria = InterceptionCriteria(
+            NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
+                protocol = "https"
+                host = "www.google.com"
+                port = "8080"
+                query = "query"
+                path = "/path"
+                method = "GET"
+            }.build()
+        )
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query", "GET")
+            )
+        ).isTrue()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com/path?query", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query2", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path2?query", "GET")
+            )
+        ).isFalse()
+        assertThat(
+            detailedCriteria.appliesTo(
+                NetworkConnection("https://www.google.com:8080/path?query", "POST")
+            )
+        ).isFalse()
+    }
+
+    @Test
     fun changeStatusCode() {
         val response = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200 OK")),
+            mapOf(null to listOf("HTTP/1.0 200 OK"), "response-status-code" to listOf("200")),
             "Body".byteInputStream()
         )
         val proto = StatusCodeReplaced.newBuilder().apply {
@@ -78,22 +153,22 @@ class InterceptionRuleTest {
             newCode = "404"
         }.build()
         var transformedResponse = StatusCodeReplacedTransformation(proto).transform(response)
-        assertThat(transformedResponse.responseHeaders["null"]!![0]).isEqualTo("HTTP/1.0 404 OK")
+        assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404 OK")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
         val responseWithoutMessage = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200")),
+            mapOf(null to listOf("HTTP/1.0 200"), "response-status-code" to listOf("200")),
             "Body".byteInputStream()
         )
         transformedResponse =
             StatusCodeReplacedTransformation(proto).transform(responseWithoutMessage)
-        assertThat(transformedResponse.responseHeaders["null"]!![0]).isEqualTo("HTTP/1.0 404")
+        assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
     }
 
     @Test
     fun addResponseHeader() {
         val response = NetworkResponse(
-            mapOf("null" to listOf("HTTP/1.0 200 OK")),
+            mapOf(null to listOf("HTTP/1.0 200 OK")),
             "Body".byteInputStream()
         )
         val addingNewHeaderAndValue = HeaderAdded.newBuilder().apply {
@@ -165,7 +240,7 @@ class InterceptionRuleTest {
     fun modifyResponseBody() {
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "BodyXBodyXBodyXBoody".byteInputStream()
@@ -183,7 +258,7 @@ class InterceptionRuleTest {
 
         val responseWithJsonContent = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("application/json")
             ),
             "Body".byteInputStream()
@@ -198,7 +273,7 @@ class InterceptionRuleTest {
     fun modifyResponseBodyWithRegex() {
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "BodyXBodyXBodyXBoody".byteInputStream()
@@ -224,7 +299,7 @@ class InterceptionRuleTest {
         }
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html"),
                 "content-encoding" to listOf("gzip")
             ),
@@ -251,7 +326,7 @@ class InterceptionRuleTest {
         }
         val response = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html"),
                 "content-encoding" to listOf("gzip")
             ),
@@ -270,14 +345,14 @@ class InterceptionRuleTest {
     fun replaceTwoResponseBody() {
         val response1 = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "Body1".toByteArray().inputStream()
         )
         val response2 = NetworkResponse(
             mapOf(
-                "null" to listOf("HTTP/1.0 200 OK"),
+                null to listOf("HTTP/1.0 200 OK"),
                 "content-type" to listOf("text/html")
             ),
             "Body2".toByteArray().inputStream()

@@ -90,6 +90,7 @@ public final class SdkConstants {
     public static final String MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY =
             "minAndroidGradlePluginVersion";
     public static final String FORCE_COMPILE_SDK_PREVIEW_PROPERTY = "forceCompileSdkPreview";
+    public static final String MIN_COMPILE_SDK_EXTENSION_PROPERTY = "minCompileSdkExtension";
 
     /** Properties in app-metadata.properties file */
     public static final String APP_METADATA_VERSION_PROPERTY = "appMetadataVersion";

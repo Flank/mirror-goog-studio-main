@@ -27,6 +27,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
+import java.util.regex.Pattern
 
 class SdkParsingUtilsTest {
 
@@ -126,11 +127,11 @@ class SdkParsingUtilsTest {
     private val PLATFORM_28_XML = """
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns2:repository
-            xmlns:ns2="http://schemas.android.com/repository/android/common/01"
-            xmlns:ns3="http://schemas.android.com/repository/android/generic/01"
-            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/01"
-            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/01"
-            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
+            xmlns:ns2="http://schemas.android.com/repository/android/common/03"
+            xmlns:ns3="http://schemas.android.com/repository/android/generic/03"
+            xmlns:ns4="http://schemas.android.com/sdk/android/repo/addon2/03"
+            xmlns:ns5="http://schemas.android.com/sdk/android/repo/repository2/03"
+            xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/03">
 
             <license id="android-sdk-license" type="text">Very valid license</license>
             <localPackage path="platforms;android-28" obsolete="false">
@@ -328,6 +329,45 @@ class SdkParsingUtilsTest {
         val optionalLibraries = parseOptionalLibraries(localPackage!!)
         assertThat(optionalLibraries).isEmpty()
     }
+
+    @Test
+    fun parseAndroidVersion_missingExtensionInfo() {
+        val xml = testFolder.newFile("package.xml")
+        xml.writeText(PLATFORM_28_XML, Charsets.UTF_8)
+
+        val localPackage = parsePackage(xml)
+        assertThat(localPackage).isNotNull()
+
+        val androidVersion = parseAndroidVersion(localPackage!!)
+        assertThat(androidVersion?.apiLevel).isEqualTo(28)
+        assertThat(androidVersion?.codename).isEqualTo(null)
+        assertThat(androidVersion?.extensionLevel).isEqualTo(null)
+        assertThat(androidVersion?.isBaseExtension).isEqualTo(true)
+    }
+
+    @Test
+    fun parseAndroidVersion_withInjectedExtensionInfo() {
+        val xml = testFolder.newFile("package.xml")
+
+        // inject <extension-level>1</extension-level> and <base-extension>false</base-extension>
+        val modifiedPlatform28Xml =
+            Pattern.compile("</codename>", Pattern.LITERAL)
+                .matcher(PLATFORM_28_XML)
+                .replaceAll(
+                    "</codename><extension-level>1</extension-level><base-extension>false</base-extension>"
+                )
+        xml.writeText(modifiedPlatform28Xml, Charsets.UTF_8)
+
+        val localPackage = parsePackage(xml)
+        assertThat(localPackage).isNotNull()
+
+        val androidVersion = parseAndroidVersion(localPackage!!)
+        assertThat(androidVersion?.apiLevel).isEqualTo(28)
+        assertThat(androidVersion?.codename).isEqualTo(null)
+        assertThat(androidVersion?.extensionLevel).isEqualTo(1)
+        assertThat(androidVersion?.isBaseExtension).isEqualTo(false)
+    }
+
 
     private fun populateBuildToolDirectory(buildToolDir: File, buildToolRevision: Revision, skipSet: Set<BuildToolInfo.PathId> = emptySet()) {
         val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(buildToolRevision, buildToolDir.toPath())

@@ -16,13 +16,4 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.dsl.AndroidResources
-
-interface LibraryCreationConfig: VariantCreationConfig, AarCreationConfig, PublishableCreationConfig {
-    /**
-     * Access to the (locked) AndroidResources DSL.
-     * Libraries don't allow overriding these values via the Variant API but they still need access
-     * to the DSL-set values.
-     */
-    val dslAndroidResources: AndroidResources
-}
+interface LibraryCreationConfig: VariantCreationConfig, AarCreationConfig, PublishableCreationConfig

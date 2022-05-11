@@ -35,6 +35,13 @@ interface AarMetadata {
     var minCompileSdk: Int?
 
     /**
+     * The minimum compileSdkExtension required by any consuming module.
+     */
+    @get:Incubating
+    @set:Incubating
+    var minCompileSdkExtension: Int?
+
+    /**
      * The minimum Android Gradle Plugin version required by any consuming module.
      *
      * For example, setting this when the AAR relies on a feature from a new version of AGP will

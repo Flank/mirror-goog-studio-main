@@ -47,8 +47,8 @@ class UninstallResult(val output: String) {
  * Always use device 'pm' CLI over SHELL protocol.
  *
  * @param [device] the [DeviceSelector] corresponding to the target device
- * @param [userID] the user identifier
  * @param [applicationID] the application idenfier (usually a package formatted name).
+ * @param [options] parameters directly passed to package manager
  * @param [timeout] timeout tracking the command execution, tracking starts *after* the
  *   device connection has been successfully established. If the command takes more time than
  *   the timeout, a [TimeoutException] is thrown and the underlying [AdbChannel] is closed.
@@ -56,15 +56,16 @@ class UninstallResult(val output: String) {
 suspend fun AdbDeviceServices.uninstall(
     // The specific device to talk to via the service above
     device: DeviceSelector,
-    // The userID on that device
-    userID: Int = 0,
     // The applicationID on that device for that userID
     applicationID: String,
+    // The options for uninstall, passed directly to the package manager
+    options: List<String> = emptyList(),
     // Timeout
     timeout : Duration = Duration.ofSeconds(10)
 ): UninstallResult {
     // TODO Improve perf by supporting 'cmd uninstall' and 'abb package uninstall' variants.
-    var cmd = "pm uninstall --user $userID $applicationID"
+    val opts = options.joinToString(" ")
+    var cmd = "pm uninstall $opts $applicationID"
     val flow = this.shell(device, cmd, TextShellCollector(), commandTimeout = timeout)
     val output = flow.first()
     return UninstallResult(output)

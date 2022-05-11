@@ -330,7 +330,7 @@ class TrackedHttpURLConnection(
         return wrapped.getHeaderField(pos)
     }
 
-    val headerFields: Map<String, List<String>>
+    val headerFields: Map<String?, List<String>>
         get() {
             tryTrackResponse()
             return interceptedResponse.responseHeaders

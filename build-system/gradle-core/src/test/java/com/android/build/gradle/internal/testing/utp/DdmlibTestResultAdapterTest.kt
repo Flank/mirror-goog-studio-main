@@ -131,7 +131,7 @@ class DdmlibTestResultAdapterTest {
         val resultProto = createResultProto("""
             test_status: ERROR
             platform_error {
-              error_detail {
+              errors {
                 summary {
                   namespace {
                     namespace: "com.google.testing.platform"

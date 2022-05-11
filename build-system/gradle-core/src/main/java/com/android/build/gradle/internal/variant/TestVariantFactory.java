@@ -176,7 +176,17 @@ public class TestVariantFactory
 
     @NonNull
     @Override
-    public BuildFeatureValues createTestBuildFeatureValues(
+    public BuildFeatureValues createUnitTestBuildFeatureValues(
+            @NonNull BuildFeatures buildFeatures,
+            @NonNull DataBinding dataBinding,
+            @NonNull ProjectOptions projectOptions,
+            boolean includeAndroidResources) {
+        throw new RuntimeException("cannot instantiate test build features in test plugin");
+    }
+
+    @NonNull
+    @Override
+    public BuildFeatureValues createAndroidTestBuildFeatureValues(
             @NonNull BuildFeatures buildFeatures,
             @NonNull DataBinding dataBinding,
             @NonNull ProjectOptions projectOptions) {

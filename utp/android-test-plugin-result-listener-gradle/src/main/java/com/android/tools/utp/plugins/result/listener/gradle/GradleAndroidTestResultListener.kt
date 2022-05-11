@@ -26,6 +26,7 @@ import com.google.protobuf.Any
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.Configurable
 import com.google.testing.platform.api.config.ProtoConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.result.TestResultListener
 import com.google.testing.platform.lib.logging.jvm.getLogger
 import com.google.testing.platform.proto.api.core.TestCaseProto
@@ -67,9 +68,10 @@ class GradleAndroidTestResultListener(
     private lateinit var requestObserver: StreamObserver<TestResultEvent>
     private val finishLatch: CountDownLatch = CountDownLatch(1)
 
-    override fun configure(config: Config) {
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as ProtoConfig
         val pluginConfig = GradleAndroidTestResultListenerConfig.parseFrom(
-                (config as ProtoConfig).configProto!!.value)
+                config.configProto!!.value)
 
         deviceId = pluginConfig.deviceId
         channel = channelFactory(pluginConfig)

@@ -347,7 +347,7 @@ class UtpTestUtilsTest {
     fun resultHasEmulatorTimeoutException() {
         val testResult = TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
             platformErrorBuilder.apply {
-                errorDetailBuilder.apply {
+                addErrorsBuilder().apply {
                     causeBuilder.apply {
                         summaryBuilder.apply {
                             stackTrace = "EmulatorTimeoutException"
@@ -364,7 +364,7 @@ class UtpTestUtilsTest {
     fun resultDoesNotHaveEmulatorTimeoutException() {
         val testResult = TestSuiteResultProto.TestSuiteResult.newBuilder().apply {
             platformErrorBuilder.apply {
-                errorDetailBuilder.apply {
+                addErrorsBuilder().apply {
                     causeBuilder.apply {
                         summaryBuilder.apply {
                             stackTrace = "Exception"
@@ -383,7 +383,7 @@ class UtpTestUtilsTest {
         val resultProto = createResultProto("""
             test_status: ERROR
             platform_error {
-              error_detail {
+              errors {
                 summary {
                   namespace {
                     namespace: "com.google.testing.platform"
@@ -417,7 +417,7 @@ class UtpTestUtilsTest {
         val resultProto = createResultProto("""
             test_status: ERROR
             platform_error {
-              error_detail {
+              errors {
                 summary {
                   namespace {
                     namespace: "com.google.testing.platform"

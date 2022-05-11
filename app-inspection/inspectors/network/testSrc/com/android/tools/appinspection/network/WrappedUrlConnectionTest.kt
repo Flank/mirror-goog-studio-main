@@ -50,7 +50,7 @@ class WrappedUrlConnectionTest {
                         method: String, fields: Map<String, List<String>>
                     ) = Unit
 
-                    override fun trackResponseHeaders(fields: Map<String, List<String>>) = Unit
+                    override fun trackResponseHeaders(fields: Map<String?, List<String>>) = Unit
                     override fun trackResponseBody(stream: InputStream) = stream
                 }
             }

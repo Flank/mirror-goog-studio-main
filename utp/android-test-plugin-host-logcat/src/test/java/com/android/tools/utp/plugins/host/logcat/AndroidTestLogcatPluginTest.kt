@@ -21,6 +21,7 @@ import com.android.testutils.MockitoKt.eq
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.api.config.ConfigBase
 import com.google.testing.platform.api.config.Environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandHandle
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.DeviceController
@@ -50,6 +51,7 @@ class AndroidTestLogcatPluginTest {
     @get:Rule var tempFolder: TemporaryFolder = TemporaryFolder()
 
     @Mock private lateinit var mockCommandHandle: CommandHandle
+    @Mock private lateinit var mockContext: Context
     @Mock private lateinit var mockConfig: ConfigBase
     @Mock private lateinit var mockDeviceController: DeviceController
     @Mock private lateinit var mockLogger: Logger
@@ -69,11 +71,12 @@ class AndroidTestLogcatPluginTest {
 
     @Before
     fun setUp() {
-        environment = Environment(tempFolder.root.path, "", "", "", null)
+        environment = Environment(tempFolder.root.path, "", "", "", "", null)
         emptyTestResult = TestResult.newBuilder().build()
         emptyTestSuiteResult = TestSuiteResult.newBuilder().build()
         androidTestLogcatPlugin = AndroidTestLogcatPlugin(mockLogger)
 
+        `when`(mockContext[eq(Context.CONFIG_KEY)]).thenReturn(mockConfig)
         `when`(mockConfig.environment).thenReturn(environment)
         `when`(mockDeviceController.deviceShell(listOf("date", "+%m-%d\\ %H:%M:%S")))
                 .thenReturn(CommandResult(0, listOf(testDeviceTime)))
@@ -92,7 +95,7 @@ class AndroidTestLogcatPluginTest {
 
     @Test
     fun beforeAll_startsLogcatStreamWithExpectedLogcatOptions() {
-        androidTestLogcatPlugin.configure(mockConfig)
+        androidTestLogcatPlugin.configure(mockContext)
         androidTestLogcatPlugin.beforeAll(mockDeviceController)
 
         val expectedLogcatOptions = mutableListOf<String>()
@@ -105,7 +108,7 @@ class AndroidTestLogcatPluginTest {
     @Test
     fun afterEach_addsLogcatArtifacts() {
         val testResult = androidTestLogcatPlugin.run {
-            configure(mockConfig)
+            configure(mockContext)
             beforeAll(mockDeviceController)
             beforeEach(emptyTestResult.testCase, mockDeviceController)
             afterEach(emptyTestResult, mockDeviceController)
@@ -121,7 +124,7 @@ class AndroidTestLogcatPluginTest {
 
     @Test
     fun afterAll_stopsLogcatStream() {
-        androidTestLogcatPlugin.configure(mockConfig)
+        androidTestLogcatPlugin.configure(mockContext)
         androidTestLogcatPlugin.beforeAll(mockDeviceController)
         androidTestLogcatPlugin.afterEach(emptyTestResult, mockDeviceController)
         androidTestLogcatPlugin.afterAll(emptyTestSuiteResult, mockDeviceController)
@@ -136,7 +139,7 @@ class AndroidTestLogcatPluginTest {
 
     @Test
     fun doNotDisplayWarningIfAfterAllIsCalledWithoutBeforeAll() {
-        androidTestLogcatPlugin.configure(mockConfig)
+        androidTestLogcatPlugin.configure(mockContext)
         // afterAll() may be invoked without beforeAll() when there is a runtime error
         // in other UTP plugins.
         androidTestLogcatPlugin.afterAll(emptyTestSuiteResult, mockDeviceController)

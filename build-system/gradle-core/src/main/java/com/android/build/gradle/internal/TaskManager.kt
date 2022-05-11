@@ -438,7 +438,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         createProcessJavaResTask(testFixturesComponent)
 
         // android resources tasks
-        if (testFixturesComponent.androidResourcesEnabled) {
+        if (testFixturesComponent.buildFeatures.androidResources) {
             taskFactory.register(ExtractDeepLinksTask.CreationAction(testFixturesComponent))
             taskFactory.register(ExtractDeepLinksTask.AarCreationAction(testFixturesComponent))
 
@@ -636,9 +636,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             }
     }
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun registerLibraryRClassTransformStream(component: ComponentCreationConfig) {
-        if (!component.androidResourcesEnabled) {
+        if (!component.buildFeatures.androidResources) {
             return
         }
         val compileRClass: FileCollection = project.files(
@@ -804,7 +804,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected open fun createDependencyStreams(creationConfig: ComponentCreationConfig) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -961,9 +961,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             creationConfig: ComponentCreationConfig,
             processResources: Boolean,
             flags: Set<MergeResources.Flag>) {
+        if (!creationConfig.buildFeatures.androidResources &&
+            creationConfig !is AndroidTestCreationConfig) {
+            return
+        }
         val alsoOutputNotCompiledResources = (creationConfig.componentType.isApk
                 && !creationConfig.componentType.isForTesting
-                && creationConfig.useResourceShrinker())
+                && creationConfig.androidResourcesCreationConfig!!.useResourceShrinker)
         val includeDependencies = true
         basicCreateMergeResourcesTask(
                 creationConfig,
@@ -1133,6 +1137,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             packageOutputType: Single<Directory>?,
             mergeType: MergeType,
             baseName: String) {
+        if (!creationConfig.buildFeatures.androidResources &&
+            creationConfig !is AndroidTestCreationConfig) {
+            return
+        }
         val scope = creationConfig.variantScope
         val variantData = creationConfig.variantData
         variantData.calculateFilters(creationConfig.global.splits)
@@ -1153,7 +1161,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                             useAaptToGenerateLegacyMultidexMainDexProguardRules)
             val rFiles: FileCollection = project.files(
                     creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             creationConfig
                     .transformManager
                     .addStream(
@@ -1257,7 +1265,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      * @param contentType the contentType of java resources, must be RESOURCES or NATIVE_LIBS
      * @return the list of scopes for which to merge the java resources.
      */
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected abstract fun getJavaResMergingScopes(
             creationConfig: ComponentCreationConfig,
             contentType: com.android.build.api.transform.QualifiedContent.ContentType): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
@@ -1285,7 +1293,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // create the stream generated from this task, but only if a library with custom transforms,
         // in which case the custom transforms must be applied before java res merging.
         if (creationConfig.variantScope.needsJavaResStreams) {
-            @Suppress("DEPRECATION") // Legacy support (b/195153220)
+            @Suppress("DEPRECATION") // Legacy support
             creationConfig
                     .transformManager
                     .addStream(
@@ -1313,7 +1321,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val transformManager = creationConfig.transformManager
 
         // Compute the scopes that need to be merged.
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         val mergeScopes = getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
         taskFactory.register(MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig))
 
@@ -1419,7 +1427,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      *
      * This should not be called for classes that will also be compiled from source by jack.
      */
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun addJavacClassesStream(creationConfig: ComponentCreationConfig) {
         // create separate streams for all the classes coming from javac, pre/post hooks and R.
         val transformManager = creationConfig.transformManager
@@ -1523,7 +1531,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         testConfigInputs.packageNameOfFinalRClass)
             }
         } else {
-            if (testedVariant.componentType.isAar && testedVariant.androidResourcesEnabled) {
+            if (testedVariant.componentType.isAar && testedVariant.buildFeatures.androidResources) {
                 // With compile classpath R classes, we need to generate a dummy R class for unit
                 // tests
                 // See https://issuetracker.google.com/143762955 for more context.
@@ -2340,7 +2348,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         creationConfig
             .transformManager
             .consumeStreams(
@@ -2367,7 +2375,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 )
             }
 
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         creationConfig
             .transformManager
             .addStream(
@@ -2459,7 +2467,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 PackageApplication.CreationAction(
                         creationConfig,
                         creationConfig.paths.apkLocation,
-                        creationConfig.useResourceShrinker(),
                         manifests,
                         manifestType),
                 null,
@@ -2729,7 +2736,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // proguard can shrink an empty library project, as the R class is always kept and
         // then removed by library jar transforms.
         val addCompileRClass = (this is LibraryTaskManager
-                && creationConfig.androidResourcesEnabled)
+                && creationConfig.buildFeatures.androidResources)
         val task: TaskProvider<out Task> =
                 createR8Task(creationConfig, isTestApplication, addCompileRClass)
         if (creationConfig.variantScope.postprocessingFeatures != null) {
@@ -2819,7 +2826,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      */
     private fun maybeCreateResourcesShrinkerTasks(
             creationConfig: ConsumableCreationConfig) {
-        if (!creationConfig.useResourceShrinker()) {
+        if (creationConfig.androidResourcesCreationConfig?.useResourceShrinker != true) {
             return
         }
         if (creationConfig.componentType.isDynamicFeature) {
@@ -3258,7 +3265,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     private fun getDeviceGroups(): Collection<DeviceGroup> =
         globalConfig.testOptions.managedDevices.groups
 
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     protected fun maybeCreateTransformClassesWithAsmTask(
         creationConfig: ComponentCreationConfig
     ) {

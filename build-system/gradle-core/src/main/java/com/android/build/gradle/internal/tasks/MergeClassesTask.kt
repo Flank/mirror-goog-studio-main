@@ -105,7 +105,7 @@ abstract class MergeClassesTask : NonIncrementalTask() {
 
         // Because ordering matters for the transform pipeline, we need to fetch the classes as soon
         // as this creation action is instantiated.
-        @Suppress("DEPRECATION") // Legacy support (b/195153220)
+        @Suppress("DEPRECATION") // Legacy support
         private val inputFiles =
             creationConfig
                 .transformManager

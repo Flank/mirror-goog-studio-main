@@ -24,6 +24,7 @@ import com.google.common.annotations.VisibleForTesting
 import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.ProtoConfig
 import com.google.testing.platform.api.config.environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugin.HostPlugin
 import com.google.testing.platform.lib.logging.jvm.getLogger
@@ -78,8 +79,9 @@ class IceboxPlugin @VisibleForTesting constructor(
     private var failureSnapshotId = 0
     private var printedWarning = false
 
-    override fun configure(config: Config) {
-        iceboxPluginConfig = IceboxPluginConfig.parseFrom((config as ProtoConfig).configProto!!.value)
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as ProtoConfig
+        iceboxPluginConfig = IceboxPluginConfig.parseFrom(config.configProto!!.value)
         androidStudioDdmlibPort = iceboxPluginConfig.androidStudioDdmlibPort
         if (androidStudioDdmlibPort == 0) {
             androidStudioDdmlibPort = defaultAndroidStudioDdmlibPort
@@ -136,7 +138,8 @@ class IceboxPlugin @VisibleForTesting constructor(
     /** Finishes the icebox snapshot and saves it on [testResult]. */
     override fun afterEach(
         testResult: TestResult,
-        deviceController: DeviceController
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestResult {
         val res = updateIceboxResult(testResult)
         if (iceboxPluginConfig.setupStrategy
@@ -214,16 +217,15 @@ class IceboxPlugin @VisibleForTesting constructor(
 
     /** Shuts down the Icebox service. */
     override fun afterAll(
-            testSuiteResult: TestSuiteResult,
-            deviceController: DeviceController
+        testSuiteResult: TestSuiteResult,
+        deviceController: DeviceController,
+        cancelled: Boolean
     ): TestSuiteResult {
         iceboxCaller.shutdownGrpc()
         return testSuiteResult
     }
 
     override fun canRun(): Boolean = true
-
-    override fun cancel(): Boolean = false
 
     /**
      * Returns the grpc info for the attached device.

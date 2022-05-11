@@ -157,10 +157,17 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
         androidResourcesEnabled: Boolean
     ): BuildFeatureValues
 
-    fun createTestBuildFeatureValues(
-            buildFeatures: BuildFeatures,
-            dataBinding: DataBinding,
-            projectOptions: ProjectOptions): BuildFeatureValues
+    fun createUnitTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBinding: DataBinding,
+        projectOptions: ProjectOptions,
+        includeAndroidResources: Boolean
+    ): BuildFeatureValues
+
+    fun createAndroidTestBuildFeatureValues(
+        buildFeatures: BuildFeatures,
+        dataBinding: DataBinding,
+        projectOptions: ProjectOptions): BuildFeatureValues
 
     val variantImplementationClass: Class<out BaseVariantImpl?>
 

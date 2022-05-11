@@ -29,11 +29,10 @@ class InterceptionCriteria(private val interceptCriteria: InterceptCriteria) {
             return false
         }
         val url = URL(connection.url)
-        return interceptCriteria.protocol == url.protocol &&
-                wildCardMatches(
-                    interceptCriteria.port,
-                    if (url.port == -1) "" else url.port.toString()
-                ) &&
+        if (interceptCriteria.protocol.isNotBlank() && interceptCriteria.protocol != url.protocol) {
+            return false
+        }
+        return wildCardMatches(interceptCriteria.port, url.port.toString()) &&
                 wildCardMatches(interceptCriteria.host, url.host) &&
                 wildCardMatches(interceptCriteria.path, url.path) &&
                 wildCardMatches(interceptCriteria.query, url.query)

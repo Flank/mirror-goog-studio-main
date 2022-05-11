@@ -48,9 +48,7 @@ class UtpTestSuiteResultMerger {
     }
 
     private fun mergePlatformError(platformError: PlatformErrorProto.PlatformError) {
-        if (!builder.platformError.hasErrorDetail() && platformError.hasErrorDetail()) {
-            builder.platformErrorBuilder.errorDetail = platformError.errorDetail
-        }
+        builder.platformErrorBuilder.addAllErrors(platformError.errorsList)
     }
 
     private fun mergeTestSuiteMetaData(metadata: TestSuiteResultProto.TestSuiteMetaData) {
@@ -68,6 +66,7 @@ class UtpTestSuiteResultMerger {
             TestStatus.UNRECOGNIZED,
             TestStatus.SKIPPED,
             TestStatus.IGNORED,
+            TestStatus.IN_PROGRESS,
             TestStatus.STARTED -> {
                 testStatus
             }

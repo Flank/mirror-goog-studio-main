@@ -23,6 +23,7 @@ import com.android.tools.utp.plugins.result.listener.gradle.proto.GradleAndroidT
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
 import com.google.testing.platform.api.config.ProtoConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.proto.api.core.ExtensionProto
 import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
@@ -38,6 +39,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.AdditionalAnswers.delegatesTo
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 /**
  * Unit test for [GradleAndroidTestResultListener].
@@ -106,7 +108,10 @@ class GradleAndroidTestResultListenerTest {
                 get() = null
         }
 
-        testListener.configure(protoConfig)
+        val context = mock(Context::class.java)
+        `when`(context[Context.CONFIG_KEY]).thenReturn(protoConfig)
+
+        testListener.configure(context)
     }
 
     @Test

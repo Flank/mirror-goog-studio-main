@@ -20,6 +20,7 @@ import com.google.testing.platform.api.config.Config
 import com.google.testing.platform.api.config.Configurable
 import com.google.testing.platform.api.config.Environment
 import com.google.testing.platform.api.config.parseConfig
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.provider.DeviceProviderConfigImpl
 import com.google.testing.platform.runtime.android.AndroidDeviceProvider
@@ -37,18 +38,26 @@ class GradleManagedAndroidDeviceProvider : AndroidDeviceProvider, Configurable {
     /** The device provider implementation to run the managed Gradle Device. */
     private lateinit var managedGradleDeviceLauncher: GradleManagedAndroidDeviceLauncher
 
-    override fun configure(config: Config) {
-        config as DeviceProviderConfigImpl
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as DeviceProviderConfigImpl
         environment = config.environment
 
         managedGradleDeviceLauncher = GradleManagedAndroidDeviceLauncher.create(config)
 
-        managedGradleDeviceLauncher.configure(
-                GradleManagedAndroidDeviceLauncher.DataBoundArgs(
-                        gradleManagedDeviceProviderConfig = config.parseConfig()!!,
-                        delegateConfigBase = config
-                )
-        )
+        val deviceLauncherContext = object : Context {
+            val config = GradleManagedAndroidDeviceLauncher.DataBoundArgs(
+                gradleManagedDeviceProviderConfig = config.parseConfig()!!,
+                delegateConfigBase = config
+            )
+            override fun get(key: String): Any? {
+                return if (Context.CONFIG_KEY == key) {
+                    this.config
+                } else {
+                    context[key]
+                }
+            }
+        }
+        managedGradleDeviceLauncher.configure(deviceLauncherContext)
     }
 
     override fun provideDevice(): DeviceController {

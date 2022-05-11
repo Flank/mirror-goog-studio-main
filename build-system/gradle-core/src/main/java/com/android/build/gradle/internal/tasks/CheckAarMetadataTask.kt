@@ -19,6 +19,7 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_EXTENSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.Version
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -26,6 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.ide.dependencies.getIdString
+import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_COMPILE_SDK_EXTENSION
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ToolsRevisionUtils
@@ -44,6 +46,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -86,8 +89,16 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     @get:Input
     abstract val aarMetadataVersion: Property<String>
 
+    // compileSdkVersion is the full compileSdkVersion hash string coming from the DSL
     @get:Input
     abstract val compileSdkVersion: Property<String>
+
+    // platformSdkExtension is the actual extension level of the platform, if specified within the
+    // SDK directory. This value is used if the extension level is not specified in the
+    // compileSdkVersion hash string.
+    @get:Input
+    @get:Optional
+    abstract val platformSdkExtension: Property<Int>
 
     @get:Input
     abstract val agpVersion: Property<String>
@@ -115,6 +126,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarFormatVersion.set(aarFormatVersion)
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
+            it.platformSdkExtension.set(platformSdkExtension)
             it.agpVersion.set(agpVersion)
             it.maxRecommendedStableCompileSdkVersionForThisAgp.set(
                 maxRecommendedStableCompileSdkVersionForThisAgp
@@ -156,6 +168,11 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             task.agpVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
             task.maxRecommendedStableCompileSdkVersionForThisAgp.setDisallowChanges(
                 ToolsRevisionUtils.MAX_RECOMMENDED_COMPILE_SDK_VERSION.apiLevel
+            )
+            task.platformSdkExtension.setDisallowChanges(
+                creationConfig.global.versionedSdkLoader.flatMap { sdkLoader ->
+                    sdkLoader.targetAndroidVersionProvider.map { it.extensionLevel }
+                }
             )
         }
     }
@@ -376,6 +393,39 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
             }
         }
 
+        // check SDK extension level
+        val minCompileSdkExtension = aarMetadataReader.minCompileSdkExtension
+        if (minCompileSdkExtension != null) {
+            val minCompileSdkExtensionInt = minCompileSdkExtension.toIntOrNull()
+            if (minCompileSdkExtensionInt == null) {
+                errorMessages.add(
+                    """
+                        The AAR metadata for dependency '$displayName' has an invalid
+                        $MIN_COMPILE_SDK_EXTENSION_PROPERTY value ($minCompileSdkExtension).
+
+                        $MIN_COMPILE_SDK_EXTENSION_PROPERTY must be an integer.
+                        """.trimIndent()
+                )
+            } else {
+                val compileSdkExtension =
+                    parseTargetHash(parameters.compileSdkVersion.get()).sdkExtension
+                        ?: parameters.platformSdkExtension.orNull
+                        ?: DEFAULT_MIN_COMPILE_SDK_EXTENSION
+                if (minCompileSdkExtensionInt > compileSdkExtension) {
+                    errorMessages.add(
+                        """
+                            Dependency '$displayName' requires libraries and applications that
+                            depend on it to compile against an SDK with an extension level of
+                            $minCompileSdkExtension or higher.
+
+                            Recommended action: Update this project to use a compileSdkExtension
+                            value of at least $minCompileSdkExtension.
+                        """.trimIndent()
+                    )
+                }
+            }
+        }
+
         // check agpVersion
         val minAgpVersion = aarMetadataReader.minAgpVersion
         if (minAgpVersion != null) {
@@ -434,6 +484,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarFormatVersion: Property<String>
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
+    abstract val platformSdkExtension: Property<Int>
     abstract val agpVersion: Property<String>
     abstract val maxRecommendedStableCompileSdkVersionForThisAgp: Property<Int>
     abstract val projectPath: Property<String>
@@ -446,6 +497,7 @@ private data class AarMetadataReader(val file: File) {
     val minCompileSdk: String?
     val minAgpVersion: String?
     val forceCompileSdkPreview: String?
+    val minCompileSdkExtension: String?
 
     init {
         val properties = Properties()
@@ -455,6 +507,7 @@ private data class AarMetadataReader(val file: File) {
         minCompileSdk = properties.getProperty(MIN_COMPILE_SDK_PROPERTY)
         minAgpVersion = properties.getProperty(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY)
         forceCompileSdkPreview = properties.getProperty(FORCE_COMPILE_SDK_PREVIEW_PROPERTY)
+        minCompileSdkExtension = properties.getProperty(MIN_COMPILE_SDK_EXTENSION_PROPERTY)
     }
 }
 

@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import org.gradle.api.provider.Property
 import javax.inject.Inject
 
 abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constructor(
@@ -70,9 +69,6 @@ abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constru
     // as in apps it will have already been included in the tested application.
     override val packageJacocoRuntime: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled && mainVariant.componentType.isAar
-
-    override val pseudoLocalesEnabled: Property<Boolean> =
-            internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, dslInfo.isPseudoLocalesEnabled)
 
     override fun <T> onTestedVariant(action: (VariantCreationConfig) -> T): T {
         return action(mainVariant)

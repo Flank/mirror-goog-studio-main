@@ -23,6 +23,7 @@ import com.google.testing.platform.api.config.ConfigBase
 import com.google.testing.platform.api.config.Environment
 import com.google.testing.platform.api.config.Setup
 import com.google.testing.platform.api.config.environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.core.device.DeviceProviderErrorSummary
@@ -55,6 +56,7 @@ class GradleManagedAndroidDeviceLauncher(
     private val maxDelayMillis: Long = 30000,
     private val logger: Logger = getLogger(),
 ) : AndroidDeviceProvider {
+    private lateinit var context: Context
     private lateinit var environment: Environment
     private lateinit var testSetup: Setup
     private lateinit var androidSdk: AndroidSdk
@@ -96,8 +98,9 @@ class GradleManagedAndroidDeviceLauncher(
             message: String
     ) : Exception(message)
 
-    override fun configure(config: Config) {
-        config as DataBoundArgs
+    override fun configure(context: Context) {
+        this.context = context
+        val config = context[Context.CONFIG_KEY] as DataBoundArgs
         environment = config.delegateConfigBase.environment
         testSetup = config.delegateConfigBase.setup
         androidSdk = config.delegateConfigBase.androidSdk
@@ -249,6 +252,7 @@ class GradleManagedAndroidDeviceLauncher(
                     testSetup,
                     androidSdk,
                     AdbConfigProto.AdbConfig.parseFrom(customConfig.adbConfig.value),
+                    context,
             )
         } catch (throwable: Throwable) {
             throw DeviceProviderException(

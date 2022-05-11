@@ -21,6 +21,7 @@ import com.android.tools.utp.plugins.host.icebox.proto.IceboxPluginProto
 import com.android.tools.utp.plugins.host.icebox.proto.IceboxOutputProto.IceboxOutput
 import com.google.common.truth.Truth.assertThat
 import com.google.protobuf.Any
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.api.plugins.PluginConfigImpl
@@ -68,6 +69,9 @@ class IceboxPluginTest {
 
     @Mock
     private lateinit var mockGrpcInfoFinder: GrpcInfoFinder
+
+    @Mock
+    private lateinit var mockContext: Context
 
     private lateinit var iceboxPlugin: IceboxPlugin
     private lateinit var iceboxPluginConfig: IceboxPluginProto.IceboxPlugin
@@ -126,6 +130,7 @@ class IceboxPluginTest {
         `when`(mockGrpcInfoFinder.findInfo(anyString())).thenReturn(DEFAULT_EMULATOR_GRPC_INFO)
         iceboxPluginConfig = buildIceboxPluginConfig(false, 0, IceboxPluginProto.Compression.NONE)
         config = buildConfig(iceboxPluginConfig)
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(config)
         testResult = TestResult.getDefaultInstance()
         val testClass = testResult.testCase.testClass
         val testMethod = testResult.testCase.testMethod
@@ -153,7 +158,7 @@ class IceboxPluginTest {
 
     @Test
     fun configure_ok() {
-        iceboxPlugin.configure(config = config)
+        iceboxPlugin.configure(mockContext)
         assertThat(iceboxPlugin.outputDir.path).isEqualTo(tempFolder.root.path)
         assertThat(iceboxPlugin.iceboxPluginConfig).isEqualTo(iceboxPluginConfig)
     }
@@ -162,7 +167,7 @@ class IceboxPluginTest {
     fun beforeAll_ok() {
         assertThat(iceboxCallerCreated).isFalse()
 
-        iceboxPlugin.configure(config = config)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
 
         assertThat(iceboxCallerCreated).isTrue()
@@ -183,8 +188,9 @@ class IceboxPluginTest {
                 0
         )
         val localConfig = buildConfig(localIceboxPluginConfig)
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(localConfig)
 
-        iceboxPlugin.configure(config = localConfig)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
 
         verify(mockGrpcInfoFinder).findInfo(anyString())
@@ -198,8 +204,9 @@ class IceboxPluginTest {
                 IceboxPluginProto.Compression.NONE
         )
         val localConfig = buildConfig(localIceboxPluginConfig)
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(localConfig)
 
-        iceboxPlugin.configure(config = localConfig)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
 
         verify(mockIceboxCaller).runIcebox(
@@ -210,7 +217,7 @@ class IceboxPluginTest {
 
     @Test
     fun afterEach_ok() {
-        iceboxPlugin.configure(config = config)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(testResult, mockDeviceController)
@@ -222,7 +229,7 @@ class IceboxPluginTest {
 
     @Test
     fun afterAll_ok() {
-        iceboxPlugin.configure(config = config)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(testResult, mockDeviceController)
@@ -240,7 +247,7 @@ class IceboxPluginTest {
             file.mkdir()
             Unit
         }
-        iceboxPlugin.configure(config = config)
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(failingTestResult, mockDeviceController)
@@ -271,7 +278,9 @@ class IceboxPluginTest {
                 IceboxPluginProto.Compression.TARGZ
         )
         val localConfig = buildConfig(localIceboxPluginConfig)
-        iceboxPlugin.configure(config = localConfig)
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(localConfig)
+
+        iceboxPlugin.configure(mockContext)
         iceboxPlugin.beforeAll(mockDeviceController)
         iceboxPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val newResult = iceboxPlugin.afterEach(failingTestResult, mockDeviceController)

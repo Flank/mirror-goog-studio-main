@@ -20,7 +20,6 @@ import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
-import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
@@ -43,6 +42,7 @@ import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
+import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_COMPILE_SDK_EXTENSION
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -108,6 +108,9 @@ open class LibraryVariantImpl @Inject constructor(
     override val aarMetadata: AarMetadata =
         internalServices.newInstance(AarMetadata::class.java).also {
             it.minCompileSdk.set(dslInfo.aarMetadata.minCompileSdk ?: 1)
+            it.minCompileSdkExtension.set(
+                dslInfo.aarMetadata.minCompileSdkExtension ?: DEFAULT_MIN_COMPILE_SDK_EXTENSION
+            )
             it.minAgpVersion.set(
                 dslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
             )
@@ -116,9 +119,6 @@ open class LibraryVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
-
-    override val dslAndroidResources: AndroidResources
-        get() = dslInfo.androidResources
 
     private val delegate by lazy { ConsumableCreationConfigImpl(this, dslInfo) }
 

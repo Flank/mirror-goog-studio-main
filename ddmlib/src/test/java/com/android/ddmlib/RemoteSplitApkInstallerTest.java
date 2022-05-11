@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.PackageManager;
+import com.android.fakeadbserver.services.PackageManager;
 import com.android.sdklib.AndroidVersion;
 import java.io.IOException;
 import java.util.ArrayList;

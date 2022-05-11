@@ -30,7 +30,9 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -209,6 +211,8 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     class CreationAction(apkCreationConfig: ApkCreationConfig) :
         VariantTaskCreationAction<LinkAndroidResForBundleTask, ApkCreationConfig>(
             apkCreationConfig
+        ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+            apkCreationConfig
         ) {
 
         override val name: String
@@ -231,7 +235,6 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            val variantScope = creationConfig.variantScope
             val projectOptions = creationConfig.services.projectOptions
 
             task.incrementalFolder = creationConfig.paths.getIncrementalDir(name)
@@ -255,9 +258,11 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.debuggable.setDisallowChanges(creationConfig.debuggable)
 
-            task.noCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
+            task.noCompress.setDisallowChanges(
+                androidResourcesCreationConfig.androidResources.noCompress
+            )
             task.aaptAdditionalParameters.setDisallowChanges(
-                creationConfig.androidResources.aaptAdditionalParameters
+                androidResourcesCreationConfig.androidResources.aaptAdditionalParameters
             )
 
             task.excludeResSourcesForReleaseBundles
@@ -272,13 +277,13 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
             task.minSdkVersion = creationConfig.minSdkVersion.apiLevel
 
-            task.resConfig = creationConfig.resourceConfigurations
+            task.resConfig = androidResourcesCreationConfig.resourceConfigurations
 
             task.manifestMergeBlameFile.setDisallowChanges(creationConfig.artifacts.get(
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             ))
 
-            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
+            if (androidResourcesCreationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources = creationConfig.variantDependencies.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

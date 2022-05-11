@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.core.dsl
 
-import com.android.build.api.variant.ResValue
 import java.io.File
 
 /**
@@ -66,15 +65,4 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
      * Returns whether to ignore all keep rules from external library dependencies.
      */
     val ignoreAllLibraryKeepRules: Boolean
-
-    /**
-     * Returns a list of generated resource values.
-     *
-     *
-     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
-     * comments (instance of String).
-     *
-     * @return a list of items.
-     */
-    fun getResValues(): Map<ResValue.Key, ResValue>
 }

@@ -20,6 +20,7 @@ import com.android.tools.utp.plugins.host.device.info.proto.AndroidTestDeviceInf
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.api.config.ConfigBase
 import com.google.testing.platform.api.config.Environment
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.CommandResult
 import com.google.testing.platform.api.device.Device
 import com.google.testing.platform.api.device.DeviceController
@@ -51,6 +52,7 @@ class AndroidTestDeviceInfoPluginTest {
     @Mock lateinit var mockDevice: Device
     @Mock lateinit var mockDeviceController: DeviceController
     @Mock lateinit var mockConfig: ConfigBase
+    @Mock lateinit var mockContext: Context
     private lateinit var environment: Environment
     private lateinit var androidTestDeviceInfoPlugin: AndroidTestDeviceInfoPlugin
     private lateinit var emptyTestResult: TestResult
@@ -72,7 +74,7 @@ class AndroidTestDeviceInfoPluginTest {
     @Before
     fun setup() {
         initMocks(this)
-        environment = Environment(tempFolder.getRoot().getPath(), "", "", "", null)
+        environment = Environment(tempFolder.root.path, "", "", "", "", null)
         `when`(mockDeviceController.deviceShell(anyList(), nullable(Long::class.java))).thenAnswer {
             @Suppress("UNCHECKED_CAST")
             val command = (it.arguments[0] as List<String>).joinToString(separator = " ")
@@ -87,13 +89,14 @@ class AndroidTestDeviceInfoPluginTest {
         `when`(mockDevice.properties).thenReturn(androidDeviceProperty)
         `when`(mockDevice.serial).thenReturn(deviceName)
         `when`(mockConfig.environment).thenReturn(environment)
+        `when`(mockContext[Context.CONFIG_KEY]).thenReturn(mockConfig)
         emptyTestResult = TestResult.newBuilder().build()
         androidTestDeviceInfoPlugin = AndroidTestDeviceInfoPlugin()
     }
 
     @Test
     fun afterEach_AddsDeviceInfo() {
-        androidTestDeviceInfoPlugin.configure(mockConfig)
+        androidTestDeviceInfoPlugin.configure(mockContext)
         androidTestDeviceInfoPlugin.beforeAll(mockDeviceController)
         androidTestDeviceInfoPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val testResult = androidTestDeviceInfoPlugin.afterEach(emptyTestResult, mockDeviceController)
@@ -134,7 +137,7 @@ class AndroidTestDeviceInfoPluginTest {
         )
         `when`(mockDevice.properties).thenReturn(managedDeviceProperties)
 
-        androidTestDeviceInfoPlugin.configure(mockConfig)
+        androidTestDeviceInfoPlugin.configure(mockContext)
         androidTestDeviceInfoPlugin.beforeAll(mockDeviceController)
         androidTestDeviceInfoPlugin.beforeEach(TestCaseProto.TestCase.getDefaultInstance(), mockDeviceController)
         val testResult = androidTestDeviceInfoPlugin.afterEach(emptyTestResult, mockDeviceController)

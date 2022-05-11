@@ -20,6 +20,7 @@ import com.android.SdkConstants.AAR_FORMAT_VERSION_PROPERTY
 import com.android.SdkConstants.AAR_METADATA_VERSION_PROPERTY
 import com.android.SdkConstants.FORCE_COMPILE_SDK_PREVIEW_PROPERTY
 import com.android.SdkConstants.MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY
+import com.android.SdkConstants.MIN_COMPILE_SDK_EXTENSION_PROPERTY
 import com.android.SdkConstants.MIN_COMPILE_SDK_PROPERTY
 import com.android.Version
 import com.android.build.gradle.internal.fixtures.FakeGradleWorkExecutor
@@ -73,7 +74,9 @@ class AarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.minCompileSdk.set(28)
+        task.minCompileSdkExtension.set(1)
         task.minAgpVersion.set("7.0.0")
+        task.forceCompileSdkPreview.set("Tiramisu")
         task.taskAction()
 
         checkAarMetadataFile(
@@ -81,7 +84,9 @@ class AarMetadataTaskTest {
             AarMetadataTask.AAR_FORMAT_VERSION,
             AarMetadataTask.AAR_METADATA_VERSION,
             minCompileSdk = "28",
-            minAgpVersion = "7.0.0"
+            minCompileSdkExtension = "1",
+            minAgpVersion = "7.0.0",
+            compileSdkPreview = "Tiramisu"
         )
     }
 
@@ -91,6 +96,7 @@ class AarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.minCompileSdk.set(28)
+        task.minCompileSdkExtension.set(1)
         task.minAgpVersion.set("7.0.0-beta01")
         try {
             task.taskAction()
@@ -110,6 +116,7 @@ class AarMetadataTaskTest {
         task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
         task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
         task.minCompileSdk.set(28)
+        task.minCompileSdkExtension.set(1)
         task.minAgpVersion.set("10000.0.0")
         try {
             task.taskAction()
@@ -124,33 +131,14 @@ class AarMetadataTaskTest {
         }
     }
 
-    @Test
-    fun testCompileSdkPreview() {
-        task.output.set(outputFile)
-        task.aarFormatVersion.set(AarMetadataTask.AAR_FORMAT_VERSION)
-        task.aarMetadataVersion.set(AarMetadataTask.AAR_METADATA_VERSION)
-        task.minCompileSdk.set(28)
-        task.minAgpVersion.set("7.0.0")
-        task.forceCompileSdkPreview.set("Tiramisu")
-        task.taskAction()
-
-        checkAarMetadataFile(
-            outputFile,
-            AarMetadataTask.AAR_FORMAT_VERSION,
-            AarMetadataTask.AAR_METADATA_VERSION,
-            minCompileSdk = "28",
-            minAgpVersion = "7.0.0",
-            compileSdkPreview = "Tiramisu"
-        )
-    }
-
     private fun checkAarMetadataFile(
         file: File,
         aarFormatVersion: String,
         aarMetadataVersion: String,
         minCompileSdk: String,
+        minCompileSdkExtension: String,
         minAgpVersion: String,
-        compileSdkPreview: String? = null
+        compileSdkPreview: String? = null,
     ) {
         assertThat(file).exists()
         val properties = Properties()
@@ -159,6 +147,8 @@ class AarMetadataTaskTest {
         assertThat(properties.getProperty(AAR_METADATA_VERSION_PROPERTY))
             .isEqualTo(aarMetadataVersion)
         assertThat(properties.getProperty(MIN_COMPILE_SDK_PROPERTY)).isEqualTo(minCompileSdk)
+        assertThat(properties.getProperty(MIN_COMPILE_SDK_EXTENSION_PROPERTY))
+            .isEqualTo(minCompileSdkExtension)
         assertThat(properties.getProperty(MIN_ANDROID_GRADLE_PLUGIN_VERSION_PROPERTY))
             .isEqualTo(minAgpVersion)
         compileSdkPreview?.let {

@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
+import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_COMPILE_SDK_EXTENSION
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
@@ -102,12 +103,16 @@ open class TestFixturesImpl @Inject constructor(
         get() = (mainVariant as? PublishableCreationConfig)?.publishInfo
 
     override val aarMetadata: AarMetadata =
-            internalServices.newInstance(AarMetadata::class.java).also {
-                it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
-                it.minAgpVersion.set(
-                    variantDslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
-                )
-            }
+        internalServices.newInstance(AarMetadata::class.java).also {
+            it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
+            it.minCompileSdkExtension.set(
+                variantDslInfo.aarMetadata.minCompileSdkExtension
+                    ?: DEFAULT_MIN_COMPILE_SDK_EXTENSION
+            )
+            it.minAgpVersion.set(
+                variantDslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
+            )
+        }
 
     override val javaCompilation: JavaCompilation =
         JavaCompilationImpl(
@@ -140,27 +145,35 @@ open class TestFixturesImpl @Inject constructor(
     }
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
-        internalServices.mapPropertyOf(
-            ResValue.Key::class.java,
-            ResValue::class.java,
-            variantDslInfo.getResValues()
-        )
+        resValuesCreationConfig?.resValues
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "resValues",
+                apiName = "resValues",
+                value = internalServices.mapPropertyOf(
+                    ResValue.Key::class.java,
+                    ResValue::class.java,
+                    dslInfo.getResValues()
+                )
+            )
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
-    override val pseudoLocalesEnabled: Property<Boolean> =
-        internalServices.newPropertyBackingDeprecatedApi(
-            Boolean::class.java,
-            variantDslInfo.isPseudoLocalesEnabled
-        )
+    override val pseudoLocalesEnabled: Property<Boolean>  by lazy {
+        androidResourcesCreationConfig?.pseudoLocalesEnabled
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = "androidResources",
+                apiName = "pseudoLocalesEnabled",
+                value = internalServices.newPropertyBackingDeprecatedApi(
+                    Boolean::class.java,
+                    dslInfo.isPseudoLocalesEnabled
+                )
+            )
+    }
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
-
-    override val androidResourcesEnabled: Boolean =
-        dslInfo.testFixturesAndroidResourcesEnabled
 
     override val supportedAbis: Set<String>
         get() = mainVariant.supportedAbis

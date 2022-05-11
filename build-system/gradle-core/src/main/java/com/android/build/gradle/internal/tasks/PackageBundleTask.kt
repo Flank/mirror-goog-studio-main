@@ -571,7 +571,10 @@ abstract class PackageBundleTask : NonIncrementalTask() {
 
             task.abiFilters.setDisallowChanges(creationConfig.supportedAbis)
 
-            task.aaptOptionsNoCompress.setDisallowChanges(creationConfig.androidResources.noCompress)
+            task.aaptOptionsNoCompress.setDisallowChanges(
+                creationConfig.androidResourcesCreationConfig?.androidResources?.noCompress,
+                handleNullable = { empty() }
+            )
 
             task.bundleOptions = creationConfig.global.bundleOptions.convert()
 

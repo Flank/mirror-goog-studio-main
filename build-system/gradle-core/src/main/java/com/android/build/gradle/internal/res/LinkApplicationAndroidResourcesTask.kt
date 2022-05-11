@@ -48,6 +48,8 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.getLeasingAapt2
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -448,7 +450,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         private val isLibrary: Boolean
     ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, ComponentCreationConfig>(
         creationConfig
-    ) {
+    ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(creationConfig) {
 
         override val name: String
             get() = computeTaskName("process", "Resources")
@@ -505,7 +507,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.resourceConfigs.setDisallowChanges(
                 if (creationConfig.componentType.canHaveSplits) {
-                    creationConfig.resourceConfigurations
+                    androidResourcesCreationConfig.resourceConfigurations
                 } else {
                     ImmutableSet.of()
                 }
@@ -535,8 +537,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
             task.setType(creationConfig.componentType)
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.set(creationConfig.androidResources.noCompress)
-                task.aaptAdditionalParameters.set(creationConfig.androidResources.aaptAdditionalParameters)
+                task.noCompress.set(androidResourcesCreationConfig.androidResources.noCompress)
+                task.aaptAdditionalParameters.set(
+                    androidResourcesCreationConfig.androidResources.aaptAdditionalParameters
+                )
             }
             task.noCompress.disallowChanges()
             task.aaptAdditionalParameters.disallowChanges()
@@ -680,7 +684,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 task.inputResourcesDir
             )
 
-            if (creationConfig.isPrecompileDependenciesResourcesEnabled) {
+            if (androidResourcesCreationConfig.isPrecompileDependenciesResourcesEnabled) {
                 task.compiledDependenciesResources.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         RUNTIME_CLASSPATH,

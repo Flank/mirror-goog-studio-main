@@ -23,12 +23,12 @@ import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -115,6 +115,8 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
     class CreationAction(creationConfig: ComponentCreationConfig) :
         VariantTaskCreationAction<ProcessAndroidAppResourcesTask, ComponentCreationConfig>(
             creationConfig
+        ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+            creationConfig
         ) {
 
         override val name: String
@@ -169,7 +171,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
             task.androidJarInput.initialize(creationConfig)
             if (creationConfig is ApkCreationConfig) {
-                task.noCompress.set(creationConfig.androidResources.noCompress)
+                task.noCompress.set(androidResourcesCreationConfig.androidResources.noCompress)
             }
             task.noCompress.disallowChanges()
             creationConfig.services.initializeAapt2Input(task.aapt2)

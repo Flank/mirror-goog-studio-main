@@ -58,8 +58,6 @@ public interface VariantScope {
     @Nullable
     PostprocessingFeatures getPostprocessingFeatures();
 
-    boolean isCrunchPngs();
-
     boolean consumesFeatureJars();
 
     /** Returns whether we need to create original java resource streams */
@@ -86,9 +84,6 @@ public interface VariantScope {
 
     @NonNull
     FileCollection getProvidedOnlyClasspath();
-
-    @NonNull
-    Provider<RegularFile> getRJarForUnitTests();
 
     enum Java8LangSupport {
         INVALID,

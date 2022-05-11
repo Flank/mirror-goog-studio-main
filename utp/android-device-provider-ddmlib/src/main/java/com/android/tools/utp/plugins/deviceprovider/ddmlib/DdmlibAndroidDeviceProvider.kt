@@ -26,6 +26,7 @@ import com.google.testing.platform.api.config.androidSdk
 import com.google.testing.platform.api.config.environment
 import com.google.testing.platform.api.config.parseConfig
 import com.google.testing.platform.api.config.setup
+import com.google.testing.platform.api.context.Context
 import com.google.testing.platform.api.device.DeviceController
 import com.google.testing.platform.config.v1.extension.hostOrDefault
 import com.google.testing.platform.core.device.DeviceProviderException
@@ -62,7 +63,8 @@ class DdmlibAndroidDeviceProvider() : AndroidDeviceProvider {
      *
      * @param config The config class which has all the required data classes.
      */
-    override fun configure(config: Config) {
+    override fun configure(context: Context) {
+        val config = context[Context.CONFIG_KEY] as Config
         environment = config.environment
         testSetup = config.setup
         androidSdk = config.androidSdk

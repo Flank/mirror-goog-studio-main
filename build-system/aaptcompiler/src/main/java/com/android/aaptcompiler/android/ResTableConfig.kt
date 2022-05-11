@@ -1660,14 +1660,14 @@ open class ResTableConfig(
     const val ANY = AConfiguration.ACONFIGURATION_ORIENTATION_ANY
     const val PORT = AConfiguration.ACONFIGURATION_ORIENTATION_PORT
     const val LAND = AConfiguration.ACONFIGURATION_ORIENTATION_LAND
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     const val SQUARE = AConfiguration.ACONFIGURATION_ORIENTATION_SQUARE
   }
 
   object TOUCHSCREEN {
     const val ANY = AConfiguration.ACONFIGURATION_TOUCHSCREEN_ANY
     const val NOTOUCH = AConfiguration.ACONFIGURATION_TOUCHSCREEN_NOTOUCH
-    @Suppress("DEPRECATION") // Legacy support (b/195153220)
+    @Suppress("DEPRECATION") // Legacy support
     const val STYLUS = AConfiguration.ACONFIGURATION_TOUCHSCREEN_STYLUS
     const val FINGER = AConfiguration.ACONFIGURATION_TOUCHSCREEN_FINGER
   }
