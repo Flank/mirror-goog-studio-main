@@ -115,7 +115,13 @@ public final class AvdInfo {
         mHasPlayStore = "true".equalsIgnoreCase(psString) || "yes".equalsIgnoreCase(psString);
     }
 
-    /** Returns the name of the AVD. */
+    /** Returns a stable ID for the AVD that doesn't change even if the device is renamed */
+    @NonNull
+    public String getId() {
+        return mFolderPath.toString();
+    }
+
+    /** Returns the name of the AVD. Do not use this as a device ID; use getId instead. */
     @NonNull
     public String getName() {
         return mName;
