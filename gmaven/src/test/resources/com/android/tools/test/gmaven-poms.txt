@@ -158,6 +158,12 @@ com.android.lint:com.android.lint.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.privacy-sandbox-sdk:com.android.privacy-sandbox-sdk.gradle.plugin
+  pomName=com.android.tools.build.gradle
+  description=Gradle plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle ()
+
 com.android.settings:com.android.settings.gradle.plugin
   pomName=com.android.tools.build.gradle-settings
   description=Gradle Settings plug-in to build Android applications.

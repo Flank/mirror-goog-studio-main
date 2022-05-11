@@ -115,6 +115,10 @@ gradlePlugin {
             id = "com.android.fused-library"
             implementationClass = "com.android.build.gradle.api.FusedLibraryPlugin"
         }
+        comAndroidSdkLibrary {
+            id = "com.android.privacy-sandbox-sdk"
+            implementationClass = "com.android.build.gradle.api.PrivacySandboxSdkPlugin"
+        }
     }
 }
 

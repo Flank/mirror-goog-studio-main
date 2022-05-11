@@ -63,7 +63,7 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
         creationConfig: FusedLibraryVariantScope,
     ) : FusedLibraryBundle.CreationAction<FusedLibraryBundleAar>(
             creationConfig,
-            FusedLibraryInternalArtifactType.CLASSES_JAR,
+            FusedLibraryInternalArtifactType.BUNDLED_LIBRARY,
     ) {
 
         override val name: String
@@ -76,9 +76,8 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
             task.archiveFileName.set("bundle.aar")
             task.from(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_MANIFEST),
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS),
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_RES)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_JAR),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_RES),
             )
         }
     }
@@ -91,7 +90,7 @@ abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
         creationConfig: FusedLibraryVariantScope,
     ): FusedLibraryBundle.CreationAction<FusedLibraryBundleClasses>(
             creationConfig,
-            FusedLibraryInternalArtifactType.BUNDLED_LIBRARY
+            FusedLibraryInternalArtifactType.CLASSES_JAR
     ) {
         override val name: String
             get() = "packageJar"
@@ -101,7 +100,10 @@ abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
         override fun configure(task: FusedLibraryBundleClasses) {
             super.configure(task)
             task.archiveFileName.set("classes.jar")
-            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_JAR))
+            task.from(
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS),
+            )
         }
     }
 }

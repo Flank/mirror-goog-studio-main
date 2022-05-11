@@ -692,6 +692,10 @@ com.android.build.gradle.api.LibraryVariant.getPackageLibrary: org.gradle.api.ta
 com.android.build.gradle.api.LibraryVariant.getPackageLibraryProvider: org.gradle.api.tasks.TaskProvider<org.gradle.api.tasks.bundling.Zip> ()
 com.android.build.gradle.api.LibraryVariantOutput
 com.android.build.gradle.api.LibraryVariantOutput.getPackageLibrary: org.gradle.api.tasks.bundling.Zip ()
+com.android.build.gradle.api.PrivacySandboxSdkPlugin implements org.gradle.api.Plugin
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.<init>: com.android.build.gradle.api.PrivacySandboxSdkPlugin ()
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.apply: void (java.lang.Object)
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.api.SourceKind extends java.lang.Enum
 com.android.build.gradle.api.SourceKind.valueOf: com.android.build.gradle.api.SourceKind (java.lang.String)
 com.android.build.gradle.api.SourceKind.values: com.android.build.gradle.api.SourceKind[] ()

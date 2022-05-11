@@ -17,15 +17,14 @@
 package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.artifact.Artifact
-import com.android.build.api.dsl.FusedLibraryExtension
-import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.api.dsl.PrivacySandboxSdkExtension
+import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
-import com.android.build.gradle.tasks.FusedLibraryBundleAar
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
-import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
+import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Plugin
@@ -35,22 +34,21 @@ import org.gradle.api.file.RegularFile
 import org.gradle.build.event.BuildEventsListenerRegistry
 import javax.inject.Inject
 
-@Suppress("UnstableApiUsage")
-class FusedLibraryPlugin @Inject constructor(
-    private val softwareComponentFactory: SoftwareComponentFactory,
+class PrivacySandboxSdkPlugin @Inject constructor(
+    softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
-): AbstractFusedLibraryPlugin<FusedLibraryVariantScope>(softwareComponentFactory, listenerRegistry) {
+): AbstractFusedLibraryPlugin<PrivacySandboxSdkVariantScope>(softwareComponentFactory, listenerRegistry) {
 
     // so far, there is only one variant.
     override val variantScope by lazy {
         withProject("variantScope") { project ->
-            FusedLibraryVariantScope(
+            PrivacySandboxSdkVariantScope(
                 project
             ) { extension }
         }
     }
 
-    private val extension: FusedLibraryExtension by lazy {
+    private val extension: PrivacySandboxSdkExtension by lazy {
         withProject("extension") { project ->
             instantiateExtension(project)
         }
@@ -63,28 +61,27 @@ class FusedLibraryPlugin @Inject constructor(
         extension
     }
 
-    private fun instantiateExtension(project: Project): FusedLibraryExtension {
+    private fun instantiateExtension(project: Project): PrivacySandboxSdkExtension {
 
-        val fusedLibraryExtensionImpl= dslServices.newDecoratedInstance(
-            FusedLibraryExtensionImpl::class.java,
+        val sdkLibraryExtensionImpl= dslServices.newDecoratedInstance(
+            PrivacySandboxSdkExtensionImpl::class.java,
             dslServices,
         )
 
         abstract class Extension(
-            val publicExtensionImpl: FusedLibraryExtensionImpl,
-        ): FusedLibraryExtension by publicExtensionImpl
+            val publicExtensionImpl: PrivacySandboxSdkExtensionImpl,
+        ): PrivacySandboxSdkExtension by publicExtensionImpl
 
         return project.extensions.create(
-            FusedLibraryExtension::class.java,
+            PrivacySandboxSdkExtension::class.java,
             "android",
             Extension::class.java,
-            fusedLibraryExtensionImpl
+            sdkLibraryExtensionImpl
         )
-
     }
 
     override fun createTasks(project: Project) {
-        createTasks(
+        createTasks<FusedLibraryVariantScope>(
             project,
             variantScope,
             listOf(
@@ -93,14 +90,15 @@ class FusedLibraryPlugin @Inject constructor(
                 FusedLibraryMergeResourcesTask.CreationAction::class.java,
                 FusedLibraryMergeClasses.CreationAction::class.java,
                 FusedLibraryBundleClasses.CreationAction::class.java,
-                FusedLibraryBundleAar.CreationAction::class.java,
             ),
         )
     }
 
     override fun getAnalyticsPluginType(): GradleBuildProject.PluginType  =
-        GradleBuildProject.PluginType.FUSED_LIBRARIES
+        GradleBuildProject.PluginType.PRIVACY_SANDBOX_SDK
 
-    override val artifactTypeForPublication: Artifact.Single<RegularFile>
-        get() = FusedLibraryInternalArtifactType.BUNDLED_LIBRARY
+    /**
+     * ASB only get published to Play Store, not maven
+     */
+    override val artifactTypeForPublication: Artifact.Single<RegularFile>? = null
 }

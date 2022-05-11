@@ -179,5 +179,16 @@ class MinimalSubProject private constructor(
                 namespace = namespace
             )
         }
+
+        fun privacySandboxSdk(namespace: String): MinimalSubProject {
+            return MinimalSubProject(
+                path = null,
+                plugin = "com.android.privacy-sandbox-sdk",
+                addCompileAndSdkVersionToBuildFile = false,
+                addVersionCodeToBuildFile = false,
+                addManifestFile = false,
+                namespace = namespace
+            )
+        }
     }
 }

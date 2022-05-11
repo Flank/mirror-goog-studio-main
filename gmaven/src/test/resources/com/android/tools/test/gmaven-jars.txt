@@ -373,11 +373,13 @@ com/android/tools/build/gradle
   META-INF/gradle-plugins/com.android.internal.dynamic-feature.properties
   META-INF/gradle-plugins/com.android.internal.fused-library.properties
   META-INF/gradle-plugins/com.android.internal.library.properties
+  META-INF/gradle-plugins/com.android.internal.privacy-sandbox-sdk.properties
   META-INF/gradle-plugins/com.android.internal.reporting.properties
   META-INF/gradle-plugins/com.android.internal.test.properties
   META-INF/gradle-plugins/com.android.internal.version-check.properties
   META-INF/gradle-plugins/com.android.library.properties
   META-INF/gradle-plugins/com.android.lint.properties
+  META-INF/gradle-plugins/com.android.privacy-sandbox-sdk.properties
   META-INF/gradle-plugins/com.android.reporting.properties
   META-INF/gradle-plugins/com.android.test.properties
   META-INF/profgen.kotlin_module
@@ -466,6 +468,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/packaging/
   com/android/build/gradle/internal/pipeline/
   com/android/build/gradle/internal/plugins/
+  com/android/build/gradle/internal/privaysandboxsdk/
   com/android/build/gradle/internal/process/
   com/android/build/gradle/internal/profile/
   com/android/build/gradle/internal/publishing/

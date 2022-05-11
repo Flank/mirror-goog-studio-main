@@ -1494,6 +1494,9 @@ package com.android.build.api.dsl {
     property public abstract String name;
   }
 
+  public interface PrivacySandboxSdkExtension extends com.android.build.api.dsl.FusedLibraryExtension {
+  }
+
   public interface ProductFlavor extends org.gradle.api.Named com.android.build.api.dsl.BaseFlavor org.gradle.api.plugins.ExtensionAware com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {
     method public String? getDimension();
     method @org.gradle.api.Incubating public java.util.List<java.lang.String> getMatchingFallbacks();
@@ -2613,6 +2616,11 @@ package com.android.build.gradle.api {
 
   @org.gradle.api.Incubating public final class FusedLibraryPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
     ctor public FusedLibraryPlugin();
+    method public void apply(org.gradle.api.Project project);
+  }
+
+  @org.gradle.api.Incubating public final class PrivacySandboxSdkPlugin implements org.gradle.api.Plugin<org.gradle.api.Project> {
+    ctor public PrivacySandboxSdkPlugin();
     method public void apply(org.gradle.api.Project project);
   }
 
