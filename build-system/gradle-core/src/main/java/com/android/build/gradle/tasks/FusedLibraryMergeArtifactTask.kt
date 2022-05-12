@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
@@ -46,6 +47,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.configurationcache.extensions.capitalized
 import org.jetbrains.kotlin.gradle.utils.minSupportedGradleVersion
+import java.io.File
 
 /**
  * Responsible for merging multiple library artifacts of the same artifact type into a single
@@ -97,6 +99,18 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                 when (val currentArtifactType = artifactType.get()) {
                     ArtifactType.AAR_METADATA -> {
                         writeMergedMetadata(inputFiles, output.get().asFile)
+                    }
+                    ArtifactType.ASSETS -> {
+                        val aarOutputAssetsOutputDir =
+                                File(output.get().asFile, SdkConstants.FD_ASSETS)
+                        copyFilesRecursivelyWithOverriding(inputFiles, aarOutputAssetsOutputDir)
+                    }
+                    ArtifactType.JNI -> {
+                        val aarOutputJniOutputDir =
+                                File(output.get().asFile, SdkConstants.FD_JNI)
+                        copyFilesRecursivelyWithOverriding(inputFiles, aarOutputJniOutputDir) {
+                            it.toString().substringAfterLast("${File.separator}jni${File.separator}")
+                        }
                     }
                     else -> {
                         val supportedArtifacts = mergeArtifactMap.map { it.first }

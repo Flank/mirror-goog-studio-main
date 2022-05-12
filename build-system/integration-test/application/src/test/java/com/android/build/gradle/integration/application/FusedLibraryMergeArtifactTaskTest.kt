@@ -18,16 +18,19 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.internal.tasks.AarMetadataReader
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /** Tests for [FusedLibraryMergeArtifactTask] */
-internal class FusedLibraryMergeArtifactTaskTest {
+internal class FusedLibraryArtifactMergeTaskTest {
 
     @JvmField
     @Rule
@@ -39,12 +42,27 @@ internal class FusedLibraryMergeArtifactTaskTest {
                 defaultCompileSdk()
                 namespace = "com.example.androidLib1"
                 minSdk = 12
+                renderscriptTargetApi = 18
+                renderscriptSupportModeEnabled = true
+                buildFeatures {
+                    renderScript = true
+                }
                 aarMetadata {
                     minCompileSdk = 12
                     minAgpVersion = "3.0.0"
                     minCompileSdkExtension = 2
                 }
             }
+            addFile("src/main/assets/android_lib_one_asset.txt", "androidLib1")
+            addFile("src/main/rs/com/example/androidLib1/ip.rsh",
+                    "#pragma version(1)\n" +
+                            "#pragma rs java_package_name(com.android.rs.image2)")
+            addFile("src/main/rs/com/example/androidLib1/copy.rs",
+                    "#include \"ip.rsh\"\n" +
+                            "\n" +
+                            "uchar4 __attribute__((kernel)) root(uchar4 v_in) {\n" +
+                            "    return v_in;\n" +
+                            "}\n")
         }
         // Library dependency at depth 0 with a dependency on androidLib1.
         subProject(":androidLib2") {
@@ -57,6 +75,7 @@ internal class FusedLibraryMergeArtifactTaskTest {
             dependencies {
                 implementation(project(":androidLib1"))
             }
+            addFile("src/main/assets/android_lib_two_asset.txt", "androidLib2")
         }
         // Library dependency at depth 0 with no dependencies
         subProject(":androidLib3") {
@@ -107,6 +126,68 @@ internal class FusedLibraryMergeArtifactTaskTest {
                 assertThat(aarMetadataReader.minCompileSdk).isEqualTo("18")
                 // Value from androidLib1
                 assertThat(aarMetadataReader.minCompileSdkExtension).isEqualTo("2")
+            }
+        }
+    }
+
+    @Test
+    fun testAssetsMergingWithDuplicateAssets() {
+        val androidLib3 = project.getSubproject("androidLib3")
+        // Adds duplicate asset file in androidLib3, which should override the asset in androidLib1,
+        // as androidLib3 is declared as a dependency in fusedLib1 before androidLib1 transitively
+        // through androidLib2.
+        val duplicateFile =
+                FileUtils.join(androidLib3.projectDir,
+                        "src",
+                        "main",
+                        "assets",
+                        "android_lib_one_asset.txt")
+        FileUtils.createFile(duplicateFile, "androidLib3")
+        val fusedLibraryAar = getFusedLibraryAar()
+        fusedLibraryAar?.let { aarFile ->
+            ZipFile(aarFile).use { zip ->
+                val mergedEntry = zip.getEntry("assets/android_lib_one_asset.txt")
+                val mergedEntryContents = zip.getInputStream(mergedEntry)
+                assertThat(String(mergedEntryContents.readBytes())).isEqualTo("androidLib3")
+                assertThat(zip.entries()
+                        .toList()
+                        .map(ZipEntry::getName)).containsAtLeastElementsIn(
+                        listOf(
+                                "assets/android_lib_one_asset.txt",
+                                "assets/android_lib_two_asset.txt"
+                        )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testRenderscriptCreatedJniCopiesToFusedLibrary() {
+        val fusedLibraryAar = getFusedLibraryAar()
+        fusedLibraryAar?.let { aarFile ->
+            ZipFile(aarFile).use { zip ->
+                val jniEntries = zip.entries().toList()
+                        .map { it.name }
+                        .filter { it.startsWith("jni/") }
+                        .filterNot { it.endsWith('/') }
+                assertThat(jniEntries).containsAtLeastElementsIn(
+                        listOf(
+                                "jni/armeabi-v7a/librsjni_androidx.so",
+                                "jni/armeabi-v7a/libRSSupport.so",
+                                "jni/armeabi-v7a/librsjni.so",
+                                "jni/armeabi-v7a/librs.copy.so",
+                                "jni/x86_64/librsjni_androidx.so",
+                                "jni/x86_64/libRSSupport.so",
+                                "jni/x86_64/librsjni.so",
+                                "jni/arm64-v8a/librsjni_androidx.so",
+                                "jni/arm64-v8a/libRSSupport.so",
+                                "jni/arm64-v8a/librsjni.so",
+                                "jni/x86/librsjni_androidx.so",
+                                "jni/x86/libRSSupport.so",
+                                "jni/x86/librsjni.so",
+                                "jni/x86/librs.copy.so"
+                        )
+                )
             }
         }
     }

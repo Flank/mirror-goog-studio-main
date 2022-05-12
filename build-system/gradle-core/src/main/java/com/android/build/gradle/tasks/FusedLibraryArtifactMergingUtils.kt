@@ -62,3 +62,19 @@ internal fun writeMergedMetadata(metadataFiles: Collection<File>, outputFile: Fi
                     ?: AarMetadataTask.DEFAULT_MIN_COMPILE_SDK_EXTENSION
     )
 }
+
+internal fun copyFilesRecursivelyWithOverriding(
+        toCopy: Collection<File>,
+        outputDirectory: File,
+        relativeTo: (File) -> String = { it.name }) {
+    val dependencyOrderedFiles = toCopy
+            // Reversed, to preserve dependency ordering, for overriding lower ordered libs.
+            .reversed()
+            .flatMap { it.walkBottomUp() }
+            .filter { it.isFile }
+    for (file in dependencyOrderedFiles) {
+        val maybeRelativePath = relativeTo(file)
+        val candidateFile = File(outputDirectory, maybeRelativePath)
+        file.copyRecursively(candidateFile, overwrite = true)
+    }
+}
