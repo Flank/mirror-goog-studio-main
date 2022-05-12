@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.instrumentation.threading.agent;
+package com.android.tools.instrumentation.threading.agent.callback;
 
 public interface ThreadingCheckerHook {
     /**
