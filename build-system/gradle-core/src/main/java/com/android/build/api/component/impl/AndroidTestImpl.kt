@@ -208,8 +208,10 @@ open class AndroidTestImpl @Inject constructor(
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
         variantServices.listPropertyOf(
-            RegularFile::class.java) {
-            dslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+            RegularFile::class.java) { list ->
+            dslInfo.gatherProguardFiles(ProguardFileType.TEST) {
+                list.add(it)
+            }
         }
     }
 

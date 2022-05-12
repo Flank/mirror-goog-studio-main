@@ -23,12 +23,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToDefaultVariant;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_APK_CREATOR;
 import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
-import static com.android.builder.core.ComponentTypeImpl.UNIT_TEST;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -45,7 +41,6 @@ import com.android.build.gradle.internal.core.dsl.ComponentDslInfo;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.dependency.ProvidedClasspath;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
@@ -58,7 +53,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.ComponentType;
 import com.android.builder.errors.IssueReporter.Type;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.sdklib.AndroidTargetHash;
@@ -69,6 +63,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -84,8 +79,6 @@ import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.attributes.DocsType;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 
 /** A scope containing data for a specific variant. */
@@ -248,14 +241,14 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     private List<File> gatherProguardFiles(ProguardFileType type) {
-        ListProperty<RegularFile> regularFiles =
-                baseServices
-                        .getProjectInfo()
-                        .getProject()
-                        .getObjects()
-                        .listProperty(RegularFile.class);
-        dslInfo.gatherProguardFiles(type, regularFiles);
-        return regularFiles.get().stream().map(RegularFile::getAsFile).collect(Collectors.toList());
+        List<File> files = new ArrayList<>();
+        dslInfo.gatherProguardFiles(
+                type,
+                regularFile -> {
+                    files.add(regularFile.getAsFile());
+                    return null;
+                });
+        return files;
     }
 
     @Override

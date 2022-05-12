@@ -146,7 +146,7 @@ interface ComponentDslInfo: DimensionCombination {
      */
     val isAndroidTestCoverageEnabled: Boolean
 
-    fun gatherProguardFiles(type: ProguardFileType, into: ListProperty<RegularFile>)
+    fun gatherProguardFiles(type: ProguardFileType, into: (RegularFile) -> Unit)
 
     // TODO: Move to VariantDslInfo
     val experimentalProperties: Map<String, Any>

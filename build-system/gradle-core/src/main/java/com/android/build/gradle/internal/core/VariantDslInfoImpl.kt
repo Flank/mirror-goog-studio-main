@@ -885,10 +885,10 @@ open class VariantDslInfoImpl internal constructor(
         }
     }
 
-    override fun gatherProguardFiles(type: ProguardFileType, into: ListProperty<RegularFile>) {
+    override fun gatherProguardFiles(type: ProguardFileType, into: (RegularFile) -> Unit) {
         val projectDir = services.projectInfo.projectDirectory
         mergedProguardFiles(type).forEach {
-            into.add(projectDir.file(it.absolutePath))
+            into(projectDir.file(it.absolutePath))
         }
     }
 
