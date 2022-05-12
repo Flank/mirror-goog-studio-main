@@ -33,15 +33,34 @@ maven_repository(
     include_transitive_deps = False,
 )
 
-# The Gmaven repository as built with the hybrid gradle/bazel build.
-merged_zip(
-    name = "gmaven",
+# A subset of the artifacts that can be built without our vendor
+# repositories.
+filegroup(
+    name = "zips_without_vendor",
     srcs = [
         ":other_gmaven_artifacts.zip",
         "//tools/base:agp_artifacts.zip",
         "//tools/base/build-system:android_gradle_plugin.zip",
         "//tools/base/utp:utp.zip",
+    ],
+)
+
+# The Gmaven repository as built with the hybrid gradle/bazel build.
+merged_zip(
+    name = "gmaven",
+    srcs = [
+        ":zips_without_vendor",
         "//tools/data-binding:data_binding_runtime.zip",
+    ],
+)
+
+# A subset of the maven repository that can be built without
+# any of the vendor repos. Note that at this moment the SDK we use
+# to build some artifacts is in a vendor repo so they are excluded.
+merged_zip(
+    name = "gmaven_without_vendor",
+    srcs = [
+        ":zips_without_vendor",
     ],
 )
 

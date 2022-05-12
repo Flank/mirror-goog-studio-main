@@ -204,3 +204,5 @@ build:dynamic --noverbose_failures
 # Multiplex workers are not sandboxed, and are not ready to be used with
 # dynamic scheduling.
 build:dynamic --noexperimental_worker_multiplex
+
+build:without_vendor --repo_env=SETUP_VENDOR=0
