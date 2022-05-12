@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.testprojects
 
+import com.android.build.api.dsl.AarMetadata
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
@@ -216,6 +217,7 @@ interface BuildTypeBuilder {
     val name: String
     var isDefault: Boolean?
     var testCoverageEnabled: Boolean?
+
     fun resValue(type: String, name: String, value: String)
     val resValues: List<Triple<String, String, String>>
 }
@@ -225,6 +227,7 @@ interface ProductFlavorBuilder {
     var isDefault: Boolean?
     var dimension: String?
 }
+
 
 interface DependenciesBuilder {
 

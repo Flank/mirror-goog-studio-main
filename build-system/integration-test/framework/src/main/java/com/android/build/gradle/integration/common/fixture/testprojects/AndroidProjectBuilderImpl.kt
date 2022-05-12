@@ -41,8 +41,8 @@ internal class AndroidProjectBuilderImpl(
     private val main: Config? = ConfigImpl(this, "main")
     private val debug: Config? = ConfigImpl(this, "debug")
     private val release: Config? = ConfigImpl(this, "release")
-
     private val buildTypes = BuildTypeContainerBuilderImpl()
+
     private val flavors = ProductFlavorContainerBuilderImpl()
 
     private var aarMetadata: AarMetadataBuilderImpl? = null

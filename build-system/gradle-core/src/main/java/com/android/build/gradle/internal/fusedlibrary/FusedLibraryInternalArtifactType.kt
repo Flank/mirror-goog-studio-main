@@ -43,4 +43,13 @@ FusedLibraryInternalArtifactType<T : FileSystemLocation>(
     object INCREMENTAL_MERGED_RES : FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object MERGED_MANIFEST: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
     object MANIFEST_MERGE_REPORT: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
+    // Republished artifacts
+    object MERGED_AIDL: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_RENDERSCRIPT_HEADERS: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_PREFAB_PACKAGE_CONFIGURATION: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_PREFAB_PACKAGE: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_ASSETS: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_JNI: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object MERGED_NAVIGATION_JSON: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
+    object MERGED_AAR_METADATA: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
 }

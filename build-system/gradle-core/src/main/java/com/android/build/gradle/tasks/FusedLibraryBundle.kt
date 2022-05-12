@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
@@ -76,9 +77,23 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
             task.archiveFileName.set("bundle.aar")
             task.from(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_MANIFEST),
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_JAR),
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_RES),
+
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_AIDL),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_RENDERSCRIPT_HEADERS),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_PREFAB_PACKAGE),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_PREFAB_PACKAGE_CONFIGURATION),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_JNI),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_NAVIGATION_JSON),
             )
+
+            task.from(creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_AAR_METADATA)) {
+                it.rename(
+                        "aar_metadata",
+                        AarMetadataTask.AAR_METADATA_ENTRY_PATH
+                )
+            }
         }
     }
 }

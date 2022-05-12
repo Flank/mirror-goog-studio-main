@@ -442,6 +442,8 @@ public final class SdkConstants {
     public static final String FD_SYMBOLS = "symbols";
     /** resource blame output folder */
     public static final String FD_BLAME = "blame";
+    /** bundle output folder */
+    public static final String FD_BUNDLE = "bundle";
     /** Machine learning models folder. */
     public static final String FD_ML_MODELS = "ml";
 

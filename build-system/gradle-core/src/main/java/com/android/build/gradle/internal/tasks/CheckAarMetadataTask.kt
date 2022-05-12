@@ -55,6 +55,7 @@ import org.gradle.work.DisableCachingByDefault
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
 import java.io.File
+import java.io.InputStream
 import java.io.Serializable
 import java.util.Locale
 import java.util.Properties
@@ -509,7 +510,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val projectPath: Property<String>
 }
 
-private data class AarMetadataReader(val file: File) {
+data class AarMetadataReader(val inputStream: InputStream) {
 
     val aarFormatVersion: String?
     val aarMetadataVersion: String?
@@ -518,9 +519,11 @@ private data class AarMetadataReader(val file: File) {
     val forceCompileSdkPreview: String?
     val minCompileSdkExtension: String?
 
+    constructor(file: File) : this(file.inputStream())
+
     init {
         val properties = Properties()
-        file.inputStream().use { properties.load(it) }
+        inputStream.use { properties.load(it) }
         aarFormatVersion = properties.getProperty(AAR_FORMAT_VERSION_PROPERTY)
         aarMetadataVersion = properties.getProperty(AAR_METADATA_VERSION_PROPERTY)
         minCompileSdk = properties.getProperty(MIN_COMPILE_SDK_PROPERTY)
