@@ -39,6 +39,7 @@ import com.android.testutils.apk.Dex
 import com.android.testutils.generateAarWithContent
 import com.android.testutils.truth.DexClassSubject
 import com.android.testutils.truth.DexSubject
+import com.android.tools.profgen.ArtProfile
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.jf.dexlib2.immutable.debug.ImmutableStartLocal
@@ -47,6 +48,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
+import java.util.zip.ZipFile
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -66,6 +68,13 @@ class CoreLibraryDesugarTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
+        .withAdditionalMavenRepo(mavenRepo)
+        .withGradleBuildCacheDirectory(File("local-build-cache"))
+        .fromTestApp(setUpTestProject()).create()
+
+    @get:Rule
+    val projectNoCache = GradleTestProject.builder()
+        .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
         .withAdditionalMavenRepo(mavenRepo)
         .withGradleBuildCacheDirectory(File("local-build-cache"))
         .fromTestApp(setUpTestProject()).create()
@@ -500,6 +509,41 @@ class CoreLibraryDesugarTest {
         desugarConfigLibDex = getDexWithSpecificClass(desugarConfigClass, apk.allDexes)
             ?: fail("Failed to find the dex with class name $desugarConfigClass")
         DexSubject.assertThat(desugarConfigLibDex).doesNotContainClasses(programClass)
+    }
+
+    @Test
+    fun testArtProfileDexNamingForApk() {
+      TestFileUtils.appendToFile(
+            FileUtils.join(app.getMainSrcDir(""),"baseline-prof.txt"),
+          programClass + "\n" + usedDesugarClass + "\n")
+
+        executor().run(":app:assembleRelease")
+
+        val apkFile = app.getApk(GradleTestProject.ApkType.RELEASE).file.toFile()
+        val zip = ZipFile(apkFile)
+        val entry = zip.entries().asSequence().first { it.name == "assets/dexopt/baseline.prof" }
+        zip.getInputStream(entry)
+        val profile = ArtProfile(zip.getInputStream(entry))
+        Truth.assertThat(profile!!.profileData.keys.map { it.name })
+            .containsExactly("classes.dex","classes2.dex")
+    }
+
+    @Test
+    fun testArtProfileDexNamingForAab() {
+        TestFileUtils.appendToFile(
+            FileUtils.join(app.getMainSrcDir(""),"baseline-prof.txt"),
+            programClass + "\n" + usedDesugarClass + "\n")
+        // b/149978740
+        projectNoCache.executor().run(":app:bundleRelease")
+
+        val apkFile = app.getBundle(GradleTestProject.ApkType.RELEASE).file.toFile()
+        val zip = ZipFile(apkFile)
+        val entry = zip.entries().asSequence()
+            .first { it.name == "BUNDLE-METADATA/com.android.tools.build.profiles/baseline.prof" }
+        zip.getInputStream(entry)
+        val profile = ArtProfile(zip.getInputStream(entry))
+        Truth.assertThat(profile!!.profileData.keys.map { it.name })
+            .containsExactly("classes.dex","classes2.dex")
     }
 
     @Test
