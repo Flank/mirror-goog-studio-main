@@ -158,7 +158,7 @@ build:remote-exec --show_timestamps
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:remote-exec --jobs=250
+build:remote-exec --jobs=350
 
 ## Remote combines all the configs used for remote execution.
 build:remote --config=_remote_base
