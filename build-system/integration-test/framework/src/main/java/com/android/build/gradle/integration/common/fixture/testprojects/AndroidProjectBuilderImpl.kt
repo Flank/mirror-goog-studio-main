@@ -33,6 +33,8 @@ internal class AndroidProjectBuilderImpl(
     override var minSdk: Int? = null
     override var minSdkPreview: String? = null
     override var targetProjectPath: String? = null
+    override var renderscriptTargetApi: Int? = null
+    override var renderscriptSupportModeEnabled: Boolean? = null
 
     override val dynamicFeatures: MutableSet<String> = mutableSetOf()
 
@@ -48,6 +50,7 @@ internal class AndroidProjectBuilderImpl(
     private var aarMetadata: AarMetadataBuilderImpl? = null
     private var androidResources: AndroidResourcesImpl? = null
     private var compileOptions: CompileOptionsImpl? = null
+    private var prefabContainer = PrefabContainerBuilderImpl()
     override fun defaultCompileSdk() {
         compileSdk = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()
     }
@@ -70,6 +73,10 @@ internal class AndroidProjectBuilderImpl(
 
     override fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit) {
         action(flavors)
+    }
+
+    override fun prefab(action: ContainerBuilder<PrefabBuilder>.() -> Unit) {
+        action(prefabContainer)
     }
 
     override fun addFile(relativePath: String, content: String) {
@@ -145,12 +152,29 @@ internal class AndroidProjectBuilderImpl(
             }
             sb.append("  }\n") // aarMetadata
         }
+        renderscriptSupportModeEnabled?.let {
+            sb.append("    renderscriptSupportModeEnabled=$it\n")
+        }
+        renderscriptTargetApi?.let {
+            sb.append("    renderscriptTargetApi=$it\n")
+        }
+        if (prefabContainer.items.isNotEmpty()) {
+            sb.append("    prefab {\n")
+            for (item in prefabContainer.items) {
+                sb.append("        ${item.key} {\n")
+                sb.append("            headers = \"${item.value.headers}\"\n")
+                sb.append("        }\n")
+            }
+            sb.append("    }\n")
+        }
         sb.append("  }\n") // DEFAULT-CONFIG
 
         if (buildFeatures.hasNonDefaultValue()) {
             sb.append("  buildFeatures {\n")
             buildFeatures.aidl?.let { sb.append("    aidl = $it\n") }
             buildFeatures.buildConfig?.let { sb.append("    buildConfig = $it\n") }
+            buildFeatures.prefab?.let { sb.append("    prefab = $it\n") }
+            buildFeatures.prefabPublishing?.let { sb.append("    prefabPublishing = $it\n") }
             buildFeatures.renderScript?.let { sb.append("    renderScript = $it\n") }
             buildFeatures.resValues?.let { sb.append("    resValues = $it\n") }
             buildFeatures.shaders?.let { sb.append("    shaders = $it\n") }
@@ -190,6 +214,14 @@ internal class AndroidProjectBuilderImpl(
                 }
                 item.testCoverageEnabled?.let {
                     sb.append("      testCoverageEnabled = $it\n")
+                }
+                item.ndk?.let { ndk ->
+                    if (ndk.abiFilters.isNotEmpty()) {
+                        sb.append("ndk {\n")
+                        sb.append(ndk.abiFilters.joinToString(", "))
+                        sb.appendLine()
+                        sb.append("}\n")
+                    }
                 }
                 item.resValues.forEach {
                     sb.append("      resValue(\"${it.first}\", \"${it.second}\", \"${it.third}\")\n")
@@ -257,6 +289,8 @@ internal class AarMetadataBuilderImpl : AarMetadataBuilder {
 internal class BuildFeaturesBuilderImpl: BuildFeaturesBuilder {
     override var aidl: Boolean? = null
     override var buildConfig: Boolean? = null
+    override var prefab: Boolean? = null
+    override var prefabPublishing: Boolean? = null
     override var renderScript: Boolean? = null
     override var resValues: Boolean? = null
     override var shaders: Boolean? = null
@@ -266,6 +300,7 @@ internal class BuildFeaturesBuilderImpl: BuildFeaturesBuilder {
     fun hasNonDefaultValue(): Boolean {
         return aidl != null
                 || buildConfig != null
+                || prefab != null
                 || renderScript != null
                 || resValues != null
                 || shaders != null
@@ -297,16 +332,40 @@ internal class ProductFlavorContainerBuilderImpl: ContainerBuilder<ProductFlavor
 internal class BuildTypeBuilderImpl(override val name: String): BuildTypeBuilder {
     override var isDefault: Boolean? = null
     override var testCoverageEnabled: Boolean? = null
+    override var ndk: NdkBuilder? = null
     override val resValues: MutableList<Triple<String, String, String>> = mutableListOf()
+
+    override fun ndk(action: NdkBuilder.() -> Unit) {
+        val ndkBuilderImpl = ndk ?: NdkBuilderImpl().also { ndk = it}
+        action(ndkBuilderImpl)
+    }
 
     override fun resValue(type: String, name: String, value: String) {
         resValues.add(Triple(type, name, value))
     }
 }
 
+internal class PrefabContainerBuilderImpl: ContainerBuilder<PrefabBuilder> {
+    internal val items = mutableMapOf<String, PrefabBuilder>()
+    override fun named(name: String, action: PrefabBuilder.() -> Unit) {
+        val newItem = items.computeIfAbsent(name) { PrefabBuilderImpl(name) }
+        action(newItem)
+    }
+}
+
 internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {
     override var isDefault: Boolean? = null
     override var dimension: String? = null
+}
+
+internal class PrefabBuilderImpl(override val name: String): PrefabBuilder {
+
+    override var headers: String? = null
+}
+
+internal class NdkBuilderImpl: NdkBuilder {
+
+    override var abiFilters: List<String> = emptyList()
 }
 
 internal class AndroidResourcesImpl : AndroidResources {
