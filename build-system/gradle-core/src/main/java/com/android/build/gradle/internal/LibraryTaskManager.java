@@ -445,8 +445,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
                         OriginalStream.builder("local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(InternalScope.LOCAL_DEPS)
-                                .setFileCollection(
-                                        creationConfig.getVariantScope().getLocalPackagedJars())
+                                .setFileCollection(creationConfig.computeLocalPackagedJars())
                                 .build());
     }
 

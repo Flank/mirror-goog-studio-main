@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.impl
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
@@ -74,7 +75,11 @@ import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -82,6 +87,11 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.Locale
+import java.util.concurrent.Callable
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
 abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     open val componentIdentity: ComponentIdentity,
@@ -523,4 +533,60 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             null
         }
     }
+
+    /**
+     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
+     * predicate
+     *
+     * @return a non null, but possibly empty FileCollection
+     * @param filePredicate the file predicate used to filter the local file dependencies
+     */
+    override fun computeLocalFileDependencies(filePredicate: Predicate<File>): FileCollection {
+        val configuration = variantDependencies.runtimeClasspath
+
+        // Get a list of local file dependencies. There is currently no API to filter the
+        // files here, so we need to filter it in the return statement below. That means that if,
+        // for example, filePredicate filters out all files but jars in the return statement, but an
+        // AarProducerTask produces an aar, then the returned FileCollection contains only jars but
+        // still has AarProducerTask as a dependency.
+        val dependencies =
+            Callable<Collection<SelfResolvingDependency>> {
+                configuration
+                    .allDependencies
+                    .stream()
+                    .filter { it: Dependency? -> it is SelfResolvingDependency }
+                    .filter { it: Dependency? -> it !is ProjectDependency }
+                    .map { it: Dependency -> it as SelfResolvingDependency }
+                    .collect(
+                        ImmutableList.toImmutableList()
+                    )
+            }
+
+        // Create a file collection builtBy the dependencies.  The files are resolved later.
+        return internalServices.fileCollection(
+            Callable<Collection<File>> {
+                dependencies.call().stream()
+                    .flatMap { it: SelfResolvingDependency ->
+                        it
+                            .resolve()
+                            .stream()
+                    }
+                    .filter(filePredicate)
+                    .collect(Collectors.toList())
+            })
+            .builtBy(dependencies)
+    }
+
+    /**
+     * Returns the packaged local Jars
+     *
+     * @return a non null, but possibly empty set.
+     */
+    override fun computeLocalPackagedJars(): FileCollection =
+        computeLocalFileDependencies { file ->
+            file
+                .name
+                .lowercase(Locale.US)
+                .endsWith(SdkConstants.DOT_JAR)
+        }
 }

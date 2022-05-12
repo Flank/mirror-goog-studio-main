@@ -337,61 +337,6 @@ public class VariantScopeImpl implements VariantScope {
         this.ndkDebuggableLibraryFolders.put(abi, searchPath);
     }
 
-    // Precomputed file paths.
-
-    /**
-     * Returns the packaged local Jars
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    @Override
-    public FileCollection getLocalPackagedJars() {
-        return getLocalFileDependencies(
-                (file) -> file.getName().toLowerCase(Locale.US).endsWith(DOT_JAR));
-    }
-
-    /**
-     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
-     * predicate
-     *
-     * @return a non null, but possibly empty FileCollection
-     * @param filePredicate the file predicate used to filter the local file dependencies
-     */
-    @NonNull
-    @Override
-    public FileCollection getLocalFileDependencies(Predicate<File> filePredicate) {
-        Configuration configuration = variantDependencies.getRuntimeClasspath();
-
-        // Get a list of local file dependencies. There is currently no API to filter the
-        // files here, so we need to filter it in the return statement below. That means that if,
-        // for example, filePredicate filters out all files but jars in the return statement, but an
-        // AarProducerTask produces an aar, then the returned FileCollection contains only jars but
-        // still has AarProducerTask as a dependency.
-        Callable<Collection<SelfResolvingDependency>> dependencies =
-                () ->
-                        configuration
-                                .getAllDependencies()
-                                .stream()
-                                .filter((it) -> it instanceof SelfResolvingDependency)
-                                .filter((it) -> !(it instanceof ProjectDependency))
-                                .map((it) -> (SelfResolvingDependency) it)
-                                .collect(ImmutableList.toImmutableList());
-
-        // Create a file collection builtBy the dependencies.  The files are resolved later.
-        return baseServices
-                .getProjectInfo()
-                .getProject()
-                .files(
-                        (Callable<Collection<File>>)
-                                () ->
-                                        dependencies.call().stream()
-                                                .flatMap((it) -> it.resolve().stream())
-                                                .filter(filePredicate)
-                                                .collect(Collectors.toList()))
-                .builtBy(dependencies);
-    }
-
     @NonNull
     @Override
     public FileCollection getProvidedOnlyClasspath() {

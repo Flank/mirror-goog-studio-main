@@ -59,6 +59,8 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.function.Predicate
 
 /**
  * Base of the interfaces used internally to access *PropertiesImpl object.
@@ -173,6 +175,10 @@ interface ComponentCreationConfig : ComponentIdentity {
         variantOutputConfiguration: VariantOutputConfiguration,
         outputFileName: String? = null
     )
+
+    fun computeLocalFileDependencies(filePredicate: Predicate<File>): FileCollection
+
+    fun computeLocalPackagedJars(): FileCollection
 
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
