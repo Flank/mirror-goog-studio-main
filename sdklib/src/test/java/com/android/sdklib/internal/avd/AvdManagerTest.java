@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.TreeMap;
 import org.junit.Before;
 import org.junit.Rule;
@@ -144,6 +145,152 @@ public final class AvdManagerTest {
         assertNotNull(mSystemImageWear25);
         assertNotNull(mSystemImageWearChina);
         assertNotNull(mSystemImageChromeOs);
+    }
+
+    @Test
+    public void getPidHardwareQemuIniLockScannerHasNextLong() throws IOException {
+        // Arrange
+        AvdInfo avd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        name.getMethodName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
+
+        assert avd != null;
+        Path file = mAvdManager.resolve(avd, "hardware-qemu.ini.lock");
+
+        Files.createDirectories(file.getParent());
+        Files.write(file, "412503".getBytes());
+
+        // Act
+        Object pid = mAvdManager.getPid(avd);
+
+        // Assert
+        assertEquals(OptionalLong.of(412503), pid);
+    }
+
+    @Test
+    public void getPidHardwareQemuIniLockIsEmpty() throws IOException {
+        // Arrange
+        AvdInfo avd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        name.getMethodName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
+
+        assert avd != null;
+        Path file = mAvdManager.resolve(avd, "hardware-qemu.ini.lock");
+
+        Files.createDirectories(file.getParent());
+        Files.createFile(file);
+
+        // Act
+        Object pid = mAvdManager.getPid(avd);
+
+        // Assert
+        assertEquals(OptionalLong.empty(), pid);
+    }
+
+    @Test
+    public void getPidHardwareQemuIniLockScannerDoesntHaveNextLong() throws IOException {
+        // Arrange
+        AvdInfo avd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        name.getMethodName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
+
+        assert avd != null;
+        Path file = mAvdManager.resolve(avd, "hardware-qemu.ini.lock");
+
+        Files.createDirectories(file.getParent());
+        Files.write(file, "notlong".getBytes());
+
+        // Act
+        Object pid = mAvdManager.getPid(avd);
+
+        // Assert
+        assertEquals(OptionalLong.empty(), pid);
+    }
+
+    @Test
+    public void getPidUserdataQemuImgLockScannerHasNextLong() throws IOException {
+        // Arrange
+        AvdInfo avd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        name.getMethodName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
+
+        assert avd != null;
+        Path file = mAvdManager.resolve(avd, "userdata-qemu.img.lock");
+
+        Files.createDirectories(file.getParent());
+        Files.write(file, "412503".getBytes());
+
+        // Act
+        Object pid = mAvdManager.getPid(avd);
+
+        // Assert
+        assertEquals(OptionalLong.of(412503), pid);
+    }
+
+    @Test
+    public void getPid() throws IOException {
+        // Arrange
+        AvdInfo avd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        name.getMethodName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
+
+        assert avd != null;
+
+        // Act
+        Object pid = mAvdManager.getPid(avd);
+
+        // Assert
+        assertEquals(OptionalLong.empty(), pid);
     }
 
     @Test

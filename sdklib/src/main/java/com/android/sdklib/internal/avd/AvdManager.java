@@ -77,7 +77,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.OptionalLong;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -776,6 +779,49 @@ public class AvdManager {
         }
     }
 
+    @Slow
+    @NonNull
+    public OptionalLong getPid(@NonNull AvdInfo avd) {
+        OptionalLong pid = getPid(avd, "hardware-qemu.ini.lock");
+
+        if (pid.isPresent()) {
+            return pid;
+        }
+
+        return getPid(avd, "userdata-qemu.img.lock");
+    }
+
+    @NonNull
+    private OptionalLong getPid(@NonNull AvdInfo avd, @NonNull String element) {
+        Path file = resolve(avd, element);
+
+        try (Scanner scanner = new Scanner(file)) {
+            // TODO(http://b/233670812)
+            scanner.useDelimiter("\0");
+
+            return OptionalLong.of(scanner.nextLong());
+        } catch (IOException | NoSuchElementException exception) {
+            mLog.error(exception, "avd = %s, file = %s", avd.getName(), file);
+            return OptionalLong.empty();
+        }
+    }
+
+    @VisibleForTesting
+    @NonNull
+    Path resolve(@NonNull AvdInfo avd, @NonNull String element) {
+        Path path = mBaseAvdFolder.resolve(avd.getDataFolderPath()).resolve(element);
+
+        // path is a file on Linux and macOS. On Windows it's a directory. Return the path to the
+        // pid file under it.
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            return path.resolve("pid");
+        }
+
+        return path;
+    }
+
+    /** @deprecated Use {@link #getPid(AvdInfo)} */
+    @Deprecated
     private String getAvdPid(@NonNull AvdInfo info) throws IOException {
         Path dataFolderPath = mBaseAvdFolder.resolve(info.getDataFolderPath());
         // this is a file on Unix, and a directory on Windows.
