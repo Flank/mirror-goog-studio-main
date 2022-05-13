@@ -5,6 +5,8 @@ java_library(
     srcs = glob([
         "src/**/*.java",
     ]),
+    resource_strip_prefix = "tools/base/threading-agent-callback/resources",
+    resources = glob(["resources/**"]),
     visibility = ["//visibility:public"],
 )
 
@@ -13,5 +15,13 @@ iml_module(
     name = "studio.android.sdktools.threading-agent-callback",
     srcs = ["src"],
     iml_files = ["android.sdktools.threading-agent-callback.iml"],
+    resources = ["resources"],
+    test_srcs = ["testSrc"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/adt/idea/.idea/libraries:mockito[test]",
+        "//tools/adt/idea/.idea/libraries:truth[test]",
+        "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
+    ],
 )

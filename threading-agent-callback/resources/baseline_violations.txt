@@ -1,0 +1,6 @@
+# List the threading-annotated methods to exclude from threading checks.
+# These methods should be specified as FullClassName[$InternalClassName]#MethodName.
+#
+# Example 1: com.android.tools.SomeClass#doSomething
+# Example 2: com.android.tools.SomeClass$InnerClass#doSomethingElse
+
