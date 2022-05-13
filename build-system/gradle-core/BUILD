@@ -59,6 +59,7 @@ maven_library(
     deps = [
         "//tools/analytics-library/crash:tools.analytics-crash",
         "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/base/build-system/aapt2-proto",
         "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",  # TODO: Not in the pom, but required to compile (?)
@@ -78,7 +79,6 @@ maven_library(
         "//tools/data-binding:tools.baseLibrary",
         "//tools/data-binding:tools.baseLibrarySupport",
         "//tools/data-binding:tools.compilerCommon",
-        "@maven//:com.android.tools.build.aapt2-proto",
         "@maven//:com.android.tools.build.bundletool",
         "@maven//:com.android.tools.build.jetifier.jetifier-core",
         "@maven//:com.android.tools.build.jetifier.jetifier-processor",

@@ -222,11 +222,11 @@ com.android.tools:sdk-common
   description=sdk-common library used by other Android tools libraries.
   dependencies:
     com.android.tools.analytics-library:shared (runtime)
+    com.android.tools.build:aapt2-proto (runtime)
     com.android.tools:common (runtime)
     com.android.tools.ddms:ddmlib (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
     com.android.tools:sdklib (runtime)
-    com.android.tools.build:aapt2-proto (runtime)
     com.google.code.gson:gson (runtime)
     com.google.guava:guava (runtime)
     com.google.protobuf:protobuf-java (runtime)
