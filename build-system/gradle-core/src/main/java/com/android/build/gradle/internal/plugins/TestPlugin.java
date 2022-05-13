@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.TestExtensionImpl;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
@@ -269,7 +268,7 @@ public class TestPlugin
 
     @NonNull
     @Override
-    protected TestVariantFactory createVariantFactory(@NonNull ProjectServices projectServices) {
-        return new TestVariantFactory(projectServices);
+    protected TestVariantFactory createVariantFactory() {
+        return new TestVariantFactory(getDslServices());
     }
 }

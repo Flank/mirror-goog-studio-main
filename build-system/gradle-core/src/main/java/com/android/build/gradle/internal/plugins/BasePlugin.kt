@@ -76,7 +76,6 @@ import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
@@ -292,7 +291,7 @@ abstract class BasePlugin<
     }
 
     private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT> by lazy {
-        createVariantFactory(projectServices)
+        createVariantFactory()
     }
 
     protected val extraModelInfo: ExtraModelInfo = ExtraModelInfo()
@@ -316,9 +315,7 @@ abstract class BasePlugin<
 
     abstract override fun getAnalyticsPluginType(): GradleBuildProject.PluginType
 
-    protected abstract fun createVariantFactory(
-        projectServices: ProjectServices
-    ): VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT>
+    protected abstract fun createVariantFactory(): VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT>
 
     protected abstract fun createTaskManager(
         project: Project,
@@ -705,7 +702,7 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
 
         // Run the old Variant API, after the variants and tasks have been created.
         @Suppress("DEPRECATION")
-        val apiObjectFactory = ApiObjectFactory(extension, variantFactory)
+        val apiObjectFactory = ApiObjectFactory(extension, variantFactory, dslServices)
         for (variant in variants) {
             apiObjectFactory.create(variant.variant)
         }

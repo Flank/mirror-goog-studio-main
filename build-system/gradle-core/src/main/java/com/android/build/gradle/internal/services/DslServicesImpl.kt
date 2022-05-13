@@ -49,12 +49,19 @@ class DslServicesImpl constructor(
     ): NamedDomainObjectContainer<T> =
         projectServices.objectFactory.domainObjectContainer(type, factory)
 
+    override fun <T> domainObjectContainer(type: Class<T>): NamedDomainObjectContainer<T> =
+        projectServices.objectFactory.domainObjectContainer(type)
+
     override fun <T> polymorphicDomainObjectContainer(
         type: Class<T>
     ): ExtensiblePolymorphicDomainObjectContainer<T> =
         projectServices.objectFactory.polymorphicDomainObjectContainer(type)
 
-    override fun <T> property(type: Class<T>): Property<T> = projectServices.objectFactory.property(type)
+    override fun <T> property(type: Class<T>): Property<T> =
+        projectServices.objectFactory.property(type)
+
+    override fun directoryProperty(): DirectoryProperty =
+        projectServices.objectFactory.directoryProperty()
 
     override fun <T> provider(type: Class<T>, value: T?): Provider<T> =
         projectServices.objectFactory.property(type).also {

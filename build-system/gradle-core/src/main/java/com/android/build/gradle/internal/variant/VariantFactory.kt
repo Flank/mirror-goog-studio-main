@@ -176,7 +176,6 @@ interface VariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: Vari
             variantData: BaseVariantData,
             readOnlyObjectProvider: ReadOnlyObjectProvider): BaseVariantImpl?
 
-    val servicesForOldVariantObjectsOnly: BaseServices
     val componentType: ComponentType
 
     /**

@@ -54,7 +54,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValues;
 import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl;
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.services.ProjectServices;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.services.VariantBuilderServices;
 import com.android.build.gradle.internal.services.VariantServices;
@@ -76,8 +76,8 @@ public class TestVariantFactory
         extends AbstractAppVariantFactory<
                 TestVariantBuilder, TestProjectVariantDslInfo, TestVariantCreationConfig> {
 
-    public TestVariantFactory(@NonNull ProjectServices projectServices) {
-        super(projectServices);
+    public TestVariantFactory(@NonNull DslServices dslServices) {
+        super(dslServices);
     }
 
     @NonNull
@@ -87,14 +87,12 @@ public class TestVariantFactory
             @NonNull ComponentIdentity componentIdentity,
             @NonNull TestProjectVariantDslInfo variantDslInfo,
             @NonNull VariantBuilderServices variantBuilderServices) {
-        return projectServices
-                .getObjectFactory()
-                .newInstance(
-                        TestVariantBuilderImpl.class,
-                        globalVariantBuilderConfig,
-                        variantDslInfo,
-                        componentIdentity,
-                        variantBuilderServices);
+        return dslServices.newInstance(
+                TestVariantBuilderImpl.class,
+                globalVariantBuilderConfig,
+                variantDslInfo,
+                componentIdentity,
+                variantBuilderServices);
     }
 
     @NonNull
@@ -116,23 +114,21 @@ public class TestVariantFactory
             @NonNull GlobalTaskCreationConfig globalConfig) {
 
         TestVariantImpl variant =
-                projectServices
-                        .getObjectFactory()
-                        .newInstance(
-                                TestVariantImpl.class,
-                                variantBuilder,
-                                buildFeatures,
-                                variantDslInfo,
-                                variantDependencies,
-                                variantSources,
-                                paths,
-                                artifacts,
-                                variantScope,
-                                variantData,
-                                transformManager,
-                                variantServices,
-                                taskCreationServices,
-                                globalConfig);
+                dslServices.newInstance(
+                        TestVariantImpl.class,
+                        variantBuilder,
+                        buildFeatures,
+                        variantDslInfo,
+                        variantDependencies,
+                        variantSources,
+                        paths,
+                        artifacts,
+                        variantScope,
+                        variantData,
+                        transformManager,
+                        variantServices,
+                        taskCreationServices,
+                        globalConfig);
 
         // create default output
         variant.addVariantOutput(

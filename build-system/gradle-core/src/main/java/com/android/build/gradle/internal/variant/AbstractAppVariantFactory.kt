@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.plugins.DslContainerProvider
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.services.ProjectServices
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.IssueReporter
@@ -44,9 +44,9 @@ import org.gradle.api.Project
  * This can be an app project, or a test-only project, though the default behavior is app.
  */
 abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilder, VariantDslInfoT: VariantDslInfo, VariantT : VariantCreationConfig>(
-    projectServices: ProjectServices,
+    dslServices: DslServices,
 ) : BaseVariantFactory<VariantBuilderT, VariantDslInfoT, VariantT>(
-    projectServices,
+    dslServices,
 ) {
 
     override fun createVariantData(
@@ -87,7 +87,7 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilder, Varia
         }
 
         // below is for dynamic-features only.
-        val issueReporter: IssueReporter = projectServices.issueReporter
+        val issueReporter: IssueReporter = dslServices.issueReporter
         for (buildType in model.buildTypes.values) {
             if (buildType.buildType.isMinifyEnabled) {
                 issueReporter.reportError(
@@ -153,7 +153,7 @@ abstract class AbstractAppVariantFactory<VariantBuilderT : VariantBuilder, Varia
 
     private fun validateVersionCodes(
             model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>) {
-        val issueReporter: IssueReporter = projectServices.issueReporter
+        val issueReporter: IssueReporter = dslServices.issueReporter
         val versionCode = model.defaultConfigData.defaultConfig.versionCode
         if (versionCode != null && versionCode < 1) {
             issueReporter.reportError(

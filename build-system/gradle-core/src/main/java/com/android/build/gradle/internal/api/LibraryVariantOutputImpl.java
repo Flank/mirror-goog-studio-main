@@ -24,7 +24,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.LibraryVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.builder.core.ComponentType;
 import java.io.File;
 import javax.inject.Inject;
@@ -41,7 +41,7 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Inject
     public LibraryVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
-            @NonNull BaseServices services,
+            @NonNull DslServices services,
             @NonNull VariantOutputImpl variantOutput,
             @NonNull ComponentType ignored) {
         super(taskContainer, services, variantOutput);

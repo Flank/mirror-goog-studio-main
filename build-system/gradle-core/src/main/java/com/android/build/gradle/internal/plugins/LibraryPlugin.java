@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
@@ -228,8 +227,8 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected LibraryVariantFactory createVariantFactory(@NonNull ProjectServices projectServices) {
-        return new LibraryVariantFactory(projectServices);
+    protected LibraryVariantFactory createVariantFactory() {
+        return new LibraryVariantFactory(getDslServices());
     }
 
     @Override

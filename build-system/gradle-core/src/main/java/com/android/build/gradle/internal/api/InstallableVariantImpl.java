@@ -23,7 +23,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.services.VariantServices;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Incubating;
@@ -41,7 +41,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     protected InstallableVariantImpl(
             @NonNull ComponentCreationConfig component,
-            @NonNull VariantServices services,
+            @NonNull DslServices services,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         super(component, services, immutableObjectProvider, outputs);

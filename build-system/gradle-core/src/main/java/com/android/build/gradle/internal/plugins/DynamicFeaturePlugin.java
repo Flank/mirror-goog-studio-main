@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.DynamicFeatureTaskManager;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
@@ -276,8 +275,7 @@ public class DynamicFeaturePlugin
 
     @NonNull
     @Override
-    protected DynamicFeatureVariantFactory createVariantFactory(
-            @NonNull ProjectServices projectServices) {
-        return new DynamicFeatureVariantFactory(projectServices);
+    protected DynamicFeatureVariantFactory createVariantFactory() {
+        return new DynamicFeatureVariantFactory(getDslServices());
     }
 }
