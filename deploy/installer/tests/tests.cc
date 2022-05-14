@@ -24,6 +24,7 @@
 #include "tools/base/deploy/common/env.h"
 #include "tools/base/deploy/installer/apk_archive.h"
 #include "tools/base/deploy/installer/command_cmd.h"
+#include "tools/base/deploy/installer/dump.h"
 #include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/highlander.h"
 #include "tools/base/deploy/installer/network_test.h"
@@ -297,4 +298,19 @@ TEST_F(InstallerTest, TestNetworkTest_Ping) {
   ASSERT_GT(network_response.current_time_ns(), 0);
   ASSERT_GT(network_response.processing_duration_ns(), 0);
   ASSERT_EQ(network_response.data().size(), 0);
+}
+
+TEST_F(InstallerTest, TestDumpError) {
+  proto::InstallerRequest request;
+  auto dump_request = request.mutable_dump_request();
+
+  proto::InstallerResponse response;
+  Workspace workspace("");
+  DumpCommand dump_command(workspace);
+  dump_command.ParseParameters(request);
+  dump_command.Run(&response);
+
+  ASSERT_TRUE(response.has_dump_response());
+  ASSERT_TRUE(response.dump_response().status() ==
+              proto::DumpResponse_Status_ERROR_NO_PACKAGES);
 }

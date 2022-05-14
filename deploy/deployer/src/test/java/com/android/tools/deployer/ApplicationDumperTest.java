@@ -28,8 +28,10 @@ import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -51,6 +53,7 @@ public class ApplicationDumperTest {
                 Deploy.DumpResponse.newBuilder()
                         .addPackages(
                                 Deploy.PackageDump.newBuilder().setName("package").addApks(dump))
+                        .setStatus(Deploy.DumpResponse.Status.OK)
                         .build();
 
         Installer installer = Mockito.mock(Installer.class);
@@ -90,6 +93,7 @@ public class ApplicationDumperTest {
                 Deploy.DumpResponse.newBuilder()
                         .addPackages(
                                 Deploy.PackageDump.newBuilder().setName("package").addApks(dump))
+                        .setStatus(Deploy.DumpResponse.Status.OK)
                         .build();
 
         Installer installer = Mockito.mock(Installer.class);
@@ -139,6 +143,7 @@ public class ApplicationDumperTest {
                                         .addProcesses(3)
                                         .addProcesses(4)
                                         .setArch(Deploy.Arch.ARCH_UNKNOWN))
+                        .setStatus(Deploy.DumpResponse.Status.OK)
                         .build();
 
         Installer installer = Mockito.mock(Installer.class);
@@ -173,6 +178,7 @@ public class ApplicationDumperTest {
                                         .addProcesses(3)
                                         .addProcesses(4)
                                         .setArch(Deploy.Arch.ARCH_32_BIT))
+                        .setStatus(Deploy.DumpResponse.Status.OK)
                         .build();
 
         Installer installer = Mockito.mock(Installer.class);
@@ -192,6 +198,59 @@ public class ApplicationDumperTest {
             assertTrue(
                     e.getMessage()
                             .contains("Application with process in both 32 and 64 bit mode."));
+        }
+    }
+
+    @Test
+    public void testErrorMessage() {
+        try {
+            List<String> packages = new ArrayList<>();
+            packages.add("foo");
+            Deploy.DumpResponse.Builder builder = Deploy.DumpResponse.newBuilder();
+            ApplicationDumper.throwDumpError(packages, builder.build());
+            Assert.fail("Bad DumpResponse not detected");
+        } catch (DeployerException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testNoPackageMessage() {
+        try {
+            List<String> packages = new ArrayList<>();
+            packages.add("foo");
+            Deploy.DumpResponse.Builder builder = Deploy.DumpResponse.newBuilder();
+            builder.setStatus(Deploy.DumpResponse.Status.ERROR_NO_PACKAGES);
+            ApplicationDumper.throwDumpError(packages, builder.build());
+            Assert.fail("Bad DumpResponse not detected");
+        } catch (DeployerException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testPackageNotFoundMessage() {
+        try {
+            List<String> packages = new ArrayList<>();
+            packages.add("foo");
+            Deploy.DumpResponse.Builder builder = Deploy.DumpResponse.newBuilder();
+            builder.setStatus(Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND);
+            ApplicationDumper.throwDumpError(packages, builder.build());
+            Assert.fail("Bad DumpResponse not detected");
+        } catch (DeployerException e) {
+            // Expected
+        }
+    }
+
+    @Test
+    public void testErrorNoPackageMessage() {
+        try {
+            List<String> packages = new ArrayList<>();
+            Deploy.DumpResponse.Builder builder = Deploy.DumpResponse.newBuilder();
+            ApplicationDumper.throwDumpError(packages, builder.build());
+            Assert.fail("Bad DumpResponse not detected");
+        } catch (DeployerException e) {
+            // Expected
         }
     }
 }

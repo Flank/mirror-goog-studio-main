@@ -457,6 +457,8 @@ message InstallerResponse {
     LiveEditResponse le_response = 11;
     NetworkTestResponse network_test_response = 12;
   }
+
+  string error_message = 13;
 }
 
 message Event {
@@ -510,6 +512,7 @@ message DumpResponse {
     UNKNOWN = 0;
     OK = 1;  // The dump completed successfully.
     ERROR_PACKAGE_NOT_FOUND = 2;
+    ERROR_NO_PACKAGES = 3;
   }
 
   Status status = 1;
