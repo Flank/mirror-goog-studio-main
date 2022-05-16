@@ -225,9 +225,9 @@ message Event {
     echo.EchoData echo = 1000;
 
     // App inspection prefix = 1200;
-    app_inspection.AppInspectionEvent app_inspection_event = 1200;
-    app_inspection.AppInspectionResponse app_inspection_response = 1201;
-    app_inspection.AppInspectionPayload app_inspection_payload = 1202;
+    app_inspection.AppInspectionEvent app_inspection_event = 1201;
+    app_inspection.AppInspectionResponse app_inspection_response = 1202;
+    app_inspection.AppInspectionPayload app_inspection_payload = 1203;
   }
 }
 
