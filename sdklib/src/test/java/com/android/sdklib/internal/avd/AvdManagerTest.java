@@ -148,8 +148,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 false,
                 false,
-                false,
-                log);
+                false);
 
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, CancellableFileIo.exists(avdConfigFile));
@@ -175,18 +174,17 @@ public class AvdManagerTest extends TestCase {
 
         MockLog log = new MockLog();
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageApi21,
-          null,
-          null,
-          null,
-          null,
-          null,
-          false,
-          false,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageApi21,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                false);
 
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
@@ -226,8 +224,7 @@ public class AvdManagerTest extends TestCase {
                 expected,
                 false,
                 false,
-                false,
-                log);
+                false);
 
         Path bootPropFile = mAvdFolder.resolve("boot.prop");
         assertTrue(Files.exists(bootPropFile));
@@ -252,8 +249,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 false,
                 false,
-                false,
-                log);
+                false);
 
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
@@ -277,8 +273,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 false,
                 false,
-                false,
-                log);
+                false);
 
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
         assertTrue("Expected config.ini in " + mAvdFolder, Files.exists(avdConfigFile));
@@ -301,14 +296,13 @@ public class AvdManagerTest extends TestCase {
                 null,
                 false,
                 false,
-                false,
-                log);
+                false);
 
         assertThat(mGradleManagedDeviceAvdManager.getAllAvds()).hasLength(1);
 
         // Creating AVD in Gradle Managed Device folder (.android/avd/gradle-managed) should not
         // confuse the standard AVD manager (.android/avd).
-        mAvdManager.reloadAvds(log);
+        mAvdManager.reloadAvds();
         assertThat(mAvdManager.getAllAvds()).isEmpty();
     }
 
@@ -316,19 +310,19 @@ public class AvdManagerTest extends TestCase {
 
         MockLog log = new MockLog();
         // Create an AVD
-        AvdInfo origAvd = mAvdManager.createAvd(
-                mAvdFolder,
-                this.getName(),
-                mSystemImageAosp,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false,
-                false,
-                false,
-                log);
+        AvdInfo origAvd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        this.getName(),
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        false);
 
         assertNotNull("Could not create AVD", origAvd);
         Path avdConfigFile = mAvdFolder.resolve("config.ini");
@@ -348,19 +342,19 @@ public class AvdManagerTest extends TestCase {
 
         // Create an AVD that is the same, but with a different name
         String newName = this.getName() + "_renamed";
-        AvdInfo renamedAvd = mAvdManager.createAvd(
-                mAvdFolder,
-                newName,
-                mSystemImageAosp,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false,
-                false,
-                true, // Yes, edit the existing AVD
-                log);
+        AvdInfo renamedAvd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        newName,
+                        mSystemImageAosp,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        false,
+                        true /* Yes, edit the existing AVD*/);
 
         assertNotNull("Could not rename AVD", renamedAvd);
         Path parentFolder = mAvdFolder.getParent();
@@ -395,19 +389,19 @@ public class AvdManagerTest extends TestCase {
         HashMap<String, String> origAvdConfig = new HashMap<>();
         origAvdConfig.put("testKey1", "originalValue1");
         origAvdConfig.put("testKey2", "originalValue2");
-        AvdInfo origAvd = mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImagePlay,
-          null,
-          null,
-          "100M", // SD card size
-          origAvdConfig,
-          null,
-          false,
-          false,
-          false,
-          log);
+        AvdInfo origAvd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        this.getName(),
+                        mSystemImagePlay,
+                        null,
+                        null,
+                        "100M", // SD card size
+                        origAvdConfig,
+                        null,
+                        false,
+                        false,
+                        false);
 
         assertNotNull("Could not create AVD", origAvd);
         // Put some extra files in the AVD directory
@@ -425,19 +419,19 @@ public class AvdManagerTest extends TestCase {
         newAvdConfig.put("testKey2", "newValue2");
 
         String newName = "Copy_of_" + this.getName();
-        AvdInfo duplicatedAvd = mAvdManager.createAvd(
-          mAvdFolder,
-          newName,
-          mSystemImagePlay,
-          null,
-          null,
-          "222M", // Different SD card size
-          newAvdConfig,
-          null,
-          false,
-          false,
-          false, // Do not remove the original
-          log);
+        AvdInfo duplicatedAvd =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        newName,
+                        mSystemImagePlay,
+                        null,
+                        null,
+                        "222M", // Different SD card size
+                        newAvdConfig,
+                        null,
+                        false,
+                        false,
+                        false); // Do not remove the original
 
         // Verify that the duplicated AVD is correct
         assertNotNull("Could not duplicate AVD", duplicatedAvd);
@@ -502,18 +496,18 @@ public class AvdManagerTest extends TestCase {
 
         // Play Store image with Play Store device
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImagePlay,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          true, // deviceHasPlayStore
-          false,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImagePlay,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                true, // deviceHasPlayStore
+                false,
+                false);
+
         Path configIniFile = mAvdFolder.resolve("config.ini");
         Map<String, String> baseProperties =
                 AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
@@ -521,87 +515,82 @@ public class AvdManagerTest extends TestCase {
 
         // Play Store image with non-Play Store device
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImagePlay,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          false, // deviceHasPlayStore
-          true,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImagePlay,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                false, // deviceHasPlayStore
+                true,
+                false);
         baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Non-Play Store image with Play Store device
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageGoogle,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          true, // deviceHasPlayStore
-          true,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageGoogle,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                true, // deviceHasPlayStore
+                true,
+                false);
         baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Wear image API 24 (no Play Store)
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageWear24,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          true, // deviceHasPlayStore
-          true,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageWear24,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                true, // deviceHasPlayStore
+                true,
+                false);
         baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
 
         // Wear image API 25 (with Play Store)
         // (All Wear devices have Play Store)
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageWear25,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          true, // deviceHasPlayStore
-          true,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageWear25,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                true, // deviceHasPlayStore
+                true,
+                false);
         baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("true", baseProperties.get("PlayStore.enabled"));
 
         // Wear image for China (no Play Store)
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageWearChina,
-          null,
-          null,
-          null,
-          null,
-          expected,
-          true, // deviceHasPlayStore
-          true,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageWearChina,
+                null,
+                null,
+                null,
+                null,
+                expected,
+                true, // deviceHasPlayStore
+                true,
+                false);
         baseProperties = AvdManager.parseIniFile(new PathFileWrapper(configIniFile), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
@@ -622,19 +611,19 @@ public class AvdManagerTest extends TestCase {
         baseHardwareProperties.put("hw.keyboard", "yes");
 
         // Create a virtual device including these properties
-        AvdInfo myDeviceInfo = mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageGoogle,
-          null,
-          null,
-          null,
-          baseHardwareProperties,
-          null,
-          true,
-          true,
-          false,
-          log);
+        AvdInfo myDeviceInfo =
+                mAvdManager.createAvd(
+                        mAvdFolder,
+                        this.getName(),
+                        mSystemImageGoogle,
+                        null,
+                        null,
+                        null,
+                        baseHardwareProperties,
+                        null,
+                        true,
+                        true,
+                        false);
 
         // Verify all the parameters that we changed and the parameter that we added
         Map<String, String> firstHardwareProperties = myDeviceInfo.getProperties();
@@ -644,7 +633,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("yes",  firstHardwareProperties.get("hw.keyboard"));
 
         // Update the device using the original hardware definition
-        AvdInfo updatedDeviceInfo = mAvdManager.updateDeviceChanged(myDeviceInfo, log);
+        AvdInfo updatedDeviceInfo = mAvdManager.updateDeviceChanged(myDeviceInfo);
 
         // Verify that the two fixed hardware properties changed back, but the other hardware
         // property and the user-settable property did not change.
@@ -658,25 +647,24 @@ public class AvdManagerTest extends TestCase {
     public void testParseAvdInfo() throws Exception {
         MockLog log = new MockLog();
         mAvdManager.createAvd(
-          mAvdFolder,
-          this.getName(),
-          mSystemImageAosp,
-          null,
-          null,
-          null,
-          null,
-          null,
-          false,
-          false,
-          false,
-          log);
+                mAvdFolder,
+                this.getName(),
+                mSystemImageAosp,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                false);
 
         // Check a valid AVD .ini file
         Path parentFolder = mAvdFolder.getParent();
         String avdIniName = this.getName() + ".ini";
         Path avdIniFile = parentFolder.resolve(avdIniName).toAbsolutePath();
         assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
-        AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile);
         assertThat(avdInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.OK);
         PathSubject.assertThat(avdInfo.getDataFolderPath()).isEqualTo(mAvdFolder);
 
@@ -688,14 +676,14 @@ public class AvdManagerTest extends TestCase {
                         new BufferedWriter(new OutputStreamWriter(corruptedStream))) {
             corruptedWriter.write("[invalid syntax]\n");
         }
-        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(avdIniFile, log);
+        AvdInfo corruptedInfo = mAvdManager.parseAvdInfo(avdIniFile);
         assertThat(corruptedInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check a non-existent AVD .ini file
         String noSuchIniName = "noSuch.ini";
         Path noSuchIniFile = parentFolder.resolve(noSuchIniName);
         assertFalse("Found unexpected noSuch.ini in " + parentFolder, Files.exists(noSuchIniFile));
-        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(noSuchIniFile, log);
+        AvdInfo noSuchInfo = mAvdManager.parseAvdInfo(noSuchIniFile);
         assertThat(noSuchInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
 
         // Check an empty AVD .ini file
@@ -705,7 +693,7 @@ public class AvdManagerTest extends TestCase {
                 Files.createFile(emptyIniFile));
         assertTrue("Expected empty AVD .ini in " + parentFolder, Files.exists(emptyIniFile));
         assertThat(Files.size(emptyIniFile)).isEqualTo(0);
-        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile, log);
+        AvdInfo emptyInfo = mAvdManager.parseAvdInfo(emptyIniFile);
         assertThat(emptyInfo.getStatus()).isEqualTo(AvdInfo.AvdStatus.ERROR_CORRUPTED_INI);
     }
 

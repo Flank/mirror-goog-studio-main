@@ -85,7 +85,7 @@ class AvdManager(
         // It fails to generate a snapshot image if you try to create two AVDs with a same name
         // simultaneously. https://issuetracker.google.com/issues/206798666
         return runWithMultiProcessLocking(deviceName) {
-            avdManager.reloadAvds(logger)
+            avdManager.reloadAvds()
             val info = avdManager.getAvd(deviceName, false)
             info?.let {
                 if (info.status == AvdStatus.OK) {
@@ -167,8 +167,7 @@ class AvdManager(
                 device.bootProps,
                 device.hasPlayStore(),
                 false,
-                false,
-                logger
+                false
         )
     }
 
@@ -248,7 +247,7 @@ class AvdManager(
      * Returns the names of all avds currently in the shared avd folder.
      */
     fun allAvds(): List<String> {
-        avdManager.reloadAvds(logger)
+        avdManager.reloadAvds()
         return avdManager.allAvds.map {
             it.name
         }
@@ -262,11 +261,11 @@ class AvdManager(
      * @param avds names of the avds to be deleted.
      */
     fun deleteAvds(avds: List<String>) {
-        avdManager.reloadAvds(logger)
+        avdManager.reloadAvds()
         for(avdName in avds) {
             val avdInfo = avdManager.getAvd(avdName, false)
             if (avdInfo != null) {
-                avdManager.deleteAvd(avdInfo, logger)
+                avdManager.deleteAvd(avdInfo)
             } else {
                 logger.warning("Failed to delete avd: $avdName.")
             }
