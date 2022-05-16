@@ -22,20 +22,17 @@ import com.android.annotations.Nullable;
 import com.android.io.CancellableFileIo;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.ISystemImage;
-import com.android.sdklib.devices.Abi;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
 
-/**
- * An immutable structure describing an Android Virtual Device.
- */
-public final class AvdInfo implements Comparable<AvdInfo> {
+/** An immutable structure describing an Android Virtual Device. */
+public final class AvdInfo {
 
     /**
      * Status for an {@link AvdInfo}. Indicates whether or not this AVD is valid.
@@ -64,8 +61,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     private final String mName;
     private final Path mIniFile;
     private final Path mFolderPath;
-    /** An immutable map of properties. This must not be modified. Map can be empty. Never null. */
-    private final Map<String, String> mProperties;
+    @NonNull private final ImmutableMap<String, String> mProperties;
     private final AvdStatus mStatus;
     private final ISystemImage mSystemImage;
     private final boolean mHasPlayStore;
@@ -79,7 +75,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param iniFile The path to the config.ini file
      * @param folderPath The path to the data directory
      * @param systemImage The system image.
-     * @param properties The property map. If null, an empty map will be created.
+     * @param properties The configuration properties. If null, an empty map will be created.
      */
     public AvdInfo(
             @NonNull String name,
@@ -87,8 +83,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
             @NonNull Path folderPath,
             @NonNull ISystemImage systemImage,
             @Nullable Map<String, String> properties) {
-         this(name, iniFile, folderPath,
-              systemImage, properties, AvdStatus.OK);
+        this(name, iniFile, folderPath, systemImage, properties, AvdStatus.OK);
     }
 
     /**
@@ -100,7 +95,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * @param iniFile The path to the config.ini file
      * @param folderPath The path to the data directory
      * @param systemImage The system image. Can be null if the image wasn't found.
-     * @param properties The property map. If null, an empty map will be created.
+     * @param properties The configuration properties. If null, an empty map will be created.
      * @param status The {@link AvdStatus} of this AVD. Cannot be null.
      */
     public AvdInfo(
@@ -114,10 +109,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         mIniFile = iniFile;
         mFolderPath = folderPath;
         mSystemImage = systemImage;
-        mProperties =
-                properties == null
-                        ? Collections.emptyMap()
-                        : Collections.unmodifiableMap(properties);
+        mProperties = properties == null ? ImmutableMap.of() : ImmutableMap.copyOf(properties);
         mStatus = status;
         String psString = mProperties.get(AvdManager.AVD_INI_PLAYSTORE_ENABLED);
         mHasPlayStore = "true".equalsIgnoreCase(psString) || "yes".equalsIgnoreCase(psString);
@@ -211,33 +203,6 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         return "";                                                              // $NON-NLS-1$
     }
 
-    /** Convenience function to return a more user friendly name of the abi type. */
-    @NonNull
-    public static String getPrettyAbiType(@NonNull AvdInfo avdInfo) {
-        return getPrettyAbiType(avdInfo.getTag(), avdInfo.getAbiType());
-    }
-
-    /** Convenience function to return a more user friendly name of the abi type. */
-    @NonNull
-    public static String getPrettyAbiType(@NonNull ISystemImage sysImg) {
-        return getPrettyAbiType(sysImg.getTag(), sysImg.getAbiType());
-    }
-
-    /** Convenience function to return a more user friendly name of the abi type. */
-    @NonNull
-    public static String getPrettyAbiType(@NonNull IdDisplay tag, @NonNull String rawAbi) {
-        String s = "";                                                          // $NON-NLS-1$
-
-        if (!SystemImage.DEFAULT_TAG.equals(tag)) {
-            s = tag.getDisplay() + ' ';
-        }
-
-        Abi abi = Abi.getEnum(rawAbi);
-        s += (abi == null ? rawAbi : abi.getDisplayName()) + " (" + rawAbi + ')';
-
-        return s;
-    }
-
     /**
      * Gets the system image for this AVD. Can be null if the system image is not found.
      */
@@ -260,7 +225,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
      * purpose of the AVD .ini file is to be able to change this folder. Callers should however use
      * this to create a new {@link AvdInfo} to setup its data folder to the default.
      *
-     * <p>The default is {@code getDefaultAvdFolder()/avdname.avd/}.
+     * <p>The default is {@code getBaseAvdFolder()/avdname.avd/}.
      *
      * <p>For an actual existing AVD, callers must use {@link #getDataFolderPath()} instead.
      *
@@ -289,7 +254,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     /**
      * Helper method that returns the .ini {@link File} for a given AVD name.
      *
-     * <p>The default is {@code getDefaultAvdFolder()/avdname.ini}.
+     * <p>The default is {@code getBaseAvdFolder()/avdname.ini}.
      *
      * @param manager The AVD Manager, used to get the AVD storage path.
      * @param avdName The name of the desired AVD.
@@ -328,9 +293,9 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     }
 
     /**
-     * Returns an unmodifiable map of properties for the AVD.
-     * This can be empty but not null.
-     * Callers must NOT try to modify this immutable map.
+     * Returns an ImmutableMap of the AVD's configuration properties; i.e. the properties stored in
+     * the <code>config.ini</code> file. Keys are defined in the <code>AVD_INI*</code> fields of
+     * {@link AvdManager}.
      */
     @NonNull
     public Map<String, String> getProperties() {
@@ -373,43 +338,6 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         }
 
         return null;
-    }
-
-    /**
-     * Compares this object with the specified object for order. Returns a negative integer, zero,
-     * or a positive integer as this object is less than, equal to, or greater than the specified
-     * object.
-     *
-     * @param o the Object to be compared.
-     * @return a negative integer, zero, or a positive integer as this object is less than, equal
-     *     to, or greater than the specified object.
-     */
-    @Override
-    public int compareTo(@NonNull AvdInfo o) {
-        int imageDiff;
-        if (mSystemImage == null) {
-            if (o.mSystemImage == null) {
-                imageDiff = 0;
-            }
-            else {
-                imageDiff = -1;
-            }
-        }
-        else {
-            if (o.mSystemImage == null) {
-                imageDiff = 1;
-            }
-            else {
-                imageDiff = mSystemImage.compareTo(o.mSystemImage);
-            }
-        }
-
-        if (imageDiff == 0) {
-            // same image? compare on the avd name
-            return mName.compareTo(o.mName);
-        }
-
-        return imageDiff;
     }
 
     @NonNull
