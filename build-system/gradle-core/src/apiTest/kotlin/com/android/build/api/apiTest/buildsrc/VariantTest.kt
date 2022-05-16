@@ -152,7 +152,6 @@ class VariantTest: VariantApiBaseTest(
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
 
                 apply<CustomPlugin>()

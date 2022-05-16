@@ -45,7 +45,6 @@ class BuildConfigApiTests: VariantApiBaseTest(
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             android {
                 ${testingElements.addCommonAndroidBuildLogic()}
@@ -123,7 +122,6 @@ The added field is used in the MainActivity.kt file.
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import org.gradle.api.DefaultTask
             import org.gradle.api.file.RegularFileProperty

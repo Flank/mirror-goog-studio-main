@@ -35,7 +35,6 @@ class WorkerEnabledTransformationTest: VariantApiBaseTest(TestType.Script) {
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import java.io.Serializable
             import javax.inject.Inject

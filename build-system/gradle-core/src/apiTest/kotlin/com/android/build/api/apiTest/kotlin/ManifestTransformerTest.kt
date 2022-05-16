@@ -35,7 +35,6 @@ class ManifestTransformerTest: VariantApiBaseTest(
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             ${testingElements.getGitVersionTask()}
 

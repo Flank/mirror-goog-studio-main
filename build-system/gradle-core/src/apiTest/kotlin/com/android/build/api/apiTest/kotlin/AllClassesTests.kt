@@ -486,7 +486,6 @@ expected result : a list of classes and jar files.
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import com.android.build.api.variant.ScopedArtifacts
             import com.android.build.api.artifact.ScopedArtifact

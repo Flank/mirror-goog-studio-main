@@ -36,7 +36,6 @@ class GetApkFromBundleTest: VariantApiBaseTest(TestType.Script) {
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import org.gradle.api.file.RegularFileProperty
             import org.gradle.api.DefaultTask

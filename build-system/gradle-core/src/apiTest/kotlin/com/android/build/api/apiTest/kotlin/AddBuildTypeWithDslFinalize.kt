@@ -36,7 +36,6 @@ class AddBuildTypeWithDslFinalize: VariantApiBaseTest(TestType.Script) {
                     |plugins {
                     |    id("com.android.application")
                     |    kotlin("android")
-                    |    kotlin("android.extensions")
                     |}
 
                     |android {
