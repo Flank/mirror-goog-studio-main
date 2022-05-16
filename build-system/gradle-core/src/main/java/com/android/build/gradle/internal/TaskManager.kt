@@ -2053,21 +2053,25 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Merge Java Resources.
         createMergeJavaResTask(creationConfig)
 
-        val isAndroidTestCoverageEnabled =
-            creationConfig.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
+        // -----------------------------------------------------------------------------------------
+        // The following task registrations MUST follow the order:
+        //   ASM API -> Legacy transforms -> jacoco transforms
+        // -----------------------------------------------------------------------------------------
+
+        maybeCreateTransformClassesWithAsmTask(creationConfig as ComponentImpl)
 
         // ----- External Transforms -----
         val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
 
         // New gradle-transform jacoco instrumentation support.
-        if (isAndroidTestCoverageEnabled) {
+        if (creationConfig.isAndroidTestCoverageEnabled &&
+            !creationConfig.componentType.isForTesting) {
             if (registeredLegacyTransform) {
                 createJacocoTaskWithLegacyTransformSupport(creationConfig)
             } else {
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(creationConfig as ComponentImpl)
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -2326,7 +2330,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val classesFromLegacyTransforms =
             creationConfig.transformManager.getPipelineOutputAsFileCollection(
                 { _, _ -> true},
-                { _, scopes -> scopes == setOf(
+                { types, _ -> types.contains(
                     com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES) }
             )
 
