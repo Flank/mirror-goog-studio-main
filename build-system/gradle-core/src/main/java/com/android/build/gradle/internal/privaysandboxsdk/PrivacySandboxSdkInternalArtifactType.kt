@@ -27,6 +27,10 @@ PrivacySandboxSdkInternalArtifactType<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
 ) : Artifact.Single<T>(kind, category) {
+
+    // generated manifest file that contains permissions to be automatically added to the sandbox.
+    object SANDBOX_MANIFEST: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+
     // final .asb file ready to be uploaded to Play Store
     object ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
 }

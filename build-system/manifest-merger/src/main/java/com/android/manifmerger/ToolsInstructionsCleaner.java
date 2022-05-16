@@ -16,6 +16,8 @@
 
 package com.android.manifmerger;
 
+import static com.android.manifmerger.MergingReport.Result.ERROR;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
@@ -23,16 +25,13 @@ import com.android.utils.ILogger;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.android.manifmerger.MergingReport.Result.ERROR;
 
 /**
  * Removes all "tools:" statements from the resulting xml.
@@ -119,7 +118,7 @@ public class ToolsInstructionsCleaner {
                     } else {
                         // anything else, we just clean the attribute unless we are merging for
                         // libraries.
-                        if (mergeType.isKeepToolsAttributeRequired()) {
+                        if (mergeType.isKeepToolsAttributeRequired(attribute.getLocalName())) {
                             element.removeAttributeNS(
                                     attribute.getNamespaceURI(), attribute.getLocalName());
                         }

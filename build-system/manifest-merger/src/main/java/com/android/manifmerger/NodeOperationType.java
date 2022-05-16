@@ -17,6 +17,8 @@
 package com.android.manifmerger;
 
 import com.android.utils.SdkUtils;
+import com.google.common.collect.Lists;
+import java.util.List;
 
 /**
  * Defines node operation types as it can be provided by user's through attributes on the
@@ -114,4 +116,18 @@ public enum NodeOperationType implements ConvertibleName {
      * local xml name for overriding uses-sdk operation types.
      */
     static final String OVERRIDE_USES_SDK = "overrideLibrary";
+
+    /**
+     * Flag that indicate to Play Store that the annotated element is required when running in the
+     * compatibility mode of the Privacy Sandbox runtime.
+     */
+    static final String REQUIRED_BY_PRIVACY_SANDBOX_SDK = "requiredByPrivacySandboxSdk";
+
+    /**
+     * List of xml local name attributes that are allowed to be present in the final merged manifest
+     *
+     * <p>Essentially, those attributes will be processed by the Play Store, not AGP.
+     */
+    static final List<String> LIST_OF_ALLOWED_RUNTIME_ATTRIBUTES =
+            Lists.newArrayList(REQUIRED_BY_PRIVACY_SANDBOX_SDK);
 }

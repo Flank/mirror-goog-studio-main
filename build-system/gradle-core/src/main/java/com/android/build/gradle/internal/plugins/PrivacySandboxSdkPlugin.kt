@@ -19,15 +19,14 @@ package com.android.build.gradle.internal.plugins
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
-import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
+import com.android.build.gradle.tasks.PrivacySandboxSdkManifestGeneratorTask
+import com.android.build.gradle.tasks.PrivacySandboxSdkManifestMergerTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
-import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.file.RegularFile
@@ -81,12 +80,13 @@ class PrivacySandboxSdkPlugin @Inject constructor(
     }
 
     override fun createTasks(project: Project) {
-        createTasks<FusedLibraryVariantScope>(
+        createTasks(
             project,
             variantScope,
             listOf(
                 FusedLibraryClassesRewriteTask.CreateAction::class.java,
-                FusedLibraryManifestMergerTask.CreationAction::class.java,
+                PrivacySandboxSdkManifestGeneratorTask.CreationAction::class.java,
+                PrivacySandboxSdkManifestMergerTask.CreationAction::class.java,
                 FusedLibraryMergeResourcesTask.CreationAction::class.java,
                 FusedLibraryMergeClasses.CreationAction::class.java,
                 FusedLibraryBundleClasses.CreationAction::class.java,

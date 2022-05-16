@@ -40,6 +40,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier
 
@@ -72,10 +73,10 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
     ) {
         val taskProviders = TaskFactoryImpl(project.tasks).let { taskFactory ->
             tasksCreationActions.map { creationAction ->
-                taskFactory.register(
-                    creationAction
-                        .getConstructor(TASK_SCOPE::class.java)
-                        .newInstance(variantScope)
+                createCreationAction(
+                    taskFactory,
+                    creationAction,
+                    TASK_SCOPE::class.java,
                 )
             }
         }
@@ -86,6 +87,26 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
                 assembleTask.dependsOn(variantScope.artifacts.get(artifactTypeForPublication))
             } ?: taskProviders.forEach {  assembleTask.dependsOn(it) }
         }
+    }
+
+    fun createCreationAction(
+        taskFactory: TaskFactoryImpl,
+        creationAction: Class<out TaskCreationAction<out Task>>,
+        creationActionConstructorParameterType: Class<*>,
+    ): TaskProvider<out Task> {
+
+        var parameterType = creationActionConstructorParameterType
+        while (parameterType != Object::class.java) {
+            try {
+                creationAction.getConstructor(parameterType).also {
+                    return taskFactory.register(it.newInstance(variantScope))
+                }
+            } catch(e: NoSuchMethodException) {
+                // it's ok, let's try with the parent class until we reach object.
+            }
+            parameterType = parameterType.superclass
+        }
+        throw NoSuchMethodException("Cannot find constructor for $creationAction with a parameter of type $creationActionConstructorParameterType")
     }
 
     /**

@@ -115,6 +115,7 @@ abstract class AndroidPluginBaseServices(
 
         this.project = project
         AndroidLocationsBuildService.RegistrationAction(project).execute()
+
         checkMinJvmVersion()
         val projectOptions: ProjectOptions = projectServices.projectOptions
         if (projectOptions.isAnalyticsEnabled) {
@@ -125,6 +126,13 @@ abstract class AndroidPluginBaseServices(
                 NoOpAnalyticsService::class.java
             ) { }
         }
+
+        SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+            project,
+            SyncOptions.getModelQueryMode(projectOptions),
+            SyncOptions.getErrorFormatMode(projectOptions)
+        ).execute()
+
         registerDependencyCheck(project, projectOptions)
         checkPathForErrors()
         val attributionFileLocation =

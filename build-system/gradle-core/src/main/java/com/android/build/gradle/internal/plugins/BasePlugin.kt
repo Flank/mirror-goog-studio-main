@@ -364,12 +364,6 @@ abstract class BasePlugin<
 
         Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute()
         Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute()
-        SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
-            project,
-            SyncOptions.getModelQueryMode(projectOptions),
-            SyncOptions.getErrorFormatMode(projectOptions)
-        ).execute()
-
         val locationsProvider = getBuildService(
             project.gradle.sharedServices,
             AndroidLocationsBuildService::class.java,
