@@ -52,7 +52,8 @@ class AvdManager(
     private val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader>,
     private val sdkHandler: AndroidSdkHandler,
     private val androidLocationsProvider: AndroidLocationsProvider,
-    private val snapshotHandler: AvdSnapshotHandler
+    private val snapshotHandler: AvdSnapshotHandler,
+    val deviceLockManager: VirtualManagedDeviceLockManager
 ) {
 
     private val sdkDirectory: File
@@ -214,15 +215,17 @@ class AvdManager(
 
             val adbExecutable = versionedSdkLoader.get().adbExecutableProvider.get().asFile
 
-            logger.verbose("Creating snapshot for $deviceName")
-            snapshotHandler.generateSnapshot(
-                deviceName,
-                emulatorExecutable,
-                adbExecutable,
-                avdFolder,
-                emulatorGpuFlag,
-                logger
-            )
+            deviceLockManager.lock(1).use {
+                logger.verbose("Creating snapshot for $deviceName")
+                snapshotHandler.generateSnapshot(
+                    deviceName,
+                    emulatorExecutable,
+                    adbExecutable,
+                    avdFolder,
+                    emulatorGpuFlag,
+                    logger
+                )
+            }
 
             if (snapshotHandler.checkSnapshotLoadable(
                     deviceName,

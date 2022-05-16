@@ -37,6 +37,9 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 
+// TODO(b/233249957): find a way to compute the default based on resources.
+private const val DEFAULT_MAX_GMDS = 4
+
 /**
  * Build Service for loading and creating Android Virtual Devices.
  */
@@ -56,6 +59,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         val avdLocation: DirectoryProperty
         val showEmulatorKernelLogging: Property<Boolean>
         val deviceSetupTimeoutMinutes: Property<Int>
+        val maxConcurrentDevices: Property<Int>
     }
 
     private val avdManager: AvdManager by lazy {
@@ -73,9 +77,15 @@ abstract class AvdComponentsBuildService @Inject constructor(
             AvdSnapshotHandler(
                 parameters.showEmulatorKernelLogging.get(),
                 parameters.deviceSetupTimeoutMinutes.getOrNull()
+            ),
+            VirtualManagedDeviceLockManager(
+                locationsService,
+                parameters.maxConcurrentDevices.getOrElse(DEFAULT_MAX_GMDS)
             )
         )
     }
+
+    val lockManager: VirtualManagedDeviceLockManager = avdManager.deviceLockManager
 
     /**
      * Returns the location of the shared avd folder.
@@ -166,6 +176,9 @@ abstract class AvdComponentsBuildService @Inject constructor(
                 projectOptions[BooleanOption.GRADLE_MANAGED_DEVICE_EMULATOR_SHOW_KERNEL_LOGGING])
             parameters.deviceSetupTimeoutMinutes.set(
                 projectOptions[IntegerOption.GRADLE_MANAGED_DEVICE_SETUP_TIMEOUT_MINUTES]
+            )
+            parameters.maxConcurrentDevices.set(
+                projectOptions[IntegerOption.GRADLE_MANAGED_DEVICE_MAX_CONCURRENT_DEVICES]
             )
         }
     }

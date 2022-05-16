@@ -36,15 +36,21 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
+import org.mockito.Answers.RETURNS_DEEP_STUBS
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.junit.MockitoJUnit
 
 @RunWith(JUnit4::class)
 class AvdManagerTest {
+
+    @get:Rule
+    val mockitoRule = MockitoJUnit.rule()
 
     @get:Rule
     val tmpFolder = TemporaryFolder()
@@ -61,6 +67,9 @@ class AvdManagerTest {
     private lateinit var adbExecutable: Path
     private lateinit var snapshotHandler: AvdSnapshotHandler
     private lateinit var versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
+
+    @Mock(answer = RETURNS_DEEP_STUBS)
+    lateinit var lockManager: VirtualManagedDeviceLockManager
 
     @Before
     fun setup() {
@@ -89,7 +98,8 @@ class AvdManagerTest {
             FakeGradleProvider(versionedSdkLoader),
             sdkHandler,
             AndroidLocationsSingleton,
-            snapshotHandler
+            snapshotHandler,
+            lockManager
         )
     }
 
