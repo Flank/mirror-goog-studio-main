@@ -157,6 +157,7 @@ import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.UTryExpression
 import org.jetbrains.uast.UTypeReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
+import org.jetbrains.uast.UastBinaryExpressionWithTypeKind
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.expressions.UInjectionHost
@@ -188,6 +189,13 @@ import kotlin.math.min
  * requirement in the manifest).
  */
 class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScanner {
+    init {
+      // Trigger <clinit> of UastBinaryExpressionWithTypeKind early
+      // to avoid a class initialization deadlock (b/232441126)
+      //noinspection NoOp
+      UastBinaryExpressionWithTypeKind.UNKNOWN
+    }
+
     private var apiDatabase: ApiLookup? = null
 
     override fun beforeCheckRootProject(context: Context) {
