@@ -39,7 +39,6 @@ class AddCustomSourceTest: VariantApiBaseTest(TestType.Script) {
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
 
                 android {
@@ -97,7 +96,6 @@ To register the custom sources, you just need to use
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
 
                 abstract class AddCustomSources: DefaultTask() {
@@ -224,7 +222,6 @@ where source files will be generated and added to the compilation task.
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
 
                 abstract class AddCustomSources: DefaultTask() {
@@ -358,7 +355,6 @@ where source files will be generated and added to the compilation task.
                     plugins {
                             id("com.android.application")
                             kotlin("android")
-                            kotlin("android.extensions")
                     }
 
                     android {

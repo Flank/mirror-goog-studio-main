@@ -44,7 +44,6 @@ class AssetsTests: VariantApiBaseTest(
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
 
             import com.android.build.api.artifact.MultipleArtifact

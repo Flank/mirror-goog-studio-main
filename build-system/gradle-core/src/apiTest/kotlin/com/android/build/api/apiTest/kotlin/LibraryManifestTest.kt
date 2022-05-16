@@ -72,7 +72,6 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             android {
                     ${testingElements.addCommonAndroidBuildLogic()}

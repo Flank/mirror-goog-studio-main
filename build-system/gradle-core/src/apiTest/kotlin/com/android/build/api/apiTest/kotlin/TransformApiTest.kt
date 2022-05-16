@@ -58,7 +58,6 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         plugins {
                 id("$plugin")
                 kotlin("android")
-                kotlin("android.extensions")
         }
         import org.gradle.api.DefaultTask
         import org.gradle.api.file.RegularFileProperty

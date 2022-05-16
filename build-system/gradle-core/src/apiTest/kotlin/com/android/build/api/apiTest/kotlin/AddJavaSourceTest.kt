@@ -59,7 +59,6 @@ class AddJavaSourceTest: VariantApiBaseTest(TestType.Script) {
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
                 import org.gradle.api.DefaultTask
                 import org.gradle.api.file.DirectoryProperty
@@ -226,7 +225,6 @@ where source files will be generated and added to the compilation task.
                 plugins {
                         id("com.android.application")
                         kotlin("android")
-                        kotlin("android.extensions")
                 }
                 import org.gradle.api.DefaultTask
                 import org.gradle.api.file.FileTree
