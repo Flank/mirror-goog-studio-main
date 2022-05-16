@@ -65,6 +65,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -119,8 +121,27 @@ public final class FakeAdbServer implements AutoCloseable {
 
     private volatile boolean mServerKeepAccepting = false;
 
+    private Set<String> mFeatures;
+    private static final Set<String> DEFAULT_FEATURES =
+            Collections.unmodifiableSet(
+                    new HashSet<>(
+                            Arrays.asList(
+                                    "push_sync",
+                                    "fixed_push_mkdir",
+                                    "shell_v2",
+                                    "apex",
+                                    "stat_v2",
+                                    "cmd",
+                                    "abb",
+                                    "abb_exec")));
+
     private FakeAdbServer() throws IOException {
+        this(DEFAULT_FEATURES);
+    }
+
+    private FakeAdbServer(Set<String> features) throws IOException {
         mServerSocket = new ServerSocket();
+        mFeatures = features;
     }
 
     public void start() throws IOException {
@@ -476,5 +497,17 @@ public final class FakeAdbServer implements AutoCloseable {
             }
             return mServer;
         }
+
+        public void setFeatures(@NonNull Set<String> features) {
+            mServer.setFeatures(features);
+        }
+    }
+
+    public Set<String> getFeatures() {
+        return mFeatures;
+    }
+
+    public void setFeatures(Set<String> features) {
+        mFeatures = features;
     }
 }

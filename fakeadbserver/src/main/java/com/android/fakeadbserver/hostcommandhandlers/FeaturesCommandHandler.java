@@ -21,10 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.fakeadbserver.CommandHandler;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.HashSet;
+import java.util.Set;
 
 /** host:features returns list of features. */
 // TODO: Refactor this class. Split in two. One for Device features and one fore Host features.
@@ -34,7 +35,6 @@ public class FeaturesCommandHandler extends HostCommandHandler {
     @NonNull public static final String HOST_COMMAND = "host-features";
 
     // By default, HOST supports all features.,
-    private static final String HOST_FEATURES = "push_sync,fixed_push_mkdir,shell_v2,apex,stat_v2,cmd,abb,abb_exec";
 
     @Override
     public boolean invoke(
@@ -46,11 +46,17 @@ public class FeaturesCommandHandler extends HostCommandHandler {
             OutputStream out = responseSocket.getOutputStream();
             if (device == null) {
                 // This is a host-features request
-                CommandHandler.writeOkayResponse(out, HOST_FEATURES); // Send ok and list of features.
+                CommandHandler.writeOkayResponse(
+                        out, String.join(",", fakeAdbServer.getFeatures()));
             }
             else {
-                String features = String.join(",", device.getFeatures());
-                CommandHandler.writeOkayResponse(out, features); // Send ok and list of features.
+                // This is a features request. It should contain only the features supported by
+                // both the server and the device.
+                Set deviceFeatures = device.getFeatures();
+                Set hostFeatures = fakeAdbServer.getFeatures();
+                Set commonFeatures = new HashSet(deviceFeatures);
+                commonFeatures.retainAll(hostFeatures);
+                CommandHandler.writeOkayResponse(out, String.join(",", commonFeatures));
             }
         } catch (IOException e) {
             // Ignored (this is from responseSocket.getOutputStream())
