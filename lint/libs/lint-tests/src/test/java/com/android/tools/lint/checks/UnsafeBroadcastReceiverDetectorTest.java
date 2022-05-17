@@ -294,6 +294,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
 
     @Nullable
     private static List<String> getProtectedBroadcasts() throws IOException {
+        // TODO: Migrate to PermissionDataGenerator
         String top = System.getenv("ANDROID_BUILD_TOP");
 
         // TODO: We should ship this file with the SDK!
