@@ -17,35 +17,40 @@
 package com.android.tools.appinspection.network.rules
 
 import studio.network.inspection.NetworkInspectorProtocol.MatchingText
+import studio.network.inspection.NetworkInspectorProtocol.MatchingText.Type.PLAIN
+import studio.network.inspection.NetworkInspectorProtocol.MatchingText.Type.REGEX
 import java.io.ByteArrayOutputStream
 import java.util.zip.GZIPOutputStream
 
-const val MATCHING_TEXT_TYPE_NOT_SPECIFIED = "MatchingText type not specified"
+const val MATCHING_TEXT_TYPE_UNEXPECTED = "MatchingText type not expected"
 const val FIELD_CONTENT_TYPE = "content-type"
 const val FIELD_CONTENT_ENCODING = "content-encoding"
 const val FIELD_RESPONSE_STATUS_CODE = "response-status-code"
 
-fun MatchingText.matches(text: String?): Boolean {
-    return this.text.isBlank() || text?.let { nonNullText ->
-        when (type) {
-            MatchingText.Type.PLAIN -> this.text == nonNullText
-            MatchingText.Type.REGEX -> Regex(this.text).matches(nonNullText)
-            else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
-        }
-    } == true
+/**
+ * Return true if this pattern matches the [text]. An undefined [MatchingText] matches all texts.
+ */
+fun MatchingText.matches(text: String?): Boolean = when (type) {
+    PLAIN -> this.text == text
+    REGEX -> text?.let { Regex(this.text).matches(text) } == true
+    else -> true
 }
 
+/**
+ * Return true if a [pattern] matches the [text]. An empty pattern matches all texts.
+ */
 fun wildCardMatches(pattern: String, text: String?): Boolean {
     return (pattern.isBlank()) || text?.let { wildCardToRegex(pattern).matches(text) } == true
 }
 
-fun MatchingText.toRegex(): Regex =
-    if (text.isBlank()) Regex(".*")
-    else when (type) {
-        MatchingText.Type.PLAIN -> Regex.fromLiteral(text)
-        MatchingText.Type.REGEX -> Regex(text)
-        else -> throw RuntimeException(MATCHING_TEXT_TYPE_NOT_SPECIFIED)
-    }
+/**
+ * Return the [Regex] for a [MatchingText].
+ */
+fun MatchingText.toRegex(): Regex = when (type) {
+    PLAIN -> Regex.fromLiteral(text)
+    REGEX -> Regex(text)
+    else -> throw RuntimeException(MATCHING_TEXT_TYPE_UNEXPECTED)
+}
 
 fun isContentCompressed(response: NetworkResponse): Boolean {
     val contentHeaderValues = response.responseHeaders[FIELD_CONTENT_ENCODING] ?: return false

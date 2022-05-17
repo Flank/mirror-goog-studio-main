@@ -45,12 +45,20 @@ class InterceptionRuleTest {
     @Test
     fun matchingTextMatchesTargets() {
         assertThat(wildCardMatches("", null)).isTrue()
+        assertThat(MatchingText.getDefaultInstance().matches(null)).isTrue()
 
-        val matchesAll = MatchingText.newBuilder().apply {
+        val matchesEmpty = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
             text = ""
         }.build()
-        assertThat(matchesAll.matches(null)).isTrue()
+        assertThat(matchesEmpty.matches(null)).isFalse()
+        assertThat(matchesEmpty.matches("")).isTrue()
+        val matchesRegexEmpty = MatchingText.newBuilder().apply {
+            type = MatchingText.Type.REGEX
+            text = ""
+        }.build()
+        assertThat(matchesRegexEmpty.matches(null)).isFalse()
+        assertThat(matchesRegexEmpty.matches("")).isTrue()
 
         val plainMatchingText = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
