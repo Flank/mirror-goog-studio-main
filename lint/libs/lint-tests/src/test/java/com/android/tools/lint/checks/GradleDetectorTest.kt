@@ -3133,6 +3133,8 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testSdkIndexLibrary() {
         val expectedFixes = if (GooglePlaySdkIndex.DEFAULT_SHOW_LINKS)
             """
+                Show URL for build.gradle line 7: View details in Google Play SDK Index:
+                http://index.example.url/
                 Show URL for build.gradle line 8: View details in Google Play SDK Index:
                 http://index.example.url/
                 Show URL for build.gradle line 5: View details in Google Play SDK Index:
@@ -3171,6 +3173,9 @@ class GradleDetectorTest : AbstractCheckTest() {
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
+                    build.gradle:7: Error: log4j:log4j version 1.2.13 has an associated message from its author [RiskyLibrary]
+                        compile 'log4j:log4j:1.2.13' // Critical BLOCKING
+                                ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.12' // OUTDATED BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
@@ -3180,7 +3185,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     build.gradle:13: Warning: com.example.ads.third.party:example version 7.2.0 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    1 errors, 2 warnings
+                    2 errors, 2 warnings
                 """
             ).expectFixDiffs(expectedFixes)
     }

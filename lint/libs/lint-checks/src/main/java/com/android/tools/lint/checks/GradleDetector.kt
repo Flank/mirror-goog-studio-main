@@ -1027,12 +1027,7 @@ open class GradleDetector : Detector(), GradleScanner {
                     if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
                         val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        reportCreated = report(context, cookie, DEPRECATED_LIBRARY, message, fix)
-                    }
-                    if ((!reportCreated) && sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, context.file)) {
-                        val message = "$groupId:$artifactId version $versionString has an associated message from its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        report(context, cookie, RISKY_LIBRARY, message, fix, overrideSeverity = Severity.INFORMATIONAL)
+                        report(context, cookie, DEPRECATED_LIBRARY, message, fix)
                     }
                 }
             }
