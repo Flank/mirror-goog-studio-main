@@ -269,6 +269,7 @@ com.android.tools:testutils
     com.android.tools:common (runtime)
     com.google.jimfs:jimfs (runtime)
     junit:junit (runtime)
+    org.apache.commons:commons-compress (runtime)
     org.easymock:easymock (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
     org.jetbrains.kotlin:kotlin-test (runtime)
