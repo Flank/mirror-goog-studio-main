@@ -16,13 +16,17 @@
 
 package com.android.tools.lint.checks.infrastructure
 
+import com.intellij.openapi.application.PathManager
 import java.io.File
 import java.net.URI
 import java.util.jar.JarFile
 
-fun findKotlinStdlibPath(): List<File> {
-    return findFromRuntimeClassPath(::isKotlinStdLib)
-}
+fun findKotlinStdlibPath(): List<File> =
+    findFromRuntimeClassPath(::isKotlinStdLib).ifEmpty {
+        // kotlin-stdlib might be in another jar, so use that.
+        PathManager.getJarForClass(KotlinVersion::class.java)?.let { listOf(it.toFile()) }
+            ?: error("Did not find kotlin-stdlib-jdk8 in classpath: ${System.getProperty("java.class.path")}")
+    }
 
 fun findFromRuntimeClassPath(accept: (File) -> Boolean): List<File> {
     val classPath: String = System.getProperty("java.class.path")
@@ -54,9 +58,6 @@ fun findFromRuntimeClassPath(accept: (File) -> Boolean): List<File> {
                 System.err.println("Could not load jar $jar: $e")
             }
         }
-    }
-    if (paths.isEmpty()) {
-        error("Did not find kotlin-stdlib-jdk8 in classpath: $classPath")
     }
     return paths
 }
