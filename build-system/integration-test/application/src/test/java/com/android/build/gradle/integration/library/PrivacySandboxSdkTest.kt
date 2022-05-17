@@ -16,31 +16,22 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.builder.core.ToolsRevisionUtils
+import com.android.testutils.apk.Dex
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(Parameterized::class)
-class PrivacySandboxSdkTest(
-    private val includePublishing: Boolean,
-) {
-
-    companion object {
-        @Parameterized.Parameters(name = "include_publishing = {0}")
-        @JvmStatic
-        fun data() = listOf(
-            true,
-            false,
-        )
-    }
+class PrivacySandboxSdkTest {
 
     private val androidLib1 = MinimalSubProject.lib("com.example.androidLib1").also {
         it.appendToBuild("""
@@ -54,23 +45,48 @@ class PrivacySandboxSdkTest(
                 <string name="string_from_android_lib_1">androidLib2</string>
               </resources>"""
         )
-    }
-    private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2")
-    private val privacySandboxSdk = MinimalSubProject.privacySandboxSdk("com.example.sdkLib1").also {
-        if (includePublishing) {
-            it.appendToBuild("""
-                apply plugin: 'maven-publish'
+        it.addFile(
+            "src/main/java/com/example/androidlib1/Example.java",
+            // language=java
+            """
+                package com.example.androidlib1;
 
+                class Example {
+
+                    public Example() {}
+
+                    public void f1() {}
+                }
+            """.trimIndent()
+        )
+    }
+    private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2").also {
+        it.addFile(
+            "src/main/java/com/example/androidlib2/Example.java",
+            // language=java
+            """
+                package com.example.androidlib2;
+
+                class Example {
+
+                    public Example() {}
+
+                    public void f2() {}
+                }
+            """.trimIndent()
+        )
+    }
+
+    private val privacySandboxSdk = MinimalSubProject.privacySandboxSdk("com.example.sdkLib1").also {
+        it.appendToBuild(
+            """
                 dependencies {
                     include project(":androidLib1")
                     include project(":androidLib2")
                 }
-                """.trimIndent())
-        }
-        it.appendToBuild(
-            """
+
                 android {
-                    compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()}
+                    compileSdk = $DEFAULT_COMPILE_SDK_VERSION
                     minSdk = $DEFAULT_MIN_SDK_VERSION
                 }
                 """.trimIndent()
@@ -89,24 +105,53 @@ class PrivacySandboxSdkTest(
         ).create()
 
     @Test
-    fun test() {
-
-        if (includePublishing) {
-            project
-                .execute(":sdkLib1:assemble", "generatePomFileForMavenPublication", "generateMetadataFileForMavenPublication")
-        } else {
-            project.execute(":sdkLib1:assemble")
-        }
+    fun smokeTest() {
+        project.execute(":sdkLib1:assemble")
         val sdkLib1BuildDir = project.getSubproject(":sdkLib1").buildDir
-        File(sdkLib1BuildDir, "packageJar/classes.jar").also { jarFile ->
-            println("Testing ${jarFile.absolutePath}")
-            Truth.assertThat(jarFile.exists()).isTrue()
+        assertThat(sdkLib1BuildDir.resolve("packageJar/classes.jar").isFile).isTrue()
+    }
+
+    @Test
+    fun testPublishing() {
+        project.getSubproject("sdkLib1").buildFile.appendText("""
+            apply plugin: 'maven-publish'
+        """.trimIndent())
+
+        project.executor().run(":sdkLib1:assemble", "generatePomFileForMavenPublication", "generateMetadataFileForMavenPublication")
+        val sdkLib1BuildDir = project.getSubproject(":sdkLib1").buildDir
+        assertThat(sdkLib1BuildDir.resolve("packageJar/classes.jar").isFile).isTrue()
+        sdkLib1BuildDir.resolve("publications/maven").also { publicationDir ->
+            assertThat(File(publicationDir, "pom-default.xml").isFile).isTrue()
+            assertThat(File(publicationDir, "module.json").isFile).isTrue()
         }
-        if (includePublishing) {
-            File(sdkLib1BuildDir, "publications/maven").also { publicationDir ->
-                Truth.assertThat(File(publicationDir, "pom-default.xml").exists()).isTrue()
-                Truth.assertThat(File(publicationDir, "module.json").exists()).isTrue()
-            }
-        }
+    }
+
+    @Test
+    fun testDexing() {
+        project.execute(":sdkLib1:mergeDex")
+
+        val dex = Dex(
+            FileUtils.join(
+                project.getSubproject(":sdkLib1").intermediatesDir,
+                "dex",
+                "single",
+                "classes.dex"
+            )
+        )
+
+        assertThat(dex.classes.keys).containsAtLeastElementsIn(
+            listOf(
+                "Lcom/example/androidlib1/Example;",
+                "Lcom/example/androidlib2/Example;",
+            )
+        )
+
+        assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map {
+            it.name
+        }).contains("f1")
+
+        assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map {
+            it.name
+        }).contains("f2")
     }
 }

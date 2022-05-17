@@ -221,7 +221,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
         workerExecutor.noIsolation().submit(DexMergingTaskDelegate::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.initialize(
-                sharedParams, numberOfBuckets, dexDirsOrJars, outputDir, inputChanges.isIncremental,
+                sharedParams, numberOfBuckets.get(), dexDirsOrJars, outputDir, inputChanges.isIncremental,
                 fileChanges?.toSerializable(),
                 mainDexListOutput = mainDexListOutput
             )
@@ -534,7 +534,7 @@ enum class DexMergingAction {
 @VisibleForTesting
 abstract class DexMergingTaskDelegate : ProfileAwareWorkAction<DexMergingTaskDelegate.Params>() {
 
-    abstract class Params : ProfileAwareWorkAction.Parameters() {
+    abstract class Params : Parameters() {
 
         abstract val sharedParams: Property<DexMergingTask.SharedParams>
         abstract val numberOfBuckets: Property<Int>
@@ -547,12 +547,12 @@ abstract class DexMergingTaskDelegate : ProfileAwareWorkAction<DexMergingTaskDel
 
         fun initialize(
             sharedParams: DexMergingTask.SharedParams,
-            numberOfBuckets: Property<Int>,
+            numberOfBuckets: Int,
             dexDirsOrJars: List<File>,
             outputDir: DirectoryProperty,
             incremental: Boolean,
             fileChanges: SerializableFileChanges?,
-            mainDexListOutput: RegularFileProperty
+            mainDexListOutput: RegularFileProperty?
         ) {
             this.sharedParams.set(sharedParams)
             this.numberOfBuckets.set(numberOfBuckets)
@@ -560,7 +560,7 @@ abstract class DexMergingTaskDelegate : ProfileAwareWorkAction<DexMergingTaskDel
             this.outputDir.set(outputDir)
             this.incremental.set(incremental)
             this.fileChanges.set(fileChanges)
-            this.mainDexListOutput.set(mainDexListOutput)
+            mainDexListOutput?.let { this.mainDexListOutput.set(it) }
         }
     }
 

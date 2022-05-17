@@ -436,7 +436,6 @@ class DexArchiveBuilderDelegateTest {
             inputJarHashesFile = inputJarHashesFile,
             desugarClasspathChangedClasses = emptySet(),
             desugarGraphDir =  tmpDir.newFolder().takeIf { java8Desugaring == VariantScope.Java8LangSupport.D8 },
-            projectVariant = "myVariant",
             numberOfBuckets = numberOfBuckets,
             workerExecutor = workerExecutor,
             dexParams = DexParameters(
