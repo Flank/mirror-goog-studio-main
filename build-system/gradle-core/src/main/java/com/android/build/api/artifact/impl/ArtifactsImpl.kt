@@ -62,14 +62,6 @@ class ArtifactsImpl(
     internal val buildDirectory = project.layout.buildDirectory
     private val outstandingRequests = Collections.synchronizedList(ArrayList<ArtifactOperationRequest>())
 
-    init {
-        @Suppress("DEPRECATION")
-        republish(MultipleArtifact.PROJECT_CLASSES_DIRS, MultipleArtifact.ALL_CLASSES_DIRS)
-
-        @Suppress("DEPRECATION")
-        republish(MultipleArtifact.PROJECT_CLASSES_JARS, MultipleArtifact.ALL_CLASSES_JARS)
-    }
-
     override fun getBuiltArtifactsLoader(): BuiltArtifactsLoader {
         return BuiltArtifactsLoaderImpl()
     }
@@ -300,8 +292,8 @@ class ArtifactsImpl(
     }
 
     private val allClasses = project.files().from(
-        getAll(MultipleArtifact.PROJECT_CLASSES_DIRS),
-        getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
+        getAll(MultipleArtifact.ALL_CLASSES_DIRS),
+        getAll(MultipleArtifact.ALL_CLASSES_JARS)
     )
 
     /**
