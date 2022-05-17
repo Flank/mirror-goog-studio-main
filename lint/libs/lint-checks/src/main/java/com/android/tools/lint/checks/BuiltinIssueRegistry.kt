@@ -148,6 +148,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 FontDetector.FONT_VALIDATION,
                 FragmentDetector.ISSUE,
                 FullBackupContentDetector.ISSUE,
+                GestureBackNavDetector.ISSUE,
                 GetContentDescriptionOverrideDetector.ISSUE,
                 GetSignaturesDetector.ISSUE,
                 GradleDetector.ACCIDENTAL_OCTAL,
