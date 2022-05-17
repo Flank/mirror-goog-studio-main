@@ -17,6 +17,12 @@
 package com.android.sdklib.internal.avd;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.io.CancellableFileIo;
 import com.android.prefs.AbstractAndroidLocations;
@@ -44,11 +50,18 @@ import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-public class AvdManagerTest extends TestCase {
-
+@RunWith(JUnit4.class)
+public final class AvdManagerTest {
     private static final String ANDROID_PREFS_ROOT = "android-home";
+
+    @Rule public final TestName name = new TestName();
 
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
@@ -65,10 +78,8 @@ public class AvdManagerTest extends TestCase {
     private SystemImage mSystemImageChromeOs;
     private final FileSystem mMockFs = InMemoryFileSystems.createInMemoryFileSystem();
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @Before
+    public void setUp() throws Exception {
         Path root = InMemoryFileSystems.getSomeRoot(mMockFs);
         InMemoryFileSystems.recordExistingFile(
                 root.resolve("sdk/tools/lib/emulator/snapshots.img"));
@@ -87,7 +98,7 @@ public class AvdManagerTest extends TestCase {
                         mAndroidSdkHandler,
                         prefsRoot.resolve(AbstractAndroidLocations.FOLDER_AVD),
                         new NullLogger());
-        mAvdFolder = AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), false);
+        mAvdFolder = AvdInfo.getDefaultAvdFolder(mAvdManager, name.getMethodName(), false);
         mGradleManagedDeviceAvdManager =
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
@@ -96,7 +107,8 @@ public class AvdManagerTest extends TestCase {
                                 .resolve(AbstractAndroidLocations.FOLDER_GRADLE_AVD),
                         new NullLogger());
         mGradleManagedDeviceAvdFolder =
-                AvdInfo.getDefaultAvdFolder(mGradleManagedDeviceAvdManager, getName(), false);
+                AvdInfo.getDefaultAvdFolder(
+                        mGradleManagedDeviceAvdManager, name.getMethodName(), false);
 
         for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
             final String tagId = si.getTag().getId();
@@ -134,12 +146,12 @@ public class AvdManagerTest extends TestCase {
         assertNotNull(mSystemImageChromeOs);
     }
 
-    public void testCreateAvdWithoutSnapshot() {
-
+    @Test
+    public void createAvdWithoutSnapshot() {
         MockLog log = new MockLog();
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageAosp,
                 null,
                 null,
@@ -170,12 +182,12 @@ public class AvdManagerTest extends TestCase {
                 CancellableFileIo.exists(mAvdFolder.resolve("snapshots.img")));
     }
 
-    public void testCreateAvdWithUserdata() {
-
+    @Test
+    public void createAvdWithUserdata() {
         MockLog log = new MockLog();
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageApi21,
                 null,
                 null,
@@ -206,7 +218,8 @@ public class AvdManagerTest extends TestCase {
                 Files.exists(mAvdFolder.resolve("snapshots.img")));
     }
 
-    public void testCreateAvdWithBootProps() {
+    @Test
+    public void createAvdWithBootProps() {
         MockLog log = new MockLog();
         Map<String, String> expected = Maps.newTreeMap();
         expected.put("ro.build.display.id", "sdk-eng 4.3 JB_MR2 774058 test-keys");
@@ -215,7 +228,7 @@ public class AvdManagerTest extends TestCase {
 
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImagePlay,
                 null,
                 null,
@@ -235,12 +248,13 @@ public class AvdManagerTest extends TestCase {
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
     }
 
-    public void testCreateChromeOsAvd() {
+    @Test
+    public void createChromeOsAvd() {
         MockLog log = new MockLog();
 
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageChromeOs,
                 null,
                 null,
@@ -259,12 +273,13 @@ public class AvdManagerTest extends TestCase {
         assertEquals("x86_64", properties.get("hw.cpu.arch"));
     }
 
-    public void testCreateNonChromeOsAvd() {
+    @Test
+    public void createNonChromeOsAvd() {
         MockLog log = new MockLog();
 
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageAosp,
                 null,
                 null,
@@ -283,11 +298,12 @@ public class AvdManagerTest extends TestCase {
         assertEquals("x86", properties.get("hw.cpu.arch"));
     }
 
-    public void testCreateAvdForGradleManagedDevice() throws AndroidLocationsException {
+    @Test
+    public void createAvdForGradleManagedDevice() throws AndroidLocationsException {
         MockLog log = new MockLog();
         mGradleManagedDeviceAvdManager.createAvd(
                 mGradleManagedDeviceAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageAosp,
                 null,
                 null,
@@ -306,14 +322,14 @@ public class AvdManagerTest extends TestCase {
         assertThat(mAvdManager.getAllAvds()).isEmpty();
     }
 
-    public void testRenameAvd() {
-
+    @Test
+    public void renameAvd() {
         MockLog log = new MockLog();
         // Create an AVD
         AvdInfo origAvd =
                 mAvdManager.createAvd(
                         mAvdFolder,
-                        this.getName(),
+                        name.getMethodName(),
                         mSystemImageAosp,
                         null,
                         null,
@@ -341,7 +357,7 @@ public class AvdManagerTest extends TestCase {
                 Files.exists(mAvdFolder.resolve(AvdManager.USERDATA_QEMU_IMG)));
 
         // Create an AVD that is the same, but with a different name
-        String newName = this.getName() + "_renamed";
+        String newName = name.getMethodName() + "_renamed";
         AvdInfo renamedAvd =
                 mAvdManager.createAvd(
                         mAvdFolder,
@@ -382,8 +398,8 @@ public class AvdManagerTest extends TestCase {
                 Files.exists(mAvdFolder.resolve(AvdManager.USERDATA_QEMU_IMG)));
     }
 
-    public void testDuplicateAvd() throws Exception {
-
+    @Test
+    public void duplicateAvd() throws Exception {
         MockLog log = new MockLog();
         // Create an AVD
         HashMap<String, String> origAvdConfig = new HashMap<>();
@@ -392,7 +408,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo origAvd =
                 mAvdManager.createAvd(
                         mAvdFolder,
-                        this.getName(),
+                        name.getMethodName(),
                         mSystemImagePlay,
                         null,
                         null,
@@ -409,7 +425,7 @@ public class AvdManagerTest extends TestCase {
         InMemoryFileSystems.recordExistingFile(
                 mAvdFolder.resolve("hardware-qemu.ini"),
                 "avd.name="
-                        + this.getName()
+                        + name.getMethodName()
                         + "\nhw.sdCard.path="
                         + mAvdFolder.toAbsolutePath()
                         + "/sdcard.img");
@@ -418,7 +434,7 @@ public class AvdManagerTest extends TestCase {
         HashMap<String, String> newAvdConfig = new HashMap<>();
         newAvdConfig.put("testKey2", "newValue2");
 
-        String newName = "Copy_of_" + this.getName();
+        String newName = "Copy_of_" + name.getMethodName();
         AvdInfo duplicatedAvd =
                 mAvdManager.createAvd(
                         mAvdFolder,
@@ -487,7 +503,8 @@ public class AvdManagerTest extends TestCase {
         assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
     }
 
-    public void testPlayStoreProperty() {
+    @Test
+    public void playStoreProperty() {
         MockLog log = new MockLog();
         Map<String, String> expected = Maps.newTreeMap();
         expected.put("ro.build.display.id", "sdk-eng 4.3 JB_MR2 774058 test-keys");
@@ -497,7 +514,7 @@ public class AvdManagerTest extends TestCase {
         // Play Store image with Play Store device
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImagePlay,
                 null,
                 null,
@@ -516,7 +533,7 @@ public class AvdManagerTest extends TestCase {
         // Play Store image with non-Play Store device
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImagePlay,
                 null,
                 null,
@@ -532,7 +549,7 @@ public class AvdManagerTest extends TestCase {
         // Non-Play Store image with Play Store device
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageGoogle,
                 null,
                 null,
@@ -548,7 +565,7 @@ public class AvdManagerTest extends TestCase {
         // Wear image API 24 (no Play Store)
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageWear24,
                 null,
                 null,
@@ -565,7 +582,7 @@ public class AvdManagerTest extends TestCase {
         // (All Wear devices have Play Store)
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageWear25,
                 null,
                 null,
@@ -581,7 +598,7 @@ public class AvdManagerTest extends TestCase {
         // Wear image for China (no Play Store)
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageWearChina,
                 null,
                 null,
@@ -595,7 +612,8 @@ public class AvdManagerTest extends TestCase {
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 
-    public void testUpdateDeviceChanged() throws Exception {
+    @Test
+    public void updateDeviceChanged() throws Exception {
         MockLog log = new MockLog();
 
         DeviceManager devMan = DeviceManager.createInstance(mAndroidSdkHandler, log);
@@ -614,7 +632,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo myDeviceInfo =
                 mAvdManager.createAvd(
                         mAvdFolder,
-                        this.getName(),
+                        name.getMethodName(),
                         mSystemImageGoogle,
                         null,
                         null,
@@ -644,11 +662,12 @@ public class AvdManagerTest extends TestCase {
         assertEquals("yes",  updatedHardwareProperties.get("hw.keyboard"));
     }
 
-    public void testParseAvdInfo() throws Exception {
+    @Test
+    public void parseAvdInfo() throws Exception {
         MockLog log = new MockLog();
         mAvdManager.createAvd(
                 mAvdFolder,
-                this.getName(),
+                name.getMethodName(),
                 mSystemImageAosp,
                 null,
                 null,
@@ -661,7 +680,7 @@ public class AvdManagerTest extends TestCase {
 
         // Check a valid AVD .ini file
         Path parentFolder = mAvdFolder.getParent();
-        String avdIniName = this.getName() + ".ini";
+        String avdIniName = name.getMethodName() + ".ini";
         Path avdIniFile = parentFolder.resolve(avdIniName).toAbsolutePath();
         assertTrue("Expected AVD .ini in " + parentFolder, Files.exists(avdIniFile));
         AvdInfo avdInfo = mAvdManager.parseAvdInfo(avdIniFile);
