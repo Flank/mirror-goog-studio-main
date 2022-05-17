@@ -76,12 +76,10 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
         if (overriddenData != null) {
             // Do not check for exceptions, calling from a test
             index = Index.parseFrom(overriddenData)
-        }
-        else {
+        } else {
             try {
                 index = Index.parseFrom(GZIPInputStream(findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE)))
-            }
-            catch(exception: Exception) {
+            } catch (exception: Exception) {
                 logCachingError(exception.message)
                 try {
                     index = Index.parseFrom(GZIPInputStream(readDefaultData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE)))
@@ -272,7 +270,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
 
     protected open fun generateShowUrl(url: String?): LintFix? {
         return if (url != null)
-            // TODO(b/223240014): change to one that allows logging when the link is followed
+        // TODO(b/223240014): change to one that allows logging when the link is followed
             LintFix.ShowUrl("View details in Google Play SDK Index", null, url)
         else
             null

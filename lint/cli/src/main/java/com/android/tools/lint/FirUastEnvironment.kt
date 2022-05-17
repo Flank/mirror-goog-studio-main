@@ -53,7 +53,7 @@ class FirUastEnvironment private constructor(
 
     class Configuration private constructor(
         override val kotlinCompilerConfig: CompilerConfiguration
-    ): UastEnvironment.Configuration {
+    ) : UastEnvironment.Configuration {
         override var javaLanguageLevel: LanguageLevel? = null
 
         companion object {

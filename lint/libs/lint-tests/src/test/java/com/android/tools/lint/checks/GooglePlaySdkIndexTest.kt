@@ -135,7 +135,7 @@ class GooglePlaySdkIndexTest {
                     )
             )
             .build()
-        index = object: GooglePlaySdkIndex() {
+        index = object : GooglePlaySdkIndex() {
             override fun readUrlData(url: String, timeout: Int): ByteArray? {
                 fail("Trying to read proto from the network!")
                 return null
@@ -147,9 +147,7 @@ class GooglePlaySdkIndexTest {
             }
 
             override fun error(throwable: Throwable, message: String?) {
-
             }
-
         }
         index.initialize(ByteArrayInputStream(proto.toByteArray()))
     }

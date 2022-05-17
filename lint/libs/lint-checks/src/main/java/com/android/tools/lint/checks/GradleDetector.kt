@@ -1023,8 +1023,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
                         report(context, cookie, DEPRECATED_LIBRARY_BLOCKING, message, fix)
                     }
-                }
-                else {
+                } else {
                     if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
                         val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)

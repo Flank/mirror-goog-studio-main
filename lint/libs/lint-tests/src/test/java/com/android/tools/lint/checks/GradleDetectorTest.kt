@@ -4518,108 +4518,133 @@ class GradleDetectorTest : AbstractCheckTest() {
             // Similarly set up the expected SDK Index network output from dl.google.com to
             // ensure stable SDK library suggestions in the tests
             val index = Index.newBuilder()
-                .addSdks(Sdk.newBuilder()
-                    .setIndexUrl("http://index.example.url/")
-                    .addLibraries(Library.newBuilder()
-                        .setLibraryId(LibraryIdentifier.newBuilder()
-                            .setMavenId(LibraryIdentifier.MavenIdentifier.newBuilder()
-                                .setGroupId("log4j")
-                                .setArtifactId("log4j")
-                                .build()
-                            )
+                .addSdks(
+                    Sdk.newBuilder()
+                        .setIndexUrl("http://index.example.url/")
+                        .addLibraries(
+                            Library.newBuilder()
+                                .setLibraryId(
+                                    LibraryIdentifier.newBuilder()
+                                        .setMavenId(
+                                            LibraryIdentifier.MavenIdentifier.newBuilder()
+                                                .setGroupId("log4j")
+                                                .setArtifactId("log4j")
+                                                .build()
+                                        )
+                                )
+                                // Ok, latest, no issues
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.18")
+                                        .setIsLatestVersion(true)
+                                )
+                                // Ok, latest, no issues
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.17")
+                                        .setIsLatestVersion(false)
+                                )
+                                // Critical NON_BLOCKING
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.16")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
+                                                .setSeverity(LibraryVersionLabels.Severity.NON_BLOCKING_SEVERITY)
+                                        )
+                                )
+                                // Outdated NON_BLOCKING
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.15")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
+                                                .setSeverity(LibraryVersionLabels.Severity.NON_BLOCKING_SEVERITY)
+                                        )
+                                )
+                                // Policy
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.14")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
+                                        )
+                                )
+                                // Critical BLOCKING
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.13")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
+                                                .setSeverity(LibraryVersionLabels.Severity.BLOCKING_SEVERITY)
+                                        )
+                                )
+                                // Outdated BLOCKING
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("1.2.12")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
+                                                .setSeverity(LibraryVersionLabels.Severity.BLOCKING_SEVERITY)
+                                        )
+                                )
                         )
-                        // Ok, latest, no issues
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.18")
-                            .setIsLatestVersion(true)
-                        )
-                        // Ok, latest, no issues
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.17")
-                            .setIsLatestVersion(false)
-                        )
-                        // Critical NON_BLOCKING
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.16")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
-                                .setSeverity(LibraryVersionLabels.Severity.NON_BLOCKING_SEVERITY)
-                            )
-                        )
-                        // Outdated NON_BLOCKING
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.15")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
-                                .setSeverity(LibraryVersionLabels.Severity.NON_BLOCKING_SEVERITY)
-                            )
-                        )
-                        // Policy
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.14")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
-                            )
-                        )
-                        // Critical BLOCKING
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.13")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
-                                .setSeverity(LibraryVersionLabels.Severity.BLOCKING_SEVERITY)
-                            )
-                        )
-                        // Outdated BLOCKING
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("1.2.12")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
-                                .setSeverity(LibraryVersionLabels.Severity.BLOCKING_SEVERITY)
-                            )
-                        )
-                    )
                 )
-                .addSdks(Sdk.newBuilder()
-                    .setIndexUrl("http://another.example.url/")
-                    .addLibraries(Library.newBuilder()
-                        .setLibraryId(LibraryIdentifier.newBuilder()
-                            .setMavenId(LibraryIdentifier.MavenIdentifier.newBuilder()
-                                .setGroupId("com.example.ads.third.party")
-                                .setArtifactId("example")
-                                .build()
-                            )
+                .addSdks(
+                    Sdk.newBuilder()
+                        .setIndexUrl("http://another.example.url/")
+                        .addLibraries(
+                            Library.newBuilder()
+                                .setLibraryId(
+                                    LibraryIdentifier.newBuilder()
+                                        .setMavenId(
+                                            LibraryIdentifier.MavenIdentifier.newBuilder()
+                                                .setGroupId("com.example.ads.third.party")
+                                                .setArtifactId("example")
+                                                .build()
+                                        )
+                                )
+                                // Ok, latest
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("8.0.0")
+                                        .setIsLatestVersion(true)
+                                )
+                                // Ok
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("7.2.2")
+                                        .setIsLatestVersion(false)
+                                )
+                                // Ok
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("7.2.1")
+                                        .setIsLatestVersion(false)
+                                )
+                                // Outdated & non compliant & Critical
+                                .addVersions(
+                                    LibraryVersion.newBuilder()
+                                        .setVersionString("7.2.0")
+                                        .setIsLatestVersion(false)
+                                        .setVersionLabels(
+                                            LibraryVersionLabels.newBuilder()
+                                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
+                                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
+                                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
+                                        )
+                                )
                         )
-                        // Ok, latest
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("8.0.0")
-                            .setIsLatestVersion(true)
-                        )
-                        // Ok
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("7.2.2")
-                            .setIsLatestVersion(false)
-                        )
-                        // Ok
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("7.2.1")
-                            .setIsLatestVersion(false)
-                        )
-                        // Outdated & non compliant & Critical
-                        .addVersions(LibraryVersion.newBuilder()
-                            .setVersionString("7.2.0")
-                            .setIsLatestVersion(false)
-                            .setVersionLabels(LibraryVersionLabels.newBuilder()
-                                .setCriticalIssueInfo(LibraryVersionLabels.CriticalIssueInfo.newBuilder())
-                                .setOutdatedIssueInfo(LibraryVersionLabels.OutdatedIssueInfo.newBuilder())
-                                .setNonCompliantIssueInfo(LibraryVersionLabels.NonCompliantPolicyInfo.newBuilder())
-                            )
-                        )
-                    )
                 )
                 .build()
             val bos = ByteArrayOutputStream()
