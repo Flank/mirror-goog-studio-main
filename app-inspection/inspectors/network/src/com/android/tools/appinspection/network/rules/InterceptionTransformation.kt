@@ -94,15 +94,20 @@ class HeaderReplacedTransformation(
 ) : InterceptionTransformation {
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        var anyMatched = false
-
         // Remove all matched header values.
+        val defaultKey = if (headerReplaced.hasNewName()) headerReplaced.newName else null
+        val defaultValue = if (headerReplaced.hasNewValue()) headerReplaced.newValue else null
+        if (defaultKey == null && defaultValue == null) {
+            return response
+        }
+        val newHeaders = mutableMapOf<String?, MutableSet<String>>()
         val headers = response.responseHeaders.mapValues { (headerKey, headerValues) ->
             if (headerReplaced.targetName.matches(headerKey)) {
-                headerValues.filter {
-                    val matched = headerReplaced.targetValue.matches(it)
+                headerValues.filter { headerValue ->
+                    val matched = headerReplaced.targetValue.matches(headerValue)
                     if (matched) {
-                        anyMatched = true
+                        newHeaders.computeIfAbsent(defaultKey ?: headerKey) { mutableSetOf() }
+                            .add(defaultValue ?: headerValue)
                     }
                     !matched
                 }
@@ -112,9 +117,11 @@ class HeaderReplacedTransformation(
         }.toMutableMap()
 
         // Add the replaced header and value.
-        if (anyMatched) {
-            headers[headerReplaced.newName] =
-                (headers[headerReplaced.newName] ?: listOf()) + listOf(headerReplaced.newValue)
+        newHeaders.entries.forEach { entry ->
+            val valueSet = mutableSetOf<String>()
+            valueSet.addAll(headers.getOrDefault(entry.key, listOf()))
+            valueSet.addAll(entry.value)
+            headers[entry.key] = valueSet.toList()
         }
         return response.copy(responseHeaders = headers)
     }

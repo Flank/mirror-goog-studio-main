@@ -237,6 +237,46 @@ class InterceptionRuleTest {
     }
 
     @Test
+    fun replaceResponseHeaderPartially() {
+        val response = NetworkResponse(
+            mapOf("header" to listOf("value", "value2")),
+            "Body".byteInputStream()
+        )
+        val headerValueReplacedProto = HeaderReplaced.newBuilder().apply {
+            targetNameBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "header"
+            }
+            targetValueBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "value"
+            }
+            newValue = "newValue"
+        }.build()
+        var transformedResponse =
+            HeaderReplacedTransformation(headerValueReplacedProto).transform(response)
+        assertThat(transformedResponse.responseHeaders["newName"]).isNull()
+        assertThat(transformedResponse.responseHeaders["header"])
+            .containsExactly("newValue", "value2")
+
+        val headerNameReplacedProto = HeaderReplaced.newBuilder().apply {
+            targetNameBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "header"
+            }
+            targetValueBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "value"
+            }
+            newName = "newName"
+        }.build()
+        transformedResponse =
+            HeaderReplacedTransformation(headerNameReplacedProto).transform(response)
+        assertThat(transformedResponse.responseHeaders["header"]).containsExactly("value2")
+        assertThat(transformedResponse.responseHeaders["newName"]).containsExactly("value")
+    }
+
+    @Test
     fun modifyResponseBody() {
         val response = NetworkResponse(
             mapOf(
