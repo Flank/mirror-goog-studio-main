@@ -19,14 +19,6 @@ package com.android.testutils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Stopwatch;
-import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runner.manipulation.Sorter;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.Suite;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.RunnerBuilder;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
@@ -39,12 +31,21 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.manipulation.Sorter;
+import org.junit.runner.notification.RunNotifier;
+import org.junit.runners.Suite;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.RunnerBuilder;
 
 public class JarTestSuiteRunner extends Suite {
 
@@ -148,7 +149,20 @@ public class JarTestSuiteRunner extends Suite {
         if (testClasses.isEmpty()) {
             throw new RuntimeException("No tests found in class path using suffix: " + jarSuffix);
         }
-        return testClasses.toArray(new Class<?>[0]);
+        String filter = System.getProperty("test_filter");
+        String filterExcludes = System.getProperty("test_exclude_filter");
+        Stream<Class<?>> stream = testClasses.stream();
+        if (filter != null && !filter.isEmpty()) {
+            Predicate<String> filterPredicate = Pattern.compile(filter).asPredicate();
+            stream = stream.filter(c -> filterPredicate.test(c.getName()));
+        }
+        if (filterExcludes != null && !filterExcludes.isEmpty()) {
+            Predicate<String> excludePredicate = Pattern.compile(filterExcludes).asPredicate();
+            stream = stream.filter(c -> !excludePredicate.test(c.getName()));
+        }
+        Class<?>[] classes = stream.toArray(i -> new Class<?>[i]);
+        System.out.printf("Filtered to %d tests%n", classes.length);
+        return classes;
     }
 
 

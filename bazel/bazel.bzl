@@ -687,6 +687,7 @@ def _gen_split_tests(
         test_tags = None,
         test_data = None,
         timeout = None,
+        jvm_flags = [],
         **kwargs):
     """Generates split test targets.
 
@@ -728,7 +729,9 @@ def _gen_split_tests(
         if test_tags:
             tags += test_tags
 
-        args = _gen_split_test_args(split_name, split_test_targets)
+        test_jvm_flags = []
+        test_jvm_flags.extend(jvm_flags)
+        test_jvm_flags.extend(_gen_split_test_jvm_flags(split_name, split_test_targets))
 
         coverage_java_test(
             name = test_name,
@@ -737,7 +740,7 @@ def _gen_split_tests(
             flaky = flaky,
             data = data,
             tags = tags,
-            args = args,
+            jvm_flags = test_jvm_flags,
             **kwargs
         )
     native.test_suite(
@@ -754,27 +757,28 @@ def _get_unique_split_data(split_test_targets):
         [data.append(d) for d in split_data if d not in data]
     return data
 
-def _gen_split_test_args(split_name, split_test_targets):
-    """Generates the args for a split test target.
+def _gen_split_test_jvm_flags(split_name, split_test_targets):
+    """Generates jvm_flags for a split test target.
 
     Args:
-        split_name: The name of the split_test_target to generate args for.
+        split_name: The name of the split_test_target to generate.
         split_test_targets: All the defined split_test_targets.
     Returns:
-        The test args with --test_filter and --test_exclude_filter defined
+        The test jvm_flags with test_filter and test_exclude_filter defined
         based on the test_filter given to each split_test_target.
     """
     args = []
+    jvm_flags = []
     split_target = split_test_targets[split_name]
     test_filter = split_target.get("test_filter")
     _validate_split_test_filter(test_filter)
     if test_filter:
-        args.append("--test_filter='(" + test_filter + ")'")
+        jvm_flags.append("-Dtest_filter=\"(" + test_filter + ")\"")
 
     excludes = _gen_split_test_excludes(split_name, split_test_targets)
     if excludes:
-        args.append("--test_exclude_filter='(" + "|".join(excludes) + ")'")
-    return args
+        jvm_flags.append("-Dtest_exclude_filter=\"(" + "|".join(excludes) + ")\"")
+    return jvm_flags
 
 def _validate_split_test_filter(test_filter):
     """Validates the test_filter matches a package or FQCN format."""
