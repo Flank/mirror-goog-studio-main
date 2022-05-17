@@ -15,18 +15,23 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.CUSTOM_PERMISSION_TYPO
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.KNOWN_PERMISSION_ERROR
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.PERMISSION_NAMING_CONVENTION
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.RESERVED_SYSTEM_PERMISSION
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.SYSTEM_PERMISSION_TYPO
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostCustomPermission
-import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostSystemPermission
+import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmostPlatformPermission
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.permissionToPrefixAndSuffix
 import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.detector.api.Detector
+import com.google.common.io.Files
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class PermissionErrorDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = PermissionErrorDetector()
@@ -201,15 +206,15 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                   xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:tools="http://schemas.android.com/tools"
                   package="com.example.helloworld">
-                  <uses-permission android:name="android.permission.BIND_EIUCC_SERVICE" />
-                  <application android:name="App" android:permission="android.permission.BIND_EIUCC_SERVICE">
+                  <uses-permission android:name="android.permission.BIND_NCF_SERVICE" />
+                  <application android:name="App" android:permission="android.permission.BIND_NCF_SERVICE">
                     <activity />
-                    <activity android:permission="android.permission.BIND_EUICC_SERVICE" />
-                    <activity android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                    <activity-alias android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                    <receiver android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                    <service android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                    <provider android:permission="android.permission.BIND_EIUCC_SERVICE" />
+                    <activity android:permission="android.permission.BIND_NFC_SERVICE" />
+                    <activity android:permission="android.permission.BIND_NCF_SERVICE" />
+                    <activity-alias android:permission="android.permission.BIND_NCF_SERVICE" />
+                    <receiver android:permission="android.permission.BIND_NCF_SERVICE" />
+                    <service android:permission="android.permission.BIND_NCF_SERVICE" />
+                    <provider android:permission="android.permission.BIND_NCF_SERVICE" />
                     </application>
                   </manifest>
                   """
@@ -219,60 +224,60 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:5: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                  <uses-permission android:name="android.permission.BIND_EIUCC_SERVICE" />
-                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                  <application android:name="App" android:permission="android.permission.BIND_EIUCC_SERVICE">
-                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:9: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <activity android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:10: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <activity-alias android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:11: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <receiver android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:12: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <service android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                AndroidManifest.xml:13: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <provider android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:5: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                  <uses-permission android:name="android.permission.BIND_NCF_SERVICE" />
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                  <application android:name="App" android:permission="android.permission.BIND_NCF_SERVICE">
+                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:9: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <activity android:permission="android.permission.BIND_NCF_SERVICE" />
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:10: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <activity-alias android:permission="android.permission.BIND_NCF_SERVICE" />
+                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:11: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <receiver android:permission="android.permission.BIND_NCF_SERVICE" />
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:12: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <service android:permission="android.permission.BIND_NCF_SERVICE" />
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:13: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <provider android:permission="android.permission.BIND_NCF_SERVICE" />
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 7 warnings
                 """
             )
             .expectFixDiffs(
                 """
-                Fix for AndroidManifest.xml line 5: Replace with android.permission.BIND_EUICC_SERVICE:
+                Fix for AndroidManifest.xml line 5: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -5 +5
-                -   <uses-permission android:name="android.permission.BIND_EIUCC_SERVICE" />
-                +   <uses-permission android:name="android.permission.BIND_EUICC_SERVICE" />
-                Fix for AndroidManifest.xml line 6: Replace with android.permission.BIND_EUICC_SERVICE:
+                -   <uses-permission android:name="android.permission.BIND_NCF_SERVICE" />
+                +   <uses-permission android:name="android.permission.BIND_NFC_SERVICE" />
+                Fix for AndroidManifest.xml line 6: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -6 +6
-                -   <application android:name="App" android:permission="android.permission.BIND_EIUCC_SERVICE">
-                +   <application android:name="App" android:permission="android.permission.BIND_EUICC_SERVICE">
-                Fix for AndroidManifest.xml line 9: Replace with android.permission.BIND_EUICC_SERVICE:
+                -   <application android:name="App" android:permission="android.permission.BIND_NCF_SERVICE">
+                +   <application android:name="App" android:permission="android.permission.BIND_NFC_SERVICE">
+                Fix for AndroidManifest.xml line 9: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -9 +9
-                -     <activity android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                +     <activity android:permission="android.permission.BIND_EUICC_SERVICE" />
-                Fix for AndroidManifest.xml line 10: Replace with android.permission.BIND_EUICC_SERVICE:
+                -     <activity android:permission="android.permission.BIND_NCF_SERVICE" />
+                +     <activity android:permission="android.permission.BIND_NFC_SERVICE" />
+                Fix for AndroidManifest.xml line 10: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -10 +10
-                -     <activity-alias android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                +     <activity-alias android:permission="android.permission.BIND_EUICC_SERVICE" />
-                Fix for AndroidManifest.xml line 11: Replace with android.permission.BIND_EUICC_SERVICE:
+                -     <activity-alias android:permission="android.permission.BIND_NCF_SERVICE" />
+                +     <activity-alias android:permission="android.permission.BIND_NFC_SERVICE" />
+                Fix for AndroidManifest.xml line 11: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -11 +11
-                -     <receiver android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                +     <receiver android:permission="android.permission.BIND_EUICC_SERVICE" />
-                Fix for AndroidManifest.xml line 12: Replace with android.permission.BIND_EUICC_SERVICE:
+                -     <receiver android:permission="android.permission.BIND_NCF_SERVICE" />
+                +     <receiver android:permission="android.permission.BIND_NFC_SERVICE" />
+                Fix for AndroidManifest.xml line 12: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -12 +12
-                -     <service android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                +     <service android:permission="android.permission.BIND_EUICC_SERVICE" />
-                Fix for AndroidManifest.xml line 13: Replace with android.permission.BIND_EUICC_SERVICE:
+                -     <service android:permission="android.permission.BIND_NCF_SERVICE" />
+                +     <service android:permission="android.permission.BIND_NFC_SERVICE" />
+                Fix for AndroidManifest.xml line 13: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -13 +13
-                -     <provider android:permission="android.permission.BIND_EIUCC_SERVICE" />
-                +     <provider android:permission="android.permission.BIND_EUICC_SERVICE" />
+                -     <provider android:permission="android.permission.BIND_NCF_SERVICE" />
+                +     <provider android:permission="android.permission.BIND_NFC_SERVICE" />
                 """
             )
     }
@@ -287,7 +292,8 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                   package="com.example.helloworld">
                   <application>
                     <activity />
-                    <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
+                    <service android:permission="android.Manifest.permission.BIND_NFC_SERVICE" />
+                    <service android:permission="android.permission.WAKE_LOCK" />
                   </application>
                 </manifest>
                 """
@@ -297,18 +303,18 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_EUICC_SERVICE? [SystemPermissionTypo]
-                    <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
-                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_NFC_SERVICE? [SystemPermissionTypo]
+                    <service android:permission="android.Manifest.permission.BIND_NFC_SERVICE" />
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 0 errors, 1 warnings
                 """
             )
             .expectFixDiffs(
                 """
-                Fix for AndroidManifest.xml line 5: Replace with android.permission.BIND_EUICC_SERVICE:
+                Fix for AndroidManifest.xml line 5: Replace with android.permission.BIND_NFC_SERVICE:
                 @@ -6 +6
-                -     <service android:permission="android.Manifest.permission.BIND_EUICC_SERVICE" />
-                +     <service android:permission="android.permission.BIND_EUICC_SERVICE" />
+                -     <service android:permission="android.Manifest.permission.BIND_NFC_SERVICE" />
+                +     <service android:permission="android.permission.BIND_NFC_SERVICE" />
                 """
             )
     }
@@ -336,44 +342,79 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
 
     @Test
     fun testFindAlmostSystemPermission() {
+        // Set up a simple compilation environment such that we can grab a project out of it to use for unit testing
+        // the findAlmostSystemPermission (which needs access to the java evaluator)
+        val temp = Files.createTempDir()
+        val temporaryFolder = TemporaryFolder(temp)
+        temporaryFolder.create()
+        val parsed = com.android.tools.lint.checks.infrastructure.parseFirst(
+            sdkHome = TestUtils.getSdk().toFile(),
+            temporaryFolder = temporaryFolder,
+            testFiles = arrayOf(
+                java(
+                    "class Test { }"
+                )
+            )
+        )
+        val disposable = Disposable {
+            Disposer.dispose(parsed.second)
+            temp.deleteRecursively()
+        }
+
+        val context = parsed.first
+        val project = context.project
+
         // well-known cases are handled
         assertEquals(
-            findAlmostSystemPermission("android.permission.BIND_EIUCC_SERVICE"),
-            "android.permission.BIND_EUICC_SERVICE"
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.permission.BIND_NCF_SERVICE")
         )
         assertEquals(
-            findAlmostSystemPermission("android.Manifest.permission.BIND_EIUCC_SERVICE"),
-            "android.permission.BIND_EUICC_SERVICE"
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.Manifest.permission.BIND_NCF_SERVICE")
         )
         assertEquals(
-            findAlmostSystemPermission("android.permission.bind_eiucc_service"),
-            "android.permission.BIND_EUICC_SERVICE"
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.permission.bind_ncf_service")
         )
         assertEquals(
-            findAlmostSystemPermission("android.permission\n      .BIND_EIUCC_@@--~~SERVICE"),
-            "android.permission.BIND_EUICC_SERVICE"
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.permission\n      .BIND_NCF_@@--~~SERVICE")
         )
         assertEquals(
-            findAlmostSystemPermission(
+            "android.permission.BLUETOOTH_PRIVILEGED",
+            findAlmostPlatformPermission(
+                project,
                 """
-                android.permission.BIND_JOB_SERVICE |
+                android.permission.BIND_NFC_SERVICE |
                 android.permission.SYSTEM_ALERT_WINDOW |
                 android.permission.BLUETOOTH_PRIVILEGED
                 """.trimMargin()
-            ),
-            "android.permission.BIND_JOB_SERVICE"
+            )
         )
-        // as of now these cases would not be handled
-        assertNull(findAlmostSystemPermission("@ndr\$oid@.BIND_EIUCC_SERVICE"))
-        assertNull(findAlmostSystemPermission("\${MY_SUBSTITUTION}.BIND_EIUCC_SERVICE"))
-        assertNull(findAlmostSystemPermission("android.BIND_EIUCC_SERVICE"))
-    }
 
-    @Test
-    fun testFindAlmostSystemPermission_noFalsePositives() {
+        // Matching based on just the name part
+        assertEquals(
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "@ndr\$oid@.BIND_NCF_SERVICE")
+        )
+        assertEquals(
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "\${MY_SUBSTITUTION}.BIND_NCF_SERVICE")
+        )
+        assertEquals(
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.BIND_NCF_SERVICE")
+        )
+        assertEquals(
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "adroid.prmission.BIND_NCF_SERVICE") // typos in package name
+        )
         for (systemPermission in SYSTEM_PERMISSIONS) {
-            assertNull(findAlmostSystemPermission(systemPermission))
+            assertNull(findAlmostPlatformPermission(project, systemPermission))
         }
+
+        Disposer.dispose(disposable)
     }
 
     @Test
@@ -381,9 +422,9 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
         val (prefix1, suffix1) = permissionToPrefixAndSuffix("foo")
         assertEquals(prefix1, "")
         assertEquals(suffix1, "foo")
-        val (prefix2, suffix2) = permissionToPrefixAndSuffix("android.permission.BIND_EUICC_SERVICE")
+        val (prefix2, suffix2) = permissionToPrefixAndSuffix("android.permission.BIND_NFC_SERVICE")
         assertEquals(prefix2, "android.permission")
-        assertEquals(suffix2, "BIND_EUICC_SERVICE")
+        assertEquals(suffix2, "BIND_NFC_SERVICE")
     }
 
     @Test
@@ -403,6 +444,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                     <service android:permission="my.custom.permission.FOOBAB" />
                     <activity android:permission="my.custom.permission.BAZQXX" />
                     <activity android:permission="my.custom.permission.BAZQUZZ" />
+                    <activity android:permission="my.custom.permission.WAKE_LOCK" />
                   </application>
                 </manifest>
                 """

@@ -35,6 +35,7 @@ import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LocationType
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
@@ -48,13 +49,15 @@ import org.w3c.dom.Element
 import java.util.Arrays
 
 /**
- * looks for obvious errors in the guarding of components with a permission via the android:permission attribute
+ * looks for obvious errors in the guarding of components with a
+ * permission via the android:permission attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
     override fun checkMergedProject(context: Context) {
         val root = context.mainProject.mergedManifest?.documentElement ?: return
         checkDocument(context, root, true)
     }
+
     override fun visitDocument(context: XmlContext, document: Document) {
         val root = document.documentElement ?: return
         checkDocument(context, root, false)
@@ -128,8 +131,10 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * report incidents related to permission definitions that are NOT related to custom permission typos
-     * @return boolean representing whether this attribute should be evaluated for a custom permission typo
+     * Report incidents related to permission definitions that are
+     * NOT related to custom permission typos. Returns a boolean
+     * representing whether this attribute should be evaluated for a
+     * custom permission typo.
      */
     private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
         val packageName =
@@ -164,8 +169,10 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * report incidents related to permission usages that are NOT related to custom permission typos
-     * @return boolean representing whether this attribute should be evaluated for a custom permission typo
+     * Report incidents related to permission usages that are
+     * NOT related to custom permission typos. Returns a boolean
+     * representing whether this attribute should be evaluated for a
+     * custom permission typo.
      */
     private fun reportPermissionUsageIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
         if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
@@ -181,7 +188,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             if (context.isEnabled(KNOWN_PERMISSION_ERROR)) return false
         }
 
-        findAlmostSystemPermission(attr.value)?.let {
+        findAlmostPlatformPermission(context.project, attr.value)?.let {
             if (!isMergedManifest) context.report(
                 Incident(
                     SYSTEM_PERMISSION_TYPO,
@@ -225,7 +232,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             implementation = IMPLEMENTATION
         )
 
-        private val PERMISSION_SUFFIX_REGEX = Regex("[A-Z0-9_]+")
+        private val PERMISSION_SUFFIX_REGEX = Regex("[A-Z\\d_]+")
 
         fun followsCustomPermissionNamingConvention(packageName: String, permissionName: String): Boolean {
             if (packageName.isEmpty()) return true
@@ -246,7 +253,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                 This check looks for values specified in component permissions that are known errors, such as \
                 `android:permission="true"`.
 
-                 Please double check the permission value you have supplied.  The value is expected to be a \
+                 Please double check the permission value you have supplied. The value is expected to be a \
                  permission string from the system, another app, or your own, NOT a boolean.
                 """,
             category = Category.SECURITY,
@@ -265,7 +272,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                 This check looks for custom permission declarations whose names are reserved values \
                 for system permissions.
 
-                Please double check the permission name you have supplied.  Attempting to redeclare a system \
+                Please double check the permission name you have supplied. Attempting to redeclare a system \
                 permission will be ignored.
                 """,
             category = Category.SECURITY,
@@ -281,9 +288,9 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             briefDescription = "Permission appears to be a system permission with a typo",
             explanation = """
                 This check looks for required permissions that *look* like well-known system permissions, but aren't, \
-                 and may be typos.
+                and may be typos.
 
-                 Please double check the permission value you have supplied.
+                Please double check the permission value you have supplied.
                 """,
             category = Category.SECURITY,
             priority = 5,
@@ -298,9 +305,9 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             briefDescription = "Permission appears to be a custom permission with a typo",
             explanation = """
                 This check looks for required permissions that *look* like custom permissions defined in the same \
-                 manifest, but aren't, and may be typos.
+                manifest, but aren't, and may be typos.
 
-                 Please double check the permission value you have supplied.
+                Please double check the permission value you have supplied.
                 """,
             category = Category.SECURITY,
             priority = 5,
@@ -320,46 +327,153 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             return customPermissions.firstOrNull { editDistance(requiredPermission, it, EDIT_DISTANCE_ESCAPE) in 1..MAX_EDIT_DISTANCE }
         }
 
-        private val UNEXPECTED_CHAR_REGEX = Regex("[^a-zA-Z0-9_.]+")
+        private val UNEXPECTED_CHAR_REGEX = Regex("[^a-zA-Z\\d_.]+")
 
         /**
-         * Crude implementation to detect an incorrectly specified system permission
+         * Crude implementation to detect an incorrectly specified
+         * system permission
          */
-        fun findAlmostSystemPermission(requiredPermission: String): String? {
+        fun findAlmostPlatformPermission(project: Project, requiredPermission: String): String? {
+            // First, if it's a known permission, either from the list of reserved system permissions (which we
+            // can't look up, so it's a hardcoded list), or from the set of platform permissions, it's not
+            // *almost* a system permission, it *is* a platform permission, so return null.
             if (isSystemPermission(requiredPermission)) return null
-            /**
-             * The convention followed by system permissions (and most permissions, for that matter) is to use letters,
-             * period, and underscore characters. Remove characters that do not follow the system permission convention
-             * to catch simple typos, such as a block of spaces, or other infrequently used characters.
-             */
+
+            val platformPermissions = getPlatformPermissions(project)
+            if (Arrays.binarySearch(platformPermissions, requiredPermission) >= 0) {
+                return null
+            }
+
+            // Limit ourselves to packages that look close enough to our target,
+            val requiredPermissionPackage = requiredPermission.substringBeforeLast('.').lowercase()
+            if (requiredPermissionPackage != "android.permission" &&
+                requiredPermissionPackage != "android" && // common mistake
+                requiredPermissionPackage != "android.manifest.permission" && // common mistake: confusing class *containing* permissions
+                !requiredPermissionPackage.startsWith("com.android.") &&
+                // unless there are non-package letters (such as whitespace) in the package name which probably
+                // indicates syntax errors; see unit test for examples
+                requiredPermission.all { it.isJavaIdentifierPart() || it == '.' }
+            ) {
+                if (editDistance(requiredPermissionPackage, "android.permission", MAX_EDIT_DISTANCE) >= MAX_EDIT_DISTANCE) {
+                    return null
+                }
+            }
+
+            // First try to match permissions that match the name (without the package). We prefer these over
+            // different names a close edit distance away; e.g. for
+            //     android.Manifest.permission.BIND_EUICC_SERVICE
+            // we want to match
+            //     android.permission.BIND_EUICC_SERVICE
+            // instead of
+            //     android.permission.BIND_NFC_SERVICE.
+            //
+            // Note that this means we'll accept ANY package name where the name matches exactly -- but this is probably
+            // what you want, because *all* the platform permission names are unique, and this lets us easily match
+            // cases like "android.Manifest.permission" (the class containing the constant instead of the constant value),
+            // etc.
+            val requiredNameBegin = requiredPermission.lastIndexOf('.') + 1
+            val requiredNameLength = requiredPermission.length - requiredNameBegin
+            for (permission in platformPermissions) {
+                val nameBegin = permission.lastIndexOf('.') + 1
+                val length = permission.length - nameBegin
+
+                if (requiredNameLength == length &&
+                    requiredPermission.regionMatches(requiredNameBegin, permission, nameBegin, length, ignoreCase = true)
+                ) {
+                    return permission
+                }
+
+                // Also check for a case-only mismatch here (foo.bar.NAME == Foo.Bar.Name)
+                if (permission.equals(requiredPermission, ignoreCase = true)) {
+                    return permission
+                }
+            }
+
+            // The convention followed by system permissions (and most permissions, for that matter) is to use letters,
+            // period, and underscore characters. Remove characters that do not follow the system permission convention
+            // to catch simple typos, such as a block of spaces, or other infrequently used characters.
+            //
             val trimmedLowerRequiredPermission = requiredPermission
                 .replace(UNEXPECTED_CHAR_REGEX, "")
                 .lowercase()
-            return SYSTEM_PERMISSIONS.firstOrNull { systemPermission ->
-                val lowerSystemPermission = systemPermission.lowercase()
-                // catches a common mistake - attempting to specify multiple permissions separated by some character
-                if (lowerSystemPermission in trimmedLowerRequiredPermission) return systemPermission
-                /*
-                 * The most interesting information from most permissions is the part AFTER the "path".
-                 * Split the permissions into "prefix" and "suffix" so we can evaluate the two independently.
-                 */
-                val (requiredPrefix, requiredSuffix) = permissionToPrefixAndSuffix(trimmedLowerRequiredPermission)
-                val (systemPrefix, systemSuffix) = permissionToPrefixAndSuffix(lowerSystemPermission)
 
-                editDistance(requiredSuffix, systemSuffix, EDIT_DISTANCE_ESCAPE) <= MAX_EDIT_DISTANCE && (
-                    // If the suffixes are reasonably close, we can additionally check for this known bad pattern in the prefix.
-                    requiredPrefix == "android.manifest.permission" ||
-                        editDistance(requiredPrefix, systemPrefix, EDIT_DISTANCE_ESCAPE) <= MAX_EDIT_DISTANCE
-                    )
+            // Look for SMALLEST edit distance, e.g. for
+            //     android.permission.BIND_NCF_SERVICE
+            // we should match
+            //     android.permission.BIND_NFC_SERVICE
+            // instead of
+            //     android.permission.BIND_INCALL_SERVICE
+            // (which is also a match, but not as close)
+
+            var bestMatch: String? = null
+            // As a performance optimization we can also shorten the max edit distance to
+            // the best one we've seen so far which helps skip irrelevant matches later in
+            // the list.
+            var bestEditDistance = MAX_EDIT_DISTANCE + 1
+
+            for (permission in platformPermissions) {
+                val lowerPermission = permission.lowercase()
+                // Catches a common mistake -- attempting to specify multiple permissions separated by some character
+                if (lowerPermission in trimmedLowerRequiredPermission) return permission
+
+                // The most interesting information from most permissions is the part AFTER the "path".
+                // Split the permissions into "prefix" and "suffix" so we can evaluate the two independently.
+                val requiredSuffix = trimmedLowerRequiredPermission.substringAfterLast('.')
+                val permissionSuffix = lowerPermission.substringAfterLast('.')
+                val editDistance = editDistance(requiredSuffix, permissionSuffix, bestEditDistance)
+                if (editDistance <= bestEditDistance) {
+                    // Make sure the package is compatible too
+                    bestEditDistance = editDistance
+                    bestMatch = permission
+                }
             }
+
+            return bestMatch
         }
 
-        fun isSystemPermission(permissionName: String): Boolean =
+        /**
+         * Whether the permission is a *reserved* system permission name
+         */
+        private fun isSystemPermission(permissionName: String): Boolean =
             Arrays.binarySearch(SYSTEM_PERMISSIONS, permissionName) >= 0
 
-        fun permissionToPrefixAndSuffix(permission: String): Pair<String, String> = Pair(
-            permission.split(".").dropLast(1).joinToString("."),
-            permission.split(".").last()
-        )
+        private var platformTarget: String? = null
+        private var platformPermissions: Array<String>? = null
+
+        /**
+         * Returns the platform permissions: those permissions users are
+         * allowed to access from their applications
+         */
+        private fun getPlatformPermissions(project: Project): Array<String> {
+            val target = project.buildTarget?.hashString() // For platforms, it's the buildTargetHash, stable and unique
+            if (target != platformTarget) {
+                platformPermissions = null
+                platformTarget = target
+            }
+            return platformPermissions ?: computePlatformPermissions(project).also { platformPermissions = it }
+        }
+
+        /**
+         * Given a project, uses the compileSdkVersion from the
+         * project to look up the available public permission names in
+         * `android.Manifest.permission`]
+         */
+        private fun computePlatformPermissions(project: Project): Array<String> {
+            val evaluator = project.client.getUastParser(project).evaluator
+            val manifest = evaluator.findClass("android.Manifest.permission")
+            if (manifest != null) {
+                return manifest.fields.mapNotNull { it.computeConstantValue() as? String }.sorted().toTypedArray()
+            }
+            return emptyArray()
+        }
+
+        fun permissionToPrefixAndSuffix(permission: String): Pair<String, String> {
+            val index = permission.lastIndexOf('.')
+            return if (index == -1) {
+                Pair("", permission)
+            } else {
+                Pair(permission.substring(0, index), permission.substring(index + 1))
+            }
+        }
     }
 }
