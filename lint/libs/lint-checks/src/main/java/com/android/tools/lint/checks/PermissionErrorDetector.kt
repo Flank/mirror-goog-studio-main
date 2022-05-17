@@ -141,13 +141,14 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             (context.project.buildVariant?.`package` ?: attr.ownerDocument.documentElement?.getAttribute(ATTR_PACKAGE))
                 .orEmpty()
 
-        if (isSystemPermission(attr.value)) {
+        val platformPermissions = getPlatformPermissions(context.project)
+        if (isStandardPermission(attr.value, platformPermissions)) {
             if (!isMergedManifest) context.report(
                 Incident(
                     RESERVED_SYSTEM_PERMISSION,
                     attr.ownerElement,
                     context.getLocation(attr, LocationType.VALUE),
-                    "`${attr.value}` is a reserved permission for the system"
+                    "`${attr.value}` is a reserved permission"
                 )
             )
             if (context.isEnabled(RESERVED_SYSTEM_PERMISSION)) return false
@@ -267,13 +268,13 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
         val RESERVED_SYSTEM_PERMISSION: Issue = Issue.create(
             id = "ReservedSystemPermission",
-            briefDescription = "Permission name is a reserved system permission",
+            briefDescription = "Permission name is a reserved Android permission",
             explanation = """
                 This check looks for custom permission declarations whose names are reserved values \
-                for system permissions.
+                for system or Android SDK permissions.
 
                 Please double check the permission name you have supplied. Attempting to redeclare a system \
-                permission will be ignored.
+                or Android SDK permission will be ignored.
                 """,
             category = Category.SECURITY,
             priority = 5,
@@ -285,10 +286,10 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         @JvmField
         val SYSTEM_PERMISSION_TYPO: Issue = Issue.create(
             id = "SystemPermissionTypo",
-            briefDescription = "Permission appears to be a system permission with a typo",
+            briefDescription = "Permission appears to be a standard permission with a typo",
             explanation = """
-                This check looks for required permissions that *look* like well-known system permissions, but aren't, \
-                and may be typos.
+                This check looks for required permissions that *look* like well-known system permissions \
+                or permissions from the Android SDK, but aren't, and may be typos.
 
                 Please double check the permission value you have supplied.
                 """,
@@ -317,7 +318,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         )
 
         // the edit distance at which we have reasonable confidence that there is a typo
-        private const val MAX_EDIT_DISTANCE = 4
+        private const val MAX_EDIT_DISTANCE = 3
 
         // purely to optimize the LintUtils.editDistance call
         private const val EDIT_DISTANCE_ESCAPE = MAX_EDIT_DISTANCE + 1
@@ -331,33 +332,19 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
         /**
          * Crude implementation to detect an incorrectly specified
-         * system permission
+         * standard (SDK or System) permission
          */
         fun findAlmostPlatformPermission(project: Project, requiredPermission: String): String? {
             // First, if it's a known permission, either from the list of reserved system permissions (which we
             // can't look up, so it's a hardcoded list), or from the set of platform permissions, it's not
             // *almost* a system permission, it *is* a platform permission, so return null.
-            if (isSystemPermission(requiredPermission)) return null
-
             val platformPermissions = getPlatformPermissions(project)
-            if (Arrays.binarySearch(platformPermissions, requiredPermission) >= 0) {
-                return null
-            }
+            if (isStandardPermission(requiredPermission, platformPermissions)) return null
 
             // Limit ourselves to packages that look close enough to our target,
-            val requiredPermissionPackage = requiredPermission.substringBeforeLast('.').lowercase()
-            if (requiredPermissionPackage != "android.permission" &&
-                requiredPermissionPackage != "android" && // common mistake
-                requiredPermissionPackage != "android.manifest.permission" && // common mistake: confusing class *containing* permissions
-                !requiredPermissionPackage.startsWith("com.android.") &&
-                // unless there are non-package letters (such as whitespace) in the package name which probably
-                // indicates syntax errors; see unit test for examples
-                requiredPermission.all { it.isJavaIdentifierPart() || it == '.' }
-            ) {
-                if (editDistance(requiredPermissionPackage, "android.permission", MAX_EDIT_DISTANCE) >= MAX_EDIT_DISTANCE) {
-                    return null
-                }
-            }
+            if (platformPermissionPackageUnlikely(requiredPermission)) return null
+
+            val standardPermissions = (SYSTEM_PERMISSIONS + platformPermissions).toSet()
 
             // First try to match permissions that match the name (without the package). We prefer these over
             // different names a close edit distance away; e.g. for
@@ -373,7 +360,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             // etc.
             val requiredNameBegin = requiredPermission.lastIndexOf('.') + 1
             val requiredNameLength = requiredPermission.length - requiredNameBegin
-            for (permission in platformPermissions) {
+            for (permission in standardPermissions) {
                 val nameBegin = permission.lastIndexOf('.') + 1
                 val length = permission.length - nameBegin
 
@@ -409,9 +396,9 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             // As a performance optimization we can also shorten the max edit distance to
             // the best one we've seen so far which helps skip irrelevant matches later in
             // the list.
-            var bestEditDistance = MAX_EDIT_DISTANCE + 1
+            var bestEditDistance = EDIT_DISTANCE_ESCAPE
 
-            for (permission in platformPermissions) {
+            for (permission in standardPermissions) {
                 val lowerPermission = permission.lowercase()
                 // Catches a common mistake -- attempting to specify multiple permissions separated by some character
                 if (lowerPermission in trimmedLowerRequiredPermission) return permission
@@ -421,7 +408,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                 val requiredSuffix = trimmedLowerRequiredPermission.substringAfterLast('.')
                 val permissionSuffix = lowerPermission.substringAfterLast('.')
                 val editDistance = editDistance(requiredSuffix, permissionSuffix, bestEditDistance)
-                if (editDistance <= bestEditDistance) {
+                if (editDistance < bestEditDistance) {
                     // Make sure the package is compatible too
                     bestEditDistance = editDistance
                     bestMatch = permission
@@ -430,6 +417,29 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
             return bestMatch
         }
+
+        /**
+         * When looking for SDK permission typos, we only want to check against permissions
+         * whose package prefixes look *close enough* to the platform package (`android.permission`),
+         * based on both edit distance and commonly found mistakes.
+         */
+        private fun platformPermissionPackageUnlikely(requiredPermission: String): Boolean {
+            val requiredPermissionPackage = requiredPermission.substringBeforeLast('.').lowercase()
+            if (requiredPermissionPackage != "android.permission" &&
+                requiredPermissionPackage != "android" && // common mistake
+                requiredPermissionPackage != "android.manifest.permission" && // common mistake: confusing class *containing* permissions
+                !requiredPermissionPackage.startsWith("com.android.") &&
+                // unless there are non-package letters (such as whitespace) in the package name which probably
+                // indicates syntax errors; see unit test for examples
+                requiredPermission.all { it.isJavaIdentifierPart() || it == '.' }
+            ) {
+                return (editDistance(requiredPermissionPackage, "android.permission", MAX_EDIT_DISTANCE) >= MAX_EDIT_DISTANCE)
+            }
+            return false
+        }
+
+        private fun isStandardPermission(permissionName: String, platformPermissions: Array<String>) =
+            isSystemPermission(permissionName) || Arrays.binarySearch(platformPermissions, permissionName) >= 0
 
         /**
          * Whether the permission is a *reserved* system permission name
@@ -456,7 +466,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         /**
          * Given a project, uses the compileSdkVersion from the
          * project to look up the available public permission names in
-         * `android.Manifest.permission`]
+         * `android.Manifest.permission`
          */
         private fun computePlatformPermissions(project: Project): Array<String> {
             val evaluator = project.client.getUastParser(project).evaluator
