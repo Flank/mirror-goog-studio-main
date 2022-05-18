@@ -18,6 +18,7 @@ package com.android.tools.appinspection.network
 
 import android.app.Application
 import android.net.TrafficStats
+import android.util.Log
 import androidx.inspection.ArtTooling
 import androidx.inspection.Connection
 import androidx.inspection.Inspector
@@ -39,8 +40,6 @@ import studio.network.inspection.NetworkInspectorProtocol
 import java.net.URL
 import java.net.URLConnection
 import java.util.List
-import java.util.logging.Level
-import android.util.Log
 
 private const val POLL_INTERVAL_MS = 500L
 private const val MULTIPLIER_FACTOR = 1000 / POLL_INTERVAL_MS
@@ -113,6 +112,11 @@ class NetworkInspector(
                     }
                     interceptCommand.hasInterceptRuleRemoved() -> {
                         interceptionService.removeRule(interceptCommand.interceptRuleRemoved.ruleId)
+                        callback.reply(INTERCEPT_COMMAND_RESPONSE)
+                    }
+                    interceptCommand.hasReorderInterceptRules() -> {
+                        interceptionService
+                            .reorderRules(interceptCommand.reorderInterceptRules.ruleIdList)
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
                 }

@@ -93,9 +93,15 @@ message InterceptCommand {
         InterceptRuleAdded intercept_rule_added = 1;
         InterceptRuleUpdated intercept_rule_updated = 2;
         InterceptRuleRemoved intercept_rule_removed = 3;
+        ReorderInterceptRules reorder_intercept_rules = 4;
     }
 }
 
+message ReorderInterceptRules {
+    repeated int32 rule_id = 1;
+}
+
+// The InterceptRuleAdded command adds a new rule at the end of an ordered processing sequence.
 message InterceptRuleAdded {
     int32 rule_id = 1;
     InterceptRule rule = 2;
@@ -195,5 +201,3 @@ message StartInspectionResponse {
 
 message InterceptResponse {
 }
-
-
