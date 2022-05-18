@@ -357,8 +357,7 @@ fun createTempLibraryManifest(tempDir: File, namespace: String?): File {
     Preconditions.checkNotNull(namespace, "namespace cannot be null.")
     val manifestFile = File.createTempFile("tempAndroidManifest", ".xml", FileUtils.mkdirs(tempDir))
     val content = """<?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-               package="$namespace" />
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"/>
             """.trimIndent()
     manifestFile.writeText(content)
     return manifestFile
