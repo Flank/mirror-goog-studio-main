@@ -20,6 +20,7 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.getOutputDir
@@ -30,6 +31,7 @@ import org.junit.Rule
 import org.junit.Test
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import java.io.File
 
 class NoManifestTest {
 
@@ -118,13 +120,16 @@ class NoManifestTest {
 
     @Test
     fun noManifestInLibraryModuleTest() {
+        val warning =
+            "Setting the namespace via a source AndroidManifest.xml's package attribute is deprecated."
         TestFileUtils.appendToFile(
                 project.getSubproject(":lib").buildFile,
                 """
                     android.namespace "com.example.lib"
                     """.trimIndent()
         )
-        project.executor().run(":lib:build", ":lib:assembleAndroidTest")
+        val result = project.executor().run(":lib:build", ":lib:assembleAndroidTest")
+        ScannerSubject.assertThat(result.stdout).doesNotContain(warning)
 
         assertThat(project.buildResult.failedTasks).isEmpty()
         val fileOutput =
@@ -137,5 +142,21 @@ class NoManifestTest {
                 )
         assertThat(fileOutput.isFile).isTrue()
         assertThat(fileOutput).contains("package=\"com.example.lib\"")
+
+        // Check that we actually see the warning when we should.
+        val manifestFile =
+            FileUtils.join(
+                project.getSubproject(":lib").projectDir, "src", "main", "AndroidManifest.xml"
+            )
+        manifestFile.parentFile.mkdirs()
+        manifestFile.writeText(
+            """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.lib" />
+            """.trimIndent()
+        )
+        val result2 = project.executor().run(":lib:build")
+        ScannerSubject.assertThat(result2.stdout).contains(warning)
     }
 }

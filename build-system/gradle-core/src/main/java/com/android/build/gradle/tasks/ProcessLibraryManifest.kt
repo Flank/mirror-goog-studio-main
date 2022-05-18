@@ -137,14 +137,9 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     }
 
     private fun createTempLibraryManifest(): File {
-        Preconditions.checkNotNull(
-                namespace.get(),
-                "namespace cannot be null."
-        )
         val manifestFile = File.createTempFile("tempAndroidManifest", ".xml", FileUtils.mkdirs(tmpDir.get().asFile))
         val content = """<?xml version="1.0" encoding="utf-8"?>
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-               package="${namespace.get()}" />
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"/>
             """.trimIndent()
         manifestFile.writeText(content)
         return manifestFile
