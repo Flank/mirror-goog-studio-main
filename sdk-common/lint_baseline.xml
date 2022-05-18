@@ -301,22 +301,6 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/ide/common/resources/StringResourceUnescaperCharacterHandler.java"
-            line="52"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/ide/common/resources/StringResourceUnescaperCharacterHandler.java"
-            line="80"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
             file="src/main/java/com/android/ide/common/blame/parser/aapt/Warning1Parser.java"
             line="28"/>
     </issue>

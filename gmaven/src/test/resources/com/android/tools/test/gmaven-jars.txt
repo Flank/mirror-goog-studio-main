@@ -2467,6 +2467,9 @@ com/android/tools/sdk-common
   com/android/ide/common/repository/
   com/android/ide/common/resources/
   com/android/ide/common/resources/configuration/
+  com/android/ide/common/resources/escape/
+  com/android/ide/common/resources/escape/string/
+  com/android/ide/common/resources/escape/xml/
   com/android/ide/common/resources/sampledata/
   com/android/ide/common/resources/usage/
   com/android/ide/common/sdk/

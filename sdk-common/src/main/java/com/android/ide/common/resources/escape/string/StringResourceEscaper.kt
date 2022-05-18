@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,112 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.resources;
+package com.android.ide.common.resources.escape.string
 
-import com.android.annotations.NonNull;
-import com.google.common.escape.Escaper;
-import com.google.common.escape.Escapers;
-import javax.xml.parsers.SAXParserFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+import com.google.common.escape.Escaper
+import com.google.common.escape.Escapers
 
-final class StringResourceEscaper {
-    @NonNull
-    private final SAXParserFactory mFactory = StringResourceEscapeUtils.createSaxParserFactory();
+/**
+ * Static singleton responsible for escaping string resources. See documentation for the
+ * [StringResourceEscaper.escape] method for details.
+ */
+object StringResourceEscaper {
+  /**
+   * Escapes a string resource value in compliance with the
+   * [rules](http://developer.android.com/guide/topics/resources/string-resource.html) and
+   * [this Android Cookbook recipe](https://androidcookbook.com/Recipe.seam?recipeId=2219).
+   *
+   * The entire string is escaped as follows:
+   *
+   * 1. `'"'` and `'\\'` are escaped with backslashes
+   * 1. `'\n'` and `'\t'` are escaped with `"\\n"` and `"\\t"`
+   * 1. If the string starts or ends with a space, the string is quoted with `'"'`
+   * 1. If the string does not start or end with a space, `'\''` is escaped with a backslash
+   * 1. If the string starts with a `'?'` or `'@'`, that character is escaped with a backslash
+   * 1. If escapeMarkupDelimiters is true, `'&'` and `'<'` are escaped with `"&amp;"` and `"&lt;"`
+   *
+   * If the string contains markup with attributes, the quotes will be escaped which will result in
+   * invalid XML. If [escapeMarkupDelimiters] is true, the markup will lose its semantics and become
+   * plain character data. If that is not desired, use
+   * [com.android.ide.common.resources.escape.xml.CharacterDataEscaper.escape] which is XML-aware.
+   *
+   * @param escapeMarkupDelimiters if true escape `'&'` and `'<'` with their entity references
+   */
+  @JvmStatic
+  @JvmOverloads
+  fun escape(string: String, escapeMarkupDelimiters: Boolean = true): String {
+    if (string.isEmpty()) return ""
 
-    @NonNull
-    String escapeCharacterData(@NonNull String xml) {
-        if (xml.isEmpty()) {
-            return "";
-        }
+    // Make the StringBuilder 50% larger as we may increase the number of characters.
+    val builder = StringBuilder(string.length * 3 / 2)
 
-        xml = StringResourceEscapeUtils.escapeCharacterReferences(xml);
-        StringBuilder builder = new StringBuilder(xml.length() * 3 / 2);
+    if (string.startsWith("?") || string.startsWith("@")) builder.append("""\""")
 
-        if (startsOrEndsWithSpace(xml)) {
-            builder.append('"');
-        } else if (startsWithQuestionMarkOrAtSign(xml)) {
-            builder.append('\\');
-        }
+    val escaper: Escaper = buildEscaper(!string.startsOrEndsWithSpace(), escapeMarkupDelimiters)
+    builder.append(escaper.escape(string))
 
-        try {
-            Escaper escaper = buildEscaper(!startsOrEndsWithSpace(xml), false);
-            StringResourceEscapeUtils.parse(xml, mFactory, newContentHandler(builder, escaper));
-        } catch (SAXException exception) {
-            throw new IllegalArgumentException(xml, exception);
-        }
+    val s = builder.toString()
+    return if (s.startsOrEndsWithSpace()) """"$s"""" else s
+  }
 
-        if (startsOrEndsWithSpace(xml)) {
-            builder.append('"');
-        }
-
-        xml = builder.toString();
-        xml = StringResourceEscapeUtils.unescapeCharacterReferences(xml);
-
-        return xml;
+  @Suppress("UnstableApiUsage")
+  private fun buildEscaper(escapeApostrophes: Boolean, escapeMarkupDelimiters: Boolean): Escaper {
+    val builder =
+        Escapers.builder()
+            .addEscape('"', """\"""")
+            .addEscape('\\', """\\""")
+            .addEscape('\n', """\n""")
+            .addEscape('\t', """\t""")
+    if (escapeApostrophes) builder.addEscape('\'', """\'""")
+    if (escapeMarkupDelimiters) {
+      builder.addEscape('&', "&amp;").addEscape('<', "&lt;")
     }
+    return builder.build()
+  }
 
-    @NonNull
-    private static ContentHandler newContentHandler(
-            @NonNull StringBuilder builder, @NonNull Escaper escaper) {
-        CharacterHandler handler = new StringResourceEscaperCharacterHandler(escaper);
-        return new StringResourceContentHandler(builder, handler);
-    }
-
-    @NonNull
-    static String escape(@NonNull String string, boolean escapeMarkupDelimiters) {
-        if (string.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder builder = new StringBuilder(string.length() * 3 / 2);
-
-        if (startsOrEndsWithSpace(string)) {
-            builder.append('"');
-        } else if (startsWithQuestionMarkOrAtSign(string)) {
-            builder.append('\\');
-        }
-
-        Escaper escaper = buildEscaper(!startsOrEndsWithSpace(string), escapeMarkupDelimiters);
-        builder.append(escaper.escape(string));
-
-        if (startsOrEndsWithSpace(string)) {
-            builder.append('"');
-        }
-
-        return builder.toString();
-    }
-
-    @NonNull
-    private static Escaper buildEscaper(boolean escapeApostrophes, boolean escapeMarkupDelimiters) {
-        @SuppressWarnings("UnstableApiUsage")
-        Escapers.Builder builder =
-                Escapers.builder()
-                        .addEscape('"', "\\\"")
-                        .addEscape('\\', "\\\\")
-                        .addEscape('\n', "\\n")
-                        .addEscape('\t', "\\t");
-
-        if (escapeApostrophes) {
-            builder.addEscape('\'', "\\'");
-        }
-
-        if (escapeMarkupDelimiters) {
-            builder
-                    .addEscape('&', "&amp;")
-                    .addEscape('<', "&lt;");
-        }
-
-        return builder.build();
-    }
-
-    private static boolean startsWithQuestionMarkOrAtSign(@NonNull String string) {
-        assert !string.isEmpty();
-        return string.charAt(0) == '?' || string.charAt(0) == '@';
-    }
-
-    private static boolean startsOrEndsWithSpace(@NonNull String string) {
-        assert !string.isEmpty();
-        return string.charAt(0) == ' ' || string.charAt(string.length() - 1) == ' ';
-    }
+  private fun String.startsOrEndsWithSpace(): Boolean = startsWith(" ") || endsWith(" ")
 }
