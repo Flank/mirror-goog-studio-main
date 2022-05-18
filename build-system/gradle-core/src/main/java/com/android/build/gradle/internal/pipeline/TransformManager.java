@@ -55,6 +55,8 @@ import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.util.GradleVersion;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Manages the transforms for a variant.
@@ -68,6 +70,9 @@ public class TransformManager extends FilterableStreamCollection {
     private static final boolean DEBUG = true;
 
     private static final String FD_TRANSFORMS = "transforms";
+
+    // Version in which IncrementalTaskInputs get deprecated
+    private static GradleVersion OLD_INCREMENTAL_API_DEPRECATED = GradleVersion.version("7.5-rc-1");
 
     public static final Set<ScopeType> EMPTY_SCOPES = ImmutableSet.of();
 
@@ -113,6 +118,7 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull private final List<TransformStream> streams = Lists.newArrayList();
     @NonNull
     private final List<Transform> transforms = Lists.newArrayList();
+    private final boolean isOldIncrementalApiDeprecated;
 
     public TransformManager(
             @NonNull Project project,
@@ -120,6 +126,8 @@ public class TransformManager extends FilterableStreamCollection {
         this.project = project;
         this.issueReporter = issueReporter;
         this.logger = Logging.getLogger(TransformManager.class);
+        this.isOldIncrementalApiDeprecated =
+                getIsOldIncrementalApiDeprecated(project.getGradle().getGradleVersion());
     }
 
     @NonNull
@@ -244,11 +252,6 @@ public class TransformManager extends FilterableStreamCollection {
                     }
                 };
 
-        boolean allowIncremental =
-                !creationConfig
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL);
         // create the task...
         return Optional.of(
                 taskFactory.register(
@@ -259,10 +262,24 @@ public class TransformManager extends FilterableStreamCollection {
                                 inputStreams,
                                 referencedStreams,
                                 outputStream,
-                                allowIncremental),
+                                isAllowIncremental(creationConfig)),
                         preConfigAction,
                         wrappedConfigAction,
                         providerCallback));
+    }
+
+    private boolean isAllowIncremental(@NotNull ComponentCreationConfig creationConfig) {
+        boolean forceIncremental =
+                !creationConfig
+                        .getServices()
+                        .getProjectOptions()
+                        .get(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL);
+        if (forceIncremental) {
+            // User explicitly wants to run incrementally.
+            return true;
+        }
+        // Otherwise, run incrementally if the API is not deprecated
+        return !isOldIncrementalApiDeprecated;
     }
 
     @Override
@@ -292,6 +309,11 @@ public class TransformManager extends FilterableStreamCollection {
         sb.append("For");
 
         return sb.toString();
+    }
+
+    @VisibleForTesting
+    static boolean getIsOldIncrementalApiDeprecated(String currentVersion) {
+        return GradleVersion.version(currentVersion).compareTo(OLD_INCREMENTAL_API_DEPRECATED) >= 0;
     }
 
     /**

@@ -195,12 +195,6 @@ enum class BooleanOption(
         FeatureStage.Experimental,
     ),
 
-    LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL(
-            "android.experimental.legacyTransform.forceNonIncremental",
-            false,
-            FeatureStage.Experimental
-    ),
-
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
@@ -255,6 +249,12 @@ enum class BooleanOption(
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
     ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS("android.enableDexingArtifactTransformForExternalLibs", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
+
+    LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL(
+            "android.experimental.legacyTransform.forceNonIncremental",
+            true,
+            FeatureStage.SoftlyEnforced(VERSION_8_0)
+    ),
 
     /* -------------------
      * DEPRECATED FEATURES
