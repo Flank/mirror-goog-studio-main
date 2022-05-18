@@ -40,9 +40,9 @@ public class JarJarTest {
     }
 
     @Test
-    public void checkPotentiallyIncrementalImplementation() throws Exception {
+    public void checkNonIncrementalImplementation() throws Exception {
         project.executor()
-                .with(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL, false)
+                .with(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL, true)
                 .run("assembleDebug");
         verifyApk();
     }

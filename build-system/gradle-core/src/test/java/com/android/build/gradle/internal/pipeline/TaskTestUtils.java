@@ -143,9 +143,7 @@ public class TaskTestUtils {
     }
 
     public boolean isAllowIncremental() {
-        return allowIncremental
-                || !TransformManager.getIsOldIncrementalApiDeprecated(
-                        project.getGradle().getGradleVersion());
+        return allowIncremental;
     }
 
     protected StreamTester streamTester() {
