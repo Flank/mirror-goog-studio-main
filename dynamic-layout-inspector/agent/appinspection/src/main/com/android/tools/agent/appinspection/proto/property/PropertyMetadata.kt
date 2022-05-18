@@ -15,7 +15,7 @@
  */
 package com.android.tools.agent.appinspection.proto.property
 
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
 
 /**
  * Metadata associated with the a property.

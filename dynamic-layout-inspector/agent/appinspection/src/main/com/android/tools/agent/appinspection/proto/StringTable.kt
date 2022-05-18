@@ -17,7 +17,7 @@
 package com.android.tools.agent.appinspection.proto
 
 import androidx.annotation.VisibleForTesting
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StringEntry
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.StringEntry
 
 /**
  * A class which associates Strings with integers, where duplicate strings all share the same

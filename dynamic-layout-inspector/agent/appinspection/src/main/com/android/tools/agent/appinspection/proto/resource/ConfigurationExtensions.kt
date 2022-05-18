@@ -18,7 +18,7 @@ package com.android.tools.agent.appinspection.proto.resource
 
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.convert
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
 import android.content.res.Configuration as AndroidResConfiguration
 
 fun AndroidResConfiguration.convert(stringTable: StringTable): Configuration {

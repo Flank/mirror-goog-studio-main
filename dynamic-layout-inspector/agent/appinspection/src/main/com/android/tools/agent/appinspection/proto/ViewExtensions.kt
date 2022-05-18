@@ -30,14 +30,14 @@ import com.android.tools.agent.appinspection.proto.property.PropertyCache
 import com.android.tools.agent.appinspection.proto.property.SimplePropertyReader
 import com.android.tools.agent.appinspection.proto.resource.convert
 import com.android.tools.agent.appinspection.util.ThreadUtils
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertyGroup
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Quad
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.AppContext
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Bounds
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertyGroup
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Quad
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Rect
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.ViewNode
 import kotlin.math.roundToInt
 
 /**

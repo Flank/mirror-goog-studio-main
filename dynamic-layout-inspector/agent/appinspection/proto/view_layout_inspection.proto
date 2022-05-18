@@ -15,7 +15,8 @@
  */
 syntax = "proto3";
 package layoutinspector.view.inspection;
-option java_package = "layoutinspector.view.inspection";
+option java_package = "com.android.tools.idea.layoutinspector.view.inspection";
+
 option java_outer_classname = "LayoutInspectorViewProtocol";
 // TODO: actually use lite runtime
 // option optimize_for = LITE_RUNTIME;

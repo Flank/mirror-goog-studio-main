@@ -16,7 +16,7 @@
 
 package com.android.tools.layoutinspector.errors
 
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorCode
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.ErrorCode
 import java.lang.RuntimeException
 
 fun noHardwareAcceleration() = InspectorError(

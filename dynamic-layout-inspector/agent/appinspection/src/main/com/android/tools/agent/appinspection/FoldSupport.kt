@@ -25,7 +25,7 @@ import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.inspection.Connection
 import com.android.tools.agent.shared.FoldObserver
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol
 import java.util.concurrent.atomic.AtomicBoolean
 
 fun createFoldSupport(

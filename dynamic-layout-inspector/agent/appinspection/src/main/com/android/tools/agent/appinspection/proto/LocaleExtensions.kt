@@ -16,7 +16,7 @@
 
 package com.android.tools.agent.appinspection.proto
 
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Locale
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Locale
 import java.util.Locale as JavaUtilLocale
 
 fun JavaUtilLocale.convert(stringTable: StringTable): Locale {

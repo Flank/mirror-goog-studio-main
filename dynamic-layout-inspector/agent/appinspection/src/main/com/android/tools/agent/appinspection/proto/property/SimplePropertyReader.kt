@@ -26,8 +26,8 @@ import android.view.animation.Animation
 import android.view.inspector.PropertyReader
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.createResource
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 
 /**
  * A [PropertyReader] implementation which modifies a list of passed in
