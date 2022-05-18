@@ -171,6 +171,13 @@ public final class JdwpPacket {
         mBuffer.limit(mLength);
 
         while (mBuffer.position() != mBuffer.limit()) {
+            if (Log.Config.LOGV) {
+                Log.v("jdwp", ">>> Writing " + mBuffer.remaining() + " bytes to socket");
+                Log.hexDump("ddms", Log.LogLevel.VERBOSE, mBuffer.array(),
+                            mBuffer.arrayOffset() + mBuffer.position(),
+                            mBuffer.remaining());
+
+            }
             chan.write(mBuffer);
         }
         // position should now be at end of packet

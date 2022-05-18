@@ -171,6 +171,12 @@ public final class Log {
     public static final class Config {
         public static final boolean LOGV = true;
         public static final boolean LOGD = true;
+
+        /**
+         * Set to {@code true} to enable {@link Log#hexDump(String, LogLevel, byte[], int, int)}
+         * logging, e.g. for logging jdwp packet contents.
+         */
+        public static final boolean HEX_DUMP = false;
     }
 
     private Log() {}
@@ -333,7 +339,9 @@ public final class Log {
      * <p>Uses no string concatenation; creates one String object per line.
      */
     public static void hexDump(String tag, LogLevel level, byte[] data, int offset, int length) {
-
+        if (!Config.HEX_DUMP) {
+            return;
+        }
         int kHexOffset = 6;
         int kAscOffset = 55;
         char[] line = new char[mSpaceLine.length];
