@@ -1005,28 +1005,29 @@ open class GradleDetector : Detector(), GradleScanner {
         if (sdkIndex.isReady()) {
             val versionString = version.toString()
             var reportCreated = false
-            if (sdkIndex.isLibraryNonCompliant(groupId, artifactId, versionString, context.file)) {
+            val buildFile = context.file
+            if (sdkIndex.isLibraryNonCompliant(groupId, artifactId, versionString, buildFile)) {
                 val message = "$groupId:$artifactId version $versionString has policy issues that will block publishing"
-                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                 reportCreated = report(context, cookie, PLAY_SDK_INDEX_NON_COMPLIANT, message, fix)
             }
             if (!reportCreated) {
                 val isBlocking = sdkIndex.hasLibraryBlockingIssues(groupId, artifactId, versionString)
                 if (isBlocking) {
-                    if (sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, context.file)) {
+                    if (sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has an associated message from its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                         reportCreated = report(context, cookie, RISKY_LIBRARY, message, fix, overrideSeverity = Severity.ERROR)
                     }
-                    if ((!reportCreated) && sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
+                    if ((!reportCreated) && sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                         report(context, cookie, DEPRECATED_LIBRARY, message, fix, overrideSeverity = Severity.ERROR)
                     }
                 } else {
-                    if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
+                    if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                         report(context, cookie, DEPRECATED_LIBRARY, message, fix)
                     }
                 }

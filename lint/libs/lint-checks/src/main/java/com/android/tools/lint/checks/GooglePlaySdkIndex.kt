@@ -44,6 +44,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
         const val GOOGLE_PLAY_SDK_INDEX_KEY = "sdk_index"
         const val GOOGLE_PLAY_SDK_CACHE_EXPIRY_INTERVAL_DAYS = 7L
         const val GOOGLE_PLAY_SDK_INDEX_URL = "https://play.google.com/sdks"
+        const val VIEW_DETAILS_MESSAGE = "View details in Google Play SDK Index"
     }
 
     private var initialized: Boolean = false
@@ -266,17 +267,16 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
      *
      * @param groupId: group id for library coordinates
      * @param artifactId: artifact id for library coordinates
+     * @param versionString: version of the library (only used for logging)
+     * @param buildFile: build file where this library is being used
+     *
      * @return a link to the SDK url this library belongs to if the
      *     index has information about it and [showLinks] is true.
      */
-    fun generateSdkLinkLintFix(groupId: String, artifactId: String): LintFix? {
-        return generateShowUrl(getSdkUrl(groupId, artifactId))
-    }
-
-    protected open fun generateShowUrl(url: String?): LintFix? {
+    open fun generateSdkLinkLintFix(groupId: String, artifactId: String, versionString: String, buildFile: File?): LintFix? {
+        val url = getSdkUrl(groupId, artifactId)
         return if (url != null)
-        // TODO(b/223240014): change to one that allows logging when the link is followed
-            LintFix.ShowUrl("View details in Google Play SDK Index", null, url)
+            LintFix.ShowUrl(VIEW_DETAILS_MESSAGE, null, url)
         else
             null
     }

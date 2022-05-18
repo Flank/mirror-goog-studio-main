@@ -214,7 +214,7 @@ class GooglePlaySdkIndexTest {
             for (library in sdk.librariesList) {
                 val group = library.libraryId.mavenId.groupId
                 val artifact = library.libraryId.mavenId.artifactId
-                val lintLink = index.generateSdkLinkLintFix(group, artifact)
+                val lintLink = index.generateSdkLinkLintFix(group, artifact, versionString = "noVersion", buildFile = null)
                 assertThat(lintLink).isNotNull()
                 assertThat(lintLink).isInstanceOf(LintFix.ShowUrl::class.java)
                 assertThat((lintLink as LintFix.ShowUrl).url).isEqualTo(expectedUrl)
@@ -229,7 +229,7 @@ class GooglePlaySdkIndexTest {
             for (library in sdk.librariesList) {
                 val group = library.libraryId.mavenId.groupId
                 val artifact = library.libraryId.mavenId.artifactId
-                val lintLink = index.generateSdkLinkLintFix(group, artifact)
+                val lintLink = index.generateSdkLinkLintFix(group, artifact, versionString = "noVersion", buildFile = null)
                 assertThat(lintLink).isNull()
             }
         }
