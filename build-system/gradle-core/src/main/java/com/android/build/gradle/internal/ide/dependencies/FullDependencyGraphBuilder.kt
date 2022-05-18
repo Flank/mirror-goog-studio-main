@@ -82,7 +82,7 @@ class FullDependencyGraphBuilder(
 
         for (artifact in unvisitedArtifacts) {
             val library = libraryService.getLibrary(artifact)
-            items.add(GraphItemImpl(library.key, null, listOf()))
+            items.add(GraphItemImpl(library.key, null))
         }
 
         return items.toList()
@@ -188,19 +188,22 @@ class FullDependencyGraphBuilder(
         }
 
         if (library != null) {
-            // create the GraphItem for the library, starting by recursively computing the children
-            val children =
-                    dependency.selected.getDependenciesForVariant(variant).mapNotNull {
-                        handleDependency(it, visited, artifactMap)
-                    }
-
-            return GraphItemImpl(
+            // Create GraphItem for the library first and add it to cache in order to avoid cycles.
+            // See http://b/232075280.
+            val libraryGraphItem = GraphItemImpl(
                 library.key,
-                null,
-                children
+                null
             ).also {
                 visited[variant] = it
             }
+
+            // Now visit children, and add them as dependencies
+            dependency.selected.getDependenciesForVariant(variant).forEach {
+                handleDependency(it, visited, artifactMap)?.let { childGraphItem ->
+                    libraryGraphItem.addDependency(childGraphItem)
+                }
+            }
+            return libraryGraphItem
         }
 
         return null
