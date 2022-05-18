@@ -1721,30 +1721,73 @@ class CheckResultDetectorTest : AbstractCheckTest() {
         // Regression test for
         // 204595183: CheckResult lint false positives on Kotlin functions that
         //            return Unit in a package with @CheckReturnValue
+        // as well as b/214582872
         lint().files(
+            compiled(
+                "libs/my.jar",
+                kotlin(
+                    """
+                    @file:Suppress("RedundantSuspendModifier", "RedundantUnitReturnType", "UNUSED_PARAMETER", "unused")
+                    package test.pkg
+                    import javax.annotation.CheckReturnValue
+
+                    @CheckReturnValue
+                    class TechFileCoroutineClient {
+                        @CheckReturnValue
+                        suspend fun createNew(path: String) {
+                        }
+
+                        suspend fun method2(ch: Char): Int {
+                            return 5
+                        }
+                        suspend fun method3(ch: Char, s: String): Unit {
+                        }
+                        suspend fun method4(): Nothing {
+                            TODO()
+                        }
+                    }
+                    """
+                ).indented(),
+                0x81cab355,
+                """
+                META-INF/main.kotlin_module:
+                H4sIAAAAAAAAAGNgYGBmYGBgBGI2BijgEuLiKEktLtEryE4XYgsBsrxLlBi0
+                GAAv8Yb6LAAAAA==
+                """,
+                """
+                test/pkg/TechFileCoroutineClient.class:
+                H4sIAAAAAAAAAK1V21IbRxA9s1rdVgIknGAuToJtbAscs9wcJ4FggwBbRFZS
+                hpBK8TRIE7FotUvtjgiPVB6S/8gXJHmxK6lKKPzmj0qld7QS4hZsKqrSTE93
+                nz7dO729b/754y8AM3jKMCyFL83dWtVcF+XtFcsWeddzG9JyRN62hCPjYAyZ
+                Hb7HTZs7VfOrrR1RJm2EITZnOZacZ4jkRjfSiCJmQEecQZfbls9wq3hZ8FmG
+                ZNkTXIqS+IFhJVc8JlqTnuVUZ4s1V9qWY5ZbSN/Muw4JDS4t15kdLZ7OjYJu
+                vHuguQcth2+oqNn58wPfVsp9kzuOKxXOzG+Lcu2FkA3P2eB2Q5DXSNH1quaO
+                kFsetxy/w9s3Sw3b5lu2UMH+w82VgSd5pTrSiiPLkCiU1tYXSvllhq4TOadx
+                De8l0Yv36Qp2udxm6D37HCjiSNmt79oiYKIOuOwJM8TrQm67lSmGh7n8lS7k
+                y0tx9PyPcQVHiqrwLrqFO2dD7ezVTYtQnsNtc9Hdp0rj+JB6dMvdp2gMfbnC
+                6DkMaQzjpoGPcItBK9MTY/l2vdMMTynv/6clv71CpLfrSea3M55hmMldKb1H
+                l8Hmxi6gHwxx1LGFoKvq9F6LyrLnuV4cDxiWznkXCy2yE9e2JL7nDVsSqy+9
+                Rlm63nPu1eiSmtPFNDCOCYZsC/xcSF7hklMSWn0vQiONBUssWEDPpUb6fSs4
+                EUqrTDK8OTwYN7R+zdAyhweGlggEzQjETHd4TDSPaTpGaWd0TMT7Dw+mtAm2
+                GD36JUaI1YFMZFCb0KdimSjtsWdHPz95/YodHihznMwJUifJbNCeenb0U4c5
+                vXoz0xWilZn27maUTree1WwmQ+rsSXXv0Y+aTrkNBBXRC0l1Dl4wXMdr1PZ6
+                3q0Ihp4iqUuN+pbw1oPpE0wGt8ztDe5ZwTlUJtesqsNplJE89KJBt18XBWfP
+                8i0yLxyPJxpxp61fc49TEwrvhJux5ja8sgiyYxgIMRtn4mESGn06gl+UKqIv
+                Ca2P6TQd3GOgHXuJxG8kaHhCq0F74KqT4wJJ6aYTkmQBskiRRlcBFskSdID+
+                O/p+beNjyj+psMNNe4gNpOvoV3YdAxgkxKLCdSEfMnfT3kP/Jfp3aeSaUf2W
+                UdRDuBFS50PqaOIVbp/mTndwR9vcUYzgTlhLJ/cHijtAtniTWgfnXdwLOYuk
+                0y8ot0dRjjXtHeW2KHWMUuFau/BISJ47Q94TaZO3UhjD/TCFx5R7ECT1J8a/
+                Yzp7icm/T2WSVZn0Nd3amaQUKwtZPz7DGmchWwTLymUeK7RXSDtFnNObiBQw
+                U8DDAj7BIxLxaQGf4fNNmpCYxdwmrvkwfHzhI+YjpYTrak37GFLCiFpv+Ljr
+                Y9THPR9jSnO/nQzd/b+7Id9YPwkAAA==
+                """
+            ),
             kotlin(
                 """
                 @file:Suppress("RedundantSuspendModifier", "RedundantUnitReturnType", "UNUSED_PARAMETER", "unused")
                 package test.pkg
-                import javax.annotation.CheckReturnValue
 
-                @CheckReturnValue
-                class TechFileCoroutineClient {
-                    @CheckResult
-                    suspend fun createNew(path: String) {
-                    }
-
-                    suspend fun method2(ch: Char): Int {
-                        return 5
-                    }
-                    suspend fun method3(ch: Char, s: String): Unit {
-                    }
-                    suspend fun method4(): Nothing {
-                        TODO()
-                    }
-                }
-
-                fun readPresentFile(client: TechFileCoroutineClient) = run {
+                suspend fun readPresentFile(client: TechFileCoroutineClient) = run {
                     client.createNew("/file") // OK 1
                     client.method2('x') // ERROR 1
                     val x = client.method2('x') // OK 2
@@ -1759,7 +1802,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             javaxCheckReturnValueSource
         ).run().expect(
             """
-            src/test/pkg/TechFileCoroutineClient.kt:23: Warning: The result of method2 is not used [CheckResult]
+            src/test/pkg/test.kt:6: Warning: The result of method2 is not used [CheckResult]
                 client.method2('x') // ERROR 1
                 ~~~~~~~~~~~~~~~~~~~
             0 errors, 1 warnings
