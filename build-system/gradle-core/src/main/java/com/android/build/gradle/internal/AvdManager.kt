@@ -259,16 +259,21 @@ class AvdManager(
      * This will delete the specified avds from the shared avd folder and update the avd cache.
      *
      * @param avds names of the avds to be deleted.
+     * @return the list of avds that were actually deleted.
      */
-    fun deleteAvds(avds: List<String>) {
+    fun deleteAvds(avds: List<String>): List<String> {
         avdManager.reloadAvds()
-        for(avdName in avds) {
+        return avds.filter { avdName ->
             val avdInfo = avdManager.getAvd(avdName, false)
-            if (avdInfo != null) {
+            val isDeleted = if (avdInfo != null) {
                 avdManager.deleteAvd(avdInfo)
             } else {
+                false
+            }
+            if (!isDeleted) {
                 logger.warning("Failed to delete avd: $avdName.")
             }
+            isDeleted
         }
     }
 

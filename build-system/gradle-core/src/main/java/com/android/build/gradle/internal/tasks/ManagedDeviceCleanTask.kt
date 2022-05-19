@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.annotations.VisibleForTesting
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -65,9 +66,11 @@ abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
     abstract class ManagedDeviceCleanRunnable : ProfileAwareWorkAction<ManagedDeviceCleanParams>() {
         override fun run() {
             val allAvds = parameters.avdService.get().allAvds()
-            parameters.avdService.get().deleteAvds(allAvds.filterNot {
+            val avdsRemoved = parameters.avdService.get().deleteAvds(allAvds.filterNot {
                 parameters.ignoredDevices.get().contains(it)
             })
+            Logging.getLogger(ManagedDeviceCleanTask::class.java)
+                .lifecycle("Successfully deleted ${avdsRemoved.size} managed devices.")
             parameters.avdService.get().deleteLegacyGradleManagedDeviceAvdDirectory()
         }
     }

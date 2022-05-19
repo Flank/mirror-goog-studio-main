@@ -103,10 +103,10 @@ abstract class AvdComponentsBuildService @Inject constructor(
      * This will delete the specified avds from the shared avd folder and update the avd cache.
      *
      * @param avds names of the avds to be deleted.
+     * @return the avds that were deleted.
      */
-    fun deleteAvds(avds: List<String>) {
+    fun deleteAvds(avds: List<String>): List<String> =
         avdManager.deleteAvds(avds)
-    }
 
     /**
      * Removes the legacy Gradle Managed Device Avd directory (.android/gradle/avd), which had
