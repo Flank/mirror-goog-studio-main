@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
@@ -57,19 +58,17 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.Project
 
 class LibraryVariantFactory(
-    projectServices: ProjectServices,
+    dslServices: DslServices,
 ) : BaseVariantFactory<LibraryVariantBuilder, LibraryVariantDslInfo, LibraryCreationConfig>(
-    projectServices,
+    dslServices,
 ) {
-
     override fun createVariantBuilder(
         globalVariantBuilderConfig: GlobalVariantBuilderConfig,
         componentIdentity: ComponentIdentity,
         variantDslInfo: LibraryVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): LibraryVariantBuilder {
-        return projectServices
-                .objectFactory
+        return dslServices
                 .newInstance(
                         LibraryVariantBuilderImpl::class.java,
                         globalVariantBuilderConfig,
@@ -94,8 +93,7 @@ class LibraryVariantFactory(
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
         ): LibraryCreationConfig {
-        val libVariant = projectServices
-                .objectFactory
+        val libVariant = dslServices
                 .newInstance(
                         LibraryVariantImpl::class.java,
                         variantBuilder,
@@ -215,7 +213,7 @@ class LibraryVariantFactory(
         model: VariantInputModel<DefaultConfig, BuildType, ProductFlavor, SigningConfig>
     ) {
         super.preVariantCallback(project, dslExtension, model)
-        val issueReporter: IssueReporter = projectServices.issueReporter
+        val issueReporter: IssueReporter = dslServices.issueReporter
         val defaultConfig = model.defaultConfigData.defaultConfig
         if (defaultConfig.applicationId != null) {
             val applicationId = defaultConfig.applicationId!!

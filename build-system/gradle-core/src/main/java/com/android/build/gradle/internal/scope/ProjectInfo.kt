@@ -96,11 +96,6 @@ class ProjectInfo(private val project: Project) {
             it.file(path)
         }
 
-    @Deprecated("Do not use: b/202449978")
-    fun getProject(): Project {
-        return project
-    }
-
     @Deprecated("DO NOT USE - Only use the new Gradle Property objects")
     fun createTestResources(value: String): TextResource = project.resources.text.fromString(value)
 

@@ -30,6 +30,7 @@ import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtensionConfig
+import com.android.build.api.variant.impl.ArtifactMetadataProcessor
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfig
 import com.android.build.api.variant.impl.GlobalVariantBuilderConfigImpl
 import com.android.build.api.variant.impl.HasAndroidTest
@@ -1095,6 +1096,19 @@ class VariantManager<
 
     fun lockVariantProperties() {
         variantPropertiesApiServices.lockProperties()
+    }
+
+    fun finalizeAllVariants() {
+        variants.forEach { variant ->
+            variant.variant.artifacts.finalizeAndLock()
+            ArtifactMetadataProcessor.wireAllFinalizedBy(variant.variant)
+        }
+        testComponents.forEach { testComponent ->
+            testComponent.artifacts.finalizeAndLock()
+        }
+        testFixturesComponents.forEach { testFixturesComponent ->
+            testFixturesComponent.artifacts.finalizeAndLock()
+        }
     }
 
     companion object {

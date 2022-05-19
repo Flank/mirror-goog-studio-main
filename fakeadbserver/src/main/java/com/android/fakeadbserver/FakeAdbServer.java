@@ -17,6 +17,7 @@
 package com.android.fakeadbserver;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.fakeadbserver.devicecommandhandlers.AbbCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.AbbExecCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
@@ -64,6 +65,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -118,8 +121,27 @@ public final class FakeAdbServer implements AutoCloseable {
 
     private volatile boolean mServerKeepAccepting = false;
 
+    private Set<String> mFeatures;
+    private static final Set<String> DEFAULT_FEATURES =
+            Collections.unmodifiableSet(
+                    new HashSet<>(
+                            Arrays.asList(
+                                    "push_sync",
+                                    "fixed_push_mkdir",
+                                    "shell_v2",
+                                    "apex",
+                                    "stat_v2",
+                                    "cmd",
+                                    "abb",
+                                    "abb_exec")));
+
     private FakeAdbServer() throws IOException {
+        this(DEFAULT_FEATURES);
+    }
+
+    private FakeAdbServer(Set<String> features) throws IOException {
         mServerSocket = new ServerSocket();
+        mFeatures = features;
     }
 
     public void start() throws IOException {
@@ -266,22 +288,38 @@ public final class FakeAdbServer implements AutoCloseable {
         }
     }
 
+    void addDevice(DeviceStateConfig deviceConfig) {
+        DeviceState device = new DeviceState(this, this.newTransportId(), deviceConfig);
+        this.mDevices.put(device.getDeviceId(), device);
+    }
+
     public Future<?> addMdnsService(@NonNull MdnsService service) {
-        return mMainServerThreadExecutor.submit(
-                () -> {
-                    assert !mMdnsServices.contains(service);
-                    mMdnsServices.add(service);
-                    return null;
-                });
+        if (mConnectionHandlerTask == null) {
+            assert !mMdnsServices.contains(service);
+            mMdnsServices.add(service);
+            return Futures.immediateFuture(null);
+        } else {
+            return mMainServerThreadExecutor.submit(
+                    () -> {
+                        assert !mMdnsServices.contains(service);
+                        mMdnsServices.add(service);
+                        return null;
+                    });
+        }
     }
 
     @NonNull
     public Future<?> removeMdnsService(@NonNull MdnsService service) {
-        return mMainServerThreadExecutor.submit(
-                () -> {
-                    mMdnsServices.remove(service);
-                    return null;
-                });
+        if (mConnectionHandlerTask == null) {
+            mMdnsServices.remove(service);
+            return Futures.immediateFuture(null);
+        } else {
+            return mMainServerThreadExecutor.submit(
+                    () -> {
+                        mMdnsServices.remove(service);
+                        return null;
+                    });
+        }
     }
 
     /**
@@ -331,12 +369,36 @@ public final class FakeAdbServer implements AutoCloseable {
         return mHandlers;
     }
 
+    @NonNull
+    public FakeAdbServerConfig getCurrentConfig() {
+        FakeAdbServerConfig config = new FakeAdbServerConfig();
+
+        config.getHostHandlers().putAll(mHostCommandHandlers);
+        config.getDeviceHandlers().addAll(mHandlers);
+        config.getMdnsServices().addAll(mMdnsServices);
+        mDevices.forEach(
+                (serial, device) -> {
+                    DeviceStateConfig deviceConfig = device.getConfig();
+                    config.getDevices().add(deviceConfig);
+                });
+
+        return config;
+    }
+
     public static final class Builder {
 
         @NonNull private final FakeAdbServer mServer;
 
+        @Nullable private FakeAdbServerConfig mConfig;
+
         public Builder() throws IOException {
             mServer = new FakeAdbServer();
+        }
+
+        /** Used to restore a {@link FakeAdbServer} instance from a previously running instance */
+        public Builder setConfig(@NonNull FakeAdbServerConfig config) {
+            mConfig = config;
+            return this;
         }
 
         /**
@@ -427,7 +489,25 @@ public final class FakeAdbServer implements AutoCloseable {
 
         @NonNull
         public FakeAdbServer build() {
+            if (mConfig != null) {
+                mConfig.getHostHandlers().forEach(this::setHostCommandHandler);
+                mConfig.getDeviceHandlers().forEach(this::addDeviceHandler);
+                mConfig.getDevices().forEach(mServer::addDevice);
+                mConfig.getMdnsServices().forEach(mServer::addMdnsService);
+            }
             return mServer;
         }
+
+        public void setFeatures(@NonNull Set<String> features) {
+            mServer.setFeatures(features);
+        }
+    }
+
+    public Set<String> getFeatures() {
+        return mFeatures;
+    }
+
+    public void setFeatures(Set<String> features) {
+        mFeatures = features;
     }
 }

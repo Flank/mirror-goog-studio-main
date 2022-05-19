@@ -42,6 +42,9 @@ import com.android.tools.agent.appinspection.util.ThreadUtils
 import com.android.tools.agent.appinspection.util.compress
 import com.android.tools.idea.protobuf.ByteString
 import com.android.tools.layoutinspector.BitmapType
+import com.android.tools.layoutinspector.errors.errorCode
+import com.android.tools.layoutinspector.errors.noHardwareAcceleration
+import com.android.tools.layoutinspector.errors.noRootViews
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -49,29 +52,28 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Point
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertiesEvent
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchCommand
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchResponse
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchResponse
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeCommand
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeResponse
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Command
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Event
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesCommand
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.GetPropertiesResponse
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.LayoutEvent
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Point
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.PropertiesEvent
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Response
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Screenshot
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchCommand
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.StartFetchResponse
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.StopFetchResponse
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeCommand
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.UpdateScreenshotTypeResponse
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.io.PrintStream
-import java.util.Random
 import java.util.Timer
 import java.util.TimerTask
 import java.util.concurrent.Callable
@@ -297,9 +299,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         if (params is WindowManager.LayoutParams) {
             if (params.flags and WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED == 0) {
                 rootsDetector.stop()
-                throw UnsupportedOperationException(
-                    "Activity must be hardware accelerated for live inspection"
-                )
+                throw noHardwareAcceleration()
             }
         }
 
@@ -665,8 +665,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 }.get()
                 when {
                     result -> break
-                    tries == MAX_START_FETCH_RETRIES ->
-                        throw Exception(Exception("Unable to find any root Views"))
+                    tries == MAX_START_FETCH_RETRIES -> throw Exception(noRootViews())
                     else -> Thread.sleep(300)
                 }
             }
@@ -676,6 +675,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             callback.reply {
                 startFetchResponse = StartFetchResponse.newBuilder().apply {
                     error = exception.cause?.message ?: "Unknown error"
+                    code = exception.cause?.errorCode
                 }.build()
             }
             return

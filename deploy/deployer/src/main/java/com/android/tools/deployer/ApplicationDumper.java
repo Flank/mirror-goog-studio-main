@@ -108,11 +108,21 @@ public class ApplicationDumper {
         // The component using it should be the one to check apkEntries.size() and throw
         // and exception if necessary. This check should be moved further down the
         // pipeline.
-        if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
-            throw DeployerException.unknownPackage(response.getFailedPackage());
+        if (response.getStatus() != Deploy.DumpResponse.Status.OK) {
+            throwDumpError(packagesToDump, response);
         }
 
         return new Dump(GetApks(response.getPackages(0)), GetPids(response), GetArch(response));
+    }
+
+    static void throwDumpError(List<String> packages, Deploy.DumpResponse response)
+            throws DeployerException {
+        switch (response.getStatus()) {
+            case ERROR_PACKAGE_NOT_FOUND:
+                throw DeployerException.unknownPackage(response.getFailedPackage());
+            default:
+                throw DeployerException.dumpBadResponse(packages, response.getStatus().getNumber());
+        }
     }
 
     public static class Dump {

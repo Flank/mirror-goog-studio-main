@@ -15,7 +15,10 @@
  */
 package com.android.adblib.tools.tests
 
+import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbDeviceServices
+import com.android.adblib.AdbHostServices
+import com.android.adblib.AdbLibHost
 import com.android.adblib.AdbLibSession
 import com.android.adblib.SOCKET_CONNECT_TIMEOUT_MS
 import com.android.adblib.testingutils.CloseablesRule
@@ -27,6 +30,7 @@ import org.junit.rules.ExpectedException
 import java.time.Duration
 
 open class TestInstallBase {
+
     @JvmField
     @Rule
     val closeables = CloseablesRule()
@@ -38,6 +42,8 @@ open class TestInstallBase {
     protected fun <T : AutoCloseable> registerCloseable(item: T): T {
         return closeables.register(item)
     }
+
+    private lateinit var channelProvider: FakeAdbServerProvider.TestingChannelProvider
 
     protected fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
         val host = registerCloseable(TestingAdbLibHost())
@@ -65,4 +71,22 @@ open class TestInstallBase {
         return fakeDevice
     }
 
+    internal fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
+        val host = registerCloseable(TestingAdbLibHost())
+        channelProvider = fakeAdb.createChannelProvider(host)
+        val session = registerCloseable(createSession(host, channelProvider))
+        return session.hostServices
+    }
+
+    private fun createSession(
+        host: AdbLibHost,
+        channelProvider: AdbChannelProvider
+    ): AdbLibSession {
+        return AdbLibSession.create(
+            host,
+            channelProvider,
+            Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
+        )
+
+    }
 }

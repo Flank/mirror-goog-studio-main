@@ -34,6 +34,7 @@ import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
+import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
@@ -48,11 +49,9 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.file.Directory
@@ -60,6 +59,8 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.function.Predicate
 
 /**
  * Base of the interfaces used internally to access *PropertiesImpl object.
@@ -95,7 +96,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val instrumentation: Instrumentation
     val debuggable: Boolean
     val profileable: Boolean
-    val buildConfigEnabled: Boolean
     val manifestPlaceholders: MapProperty<String, String>
     val supportedAbis: Set<String>
 
@@ -110,6 +110,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val assetsCreationConfig: AssetsCreationConfig?
     val androidResourcesCreationConfig: AndroidResourcesCreationConfig?
     val resValuesCreationConfig: ResValuesCreationConfig?
+    val buildConfigCreationConfig: BuildConfigCreationConfig?
 
     // TODO figure out whether these properties are needed by all
     // TODO : remove as it is now in Variant.
@@ -175,16 +176,16 @@ interface ComponentCreationConfig : ComponentIdentity {
         outputFileName: String? = null
     )
 
+    fun computeLocalFileDependencies(filePredicate: Predicate<File>): FileCollection
+
+    fun computeLocalPackagedJars(): FileCollection
+
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------
     // TODO: Figure out if we should be exposing any of the below
 
     val isAndroidTestCoverageEnabled: Boolean
-
-    fun getCompiledBuildConfig(): FileCollection
-
-    fun getBuildConfigType() : BuildConfigType
 
     fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
 
@@ -202,12 +203,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // ---------------------------------------------------------------------------------------------
     // LEGACY SUPPORT
     // ---------------------------------------------------------------------------------------------
-
-    // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
-    // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
-    // switches to the new variant API.
-    @Deprecated("DO NOT USE, this is just for KAPT legacy support")
-    fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
 
     @Deprecated("DO NOT USE, this is just for model v1 legacy support")
     val modelV1LegacySupport: ModelV1LegacySupport

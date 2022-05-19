@@ -288,10 +288,6 @@ com/android/tools/build/builder
   META-INF/services/
   META-INF/services/com.android.tools.r8
   NOTICE
-  api_database/
-  api_database/api_database_ambiguous.txt
-  api_database/api_database_api_level.ser
-  api_database/api_database_hash_lookup.ser
   com/
   com/android/
   com/android/builder/
@@ -326,6 +322,8 @@ com/android/tools/build/builder
   com/android/tools/
   com/android/tools/r8/
   r8-version.properties
+  resources/
+  resources/new_api_database.ser
 
 com/android/tools/build/builder-model
   META-INF/
@@ -375,11 +373,13 @@ com/android/tools/build/gradle
   META-INF/gradle-plugins/com.android.internal.dynamic-feature.properties
   META-INF/gradle-plugins/com.android.internal.fused-library.properties
   META-INF/gradle-plugins/com.android.internal.library.properties
+  META-INF/gradle-plugins/com.android.internal.privacy-sandbox-sdk.properties
   META-INF/gradle-plugins/com.android.internal.reporting.properties
   META-INF/gradle-plugins/com.android.internal.test.properties
   META-INF/gradle-plugins/com.android.internal.version-check.properties
   META-INF/gradle-plugins/com.android.library.properties
   META-INF/gradle-plugins/com.android.lint.properties
+  META-INF/gradle-plugins/com.android.privacy-sandbox-sdk.properties
   META-INF/gradle-plugins/com.android.reporting.properties
   META-INF/gradle-plugins/com.android.test.properties
   META-INF/profgen.kotlin_module
@@ -468,6 +468,7 @@ com/android/tools/build/gradle
   com/android/build/gradle/internal/packaging/
   com/android/build/gradle/internal/pipeline/
   com/android/build/gradle/internal/plugins/
+  com/android/build/gradle/internal/privaysandboxsdk/
   com/android/build/gradle/internal/process/
   com/android/build/gradle/internal/profile/
   com/android/build/gradle/internal/publishing/

@@ -22,6 +22,7 @@ import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.AdbHelper;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.AvdData;
+import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.ClientTracker;
 import com.android.ddmlib.CollectingOutputReceiver;
@@ -35,6 +36,7 @@ import com.android.ddmlib.InstallReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.NullOutputReceiver;
+import com.android.ddmlib.ProfileableClient;
 import com.android.ddmlib.PropertyFetcher;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.RemoteSplitApkInstaller;
@@ -837,16 +839,16 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public ClientImpl[] getClients() {
+    public Client[] getClients() {
         synchronized (mClients) {
-            return mClients.toArray(new ClientImpl[0]);
+            return mClients.toArray(new Client[0]);
         }
     }
 
     @Override
-    public ClientImpl getClient(String applicationName) {
+    public Client getClient(String applicationName) {
         synchronized (mClients) {
-            for (ClientImpl c : mClients) {
+            for (Client c : mClients) {
                 if (applicationName.equals(c.getClientData().getClientDescription())) {
                     return c;
                 }
@@ -857,7 +859,11 @@ public final class DeviceImpl implements IDevice {
     }
 
     @Override
-    public ProfileableClientImpl[] getProfileableClients() {
+    public ProfileableClient[] getProfileableClients() {
+        return getProfileableClientImpls();
+    }
+
+    ProfileableClientImpl[] getProfileableClientImpls() {
         synchronized (mProfileableClients) {
             return mProfileableClients.toArray(new ProfileableClientImpl[0]);
         }

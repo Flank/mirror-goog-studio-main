@@ -1,4 +1,4 @@
-load("//tools/base/bazel:repositories.bzl", "setup_external_repositories")
+load("//tools/base/bazel:repositories.bzl", "setup_external_repositories", "vendor_repository")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
 load("//tools/adt/idea/kotlin-integration:version.bzl", "KOTLIN_IDE_VERSION")
@@ -30,9 +30,14 @@ local_repository(
     },
 )
 
-load("@blaze//:binds.bzl", "blaze_binds")
+vendor_repository(
+    name = "vendor",
+    bzl = "@//tools/base/bazel:vendor.bzl",
+    function = "setup_vendor_repositories",
+)
+load("@vendor//:vendor.bzl", "setup_vendor_repositories")
 
-blaze_binds()
+setup_vendor_repositories()
 
 local_repository(
     name = "io_bazel_rules_kotlin",

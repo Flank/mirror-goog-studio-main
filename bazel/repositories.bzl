@@ -87,12 +87,16 @@ _git = [
         "path": "external/grpc-grpc",
     },
     {
-        "name": "androidndk",
-        "api_level": 21,
-    },
-    {
         "name": "gflags_repo",
         "path": "external/gflags",
+    },
+]
+
+# Vendor repository mapped to git repositories.
+_vendor_git = [
+    {
+        "name": "androidndk",
+        "api_level": 21,
     },
 ]
 
@@ -202,13 +206,37 @@ local_archive = repository_rule(
     },
 )
 
+def _vendor_repository_impl(repository_ctx):
+    setup_vendor = repository_ctx.os.environ["SETUP_VENDOR"] in ["1", "True", "TRUE"] if "SETUP_VENDOR" in repository_ctx.os.environ else True
+    s = ""
+    if setup_vendor:
+        s = repository_ctx.read(repository_ctx.path(repository_ctx.attr.bzl))
+    else:
+        s = "def " + repository_ctx.attr.function + "(): pass"
+    repository_ctx.file("vendor.bzl", s)
+    repository_ctx.file("BUILD", "")
+
+# Helper rule for getting conditional workspace execution. Required for AOSP builds
+vendor_repository = repository_rule(
+    implementation = _vendor_repository_impl,
+    environ = ["SETUP_VENDOR"],
+    local = True,
+    attrs = {
+        "bzl": attr.label(doc = "Relative path to the bzl to load."),
+        "function": attr.string(doc = "The function to import."),
+    },
+)
+
+def setup_vendor_repos():
+    _setup_git_repos(_vendor_git)
+
 def setup_external_repositories(prefix = ""):
-    _setup_git_repos(prefix)
+    _setup_git_repos(_git, prefix)
     _setup_archive_repos(prefix)
     _setup_binds()
 
-def _setup_git_repos(prefix = ""):
-    for _repo in _git:
+def _setup_git_repos(repos, prefix = ""):
+    for _repo in repos:
         repo = dict(_repo)
         if repo["name"] == "androidndk":
             native.android_ndk_repository(**repo)

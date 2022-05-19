@@ -158,6 +158,12 @@ com.android.lint:com.android.lint.gradle.plugin
   dependencies:
     com.android.tools.build:gradle ()
 
+com.android.privacy-sandbox-sdk:com.android.privacy-sandbox-sdk.gradle.plugin
+  pomName=com.android.tools.build.gradle
+  description=Gradle plug-in to build Android applications.
+  dependencies:
+    com.android.tools.build:gradle ()
+
 com.android.settings:com.android.settings.gradle.plugin
   pomName=com.android.tools.build.gradle-settings
   description=Gradle Settings plug-in to build Android applications.
@@ -222,11 +228,11 @@ com.android.tools:sdk-common
   description=sdk-common library used by other Android tools libraries.
   dependencies:
     com.android.tools.analytics-library:shared (runtime)
+    com.android.tools.build:aapt2-proto (runtime)
     com.android.tools:common (runtime)
     com.android.tools.ddms:ddmlib (runtime)
     com.android.tools.layoutlib:layoutlib-api (runtime)
     com.android.tools:sdklib (runtime)
-    com.android.tools.build:aapt2-proto (runtime)
     com.google.code.gson:gson (runtime)
     com.google.guava:guava (runtime)
     com.google.protobuf:protobuf-java (runtime)
@@ -456,6 +462,7 @@ com.android.tools.build:gradle
     com.android.tools.build:builder (compile)
     com.android.tools.build:builder-model (compile)
     com.android.tools.build:gradle-api (compile)
+    com.android.tools.build:gradle-settings-api (runtime)
     com.android.tools:sdk-common (runtime)
     com.android.tools:sdklib (runtime)
     com.android.tools:repository (runtime)
@@ -518,7 +525,6 @@ com.android.tools.build:gradle-settings
   description=Gradle Settings plug-in to build Android applications.
   dependencies:
     com.android.tools.build:gradle-settings-api (compile)
-    com.android.tools.build:gradle-api (runtime)
     org.jetbrains.kotlin:kotlin-stdlib-jdk8 (runtime)
 
 com.android.tools.build:gradle-settings-api

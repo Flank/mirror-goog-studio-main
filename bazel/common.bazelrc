@@ -39,6 +39,7 @@ test:ignored --jvmopt=-Dignored.tests.only=true
 test --aspects=tools/base/bazel/validations/timeout.bzl%no_eternal_tests
 test --aspects=tools/base/bazel/validations/flaky.bzl%limit_flaky_tests
 test --aspects=tools/base/bazel/validations/py2.bzl%no_py2_targets
+build --aspects=tools/base/bazel/validations/exec_props.bzl%limit_exec_properties
 # Generates a ${TARGET}.datasize.txt output which shows the size of data
 # dependencies for each target. See the aspect definition for more.
 build:datasize_aspect --aspects=tools/base/bazel/validations/size.bzl%data_size
@@ -96,7 +97,7 @@ build:release --define release=true
 build:release --copt=-w
 
 ## Base RBE configuration
-build:_remote_base --bes_timeout=60s
+build:_remote_base --bes_timeout=120s
 build:_remote_base --project_id=908081808034
 build:_remote_base --google_default_credentials
 build:_remote_base --remote_cache=remotebuildexecution.googleapis.com
@@ -158,7 +159,7 @@ build:remote-exec --show_timestamps
 # this higher can make builds faster by allowing more jobs to run in parallel.
 # Setting it too high can result in jobs that timeout, however, while waiting
 # for a remote machine to execute them.
-build:remote-exec --jobs=250
+build:remote-exec --jobs=350
 
 ## Remote combines all the configs used for remote execution.
 build:remote --config=_remote_base
@@ -204,3 +205,5 @@ build:dynamic --noverbose_failures
 # Multiplex workers are not sandboxed, and are not ready to be used with
 # dynamic scheduling.
 build:dynamic --noexperimental_worker_multiplex
+
+build:without_vendor --repo_env=SETUP_VENDOR=0

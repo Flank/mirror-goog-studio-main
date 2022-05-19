@@ -28,8 +28,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldOrientation
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldOrientation
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.FoldEvent.FoldState
 import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule

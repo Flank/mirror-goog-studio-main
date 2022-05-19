@@ -424,10 +424,10 @@ class AvdManagerCli extends CommandLineParser {
      */
     private void displayAvdList(AvdManager avdManager) {
 
-        AvdInfo[] avds = avdManager.getValidAvds();
+        List<AvdInfo> avds = new ArrayList<>(avdManager.getValidAvds());
 
         // Sort the AVD list by name, to make it stable on different operating systems.
-        Arrays.sort(avds, (a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()));
+        avds.sort((a1, a2) -> a1.getName().compareToIgnoreCase(a2.getName()));
 
         // Compact output, suitable for scripts.
         if (getFlagCompact()) {
@@ -442,8 +442,8 @@ class AvdManagerCli extends CommandLineParser {
 
         mSdkLog.info("Available Android Virtual Devices:\n");
 
-        for (int index = 0; index < avds.length; index++) {
-            AvdInfo info = avds[index];
+        for (int index = 0; index < avds.size(); index++) {
+            AvdInfo info = avds.get(index);
             if (index > 0) {
                 mSdkLog.info("---------\n");
             }
@@ -886,8 +886,7 @@ class AvdManagerCli extends CommandLineParser {
                             device == null ? null : device.getBootProps(),
                             true,
                             removePrevious,
-                            false,
-                            mSdkLog);
+                            false);
 
             if (newAvdInfo == null) {
                 errorAndExit("AVD not created.");
@@ -940,7 +939,7 @@ class AvdManagerCli extends CommandLineParser {
                 return;
             }
 
-            avdManager.deleteAvd(info, mSdkLog);
+            avdManager.deleteAvd(info);
         } catch (AndroidLocationsException e) {
             errorAndExit(e.getMessage());
         }
@@ -1043,7 +1042,7 @@ class AvdManagerCli extends CommandLineParser {
                 properties.put(AvdManager.AVD_INI_DISPLAY_NAME, newName);
                 avdManager.updateAvd(info, properties);
             }
-            avdManager.moveAvd(info, newName, paramFolderPath, mSdkLog);
+            avdManager.moveAvd(info, newName, paramFolderPath);
         } catch (AndroidLocationsException | IOException e) {
             errorAndExit(e.getMessage());
         }

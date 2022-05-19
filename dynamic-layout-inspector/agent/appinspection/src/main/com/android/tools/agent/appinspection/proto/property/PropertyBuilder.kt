@@ -18,9 +18,9 @@ package com.android.tools.agent.appinspection.proto.property
 import android.view.View
 import com.android.tools.agent.appinspection.proto.StringTable
 import com.android.tools.agent.appinspection.proto.getNamespace
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.FlagValue
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.FlagValue
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Resource
 import java.util.function.IntFunction
 
 /**

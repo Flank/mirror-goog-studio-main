@@ -592,22 +592,22 @@ fun getManifestProducerTask() =
             abstract class GetAllClassesTask: DefaultTask() {
 
                 @get:InputFiles
-                abstract val allClasses: ListProperty<Directory>
+                abstract val allDirectories: ListProperty<Directory>
 
                 @get:InputFiles
-                abstract val allJarsWithClasses: ListProperty<RegularFile>
+                abstract val allJars: ListProperty<RegularFile>
 
                 @TaskAction
                 fun taskAction() {
 
-                    allClasses.get().forEach { directory ->
+                    allDirectories.get().forEach { directory ->
                         println("Directory : ${'$'}{directory.asFile.absolutePath}")
                         directory.asFile.walk().filter(File::isFile).forEach { file ->
                             println("File : ${'$'}{file.absolutePath}")
                         }
-                        allJarsWithClasses.get().forEach { file ->
-                            println("JarFile : ${'$'}{file.asFile.absolutePath}")
-                        }
+                    }
+                    allJars.get().forEach { file ->
+                        println("JarFile : ${'$'}{file.asFile.absolutePath}")
                     }
                 }
             }
@@ -625,22 +625,22 @@ fun getManifestProducerTask() =
             abstract class GetAllClassesTask extends DefaultTask {
 
                 @InputFiles
-                abstract ListProperty<Directory> getAllClasses()
+                abstract ListProperty<Directory> getAllDirectories()
 
                 @InputFiles
-                abstract ListProperty<RegularFile> getAllJarsWithClasses()
+                abstract ListProperty<RegularFile> getAllJars()
 
                 @TaskAction
                 void taskAction() {
 
-                    allClasses.get().forEach { directory ->
+                    allDirectories.get().forEach { directory ->
                         println("Directory : ${'$'}{directory.asFile.absolutePath}")
                         directory.asFile.traverse(type: groovy.io.FileType.FILES) { file ->
                             println("File : ${'$'}{file.absolutePath}")
                         }
-                        allJarsWithClasses.get().forEach { file ->
-                            println("JarFile : ${'$'}{file.asFile.absolutePath}")
-                        }
+                    }
+                    allJars.get().forEach { file ->
+                        println("JarFile : ${'$'}{file.asFile.absolutePath}")
                     }
                 }
             }

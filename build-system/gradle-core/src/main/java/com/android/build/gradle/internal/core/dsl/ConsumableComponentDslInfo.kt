@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.core.dsl
 
+import com.android.build.api.variant.BuildConfigField
 import java.io.File
+import java.io.Serializable
 
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
@@ -65,4 +67,15 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
      * Returns whether to ignore all keep rules from external library dependencies.
      */
     val ignoreAllLibraryKeepRules: Boolean
+
+    /**
+     * Returns a list of items for the BuildConfig class.
+     *
+     *
+     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
+     * comments (instance of String).
+     *
+     * @return a list of items.
+     */
+    fun getBuildConfigFields(): Map<String, BuildConfigField<out Serializable>>
 }

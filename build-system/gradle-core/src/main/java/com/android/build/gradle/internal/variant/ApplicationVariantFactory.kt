@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
@@ -62,9 +63,9 @@ import java.util.Arrays
 import java.util.function.Consumer
 
 class ApplicationVariantFactory(
-    projectServices: ProjectServices,
+    dslServices: DslServices,
 ) : AbstractAppVariantFactory<ApplicationVariantBuilder, ApplicationVariantDslInfo, ApplicationCreationConfig>(
-    projectServices,
+    dslServices,
 ) {
 
     override fun createVariantBuilder(
@@ -74,8 +75,7 @@ class ApplicationVariantFactory(
         variantBuilderServices: VariantBuilderServices
     ): ApplicationVariantBuilderImpl {
 
-        return projectServices
-            .objectFactory
+        return dslServices
             .newInstance(
                 ApplicationVariantBuilderImpl::class.java,
                 globalVariantBuilderConfig,
@@ -101,8 +101,7 @@ class ApplicationVariantFactory(
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
         ): ApplicationCreationConfig {
-        val appVariant = projectServices
-            .objectFactory
+        val appVariant = dslServices
             .newInstance(
                 ApplicationVariantImpl::class.java,
                 variantBuilder,
@@ -315,7 +314,7 @@ class ApplicationVariantFactory(
             return
         }
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        val issueReporter = projectServices.issueReporter
+        val issueReporter = dslServices.issueReporter
         issueReporter.reportError(
             IssueReporter.Type.GENERIC, String.format(
                 "Conflicting configuration : '%1\$s' in ndk abiFilters "
@@ -332,7 +331,7 @@ class ApplicationVariantFactory(
         globalConfig: GlobalTaskCreationConfig
     ) {
         val supportedAbis: Set<String> = component.supportedAbis
-        val projectOptions = projectServices.projectOptions
+        val projectOptions = dslServices.projectOptions
         val buildTargetAbi =
             (if (projectOptions[BooleanOption.BUILD_ONLY_TARGET_ABI]
                 || globalConfig.splits.abi.isEnable
@@ -368,7 +367,7 @@ class ApplicationVariantFactory(
                 .map { filters: Collection<FilterConfiguration> ->
                     filters.joinToString(",")
                 }
-            projectServices
+            dslServices
                 .issueReporter
                 .reportWarning(
                     IssueReporter.Type.GENERIC, String.format(

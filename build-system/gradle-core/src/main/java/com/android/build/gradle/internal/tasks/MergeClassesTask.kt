@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
+import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -48,8 +50,7 @@ import java.util.zip.Deflater
 abstract class MergeClassesTask : NonIncrementalTask() {
 
     @get:Classpath
-    abstract var inputFiles: FileCollection
-        protected set
+    abstract val inputFiles: ConfigurableFileCollection
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -132,7 +133,8 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             task: MergeClassesTask
         ) {
             super.configure(task)
-            task.inputFiles = inputFiles
+            task.inputFiles.setFrom(inputFiles)
+            task.inputFiles.disallowChanges()
             task.jarCreatorType = creationConfig.variantScope.jarCreatorType
         }
     }

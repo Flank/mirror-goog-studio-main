@@ -25,6 +25,8 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
@@ -116,7 +118,6 @@ import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles
 import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
-import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
@@ -152,6 +153,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDepen
 import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
 import com.android.build.gradle.internal.tasks.databinding.KAPT_FIX_KOTLIN_VERSION
 import com.android.build.gradle.internal.tasks.databinding.MergeRFilesForDataBindingTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactory
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
@@ -234,10 +236,6 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Sets
-import java.io.File
-import java.util.concurrent.Callable
-import java.util.function.Consumer
-import java.util.stream.Collectors
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -262,6 +260,10 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
+import java.io.File
+import java.util.concurrent.Callable
+import java.util.function.Consumer
+import java.util.stream.Collectors
 
 /**
  * Manages tasks creation
@@ -1053,7 +1055,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createBuildConfigTask(creationConfig: ConsumableCreationConfig) {
-        if (creationConfig.buildConfigEnabled) {
+        creationConfig.buildConfigCreationConfig?.let { buildConfigCreationConfig ->
             val generateBuildConfigTask =
                     taskFactory.register(GenerateBuildConfig.CreationAction(creationConfig))
             val isBuildConfigBytecodeEnabled = creationConfig
@@ -1062,7 +1064,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             if (!isBuildConfigBytecodeEnabled
                     // TODO(b/224758957): This is wrong we need to check the final build config
                     //  fields from the variant API
-                    || creationConfig.dslBuildConfigFields.isNotEmpty()
+                    || buildConfigCreationConfig.dslBuildConfigFields.isNotEmpty()
             ) {
                 creationConfig.taskContainer.sourceGenTask.dependsOn(generateBuildConfigTask)
             }
@@ -1174,7 +1176,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                                     .build())
             creationConfig
                     .artifacts
-                    .appendTo(MultipleArtifact.PROJECT_CLASSES_DIRS, RUNTIME_R_CLASS_CLASSES)
+                    .appendTo(MultipleArtifact.ALL_CLASSES_DIRS, RUNTIME_R_CLASS_CLASSES)
             return
         }
         createNonNamespacedResourceTasks(
@@ -1245,7 +1247,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                                     creationConfig))
                 }
                 artifacts.appendTo(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
 
                 if (!creationConfig.debuggable &&
@@ -1360,10 +1362,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     protected open fun postJavacCreation(creationConfig: ComponentCreationConfig) {
+        // Use the deprecated public artifac types to register the pre/post JavaC hooks as well as
+        // the javac output itself.
+        // It is necessary to do so in case some third-party plugin is using those deprecated public
+        // artifact type to append/transform/replace content.
+        // Once the deprecated types can be removed, all the methods below should use the
+        // [ScopedArtifacts.setInitialContent] methods to initialize directly the scoped container.
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         creationConfig.variantData.allPreJavacGeneratedBytecode.getRegularFiles(
                                 project.layout.projectDirectory
                         ));
@@ -1371,7 +1379,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         creationConfig.variantData.allPreJavacGeneratedBytecode.getDirectories(
                             project.layout.projectDirectory
                         ));
@@ -1379,7 +1387,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         creationConfig.variantData.allPostJavacGeneratedBytecode.getRegularFiles(
                             project.layout.projectDirectory
                         ));
@@ -1387,14 +1395,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         creationConfig.variantData.allPostJavacGeneratedBytecode.getDirectories(
                             project.layout.projectDirectory
                         ));
         creationConfig
                 .artifacts
                 .appendTo(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         JAVAC)
     }
 
@@ -1439,7 +1447,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                                 if (needsJavaResStreams) TransformManager.CONTENT_JARS else setOf(
                                     com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
                         .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
-                        .setFileCollection(creationConfig.artifacts.getAllClasses())
+                        .setFileCollection(creationConfig
+                            .artifacts
+                            .forScope(ScopedArtifacts.Scope.PROJECT)
+                            .getFinalArtifacts(ScopedArtifact.CLASSES))
                         .build())
     }
 
@@ -2064,21 +2075,25 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // Merge Java Resources.
         createMergeJavaResTask(creationConfig)
 
-        val isAndroidTestCoverageEnabled =
-            creationConfig.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
+        // -----------------------------------------------------------------------------------------
+        // The following task registrations MUST follow the order:
+        //   ASM API -> Legacy transforms -> jacoco transforms
+        // -----------------------------------------------------------------------------------------
+
+        maybeCreateTransformClassesWithAsmTask(creationConfig)
 
         // ----- External Transforms -----
         val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
 
         // New gradle-transform jacoco instrumentation support.
-        if (isAndroidTestCoverageEnabled) {
+        if (creationConfig.isAndroidTestCoverageEnabled &&
+            !creationConfig.componentType.isForTesting) {
             if (registeredLegacyTransform) {
                 createJacocoTaskWithLegacyTransformSupport(creationConfig)
             } else {
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(creationConfig)
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -2337,7 +2352,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val classesFromLegacyTransforms =
             creationConfig.transformManager.getPipelineOutputAsFileCollection(
                 { _, _ -> true},
-                { _, scopes -> scopes == setOf(
+                { types, _ -> types.contains(
                     com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES) }
             )
 
@@ -2367,7 +2382,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                     creationConfig !is ApplicationCreationConfig) {
                 // For libraries that can be published,avoid publishing classes
                 // with runtime dependencies on Jacoco.
-                creationConfig.artifacts.getAllClasses()
+                creationConfig.artifacts
+                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                    .getFinalArtifacts(ScopedArtifact.CLASSES)
             } else {
                 project.files(
                     creationConfig.artifacts.get(JACOCO_INSTRUMENTED_CLASSES),
@@ -2430,7 +2447,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
         // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
         // new variant API.
-        creationConfig.addDataBindingArgsToOldVariantApi(dataBindingArgs)
+        creationConfig.oldVariantApiLegacySupport.addDataBindingArgsToOldVariantApi(dataBindingArgs)
 
         // add it the new Variant API objects, this is what our tasks use.
         processorOptions.argumentProviders.add(dataBindingArgs)

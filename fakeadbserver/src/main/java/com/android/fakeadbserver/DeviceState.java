@@ -45,7 +45,7 @@ public class DeviceState {
     private final HostConnectionType mHostConnectionType;
     private final Set<String> mFeatures;
 
-    private int myTransportId;
+    private final int myTransportId;
 
     private final String mDeviceId;
     private final String mManufacturer;
@@ -75,6 +75,22 @@ public class DeviceState {
         myTransportId = transportId;
         mDeviceStatus = DeviceStatus.OFFLINE;
         mServiceManager = new ServiceManager();
+    }
+
+    DeviceState(@NonNull FakeAdbServer server, int transportId, @NonNull DeviceStateConfig config) {
+        this(
+                server,
+                config.getSerialNumber(),
+                config.getManufacturer(),
+                config.getModel(),
+                config.getBuildVersionRelease(),
+                config.getBuildVersionSdk(),
+                config.getHostConnectionType(),
+                transportId);
+        config.getFiles().forEach(fileState -> mFiles.put(fileState.getPath(), fileState));
+        mLogcatMessages.addAll(config.getLogcatMessages());
+        mDeviceStatus = config.getDeviceStatus();
+        config.getClients().forEach(clientState -> mClients.put(clientState.getPid(), clientState));
     }
 
     public void stop() {
@@ -111,7 +127,6 @@ public class DeviceState {
         return mDeviceStatus;
     }
 
-    @NonNull
     public int getTransportId() {
         return myTransportId;
     }
@@ -275,6 +290,21 @@ public class DeviceState {
                     .map(clientState -> Integer.toString(clientState.getPid()))
                     .collect(Collectors.joining("\n"));
         }
+    }
+
+    @NonNull
+    public DeviceStateConfig getConfig() {
+        return new DeviceStateConfig(
+                mDeviceId,
+                new ArrayList<>(mFiles.values()),
+                new ArrayList<>(mLogcatMessages),
+                new ArrayList<>(mClients.values()),
+                mHostConnectionType,
+                mManufacturer,
+                mModel,
+                mBuildVersionRelease,
+                mBuildVersionSdk,
+                mDeviceStatus);
     }
 
     private static Set<String> initFeatures(String sdk) {

@@ -61,6 +61,12 @@ public class DeployerException extends Exception {
                 "Install and run app",
                 ResolutionAction.RUN_APP),
 
+        DUMP_ERROR(
+                "Packages [%s] dump failed [%s].",
+                "Unable to retrieve packages [%s] info. Error code [%s]",
+                "",
+                ResolutionAction.NONE),
+
         DUMP_UNKNOWN_PROCESS(
                 "No running app process found.", "", "Run app", ResolutionAction.RUN_APP),
 
@@ -396,6 +402,13 @@ public class DeployerException extends Exception {
 
     public static DeployerException unknownPackage(String packageName) {
         return new DeployerException(Error.DUMP_UNKNOWN_PACKAGE, NO_ARGS, packageName);
+    }
+
+    public static DeployerException dumpBadResponse(List<String> packages, int status) {
+        String[] args = new String[2];
+        args[0] = String.join(",", packages);
+        args[1] = Integer.toString(status);
+        return new DeployerException(Error.DUMP_ERROR, args, args[0], args[1]);
     }
 
     // TODO: Make this package-aware.

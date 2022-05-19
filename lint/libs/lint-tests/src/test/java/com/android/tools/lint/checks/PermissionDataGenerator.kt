@@ -84,12 +84,12 @@ data class Permission(
 
     /* Mark this permission as dangerous in the given API level */
     fun markDangerous(apiLevel: Int) {
-        dangerous = dangerous or ((1 shl apiLevel).toLong())
+        dangerous = dangerous or (1L shl apiLevel)
     }
 
     /* Mark this permission as signature/system in the given API level */
     fun markSignature(apiLevel: Int) {
-        signature = signature or ((1 shl apiLevel).toLong())
+        signature = signature or (1L shl apiLevel)
     }
 
     /**
@@ -208,7 +208,7 @@ class PermissionDataGenerator {
         permissions ?: return emptyList()
 
         return permissions.filter { permission ->
-            permission.introducedIn < permission.signatureIn && permission.field != null
+            permission.introducedIn < permission.signatureIn && permission.field != null && permission.introducedIn != -1
         }.sortedWith(compareBy(Permission::signatureIn, Permission::name))
     }
 

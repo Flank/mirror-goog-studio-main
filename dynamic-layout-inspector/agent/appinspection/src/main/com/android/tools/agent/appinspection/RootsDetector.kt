@@ -20,8 +20,8 @@ import android.view.View
 import android.view.inspector.WindowInspector
 import androidx.inspection.Connection
 import com.android.tools.agent.appinspection.util.ThreadUtils
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.ProgressEvent.ProgressCheckpoint
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.WindowRootsEvent
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean

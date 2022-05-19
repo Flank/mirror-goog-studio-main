@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.android.build.gradle.internal.generators.BuildConfigGenerator
+import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationActionImpl
 import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
@@ -201,6 +203,8 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     internal class CreationAction(creationConfig: ConsumableCreationConfig) :
         VariantTaskCreationAction<GenerateBuildConfig, ConsumableCreationConfig>(
             creationConfig
+        ), BuildConfigTaskCreationAction by BuildConfigTaskCreationActionImpl(
+            creationConfig
         ) {
 
         override val name: String = computeTaskName("generate", "BuildConfig")
@@ -215,7 +219,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                     .get(BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE)
             // TODO(b/224758957): This is wrong we need to check the final build config fields from
             //  the variant API
-            val generateItems = creationConfig.dslBuildConfigFields.any()
+            val generateItems = buildConfigCreationConfig.dslBuildConfigFields.any()
             creationConfig.taskContainer.generateBuildConfigTask = taskProvider
             if (outputBytecode && !generateItems) {
                 creationConfig.artifacts.setInitialProvider(
@@ -267,7 +271,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 creationConfig.getFlavorNamesWithDimensionNames()
             })
 
-            task.items.set(creationConfig.buildConfigFields)
+            task.items.set(buildConfigCreationConfig.buildConfigFields)
 
             if (creationConfig.componentType.isTestComponent) {
                 creationConfig.artifacts.setTaskInputToFinalProduct(

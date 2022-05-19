@@ -33,6 +33,8 @@ import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.internal.component.PublishableCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
+import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -125,6 +127,8 @@ open class TestFixturesImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? = null
+
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
 
@@ -147,7 +151,7 @@ open class TestFixturesImpl @Inject constructor(
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         resValuesCreationConfig?.resValues
             ?: warnAboutAccessingVariantApiValueForDisabledFeature(
-                featureName = "resValues",
+                featureName = FeatureNames.RES_VALUES,
                 apiName = "resValues",
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
@@ -162,7 +166,7 @@ open class TestFixturesImpl @Inject constructor(
     override val pseudoLocalesEnabled: Property<Boolean>  by lazy {
         androidResourcesCreationConfig?.pseudoLocalesEnabled
             ?: warnAboutAccessingVariantApiValueForDisabledFeature(
-                featureName = "androidResources",
+                featureName = FeatureNames.ANDROID_RESOURCES,
                 apiName = "pseudoLocalesEnabled",
                 value = internalServices.newPropertyBackingDeprecatedApi(
                     Boolean::class.java,

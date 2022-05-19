@@ -100,6 +100,11 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
     @get:Optional
     abstract val platformSdkExtension: Property<Int>
 
+    // platformSdkApiLevel is the actual api level of the platform. This value is used if the
+    // compileSdkVersion hash string specifies a preview SDK unknown to this version of AGP.
+    @get:Input
+    abstract val platformSdkApiLevel: Property<Int>
+
     @get:Input
     abstract val agpVersion: Property<String>
 
@@ -127,6 +132,7 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             it.aarMetadataVersion.set(aarMetadataVersion)
             it.compileSdkVersion.set(compileSdkVersion)
             it.platformSdkExtension.set(platformSdkExtension)
+            it.platformSdkApiLevel.set(platformSdkApiLevel)
             it.agpVersion.set(agpVersion)
             it.maxRecommendedStableCompileSdkVersionForThisAgp.set(
                 maxRecommendedStableCompileSdkVersionForThisAgp
@@ -172,6 +178,11 @@ abstract class CheckAarMetadataTask : NonIncrementalTask() {
             task.platformSdkExtension.setDisallowChanges(
                 creationConfig.global.versionedSdkLoader.flatMap { sdkLoader ->
                     sdkLoader.targetAndroidVersionProvider.map { it.extensionLevel }
+                }
+            )
+            task.platformSdkApiLevel.setDisallowChanges(
+                creationConfig.global.versionedSdkLoader.flatMap { sdkLoader ->
+                    sdkLoader.targetAndroidVersionProvider.map { it.featureLevel }
                 }
             )
         }
@@ -355,7 +366,14 @@ abstract class CheckAarMetadataWorkAction: WorkAction<CheckAarMetadataWorkParame
                 )
             } else {
                 val compileSdkVersion = parameters.compileSdkVersion.get()
-                val compileSdkVersionInt = getApiIntFromString(compileSdkVersion)
+                val compileSdkVersionInt =
+                    getApiIntFromString(compileSdkVersion).let {
+                        if (it > SdkVersionInfo.HIGHEST_KNOWN_API) {
+                            parameters.platformSdkApiLevel.get()
+                        } else {
+                            it
+                        }
+                    }
                 if (minCompileSdkInt > compileSdkVersionInt) {
                     // TODO(b/199900566) - change compileSdkVersion to compileSdk for AGP 8.0.
                     val maxRecommendedCompileSdk = parameters.maxRecommendedStableCompileSdkVersionForThisAgp.get()
@@ -485,6 +503,7 @@ abstract class CheckAarMetadataWorkParameters: WorkParameters {
     abstract val aarMetadataVersion: Property<String>
     abstract val compileSdkVersion: Property<String>
     abstract val platformSdkExtension: Property<Int>
+    abstract val platformSdkApiLevel: Property<Int>
     abstract val agpVersion: Property<String>
     abstract val maxRecommendedStableCompileSdkVersionForThisAgp: Property<Int>
     abstract val projectPath: Property<String>

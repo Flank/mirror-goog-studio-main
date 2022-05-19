@@ -190,9 +190,8 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
       std::string error = "";
       bool result = recompose.InvalidateGroupsWithKey(
           reloader, jni->NewStringUTF(target_class.class_name().c_str()),
-          req.start_offset(), req.end_offset(), error);
-      Log::V("InvalidateGroupsWithKey %d, %d", req.start_offset(),
-             req.end_offset());
+          req.group_id(), error);
+      Log::V("InvalidateGroupsWithKey %d", req.group_id());
       if (!result) {
         Log::E("%s", error.c_str());
         resp.set_status(proto::AgentLiveEditResponse::ERROR);

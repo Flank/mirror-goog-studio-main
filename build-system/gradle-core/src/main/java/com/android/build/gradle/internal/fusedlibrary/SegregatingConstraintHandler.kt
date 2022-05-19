@@ -26,10 +26,10 @@ import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import org.gradle.api.specs.Spec
 
 class SegregatingConstraintHandler(
-    val incomingConfiguration: Configuration,
-    val targetConfiguration: Configuration,
-    val mergeSpec: Spec<ComponentIdentifier>,
-    val project: Project,
+    private val incomingConfiguration: Configuration,
+    private val targetConfiguration: Configuration,
+    private val mergeSpec: Spec<ComponentIdentifier>,
+    private val project: Project,
 ): Action<ResolvableDependencies> {
 
     override fun execute(

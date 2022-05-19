@@ -492,12 +492,14 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                 AttributeModel.newModel("protectionLevel")
                         .setDefaultValue("normal")
                         .setOnReadValidator(
+                                // TODO(b/232285409) - keep this list up to date
                                 new SeparatedValuesValidator(
                                         SdkConstants.VALUE_DELIMITER_PIPE,
                                         "normal",
                                         "dangerous",
                                         "signature",
                                         "signatureOrSystem",
+                                        "internal",
                                         "privileged",
                                         "system",
                                         "development",
@@ -519,7 +521,10 @@ public class ManifestModel implements DocumentModel<ManifestModel.NodeTypes> {
                                         "incidentReportApprover",
                                         "appPredictor",
                                         "companion",
-                                        "retailDemo"))),
+                                        "retailDemo",
+                                        "recents",
+                                        "role",
+                                        "knownSigner"))),
 
         /**
          * Permission-tree (contained in manifest).

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.instrumentation.threading.agent;
+package com.android.tools.instrumentation.threading.agent.callback;
 
 /**
  * Java agent is loaded by the bootstrap class loader, and we cannot emit bytecode that calls into

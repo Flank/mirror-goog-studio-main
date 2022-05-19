@@ -31,7 +31,7 @@ class ArtifactMetadataProcessor {
          *
          * There is a test that will ensure that all annotated types are present in this list.
          */
-        val internalTypesFinalizingArtifacts = listOf(
+        val internalTypesFinalizingArtifacts: List<InternalArtifactType<*>> = listOf(
             InternalArtifactType.APK_IDE_REDIRECT_FILE,
             InternalArtifactType.BUNDLE_IDE_REDIRECT_FILE,
             InternalArtifactType.APK_FROM_BUNDLE_IDE_REDIRECT_FILE

@@ -542,6 +542,12 @@ public class ClientImpl extends JdwpPipe implements Client {
             tempBuffer.flip();
             // synchronization on mChan not needed because it's called only once immediately after
             // object creation.
+            if (Log.Config.LOGV) {
+                Log.v("ddms-client", ">>> Writing " + tempBuffer.remaining() + " bytes to socket (handshake)");
+                Log.hexDump("ddms", Log.LogLevel.VERBOSE, tempBuffer.array(),
+                            tempBuffer.arrayOffset() + tempBuffer.position(),
+                            tempBuffer.remaining());
+            }
             if (mChan.write(tempBuffer) != expectedLen) {
                 throw new IOException("partial handshake write");
             }
@@ -627,9 +633,11 @@ public class ClientImpl extends JdwpPipe implements Client {
         count = chan.read(mReadBuffer);
         if (count < 0) throw new IOException("read failed");
 
-        if (Log.Config.LOGV) Log.v("ddms", "Read " + count + " bytes from " + this);
-        //Log.hexDump("ddms", Log.DEBUG, mReadBuffer.array(),
-        //    mReadBuffer.arrayOffset(), mReadBuffer.position());
+        if (Log.Config.LOGV) {
+            Log.v("ddms", "Read " + count + " bytes from " + this);
+            Log.hexDump("ddms", Log.LogLevel.VERBOSE, mReadBuffer.array(),
+                        mReadBuffer.arrayOffset(), mReadBuffer.position());
+        }
     }
 
     /**

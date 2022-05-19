@@ -16,6 +16,7 @@
 
 package com.android.build.api.component.impl
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
@@ -28,6 +29,8 @@ import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.JavaCompilation
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
@@ -42,7 +45,6 @@ import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
@@ -69,15 +71,17 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.compiling.BuildConfigType
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
+import org.gradle.api.artifacts.Dependency
+import org.gradle.api.artifacts.ProjectDependency
+import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -85,6 +89,11 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.Locale
+import java.util.concurrent.Callable
+import java.util.function.Predicate
+import java.util.stream.Collectors
 
 abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     open val componentIdentity: ComponentIdentity,
@@ -238,7 +247,9 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                     )
                 }
             } else {
-                artifacts.getAllClasses()
+                artifacts
+                    .forScope(ScopedArtifacts.Scope.PROJECT)
+                    .getFinalArtifacts(ScopedArtifact.CLASSES)
             }
 
     override val projectClassesAreInstrumented: Boolean
@@ -248,10 +259,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val dependenciesClassesAreInstrumented: Boolean
         get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
                 (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
-
-    // by default, we delegate to the build features flags.
-    override val buildConfigEnabled: Boolean
-        get() = buildFeatures.buildConfig
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(
@@ -337,7 +344,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             internalServices.fileCollection(
                 *listOfNotNull(
                     androidResourcesCreationConfig?.getCompiledRClasses(configType),
-                    getCompiledBuildConfig(),
+                    buildConfigCreationConfig?.compiledBuildConfig,
                     getCompiledManifest(),
                     mainCollection
                 ).toTypedArray()
@@ -416,21 +423,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    override fun getCompiledBuildConfig(): FileCollection {
-        val isBuildConfigJar = getBuildConfigType() == BuildConfigType.JAR
-        // BuildConfig JAR is not required to be added as a classpath for ANDROID_TEST and UNIT_TEST
-        // variants as the tests will use JAR from GradleTestProject which doesn't use testedConfig.
-        return if (isBuildConfigJar && this !is TestComponentCreationConfig) {
-            internalServices.fileCollection(
-                artifacts.get(
-                    COMPILE_BUILD_CONFIG_JAR
-                )
-            )
-        } else {
-            internalServices.fileCollection()
-        }
-    }
-
     private fun getCompiledManifest(): FileCollection {
         val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
@@ -471,20 +463,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    override fun getBuildConfigType() : BuildConfigType {
-        return if (!buildConfigEnabled) {
-            BuildConfigType.NONE
-        } else if (services.projectOptions[BooleanOption.ENABLE_BUILD_CONFIG_AS_BYTECODE]
-            // TODO(b/224758957): This is wrong we need to check the final build config fields from
-            //  the variant API
-            && dslInfo.getBuildConfigFields().none()
-        ) {
-            BuildConfigType.JAR
-        } else {
-            BuildConfigType.JAVA_SOURCE
-        }
-    }
-
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
         instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
     }
@@ -520,11 +498,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val isAndroidTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
-
-    override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        dslInfo.javaCompileOptions.annotationProcessorOptions
-            .compilerArgumentProviders.add(args)
-    }
 
     override val modelV1LegacySupport =
         ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
@@ -564,4 +537,60 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             null
         }
     }
+
+    /**
+     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
+     * predicate
+     *
+     * @return a non null, but possibly empty FileCollection
+     * @param filePredicate the file predicate used to filter the local file dependencies
+     */
+    override fun computeLocalFileDependencies(filePredicate: Predicate<File>): FileCollection {
+        val configuration = variantDependencies.runtimeClasspath
+
+        // Get a list of local file dependencies. There is currently no API to filter the
+        // files here, so we need to filter it in the return statement below. That means that if,
+        // for example, filePredicate filters out all files but jars in the return statement, but an
+        // AarProducerTask produces an aar, then the returned FileCollection contains only jars but
+        // still has AarProducerTask as a dependency.
+        val dependencies =
+            Callable<Collection<SelfResolvingDependency>> {
+                configuration
+                    .allDependencies
+                    .stream()
+                    .filter { it: Dependency? -> it is SelfResolvingDependency }
+                    .filter { it: Dependency? -> it !is ProjectDependency }
+                    .map { it: Dependency -> it as SelfResolvingDependency }
+                    .collect(
+                        ImmutableList.toImmutableList()
+                    )
+            }
+
+        // Create a file collection builtBy the dependencies.  The files are resolved later.
+        return internalServices.fileCollection(
+            Callable<Collection<File>> {
+                dependencies.call().stream()
+                    .flatMap { it: SelfResolvingDependency ->
+                        it
+                            .resolve()
+                            .stream()
+                    }
+                    .filter(filePredicate)
+                    .collect(Collectors.toList())
+            })
+            .builtBy(dependencies)
+    }
+
+    /**
+     * Returns the packaged local Jars
+     *
+     * @return a non null, but possibly empty set.
+     */
+    override fun computeLocalPackagedJars(): FileCollection =
+        computeLocalFileDependencies { file ->
+            file
+                .name
+                .lowercase(Locale.US)
+                .endsWith(SdkConstants.DOT_JAR)
+        }
 }

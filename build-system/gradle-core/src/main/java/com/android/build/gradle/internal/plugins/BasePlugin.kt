@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.plugins
 import com.android.SdkConstants
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.SettingsExtension
 import com.android.build.api.dsl.SingleVariant
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidComponentsExtension
@@ -76,7 +77,6 @@ import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
-import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.StringCachingBuildService
 import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
@@ -292,7 +292,7 @@ abstract class BasePlugin<
     }
 
     private val variantFactory: VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT> by lazy {
-        createVariantFactory(projectServices)
+        createVariantFactory()
     }
 
     protected val extraModelInfo: ExtraModelInfo = ExtraModelInfo()
@@ -316,9 +316,7 @@ abstract class BasePlugin<
 
     abstract override fun getAnalyticsPluginType(): GradleBuildProject.PluginType
 
-    protected abstract fun createVariantFactory(
-        projectServices: ProjectServices
-    ): VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT>
+    protected abstract fun createVariantFactory(): VariantFactory<VariantBuilderT, VariantDslInfoT, CreationConfigT>
 
     protected abstract fun createTaskManager(
         project: Project,
@@ -705,7 +703,7 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
 
         // Run the old Variant API, after the variants and tasks have been created.
         @Suppress("DEPRECATION")
-        val apiObjectFactory = ApiObjectFactory(extension, variantFactory)
+        val apiObjectFactory = ApiObjectFactory(extension, variantFactory, dslServices)
         for (variant in variants) {
             apiObjectFactory.create(variant.variant)
         }
@@ -734,10 +732,7 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         }
         checkSplitConfiguration()
         variantManager.setHasCreatedTasks(true)
-        for (variant in variants) {
-            variant.variant.artifacts.ensureAllOperationsAreSatisfied()
-            wireAllFinalizedBy(variant.variant)
-        }
+        variantManager.finalizeAllVariants()
     }
 
     private fun findHighestSdkInstalled(): String? {
@@ -793,6 +788,40 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
      */
     protected open fun isPackagePublished(): Boolean {
         return false
+    }
+
+    protected fun initExtensionFromSettings(extension: AndroidT) {
+        // Query for the settings extension via extra properties.
+        // This is deposited here by the SettingsPlugin
+        val properties = project?.extensions?.extraProperties ?: return
+        if (properties.has("_android_settings")) {
+            val settings = properties.get("_android_settings") as? SettingsExtension
+            settings?.let {
+                extension.doInitExtensionFromSettings(it)
+            }
+        }
+    }
+
+    protected open fun AndroidT.doInitExtensionFromSettings(settings: SettingsExtension) {
+        settings.compileSdk?.let { compileSdk ->
+            this.compileSdk = compileSdk
+
+            settings.compileSdkExtension?.let { compileSdkExtension ->
+                this.compileSdkExtension = compileSdkExtension
+            }
+        }
+
+        settings.compileSdkPreview?.let { compileSdkPreview ->
+            this.compileSdkPreview = compileSdkPreview
+        }
+
+        settings.minSdk?.let { minSdk ->
+            this.defaultConfig.minSdk = minSdk
+        }
+
+        settings.minSdkPreview?.let { minSdkPreview ->
+            this.defaultConfig.minSdkPreview = minSdkPreview
+        }
     }
 
     // Create the "special" configuration for test buddy APKs. It will be resolved by the test

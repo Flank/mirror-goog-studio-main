@@ -364,7 +364,7 @@ open class TestMode(
         val CDATA: TestMode = CharacterDataTestMode()
 
         @JvmField
-        val SOURCE_TRANSFORMATION_GROUP: TestMode = TestModeGroup(
+        val SOURCE_TRANSFORMATION_GROUP: TestMode = UastSourceTransformationTestModeGroup(
             PARENTHESIZED,
             FULLY_QUALIFIED,
             REORDER_ARGUMENTS,

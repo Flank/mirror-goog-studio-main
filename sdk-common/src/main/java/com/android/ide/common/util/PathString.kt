@@ -16,7 +16,6 @@
 @file:JvmName("PathStringUtil")
 package com.android.ide.common.util
 
-import com.google.common.base.Joiner
 import java.io.File
 import java.net.URI
 import java.nio.file.FileSystemNotFoundException
@@ -27,6 +26,7 @@ import java.nio.file.ProviderNotFoundException
 import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.min
 
 /**
  * An implementation of a [Path]-like data structure that can represent unix or Windows-style path names.
@@ -256,7 +256,7 @@ class PathString private constructor(
         if (range.step != 1) {
             throw IllegalArgumentException("Step must be 1")
         }
-        return subRange(range.start, range.endInclusive - range.start + 1)
+        return subRange(range.first, range.last - range.first + 1)
     }
 
     /**
@@ -349,7 +349,7 @@ class PathString private constructor(
                         parentHash -= hashCodeForSegment
                         hashCodeForSegment = 0
                     }
-                    hashCodeForSegment = 31 * hashCodeForSegment + nextChar.toInt()
+                    hashCodeForSegment = 31 * hashCodeForSegment + nextChar.code
                 }
                 parentHash -= hashCodeForSegment
                 result.hash = parentHash
@@ -427,7 +427,7 @@ class PathString private constructor(
         var result = filesystemUri.hashCode()
 
         for (i in 0.until(prefixEndIndex)) {
-            result = 31 * result + path[i].toInt()
+            result = 31 * result + path[i].code
         }
 
         // Compute the hashcode as the simple sum of the hashcodes of the individual segments.
@@ -440,7 +440,7 @@ class PathString private constructor(
                 result += hashCodeForSegment
                 hashCodeForSegment = 0
             }
-            hashCodeForSegment = 31 * hashCodeForSegment + nextChar.toInt()
+            hashCodeForSegment = 31 * hashCodeForSegment + nextChar.code
         }
         result += hashCodeForSegment
 
@@ -473,7 +473,7 @@ class PathString private constructor(
 
         val rootString = root?.rawPath?.withSeparator(separator) ?: ""
 
-        return PathString(filesystemUri, rootString + Joiner.on(separator).join(newNames))
+        return PathString(filesystemUri, rootString + newNames.joinToString(separator.toString()))
     }
 
     /**
@@ -491,8 +491,7 @@ class PathString private constructor(
      */
     @get:JvmName("hasTrailingSeparator")
     val hasTrailingSeparator: Boolean
-        get() = suffixEndIndex > startIndex && isSeparator(
-                path[suffixEndIndex - 1])
+        get() = suffixEndIndex > startIndex && isSeparator(path[suffixEndIndex - 1])
 
     /**
      * Constructs a path which, when resolved against this path, will point to the same location as the original. Returns the original path
@@ -515,7 +514,7 @@ class PathString private constructor(
                 var rootString = otherRootString
                 val afterDriveSeparator = prefixEndIndex - 0.until(prefixEndIndex).reversed().countUntil { path[it] == ':' }
                 if (afterDriveSeparator > 0) {
-                    val firstDifference = 0.until(Math.min(afterDriveSeparator,
+                    val firstDifference = 0.until(min(afterDriveSeparator,
                             other.prefixEndIndex)).countUntil { path[it] != other.path[it] }
                     if (firstDifference >= afterDriveSeparator) {
                         rootString = other.path.substring(afterDriveSeparator, other.prefixEndIndex)
@@ -530,14 +529,14 @@ class PathString private constructor(
         val segments = this.segments
         val otherSegments = other.segments
 
-        val commonPrefixLength = 0.until(Math.min(segments.count(), otherSegments.count()))
+        val commonPrefixLength = 0.until(min(segments.count(), otherSegments.count()))
                 .countUntil { segments[it] != otherSegments[it] }
 
         val newSegments = (commonPrefixLength.until(segments.size)).map { PARENT } +
                 (commonPrefixLength.until(otherSegments.size)).map { otherSegments[it] }
         val newSeparator = chooseSeparator(other.separator, separator)
         val finalString =
-                Joiner.on(newSeparator).join(newSegments) + if (other.hasTrailingSeparator && !newSegments.isEmpty()) newSeparator else ""
+                newSegments.joinToString(newSeparator.toString()) + if (other.hasTrailingSeparator && newSegments.isNotEmpty()) newSeparator else ""
 
         return PathString(filesystemUri,
                 finalString,
@@ -657,7 +656,7 @@ class PathString private constructor(
 
         val otherPrefixEndIndex = other.prefixEndIndex
 
-        for (i in 0.until(Math.min(otherPrefixEndIndex, prefixEndIndex))) {
+        for (i in 0.until(min(otherPrefixEndIndex, prefixEndIndex))) {
             val cmpResult = path[i].compareTo(other.path[i])
 
             if (cmpResult != 0) {
@@ -671,7 +670,7 @@ class PathString private constructor(
 
         val length = suffixEndIndex - startIndex
         val otherLength = other.suffixEndIndex - other.startIndex
-        val min = Math.min(length, otherLength)
+        val min = min(length, otherLength)
 
         for (i in 0.until(min)) {
             val cmpResult = path[startIndex + i].compareTo(other.path[other.startIndex + i])
@@ -713,7 +712,7 @@ class PathString private constructor(
     }
 
     private fun driveName(rawPath: String): String =
-            rawPath.substring(0, rawPath.countUntil(':')).toUpperCase()
+            rawPath.substring(0, rawPath.countUntil(':')).uppercase()
 
     private fun subRangeOrNull(index: Int,
             length: Int = 1): PathString? {
@@ -792,7 +791,7 @@ private fun isSeparator(c: Char) = c == '/' || c == '\\'
 
 private fun prefixLength(path: String): Int {
     var firstSlash = path.length
-    for (i in 0.until(path.length)) {
+    for (i in path.indices) {
         if (isSeparator(path[i])) {
             firstSlash = i
             break
@@ -841,7 +840,7 @@ private fun detectSeparator(path: String, rootLength: Int): Char {
     for (i in startIndex.until(path.length)) {
         val c = path[i]
         if (isSeparator(c)) {
-            return c;
+            return c
         }
     }
     return NUL_CHAR

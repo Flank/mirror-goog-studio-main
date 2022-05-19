@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adblib.utils
 
-package com.android.tools.instrumentation.threading.agent;
+import kotlinx.coroutines.CancellationException
 
-public interface ThreadingCheckerHook {
-    /**
-     * This method is called by a java agent when encountering methods annotated with @UiThread
-     * annotation.
-     */
-    void verifyOnUiThread();
+internal inline fun Throwable.rethrowCancellation(block: (CancellationException) -> Unit = { }) {
+    if (this is CancellationException) {
+        block(this)
+        throw this
+    }
 }

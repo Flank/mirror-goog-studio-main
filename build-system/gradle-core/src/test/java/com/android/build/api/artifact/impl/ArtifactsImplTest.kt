@@ -1173,24 +1173,6 @@ class ArtifactsImplTest {
             )
     }
 
-    @Test
-    fun `test ALL_CLASSES_JARS deprecated artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.ALL_CLASSES_JARS,
-            MultipleArtifact.PROJECT_CLASSES_JARS
-        )
-    }
-
-    @Test
-    fun `test PROJECT_CLASSES_JARS artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.PROJECT_CLASSES_JARS,
-            MultipleArtifact.ALL_CLASSES_JARS
-        )
-    }
-
     abstract class AgpDirectoryTask: DefaultTask() {
         @get:OutputFile abstract val outputFolder: DirectoryProperty
     }
@@ -1213,23 +1195,5 @@ class ArtifactsImplTest {
                 "build/intermediates/${artifactToRegister.getFolderName()}/debug/agpTaskProvider"
                     .replace('/', File.separatorChar)
             )
-    }
-
-    @Test
-    fun `test ALL_CLASSES_DIRS deprecated artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test directory deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.ALL_CLASSES_DIRS,
-            MultipleArtifact.PROJECT_CLASSES_DIRS
-        )
-    }
-
-    @Test
-    fun `test PROJECT_CLASSES_DIRS artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test directory deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.PROJECT_CLASSES_DIRS,
-            MultipleArtifact.ALL_CLASSES_DIRS
-        )
     }
 }

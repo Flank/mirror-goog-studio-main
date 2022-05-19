@@ -151,8 +151,10 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        internalServices.listPropertyOf(RegularFile::class.java) {
-            dslInfo.gatherProguardFiles(ProguardFileType.TEST, it)
+        internalServices.listPropertyOf(RegularFile::class.java) { list ->
+            dslInfo.gatherProguardFiles(ProguardFileType.TEST) {
+                list.add(it)
+            }
         }
     }
 

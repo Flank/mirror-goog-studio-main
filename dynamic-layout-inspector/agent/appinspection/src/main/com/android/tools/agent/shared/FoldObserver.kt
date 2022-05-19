@@ -17,7 +17,7 @@
 package com.android.tools.agent.shared
 
 import android.view.View
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol
 
 /**
  * Convenience interface built into the main inspector, to make it easier to interact with

@@ -165,7 +165,7 @@ public class AvdManagerCliTest {
                     "-k", android25GoogleApisSdkPath,
                     "-d", "Nexus 6P"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         AvdInfo info = mAvdManager.getAvd("testAvd", true);
         assertEquals("x86", info.getAbiType());
         assertEquals("Google", info.getDeviceManufacturer());
@@ -196,7 +196,7 @@ public class AvdManagerCliTest {
                     "-d", "Nexus 6P",
                     "--skin", "nexus_s"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         AvdInfo info = mAvdManager.getAvd("testAvd", true);
 
         Path avdConfigFile = info.getDataFolderPath().resolve("config.ini");
@@ -219,7 +219,7 @@ public class AvdManagerCliTest {
                     "-k", android25GoogleApisPlayStoreSdkPath,
                     "-d", "Nexus 6P"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         AvdInfo info = mAvdManager.getAvd("testAvd", true);
         assertEquals("x86", info.getAbiType());
         assertEquals("Google", info.getDeviceManufacturer());
@@ -256,12 +256,12 @@ public class AvdManagerCliTest {
                     "-k", android26WearSdkPath,
                     "-d", "Nexus 6P"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         assertEquals(2, mAvdManager.getAllAvds().length);
 
         mCli.run(new String[] {"delete", "avd", "--name", "testAvd1"});
 
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         assertEquals(1, mAvdManager.getAllAvds().length);
 
         AvdInfo info = mAvdManager.getAvd("testAvd2", true);
@@ -285,7 +285,7 @@ public class AvdManagerCliTest {
                     "-p", moved.toAbsolutePath().toString(),
                     "-r", "newName"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         assertEquals(1, mAvdManager.getAllAvds().length);
 
         AvdInfo info = mAvdManager.getAvd("newName", true);
@@ -308,7 +308,7 @@ public class AvdManagerCliTest {
                     "-k", android26WearSdkPath,
                     "-d", "wearos_small_round"
                 });
-        mAvdManager.reloadAvds(mLogger);
+        mAvdManager.reloadAvds();
         mLogger.clear();
         mCli.run(new String[] {"list", "avds"});
         assertEquals(

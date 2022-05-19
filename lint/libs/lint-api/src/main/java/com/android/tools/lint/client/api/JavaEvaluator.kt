@@ -368,6 +368,16 @@ class JavaEvaluator {
     }
 
     open fun isSuspend(owner: PsiModifierListOwner?): Boolean {
+        if (owner is PsiCompiledElement && owner is PsiMethod) {
+            // If it's a binary method in a jar we don't get access to the kotlin modifier list,
+            // but we can look for other tell-tale signs of it being a suspend function
+            val parameterList = owner.parameterList
+            val size = parameterList.parametersCount
+            if (size > 0) {
+                val last = parameterList.getParameter(size - 1) ?: return false
+                return last.type.canonicalText == "kotlin.coroutines.Continuation<? super kotlin.Unit>"
+            }
+        }
         return hasModifier(owner, KtTokens.SUSPEND_KEYWORD)
     }
 

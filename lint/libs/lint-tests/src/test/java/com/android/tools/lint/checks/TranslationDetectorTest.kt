@@ -128,6 +128,20 @@ class TranslationDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testMissingPluralTranslationBatch() {
+        // Like testMissingPluralTranslation, but without incremental()
+        lint().files(valuesStringsPlural, valuesFrStringsNoPlural)
+            .run()
+            .expect(
+                """
+                res/values/strings.xml:5: Error: "my_plurals" is not translated in "fr" (French) [MissingTranslation]
+                    <plurals name="my_plurals">
+                             ~~~~~~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+    }
+
     fun testMissingPluralTranslation() {
         lint().files(valuesStringsPlural, valuesFrStringsNoPlural)
             .incremental("res/values/strings.xml")

@@ -13,6 +13,7 @@ java_binary(
     main_class = "com.android.tools.instrumentation.threading.agent.Agent",
     deps = [
         "//tools/base/annotations",
+        "//tools/base/threading-agent-callback:agent_callback",
     ],
 )
 
@@ -26,13 +27,5 @@ java_jarjar(
         ":agent_binary_deploy.jar",
     ],
     rules = "jarjar_rules.txt",
-    visibility = ["//visibility:public"],
-)
-
-# managed by go/iml_to_build
-iml_module(
-    name = "studio.android.sdktools.threading-agent",
-    srcs = ["src"],
-    iml_files = ["android.sdktools.threading-agent.iml"],
     visibility = ["//visibility:public"],
 )

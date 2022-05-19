@@ -375,7 +375,7 @@ private fun getExternalLibJavaRes(
         )
     }
     if (mergeScopes.contains(LOCAL_DEPS)) {
-        externalLibJavaRes.from(creationConfig.variantScope.localPackagedJars)
+        externalLibJavaRes.from(creationConfig.computeLocalPackagedJars())
     }
     return externalLibJavaRes
 }

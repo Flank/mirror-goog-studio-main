@@ -18,6 +18,7 @@ package com.android.build.api.component.impl
 
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
@@ -27,10 +28,12 @@ import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import java.io.Serializable
 
 class OldVariantApiLegacySupportImpl(
     private val component: ComponentCreationConfig,
@@ -136,5 +139,16 @@ class OldVariantApiLegacySupportImpl(
             }
         })
         return allRawAndroidResources!!
+    }
+
+    override fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
+        component.buildConfigCreationConfig?.buildConfigFields?.put(
+            key, BuildConfigField(type, value, comment)
+        )
+    }
+
+    override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
+        variantDslInfo.javaCompileOptions.annotationProcessorOptions
+            .compilerArgumentProviders.add(args)
     }
 }

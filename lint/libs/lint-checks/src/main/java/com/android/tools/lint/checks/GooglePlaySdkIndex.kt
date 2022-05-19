@@ -16,7 +16,6 @@
 package com.android.tools.lint.checks
 
 import com.android.ide.common.repository.NetworkCache
-import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.LintFix
 import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
@@ -28,7 +27,7 @@ import java.util.zip.GZIPInputStream
 /**
  * Provides information about libraries from the Google Play SDK Index.
  */
-abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null) : NetworkCache(
+abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
     GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL,
     GOOGLE_PLAY_SDK_INDEX_KEY,
     cacheDir,
@@ -77,12 +76,10 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
         if (overriddenData != null) {
             // Do not check for exceptions, calling from a test
             index = Index.parseFrom(overriddenData)
-        }
-        else {
+        } else {
             try {
                 index = Index.parseFrom(GZIPInputStream(findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE)))
-            }
-            catch(exception: Exception) {
+            } catch (exception: Exception) {
                 logCachingError(exception.message)
                 try {
                     index = Index.parseFrom(GZIPInputStream(readDefaultData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE)))
@@ -157,10 +154,40 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
         return showMessages && showCriticalIssues && hasCriticalIssues
     }
 
-    private fun getSdkUrl(groupId: String, artifactId: String): String? {
+    /**
+     * Does this library have blocking issues?
+     *
+     * @param groupId: group id for library coordinates
+     * @param artifactId: artifact id for library coordinates
+     * @param versionString: version to check
+     *
+     * @return true if the index has information about this particular version, and it has been labeled with blocking severity.
+     */
+    fun hasLibraryBlockingIssues(groupId: String, artifactId: String, versionString: String): Boolean {
+        val labels = getLabels(groupId, artifactId, versionString) ?: return false
+        val severity = labels.severity
+        if (severity != null && severity == LibraryVersionLabels.Severity.BLOCKING_SEVERITY) {
+            return true
+        }
+        // Non-compliant issues are always blocking
+        val isLibraryNonCompliant = getLabels(groupId, artifactId, versionString)?.hasNonCompliantIssueInfo() ?: false
+        return showPolicyIssues && isLibraryNonCompliant
+    }
+
+    /**
+     * Get URL for the SDK associated to this library
+     *
+     * @param groupId: group id for library coordinates
+     * @param artifactId: artifact id for library coordinates
+     *
+     * @return the associated URL or null if there is none or flag for links to SDK is not enabled
+     */
+    fun getSdkUrl(groupId: String, artifactId: String): String? {
         if (!isReady()) {
             return null
         }
+        if (!showLinks)
+            return null
         val sdk = getSdk(groupId, artifactId) ?: return null
         return sdk.sdk.indexUrl
     }
@@ -238,22 +265,16 @@ abstract class GooglePlaySdkIndex(val client: LintClient, cacheDir: Path? = null
      * @return a link to the SDK url this library belongs to if the index has information about it and [showLinks] is true.
      */
     fun generateSdkLinkLintFix(groupId: String, artifactId: String): LintFix? {
-        if (!showLinks)
-            return null
-        val url = getSdkUrl(groupId, artifactId)
-        return generateShowUrl(url)
+        return generateShowUrl(getSdkUrl(groupId, artifactId))
     }
 
     protected open fun generateShowUrl(url: String?): LintFix? {
         return if (url != null)
-            // TODO(b/223240014): change to one that allows logging when the link is followed
+        // TODO(b/223240014): change to one that allows logging when the link is followed
             LintFix.ShowUrl("View details in Google Play SDK Index", null, url)
         else
             null
     }
-
-    public override fun error(throwable: Throwable, message: String?) =
-        client.log(throwable, message)
 
     protected open fun logHasCriticalIssues(groupId: String, artifactId: String, versionString: String, file: File?) {
     }

@@ -358,6 +358,11 @@ com.android.build.gradle.ReportingPlugin.apply: void (java.lang.Object)
 com.android.build.gradle.ReportingPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.ReportingPluginKt
 com.android.build.gradle.ReportingPluginKt.access$getINTERNAL_PLUGIN_ID$p: java.util.Map ()
+com.android.build.gradle.SettingsPlugin implements org.gradle.api.Plugin
+com.android.build.gradle.SettingsPlugin.<init>: com.android.build.gradle.SettingsPlugin ()
+com.android.build.gradle.SettingsPlugin.apply: void (java.lang.Object)
+com.android.build.gradle.SettingsPlugin.apply: void (org.gradle.api.initialization.Settings)
+com.android.build.gradle.SettingsPlugin.getAndroid: com.android.build.api.dsl.SettingsExtension ()
 com.android.build.gradle.TestAndroidConfig implements com.android.build.gradle.AndroidConfig
 com.android.build.gradle.TestAndroidConfig$DefaultImpls
 com.android.build.gradle.TestAndroidConfig.getTargetProjectPath: java.lang.String ()
@@ -692,6 +697,10 @@ com.android.build.gradle.api.LibraryVariant.getPackageLibrary: org.gradle.api.ta
 com.android.build.gradle.api.LibraryVariant.getPackageLibraryProvider: org.gradle.api.tasks.TaskProvider<org.gradle.api.tasks.bundling.Zip> ()
 com.android.build.gradle.api.LibraryVariantOutput
 com.android.build.gradle.api.LibraryVariantOutput.getPackageLibrary: org.gradle.api.tasks.bundling.Zip ()
+com.android.build.gradle.api.PrivacySandboxSdkPlugin implements org.gradle.api.Plugin
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.<init>: com.android.build.gradle.api.PrivacySandboxSdkPlugin ()
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.apply: void (java.lang.Object)
+com.android.build.gradle.api.PrivacySandboxSdkPlugin.apply: void (org.gradle.api.Project)
 com.android.build.gradle.api.SourceKind extends java.lang.Enum
 com.android.build.gradle.api.SourceKind.valueOf: com.android.build.gradle.api.SourceKind (java.lang.String)
 com.android.build.gradle.api.SourceKind.values: com.android.build.gradle.api.SourceKind[] ()

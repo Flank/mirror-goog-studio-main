@@ -70,19 +70,6 @@ public interface VariantScope {
     void addNdkDebuggableLibraryFolders(@NonNull Abi abi, @NonNull File searchPath);
 
     @NonNull
-    FileCollection getLocalPackagedJars();
-
-    /**
-     * Returns the direct (i.e., non-transitive) local file dependencies matching the given
-     * predicate
-     *
-     * @return a non null, but possibly empty FileCollection
-     * @param filePredicate the file predicate used to filter the local file dependencies
-     */
-    @NonNull
-    FileCollection getLocalFileDependencies(Predicate<File> filePredicate);
-
-    @NonNull
     FileCollection getProvidedOnlyClasspath();
 
     enum Java8LangSupport {

@@ -18,11 +18,11 @@ package com.android.tools.agent.appinspection.proto.property;
 
 import android.view.inspector.PropertyMapper;
 import androidx.annotation.NonNull;
+import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntFunction;
-import layoutinspector.view.inspection.LayoutInspectorViewProtocol.Property;
 
 /**
  * A {@link PropertyMapper} implementation that accepts property values and generates {@link

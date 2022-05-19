@@ -126,7 +126,7 @@ class DefaultSourcesProviderImpl(
         )
 
         // for the other, there's no duplicate so no issue.
-        if (buildConfigEnabled && getBuildConfigType() == BuildConfigType.JAVA_SOURCE) {
+        if (buildConfigCreationConfig?.buildConfigType == BuildConfigType.JAVA_SOURCE) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(
                     "generated_build_config",

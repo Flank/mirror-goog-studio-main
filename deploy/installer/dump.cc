@@ -56,6 +56,11 @@ void DumpCommand::Run(proto::InstallerResponse* response) {
 
   auto dump_response = response->mutable_dump_response();
 
+  if (package_names_.size() == 0) {
+    dump_response->set_status(proto::DumpResponse::ERROR_NO_PACKAGES);
+    return;
+  }
+
   for (const std::string& package_name : package_names_) {
     proto::PackageDump* package_dump = dump_response->add_packages();
     package_dump->set_name(package_name);

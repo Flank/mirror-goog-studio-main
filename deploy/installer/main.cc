@@ -95,6 +95,7 @@ void Fail(proto::InstallerResponse::Status status, Workspace& workspace,
          const std::string& message) {
   proto::InstallerResponse response;
   response.set_status(status);
+  response.set_error_message(message);
   ErrEvent(message);
   SendResponse(&response, workspace);
 }

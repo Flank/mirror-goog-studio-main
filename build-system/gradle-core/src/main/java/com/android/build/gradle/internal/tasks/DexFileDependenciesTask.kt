@@ -204,15 +204,16 @@ abstract class DexFileDependenciesTask: NonIncrementalTask() {
                 task.bootClasspath.from(creationConfig.global.bootClasspath)
             }
 
-            task.classpath.disallowChanges()
-            task.bootClasspath.disallowChanges()
-
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(creationConfig.services.projectOptions)
 
             if (creationConfig.isCoreLibraryDesugaringEnabled) {
                 task.libConfiguration.set(getDesugarLibConfig(creationConfig.services))
+                task.bootClasspath.from(creationConfig.global.bootClasspath)
             }
+
+            task.classpath.disallowChanges()
+            task.bootClasspath.disallowChanges()
             task.libConfiguration.disallowChanges()
         }
     }

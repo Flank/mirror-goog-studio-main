@@ -19,9 +19,10 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JSON
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.instrumentation.AsmInstrumentationManager
@@ -31,6 +32,8 @@ import com.android.build.gradle.internal.instrumentation.saveClassData
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getDirectories
+import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
@@ -38,7 +41,6 @@ import com.android.build.gradle.internal.tasks.JarsIdentityMapping
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.SerializableFileChanges
 import com.android.builder.utils.isValidZipEntryName
 import com.android.ide.common.resources.FileStatus
@@ -487,18 +489,22 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
             task.excludes.setDisallowChanges(creationConfig.instrumentation.excludes)
 
+            val projectClasses = creationConfig.artifacts.forScope(ScopedArtifacts.Scope.PROJECT)
+                .getFinalArtifacts(ScopedArtifact.CLASSES)
             task.inputClassesDir.from(
-                creationConfig.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_DIRS)
+                projectClasses.getDirectories(creationConfig.services.projectInfo.projectDirectory)
             )
+            task.inputClassesDir.disallowChanges()
 
             task.inputJarsWithIdentity.inputJars.from(
-                creationConfig.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
+                projectClasses.getRegularFiles(creationConfig.services.projectInfo.projectDirectory)
             )
+            task.inputJarsWithIdentity.inputJars.disallowChanges()
 
             task.bootClasspath.from(creationConfig.global.bootClasspath)
+            task.bootClasspath.disallowChanges()
 
             task.runtimeClasspath.from(creationConfig.variantScope.providedOnlyClasspath)
-
 
             task.runtimeClasspath.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(
@@ -512,6 +518,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
                         }
                     )
             )
+            task.runtimeClasspath.disallowChanges()
 
             task.classesHierarchyBuildService.setDisallowChanges(
                     getBuildService(creationConfig.services.buildServiceRegistry)

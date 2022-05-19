@@ -75,11 +75,11 @@ maven_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/base/build-system/aapt2-proto",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/sdklib:tools.sdklib",
-        "@maven//:com.android.tools.build.aapt2-proto",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.protobuf.protobuf-java",
@@ -118,6 +118,7 @@ kotlin_test(
     deps = [
         ":tools.sdk-common",
         "//tools/base/annotations",
+        "//tools/base/build-system/aapt2-proto",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
@@ -127,7 +128,6 @@ kotlin_test(
         "//tools/base/repository:tools.testlib",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
-        "@maven//:com.android.tools.build.aapt2-proto",
         "@maven//:com.google.code.gson.gson",
         "@maven//:com.google.jimfs.jimfs",
         "@maven//:com.google.protobuf.protobuf-java",

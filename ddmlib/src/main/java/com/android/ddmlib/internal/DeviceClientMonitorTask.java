@@ -531,7 +531,7 @@ class DeviceClientMonitorTask implements Runnable {
                 @NonNull Map<Integer, ProfileableClientImpl> currentProfileable) {
             // Map from pid to the associated data, for profileable apps discovered before.
             Map<Integer, ProfileableClientImpl> previousProfileable = new HashMap<>();
-            for (ProfileableClientImpl client : device.getProfileableClients()) {
+            for (ProfileableClientImpl client : device.getProfileableClientImpls()) {
                 previousProfileable.put(client.getProfileableClientData().getPid(), client);
             }
             Set<Integer> addPids =

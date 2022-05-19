@@ -19,6 +19,8 @@ package com.android.sdklib.internal.avd;
 import static com.android.sdklib.internal.avd.AvdManager.AvdManagerCacheKey;
 
 import com.android.annotations.NonNull;
+import com.android.utils.NullLogger;
+import com.android.utils.StdLogger;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.testing.EqualsTester;
@@ -34,22 +36,32 @@ public class AvdManagerCacheKeyTest {
                 .addEqualityGroup(
                         new AvdManagerCacheKey(
                                 myFileSystem.getPath("/path/to/sdk"),
-                                myFileSystem.getPath("/path/to/avd")),
+                                myFileSystem.getPath("/path/to/avd"),
+                                NullLogger.getLogger()),
                         new AvdManagerCacheKey(
                                 myFileSystem.getPath("/path/to/sdk"),
-                                myFileSystem.getPath("/path/to/avd")))
+                                myFileSystem.getPath("/path/to/avd"),
+                                NullLogger.getLogger()))
                 .addEqualityGroup(
                         new AvdManagerCacheKey(
                                 myFileSystem.getPath("/path/to/other/sdk"),
-                                myFileSystem.getPath("/path/to/avd")))
+                                myFileSystem.getPath("/path/to/avd"),
+                                NullLogger.getLogger()))
                 .addEqualityGroup(
                         new AvdManagerCacheKey(
                                 myFileSystem.getPath("/path/to/sdk"),
-                                myFileSystem.getPath("/path/to/other/avd")))
+                                myFileSystem.getPath("/path/to/other/avd"),
+                                NullLogger.getLogger()))
                 .addEqualityGroup(
                         new AvdManagerCacheKey(
                                 myFileSystem.getPath("/path/to/other/sdk"),
-                                myFileSystem.getPath("/path/to/other/avd")))
+                                myFileSystem.getPath("/path/to/other/avd"),
+                                NullLogger.getLogger()))
+                .addEqualityGroup(
+                        new AvdManagerCacheKey(
+                                myFileSystem.getPath("/path/to/other/sdk"),
+                                myFileSystem.getPath("/path/to/other/avd"),
+                                new StdLogger(StdLogger.Level.INFO)))
                 .testEquals();
     }
 }

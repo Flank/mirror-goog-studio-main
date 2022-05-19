@@ -24,7 +24,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.specs.Spec
 
-class FusedLibraryVariantScope(
+open class FusedLibraryVariantScope(
     project: Project,
     extensionProvider: () -> FusedLibraryExtension
 ) {
@@ -38,7 +38,7 @@ class FusedLibraryVariantScope(
         extensionProvider.invoke()
     }
 
-    val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
+    open val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
         println("In mergeSpec -> $componentIdentifier, type is ${componentIdentifier.javaClass}, merge = ${componentIdentifier is ProjectComponentIdentifier}")
         componentIdentifier is ProjectComponentIdentifier
     }

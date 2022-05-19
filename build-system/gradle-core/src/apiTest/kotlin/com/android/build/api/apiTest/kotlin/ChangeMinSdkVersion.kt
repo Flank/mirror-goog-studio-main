@@ -39,7 +39,6 @@ class ChangeMinSdkVersion: VariantApiBaseTest(TestType.Script) {
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
 
             import com.android.build.api.variant.AndroidVersion

@@ -181,7 +181,7 @@ abstract class LibraryJniLibsTask : NonIncrementalTask() {
             task.projectNativeLibs.setDisallowChanges(
                 creationConfig.artifacts.get(STRIPPED_NATIVE_LIBS)
             )
-            task.localJarsNativeLibs = creationConfig.variantScope.localPackagedJars
+            task.localJarsNativeLibs = creationConfig.computeLocalPackagedJars()
         }
     }
 }

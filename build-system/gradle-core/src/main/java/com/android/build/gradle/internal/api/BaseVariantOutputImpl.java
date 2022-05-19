@@ -30,7 +30,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.scope.TaskContainer;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.google.common.collect.ImmutableList;
@@ -51,12 +51,12 @@ import org.gradle.api.tasks.TaskProvider;
 public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull protected final TaskContainer taskContainer;
-    @NonNull protected final BaseServices services;
+    @NonNull protected final DslServices services;
     @NonNull protected final VariantOutputImpl variantOutput;
 
     protected BaseVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
-            @NonNull BaseServices services,
+            @NonNull DslServices services,
             @NonNull VariantOutputImpl variantOutput) {
         this.taskContainer = taskContainer;
         this.services = services;

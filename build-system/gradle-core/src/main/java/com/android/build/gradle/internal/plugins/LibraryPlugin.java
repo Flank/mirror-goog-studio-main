@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SdkComponentsImpl;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.services.DslServices;
-import com.android.build.gradle.internal.services.ProjectServices;
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig;
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl;
@@ -139,10 +138,13 @@ public class LibraryPlugin
                             com.android.build.gradle.LibraryExtension.class,
                             "_internal_legacy_android_extension",
                             android);
+
+            initExtensionFromSettings(libraryExtension);
+
             return new ExtensionData<>(android, libraryExtension, bootClasspathConfig);
         }
 
-        return new ExtensionData<>(
+        com.android.build.gradle.LibraryExtension android =
                 project.getExtensions()
                         .create(
                                 "android",
@@ -152,9 +154,10 @@ public class LibraryPlugin
                                 buildOutputs,
                                 dslContainers.getSourceSetManager(),
                                 extraModelInfo,
-                                libraryExtension),
-                libraryExtension,
-                bootClasspathConfig);
+                                libraryExtension);
+        initExtensionFromSettings(android);
+
+        return new ExtensionData<>(android, libraryExtension, bootClasspathConfig);
     }
 
     /**
@@ -228,8 +231,8 @@ public class LibraryPlugin
 
     @NonNull
     @Override
-    protected LibraryVariantFactory createVariantFactory(@NonNull ProjectServices projectServices) {
-        return new LibraryVariantFactory(projectServices);
+    protected LibraryVariantFactory createVariantFactory() {
+        return new LibraryVariantFactory(getDslServices());
     }
 
     @Override

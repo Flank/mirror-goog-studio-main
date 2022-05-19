@@ -59,6 +59,14 @@ class FakeAdbServerProvider : AutoCloseable {
         return this
     }
 
+    fun buildWithFeatures(features : Set<String>) : FakeAdbServerProvider {
+        // Build the server and configure it to use the default ADB command handlers.
+        builder.installDefaultCommandHandlers()
+        builder.setFeatures(features)
+        build()
+        return this
+    }
+
     fun installHostHandler(
         command: String,
         handlerConstructor: Supplier<HostCommandHandler?>
@@ -104,6 +112,18 @@ class FakeAdbServerProvider : AutoCloseable {
         return this
     }
 
+    fun restart() {
+        // Save current server config and close it
+        val config = server?.currentConfig
+        server?.close()
+
+        // Build a new server, using saved config to restore as much state as possible
+        val builder = FakeAdbServer.Builder()
+        config?.let { builder.setConfig(it) }
+        server = builder.build()
+        server?.start()
+    }
+
     fun createChannelProvider(host: AdbLibHost): TestingChannelProvider {
         return TestingChannelProvider(host, portSupplier = { port })
     }
@@ -121,12 +141,16 @@ class FakeAdbServerProvider : AutoCloseable {
 
         private val provider = AdbChannelProviderFactory.createOpenLocalHost(host, portSupplier)
 
-        var lastCreatedChannel: TestingAdbChannel? = null
+        val createdChannels = ArrayList<TestingAdbChannel>()
+        val lastCreatedChannel: TestingAdbChannel?
+            get() {
+                return createdChannels.lastOrNull()
+            }
 
         override suspend fun createChannel(timeout: Long, unit: TimeUnit): AdbChannel {
             val channel = provider.createChannel(timeout, unit)
             return TestingAdbChannel(channel).apply {
-                lastCreatedChannel = this
+                createdChannels.add(this)
             }
         }
     }

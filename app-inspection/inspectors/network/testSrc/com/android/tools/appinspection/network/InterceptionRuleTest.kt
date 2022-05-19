@@ -45,12 +45,20 @@ class InterceptionRuleTest {
     @Test
     fun matchingTextMatchesTargets() {
         assertThat(wildCardMatches("", null)).isTrue()
+        assertThat(MatchingText.getDefaultInstance().matches(null)).isTrue()
 
-        val matchesAll = MatchingText.newBuilder().apply {
+        val matchesEmpty = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
             text = ""
         }.build()
-        assertThat(matchesAll.matches(null)).isTrue()
+        assertThat(matchesEmpty.matches(null)).isFalse()
+        assertThat(matchesEmpty.matches("")).isTrue()
+        val matchesRegexEmpty = MatchingText.newBuilder().apply {
+            type = MatchingText.Type.REGEX
+            text = ""
+        }.build()
+        assertThat(matchesRegexEmpty.matches(null)).isFalse()
+        assertThat(matchesRegexEmpty.matches("")).isTrue()
 
         val plainMatchingText = MatchingText.newBuilder().apply {
             type = MatchingText.Type.PLAIN
@@ -234,6 +242,46 @@ class InterceptionRuleTest {
         transformedResponse = HeaderReplacedTransformation(multipleMatchedProto).transform(response)
         assertThat(transformedResponse.responseHeaders["newName"]!![0]).isEqualTo("newValue")
         assertThat(transformedResponse.responseHeaders["header1"]).isNull()
+    }
+
+    @Test
+    fun replaceResponseHeaderPartially() {
+        val response = NetworkResponse(
+            mapOf("header" to listOf("value", "value2")),
+            "Body".byteInputStream()
+        )
+        val headerValueReplacedProto = HeaderReplaced.newBuilder().apply {
+            targetNameBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "header"
+            }
+            targetValueBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "value"
+            }
+            newValue = "newValue"
+        }.build()
+        var transformedResponse =
+            HeaderReplacedTransformation(headerValueReplacedProto).transform(response)
+        assertThat(transformedResponse.responseHeaders["newName"]).isNull()
+        assertThat(transformedResponse.responseHeaders["header"])
+            .containsExactly("newValue", "value2")
+
+        val headerNameReplacedProto = HeaderReplaced.newBuilder().apply {
+            targetNameBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "header"
+            }
+            targetValueBuilder.apply {
+                type = MatchingText.Type.PLAIN
+                text = "value"
+            }
+            newName = "newName"
+        }.build()
+        transformedResponse =
+            HeaderReplacedTransformation(headerNameReplacedProto).transform(response)
+        assertThat(transformedResponse.responseHeaders["header"]).containsExactly("value2")
+        assertThat(transformedResponse.responseHeaders["newName"]).containsExactly("value")
     }
 
     @Test

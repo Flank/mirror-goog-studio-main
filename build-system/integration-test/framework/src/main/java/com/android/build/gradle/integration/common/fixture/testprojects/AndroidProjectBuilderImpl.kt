@@ -45,10 +45,15 @@ internal class AndroidProjectBuilderImpl(
     private val buildTypes = BuildTypeContainerBuilderImpl()
     private val flavors = ProductFlavorContainerBuilderImpl()
 
+    private var aarMetadata: AarMetadataBuilderImpl? = null
     private var androidResources: AndroidResourcesImpl? = null
     private var compileOptions: CompileOptionsImpl? = null
     override fun defaultCompileSdk() {
         compileSdk = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()
+    }
+
+    override fun aarMetadata(action: AarMetadataBuilder.() -> Unit) {
+        action(aarMetadata ?: AarMetadataBuilderImpl().also {aarMetadata = it})
     }
 
     override fun buildFeatures(action: BuildFeaturesBuilder.() -> Unit) {
@@ -125,6 +130,20 @@ internal class AndroidProjectBuilderImpl(
 
         applicationId?.let {
             sb.append("    applicationId = \"$it\"\n")
+        }
+
+        aarMetadata?.let { aarMetadata ->
+            sb.append("  aarMetadata{\n")
+            aarMetadata.minCompileSdk?.let {
+                sb.append("    minCompileSdk $it\n")
+            }
+            aarMetadata.minAgpVersion?.let {
+                sb.append("    minAgpVersion '$it'\n")
+            }
+            aarMetadata.minCompileSdkExtension?.let {
+                sb.append("    minCompileSdkExtension $it\n")
+            }
+            sb.append("  }\n") // aarMetadata
         }
         sb.append("  }\n") // DEFAULT-CONFIG
 
@@ -228,6 +247,11 @@ internal class ConfigImpl(
             android.subProject.addFile("src/$name/AndroidManifest.xml", value)
         }
     override var dependencies: MutableList<String> = mutableListOf()
+}
+internal class AarMetadataBuilderImpl : AarMetadataBuilder {
+    override var minAgpVersion: String? = null
+    override var minCompileSdk: Int? = null
+    override var minCompileSdkExtension: Int? = null
 }
 
 internal class BuildFeaturesBuilderImpl: BuildFeaturesBuilder {

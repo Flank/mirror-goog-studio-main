@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.scope.BuildFeatureValuesImpl
 import com.android.build.gradle.internal.scope.TestFixturesBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.UnitTestBuildFeaturesValuesImpl
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
@@ -46,9 +47,9 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.ComponentTypeImpl
 
 internal class DynamicFeatureVariantFactory(
-    projectServices: ProjectServices,
+    dslServices: DslServices,
 ) : AbstractAppVariantFactory<DynamicFeatureVariantBuilder, DynamicFeatureVariantDslInfo, DynamicFeatureCreationConfig>(
-    projectServices,
+    dslServices,
 ) {
 
     override fun createVariantBuilder(
@@ -57,8 +58,7 @@ internal class DynamicFeatureVariantFactory(
         variantDslInfo: DynamicFeatureVariantDslInfo,
         variantBuilderServices: VariantBuilderServices
     ): DynamicFeatureVariantBuilder {
-        return projectServices
-            .objectFactory
+        return dslServices
             .newInstance(
                 DynamicFeatureVariantBuilderImpl::class.java,
                 globalVariantBuilderConfig,
@@ -84,8 +84,7 @@ internal class DynamicFeatureVariantFactory(
         taskCreationServices: TaskCreationServices,
         globalConfig: GlobalTaskCreationConfig,
         ): DynamicFeatureCreationConfig {
-        val variantProperties = projectServices
-            .objectFactory
+        val variantProperties = dslServices
             .newInstance(
                 DynamicFeatureVariantImpl::class.java,
                 variantBuilder,

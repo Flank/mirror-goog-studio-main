@@ -27,7 +27,7 @@ import com.android.build.api.variant.impl.VariantOutputImpl;
 import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.TaskContainer;
-import com.android.build.gradle.internal.services.BaseServices;
+import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.builder.core.ComponentType;
@@ -50,7 +50,7 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Inject
     public ApkVariantOutputImpl(
             @NonNull TaskContainer taskContainer,
-            @NonNull BaseServices services,
+            @NonNull DslServices services,
             @NonNull VariantOutputImpl variantOutput,
             @NonNull ComponentType componentType) {
         super(taskContainer, services, variantOutput);

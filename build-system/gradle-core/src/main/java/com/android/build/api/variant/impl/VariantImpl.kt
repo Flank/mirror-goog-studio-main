@@ -18,6 +18,7 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
+import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
 import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -30,6 +31,8 @@ import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
+import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantSources
@@ -99,19 +102,16 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = variantBuilder.maxSdk
 
     override val buildConfigFields: MapProperty<String, BuildConfigField<out Serializable>> by lazy {
-        internalServices.mapPropertyOf(
-            String::class.java,
-            BuildConfigField::class.java,
-            dslInfo.getBuildConfigFields()
-        )
-    }
-
-    override val dslBuildConfigFields: Map<String, BuildConfigField<out Serializable>>
-        get() = dslInfo.getBuildConfigFields()
-
-    // for compatibility with old variant API.
-    override fun addBuildConfigField(type: String, key: String, value: Serializable, comment: String?) {
-        buildConfigFields.put(key, BuildConfigField(type, value, comment))
+        buildConfigCreationConfig?.buildConfigFields
+            ?: warnAboutAccessingVariantApiValueForDisabledFeature(
+                featureName = FeatureNames.BUILD_CONFIG,
+                apiName = "buildConfigFields",
+                value = internalServices.mapPropertyOf(
+                    String::class.java,
+                    BuildConfigField::class.java,
+                    dslInfo.getBuildConfigFields()
+                )
+            )
     }
 
     override val packaging: Packaging by lazy {
@@ -158,6 +158,18 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy {
+        if (buildFeatures.buildConfig) {
+            BuildConfigCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices
+            )
+        } else {
+            null
+        }
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
@@ -171,7 +183,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         resValuesCreationConfig?.resValues
             ?: warnAboutAccessingVariantApiValueForDisabledFeature(
-                featureName = "resValues",
+                featureName = FeatureNames.RES_VALUES,
                 apiName = "resValues",
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
@@ -226,7 +238,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
         androidResourcesCreationConfig?.pseudoLocalesEnabled
             ?: warnAboutAccessingVariantApiValueForDisabledFeature(
-                featureName = "androidResources",
+                featureName = FeatureNames.ANDROID_RESOURCES,
                 apiName = "pseudoLocalesEnabled",
                 value = internalServices.newPropertyBackingDeprecatedApi(
                     Boolean::class.java,
