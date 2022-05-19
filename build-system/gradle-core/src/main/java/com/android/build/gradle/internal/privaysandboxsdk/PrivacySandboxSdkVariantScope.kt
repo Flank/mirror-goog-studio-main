@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.privaysandboxsdk
 
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
+import com.android.build.gradle.internal.dsl.PrivacySandboxSdkBundleImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
@@ -44,5 +45,8 @@ class PrivacySandboxSdkVariantScope(
     }
     val bootClasspath: Provider<List<RegularFile>>
             get() = bootClasspathConfigProvider.invoke().bootClasspath
+
+    val bundle: PrivacySandboxSdkBundleImpl
+        get() = extension.bundle as PrivacySandboxSdkBundleImpl
 
 }

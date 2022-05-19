@@ -25,10 +25,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import groovy.namespace.QName
+import groovy.util.Node
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.LibraryBinaryIdentifier
@@ -38,15 +39,13 @@ import org.gradle.api.attributes.Usage
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
-import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier
 
 abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
-    private val softwareComponentFactory: SoftwareComponentFactory,
+    protected val softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
 ): AndroidPluginBaseServices(listenerRegistry), Plugin<Project> {
 
@@ -94,11 +93,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
 
     override fun apply(project: Project) {
         super.basePluginApply(project)
-
-        // create an adhoc component, this will be used for publication
-        val adhocComponent = softwareComponentFactory.adhoc("fusedLibraryComponent")
-        // add it to the list of components that this project declares
-        project.components.add(adhocComponent)
 
         // so far by default, we consume and publish only 'debug' variant
 
@@ -230,23 +224,20 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
             }
         }
 
-        adhocComponent.addVariantsFromConfiguration(includeApiElements) {
-            it.mapToMavenScope("compile")
-        }
-        adhocComponent.addVariantsFromConfiguration(includeRuntimeElements) {
-            it.mapToMavenScope("runtime")
-        }
-
-        project.afterEvaluate {
-            project.extensions.findByType(PublishingExtension::class.java)?.also {
-                component(
-                    it.publications.create("maven", MavenPublication::class.java).also { mavenPublication ->
-                        mavenPublication.from(adhocComponent)
-                    }, includeRuntimeUnmerged.incoming.artifacts
-                )
-            }
-        }
+        maybePublishToMaven(
+            project,
+            includeApiElements,
+            includeRuntimeElements,
+            includeRuntimeUnmerged
+        )
     }
+
+    protected abstract fun maybePublishToMaven(
+        project: Project,
+        includeApiElements: Configuration,
+        includeRuntimeElements: Configuration,
+        includeRuntimeUnmerged: Configuration
+    )
 
     private fun initConfiguration(configuration: Configuration) {
         configuration.attributes.attribute(
@@ -266,7 +257,11 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
 
         publication.pom {  pom: MavenPom ->
             pom.withXml { xml ->
-                val dependenciesNode = xml.asNode().appendNode("dependencies")
+                val dependenciesNode = xml.asNode().let {
+                    it.children().firstOrNull { node ->
+                        ((node as Node).name() as QName).qualifiedName == "dependencies"
+                    } ?: it.appendNode("dependencies")
+                } as Node
 
                 unmergedArtifacts.forEach { artifact ->
                     if (artifact.id is ModuleComponentArtifactIdentifier) {

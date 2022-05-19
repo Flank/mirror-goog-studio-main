@@ -16,17 +16,10 @@
 
 package com.android.build.gradle.internal.dsl
 
-import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
-import com.android.build.gradle.internal.services.DslServices
-import com.android.builder.core.ToolsRevisionUtils
-import javax.inject.Inject
+import com.android.build.api.dsl.PrivacySandboxSdkBundle
+import com.android.build.api.dsl.PrivacySandboxSdkExtension
+import org.gradle.api.Action
 
-abstract class PrivacySandboxSdkExtensionImpl @Inject @WithLazyInitialization("lazyInit") constructor(
-    dslServices: DslServices,
-): FusedLibraryExtensionImpl(dslServices), InternalPrivacySandboxSdkExtension {
-
-    protected fun lazyInit() {
-        buildToolsVersion = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString()
-    }
-
+interface InternalPrivacySandboxSdkExtension: PrivacySandboxSdkExtension {
+    fun bundle(action: Action<PrivacySandboxSdkBundle>)
 }

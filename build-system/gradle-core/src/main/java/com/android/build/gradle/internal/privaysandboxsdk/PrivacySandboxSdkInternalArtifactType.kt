@@ -36,6 +36,8 @@ PrivacySandboxSdkInternalArtifactType<T : FileSystemLocation>(
     // final .asb file ready to be uploaded to Play Store
     object ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
     object LINKED_MERGE_RES_FOR_ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object MODULE_BUNDLE: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object APP_METADATA: PrivacySandboxSdkInternalArtifactType<RegularFile>(FILE), Replaceable
 
     // Directory containing merged resources from all libraries and their dependencies.
     object MERGED_RES: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable

@@ -49,7 +49,7 @@ android {
             """
         )
 
-        project.execute("assemble")
+        project.execute("mainManifestGenerator")
         // check that merged manifest still has the tools: entries.
         // eventually, once the bundletool is ready, we should check there as well.
         val manifestFile = FileUtils.join(project.buildDir,

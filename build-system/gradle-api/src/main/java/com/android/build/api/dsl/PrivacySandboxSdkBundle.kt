@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.build.api.dsl
 
-import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
-import com.android.build.gradle.internal.services.DslServices
-import com.android.builder.core.ToolsRevisionUtils
-import javax.inject.Inject
+import org.gradle.api.Incubating
 
-abstract class PrivacySandboxSdkExtensionImpl @Inject @WithLazyInitialization("lazyInit") constructor(
-    dslServices: DslServices,
-): FusedLibraryExtensionImpl(dslServices), InternalPrivacySandboxSdkExtension {
+@Incubating
+interface PrivacySandboxSdkBundle {
 
-    protected fun lazyInit() {
-        buildToolsVersion = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString()
-    }
+    @get:Incubating
+    @set:Incubating
+    var packageName: String?
 
+    @get:Incubating
+    @set:Incubating
+    var sdkProviderClassName: String?
+
+    @Incubating
+    fun setVersion(major: Int, minor: Int, patch: Int)
 }

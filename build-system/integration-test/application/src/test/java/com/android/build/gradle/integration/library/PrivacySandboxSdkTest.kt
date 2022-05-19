@@ -22,14 +22,14 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.testutils.apk.Dex
+import com.android.testutils.apk.Zip
+import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import java.io.File
+import java.util.Objects
+import kotlin.io.path.readText
 
 class PrivacySandboxSdkTest {
 
@@ -88,6 +88,12 @@ class PrivacySandboxSdkTest {
                 android {
                     compileSdk = $DEFAULT_COMPILE_SDK_VERSION
                     minSdk = $DEFAULT_MIN_SDK_VERSION
+
+                    bundle {
+                        packageName = "com.example.sdkLib1"
+                        sdkProviderClassName = "Test"
+                        setVersion(1, 2, 3)
+                    }
                 }
                 """.trimIndent()
         )
@@ -105,25 +111,10 @@ class PrivacySandboxSdkTest {
         ).create()
 
     @Test
-    fun smokeTest() {
+    fun testMergedClasses() {
         project.execute(":sdkLib1:assemble")
         val sdkLib1BuildDir = project.getSubproject(":sdkLib1").buildDir
         assertThat(sdkLib1BuildDir.resolve("packageJar/classes.jar").isFile).isTrue()
-    }
-
-    @Test
-    fun testPublishing() {
-        project.getSubproject("sdkLib1").buildFile.appendText("""
-            apply plugin: 'maven-publish'
-        """.trimIndent())
-
-        project.executor().run(":sdkLib1:assemble", "generatePomFileForMavenPublication", "generateMetadataFileForMavenPublication")
-        val sdkLib1BuildDir = project.getSubproject(":sdkLib1").buildDir
-        assertThat(sdkLib1BuildDir.resolve("packageJar/classes.jar").isFile).isTrue()
-        sdkLib1BuildDir.resolve("publications/maven").also { publicationDir ->
-            assertThat(File(publicationDir, "pom-default.xml").isFile).isTrue()
-            assertThat(File(publicationDir, "module.json").isFile).isTrue()
-        }
     }
 
     @Test
@@ -153,5 +144,41 @@ class PrivacySandboxSdkTest {
         assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map {
             it.name
         }).contains("f2")
+    }
+
+    @Test
+    fun testAsb() {
+        project.execute(":sdkLib1:assemble")
+
+        val asbFile = FileUtils.join(
+            project.getSubproject(":sdkLib1").intermediatesDir,
+            "asb",
+            "single",
+            "sdkLib1.asb"
+        )
+
+        assertThat(asbFile.exists()).isTrue()
+
+        Zip(asbFile).use {
+            assertThat(
+                Objects.requireNonNull(it.getEntryAsFile(
+                    "BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.properties"
+                )).readText()
+            ).let { metadataContent ->
+                metadataContent.contains("appMetadataVersion=")
+                metadataContent.contains("androidGradlePluginVersion=")
+            }
+
+            assertThat(it.getEntry("SdkBundleConfig.pb")).isNotNull()
+
+            ZipFileSubject.assertThat(
+                Objects.requireNonNull(it.getEntryAsFile("modules.resm"))
+            ) { modules ->
+                modules.contains("base/dex/classes.dex")
+                modules.contains("base/manifest/AndroidManifest.xml")
+                modules.contains("base/resources.pb")
+                modules.contains("SdkModulesConfig.pb")
+            }
+        }
     }
 }

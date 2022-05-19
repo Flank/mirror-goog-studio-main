@@ -50,6 +50,7 @@ import com.android.build.api.dsl.SigningConfig
 import com.android.build.api.dsl.Split
 import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.BundleStoreArchive
+import com.android.build.api.dsl.PrivacySandboxSdkBundle
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.api.dsl.ViewBinding
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -78,6 +79,7 @@ import com.android.build.gradle.internal.dsl.JavaCompileOptions as JavaCompileOp
 import com.android.build.gradle.internal.dsl.JniLibsPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.LibraryPublishingImpl
 import com.android.build.gradle.internal.dsl.NdkBuildOptions
+import com.android.build.gradle.internal.dsl.PrivacySandboxSdkBundleImpl
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
 import com.android.build.gradle.internal.dsl.ResourcesPackagingOptionsImpl
 import com.android.build.gradle.internal.dsl.SplitOptions
@@ -135,7 +137,8 @@ val AGP_SUPPORTED_PROPERTY_TYPES: List<SupportedPropertyType> = listOf(
 
     // FusedLibrary Extensions.
     SupportedPropertyType.Block(FusedLibraryExtension::class.java, FusedLibraryExtensionImpl::class.java),
-    SupportedPropertyType.Block(PrivacySandboxSdkExtension::class.java, PrivacySandboxSdkExtensionImpl::class.java)
+    SupportedPropertyType.Block(PrivacySandboxSdkExtension::class.java, PrivacySandboxSdkExtensionImpl::class.java),
+    SupportedPropertyType.Block(PrivacySandboxSdkBundle::class.java, PrivacySandboxSdkBundleImpl::class.java)
 )
 
 /**
