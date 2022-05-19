@@ -473,32 +473,43 @@ class NotificationTrampolineDetectorTest : AbstractCheckTest() {
         )
     }
 
-    private val notificationStubs = arrayOf(
-        // NotificationCompat & Builder Stubs
-        java(
-            """
-            package androidx.core.app;
-            import android.app.Notification;
-            import android.app.PendingIntent;
-            import android.content.Context;
-            public class NotificationCompat {
-                public static final int PRIORITY_DEFAULT = 0;
-                public static class Builder {
-                    public Builder(Context context, String channel) { }
-                    public NotificationCompat.Builder setSmallIcon(int icon) { return this; }
-                    public NotificationCompat.Builder setContentTitle(String title) { return this; }
-                    public NotificationCompat.Builder setContentText(String title) { return this; }
-                    public NotificationCompat.Builder setPriority(int priority) { return this; }
-                    public NotificationCompat.Builder setContentIntent(PendingIntent intent) { return this; }
-                    public NotificationCompat.Builder setFullScreenIntent(PendingIntent intent, boolean highPriority) { return this; }
-                    public NotificationCompat.Builder setAutoCancel(boolean auto) { return this; }
-                    public NotificationCompat.Builder addAction(int icon, CharSequence title, PendingIntent intent) { return this; }
-                    public Notification build() {
-                        return null;
+    companion object {
+        val notificationStubs = arrayOf(
+            // NotificationCompat & Builder Stubs
+            java(
+                """
+                package androidx.core.app;
+                import android.app.Notification;
+                import android.app.PendingIntent;
+                import android.content.Context;
+                public class NotificationCompat {
+                    public static final int PRIORITY_DEFAULT = 0;
+                    public static class Builder {
+                        public Builder(Context context, String channel) { }
+                        public NotificationCompat.Builder setSmallIcon(int icon) { return this; }
+                        public NotificationCompat.Builder setContentTitle(String title) { return this; }
+                        public NotificationCompat.Builder setContentText(String title) { return this; }
+                        public NotificationCompat.Builder setPriority(int priority) { return this; }
+                        public NotificationCompat.Builder setContentIntent(PendingIntent intent) { return this; }
+                        public NotificationCompat.Builder setFullScreenIntent(PendingIntent intent, boolean highPriority) { return this; }
+                        public NotificationCompat.Builder setAutoCancel(boolean auto) { return this; }
+                        public NotificationCompat.Builder addAction(int icon, CharSequence title, PendingIntent intent) { return this; }
+                        public Notification build() {
+                            return null;
+                        }
                     }
                 }
-            }
-            """
-        ).indented()
-    )
+                """
+            ).indented(),
+            java(
+                """
+                package androidx.core.app;
+                import android.app.Notification;
+                public final class NotificationManagerCompat {
+                    public void notify(int id, Notification notification) { }
+                }
+                """
+            ).indented()
+        )
+    }
 }

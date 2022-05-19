@@ -399,6 +399,7 @@ class LintFixVerifier(private val task: TestLintTask, private val mode: TestMode
             diffs.append(key)
             diffs.append(" : ")
             diffs.append(map[key])
+            diffs.append("\n")
         }
     }
 

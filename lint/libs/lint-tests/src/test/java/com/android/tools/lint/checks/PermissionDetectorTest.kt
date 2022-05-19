@@ -468,7 +468,12 @@ class PermissionDetectorTest : AbstractCheckTest() {
             mPermissionTest,
             mLocationManagerStub,
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expect(expected)
+        ).run().expect(expected).expectFixDiffs(
+            """
+            Data for src/test/pkg/PermissionTest.java line 7:   missing : android.permission.ACCESS_FINE_LOCATION, android.permission.ACCESS_COARSE_LOCATION
+              requirement : |android.permission.ACCESS_FINE_LOCATION,android.permission.ACCESS_COARSE_LOCATION
+            """
+        )
     }
 
     fun testIntentPermission() {
@@ -1235,6 +1240,19 @@ class PermissionDetectorTest : AbstractCheckTest() {
                     "        AnnotationsClass.testAnyOfLocationPermissionAnnotation(); // Missing Location Permission\n" +
                     "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "3 errors, 0 warnings"
+            )
+            .expectFixDiffs(
+                """
+                Data for src/test/pkg/TestClass.java line 13:   lastApi : 2147483647
+                  message : Missing permissions required by TestClass.inClassBluetoothAnnotation: %1＄s
+                  missing : android.permission.BLUETOOTH
+                Data for src/test/pkg/TestClass.java line 14:   lastApi : 2147483647
+                  message : Missing permissions required by AnnotationsClass.testBluetoothPermissionAnnotation: %1＄s
+                  missing : android.permission.BLUETOOTH
+                Data for src/test/pkg/TestClass.java line 15:   lastApi : 2147483647
+                  message : Missing permissions required by AnnotationsClass.testAnyOfLocationPermissionAnnotation: %1＄s
+                  missing : android.permission.ACCESS_FINE_LOCATION, android.permission.ACCESS_COARSE_LOCATION
+                """
             )
     }
 
