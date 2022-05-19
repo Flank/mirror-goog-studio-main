@@ -29,12 +29,12 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
-import com.android.utils.FileUtils
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -60,6 +60,31 @@ abstract class BundleAar : Zip(), VariantAwareTask {
     @get:Input
     lateinit var projectPath: String
         private set
+
+    /**
+     * AbstractArchiveTask has main output "archiveFile" as a Provider. Two properties
+     * destinationDirectory and archiveFileName need to be set to define output.
+     * SingleInitialProviderRequestImpl has mechanism that manipulates names and
+     * paths and uses one path property to fuze task into graph.
+     * To adapt two properties of AbstractArchiveTask we introduced mappedOutput that
+     * publishes value to destinationDirectory, archiveFileName and archiveFile
+     */
+    private val mappedOutput: RegularFileProperty = project.objects.fileProperty()
+
+    /**
+     * Schema of publishing archive folder data from mappedOutput to archiveFile
+     *
+     *                  +----  destinationDirectory  <---
+     *                  |                               |
+     * @Output        <--                               + ----   mappedOutput
+     * archiveFile    <--                               |
+     *                  |                               |
+     *                  +----   archiveFileName      <---
+     */
+    init {
+        destinationDirectory.fileProvider(mappedOutput.map { it.asFile.parentFile })
+        archiveFileName.set(mappedOutput.map { it.asFile.name })
+    }
 
     @get:Input
     val hasLocalAarDeps: Boolean
@@ -181,13 +206,10 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             taskProvider: TaskProvider<BundleAar>
         ) {
             super.handleProvider(taskProvider)
-
-            val propertyProvider = { task : BundleAar ->
-                val property = task.project.objects.fileProperty()
-                property.set(task.archiveFile)
-                property
-            }
-            creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
+            val propertyProvider = { task: BundleAar -> task.archiveFile }
+            creationConfig.artifacts.setInitialProvider(taskProvider,BundleAar::mappedOutput, propertyProvider)
+                .withBuildOutput(creationConfig.paths.aarLocation)
+                .withName(creationConfig.outputs.getMainSplit().outputFileName)
                 .on(SingleArtifact.AAR)
         }
 
@@ -196,9 +218,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         ) {
             super.configure(task)
             task.description = "Assembles a bundle containing the testFixtures in ${creationConfig.name}."
-
-            task.archiveFileName.set(creationConfig.outputs.getMainSplit().outputFileName)
-            task.destinationDirectory.set(creationConfig.paths.aarLocation)
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
         }
     }
@@ -215,14 +234,19 @@ abstract class BundleAar : Zip(), VariantAwareTask {
         ) {
             super.handleProvider(taskProvider)
 
-            val propertyProvider = { task: BundleAar ->
-                val property = task.project.objects.fileProperty()
-                property.set(task.archiveFile)
-                property
-            }
+            val outputFile =
+                InternalArtifactType.LOCAL_AAR_FOR_LINT
+                    .getOutputPath(
+                        creationConfig.artifacts.buildDirectory,
+                        creationConfig.name
+                    )
+            val propertyProvider = { task: BundleAar -> task.archiveFile }
+
             creationConfig.artifacts
-                .setInitialProvider(taskProvider, propertyProvider)
-                .on(InternalArtifactType.LOCAL_AAR_FOR_LINT)
+                .setInitialProvider(taskProvider, BundleAar::mappedOutput, propertyProvider)
+                    .withBuildOutput(outputFile)
+                    .withName("out-${testFixturesClassifier}.aar")
+                    .on(InternalArtifactType.LOCAL_AAR_FOR_LINT)
         }
 
         override fun configure(
@@ -231,15 +255,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             super.configure(task)
             task.description = "Assembles a bundle containing the testFixtures in ${creationConfig.name}."
 
-            val outputFile =
-                InternalArtifactType.LOCAL_AAR_FOR_LINT
-                    .getOutputPath(
-                        creationConfig.artifacts.buildDirectory,
-                        creationConfig.name,
-                        "out-${testFixturesClassifier}.aar"
-                    )
-            task.archiveFileName.set(outputFile.name)
-            task.destinationDirectory.set(outputFile.parentFile)
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
@@ -267,29 +282,22 @@ abstract class BundleAar : Zip(), VariantAwareTask {
 
         override fun handleProvider(taskProvider: TaskProvider<BundleAar>) {
             super.handleProvider(taskProvider)
-
-            val propertyProvider = { task: BundleAar ->
-                val property = task.project.objects.fileProperty()
-                property.set(task.archiveFile)
-                property
-            }
+            val outputFile =
+                InternalArtifactType.LOCAL_AAR_FOR_LINT
+                    .getOutputPath(
+                        creationConfig.artifacts.buildDirectory,
+                        creationConfig.name
+                    )
+            val propertyProvider = { task: BundleAar -> task.archiveFile }
             creationConfig.artifacts
-                .setInitialProvider(taskProvider, propertyProvider)
+                .setInitialProvider(taskProvider, BundleAar::mappedOutput, propertyProvider)
+                .withName("out.aar")
+                .withBuildOutput(outputFile)
                 .on(InternalArtifactType.LOCAL_AAR_FOR_LINT)
         }
 
         override fun configure(task: BundleAar) {
             super.configure(task)
-
-            val outputFile =
-                InternalArtifactType.LOCAL_AAR_FOR_LINT
-                    .getOutputPath(
-                        creationConfig.artifacts.buildDirectory,
-                        creationConfig.name,
-                        "out.aar"
-                    )
-            task.archiveFileName.set(outputFile.name)
-            task.destinationDirectory.set(outputFile.parentFile)
 
             // No need to compress this archive because it's just an intermediate artifact.
             task.entryCompression = ZipEntryCompression.STORED
@@ -317,20 +325,15 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             super.handleProvider(taskProvider)
             creationConfig.taskContainer.bundleLibraryTask = taskProvider
 
-            val propertyProvider = { task: BundleAar ->
-                val property = task.project.objects.fileProperty()
-                property.set(task.archiveFile)
-                property
+            creationConfig.let {
+                it.artifacts.setInitialProvider(taskProvider, BundleAar::mappedOutput) { task: BundleAar -> task.archiveFile }
+                    .withBuildOutput(it.paths.aarLocation)
+                    .withName(it.outputs.getMainSplit().outputFileName)
+                    .on(SingleArtifact.AAR)
             }
-            creationConfig.artifacts.setInitialProvider(taskProvider, propertyProvider)
-                .on(SingleArtifact.AAR)
         }
-
         override fun configure(task: BundleAar) {
             super.configure(task)
-
-            task.archiveFileName.set(creationConfig.outputs.getMainSplit().outputFileName)
-            task.destinationDirectory.set(creationConfig.paths.aarLocation)
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
         }
     }

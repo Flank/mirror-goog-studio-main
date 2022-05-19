@@ -54,7 +54,6 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script) {
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import com.android.build.api.artifact.MultipleArtifact
             ${testingElements.getAllClassesAccessTask()}
@@ -133,7 +132,6 @@ expected result : a list of classes and jar files.
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import com.android.build.api.artifact.MultipleArtifact
 
@@ -278,7 +276,6 @@ expected result : a list of classes and jar files.
             plugins {
                     id("com.android.application")
                     kotlin("android")
-                    kotlin("android.extensions")
             }
             import com.android.build.api.artifact.MultipleArtifact
 

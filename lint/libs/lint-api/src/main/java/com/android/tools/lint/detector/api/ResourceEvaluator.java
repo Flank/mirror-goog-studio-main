@@ -41,6 +41,7 @@ import com.intellij.psi.PsiConditionalExpression;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -73,6 +74,7 @@ import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.jetbrains.uast.UastCallKind;
 import org.jetbrains.uast.UastFacade;
+import org.jetbrains.uast.java.UnknownJavaExpression;
 
 /** Evaluates constant expressions */
 public class ResourceEvaluator {
@@ -748,28 +750,14 @@ public class ResourceEvaluator {
                         return null;
                     }
                 } else if (unit instanceof ULiteralExpression) {
-                    Object value = ((ULiteralExpression) unit).getValue();
-                    if (value instanceof Integer) {
-                        // Constants from Dimension.java:
-                        //   int DP = 0;
-                        //   int PX = 1;
-                        //   int SP = 2;
-                        switch ((Integer) value) {
-                            case 0:
-                                return DIMENSION_DP_MARKER_TYPE;
-                            case 1:
-                                return DIMENSION_MARKER_TYPE;
-                            case 2:
-                                return DIMENSION_SP_MARKER_TYPE;
-                            default:
-                                // If it's some other number, it must be a future-added new unit
-                                // type that this
-                                // version of lint doesn't understand; don't process this as a
-                                // resource type
-                                // since it can lead to incorrect comparisons
-                                return null;
-                        }
-                    }
+                    return getDimensionFromIntValue(((ULiteralExpression) unit).getValue());
+                } else if (unit != null
+                        && unit.getSourcePsi() instanceof PsiLiteralExpression) { // bytecode
+                    PsiLiteralExpression psi = (PsiLiteralExpression) unit.getSourcePsi();
+                    return getDimensionFromIntValue(psi.getValue());
+                } else if (unit instanceof UnknownJavaExpression) {
+                    // some other PSI problem
+                    return null;
                 }
             }
             return DIMENSION_MARKER_TYPE;
@@ -779,6 +767,29 @@ public class ResourceEvaluator {
             } else {
                 return getTypeFromAnnotationSignature(signature);
             }
+        }
+    }
+
+    @Nullable
+    private static ResourceType getDimensionFromIntValue(Object value) {
+        if (value instanceof Integer) {
+            switch ((Integer) value) {
+                case 0:
+                    return DIMENSION_DP_MARKER_TYPE;
+                case 1:
+                    return DIMENSION_MARKER_TYPE;
+                case 2:
+                    return DIMENSION_SP_MARKER_TYPE;
+                default:
+                    // If it's some other number, it must be a future-added new unit
+                    // type that this
+                    // version of lint doesn't understand; don't process this as a
+                    // resource type
+                    // since it can lead to incorrect comparisons
+                    return null;
+            }
+        } else {
+            return null;
         }
     }
 

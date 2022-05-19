@@ -1171,7 +1171,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                     .build())
             creationConfig
                     .artifacts
-                    .appendTo(MultipleArtifact.PROJECT_CLASSES_DIRS, RUNTIME_R_CLASS_CLASSES)
+                    .appendTo(MultipleArtifact.ALL_CLASSES_DIRS, RUNTIME_R_CLASS_CLASSES)
             return
         }
         createNonNamespacedResourceTasks(
@@ -1242,7 +1242,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
                                     creationConfig))
                 }
                 artifacts.appendTo(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
 
                 if (!creationConfig.debuggable &&
@@ -1360,7 +1360,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         creationConfig.variantData.allPreJavacGeneratedBytecode.getRegularFiles(
                                 project.layout.projectDirectory
                         ));
@@ -1368,7 +1368,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         creationConfig.variantData.allPreJavacGeneratedBytecode.getDirectories(
                             project.layout.projectDirectory
                         ));
@@ -1376,7 +1376,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_JARS,
+                        MultipleArtifact.ALL_CLASSES_JARS,
                         creationConfig.variantData.allPostJavacGeneratedBytecode.getRegularFiles(
                             project.layout.projectDirectory
                         ));
@@ -1384,14 +1384,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         creationConfig
                 .artifacts
                 .appendAll(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         creationConfig.variantData.allPostJavacGeneratedBytecode.getDirectories(
                             project.layout.projectDirectory
                         ));
         creationConfig
                 .artifacts
                 .appendTo(
-                        MultipleArtifact.PROJECT_CLASSES_DIRS,
+                        MultipleArtifact.ALL_CLASSES_DIRS,
                         JAVAC)
     }
 
@@ -2053,21 +2053,25 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         // Merge Java Resources.
         createMergeJavaResTask(creationConfig)
 
-        val isAndroidTestCoverageEnabled =
-            creationConfig.isAndroidTestCoverageEnabled && !creationConfig.componentType.isForTesting
+        // -----------------------------------------------------------------------------------------
+        // The following task registrations MUST follow the order:
+        //   ASM API -> Legacy transforms -> jacoco transforms
+        // -----------------------------------------------------------------------------------------
+
+        maybeCreateTransformClassesWithAsmTask(creationConfig as ComponentImpl)
 
         // ----- External Transforms -----
         val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
 
         // New gradle-transform jacoco instrumentation support.
-        if (isAndroidTestCoverageEnabled) {
+        if (creationConfig.isAndroidTestCoverageEnabled &&
+            !creationConfig.componentType.isForTesting) {
             if (registeredLegacyTransform) {
                 createJacocoTaskWithLegacyTransformSupport(creationConfig)
             } else {
                 createJacocoTask(creationConfig)
             }
         }
-        maybeCreateTransformClassesWithAsmTask(creationConfig as ComponentImpl)
 
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
@@ -2326,7 +2330,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
         val classesFromLegacyTransforms =
             creationConfig.transformManager.getPipelineOutputAsFileCollection(
                 { _, _ -> true},
-                { _, scopes -> scopes == setOf(
+                { types, _ -> types.contains(
                     com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES) }
             )
 

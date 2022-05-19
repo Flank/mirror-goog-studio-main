@@ -449,7 +449,7 @@ class LintBaseline(
                         val value = parser.getAttributeValue(i)
                         when (name) {
                             ATTR_ID -> issue = value
-                            ATTR_MESSAGE -> message = value
+                            ATTR_MESSAGE -> if (parser.depth == 2) message = value // else: depth=3: location-specific message
                             ATTR_FILE -> path = value
                             // For now not reading ATTR_LINE; not used for baseline entry matching
                             // ATTR_LINE -> line = value

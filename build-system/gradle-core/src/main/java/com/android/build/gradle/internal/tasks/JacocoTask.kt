@@ -371,13 +371,13 @@ abstract class JacocoTask : NewIncrementalTask() {
                 .from(
                     creationConfig
                         .artifacts
-                        .getAll(MultipleArtifact.PROJECT_CLASSES_JARS)
+                        .getAll(MultipleArtifact.ALL_CLASSES_JARS)
                 )
             task.classesDir
                 .from(
                     creationConfig
                         .artifacts
-                        .getAll(MultipleArtifact.PROJECT_CLASSES_DIRS)
+                        .getAll(MultipleArtifact.ALL_CLASSES_DIRS)
                 )
         }
     }

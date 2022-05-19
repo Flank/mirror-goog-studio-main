@@ -393,6 +393,19 @@ abstract class LintClient {
         resourcePath.toFile()?.readBytes() ?: throw FileNotFoundException(resourcePath.toString())
 
     /**
+     * Returns whether the given [file] has been edited since the last
+     * save, or recently saved (within the last [savedSinceMsAgo]
+     * milliseconds, which defaults to 5 minutes; if -1 it will not
+     * consider unmodified files.)
+     *
+     * If unknown or unsupported by this [LintClient], returns
+     * [returnIfUnknown].
+     */
+    open fun isEdited(file: File, returnIfUnknown: Boolean = true, savedSinceMsAgo: Long = 5 * 60 * 1000L): Boolean {
+        return returnIfUnknown
+    }
+
+    /**
      * Returns the list of source folders for Java source files
      *
      * @param project the project to look up Java source file locations

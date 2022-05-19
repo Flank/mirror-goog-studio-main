@@ -61,8 +61,8 @@ class AllClassesTests: VariantApiBaseTest(TestType.Script, ScriptingLanguage.Gro
             androidComponents {
                 onVariants(selector().all(), { variant ->
                     project.tasks.register(variant.getName() + "GetAllClasses", GetAllClassesTask.class) {
-                        it.allClasses.set(variant.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE))
-                        it.allJarsWithClasses.set(variant.artifacts.getAll(MultipleArtifact.PROJECT_CLASSES_JARS.INSTANCE))
+                        it.allClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE))
+                        it.allJarsWithClasses.set(variant.artifacts.getAll(MultipleArtifact.ALL_CLASSES_JARS.INSTANCE))
 
                     }
                 })
@@ -190,7 +190,7 @@ expected result : a list of classes and jar files.
                     TaskProvider<ModifyClassesTask> taskProvider = project.tasks.register(variant.getName() + "ModifyAllClasses", ModifyClassesTask.class)
                     variant.artifacts.use(taskProvider)
                         .wiredWith( { it.getAllClasses() }, { it.getOutput() })
-                        .toTransform(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE)
+                        .toTransform(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE)
                 })
             }
         """.trimIndent()
@@ -310,7 +310,7 @@ expected result : a list of classes and jar files.
                     TaskProvider<AddClassesTask> taskProvider = project.tasks.register(variant.getName() + "AddAllClasses", AddClassesTask.class)
                     variant.artifacts.use(taskProvider)
                         .wiredWith( { it.getOutput() })
-                        .toAppendTo(MultipleArtifact.PROJECT_CLASSES_DIRS.INSTANCE)
+                        .toAppendTo(MultipleArtifact.ALL_CLASSES_DIRS.INSTANCE)
                 })
             }
         """.trimIndent()

@@ -316,8 +316,12 @@ class ArtifactsImplTest {
         Truth.assertThat(agpTaskProvider.get().outputFile.get().asFile.absolutePath).contains("agpTaskProvider")
         // transform input should be in the agp producer.
         Truth.assertThat(transformerProvider.get().inputFile.asFile.get().absolutePath).contains("agpTaskProvider")
-        // transform output should have the task name in its output.
-        Truth.assertThat(transformerProvider.get().outputFile.get().asFile.absolutePath).contains("transformer")
+        // transform output should not have the task name in its output.
+        val transformerOut = transformerProvider.get().outputFile.get().asFile.absolutePath
+        Truth.assertThat(transformerOut).contains(TEST_TRANSFORMABLE_FILE.name().lowercase())
+        Truth.assertThat(transformerOut).endsWith("out")
+        Truth.assertThat(transformerOut).doesNotContain("transformer")
+
         // final artifact value should be the transformer task output
         Truth.assertThat(artifactContainer.get().get().asFile.absolutePath)
             .isEqualTo(transformerProvider.get().outputFile.asFile.get().absolutePath)
@@ -361,7 +365,8 @@ class ArtifactsImplTest {
         // transform input should be in the agp producer.
         Truth.assertThat(transformerProvider.get().inputFolder.asFile.get().absolutePath).contains("agpTaskProvider")
         // transform output should have the task name in its output.
-        Truth.assertThat(transformerProvider.get().outputFolder.get().asFile.absolutePath).contains("transformer")
+        Truth.assertThat(transformerProvider.get().outputFolder.get().asFile.absolutePath)
+            .contains(TEST_TRANSFORMABLE_DIRECTORY.name().lowercase())
         // final artifact value should be the transformer task output
         Truth.assertThat(artifactContainer.get().get().asFile.absolutePath)
             .isEqualTo(transformerProvider.get().outputFolder.asFile.get().absolutePath)
@@ -429,8 +434,10 @@ class ArtifactsImplTest {
         Truth.assertThat(transformerOneProvider.get().outputFile.get().asFile.absolutePath).contains("transformerOne")
         // transformTwo input should be TransformOne output
         Truth.assertThat(transformerTwoProvider.get().inputFile.asFile.get().absolutePath).contains("transformerOne")
-        // transformTwo output should have the task name in its output.
-        Truth.assertThat(transformerTwoProvider.get().outputFile.get().asFile.absolutePath).contains("transformerTwo")
+        // transformTwo output should not have the task name in its output.
+        val outputTwo = transformerTwoProvider.get().outputFile.get().asFile.absolutePath
+        Truth.assertThat(outputTwo).contains(TEST_TRANSFORMABLE_FILE.name().lowercase())
+        Truth.assertThat(outputTwo).doesNotContain("transformerTwo")
 
         // the producers have been looked up, it should now be configured
         Truth.assertThat(agpInitialized.get()).isTrue()
@@ -500,7 +507,8 @@ class ArtifactsImplTest {
         // transformTwo input should be TransformOne output
         Truth.assertThat(transformerTwoProvider.get().inputFolder.asFile.get().absolutePath).contains("transformerOne")
         // transformTwo output should have the task name in its output.
-        Truth.assertThat(transformerTwoProvider.get().outputFolder.get().asFile.absolutePath).contains("transformerTwo")
+        Truth.assertThat(transformerTwoProvider.get().outputFolder.get().asFile.absolutePath)
+            .contains(TEST_TRANSFORMABLE_DIRECTORY.name().lowercase())
 
         // the producers have been looked up, it should now be configured
         Truth.assertThat(agpInitialized.get()).isTrue()
@@ -1165,24 +1173,6 @@ class ArtifactsImplTest {
             )
     }
 
-    @Test
-    fun `test ALL_CLASSES_JARS deprecated artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.ALL_CLASSES_JARS,
-            MultipleArtifact.PROJECT_CLASSES_JARS
-        )
-    }
-
-    @Test
-    fun `test PROJECT_CLASSES_JARS artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.PROJECT_CLASSES_JARS,
-            MultipleArtifact.ALL_CLASSES_JARS
-        )
-    }
-
     abstract class AgpDirectoryTask: DefaultTask() {
         @get:OutputFile abstract val outputFolder: DirectoryProperty
     }
@@ -1205,23 +1195,5 @@ class ArtifactsImplTest {
                 "build/intermediates/${artifactToRegister.getFolderName()}/debug/agpTaskProvider"
                     .replace('/', File.separatorChar)
             )
-    }
-
-    @Test
-    fun `test ALL_CLASSES_DIRS deprecated artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test directory deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.ALL_CLASSES_DIRS,
-            MultipleArtifact.PROJECT_CLASSES_DIRS
-        )
-    }
-
-    @Test
-    fun `test PROJECT_CLASSES_DIRS artifact are rerouted correctly`() {
-        @Suppress("DEPRECATION")
-        `test directory deprecated artifacts are rerouted correctly`(
-            MultipleArtifact.PROJECT_CLASSES_DIRS,
-            MultipleArtifact.ALL_CLASSES_DIRS
-        )
     }
 }

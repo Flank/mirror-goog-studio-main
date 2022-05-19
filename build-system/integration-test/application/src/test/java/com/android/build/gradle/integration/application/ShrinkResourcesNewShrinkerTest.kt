@@ -490,7 +490,6 @@ class ShrinkResourcesNewShrinkerTest {
             getIntermediateFile(
                     "intermediary_bundle",
                     "release",
-                    "shrinkBundleReleaseResources",
                     "intermediary-bundle.aab"
             )
 
