@@ -22,7 +22,7 @@ import java.io.IOException
 import java.net.Socket
 
 class ActivityManagerCommandHandler(
-  private val processStarter: ProcessStarter
+  private val commandHandlerAdapter: CommandHandlerAdapter
 ) : SimpleShellHandler("am") {
 
   override fun execute(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
@@ -37,22 +37,30 @@ class ActivityManagerCommandHandler(
       CommandHandler.writeOkay(output)
 
       val response: String = when {
-        args.startsWith("start") -> processStarter.startProcess(device)
-        else -> ""
+          args.startsWith("start") -> commandHandlerAdapter.start(
+              device,
+              args.substringAfter("start").trimStart()
+          )
+          args.startsWith("force-stop") -> commandHandlerAdapter.forceStop(
+              device,
+              args.substringAfter("force-stop").trimStart()
+          )
+          else -> ""
       }
 
-      CommandHandler.writeString(output, response)
-    }
-    catch (ignored: IOException) {
-      // Unable to write to socket. Can't communicate anything with client. Just swallow
-      // the exception and move on
+        CommandHandler.writeString(output, response)
+    } catch (ignored: IOException) {
+        // Unable to write to socket. Can't communicate anything with client. Just swallow
+        // the exception and move on
     }
 
-    return
+      return
   }
 
-  interface ProcessStarter {
-    fun startProcess(deviceState: DeviceState): String
-  }
+    interface CommandHandlerAdapter {
+
+        fun start(deviceState: DeviceState, args: String): String = throw NotImplementedError()
+        fun forceStop(deviceState: DeviceState, args: String): String = throw NotImplementedError()
+    }
 
 }
