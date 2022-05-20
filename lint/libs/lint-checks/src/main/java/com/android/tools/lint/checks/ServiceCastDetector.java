@@ -437,8 +437,12 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.telephony.euicc.EuiccManager";
             case "DEVICE_POLICY_SERVICE":
                 return "android.app.admin.DevicePolicyManager";
+            case "DISPLAY_HASH_SERVICE":
+                return "android.view.displayhash.DisplayHashManager";
             case "DISPLAY_SERVICE":
                 return "android.hardware.display.DisplayManager";
+            case "DOMAIN_VERIFICATION_SERVICE":
+                return "android.content.pm.verify.domain.DomainVerificationManager";
             case "DOWNLOAD_SERVICE":
                 return "android.app.DownloadManager";
             case "DROPBOX_SERVICE":
@@ -461,6 +465,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.content.pm.LauncherApps";
             case "LAYOUT_INFLATER_SERVICE":
                 return "android.view.LayoutInflater";
+            case "LOCALE_SERVICE":
+                return "android.app.LocaleManager";
             case "LOCATION_SERVICE":
                 return "android.location.LocationManager";
             case "MEDIA_COMMUNICATION_SERVICE":
@@ -515,6 +521,8 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                 return "android.view.textservice.TextServicesManager";
             case "TV_INPUT_SERVICE":
                 return "android.media.tv.TvInputManager";
+            case "TV_INTERACTIVE_APP_SERVICE":
+                return "android.media.tv.interactive.TvInteractiveAppManager";
             case "UI_MODE_SERVICE":
                 return "android.app.UiModeManager";
             case "USAGE_STATS_SERVICE":
