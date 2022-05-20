@@ -2852,6 +2852,7 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION,
             moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
+            androidSpecific = true
         )
 
         @JvmField
@@ -2866,6 +2867,7 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION,
             moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
+            androidSpecific = true
         )
 
         /** Gradle plugin IDs based on the Java plugin. */
