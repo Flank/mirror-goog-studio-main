@@ -62,6 +62,10 @@ class ActivityManager {
   virtual bool TriggerHeapDump(int pid, const std::string &file_path,
                                std::string *error_string) const;
 
+  // Returns the output of "am get-current-user" command without the terminating
+  // newline, or an empty string if the command doesn't run successfully.
+  std::string GetCurrentUser() const;
+
   // Stops all ongoing profiling.
   void Shutdown();
 

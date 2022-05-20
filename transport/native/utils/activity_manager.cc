@@ -145,6 +145,15 @@ bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,
   return bash_->Run(ss.str(), error_string);
 }
 
+string ActivityManager::GetCurrentUser() const {
+  string output;
+  bool success = bash_->Run("get-current-user", &output);
+  if (!success) return "";
+  int size = output.size();
+  if (output[size - 1] == '\n') return output.substr(0, size - 1);
+  return output;
+}
+
 void ActivityManager::Shutdown() {
   // Intentionally not protected by |profiled_lock_| so this function can
   // proceed without being blocked.

@@ -23,6 +23,8 @@ namespace profiler {
 
 // Absolute on-device path to 'run-as'.
 const char *const kRunAsExecutable = "/system/bin/run-as";
+// The 'run-as' command line flag to set user.
+const char *const kRunAsUserFlag = "--user";
 // Absolute on-device path to 'su' on non-user-build devices.
 const char *const kSuExecutable = "/system/xbin/su";
 
@@ -42,8 +44,14 @@ class BashCommandRunner {
   // If |output| is not null, it is populated with stdin and stderr from
   // running command.
   virtual bool Run(const std::string &parameters, std::string *output) const;
-  bool RunAs(const std::string &parameters, const std::string &username,
-             std::string *output) const;
+  // Same as |Run| but using 'run-as' command for the given |package_name|
+  // under the given |user|.
+  // |user| is the argument passed to 'run-as' command's --user flag. It should
+  // be a non-negative integer. For example, the main user is usually '0' and
+  // the first secondary user is often '10'. Note this is not uid in Android
+  // which often varies per package.
+  bool RunAs(const std::string &parameters, const std::string &package_name,
+             const std::string &user, std::string *output) const;
   static bool IsRunAsCapable();
 
  private:

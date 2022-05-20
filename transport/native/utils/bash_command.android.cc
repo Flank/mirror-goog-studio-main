@@ -16,6 +16,8 @@
 
 #include "bash_command.h"
 
+#include <sstream>
+
 #include "sys/wait.h"
 #include "utils/device_info.h"
 #include "utils/fs/disk_file_system.h"
@@ -27,31 +29,26 @@ using std::string;
 namespace profiler {
 
 bool BashCommandRunner::RunAs(const string &parameters,
-                              const string &package_name,
+                              const string &package_name, const string &user,
                               string *output) const {
   // TODO: The single quote can interfer with parameters. Disregarding
   // this potential issue for now.
-  string cmd;
+  std::ostringstream oss;
   if (!DeviceInfo::is_user_build() &&
       DeviceInfo::api_level() >= DeviceInfo::P) {
     // Since Android Pie (API 28), JVMTI agent can be attached to non-debuggable
     // apps. Therefore, we use "su root" on non-user-build devices (such as
     // userdebug build) to support non-debuggable apps.
-    cmd.append(kSuExecutable);
-    cmd.append(" root sh -c 'cd /data/data/");
-    cmd.append(package_name);
-    cmd.append(" && ");
+    oss << kSuExecutable << " root sh -c 'cd /data/data/" << package_name
+        << " && ";
   } else {
-    cmd.append(kRunAsExecutable);
-    cmd.append(" ");
-    cmd.append(package_name);
-    cmd.append(" sh -c '");
+    oss << kRunAsExecutable << " " << package_name << " " << kRunAsUserFlag
+        << " "
+        // replace an empty string (error) with the main user
+        << (user != "" ? user : "0") << " sh -c '";
   }
-  cmd.append(executable_path_);
-  cmd.append(" ");
-  cmd.append(parameters);
-  cmd.append("'");
-  return RunAndReadOutput(cmd, output);
+  oss << executable_path_ << " " << parameters << "'";
+  return RunAndReadOutput(oss.str(), output);
 }
 
 bool BashCommandRunner::IsRunAsCapable() {

@@ -145,7 +145,8 @@ class Daemon {
   static constexpr int64_t kHeartbeatThresholdNs = Clock::ms_to_ns(500);
 
   // True if there is an JVMTI agent attached to an app. False otherwise.
-  bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name);
+  bool IsAppAgentAlive(int32_t app_pid, const std::string& app_name,
+                       const std::string& user);
 
   // True if the daemon has received a heartbeat from an app. False otherwise.
   bool CheckAppHeartBeat(int32_t app_pid);
