@@ -64,6 +64,7 @@ import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
@@ -1396,6 +1397,26 @@ open class LintCliClient : LintClient {
         return flags.enabledIds.contains(issue.id)
     }
 
+    /**
+     * Returns true if Kotlin scripting may be required based on the [driver]'s
+     * [LintDriver.scope] and the files in [allProjects].
+     */
+    private fun mayNeedKotlinScripting(allProjects: Set<Project>): Boolean {
+        if (::driver.isInitialized && !driver.scope.contains(Scope.GRADLE_FILE)) {
+            return false
+        }
+
+        for (project in allProjects) {
+            val files = project.subset ?: project.gradleBuildScripts
+            for (file in files) {
+                if (file.name.endsWith(DOT_KTS)) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     public override fun initializeProjects(knownProjects: Collection<Project>) {
         // Initialize the associated idea project to use
         val includeTests = !flags.isIgnoreTestSources
@@ -1461,7 +1482,9 @@ open class LintCliClient : LintClient {
             require(file.isAbsolute) { "Relative Path found: $file. All paths should be absolute." }
         }
 
-        val config = UastEnvironment.Configuration.create()
+        val config = UastEnvironment.Configuration.create(
+            enableKotlinScripting = mayNeedKotlinScripting(allProjects)
+        )
         config.javaLanguageLevel = maxLevel
         config.addSourceRoots(sourceRoots.toList())
         config.addClasspathRoots(classpathRoots.toList())

@@ -58,7 +58,8 @@ class FirUastEnvironment private constructor(
 
         companion object {
             @JvmStatic
-            fun create(): Configuration = Configuration(createKotlinCompilerConfig())
+            fun create(enableKotlinScripting: Boolean = true): Configuration =
+                Configuration(createKotlinCompilerConfig(enableKotlinScripting))
         }
     }
 
@@ -79,12 +80,12 @@ class FirUastEnvironment private constructor(
     }
 }
 
-private fun createKotlinCompilerConfig(): CompilerConfiguration {
+private fun createKotlinCompilerConfig(enableKotlinScripting: Boolean): CompilerConfiguration {
     val config = createCommonKotlinCompilerConfig()
 
     // TODO: NO_JDK ?
 
-    // TODO: register FIR version of scripting compiler plugin if any
+    // TODO: if [enableKotlinScripting], register FIR version of scripting compiler plugin if any
 
     return config
 }

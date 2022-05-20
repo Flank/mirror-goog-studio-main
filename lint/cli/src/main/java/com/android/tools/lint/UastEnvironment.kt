@@ -72,12 +72,12 @@ interface UastEnvironment {
              * Creates a new [Configuration] that specifies
              * project structure, classpath, compiler flags, etc.
              */
-            @JvmStatic
-            fun create(): Configuration {
+            @JvmStatic @JvmOverloads
+            fun create(enableKotlinScripting: Boolean = true): Configuration {
                 return if (useFirUast())
-                    FirUastEnvironment.Configuration.create()
+                    FirUastEnvironment.Configuration.create(enableKotlinScripting)
                 else
-                    Fe10UastEnvironment.Configuration.create()
+                    Fe10UastEnvironment.Configuration.create(enableKotlinScripting)
             }
         }
 

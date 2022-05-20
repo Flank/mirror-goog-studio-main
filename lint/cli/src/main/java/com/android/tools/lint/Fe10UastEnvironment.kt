@@ -84,7 +84,8 @@ class Fe10UastEnvironment private constructor(
 
         companion object {
             @JvmStatic
-            fun create(): Configuration = Configuration(createKotlinCompilerConfig())
+            fun create(enableKotlinScripting: Boolean): Configuration =
+                Configuration(createKotlinCompilerConfig(enableKotlinScripting))
         }
     }
 
@@ -203,16 +204,18 @@ class Fe10UastEnvironment private constructor(
     }
 }
 
-private fun createKotlinCompilerConfig(): CompilerConfiguration {
+private fun createKotlinCompilerConfig(enableKotlinScripting: Boolean): CompilerConfiguration {
     val config = createCommonKotlinCompilerConfig()
 
     config.put(JVMConfigurationKeys.NO_JDK, true)
 
     // Registers the scripting compiler plugin to support build.gradle.kts files.
-    config.add(
-        ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS,
-        ScriptingCompilerConfigurationComponentRegistrar()
-    )
+    if (enableKotlinScripting) {
+        config.add(
+            ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS,
+            ScriptingCompilerConfigurationComponentRegistrar()
+        )
+    }
 
     return config
 }
