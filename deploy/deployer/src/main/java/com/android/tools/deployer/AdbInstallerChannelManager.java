@@ -62,7 +62,7 @@ public class AdbInstallerChannelManager {
             try (SocketChannel c = channel) {}
             throw new IOException(e);
         }
-        return new AdbInstallerChannel(channel);
+        return new AdbInstallerChannel(channel, logger);
     }
 
     public synchronized void reset(AdbClient client) throws IOException {

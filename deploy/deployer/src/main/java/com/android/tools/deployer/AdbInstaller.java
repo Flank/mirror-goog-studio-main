@@ -16,8 +16,6 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.idea.protobuf.CodedInputStream;
-import com.android.tools.idea.protobuf.CodedOutputStream;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -27,8 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -49,18 +45,6 @@ public class AdbInstaller implements Installer {
     private final String installersFolder;
     private final Collection<DeployMetric> metrics;
     private final ILogger logger;
-
-    // MessagePipeWrapper magic number; should be kept in sync with message_pipe_wrapper.cc
-    private static final byte[] MAGIC_NUMBER = {
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5,
-        (byte) 0xAC,
-        (byte) 0xA5
-    };
 
     private enum OnFail {
         RETRY,
@@ -349,17 +333,15 @@ public class AdbInstaller implements Installer {
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
     private Deploy.InstallerResponse sendInstallerRequest(
-            Deploy.InstallerRequest installerRequest, OnFail onFail, long timeOutMs)
-            throws IOException {
-        ByteBuffer request = wrap(installerRequest);
+            Deploy.InstallerRequest request, OnFail onFail, long timeOutMs) throws IOException {
         Deploy.InstallerResponse response = null;
 
         AdbInstallerChannel channel = channelsProvider.getChannel(adb, getVersion());
 
         channel.lock();
         try {
-            if (writeRequest(channel, request, timeOutMs)) {
-                response = readResponse(channel, timeOutMs);
+            if (channel.writeRequest(request, timeOutMs)) {
+                response = channel.readResponse(timeOutMs);
             }
         } catch (TimeoutException e) {
             // If something timed out, don't call into ddmlib to prepare and push the binary
@@ -381,7 +363,7 @@ public class AdbInstaller implements Installer {
             }
             channelsProvider.reset(adb);
             prepare();
-            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOutMs);
+            return sendInstallerRequest(request, OnFail.DO_NO_RETRY, timeOutMs);
         }
 
         // Parse response.
@@ -392,7 +374,7 @@ public class AdbInstaller implements Installer {
             }
             channelsProvider.reset(adb);
             prepare();
-            return sendInstallerRequest(installerRequest, OnFail.DO_NO_RETRY, timeOutMs);
+            return sendInstallerRequest(request, OnFail.DO_NO_RETRY, timeOutMs);
         }
 
         Deploy.InstallerResponse.Status status = response.getStatus();
@@ -415,45 +397,7 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
-    private boolean writeRequest(AdbInstallerChannel channel, ByteBuffer request, long timeOutMs)
-            throws TimeoutException {
-        try {
-            channel.write(request, timeOutMs);
-        } catch (IOException e) {
-            // If the connection has been broken an IOException 'broken pipe' will be received here.
-            return false;
-        }
-        return request.remaining() == 0;
-    }
 
-    private Deploy.InstallerResponse readResponse(AdbInstallerChannel channel, long timeOutMs) {
-        try {
-            ByteBuffer bufferMarker = ByteBuffer.allocate(MAGIC_NUMBER.length);
-            channel.read(bufferMarker, timeOutMs);
-
-            if (!Arrays.equals(MAGIC_NUMBER, bufferMarker.array())) {
-                String garbage = new String(bufferMarker.array(), Charsets.UTF_8);
-                logger.info("Read '" + garbage + "' from socket");
-                return null;
-            }
-
-            ByteBuffer bufferSize =
-                    ByteBuffer.allocate(Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-            channel.read(bufferSize, timeOutMs);
-            int responseSize = bufferSize.getInt();
-            if (responseSize < 0) {
-                return null;
-            }
-
-            ByteBuffer bufferPayload = ByteBuffer.allocate(responseSize);
-            channel.read(bufferPayload, timeOutMs);
-            return unwrap(bufferPayload);
-        } catch (IOException e) {
-            // If the connection has been broken an IOException 'broken pipe' will be received here.
-            logger.warning("Error while reading InstallerChannel");
-            return null;
-        }
-    }
 
     private void prepare() throws IOException {
         File installerFile = null;
@@ -532,37 +476,7 @@ public class AdbInstaller implements Installer {
         return stream;
     }
 
-    private Deploy.InstallerResponse unwrap(ByteBuffer buffer) {
-        buffer.rewind();
-        try {
-            CodedInputStream cis = CodedInputStream.newInstance(buffer);
-            return Deploy.InstallerResponse.parser().parseFrom(cis);
-        } catch (IOException e) {
-            // All in-memory buffers, should not happen
-            throw new IllegalStateException(e);
-        }
-    }
 
-    private ByteBuffer wrap(Deploy.InstallerRequest message) {
-        int messageSize = message.getSerializedSize();
-        int headerSize = MAGIC_NUMBER.length + Integer.BYTES;
-        byte[] buffer = new byte[headerSize + messageSize];
-
-        // Write size in the buffer.
-        ByteBuffer headerWriter = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
-        headerWriter.put(MAGIC_NUMBER);
-        headerWriter.putInt(messageSize);
-
-        // Write protobuffer payload in the buffer.
-        try {
-            CodedOutputStream cos = CodedOutputStream.newInstance(buffer, headerSize, messageSize);
-            message.writeTo(cos);
-        } catch (IOException e) {
-            // In memory buffers, should not happen
-            throw new IllegalStateException(e);
-        }
-        return ByteBuffer.wrap(buffer);
-    }
 
     @VisibleForTesting
     public String getVersion() {
