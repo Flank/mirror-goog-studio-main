@@ -61,9 +61,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
         RESTRICT_TO_ANNOTATION.oldName(),
         RESTRICT_TO_ANNOTATION.newName(),
-        VISIBLE_FOR_TESTING_ANNOTATION.oldName(),
-        VISIBLE_FOR_TESTING_ANNOTATION.newName(),
-        GUAVA_VISIBLE_FOR_TESTING
+        "VisibleForTesting"
     )
 
     override fun inheritAnnotation(annotation: String): Boolean {
@@ -96,24 +94,13 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         val member = usageInfo.referenced as? PsiMember
         val annotation = annotationInfo.annotation
-        when (annotationInfo.qualifiedName) {
-            RESTRICT_TO_ANNOTATION.oldName(), RESTRICT_TO_ANNOTATION.newName() -> {
-                checkRestrictTo(
-                    context, element, member, annotation, usageInfo, true
-                )
-            }
-            VISIBLE_FOR_TESTING_ANNOTATION.oldName(), VISIBLE_FOR_TESTING_ANNOTATION.newName(),
-            GUAVA_VISIBLE_FOR_TESTING -> {
-                if (member != null && type != AnnotationUsageType.METHOD_OVERRIDE && type != AnnotationUsageType.METHOD_CALL_PARAMETER) {
-                    checkVisibleForTesting(
-                        context,
-                        element,
-                        member,
-                        annotation,
-                        usageInfo
-                    )
-                }
-            }
+        val qualifiedName = annotationInfo.qualifiedName
+        if (RESTRICT_TO_ANNOTATION.isEquals(qualifiedName)) {
+            checkRestrictTo(context, element, member, annotation, usageInfo, true)
+        } else if (qualifiedName.endsWith(VISIBLE_FOR_TESTING_SUFFIX) && member != null &&
+            type != AnnotationUsageType.METHOD_OVERRIDE && type != AnnotationUsageType.METHOD_CALL_PARAMETER
+        ) {
+            checkVisibleForTesting(context, element, member, annotation, usageInfo)
         }
     }
 
@@ -139,7 +126,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     if (restrictionScope and RESTRICT_TO_TESTS != 0) {
                         return true
                     }
-                } else if (VISIBLE_FOR_TESTING_ANNOTATION.isEquals(name) || GUAVA_VISIBLE_FOR_TESTING == name) {
+                } else if (name != null && name.endsWith(VISIBLE_FOR_TESTING_SUFFIX)) {
                     return true
                 }
             }
@@ -478,6 +465,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
+        private const val VISIBLE_FOR_TESTING_SUFFIX = ".VisibleForTesting"
         private const val ATTR_OTHERWISE = "otherwise"
         private const val ATTR_PRODUCTION_VISIBILITY = "productionVisibility"
 

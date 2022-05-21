@@ -1918,4 +1918,194 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testOtherAliases() {
+        // We now match ANY annotation named "CheckReturnValue" or "CheckResult"
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                class JavaTest {
+                    void test() {
+                        TestKt.test1(); // ERROR 1
+                        TestKt.test2(); // ERROR 2
+                        TestKt.test3(); // ERROR 3
+                        TestKt.test4(); // ERROR 4
+                    }
+                    void test(Foo foo) {
+                        foo.foo1(); // ERROR 5
+                        foo.foo2(); // OK
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+
+                class KotlinTest {
+                    fun test() {
+                        test1() // ERROR 6
+                        test2() // ERROR 7
+                        test3() // ERROR 8
+                        test4() // ERROR 9
+                    }
+                    fun test(foo: Foo) {
+                        foo.foo1() // ERROR 10
+                        foo.foo2() // OK
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import test.pkg.CanIgnoreReturnValue
+                import com.google.protobuf.CheckReturnValue
+
+                @CheckReturnValue
+                class Foo {
+                  fun foo1(): String = "Hello world"
+                  @CanIgnoreReturnValue
+                  fun foo2(): String = foo1()
+                }
+                """
+            ).indented(),
+            kotlin(
+                "src/test/pkg/test.kt",
+                """
+                package test.pkg
+                @io.reactivex.annotations.CheckReturnValue fun test1(): String = "test1"
+                @io.reactivex.rxjava3.annotations.CheckReturnValue fun test2(): String = "test2"
+                @com.google.protobuf.CheckReturnValue fun test3(): String = "test3"
+                @org.mockito.CheckReturnValue fun test4(): String = "test4"
+                """
+            ).indented(),
+            java(
+                """
+                package io.reactivex.annotations;
+                public @interface CheckReturnValue {
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package io.reactivex.rxjava3.annotations;
+                public @interface CheckReturnValue {
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package com.google.protobuf;
+                import static java.lang.annotation.ElementType.CONSTRUCTOR;
+                import static java.lang.annotation.ElementType.METHOD;
+                import static java.lang.annotation.ElementType.PACKAGE;
+                import static java.lang.annotation.ElementType.TYPE;
+                import static java.lang.annotation.RetentionPolicy.RUNTIME;
+                import java.lang.annotation.Documented;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.Target;
+                @Documented
+                @Target({METHOD, CONSTRUCTOR, TYPE, PACKAGE})
+                @Retention(RUNTIME)
+                public @interface CheckReturnValue {}
+                """
+            ).indented(),
+            java(
+                """
+                package org.mockito;
+                import java.lang.annotation.ElementType;
+                import java.lang.annotation.Retention;
+                import java.lang.annotation.RetentionPolicy;
+                import java.lang.annotation.Target;
+                @Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PACKAGE, ElementType.TYPE})
+                @Retention(RetentionPolicy.CLASS)
+                public @interface CheckReturnValue {}
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public @interface CanIgnoreReturnValue {}
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/JavaTest.java:5: Warning: The result of test1 is not used [CheckResult]
+                    TestKt.test1(); // ERROR 1
+                    ~~~~~~~~~~~~~~
+            src/test/pkg/JavaTest.java:6: Warning: The result of test2 is not used [CheckResult]
+                    TestKt.test2(); // ERROR 2
+                    ~~~~~~~~~~~~~~
+            src/test/pkg/JavaTest.java:7: Warning: The result of test3 is not used [CheckResult]
+                    TestKt.test3(); // ERROR 3
+                    ~~~~~~~~~~~~~~
+            src/test/pkg/JavaTest.java:8: Warning: The result of test4 is not used [CheckResult]
+                    TestKt.test4(); // ERROR 4
+                    ~~~~~~~~~~~~~~
+            src/test/pkg/JavaTest.java:11: Warning: The result of foo1 is not used [CheckResult]
+                    foo.foo1(); // ERROR 5
+                    ~~~~~~~~~~
+            src/test/pkg/KotlinTest.kt:5: Warning: The result of test1 is not used [CheckResult]
+                    test1() // ERROR 6
+                    ~~~~~~~
+            src/test/pkg/KotlinTest.kt:6: Warning: The result of test2 is not used [CheckResult]
+                    test2() // ERROR 7
+                    ~~~~~~~
+            src/test/pkg/KotlinTest.kt:7: Warning: The result of test3 is not used [CheckResult]
+                    test3() // ERROR 8
+                    ~~~~~~~
+            src/test/pkg/KotlinTest.kt:8: Warning: The result of test4 is not used [CheckResult]
+                    test4() // ERROR 9
+                    ~~~~~~~
+            src/test/pkg/KotlinTest.kt:11: Warning: The result of foo1 is not used [CheckResult]
+                    foo.foo1() // ERROR 10
+                    ~~~~~~~~~~
+            0 errors, 10 warnings
+            """
+        )
+    }
+
+    fun testExactNameMatch() {
+        // While we match on "@x.CheckResult", don't match "@xCheckResult" or "@CheckResultX"
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                class KotlinTest {
+                    fun test() {
+                        test1() // OK
+                        test2() // OK
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                "src/test/pkg/test.kt",
+                """
+                package test.pkg
+                import foo.bar.*;
+                @XCheckResult fun test1(): String = "test1"
+                @CheckResultX fun test2(): String = "test2"
+                """
+            ).indented(),
+            java(
+                """
+                package foo.bar;
+                public @interface XCheckResult {
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package foo.bar;
+                public @interface CheckResultX {
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }

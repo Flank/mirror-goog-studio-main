@@ -1246,13 +1246,7 @@ class AnnotationDetector : Detector(), SourceCodeScanner {
 
 // Well-known Annotation names
 
-const val GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide"
-const val GMS_SHOW_FIRST_PARTY_ANNOTATION = "com.google.android.gms.common.internal.ShowFirstParty"
 const val SECURITY_EXCEPTION = "java.lang.SecurityException"
-const val FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE = "edu.umd.cs.findbugs.annotations.CheckReturnValue"
-const val JAVAX_ANNOTATION_CHECK_RETURN_VALUE = "javax.annotation.CheckReturnValue"
-const val ERRORPRONE_CAN_IGNORE_RETURN_VALUE = "com.google.errorprone.annotations.CanIgnoreReturnValue"
-const val GUAVA_VISIBLE_FOR_TESTING = "com.google.common.annotations.VisibleForTesting"
 
 @JvmField val CHECK_RESULT_ANNOTATION: AndroidxName = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "CheckResult")
 @JvmField val UI_THREAD_ANNOTATION: AndroidxName = AndroidxName.of(SUPPORT_ANNOTATIONS_PREFIX, "UiThread")
