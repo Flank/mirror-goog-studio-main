@@ -268,6 +268,7 @@ DATA = [
     "com.android.tools.build:aapt2:jar:linux:3.5.0-5435860",
     "com.android.tools.build:aapt2:jar:linux:4.0.0-6051327",
     "com.android.tools.build:aapt2:jar:linux:4.1.0-6503028",
+    "com.android.tools.build:aapt2:jar:linux:4.2.0-7147631",
     "com.android.tools.build:aapt2:jar:linux:7.0.0-7396180",
     "com.android.tools.build:aapt2:jar:linux:7.1.0-7984345",
     "com.android.tools.build:aapt2:jar:linux:7.2.0-7984345",

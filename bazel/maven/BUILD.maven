@@ -17427,6 +17427,14 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.android.tools.build.aapt2_4.2.0-7147631",
+    pom = "repository/com/android/tools/build/aapt2/4.2.0-7147631/aapt2-4.2.0-7147631.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/build/aapt2/4.2.0-7147631",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.android.tools.build.aapt2_7.0.0-7396180",
     pom = "repository/com/android/tools/build/aapt2/7.0.0-7396180/aapt2-7.0.0-7396180.pom",
     repo_root_path = "repository",

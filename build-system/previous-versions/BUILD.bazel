@@ -42,6 +42,7 @@ maven_repository(
 
 AGP_4_2_0_ARTIFACTS = [
     "@maven//:com.android.tools.build.gradle_4.2.0",
+    "@maven//:com.android.tools.build.aapt2_4.2.0-7147631",
 ]
 
 maven_repository(
