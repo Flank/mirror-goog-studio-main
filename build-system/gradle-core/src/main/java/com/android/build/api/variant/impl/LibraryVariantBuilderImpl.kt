@@ -50,8 +50,8 @@ open class LibraryVariantBuilderImpl @Inject constructor(
     override var enableTestFixtures: Boolean = dslInfo.testFixtures.enable
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder?
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
             this as T
@@ -82,4 +82,8 @@ open class LibraryVariantBuilderImpl @Inject constructor(
             )
             super.targetSdkPreview = value
         }
+
+    override var codeMinification: Boolean =
+        dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        set(value) = setMinificationIfPossible("enableMinification", value) { field = it }
 }

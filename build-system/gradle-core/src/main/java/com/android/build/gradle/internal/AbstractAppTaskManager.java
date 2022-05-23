@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTasksKt.createCxxVariantBuildTask;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.variant.VariantBuilder;
 import com.android.build.gradle.BaseExtension;
@@ -245,15 +243,7 @@ public abstract class AbstractAppTaskManager<
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull ComponentCreationConfig creationConfig,
-            @NonNull QualifiedContent.ContentType contentType) {
-        if (creationConfig instanceof ApplicationCreationConfig
-                && ((ApplicationCreationConfig) creationConfig).getConsumesFeatureJars()
-                && contentType == RESOURCES
-                // if minification is enabled, we rely on R8 to merge the dynamic feature java res
-                && !((ApplicationCreationConfig) creationConfig).getMinifiedEnabled()) {
-            return TransformManager.SCOPE_FULL_WITH_FEATURES;
-        }
+            @NonNull ComponentCreationConfig creationConfig) {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 

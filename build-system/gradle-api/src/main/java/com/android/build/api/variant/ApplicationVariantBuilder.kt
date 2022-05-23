@@ -29,7 +29,9 @@ package com.android.build.api.variant
 interface ApplicationVariantBuilder : VariantBuilder,
     HasAndroidTestBuilder,
     HasTestFixturesBuilder,
-    GeneratesApkBuilder{
+    GeneratesApkBuilder,
+    MinifyableBuilder,
+    ResourcesShrinkableBuilder{
 
     val debuggable: Boolean
 

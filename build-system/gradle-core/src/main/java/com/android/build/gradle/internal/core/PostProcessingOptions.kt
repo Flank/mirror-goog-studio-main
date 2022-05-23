@@ -32,4 +32,6 @@ interface PostProcessingOptions : ProguardFilesProvider {
     fun codeShrinkerEnabled(): Boolean
 
     fun resourcesShrinkingEnabled(): Boolean
+
+    fun hasPostProcessingConfiguration(): Boolean
 }

@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
@@ -778,6 +779,31 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("should not be specified in this module.")
+    }
+
+    @Test
+    fun testMinifyVariantApi() {
+        project.getSubproject(":baseModule")
+            .buildFile
+            .appendText(
+                """androidComponents {
+    beforeVariants(selector().withBuildType("minified"), { variant ->
+        println("beforeVariants.appMinified=" + variant.getCodeMinification())
+        variant.setCodeMinification(false);
+        println("beforeVariants.appMinifiedDisabled=" + variant.getCodeMinification())
+    })
+    onVariants(selector().withBuildType("minified"), { variant ->
+          println("onVariants.appMinified=" + variant.getCodeMinification())
+    })
+}
+                    """
+            )
+        val output = project.executor().run("tasks")
+        output.stdout.use {
+            ScannerSubject.assertThat(it).contains("beforeVariants.appMinified=true")
+            ScannerSubject.assertThat(it).contains("beforeVariants.appMinifiedDisabled=false")
+            ScannerSubject.assertThat(it).contains("onVariants.appMinified=false")
+        }
     }
 
     // Tests new shrinker rules filtering done by FilterShrinkerRulesTransform to select only rules

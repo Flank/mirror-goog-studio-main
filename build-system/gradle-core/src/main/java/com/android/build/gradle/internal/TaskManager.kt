@@ -853,7 +853,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
         // merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+        if (!getJavaResMergingScopes(creationConfig)
                         .contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
                     OriginalStream.builder("ext-libs-java-res")
@@ -882,7 +882,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         )
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES).contains(
+        if (!getJavaResMergingScopes(creationConfig).contains(
                 com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)) {
             transformManager.addStream(
                     OriginalStream.builder("sub-projects-java-res")
@@ -1296,8 +1296,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      */
     @Suppress("DEPRECATION") // Legacy support
     protected abstract fun getJavaResMergingScopes(
-            creationConfig: ComponentCreationConfig,
-            contentType: com.android.build.api.transform.QualifiedContent.ContentType): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
+            creationConfig: ComponentCreationConfig): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
 
     /**
      * Creates the java resources processing tasks.
@@ -1351,7 +1350,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Compute the scopes that need to be merged.
         @Suppress("DEPRECATION") // Legacy support
-        val mergeScopes = getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+        val mergeScopes = getJavaResMergingScopes(creationConfig)
         taskFactory.register(MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig))
 
         // also add a new merged java res stream if needed.

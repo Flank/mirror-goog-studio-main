@@ -125,7 +125,9 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val minifiedEnabled: Boolean
-        get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        get() = variantBuilder.codeMinification
+    override val resourcesShrink: Boolean
+        get() = false
 
     override val instrumentationRunner: Property<String> =
         internalServices.propertyOf(String::class.java, dslInfo.getInstrumentationRunner(dexingType))
@@ -161,6 +163,9 @@ open class TestVariantImpl @Inject constructor(
             )
         }
     }
+
+    override val codeMinification: Boolean
+        get() = variantBuilder.codeMinification
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

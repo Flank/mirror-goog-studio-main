@@ -2050,7 +2050,7 @@ package com.android.build.api.variant {
   public interface ApplicationAndroidComponentsExtension extends com.android.build.api.variant.AndroidComponentsExtension<com.android.build.api.dsl.ApplicationExtension,com.android.build.api.variant.ApplicationVariantBuilder,com.android.build.api.variant.ApplicationVariant> {
   }
 
-  public interface ApplicationVariant extends com.android.build.api.variant.GeneratesApk com.android.build.api.variant.HasAndroidTest com.android.build.api.variant.HasTestFixtures com.android.build.api.variant.Variant {
+  public interface ApplicationVariant extends com.android.build.api.variant.GeneratesApk com.android.build.api.variant.HasAndroidTest com.android.build.api.variant.HasTestFixtures com.android.build.api.variant.MinifyableVariant com.android.build.api.variant.ResourcesShrinkableVariant com.android.build.api.variant.Variant {
     method public org.gradle.api.provider.Property<java.lang.String> getApplicationId();
     method @org.gradle.api.Incubating public com.android.build.api.variant.BundleConfig getBundleConfig();
     method public com.android.build.api.variant.DependenciesInfo getDependenciesInfo();
@@ -2063,7 +2063,7 @@ package com.android.build.api.variant {
     property public abstract com.android.build.api.variant.SigningConfig signingConfig;
   }
 
-  public interface ApplicationVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.GeneratesApkBuilder com.android.build.api.variant.HasAndroidTestBuilder com.android.build.api.variant.HasTestFixturesBuilder {
+  public interface ApplicationVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.GeneratesApkBuilder com.android.build.api.variant.HasAndroidTestBuilder com.android.build.api.variant.HasTestFixturesBuilder com.android.build.api.variant.MinifyableBuilder com.android.build.api.variant.ResourcesShrinkableBuilder {
     method public boolean getDebuggable();
     method public com.android.build.api.variant.DependenciesInfoBuilder getDependenciesInfo();
     property public abstract boolean debuggable;
@@ -2353,15 +2353,26 @@ package com.android.build.api.variant {
   public interface LibraryAndroidComponentsExtension extends com.android.build.api.variant.AndroidComponentsExtension<com.android.build.api.dsl.LibraryExtension,com.android.build.api.variant.LibraryVariantBuilder,com.android.build.api.variant.LibraryVariant> {
   }
 
-  public interface LibraryVariant extends com.android.build.api.variant.Variant com.android.build.api.variant.GeneratesAar com.android.build.api.variant.HasAndroidTest com.android.build.api.variant.HasTestFixtures {
+  public interface LibraryVariant extends com.android.build.api.variant.Variant com.android.build.api.variant.GeneratesAar com.android.build.api.variant.HasAndroidTest com.android.build.api.variant.HasTestFixtures com.android.build.api.variant.MinifyableVariant {
     method public com.android.build.api.variant.Renderscript? getRenderscript();
     property public abstract com.android.build.api.variant.Renderscript? renderscript;
   }
 
-  public interface LibraryVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.HasAndroidTestBuilder com.android.build.api.variant.HasTestFixturesBuilder {
+  public interface LibraryVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.HasAndroidTestBuilder com.android.build.api.variant.HasTestFixturesBuilder com.android.build.api.variant.MinifyableBuilder {
   }
 
   @org.gradle.api.Incubating public interface LintLifecycleExtension extends com.android.build.api.variant.DslLifecycle<com.android.build.api.dsl.Lint> {
+  }
+
+  @org.gradle.api.Incubating public interface MinifyableBuilder {
+    method public boolean getCodeMinification();
+    method public void setCodeMinification(boolean codeMinification);
+    property public abstract boolean codeMinification;
+  }
+
+  @org.gradle.api.Incubating public interface MinifyableVariant {
+    method public boolean getCodeMinification();
+    property public abstract boolean codeMinification;
   }
 
   public interface Packaging {
@@ -2404,6 +2415,17 @@ package com.android.build.api.variant {
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> excludes;
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> merges;
     property public abstract org.gradle.api.provider.SetProperty<java.lang.String> pickFirsts;
+  }
+
+  @org.gradle.api.Incubating public interface ResourcesShrinkableBuilder {
+    method public boolean getShrinkResources();
+    method public void setShrinkResources(boolean shrinkResources);
+    property public abstract boolean shrinkResources;
+  }
+
+  @org.gradle.api.Incubating public interface ResourcesShrinkableVariant {
+    method public boolean getShrinkResources();
+    property public abstract boolean shrinkResources;
   }
 
   public interface ScopedArtifacts {
@@ -2482,14 +2504,14 @@ package com.android.build.api.variant {
     property public abstract org.gradle.api.provider.Provider<java.lang.String> namespace;
   }
 
-  public interface TestVariant extends com.android.build.api.variant.GeneratesTestApk com.android.build.api.variant.Variant {
+  public interface TestVariant extends com.android.build.api.variant.GeneratesTestApk com.android.build.api.variant.MinifyableVariant com.android.build.api.variant.Variant {
     method public org.gradle.api.provider.Property<java.lang.String> getApplicationId();
     method public org.gradle.api.provider.Provider<java.lang.String> getTestedApplicationId();
     property public abstract org.gradle.api.provider.Property<java.lang.String> applicationId;
     property public abstract org.gradle.api.provider.Provider<java.lang.String> testedApplicationId;
   }
 
-  public interface TestVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.GeneratesApkBuilder {
+  public interface TestVariantBuilder extends com.android.build.api.variant.VariantBuilder com.android.build.api.variant.GeneratesApkBuilder com.android.build.api.variant.MinifyableBuilder {
   }
 
   public interface UnitTest extends com.android.build.api.variant.TestComponent {

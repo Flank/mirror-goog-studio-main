@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.build.api.variant
 
-import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
+import org.gradle.api.Incubating
 
 /**
- * [Variant] for test-only modules.
+ * Variant interface for modules that can shrinkResources
  */
-interface TestVariant: GeneratesTestApk, Variant, MinifyableVariant {
-    /**
-     * Variant's application ID as present in the final manifest file of the APK.
-     */
-    override val applicationId: Property<String>
+@Incubating
+interface ResourcesShrinkableVariant {
 
     /**
-     * The application of the app under tests.
+     * Variant value for BuildType isShrinkResources
      */
-    val testedApplicationId: Provider<String>
+    val shrinkResources: Boolean
 }

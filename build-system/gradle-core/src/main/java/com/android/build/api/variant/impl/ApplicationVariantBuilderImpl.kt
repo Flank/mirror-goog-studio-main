@@ -62,8 +62,9 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T: VariantBuilder> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder?,): T =
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder?,
+    ): T =
         if (stats == null) {
             this as T
         } else {
@@ -73,4 +74,13 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
                 stats
             ) as T
         }
+
+    override var codeMinification: Boolean =
+        dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        set(value) = setMinificationIfPossible("enableMinification", value){ field = it }
+
+    override var shrinkResources: Boolean =
+        dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()
+        set(value) = setMinificationIfPossible("shrinkResources", value){ field = it }
+
 }

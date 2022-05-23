@@ -118,9 +118,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         getAndroidResources()
     }
 
-    override val minifiedEnabled: Boolean
-        get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
-
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
             dslInfo.packaging,
@@ -270,6 +267,13 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             it.disallowChanges()
             it.finalizeValueOnRead()
         }
+
+
+    override val minifiedEnabled: Boolean
+        get() = false
+
+    override val resourcesShrink: Boolean
+        get() = false
 
     override val dexingType: DexingType
         get() = delegate.dexingType
