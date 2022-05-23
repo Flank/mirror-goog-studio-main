@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib.ddmlibcompatibility
+package com.android.adblib.ddmlibcompatibility.debugging
 
 import com.android.adblib.AdbLibSession
+import com.android.adblib.thisLogger
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.ClientManager
@@ -27,11 +28,14 @@ import com.android.ddmlib.clientmanager.DeviceClientManagerListener
  */
 class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
 
+    private val logger = thisLogger(session)
+
     override fun createDeviceClientManager(
         bridge: AndroidDebugBridge,
         device: IDevice,
         listener: DeviceClientManagerListener
     ): DeviceClientManager {
-        TODO("Not yet implemented")
+        logger.debug { "Creating device client manager for device $device" }
+        return AdbLibDeviceClientManager(this, bridge, device, listener)
     }
 }

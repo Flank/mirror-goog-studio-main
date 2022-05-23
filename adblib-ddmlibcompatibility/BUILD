@@ -62,5 +62,7 @@ kotlin_test(
         "@maven//:junit.junit",
         # FakeAdbServer
         "//tools/base/fakeadbserver:tools.fakeadbserver",
+        # FakeAdbRule
+        "//tools/base/ddmlib:test-utils",
     ],
 )

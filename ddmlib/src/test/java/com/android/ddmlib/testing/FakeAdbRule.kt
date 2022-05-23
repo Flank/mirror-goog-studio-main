@@ -112,6 +112,10 @@ class FakeAdbRule : ExternalResource() {
     return device
   }
 
+  fun disconnectDevice(deviceId: String) {
+      fakeAdbServer.disconnectDevice(deviceId).get()
+  }
+
   val fakeAdbServerPort: Int
     get() = fakeAdbServer.port
 
