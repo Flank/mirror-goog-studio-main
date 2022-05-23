@@ -51,7 +51,7 @@ maven_repository(
 gradle_build(
     name = "utp",
     build_file = "//tools:agp_gradle_build_root_build_file",
-    data = ["//prebuilts/studio/jdk"] + UTP_SOURCE_FILES,
+    data = ["//prebuilts/studio/jdk:jdk11"] + UTP_SOURCE_FILES,
     gradle_properties = {
         "hybrid-build-embedded-in-bazel": "true",
         "release": "true",

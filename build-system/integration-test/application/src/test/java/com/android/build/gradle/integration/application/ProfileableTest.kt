@@ -29,7 +29,6 @@ import com.android.build.gradle.options.StringOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import sun.security.x509.X500Name
 
 /**
  * Tests verifying that builds using the profileable option are configured correctly.
@@ -56,8 +55,8 @@ class ProfileableTest {
         val apk = project.getSubproject("app").getApk(apkType)
         val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 30)
         assertThat(
-            (verificationResult.signerCertificates.first().subjectDN as X500Name).commonName
-        ).isEqualTo("Android Debug")
+            verificationResult.signerCertificates.first().subjectX500Principal.name
+        ).isEqualTo("C=US,O=Android,CN=Android Debug")
         val manifest = ApkSubject.getManifestContent(apk.file.toAbsolutePath())
         assertThat(manifest).containsAtLeastElementsIn(
             arrayListOf(

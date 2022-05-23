@@ -103,6 +103,8 @@ class SdkCommandLineToolsSmokeTest {
         val extractedDir = extract()
 
         val sdkManagerBinary = extractedDir.resolve("cmdline-tools/bin/sdkmanager")
+        // Make sure process is started with the JDK used to run tests
+        val envVars = mapOf("JAVA_HOME" to System.getProperty("java.home"))
 
         var outFile = temporaryFolder.newFile("out")
         var errFile = temporaryFolder.newFile("err")
@@ -110,6 +112,7 @@ class SdkCommandLineToolsSmokeTest {
             .redirectError(errFile)
             .redirectOutput(outFile)
             .command("sh", sdkManagerBinary.toString())
+        processBuilder.environment().putAll(envVars)
 
         var returnCode = processBuilder.start().waitFor()
         assertThat(returnCode).named("returnCode").isEqualTo(1)
@@ -122,6 +125,7 @@ class SdkCommandLineToolsSmokeTest {
             .redirectError(errFile)
             .redirectOutput(outFile)
             .command("sh", sdkManagerBinary.toString(), "--help")
+        processBuilder.environment().putAll(envVars)
 
         returnCode = processBuilder.start().waitFor()
         assertThat(returnCode).named("returnCode").isEqualTo(1)

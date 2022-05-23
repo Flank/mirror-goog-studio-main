@@ -300,7 +300,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
 gradle_build(
     name = "android_gradle_plugin",
     build_file = "//tools:agp_gradle_build_root_build_file",
-    data = ["//prebuilts/studio/jdk"] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
+    data = ["//prebuilts/studio/jdk:jdk11"] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
         "hybrid-build-embedded-in-bazel": "true",
         "release": "true",
@@ -432,7 +432,7 @@ gradle_test(
     # keep sorted
     data = [
         ":agp_gradle_build_files",
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//tools:agp_gradle_build_files",
         "//tools/base/build-system/builder-model:agp_gradle_build_files",
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
@@ -460,7 +460,7 @@ gradle_build(
     name = "android_gradle_plugin_dackka_docs",
     build_file = "//tools:agp_gradle_build_root_build_file",
     data = [
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//prebuilts/tools/common/dackka",
     ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
@@ -489,7 +489,7 @@ gradle_build(
     name = "android_gradle_plugin_metalava_api",
     build_file = "//tools:agp_gradle_build_root_build_file",
     data = [
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//prebuilts/tools/common/dackka",
     ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
@@ -514,7 +514,7 @@ gradle_test(
     # keep sorted
     data = [
         ":agp_gradle_build_files",
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//tools:agp_gradle_build_files",
         "//tools/base/build-system/builder-model:agp_gradle_build_files",
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
