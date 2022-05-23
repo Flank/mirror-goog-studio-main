@@ -17,9 +17,11 @@
 package com.android.tools.instrumentation.threading.agent;
 
 import com.android.annotations.NonNull;
-import java.util.HashMap;
+import com.android.annotations.Nullable;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Class that contains mappings between the threading annotations and the instrumented static
@@ -27,11 +29,60 @@ import java.util.Optional;
  */
 final class AnnotationMappings {
 
+    private enum AnnotationMapping {
+        UI_THREAD(
+                "Lcom/android/annotations/concurrency/UiThread;",
+                "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
+                "verifyOnUiThread"),
+        WORKER_THREAD("Lcom/android/annotations/concurrency/WorkerThread;"),
+        SLOW_THREAD("Lcom/android/annotations/concurrency/Slow;"),
+        ANY_THREAD("Lcom/android/annotations/concurrency/AnyThread;");
+
+        @NonNull private final String annotation;
+
+        @Nullable private final CheckerMethodRef checkerMethod;
+
+        /** Create AnnotationMapping with no mapped checker method */
+        AnnotationMapping(@NonNull String annotation) {
+            this.annotation = annotation;
+            this.checkerMethod = null;
+        }
+
+        /** Create Annotation with a mapped checker method */
+        AnnotationMapping(
+                @NonNull String annotation,
+                @NonNull String checkMethodClassName,
+                @NonNull String checkerMethodName) {
+            this.annotation = annotation;
+            this.checkerMethod = new CheckerMethodRef(checkMethodClassName, checkerMethodName);
+        }
+
+        @NonNull
+        String getAnnotation() {
+            return annotation;
+        }
+
+        @NonNull
+        Optional<CheckerMethodRef> getCheckerMethod() {
+            return Optional.ofNullable(checkerMethod);
+        }
+    }
+
     @NonNull private final Map<String, Optional<CheckerMethodRef>> annotationToCheckerMethodsMap;
 
-    private AnnotationMappings(
-            @NonNull Map<String, Optional<CheckerMethodRef>> annotationToCheckerMethodsMap) {
-        this.annotationToCheckerMethodsMap = annotationToCheckerMethodsMap;
+    private AnnotationMappings(EnumSet<AnnotationMapping> annotationMappings) {
+        this.annotationToCheckerMethodsMap =
+                annotationMappings.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        AnnotationMapping::getAnnotation,
+                                        AnnotationMapping::getCheckerMethod));
+    }
+
+    /** Creates {@link AnnotationMappings} for all the threading annotations. */
+    @NonNull
+    public static AnnotationMappings create() {
+        return new AnnotationMappings(EnumSet.allOf(AnnotationMapping.class));
     }
 
     /**
@@ -57,55 +108,5 @@ final class AnnotationMappings {
                     "Annotation '" + annotation + "' is not a threading annotation.");
         }
         return annotationToCheckerMethodsMap.get(annotation);
-    }
-
-    @NonNull
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
-    static class Builder {
-
-        private final Map<String, Optional<CheckerMethodRef>> mappings = new HashMap<>();
-
-        private Builder() {}
-
-        /**
-         * Add a mapping from a threading annotation to a checker method
-         *
-         * @param annotation Annotation descriptor as in
-         *     org.objectweb.asm.MethodVisitor#visitAnnotation
-         * @param className name of the class containing a method to call
-         * @param methodName method name to call
-         */
-        @NonNull
-        public Builder addThreadingAnnotationWithCheckerMethod(
-                @NonNull String annotation, @NonNull String className, @NonNull String methodName) {
-            if (mappings.containsKey(annotation)) {
-                throw new IllegalArgumentException(annotation + " has been already added.");
-            }
-            mappings.put(annotation, Optional.of(new CheckerMethodRef(className, methodName)));
-            return this;
-        }
-
-        /**
-         * Add a threading annotation for which there is no checker method.
-         *
-         * <p>Note that we need to specify these annotations to correctly handle conflicts between
-         * class and method level threading annotations.
-         *
-         * @param annotation Annotation descriptor as in
-         *     org.objectweb.asm.MethodVisitor#visitAnnotation
-         */
-        @NonNull
-        public Builder addNoopThreadingAnnotation(@NonNull String annotation) {
-            mappings.put(annotation, Optional.empty());
-            return this;
-        }
-
-        @NonNull
-        public AnnotationMappings build() {
-            return new AnnotationMappings(mappings);
-        }
     }
 }

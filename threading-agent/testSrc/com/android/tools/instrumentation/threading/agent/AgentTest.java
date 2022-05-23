@@ -55,9 +55,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "uiMethod1", false);
 
@@ -69,9 +67,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "workerMethod1", false);
 
@@ -83,9 +79,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "anyThreadMethod1", false);
 
@@ -97,9 +91,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "slowThreadMethod1", false);
 
@@ -111,9 +103,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "privateUiMethod1", true);
 
@@ -125,9 +115,7 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "nonAnnotatedMethod1", false);
 
@@ -140,9 +128,7 @@ public class AgentTest {
                     NoSuchMethodException, InvocationTargetException {
 
         Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedConstructor.class,
-                        Agent.createMappingRules());
+                loadAndTransform(SampleClasses.ClassWithAnnotatedConstructor.class);
 
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
 
@@ -155,9 +141,7 @@ public class AgentTest {
                     NoSuchMethodException, InvocationTargetException {
 
         Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithUiThreadAnnotation.class,
-                        Agent.createMappingRules());
+                loadAndTransform(SampleClasses.ClassWithUiThreadAnnotation.class);
 
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "nonAnnotatedMethod1", false);
@@ -172,9 +156,7 @@ public class AgentTest {
                     NoSuchMethodException, InvocationTargetException {
 
         Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithUiThreadAnnotation.class,
-                        Agent.createMappingRules());
+                loadAndTransform(SampleClasses.ClassWithUiThreadAnnotation.class);
 
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "uiMethod1", false);
@@ -189,9 +171,7 @@ public class AgentTest {
                     NoSuchMethodException, InvocationTargetException {
 
         Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithUiThreadAnnotation.class,
-                        Agent.createMappingRules());
+                loadAndTransform(SampleClasses.ClassWithUiThreadAnnotation.class);
 
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "anyThreadMethod1", false);
@@ -205,17 +185,14 @@ public class AgentTest {
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedClass =
-                loadAndTransform(
-                        SampleClasses.ClassWithAnnotatedMethods.class, Agent.createMappingRules());
+        Class<?> transformedClass = loadAndTransform(SampleClasses.ClassWithAnnotatedMethods.class);
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "workerAndUiMethod1", false);
 
         verify(mockThreadingCheckerHook).verifyOnUiThread();
     }
 
-    private static Class<?> loadAndTransform(Class<?> clazz, AnnotationMappings annotationMappings)
-            throws IOException {
+    private static Class<?> loadAndTransform(Class<?> clazz) throws IOException {
         TestClassLoader classLoader = new TestClassLoader(AgentTest.class.getClassLoader());
         String binaryTestClassName = clazz.getName().replace('.', '/');
         byte[] classInput =
@@ -223,7 +200,7 @@ public class AgentTest {
                         Objects.requireNonNull(
                                 classLoader.getResourceAsStream(binaryTestClassName + ".class")));
 
-        Transformer transformer = new Transformer(annotationMappings);
+        Transformer transformer = new Transformer(AnnotationMappings.create());
 
         byte[] newClass =
                 transformer.transform(classLoader, clazz.getName(), null, null, classInput);

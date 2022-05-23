@@ -16,7 +16,6 @@
 
 package com.android.tools.instrumentation.threading.agent;
 
-import com.android.annotations.NonNull;
 import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 
@@ -34,20 +33,7 @@ public class Agent {
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         Agent.instrumentation = instrumentation;
-        instrumentation.addTransformer(new Transformer(createMappingRules()));
+        instrumentation.addTransformer(new Transformer(AnnotationMappings.create()));
         LOGGER.info("Threading agent has been loaded.");
-    }
-
-    @NonNull
-    static AnnotationMappings createMappingRules() {
-        return AnnotationMappings.newBuilder()
-                .addThreadingAnnotationWithCheckerMethod(
-                        "Lcom/android/annotations/concurrency/UiThread;",
-                        "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
-                        "verifyOnUiThread")
-                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/AnyThread;")
-                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/Slow;")
-                .addNoopThreadingAnnotation("Lcom/android/annotations/concurrency/WorkerThread;")
-                .build();
     }
 }

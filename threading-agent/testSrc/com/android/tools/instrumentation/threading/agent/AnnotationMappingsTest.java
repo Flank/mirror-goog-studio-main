@@ -25,50 +25,77 @@ import org.junit.Test;
 
 public class AnnotationMappingsTest {
 
-    private static String ANNOTATION_1 = "ThreadingAnnotation1";
-
-    private static String ANNOTATION_2 = "ThreadingAnnotation2";
-
-    private static String CLASS_NAME_1 = "ClassAbc";
-
-    private static String METHOD_NAME_1 = "methodIjk";
-
     @Test
-    public void isThreadingAnnotation() {
-        AnnotationMappings annotationMappings =
-                AnnotationMappings.newBuilder()
-                        .addThreadingAnnotationWithCheckerMethod(
-                                ANNOTATION_1, CLASS_NAME_1, METHOD_NAME_1)
-                        .addNoopThreadingAnnotation(ANNOTATION_2)
-                        .build();
-
-        assertThat(annotationMappings.isThreadingAnnotation(ANNOTATION_1)).isTrue();
-        assertThat(annotationMappings.isThreadingAnnotation(ANNOTATION_2)).isTrue();
-        assertThat(annotationMappings.isThreadingAnnotation("random_annotation_abc")).isFalse();
+    public void uiThreadAnnotationMapping() {
+        assertThat(
+                        AnnotationMappings.create()
+                                .isThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/UiThread;"))
+                .isTrue();
+        assertThat(
+                        AnnotationMappings.create()
+                                .getCheckerMethodForThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/UiThread;"))
+                .isEqualTo(
+                        Optional.of(
+                                new CheckerMethodRef(
+                                        "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
+                                        "verifyOnUiThread")));
     }
 
     @Test
-    public void getCheckerMethodForThreadingAnnotation() {
-        AnnotationMappings annotationMappings =
-                AnnotationMappings.newBuilder()
-                        .addThreadingAnnotationWithCheckerMethod(
-                                ANNOTATION_1, CLASS_NAME_1, METHOD_NAME_1)
-                        .addNoopThreadingAnnotation(ANNOTATION_2)
-                        .build();
-
-        assertThat(annotationMappings.getCheckerMethodForThreadingAnnotation(ANNOTATION_1))
-                .isEqualTo(Optional.of(new CheckerMethodRef(CLASS_NAME_1, METHOD_NAME_1)));
-        assertThat(annotationMappings.getCheckerMethodForThreadingAnnotation(ANNOTATION_2))
+    public void workerThreadAnnotationMapping() {
+        assertThat(
+                        AnnotationMappings.create()
+                                .isThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/WorkerThread;"))
+                .isTrue();
+        assertThat(
+                        AnnotationMappings.create()
+                                .getCheckerMethodForThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/WorkerThread;"))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
-    public void getCheckerMethodForNonThreadingAnnotation_throws() {
-        AnnotationMappings annotationMappings =
-                AnnotationMappings.newBuilder().addNoopThreadingAnnotation(ANNOTATION_1).build();
+    public void slowThreadAnnotationMapping() {
+        assertThat(
+                        AnnotationMappings.create()
+                                .isThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/Slow;"))
+                .isTrue();
+        assertThat(
+                        AnnotationMappings.create()
+                                .getCheckerMethodForThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/Slow;"))
+                .isEqualTo(Optional.empty());
+    }
 
+    @Test
+    public void anyThreadAnnotationMapping() {
+        assertThat(
+                        AnnotationMappings.create()
+                                .isThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/AnyThread;"))
+                .isTrue();
+        assertThat(
+                        AnnotationMappings.create()
+                                .getCheckerMethodForThreadingAnnotation(
+                                        "Lcom/android/annotations/concurrency/AnyThread;"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void nonThreadingAnnotation_callToIsThreadingAnnotation_returnsFalse() {
+        assertThat(AnnotationMappings.create().isThreadingAnnotation("random_annotation_abc"))
+                .isFalse();
+    }
+
+    @Test
+    public void nonThreadingAnnotation_callToGetCheckerMethod_throws() {
         try {
-            annotationMappings.getCheckerMethodForThreadingAnnotation("random_annotation_abc");
+            AnnotationMappings.create()
+                    .getCheckerMethodForThreadingAnnotation("random_annotation_abc");
             fail("Expected IllegalArgumentException to be thrown");
         } catch (IllegalArgumentException e) {
             assertThat(Throwables.getRootCause(e).getMessage())
