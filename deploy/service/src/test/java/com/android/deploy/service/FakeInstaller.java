@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FakeInstaller implements Installer {
+public class FakeInstaller extends Installer {
 
     List<Deploy.NetworkTestRequest> myNetworkRequestReceived = new ArrayList<>();
 
@@ -29,54 +29,23 @@ public class FakeInstaller implements Installer {
         return myNetworkRequestReceived;
     }
 
+    @Override
+    protected Deploy.InstallerResponse sendInstallerRequest(
+            Deploy.InstallerRequest request, long timeOutMs) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
+    protected void onAsymmetryDetected(
+            String reqType, String resType, Deploy.InstallerResponse resp) {
+        throw new IllegalStateException("Not implemented");
+    }
+
+    @Override
     public Deploy.NetworkTestResponse networkTest(Deploy.NetworkTestRequest request)
             throws IOException {
         myNetworkRequestReceived.add(request);
         return Deploy.NetworkTestResponse.newBuilder().setProcessingDurationNs(1L).build();
     }
 
-    public Deploy.DumpResponse dump(List<String> packageNames) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest request) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
-            throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.OverlayInstallResponse overlayInstall(Deploy.OverlayInstallRequest request)
-            throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
-            Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid)
-            throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.InstallCoroutineAgentResponse installCoroutineAgent(
-            String packageName, Deploy.Arch arch) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
-
-    public Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException {
-        throw new IllegalStateException("Not implemented");
-    }
 }

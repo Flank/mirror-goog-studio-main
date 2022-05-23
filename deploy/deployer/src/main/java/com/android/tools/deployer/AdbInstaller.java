@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,7 +34,7 @@ import java.util.Locale;
 import java.util.Stack;
 import java.util.concurrent.TimeoutException;
 
-public class AdbInstaller implements Installer {
+public class AdbInstaller extends Installer {
     public static final String INSTALLER_BINARY_NAME = "installer";
     public static final String INSTALLER_PATH =
             Deployer.INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
@@ -44,7 +43,6 @@ public class AdbInstaller implements Installer {
     private final AdbClient adb;
     private final String installersFolder;
     private final Collection<DeployMetric> metrics;
-    private final ILogger logger;
 
     private enum OnFail {
         RETRY,
@@ -75,10 +73,10 @@ public class AdbInstaller implements Installer {
             Collection<DeployMetric> metrics,
             ILogger logger,
             Mode mode) {
+        super(logger);
         this.adb = adb;
         this.installersFolder = installersFolder;
         this.metrics = metrics;
-        this.logger = logger;
         this.channelsProvider = new AdbInstallerChannelManager(logger, mode);
         this.mode = mode;
     }
@@ -101,183 +99,7 @@ public class AdbInstaller implements Installer {
         }
     }
 
-    @Override
-    public Deploy.InstallCoroutineAgentResponse installCoroutineAgent(
-            String packageName, Deploy.Arch arch) throws IOException {
-        Deploy.InstallCoroutineAgentRequest.Builder installCoroutineAgentRequestBuilder =
-                Deploy.InstallCoroutineAgentRequest.newBuilder();
-        installCoroutineAgentRequestBuilder.setPackageName(packageName).setArch(arch);
-        Deploy.InstallerRequest.Builder request =
-                buildRequest("installcoroutineagent")
-                        .setInstallCoroutineAgentRequest(installCoroutineAgentRequestBuilder);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(request.build(), Timeouts.CMD_INSTALL_COROUTINE);
-        if (!resp.hasInstallCoroutineAgentResponse()) {
-            onAsymmetryDetected(
-                    "InstallCoroutineAgentResponse", "InstallCoroutineAgentRequest", resp);
-        }
-        Deploy.InstallCoroutineAgentResponse response = resp.getInstallCoroutineAgentResponse();
-        logger.verbose("installer install coroutine agent: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.DumpResponse dump(List<String> packageNames) throws IOException {
-        Deploy.DumpRequest.Builder dumpRequestBuilder = Deploy.DumpRequest.newBuilder();
-        for (String packageName : packageNames) {
-            dumpRequestBuilder.addPackageNames(packageName);
-        }
-        Deploy.InstallerRequest.Builder req =
-                buildRequest("dump").setDumpRequest(dumpRequestBuilder);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_DUMP_MS);
-        if (!resp.hasDumpResponse()) {
-            onAsymmetryDetected("DumpResponse", "DumpRequest", resp);
-        }
-        Deploy.DumpResponse response = resp.getDumpResponse();
-        logger.verbose("installer dump: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.SwapResponse swap(Deploy.SwapRequest swapRequest) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("swap");
-        req.setSwapRequest(swapRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_SWAP_MS);
-        if (!resp.hasSwapResponse()) {
-            onAsymmetryDetected("SwapResponse", "SwapRequest", resp);
-        }
-        Deploy.SwapResponse response = resp.getSwapResponse();
-        logger.verbose("installer swap: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest overlaySwapRequest)
-            throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayswap");
-        req.setOverlaySwapRequest(overlaySwapRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OSWAP_MS);
-        if (!resp.hasSwapResponse()) {
-            onAsymmetryDetected("SwapResponse", "SwapRequest", resp);
-        }
-        Deploy.SwapResponse response = resp.getSwapResponse();
-        logger.verbose("installer overlayswap: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.OverlayInstallResponse overlayInstall(
-            Deploy.OverlayInstallRequest overlayInstallRequest) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayinstall");
-        req.setOverlayInstall(overlayInstallRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OINSTALL_MS);
-        if (!resp.hasOverlayInstallResponse()) {
-            onAsymmetryDetected("OverlayInstallResponse", "OverlayInstall", resp);
-        }
-        Deploy.OverlayInstallResponse response = resp.getOverlayInstallResponse();
-        logger.verbose("installer overlayinstall: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.OverlayIdPushResponse verifyOverlayId(String packageName, String oid)
-            throws IOException {
-        // Doing a overylayid push with both new and old OID as the argument effectively verifies
-        // the OID without updating it.
-        Deploy.OverlayIdPush overlayIdPushRequest =
-                createOidPushRequest(packageName, oid, oid, false);
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayidpush");
-        req.setOverlayIdPush(overlayIdPushRequest);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_VERIFY_OID_MS);
-        if (!resp.hasOverlayidpushResponse()) {
-            onAsymmetryDetected("OverlayidpushResponse", "OverlayIdPush", resp);
-        }
-        Deploy.OverlayIdPushResponse response = resp.getOverlayidpushResponse();
-        logger.verbose("installer overlayidpush: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.NetworkTestResponse networkTest(Deploy.NetworkTestRequest testParams)
-            throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("networktest");
-        request.setNetworkTestRequest(testParams);
-        Deploy.InstallerResponse resp = sendInstallerRequest(request.build(), Timeouts.CMD_NETTEST);
-        if (!resp.hasNetworkTestResponse()) {
-            onAsymmetryDetected("NetworkTestResponse", "NetworkTestRequest", resp);
-        }
-        return resp.getNetworkTestResponse();
-    }
-
-    private static Deploy.OverlayIdPush createOidPushRequest(
-            String packageName, String prevOid, String nextOid, boolean wipeOverlays) {
-        return Deploy.OverlayIdPush.newBuilder()
-                .setPackageName(packageName)
-                .setPrevOid(prevOid)
-                .setNextOid(nextOid)
-                .setWipeOverlays(wipeOverlays)
-                .build();
-    }
-
-    @Override
-    public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
-            throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("deltapreinstall");
-        req.setInstallInfoRequest(info);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_PREINSTALL_MS);
-        if (!resp.hasDeltapreinstallResponse()) {
-            onAsymmetryDetected("DeltapreinstallResponse", "InstallInfoRequest", resp);
-        }
-        Deploy.DeltaPreinstallResponse response = resp.getDeltapreinstallResponse();
-        logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("deltainstall");
-        req.setInstallInfoRequest(info);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_INSTALL_MS);
-        if (!resp.hasDeltainstallResponse()) {
-            onAsymmetryDetected("DeltainstallResponse", "InstallInfoRequest", resp);
-        }
-        Deploy.DeltaInstallResponse response = resp.getDeltainstallResponse();
-        logger.verbose("installer deltainstall: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
-            Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("liveliteralupdate");
-        req.setLiveLiteralRequest(liveLiterals);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_UPDATE_LL);
-        if (!resp.hasLiveLiteralResponse()) {
-            onAsymmetryDetected("LiveLiteralResponse", "LiveLiteralRequest", resp);
-        }
-        Deploy.LiveLiteralUpdateResponse response = resp.getLiveLiteralResponse();
-        logger.verbose("installer liveliteralupdate: " + response.getStatus().toString());
-        return response;
-    }
-
-    @Override
-    public Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("liveedit");
-        request.setLeRequest(ler);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(request.build(), Timeouts.CMD_LIVE_EDIT);
-        if (!resp.hasLeResponse()) {
-            onAsymmetryDetected("LeResponse", "LeRequest", resp);
-        }
-        Deploy.LiveEditResponse response = resp.getLeResponse();
-        logger.verbose("installer liveEdit: " + response.getStatus().toString());
-        return response;
-    }
-
-    private Deploy.InstallerResponse sendInstallerRequest(
+    protected Deploy.InstallerResponse sendInstallerRequest(
             Deploy.InstallerRequest request, long timeOutMs) throws IOException {
         Trace.begin("./installer " + request.getCommandName());
         long start = System.nanoTime();
@@ -397,8 +219,6 @@ public class AdbInstaller implements Installer {
         return response;
     }
 
-
-
     private void prepare() throws IOException {
         File installerFile = null;
         List<String> abis = adb.getAbis();
@@ -476,21 +296,6 @@ public class AdbInstaller implements Installer {
         return stream;
     }
 
-
-
-    @VisibleForTesting
-    public String getVersion() {
-        return Version.hash();
-    }
-
-    private Deploy.InstallerRequest.Builder buildRequest(String commandName) {
-        Deploy.InstallerRequest.Builder request =
-                Deploy.InstallerRequest.newBuilder()
-                        .setCommandName(commandName)
-                        .setVersion(getVersion());
-        return request;
-    }
-
     // An asymmetry is when the "extra" response contained in an InstallerResponse does not match
     // the "extra" request in the InstallerRequest. e.g.: If an InstallerRequest with a DumpRequest
     // was sent, the response received should contain a DumpResponse.
@@ -500,8 +305,8 @@ public class AdbInstaller implements Installer {
     // would be read without change to recovery.
     //
     // To solve this issue, we reset the connection to the daemon.
-    private void onAsymmetryDetected(String reqType, String resType, Deploy.InstallerResponse resp)
-            throws IOException {
+    protected void onAsymmetryDetected(
+            String reqType, String resType, Deploy.InstallerResponse resp) throws IOException {
         try {
             channelsProvider.reset(adb);
         } catch (IOException e) {
