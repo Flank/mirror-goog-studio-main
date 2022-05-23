@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.transform.Format
+import com.android.build.api.variant.ScopedArtifacts
+import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -497,7 +500,7 @@ abstract class R8Task @Inject constructor(
             it.useFullR8.set(useFullR8.get())
             it.referencedInputs.from((referencedClasses + referencedResources).toList())
             it.classes.from(
-                if (includeFeaturesInScopes.get()) {
+                if (includeFeaturesInScopes.get() && !hasAllAccessTransformers.get()) {
                     listOf(baseJar.get().asFile)
                 } else {
                     classes.toList()

@@ -67,6 +67,7 @@ class ArtifactsImpl(
     }
 
     private val projectScopedArtifacts = ScopedArtifactsImpl(
+        ScopedArtifacts.Scope.PROJECT,
         identifier,
         project.layout,
         project::files,
@@ -86,9 +87,17 @@ class ArtifactsImpl(
         )
     }
 
+    private val allScopedArtifacts = ScopedArtifactsImpl(
+        ScopedArtifacts.Scope.ALL,
+        identifier,
+        project.layout,
+        project::files,
+    )
+
     override fun forScope(scope: ScopedArtifacts.Scope): ScopedArtifactsImpl =
         when(scope) {
             ScopedArtifacts.Scope.PROJECT -> projectScopedArtifacts
+            ScopedArtifacts.Scope.ALL -> allScopedArtifacts
             else -> throw IllegalArgumentException("Not implemented yet !")
         }
 

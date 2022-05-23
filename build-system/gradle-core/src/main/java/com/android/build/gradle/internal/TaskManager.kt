@@ -26,6 +26,7 @@ import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.artifact.ScopedArtifact
+import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.BaseExtension
@@ -105,6 +106,7 @@ import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
 import com.android.build.gradle.internal.tasks.CheckJetifierTask
 import com.android.build.gradle.internal.tasks.CheckProguardFiles
+import com.android.build.gradle.internal.tasks.ClassesClasspathUtils
 import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
@@ -2100,6 +2102,47 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             }
         }
 
+        // initialize the all classes scope, at this point we do not consume the classes, just read
+        // the content as folks can be accessing these classes without transforming them and
+        // re-injecting them in the build flow.
+        creationConfig.artifacts.forScope(ScopedArtifacts.Scope.ALL)
+            .getScopedArtifactsContainer(ScopedArtifact.CLASSES)
+            .initialScopedContent
+            .from(
+                creationConfig
+                    .transformManager
+                    .getPipelineOutputAsFileCollection { contentTypes, scopes ->
+                        contentTypes.contains(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                                && scopes.intersect(TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS).isNotEmpty()
+                    }
+            )
+
+        // let's check if the ALL scoped classes are transformed.
+        if (creationConfig.artifacts.forScope(ScopedArtifacts.Scope.ALL)
+                .getScopedArtifactsContainer(ScopedArtifact.CLASSES).artifactsAltered.get()) {
+
+            // at this point, we need to consume all these streams as they will be provided by the
+            // final producer of the CLASSES artifact.
+            creationConfig.transformManager
+                .consumeStreams(
+                    TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS,
+                    setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
+                )
+
+            // and register the final transformed version back into the transform pipeline.
+            creationConfig.transformManager
+                .addStream(
+                    OriginalStream.builder("variant-api-transformed-classes")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(QualifiedContent.Scope.PROJECT)
+                        .setFileCollection(
+                            creationConfig.artifacts.forScope(ScopedArtifacts.Scope.ALL)
+                                .getFinalArtifacts(ScopedArtifact.CLASSES)
+                        )
+                        .build()
+                )
+        }
+
         // Add a task to create merged runtime classes if this is a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
         // minification is enabled in a project with features or dynamic-features.
@@ -2194,16 +2237,35 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         && creationConfig
                         .services
                         .projectOptions[BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM]))
+
+        val classesAlteredTroughVariantAPI = creationConfig
+            .artifacts
+            .forScope(ScopedArtifacts.Scope.ALL)
+            .getScopedArtifactsContainer(ScopedArtifact.CLASSES)
+            .artifactsAltered
+            .get()
+
         val enableDexingArtifactTransform = (creationConfig
                 .services
                 .projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]
                 && !registeredLegacyTransforms
                 && supportsDesugaringViaArtifactTransform)
+                && !classesAlteredTroughVariantAPI
+        val classpathUtils = ClassesClasspathUtils(
+            creationConfig,
+            enableDexingArtifactTransform,
+            registeredLegacyTransforms,
+            classesAlteredTroughVariantAPI
+        )
         taskFactory.register(
                 DexArchiveBuilderTask.CreationAction(
-                    creationConfig,enableDexingArtifactTransform, registeredLegacyTransforms))
+                    creationConfig,
+                    classpathUtils,
+                )
+        )
+
         maybeCreateDesugarLibTask(creationConfig, enableDexingArtifactTransform)
-        createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform)
+        createDexMergingTasks(creationConfig, dexingType, enableDexingArtifactTransform, classesAlteredTroughVariantAPI)
     }
 
     /**
@@ -2230,7 +2292,20 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     private fun createDexMergingTasks(
             creationConfig: ApkCreationConfig,
             dexingType: DexingType,
-            dexingUsingArtifactTransforms: Boolean) {
+            dexingUsingArtifactTransforms: Boolean,
+            classesAlteredThroughVariantAPI: Boolean,
+    ) {
+
+        // if classes were altered at the ALL scoped level, we just need to merge the single jar
+        // file resulting.
+        if (classesAlteredThroughVariantAPI) {
+            taskFactory.register(DexMergingTask.CreationAction(
+                creationConfig,
+                DexMergingAction.MERGE_TRANSFORMED_CLASSES,
+                dexingType,
+                dexingUsingArtifactTransforms))
+            return
+        }
 
         // When desugaring, The file dependencies are dexed in a task with the whole
         // remote classpath present, as they lack dependency information to desugar
