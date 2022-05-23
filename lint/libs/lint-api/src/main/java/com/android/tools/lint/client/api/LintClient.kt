@@ -61,6 +61,7 @@ import com.android.tools.lint.model.LintModelLibrary
 import com.android.tools.lint.model.PathVariables
 import com.android.utils.CharSequences
 import com.android.utils.Pair
+import com.android.utils.SdkUtils
 import com.android.utils.XmlUtils
 import com.android.utils.findGradleBuildFile
 import com.google.common.base.Splitter
@@ -1480,9 +1481,22 @@ abstract class LintClient {
      * @param urls the URLs
      * @param parent the parent class loader
      * @return a new class loader
+     * @deprecated Use List<File> version
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("Use the List<File> version")
     open fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader =
         URLClassLoader(urls, parent)
+
+    /**
+     * Creates a [ClassLoader] which can load in a set of Jar files.
+     *
+     * @param files the jar files
+     * @param parent the parent class loader
+     * @return a new class loader
+     */
+    open fun createUrlClassLoader(files: List<File>, parent: ClassLoader): ClassLoader =
+        URLClassLoader(files.mapNotNull { SdkUtils.fileToUrl(it) }.toTypedArray(), parent)
 
     /**
      * Returns the merged manifest of the given project. This may

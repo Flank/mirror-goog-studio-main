@@ -2855,8 +2855,13 @@ class LintDriver(
         override fun getAssetFolders(project: Project): List<File> =
             delegate.getAssetFolders(project)
 
+        @Suppress("DEPRECATION")
+        @Deprecated("Use the List<File> version")
         override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader =
             delegate.createUrlClassLoader(urls, parent)
+
+        override fun createUrlClassLoader(files: List<File>, parent: ClassLoader): ClassLoader =
+            delegate.createUrlClassLoader(files, parent)
 
         override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 

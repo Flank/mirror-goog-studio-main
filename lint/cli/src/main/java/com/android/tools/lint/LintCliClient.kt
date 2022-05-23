@@ -1622,7 +1622,18 @@ open class LintCliClient : LintClient {
         return errorCount > 0
     }
 
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("Use the List<File> version")
     override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader {
+        return if (isGradle || currentPlatform() == PLATFORM_WINDOWS) {
+            createUrlClassLoader(urls.map { File(UrlClassLoader.urlToFilePath(it.path)) }.toList(), parent)
+        } else {
+            @Suppress("DEPRECATION")
+            super.createUrlClassLoader(urls, parent)
+        }
+    }
+
+    override fun createUrlClassLoader(files: List<File>, parent: ClassLoader): ClassLoader {
         return if (isGradle || currentPlatform() == PLATFORM_WINDOWS) {
             // When lint is invoked from Gradle, it's normally running in the Gradle
             // daemon which sticks around for a while, And URLClassLoader will on
@@ -1631,9 +1642,9 @@ open class LintCliClient : LintClient {
             // succeeding. So here we'll use the IntelliJ platform's UrlClassLoader
             // instead which does not lock files. See
             // JarFileIssueRegistry#loadAndCloseURLClassLoader for more details.
-            UrlClassLoader.build().parent(parent).urls(urls.toList()).get()
+            UrlClassLoader.build().parent(parent).files(files.map { it.toPath() }).get()
         } else {
-            super.createUrlClassLoader(urls, parent)
+            super.createUrlClassLoader(files, parent)
         }
     }
 
