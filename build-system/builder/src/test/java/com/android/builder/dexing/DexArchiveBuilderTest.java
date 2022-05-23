@@ -25,6 +25,8 @@ import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.builder.dexing.testdata.ClassWithAssertions;
+import com.android.builder.dexing.testdata.DebugInfoClass;
 import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
@@ -67,12 +69,6 @@ public class DexArchiveBuilderTest {
     enum DexArchiveFormat {
         DIR,
         JAR
-    }
-
-    static class ClassWithAssertions {
-        public static void foo() {
-            assert 1 > System.currentTimeMillis();
-        }
     }
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -231,20 +227,6 @@ public class DexArchiveBuilderTest {
     public void checkDebugInfoExists() throws Exception {
         Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
         Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
-        class DebugInfoClass {
-
-            private void noBody() {}
-
-            private void debugInfoMethod() {
-                int x = 10;
-            }
-
-            private void anotherMethod() {
-                int y = 10;
-                int x = 1000;
-                debugInfoMethod();
-            }
-        }
         Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
         String path = DebugInfoClass.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
         Path outClassFile = classesDir.resolve(path);
@@ -370,3 +352,4 @@ public class DexArchiveBuilderTest {
         return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
     }
 }
+
