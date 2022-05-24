@@ -23,7 +23,7 @@ for /f "tokens=*" %%f in ('uuidgen') do (
 if exist %DISTDIR%\ (
   echo "<head><meta http-equiv="refresh" content="0; url='https://source.cloud.google.com/results/invocations/%INVOCATIONID%'" /></head>" > %DISTDIR%\upsalite_build_results.html
 )
-
+set USE_BAZEL_VERSION=last_rc
 call %BASEDIR%\tools\base\bazel\bazel.cmd ^
   --max_idle_secs=10 ^
   build ^
