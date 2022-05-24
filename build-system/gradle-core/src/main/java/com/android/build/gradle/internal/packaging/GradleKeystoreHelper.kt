@@ -21,16 +21,16 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.builder.signing.DefaultSigningConfig
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.ide.common.signing.KeytoolException
+import com.android.prefs.AndroidLocationsException
 import com.android.prefs.AndroidLocationsProvider
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.Logger
-import shadow.bundletool.com.android.prefs.AndroidLocation.AndroidLocationException
 import java.io.File
 import java.io.IOException
 
 fun AndroidLocationsProvider.getDefaultDebugKeystoreLocation(): File = try {
     KeystoreHelper.defaultDebugKeystoreLocation(this)
-} catch (e: AndroidLocationException) {
+} catch (e: AndroidLocationsException) {
     throw InvalidUserDataException("Failed to get default debug keystore location.", e)
 }
 
