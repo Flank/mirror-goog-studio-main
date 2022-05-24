@@ -71,9 +71,8 @@ fun RecipeExecutor.androidTVActivityRecipe(
            manifestOut.resolve("AndroidManifest.xml"))
   mergeXml(stringsXml(activityClass, moduleData.isNewModule), resOut.resolve("values/strings.xml"))
   mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
-  copy(File("app_icon_your_company.png"), resOut.resolve("drawable/app_icon_your_company.png"))
-  copy(File("default_background.xml"), resOut.resolve("drawable/default_background.xml"))
-  copy(File("movie.png"), resOut.resolve("drawable/movie.png"))
+
+  copy(File("androidtv-activity").resolve("drawable"), resOut.resolve("drawable"))
   save(activityMainXml(activityClass, packageName), resOut.resolve("layout/${layoutName}.xml"))
   save(activityDetailsXml(detailsActivityClass, packageName), resOut.resolve("layout/${detailsLayoutName}.xml"))
 

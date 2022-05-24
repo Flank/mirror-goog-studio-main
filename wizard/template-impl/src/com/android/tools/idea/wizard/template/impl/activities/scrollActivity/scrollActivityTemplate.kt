@@ -100,7 +100,7 @@ val scrollActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_scroll_activity.png") }
+    thumb { File("scrolling-activity").resolve("template_scroll_activity.png") }
 
     recipe = { data: TemplateData ->
       scrollActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value,

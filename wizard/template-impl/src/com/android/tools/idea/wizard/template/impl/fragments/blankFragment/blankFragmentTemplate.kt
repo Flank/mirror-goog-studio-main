@@ -63,7 +63,7 @@ val blankFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_blank_fragment.png") }
+    thumb { File("blank-fragment").resolve("template_blank_fragment.png") }
 
     recipe = { data: TemplateData ->
       blankFragmentRecipe(data as ModuleTemplateData, className.value, layoutName.value)

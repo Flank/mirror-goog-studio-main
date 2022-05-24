@@ -68,7 +68,7 @@ val fullscreenFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_fullscreen_fragment.png") }
+    thumb { File("fullscreen-fragment").resolve("template_fullscreen_fragment.png") }
 
     recipe = { data: TemplateData ->
       fullscreenFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, packageName.value)

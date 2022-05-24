@@ -72,7 +72,7 @@ val googleMapsFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_map_fragment.png") }
+    thumb { File("google-maps-fragment").resolve("template_map_fragment.png") }
 
     recipe = { data: TemplateData ->
       googleMapsFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, packageName.value)

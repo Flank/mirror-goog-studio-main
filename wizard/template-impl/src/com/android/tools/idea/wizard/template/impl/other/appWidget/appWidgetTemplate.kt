@@ -102,7 +102,7 @@ val appWidgetTemplate
     }
 
     thumb {
-      File("template_widget_" + minWidth.value.name + "x" + minHeight.value.name + "_" + resizable.value.suffix + ".png")
+      File("app-widget").resolve("template_widget_" + minWidth.value.name + "x" + minHeight.value.name + "_" + resizable.value.suffix + ".png")
     }
 
     widgets(

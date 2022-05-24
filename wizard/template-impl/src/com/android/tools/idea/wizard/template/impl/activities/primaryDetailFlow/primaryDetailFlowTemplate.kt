@@ -105,7 +105,7 @@ val primaryDetailFlowTemplate
       TextFieldWidget(detailNameFragmentLayout)
     )
 
-    thumb { File("template_primary_detail.png") }
+    thumb { File("primary-detail-flow").resolve("template_primary_detail.png") }
 
     recipe = { data: TemplateData ->
       primaryDetailFlowRecipe(data as ModuleTemplateData,

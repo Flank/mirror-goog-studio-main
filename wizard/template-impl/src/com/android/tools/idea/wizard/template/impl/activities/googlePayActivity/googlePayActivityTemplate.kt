@@ -88,7 +88,7 @@ val googlePayActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_pay_activity.png") }
+    thumb { File("google-pay-activity").resolve("template_pay_activity.png") }
 
     recipe = { data: TemplateData ->
       googlePayActivityRecipe(data as ModuleTemplateData, activityClass.value, viewModelClass.value,

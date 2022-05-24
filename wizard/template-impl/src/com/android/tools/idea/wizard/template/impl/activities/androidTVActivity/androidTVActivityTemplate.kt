@@ -120,7 +120,7 @@ val androidTVActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template-leanback-TV.png") }
+    thumb { File("androidtv-activity").resolve("template-leanback-TV.png") }
 
     recipe = { data: TemplateData ->
       androidTVActivityRecipe(

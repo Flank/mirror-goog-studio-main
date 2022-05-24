@@ -108,7 +108,7 @@ val listFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_list_fragment.png") }
+    thumb { File("list-fragment").resolve("template_list_fragment.png") }
 
     recipe = { data: TemplateData ->
       listFragmentRecipe(data as ModuleTemplateData, packageName.value, fragmentClass.value, columnCount.value,

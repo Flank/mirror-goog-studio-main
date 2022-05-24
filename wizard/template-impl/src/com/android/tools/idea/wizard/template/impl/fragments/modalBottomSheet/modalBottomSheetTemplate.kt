@@ -94,7 +94,7 @@ val modalBottomSheetTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_modal_bottom_sheet_fragment.png") }
+    thumb { File("modal-bottom-sheet").resolve("template_modal_bottom_sheet_fragment.png") }
 
     recipe = { data: TemplateData ->
       modalBottomSheetRecipe(data as ModuleTemplateData, packageName.value, objectKind.value, fragmentClass.value, columnCount.value,

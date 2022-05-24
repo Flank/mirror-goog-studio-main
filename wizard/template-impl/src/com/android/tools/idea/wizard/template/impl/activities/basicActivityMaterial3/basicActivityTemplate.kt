@@ -137,7 +137,7 @@ val basicActivityMaterial3Template get() = template {
   )
 
   thumb {
-    File("template_basic_activity_material3.png")
+    File("basic-activity-material3").resolve("template_basic_activity_material3.png")
   }
 
   recipe = { data: TemplateData ->

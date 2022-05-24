@@ -90,7 +90,7 @@ val composeActivityMaterial3Template
       LanguageWidget()
     )
 
-    thumb { File("template_compose_empty_activity_material3.png") }
+    thumb { File("compose-activity-material3").resolve("template_compose_empty_activity_material3.png") }
 
     recipe = { data: TemplateData ->
       composeActivityRecipe(data as ModuleTemplateData, activityClass.value, packageName.value, isLauncher.value,

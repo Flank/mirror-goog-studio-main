@@ -92,7 +92,7 @@ val tabbedActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_blank_activity_tabs.png") }
+    thumb { File("tabbed-activity").resolve("template_blank_activity_tabs.png") }
 
     recipe = { data: TemplateData ->
       tabbedActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, fragmentLayoutName.value,

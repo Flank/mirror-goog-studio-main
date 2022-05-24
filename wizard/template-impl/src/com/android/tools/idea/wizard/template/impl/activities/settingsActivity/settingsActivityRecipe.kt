@@ -62,8 +62,7 @@ fun RecipeExecutor.settingsActivityRecipe(
   mergeXml(settingsActivityXml(), resOut.resolve("layout/settings_activity.xml"))
 
   if (multipleScreens) {
-    copy(File("messages.xml"), resOut.resolve("drawable/messages.xml"))
-    copy(File("sync.xml"), resOut.resolve("drawable/sync.xml"))
+    copy(File("settings-activity").resolve("drawable"), resOut.resolve("drawable"))
 
     mergeXml(headerPreferencesXml(activityClass, packageName), resOut.resolve("xml/header_preferences.xml"))
     mergeXml(messagesPreferencesXml(), resOut.resolve("xml/messages_preferences.xml"))

@@ -93,14 +93,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     themesData = moduleTemplateData.themesData
   )
 
-  (1..16).map {
-    copy(File("avatar_$it.xml"), resOut.resolve("drawable/avatar_$it.xml"))
-  }
-  copy(File("drawable/side_nav_bar.xml"), resOut.resolve("drawable/side_nav_bar.xml"))
-  copy(File("ic_camera_black_24dp.xml"), resOut.resolve("drawable/ic_camera_black_24dp.xml"))
-  copy(File("ic_gallery_black_24dp.xml"), resOut.resolve("drawable/ic_gallery_black_24dp.xml"))
-  copy(File("ic_slideshow_black_24dp.xml"), resOut.resolve("drawable/ic_slideshow_black_24dp.xml"))
-  copy(File("ic_settings_black_24dp.xml"), resOut.resolve("drawable/ic_settings_black_24dp.xml"))
+  copy(File("responsive-activity").resolve("drawable"), resOut.resolve("drawable"))
   mergeXml(strings(), resOut.resolve("values/strings.xml"))
   mergeXml(dimens(), resOut.resolve("values/dimens.xml"))
   mergeXml(dimensW600dp(), resOut.resolve("values-w600dp/dimens.xml"))

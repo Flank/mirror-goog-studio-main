@@ -128,7 +128,7 @@ val navigationDrawerActivityTemplate = template {
     LanguageWidget()
   )
 
-  thumb { File("template_blank_activity_drawer.png") }
+  thumb { File("navigation-drawer-activity").resolve("template_blank_activity_drawer.png") }
 
   recipe = { data: TemplateData ->
     generateNavigationDrawer(

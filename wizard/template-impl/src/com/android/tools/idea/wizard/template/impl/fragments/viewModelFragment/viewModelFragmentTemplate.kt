@@ -78,7 +78,7 @@ val viewModelFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_blank_fragment.png") }
+    thumb { File("viewmodel-fragment").resolve("template_blank_fragment.png") }
 
     recipe = { data: TemplateData ->
       viewModelFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, viewModelName.value, packageName.value)

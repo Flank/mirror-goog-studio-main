@@ -56,14 +56,12 @@ fun RecipeExecutor.watchFaceServiceRecipe(
       Language.Java -> addDependency("androidx.palette:palette:+")
       Language.Kotlin -> addDependency("androidx.palette:palette-ktx:+")
     }
-    copy(File("preview_analog.png"), resOut.resolve("drawable-nodpi/preview_analog.png"))
-    copy(File("watchface_service_bg.png"), resOut.resolve("drawable-nodpi/watchface_service_bg.png"))
+    copy(File("watch-face-service").resolve("drawable-nodpi-analog"), resOut.resolve("drawable-nodpi"))
   }
   else if (watchFaceStyle == WatchFaceStyle.Digital) {
     mergeXml(dimensXml(), resOut.resolve("values/dimens.xml"))
     mergeXml(colorsXml(), resOut.resolve("values/colors.xml"))
-    copy(File("preview_digital.png"), resOut.resolve("drawable-nodpi/preview_digital.png"))
-    copy(File("preview_digital_circular.png"), resOut.resolve("drawable-nodpi/preview_digital_circular.png"))
+    copy(File("watch-face-service").resolve("drawable-nodpi-digital"), resOut.resolve("drawable-nodpi"))
   }
 
   if (watchFaceStyle == WatchFaceStyle.Analog) {

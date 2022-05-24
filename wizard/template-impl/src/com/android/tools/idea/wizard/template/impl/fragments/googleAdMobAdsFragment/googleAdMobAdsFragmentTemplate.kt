@@ -90,7 +90,7 @@ val googleAdMobAdsFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_admob_fragment_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
+    thumb { File("google-admob-ads-fragment").resolve("template_admob_fragment_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
 
     recipe = { data: TemplateData ->
       googleAdMobAdsFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, adFormat.value, packageName.value)

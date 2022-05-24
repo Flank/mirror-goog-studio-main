@@ -83,7 +83,7 @@ val watchFaceServiceTemplate
     )
 
     thumb {
-      File("watchface_service_template_thumbnail.png")
+      File("watch-face-service").resolve("watchface_service_template_thumbnail.png")
     }
 
     recipe = { data: TemplateData ->

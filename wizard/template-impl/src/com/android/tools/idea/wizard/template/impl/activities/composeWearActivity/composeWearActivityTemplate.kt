@@ -101,7 +101,7 @@ val composeWearActivityTemplate
                 TextFieldWidget(defaultPreview),
         )
 
-        thumb { File("templates-WatchViewStub-Wear.png") }
+        thumb { File("compose-wear-activity").resolve("templates-WatchViewStub-Wear.png") }
 
         recipe = { data: TemplateData ->
             composeWearActivityRecipe(

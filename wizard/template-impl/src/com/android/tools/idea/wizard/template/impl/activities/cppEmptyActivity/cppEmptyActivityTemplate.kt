@@ -102,7 +102,7 @@ val cppEmptyActivityTemplate
     )
 
     thumb {
-      File("cpp_configure.png")
+      File("cpp-empty-activity").resolve("cpp_configure.png")
     }
 
     recipe = { data ->

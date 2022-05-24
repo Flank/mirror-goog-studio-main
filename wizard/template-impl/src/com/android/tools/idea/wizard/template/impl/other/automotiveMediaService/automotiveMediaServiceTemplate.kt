@@ -74,7 +74,7 @@ val automotiveMediaServiceTemplate
       LanguageWidget()
     )
 
-    thumb { File("automotive-media-service.png") }
+    thumb { File("automotive-media-service").resolve("automotive-media-service.png") }
 
     recipe = { data: TemplateData ->
       automotiveMediaServiceRecipe(data as ModuleTemplateData, mediaBrowserServiceName.value, packageName.value, useCustomTheme.value,
