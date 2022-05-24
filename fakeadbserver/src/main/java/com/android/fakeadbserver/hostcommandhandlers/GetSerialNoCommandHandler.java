@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-
 import java.io.IOException;
 import java.net.Socket;
 
@@ -37,10 +36,13 @@ public class GetSerialNoCommandHandler extends HostCommandHandler {
             @NonNull Socket responseSocket,
             @Nullable DeviceState device,
             @NonNull String args) {
-        assert device != null;
-        try {
-            writeOkayResponse(responseSocket.getOutputStream(), device.getDeviceId());
-        } catch (IOException ignored) {
+        // Device may be null if an invalid serial number was sent. A FAIL response
+        // should already have been sent.
+        if (device != null) {
+            try {
+                writeOkayResponse(responseSocket.getOutputStream(), device.getDeviceId());
+            } catch (IOException ignored) {
+            }
         }
         return false;
     }
