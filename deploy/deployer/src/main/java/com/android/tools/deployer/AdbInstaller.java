@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
@@ -154,6 +155,7 @@ public class AdbInstaller extends Installer {
     // Invoke command on device. The command must be known by installer android executable.
     // Send content of data into the executable standard input and return a proto buffer
     // object specific to the command.
+    @NonNull
     private Deploy.InstallerResponse sendInstallerRequest(
             Deploy.InstallerRequest request, OnFail onFail, long timeOutMs) throws IOException {
         Deploy.InstallerResponse response = null;
@@ -300,26 +302,18 @@ public class AdbInstaller extends Installer {
     // the "extra" request in the InstallerRequest. e.g.: If an InstallerRequest with a DumpRequest
     // was sent, the response received should contain a DumpResponse.
     //
-    // This could happen in deamom mode, if a request is sent but the response is not read. This
+    // This could happen in daemom mode, if a request is sent but the response is not read. This
     // case would create a "desync" where the previous response (stored in the socket buffer)
     // would be read without change to recovery.
     //
     // To solve this issue, we reset the connection to the daemon.
-    protected void onAsymmetryDetected(
-            String reqType, String resType, Deploy.InstallerResponse resp) throws IOException {
+    protected void onAsymetry(Deploy.InstallerRequest req, Deploy.InstallerResponse resp)
+            throws IOException {
         try {
             channelsProvider.reset(adb);
         } catch (IOException e) {
             // ignore
         }
-        String extra = resp.getExtraCase().name();
-        String msg =
-                String.format(
-                        Locale.US,
-                        "No '%s' matching '%s' (got %s instead)",
-                        reqType,
-                        resType,
-                        extra);
-        throw new IOException(msg);
+
     }
 }

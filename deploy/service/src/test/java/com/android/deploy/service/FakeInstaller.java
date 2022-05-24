@@ -36,8 +36,7 @@ public class FakeInstaller extends Installer {
     }
 
     @Override
-    protected void onAsymmetryDetected(
-            String reqType, String resType, Deploy.InstallerResponse resp) {
+    protected void onAsymetry(Deploy.InstallerRequest req, Deploy.InstallerResponse resp) {
         throw new IllegalStateException("Not implemented");
     }
 

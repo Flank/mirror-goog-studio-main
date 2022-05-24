@@ -15,21 +15,24 @@
  */
 package com.android.tools.deployer;
 
+import com.android.annotations.NonNull;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.utils.ILogger;
 import com.android.utils.NullLogger;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 public abstract class Installer {
 
     protected final ILogger logger;
 
+    @NonNull
     protected abstract Deploy.InstallerResponse sendInstallerRequest(
             Deploy.InstallerRequest request, long timeOutMs) throws IOException;
 
-    protected abstract void onAsymmetryDetected(
-            String reqType, String resType, Deploy.InstallerResponse resp) throws IOException;
+    protected abstract void onAsymetry(Deploy.InstallerRequest req, Deploy.InstallerResponse resp)
+            throws IOException;
 
     protected Installer() {
         this(new NullLogger());
@@ -37,6 +40,18 @@ public abstract class Installer {
 
     protected Installer(ILogger logger) {
         this.logger = logger;
+    }
+
+    private void asymetryThrow(Deploy.InstallerRequest req, Deploy.InstallerResponse resp)
+            throws IOException {
+        onAsymetry(req, resp);
+        String msg =
+                String.format(
+                        Locale.US,
+                        "Unexpected response '%s' for request '%s'",
+                        resp.getExtraCase().name(),
+                        req.getRequestCase().name());
+        throw new IOException(msg);
     }
 
     /**
@@ -48,15 +63,17 @@ public abstract class Installer {
         Deploy.InstallCoroutineAgentRequest.Builder installCoroutineAgentRequestBuilder =
                 Deploy.InstallCoroutineAgentRequest.newBuilder();
         installCoroutineAgentRequestBuilder.setPackageName(packageName).setArch(arch);
-        Deploy.InstallerRequest.Builder request =
+        Deploy.InstallerRequest.Builder reqBuilder =
                 buildRequest("installcoroutineagent")
                         .setInstallCoroutineAgentRequest(installCoroutineAgentRequestBuilder);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(request.build(), Timeouts.CMD_INSTALL_COROUTINE);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_INSTALL_COROUTINE);
         if (!resp.hasInstallCoroutineAgentResponse()) {
-            onAsymmetryDetected(
-                    "InstallCoroutineAgentResponse", "InstallCoroutineAgentRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.InstallCoroutineAgentResponse response = resp.getInstallCoroutineAgentResponse();
         logger.verbose("installer install coroutine agent: " + response.getStatus().toString());
         return response;
@@ -67,24 +84,32 @@ public abstract class Installer {
         for (String packageName : packageNames) {
             dumpRequestBuilder.addPackageNames(packageName);
         }
-        Deploy.InstallerRequest.Builder req =
+        Deploy.InstallerRequest.Builder reqBuilder =
                 buildRequest("dump").setDumpRequest(dumpRequestBuilder);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_DUMP_MS);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DUMP_MS);
         if (!resp.hasDumpResponse()) {
-            onAsymmetryDetected("DumpResponse", "DumpRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.DumpResponse response = resp.getDumpResponse();
         logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
     }
 
     public Deploy.SwapResponse swap(Deploy.SwapRequest swapRequest) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("swap");
-        req.setSwapRequest(swapRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_SWAP_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("swap");
+        reqBuilder.setSwapRequest(swapRequest);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_SWAP_MS);
         if (!resp.hasSwapResponse()) {
-            onAsymmetryDetected("SwapResponse", "SwapRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.SwapResponse response = resp.getSwapResponse();
         logger.verbose("installer swap: " + response.getStatus().toString());
         return response;
@@ -92,12 +117,16 @@ public abstract class Installer {
 
     public Deploy.SwapResponse overlaySwap(Deploy.OverlaySwapRequest overlaySwapRequest)
             throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayswap");
-        req.setOverlaySwapRequest(overlaySwapRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OSWAP_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("overlayswap");
+        reqBuilder.setOverlaySwapRequest(overlaySwapRequest);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_OSWAP_MS);
         if (!resp.hasSwapResponse()) {
-            onAsymmetryDetected("SwapResponse", "SwapRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.SwapResponse response = resp.getSwapResponse();
         logger.verbose("installer overlayswap: " + response.getStatus().toString());
         return response;
@@ -105,12 +134,16 @@ public abstract class Installer {
 
     public Deploy.OverlayInstallResponse overlayInstall(
             Deploy.OverlayInstallRequest overlayInstallRequest) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayinstall");
-        req.setOverlayInstall(overlayInstallRequest);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_OINSTALL_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("overlayinstall");
+        reqBuilder.setOverlayInstall(overlayInstallRequest);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_OINSTALL_MS);
         if (!resp.hasOverlayInstallResponse()) {
-            onAsymmetryDetected("OverlayInstallResponse", "OverlayInstall", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.OverlayInstallResponse response = resp.getOverlayInstallResponse();
         logger.verbose("installer overlayinstall: " + response.getStatus().toString());
         return response;
@@ -125,13 +158,16 @@ public abstract class Installer {
         // the OID without updating it.
         Deploy.OverlayIdPush overlayIdPushRequest =
                 createOidPushRequest(packageName, oid, oid, false);
-        Deploy.InstallerRequest.Builder req = buildRequest("overlayidpush");
-        req.setOverlayIdPush(overlayIdPushRequest);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_VERIFY_OID_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("overlayidpush");
+        reqBuilder.setOverlayIdPush(overlayIdPushRequest);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_VERIFY_OID_MS);
         if (!resp.hasOverlayidpushResponse()) {
-            onAsymmetryDetected("OverlayidpushResponse", "OverlayIdPush", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.OverlayIdPushResponse response = resp.getOverlayidpushResponse();
         logger.verbose("installer overlayidpush: " + response.getStatus().toString());
         return response;
@@ -139,12 +175,16 @@ public abstract class Installer {
 
     public Deploy.NetworkTestResponse networkTest(Deploy.NetworkTestRequest testParams)
             throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("networktest");
-        request.setNetworkTestRequest(testParams);
-        Deploy.InstallerResponse resp = sendInstallerRequest(request.build(), Timeouts.CMD_NETTEST);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("networktest");
+        reqBuilder.setNetworkTestRequest(testParams);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_NETTEST);
         if (!resp.hasNetworkTestResponse()) {
-            onAsymmetryDetected("NetworkTestResponse", "NetworkTestRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         return resp.getNetworkTestResponse();
     }
 
@@ -160,26 +200,32 @@ public abstract class Installer {
 
     public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
             throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("deltapreinstall");
-        req.setInstallInfoRequest(info);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_PREINSTALL_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("deltapreinstall");
+        reqBuilder.setInstallInfoRequest(info);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DELTA_PREINSTALL_MS);
         if (!resp.hasDeltapreinstallResponse()) {
-            onAsymmetryDetected("DeltapreinstallResponse", "InstallInfoRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.DeltaPreinstallResponse response = resp.getDeltapreinstallResponse();
         logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
         return response;
     }
 
     public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("deltainstall");
-        req.setInstallInfoRequest(info);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(req.build(), Timeouts.CMD_DELTA_INSTALL_MS);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("deltainstall");
+        reqBuilder.setInstallInfoRequest(info);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DELTA_INSTALL_MS);
         if (!resp.hasDeltainstallResponse()) {
-            onAsymmetryDetected("DeltainstallResponse", "InstallInfoRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.DeltaInstallResponse response = resp.getDeltainstallResponse();
         logger.verbose("installer deltainstall: " + response.getStatus().toString());
         return response;
@@ -187,25 +233,32 @@ public abstract class Installer {
 
     public Deploy.LiveLiteralUpdateResponse updateLiveLiterals(
             Deploy.LiveLiteralUpdateRequest liveLiterals) throws IOException {
-        Deploy.InstallerRequest.Builder req = buildRequest("liveliteralupdate");
-        req.setLiveLiteralRequest(liveLiterals);
-        Deploy.InstallerResponse resp = sendInstallerRequest(req.build(), Timeouts.CMD_UPDATE_LL);
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("liveliteralupdate");
+        reqBuilder.setLiveLiteralRequest(liveLiterals);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_UPDATE_LL);
         if (!resp.hasLiveLiteralResponse()) {
-            onAsymmetryDetected("LiveLiteralResponse", "LiveLiteralRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.LiveLiteralUpdateResponse response = resp.getLiveLiteralResponse();
         logger.verbose("installer liveliteralupdate: " + response.getStatus().toString());
         return response;
     }
 
     public Deploy.LiveEditResponse liveEdit(Deploy.LiveEditRequest ler) throws IOException {
-        Deploy.InstallerRequest.Builder request = buildRequest("liveedit");
-        request.setLeRequest(ler);
-        Deploy.InstallerResponse resp =
-                sendInstallerRequest(request.build(), Timeouts.CMD_LIVE_EDIT);
+        Deploy.InstallerRequest.Builder requestBuilder = buildRequest("liveedit");
+        requestBuilder.setLeRequest(ler);
+        Deploy.InstallerRequest req = requestBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_LIVE_EDIT);
         if (!resp.hasLeResponse()) {
-            onAsymmetryDetected("LeResponse", "LeRequest", resp);
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
         }
+
         Deploy.LiveEditResponse response = resp.getLeResponse();
         logger.verbose("installer liveEdit: " + response.getStatus().toString());
         return response;
@@ -221,5 +274,14 @@ public abstract class Installer {
                         .setCommandName(commandName)
                         .setVersion(getVersion());
         return request;
+    }
+
+    private Deploy.InstallerResponse send(Deploy.InstallerRequest req, long timeOutMs)
+            throws IOException {
+        Deploy.InstallerResponse resp = sendInstallerRequest(req, timeOutMs);
+        logger.verbose("Sent request %s", req.getRequestCase().name());
+        Deploy.InstallerResponse.ExtraCase respCase = resp.getExtraCase();
+        logger.verbose("Received response %s", respCase.name());
+        return resp;
     }
 }
