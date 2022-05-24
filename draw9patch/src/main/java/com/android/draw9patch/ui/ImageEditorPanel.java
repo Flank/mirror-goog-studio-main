@@ -221,15 +221,14 @@ public class ImageEditorPanel extends JPanel {
                 GridBagConstraints.LINE_END, GridBagConstraints.NONE,
                 new Insets(0, 6, 0, 0), 0, 0));
 
-        label = new JLabel();
-        label.setText("100%");
+        label = new JLabel(ImageViewer.MIN_ZOOM + "%");
         label.putClientProperty("JComponent.sizeVariant", "small");
         status.add(label, new GridBagConstraints(1, 0, 1, 1, 0.0f, 0.0f,
                 GridBagConstraints.LINE_END, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
 
-        zoomSlider = new JSlider(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM,
-                ImageViewer.DEFAULT_ZOOM);
+        zoomSlider =
+                new JSlider(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM, ImageViewer.DEFAULT_ZOOM);
         zoomSlider.putClientProperty("JComponent.sizeVariant", "small");
         zoomSlider.addChangeListener(new ChangeListener() {
             @Override
@@ -241,9 +240,8 @@ public class ImageEditorPanel extends JPanel {
                 GridBagConstraints.LINE_START, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
 
-        JLabel maxZoomLabel = new JLabel();
+        JLabel maxZoomLabel = new JLabel(ImageViewer.MAX_ZOOM + "%");
         maxZoomLabel.putClientProperty("JComponent.sizeVariant", "small");
-        maxZoomLabel.setText("800%");
         status.add(maxZoomLabel, new GridBagConstraints(3, 0, 1, 1, 0.0f, 0.0f,
                 GridBagConstraints.LINE_START, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 0), 0, 0));
