@@ -35,7 +35,6 @@ import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_CONFIGURATION
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY
-import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY_BLOCKING
 import com.android.tools.lint.checks.GradleDetector.Companion.DEV_MODE_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.DUPLICATE_CLASSES
 import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRED_TARGET_SDK_VERSION
@@ -52,7 +51,6 @@ import com.android.tools.lint.checks.GradleDetector.Companion.MINIMUM_TARGET_SDK
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
 import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
 import com.android.tools.lint.checks.GradleDetector.Companion.PATH
-import com.android.tools.lint.checks.GradleDetector.Companion.PLAY_SDK_INDEX_BLOCKING_MESSAGE
 import com.android.tools.lint.checks.GradleDetector.Companion.PLAY_SDK_INDEX_NON_COMPLIANT
 import com.android.tools.lint.checks.GradleDetector.Companion.PLUS
 import com.android.tools.lint.checks.GradleDetector.Companion.PREVIOUS_MINIMUM_TARGET_SDK_VERSION
@@ -3169,11 +3167,11 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY, PLAY_SDK_INDEX_NON_COMPLIANT, DEPRECATED_LIBRARY_BLOCKING, PLAY_SDK_INDEX_BLOCKING_MESSAGE)
+        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY, PLAY_SDK_INDEX_NON_COMPLIANT)
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibraryBlocking]
+                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.12' // OUTDATED BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
