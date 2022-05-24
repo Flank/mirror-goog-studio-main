@@ -23,6 +23,8 @@ import com.android.draw9patch.graphics.GraphicsUtilities;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -30,11 +32,15 @@ import java.awt.Insets;
 import java.awt.TexturePaint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.function.Supplier;
 import javax.swing.Box;
@@ -42,6 +48,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -359,6 +366,60 @@ public class ImageEditorPanel extends JPanel {
         status.add(yLabel, new GridBagConstraints(8, 1, 1, 1, 0.0f, 0.0f,
                 GridBagConstraints.LINE_END, GridBagConstraints.NONE,
                 new Insets(0, 0, 0, 6), 0, 0));
+
+        final String helpUrl = "http://developer.android.com/r/studio-ui/ninepatch.html";
+        final String helpText = "Learn More...";
+        final JLabel helpButton = new JLabel("<html><a href=\"\">Learn More</a></html>");
+        helpButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        helpButton.setToolTipText("Show help for 9-Patch files");
+        helpButton.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        try {
+                            Desktop.getDesktop().browse(new URI(helpUrl));
+                        } catch (IOException | URISyntaxException ex) {
+                            JOptionPane.showMessageDialog(
+                                    null,
+                                    "Failed to open help link. Please visit "
+                                            + helpUrl
+                                            + " directly.",
+                                    "Cannot open URL",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
+                    }
+
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        updateText(true);
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        updateText(false);
+                    }
+
+                    public void updateText(boolean ul) {
+                        String link = ul ? "<u>" + helpText + "</u>" : helpText;
+                        helpButton.setText(
+                                "<html><span style=\"color: #000099;\">" + link + "</span></html>");
+                    }
+                });
+
+        status.add(
+                helpButton,
+                new GridBagConstraints(
+                        9,
+                        0,
+                        1,
+                        2,
+                        0.0f,
+                        0.0f,
+                        GridBagConstraints.LINE_START,
+                        GridBagConstraints.NONE,
+                        new Insets(0, 6, 0, 6),
+                        0,
+                        0));
 
         add(status, BorderLayout.SOUTH);
     }
