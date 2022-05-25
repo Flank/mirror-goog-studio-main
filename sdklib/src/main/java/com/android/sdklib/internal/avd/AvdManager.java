@@ -800,6 +800,9 @@ public class AvdManager {
             scanner.useDelimiter("\0");
 
             return OptionalLong.of(scanner.nextLong());
+        } catch (NoSuchFileException exception) {
+            mLog.info("%s not found for %s", file, avd.getName());
+            return OptionalLong.empty();
         } catch (IOException | NoSuchElementException exception) {
             mLog.error(exception, "avd = %s, file = %s", avd.getName(), file);
             return OptionalLong.empty();
