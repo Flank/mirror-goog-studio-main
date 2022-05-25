@@ -34,9 +34,7 @@ import org.jetbrains.uast.kotlin.internal.FirCliKotlinUastResolveProviderService
 import java.io.File
 import kotlin.concurrent.withLock
 
-/**
- * This class is FIR version of [UastEnvironment]
- */
+/** This class is FIR version of [UastEnvironment] */
 class FirUastEnvironment private constructor(
     // TODO: we plan to redesign Analysis API facade to not use KotlinCoreEnvironment (which is FE1.0 specific)
     private val kotlinCompilerEnv: KotlinCoreEnvironment,
@@ -63,9 +61,7 @@ class FirUastEnvironment private constructor(
         }
     }
 
-    /**
-     * In FIR UAST, even Kotlin files are analyzed lazily.
-     */
+    /** In FIR UAST, even Kotlin files are analyzed lazily. */
     override fun analyzeFiles(ktFiles: List<File>) {
         // TODO: addKtFilesFromSrcJars ?
     }

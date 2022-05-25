@@ -166,5 +166,4 @@ class MonochromeLauncherIconDetectorTest : AbstractCheckTest() {
         ).run()
             .expectClean()
     }
-
 }

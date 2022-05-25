@@ -238,5 +238,4 @@ class TileProviderDetectorTest : AbstractCheckTest() {
         """
         )
     }
-
 }

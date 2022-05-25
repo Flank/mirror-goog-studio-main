@@ -69,8 +69,8 @@ interface UastEnvironment {
     interface Configuration {
         companion object {
             /**
-             * Creates a new [Configuration] that specifies
-             * project structure, classpath, compiler flags, etc.
+             * Creates a new [Configuration] that specifies project
+             * structure, classpath, compiler flags, etc.
              */
             @JvmStatic @JvmOverloads
             fun create(enableKotlinScripting: Boolean = true): Configuration {
@@ -116,10 +116,11 @@ interface UastEnvironment {
 
     companion object {
         /**
-         * Creates a new [UastEnvironment] suitable for analyzing both
-         * Java and Kotlin code. You must still call [UastEnvironment.analyzeFiles]
-         * before doing anything with PSI/UAST. When finished using the
-         * environment, call [UastEnvironment.dispose].
+         * Creates a new [UastEnvironment] suitable for analyzing
+         * both Java and Kotlin code. You must still call
+         * [UastEnvironment.analyzeFiles] before doing anything
+         * with PSI/UAST. When finished using the environment, call
+         * [UastEnvironment.dispose].
          */
         @JvmStatic
         fun create(
@@ -153,7 +154,8 @@ interface UastEnvironment {
     }
 
     /**
-     * Analyzes the given files so that PSI/UAST resolve works correctly.
+     * Analyzes the given files so that PSI/UAST resolve works
+     * correctly.
      */
     fun analyzeFiles(ktFiles: List<File>)
 

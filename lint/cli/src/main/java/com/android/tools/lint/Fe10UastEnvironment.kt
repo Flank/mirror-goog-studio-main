@@ -58,9 +58,7 @@ import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
 import java.io.File
 import kotlin.concurrent.withLock
 
-/**
- * This class is FE1.0 version of [UastEnvironment].
- */
+/** This class is FE1.0 version of [UastEnvironment]. */
 class Fe10UastEnvironment private constructor(
     // Luckily, the Kotlin compiler already has the machinery for creating an IntelliJ
     // application environment (because Kotlin uses IntelliJ to parse Java). So most of

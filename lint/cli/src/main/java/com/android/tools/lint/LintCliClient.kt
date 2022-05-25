@@ -1398,8 +1398,8 @@ open class LintCliClient : LintClient {
     }
 
     /**
-     * Returns true if Kotlin scripting may be required based on the [driver]'s
-     * [LintDriver.scope] and the files in [allProjects].
+     * Returns true if Kotlin scripting may be required based on the
+     * [driver]'s [LintDriver.scope] and the files in [allProjects].
      */
     private fun mayNeedKotlinScripting(allProjects: Set<Project>): Boolean {
         if (::driver.isInitialized && !driver.scope.contains(Scope.GRADLE_FILE)) {

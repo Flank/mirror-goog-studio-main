@@ -197,8 +197,8 @@ class LintDriver(
     }
 
     /**
-     * The scope for the lint job. The scope may be narrowed and then restored
-     * during [runExtraPhases].
+     * The scope for the lint job. The scope may be narrowed and then
+     * restored during [runExtraPhases].
      */
     var scope: EnumSet<Scope> = request.getScope() ?: Scope.infer(projectRoots)
 

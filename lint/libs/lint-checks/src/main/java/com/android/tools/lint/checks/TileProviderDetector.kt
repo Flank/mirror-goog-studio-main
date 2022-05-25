@@ -205,6 +205,4 @@ class TileProviderDetector : Detector(), XmlScanner, BinaryResourceScanner {
             )
         }
     }
-
-
 }

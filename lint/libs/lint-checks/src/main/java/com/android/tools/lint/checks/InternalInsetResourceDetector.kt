@@ -29,8 +29,8 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UExpression
 
 /**
- * Detector looking for usages of Resources.getIdentifier(insetName, "dimen", "android") for
- * platform-internal insetName resources.
+ * Detector looking for usages of Resources.getIdentifier(insetName,
+ * "dimen", "android") for platform-internal insetName resources.
  */
 class InternalInsetResourceDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> {
