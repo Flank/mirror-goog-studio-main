@@ -5,6 +5,7 @@ import android.com.java.profilertester.util.Lookup3;
 import android.os.AsyncTask;
 import android.os.Debug;
 import android.os.Trace;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.io.File;
@@ -43,7 +44,8 @@ public class CpuTaskCategory extends TaskCategory {
                         new MaximumPowerTask(new SingleThreadMemoryComputation(RUNNING_TIME_S)),
                         new NativeCodeTask(),
                         new CodeWithTraceMarkersTask(),
-                        new AutomaticRecordingTask());
+                        new AutomaticRecordingTask(),
+                        new ThreadLaunchingTask());
     }
 
     private static ThreadPoolExecutor getDefaultThreadPoolExecutor(int corePoolSize) {
@@ -452,5 +454,28 @@ public class CpuTaskCategory extends TaskCategory {
         }
     }
 
+    public class ThreadLaunchingTask extends Task {
+
+        @Nullable
+        @Override
+        protected String execute() throws Exception {
+            for (int i = 0; i < 10_000; ++i) {
+                final int n = i;
+                new Thread() {
+                    @Override
+                    public void run() {
+                        Log.d("ThreadLaunchingTask", "Running thread #" + n);
+                    }
+                }.start();
+            }
+            return "Finished";
+        }
+
+        @NonNull
+        @Override
+        protected String getTaskDescription() {
+            return "Thread Launching Task";
+        }
+    }
 }
 
