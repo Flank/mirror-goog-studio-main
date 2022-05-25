@@ -102,6 +102,11 @@ class AdbInstallerChannel implements AutoCloseable {
 
             int read = channel.read(buffer);
             if (read == 0 || System.currentTimeMillis() >= deadline) {
+                // If we timeout, the Installer could still write in the socket. These bytes would
+                // be stored in the OS buffer and returned on the next request, effectively
+                // desyncing. We have no choice but to the close the connection at this point.
+                close();
+
                 // Select timed out or deadline expired.
                 String template = "InstallerChannel.select: Timeout on read after %dms";
                 String msg = String.format(Locale.US, template, timeOutMs);
@@ -245,5 +250,9 @@ class AdbInstallerChannel implements AutoCloseable {
             throw new IllegalStateException(e);
         }
         return ByteBuffer.wrap(buffer);
+    }
+
+    boolean isClosed() {
+        return !channel.isOpen();
     }
 }

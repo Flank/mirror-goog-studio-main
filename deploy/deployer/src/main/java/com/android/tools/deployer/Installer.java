@@ -264,6 +264,31 @@ public abstract class Installer {
         return response;
     }
 
+    /**
+     * Request the Installer to remain inactive for a the timeout duration. This is only used for
+     * testing desync detection system.
+     *
+     * @param timeout Duration to wait before returning.
+     * @return Nothing very interesting
+     * @throws IOException on Host timeout
+     */
+    public Deploy.TimeoutResponse timeout(long timeoutMs) throws IOException {
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("timeout");
+        Deploy.TimeoutRequest.Builder timeoutBuilder = Deploy.TimeoutRequest.newBuilder();
+        timeoutBuilder.setTimeoutMs(timeoutMs);
+        reqBuilder.setTimeoutRequest(timeoutBuilder.build());
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_TIMEOUT);
+        if (!resp.hasTimeoutResponse()) {
+            onAsymetry(req, resp);
+            asymetryThrow(req, resp);
+        }
+
+        Deploy.TimeoutResponse response = resp.getTimeoutResponse();
+        return response;
+    }
+
     public String getVersion() {
         return Version.hash();
     }

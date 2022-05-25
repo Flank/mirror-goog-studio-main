@@ -159,6 +159,7 @@ cc_library(
         "server/app_servers.cc",
         "server/install_client.cc",
         "swap.cc",
+        "timeout.cc",
         "workspace.cc",
     ],
     hdrs = [
@@ -188,6 +189,7 @@ cc_library(
         "server/app_servers.h",
         "server/install_client.h",
         "swap.h",
+        "timeout.h",
         "workspace.h",
     ],
     copts = ANDROID_COPTS + [

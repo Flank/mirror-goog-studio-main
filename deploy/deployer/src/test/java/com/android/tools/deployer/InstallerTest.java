@@ -17,7 +17,10 @@ package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -209,5 +212,25 @@ public class InstallerTest {
         respBuilder.setLeResponse(Deploy.LiveEditResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.liveEdit(Deploy.LiveEditRequest.newBuilder().build());
+    }
+
+    @Test
+    public void testDesync() throws Exception {
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+        installersPath = Path.of(installersPath + "/x86/installer");
+        try (SocketInstaller installer = new SocketInstaller(installersPath)) {
+            // Send a request so the Host will timeout before the device.
+            try {
+                long oneSecond = TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS);
+                installer.timeout(Timeouts.CMD_TIMEOUT + oneSecond);
+            } catch (IOException e) {
+            }
+
+            // If our detection system did not work, we are desynced.
+            // There is an InstallerResponse in the socket buffer, containing a TimeoutResponse.
+            // The next request will throw an IOException if we did not close the channel.
+            List packagesToDump = new ArrayList();
+            installer.dump(packagesToDump);
+        }
     }
 }

@@ -427,6 +427,7 @@ message InstallerRequest {
     InstallCoroutineAgentRequest install_coroutine_agent_request = 10;
     LiveEditRequest le_request = 11;
     NetworkTestRequest network_test_request = 12;
+    TimeoutRequest timeout_request = 13;
   }
 }
 
@@ -456,9 +457,10 @@ message InstallerResponse {
     InstallCoroutineAgentResponse install_coroutine_agent_response = 10;
     LiveEditResponse le_response = 11;
     NetworkTestResponse network_test_response = 12;
+    TimeoutResponse timeout_response = 13;
   }
 
-  string error_message = 13;
+  string error_message = 14;
 }
 
 message Event {
@@ -747,4 +749,17 @@ message NetworkTestResponse {
   uint64 current_time_ns = 2;
   // used to remove as much non-networking overhead as possible.
   uint64 processing_duration_ns = 3;
+}
+
+message TimeoutRequest {
+  uint64 timeout_ms = 1;
+}
+
+message TimeoutResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Status status = 1;
 }
