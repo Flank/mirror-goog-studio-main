@@ -42,7 +42,7 @@ class MonochromeLauncherIconDetector : Detector(), XmlScanner {
 
         @JvmField
         val ISSUE = Issue.create(
-            id = "MonochromeLauncherIconIssue",
+            id = "MonochromeLauncherIcon",
             briefDescription = "Monochrome icon is not defined",
             explanation = """
                 If `android:roundIcon` and `android:icon` are both in your manifest, \

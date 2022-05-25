@@ -51,10 +51,10 @@ class MonochromeLauncherIconDetectorTest : AbstractCheckTest() {
         ).run()
             .expect(
                 """
-                res/drawable-ldpi/ic_icon.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIconIssue]
+                res/drawable-ldpi/ic_icon.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
                                     <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
                                     ^
-                res/drawable-ldpi/ic_round_icon.xml:2: Warning: The application adaptive roundIcon is missing a monochrome tag [MonochromeLauncherIconIssue]
+                res/drawable-ldpi/ic_round_icon.xml:2: Warning: The application adaptive roundIcon is missing a monochrome tag [MonochromeLauncherIcon]
                                     <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
                                     ^
                 0 errors, 2 warnings
@@ -132,7 +132,7 @@ class MonochromeLauncherIconDetectorTest : AbstractCheckTest() {
         ).run()
             .expect(
                 """
-                res/drawable-ldpi/ic_icon.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIconIssue]
+                res/drawable-ldpi/ic_icon.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
                                     <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
                                     ^
                 0 errors, 1 warnings
