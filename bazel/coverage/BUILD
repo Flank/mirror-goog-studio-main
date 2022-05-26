@@ -748,10 +748,11 @@ coverage_report(
     ],
 )
 
-# Coverage report for Embedded Emulator.
+# Coverage report for Embedded Emulator and device mirroring.
 coverage_report(
     name = "emulator",
     srcpath_include = [
+        "tools/adt/idea/emulator/src/com/android/tools/idea/device",
         "tools/adt/idea/emulator/src/com/android/tools/idea/emulator",
     ],
     tests = [
