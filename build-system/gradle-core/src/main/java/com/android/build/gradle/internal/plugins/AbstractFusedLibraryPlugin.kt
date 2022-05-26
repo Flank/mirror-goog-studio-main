@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -69,15 +70,11 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
     inline fun <reified TASK_SCOPE: FusedLibraryVariantScope> createTasks(
         project: Project,
         variantScope: TASK_SCOPE,
-        tasksCreationActions: List<Class<out TaskCreationAction<out Task>>>,
+        tasksCreationActions: List<TaskCreationAction<out DefaultTask>>,
     ) {
         val taskProviders = TaskFactoryImpl(project.tasks).let { taskFactory ->
             tasksCreationActions.map { creationAction ->
-                createCreationAction(
-                    taskFactory,
-                    creationAction,
-                    TASK_SCOPE::class.java,
-                )
+                taskFactory.register(creationAction)
             }
         }
 
@@ -87,26 +84,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
                 assembleTask.dependsOn(variantScope.artifacts.get(artifactTypeForPublication))
             } ?: taskProviders.forEach {  assembleTask.dependsOn(it) }
         }
-    }
-
-    fun createCreationAction(
-        taskFactory: TaskFactoryImpl,
-        creationAction: Class<out TaskCreationAction<out Task>>,
-        creationActionConstructorParameterType: Class<*>,
-    ): TaskProvider<out Task> {
-
-        var parameterType = creationActionConstructorParameterType
-        while (parameterType != Object::class.java) {
-            try {
-                creationAction.getConstructor(parameterType).also {
-                    return taskFactory.register(it.newInstance(variantScope))
-                }
-            } catch(e: NoSuchMethodException) {
-                // it's ok, let's try with the parent class until we reach object.
-            }
-            parameterType = parameterType.superclass
-        }
-        throw NoSuchMethodException("Cannot find constructor for $creationAction with a parameter of type $creationActionConstructorParameterType")
     }
 
     /**

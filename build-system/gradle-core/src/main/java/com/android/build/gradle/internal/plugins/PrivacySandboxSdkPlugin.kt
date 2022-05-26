@@ -81,16 +81,16 @@ class PrivacySandboxSdkPlugin @Inject constructor(
 
     override fun createTasks(project: Project) {
         createTasks(
-            project,
-            variantScope,
-            listOf(
-                FusedLibraryClassesRewriteTask.CreateAction::class.java,
-                PrivacySandboxSdkManifestGeneratorTask.CreationAction::class.java,
-                PrivacySandboxSdkManifestMergerTask.CreationAction::class.java,
-                FusedLibraryMergeResourcesTask.CreationAction::class.java,
-                FusedLibraryMergeClasses.CreationAction::class.java,
-                FusedLibraryBundleClasses.CreationAction::class.java,
-            ),
+                project,
+                variantScope,
+                listOf(
+                        FusedLibraryBundleClasses.CreationAction(variantScope),
+                        FusedLibraryClassesRewriteTask.CreateAction(variantScope),
+                        FusedLibraryMergeClasses.CreationAction(variantScope),
+                        FusedLibraryMergeResourcesTask.CreationAction(variantScope),
+                        PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
+                        PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),
+                ),
         )
     }
 

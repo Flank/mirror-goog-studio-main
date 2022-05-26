@@ -89,12 +89,12 @@ class FusedLibraryPlugin @Inject constructor(
                 project,
                 variantScope,
                 listOf(
-                        FusedLibraryClassesRewriteTask.CreateAction::class.java,
-                        FusedLibraryManifestMergerTask.CreationAction::class.java,
-                        FusedLibraryMergeResourcesTask.CreationAction::class.java,
-                        FusedLibraryMergeClasses.CreationAction::class.java,
-                        FusedLibraryBundleClasses.CreationAction::class.java,
-                        FusedLibraryBundleAar.CreationAction::class.java,
+                        FusedLibraryClassesRewriteTask.CreateAction(variantScope),
+                        FusedLibraryManifestMergerTask.CreationAction(variantScope),
+                        FusedLibraryMergeResourcesTask.CreationAction(variantScope),
+                        FusedLibraryMergeClasses.CreationAction(variantScope),
+                        FusedLibraryBundleClasses.CreationAction(variantScope),
+                        FusedLibraryBundleAar.CreationAction(variantScope),
                 ),
         )
 
