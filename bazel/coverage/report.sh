@@ -24,11 +24,11 @@ fi
 echo "Delete old baseline coverage file lists"
 find bazel-bin/ -name '*.coverage.baseline*' | xargs rm -fv || exit $?
 echo "Generate baseline coverage file lists"
-./tools/base/bazel/bazel build --config=rcache --build_tag_filters="coverage-sources" -- //tools/... || exit $?
+./tools/base/bazel/bazel build --build_tag_filters="coverage-sources" -- //tools/... || exit $?
 echo "Run tests to generate coverage data"
-./tools/base/bazel/bazel test --define agent_coverage=true --config=dynamic -- "@cov//:${report_name}.suite" @baseline//... || exit $?
+./tools/base/bazel/bazel test --define agent_coverage=true -- "@cov//:${report_name}.suite" @baseline//... || exit $?
 echo "Processing raw coverage data"
-./tools/base/bazel/bazel build --config=rcache -- "@cov//:${report_name}.lcov.notests" || exit $?
+./tools/base/bazel/bazel build -- "@cov//:${report_name}.lcov.notests" || exit $?
 echo "Generating HTML report in ${html_dir}"
 genhtml -o ${html_dir} -p $(pwd) --no-function-coverage "bazel-bin/external/cov/${report_name}/lcov.notests" || exit $?
 echo "Done"
