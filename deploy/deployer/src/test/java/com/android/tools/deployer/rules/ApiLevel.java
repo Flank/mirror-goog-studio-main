@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer.rules;
 
+import com.android.annotations.Nullable;
 import com.android.tools.deployer.devices.DeviceId;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -33,7 +34,6 @@ import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.Suite;
 import org.junit.runners.model.FrameworkField;
-import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
@@ -77,16 +77,23 @@ public class ApiLevel extends Suite {
             throws InitializationError, NoTestsRemainException {
         List<Runner> runners = new ArrayList<>();
         for (DeviceId deviceId : DeviceId.values()) {
-            runners.add(createFilteredRunner(deviceId));
+            Runner runner = createFilteredRunner(deviceId);
+            if (runner != null) {
+                runners.add(runner);
+            }
         }
         return runners;
     }
 
-    private Runner createFilteredRunner(DeviceId deviceId)
-            throws InitializationError, NoTestsRemainException {
-        ApiLevelRunner runner = new ApiLevelRunner(deviceId, getTestClass().getJavaClass());
-        runner.filter(new ApiLevelFilter(deviceId));
-        return runner;
+    @Nullable
+    private Runner createFilteredRunner(DeviceId deviceId) throws InitializationError {
+        try {
+            ApiLevelRunner runner = new ApiLevelRunner(deviceId, getTestClass().getJavaClass());
+            runner.filter(new ApiLevelFilter(deviceId));
+            return runner;
+        } catch (NoTestsRemainException e) {
+            return null;
+        }
     }
 
     /** Test runner that initializes all test class fields annotated with {@link Init}. */
