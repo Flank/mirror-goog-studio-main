@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.privaysandboxsdk
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 
@@ -33,4 +35,13 @@ PrivacySandboxSdkInternalArtifactType<T : FileSystemLocation>(
 
     // final .asb file ready to be uploaded to Play Store
     object ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+    object LINKED_MERGE_RES_FOR_ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
+
+    // Directory containing merged resources from all libraries and their dependencies.
+    object MERGED_RES: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
+
+    // Directory containing blame log of fused library manifest merging
+    object MERGED_RES_BLAME_LOG: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
+
+    object INCREMENTAL_MERGED_RES: PrivacySandboxSdkInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
 }

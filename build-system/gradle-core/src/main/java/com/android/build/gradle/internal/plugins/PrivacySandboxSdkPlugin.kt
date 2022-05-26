@@ -20,12 +20,17 @@ import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
+import com.android.build.gradle.internal.res.PrivacySandboxSdkLinkAndroidResourcesTask
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
+import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkManifestGeneratorTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkManifestMergerTask
+import com.android.build.gradle.tasks.PrivacySandboxSdkMergeResourcesTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
@@ -60,6 +65,13 @@ class PrivacySandboxSdkPlugin @Inject constructor(
         extension
     }
 
+
+    override fun apply(project: Project) {
+        super.apply(project)
+        Aapt2ThreadPoolBuildService.RegistrationAction(project, projectServices.projectOptions).execute()
+        Aapt2DaemonBuildService.RegistrationAction(project, projectServices.projectOptions).execute()
+    }
+
     private fun instantiateExtension(project: Project): PrivacySandboxSdkExtension {
 
         val sdkLibraryExtensionImpl= dslServices.newDecoratedInstance(
@@ -85,12 +97,13 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                 variantScope,
                 listOf(
                         FusedLibraryBundleClasses.CreationAction(variantScope),
-                        FusedLibraryClassesRewriteTask.CreateAction(variantScope),
+                        FusedLibraryClassesRewriteTask.CreationAction(variantScope),
                         FusedLibraryMergeClasses.CreationAction(variantScope),
-                        FusedLibraryMergeResourcesTask.CreationAction(variantScope),
+                        PrivacySandboxSdkMergeResourcesTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),
-                ),
+                        PrivacySandboxSdkLinkAndroidResourcesTask.CreationAction(variantScope)
+                ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
     }
 

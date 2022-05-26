@@ -43,6 +43,7 @@ apply plugin: 'com.android.privacy-sandbox-sdk'
 android {
     namespace 'com.example.sdk'
     minSdk 13
+    compileSdk ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()}
 }
             """
         )

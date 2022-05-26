@@ -147,6 +147,7 @@ interface SubProjectBuilder {
 interface AndroidProjectBuilder {
     var packageName: String
     var applicationId: String?
+    var buildToolsRevision: String?
     var namespace: String?
     var compileSdk: Int?
     var minSdk: Int?

@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSI
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.builder.core.ToolsRevisionUtils
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
@@ -55,7 +56,7 @@ class PrivacySandboxSdkTest(
         )
     }
     private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2")
-    private val fusedLibrary = MinimalSubProject.privacySandboxSdk("com.example.sdkLib1").also {
+    private val privacySandboxSdk = MinimalSubProject.privacySandboxSdk("com.example.sdkLib1").also {
         if (includePublishing) {
             it.appendToBuild("""
                 apply plugin: 'maven-publish'
@@ -69,6 +70,7 @@ class PrivacySandboxSdkTest(
         it.appendToBuild(
             """
                 android {
+                    compileSdk = ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()}
                     minSdk = $DEFAULT_MIN_SDK_VERSION
                 }
                 """.trimIndent()
@@ -82,7 +84,7 @@ class PrivacySandboxSdkTest(
             MultiModuleTestProject.builder()
                 .subproject("androidLib1", androidLib1)
                 .subproject("androidLib2", androidLib2)
-                .subproject("sdkLib1", fusedLibrary)
+                .subproject("sdkLib1", privacySandboxSdk)
                 .build()
         ).create()
 

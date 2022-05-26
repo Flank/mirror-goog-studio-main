@@ -16,11 +16,17 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.build.api.dsl.FusedLibraryExtension
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
+import com.android.build.gradle.internal.dsl.decorator.annotation.WithLazyInitialization
 import com.android.build.gradle.internal.services.DslServices
+import com.android.builder.core.ToolsRevisionUtils
 import javax.inject.Inject
 
 abstract class PrivacySandboxSdkExtensionImpl @Inject constructor(
     dslServices: DslServices,
 ): FusedLibraryExtensionImpl(dslServices), PrivacySandboxSdkExtension {
+
+    abstract override var compileSdk: Int?
+    override var buildToolsVersion: String = "${ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION}"
 }

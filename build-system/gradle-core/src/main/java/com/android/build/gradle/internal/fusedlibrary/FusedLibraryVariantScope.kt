@@ -18,28 +18,17 @@ package com.android.build.gradle.internal.fusedlibrary
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.FusedLibraryExtension
-import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.specs.Spec
 
-open class FusedLibraryVariantScope(
-    project: Project,
-    extensionProvider: () -> FusedLibraryExtension
-) {
-    val layout: ProjectLayout = project.layout
-    val artifacts= ArtifactsImpl(project, "single")
-    val incomingConfigurations = FusedLibraryConfigurations()
-    val outgoingConfigurations = FusedLibraryConfigurations()
-    val dependencies = FusedLibraryDependencies(incomingConfigurations)
-
-    val extension: FusedLibraryExtension by lazy {
-        extensionProvider.invoke()
-    }
-
-    open val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
-        println("In mergeSpec -> $componentIdentifier, type is ${componentIdentifier.javaClass}, merge = ${componentIdentifier is ProjectComponentIdentifier}")
-        componentIdentifier is ProjectComponentIdentifier
-    }
+interface FusedLibraryVariantScope {
+    val layout: ProjectLayout
+    val artifacts: ArtifactsImpl
+    val incomingConfigurations: FusedLibraryConfigurations
+    val outgoingConfigurations: FusedLibraryConfigurations
+    val dependencies: FusedLibraryDependencies
+    val extension: FusedLibraryExtension
+    val mergeSpec: Spec<ComponentIdentifier>
 }

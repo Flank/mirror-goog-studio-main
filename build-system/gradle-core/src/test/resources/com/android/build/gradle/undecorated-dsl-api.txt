@@ -742,6 +742,8 @@ com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setHeaderOnly: void
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setHeaders: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setLibraryName: void (java.lang.String)
 com.android.build.gradle.internal.dsl.PrefabPackagingOptions.setName: void (java.lang.String)
+com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl.getBuildToolsVersion: java.lang.String ()
+com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl.setBuildToolsVersion: void (java.lang.String)
 com.android.build.gradle.internal.dsl.ProductFlavor.getDimension: java.lang.String ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getMatchingFallbacks: java.util.List<java.lang.String> ()
 com.android.build.gradle.internal.dsl.ProductFlavor.getSigningConfig: com.android.build.api.dsl.ApkSigningConfig ()

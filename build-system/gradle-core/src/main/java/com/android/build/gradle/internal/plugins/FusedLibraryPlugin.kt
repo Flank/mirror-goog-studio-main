@@ -20,7 +20,7 @@ import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.FusedLibraryExtension
 import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
@@ -40,12 +40,12 @@ import javax.inject.Inject
 class FusedLibraryPlugin @Inject constructor(
     private val softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
-): AbstractFusedLibraryPlugin<FusedLibraryVariantScope>(softwareComponentFactory, listenerRegistry) {
+): AbstractFusedLibraryPlugin<FusedLibraryVariantScopeImpl>(softwareComponentFactory, listenerRegistry) {
 
     // so far, there is only one variant.
     override val variantScope by lazy {
         withProject("variantScope") { project ->
-            FusedLibraryVariantScope(
+            FusedLibraryVariantScopeImpl(
                 project
             ) { extension }
         }
@@ -89,20 +89,14 @@ class FusedLibraryPlugin @Inject constructor(
                 project,
                 variantScope,
                 listOf(
-                        FusedLibraryClassesRewriteTask.CreateAction(variantScope),
+                        FusedLibraryClassesRewriteTask.CreationAction(variantScope),
                         FusedLibraryManifestMergerTask.CreationAction(variantScope),
                         FusedLibraryMergeResourcesTask.CreationAction(variantScope),
                         FusedLibraryMergeClasses.CreationAction(variantScope),
                         FusedLibraryBundleClasses.CreationAction(variantScope),
                         FusedLibraryBundleAar.CreationAction(variantScope),
-                ),
+                ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
-
-        TaskFactoryImpl(project.tasks).let { taskFactory ->
-            FusedLibraryMergeArtifactTask.getCreationActions(variantScope).forEach {
-                taskFactory.register(it)
-            }
-        }
     }
 
     override fun getAnalyticsPluginType(): GradleBuildProject.PluginType  =

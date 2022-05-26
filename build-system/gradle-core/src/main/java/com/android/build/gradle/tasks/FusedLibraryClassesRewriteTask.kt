@@ -22,12 +22,10 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.NamespaceRewriter
 import com.android.build.gradle.internal.services.SymbolTableBuildService
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
 import org.gradle.api.attributes.Usage
@@ -44,7 +42,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.configurationcache.extensions.serviceOf
 import java.io.File
 
 /*
@@ -123,7 +120,7 @@ abstract class FusedLibraryClassesRewriteTask : NonIncrementalTask() {
             .addAll(dependencySymbolTables.flatMap { it.symbols.values() }.toSet()).build()
     }
 
-    class CreateAction(val creationConfig: FusedLibraryVariantScope) :
+    class CreationAction(val creationConfig: FusedLibraryVariantScope) :
         TaskCreationAction<FusedLibraryClassesRewriteTask>() {
 
         override val name: String

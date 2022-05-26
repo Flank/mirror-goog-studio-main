@@ -16,28 +16,19 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.res.Aapt2FromMaven
+import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.rendering.api.ResourceNamespace
-import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService
-import com.android.ide.common.resources.MergedResourceWriter
-import com.android.ide.common.resources.MergedResourceWriterRequest
-import com.android.ide.common.resources.ResourceMerger
-import com.android.ide.common.resources.ResourceSet
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.utils.FileUtils
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -46,12 +37,12 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
  * Manages Android resource merging for libraries dependencies of the fused library.
@@ -61,7 +52,7 @@ import java.io.File
  * handled by the AGP MergeResources task.
  */
 @CacheableTask
-abstract class FusedLibraryMergeResourcesTask : NonIncrementalGlobalTask() {
+abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     abstract val mergedResources: DirectoryProperty
@@ -83,6 +74,9 @@ abstract class FusedLibraryMergeResourcesTask : NonIncrementalGlobalTask() {
     @get:Internal
     abstract val analytics: Property<AnalyticsService>
 
+    @get:Nested
+    abstract val aapt2: Aapt2Input
+
     @get:Internal
     val aaptWorkerFacade: WorkerExecutorFacade
         get() = Workers.withGradleWorkers(
@@ -98,7 +92,13 @@ abstract class FusedLibraryMergeResourcesTask : NonIncrementalGlobalTask() {
 
     override fun doTaskAction() {
         mergeResourcesWithCompilationService(
-                resCompilerService = CopyToOutputDirectoryResourceCompilationService,
+                resCompilerService = WorkerExecutorResourceCompilationService(
+                        projectPath,
+                        path,
+                        workerExecutor,
+                        analyticsService,
+                        aapt2
+                ),
                 incrementalMergedResources = incrementalMergedResources.get().asFile,
                 mergedResources = mergedResources.get().asFile,
                 resourceSets = resourceSets.files.toList(),
@@ -109,31 +109,46 @@ abstract class FusedLibraryMergeResourcesTask : NonIncrementalGlobalTask() {
     }
 
     class CreationAction(val creationConfig: FusedLibraryVariantScope) :
-            TaskCreationAction<FusedLibraryMergeResourcesTask>() {
+            TaskCreationAction<PrivacySandboxSdkMergeResourcesTask>() {
 
         override val name: String
-            get() = "mergeResources"
-        override val type: Class<FusedLibraryMergeResourcesTask>
-            get() = FusedLibraryMergeResourcesTask::class.java
+            get() = "mergeAndCompileResources"
+        override val type: Class<PrivacySandboxSdkMergeResourcesTask>
+            get() = PrivacySandboxSdkMergeResourcesTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<FusedLibraryMergeResourcesTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<PrivacySandboxSdkMergeResourcesTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
-                    FusedLibraryMergeResourcesTask::mergedResources
-            ).on(FusedLibraryInternalArtifactType.MERGED_RES)
+                    PrivacySandboxSdkMergeResourcesTask::mergedResources
+            ).on(PrivacySandboxSdkInternalArtifactType.MERGED_RES)
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
-                    FusedLibraryMergeResourcesTask::incrementalMergedResources
-            ).on(FusedLibraryInternalArtifactType.INCREMENTAL_MERGED_RES)
+                    PrivacySandboxSdkMergeResourcesTask::incrementalMergedResources
+            ).on(PrivacySandboxSdkInternalArtifactType.INCREMENTAL_MERGED_RES)
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
-                    FusedLibraryMergeResourcesTask::blameLogOutputFolder
-            ).on(FusedLibraryInternalArtifactType.MERGED_RES_BLAME_LOG)
+                    PrivacySandboxSdkMergeResourcesTask::blameLogOutputFolder
+            ).on(PrivacySandboxSdkInternalArtifactType.MERGED_RES_BLAME_LOG)
         }
 
-        override fun configure(task: FusedLibraryMergeResourcesTask) {
-
+        override fun configure(task: PrivacySandboxSdkMergeResourcesTask) {
+            task.aapt2.let { aapt2Input ->
+                aapt2Input.buildService.setDisallowChanges(
+                        getBuildService(task.project.gradle.sharedServices)
+                )
+                aapt2Input.threadPoolBuildService.setDisallowChanges(
+                        getBuildService(task.project.gradle.sharedServices)
+                )
+                val aapt2Bin =
+                        Aapt2FromMaven.create(task.project) { System.getenv(it.propertyName) }
+                aapt2Input.binaryDirectory.setFrom(aapt2Bin.aapt2Directory)
+                aapt2Input.version.setDisallowChanges(aapt2Bin.version)
+                aapt2Input.maxWorkerCount.setDisallowChanges(
+                        task.project.gradle.startParameter.maxWorkerCount
+                )
+                aapt2Input.maxAapt2Daemons.setDisallowChanges(8)
+            }
             task.projectFilepath.set(creationConfig.layout.projectDirectory.asFile.absolutePath)
             task.analyticsService.setDisallowChanges(
                     getBuildService(task.project.gradle.sharedServices)
