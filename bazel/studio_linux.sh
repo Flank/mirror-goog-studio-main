@@ -24,7 +24,7 @@ fi
 readonly SCRIPT_DIR="$(dirname "$0")"
 readonly SCRIPT_NAME="$(basename "$0")"
 
-readonly CONFIG_OPTIONS="--config=ci --config=datasize_aspect"
+readonly CONFIG_OPTIONS="--config=ci"
 
 ####################################
 # Copies bazel artifacts to an output directory named 'artifacts'.
