@@ -241,7 +241,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
     public static Boolean getExplicitExported(@NonNull Element element) {
         // Used to check whether an activity, service or broadcast receiver is exported.
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
-        if (exportValue != null && !exportValue.isEmpty()) {
+        if (!exportValue.isEmpty()) {
             return Boolean.parseBoolean(exportValue);
         } else {
             return null;
@@ -273,13 +273,13 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         if (TODO.equals(permission)) { // temporary quickfix state: don't accept as solved
             return true;
         }
-        if (permission == null || permission.isEmpty()) {
+        if (permission.isEmpty()) {
             Node parent = element.getParentNode();
             if (parent.getNodeType() == Node.ELEMENT_NODE
                     && parent.getNodeName().equals(TAG_APPLICATION)) {
                 Element application = (Element) parent;
                 permission = application.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-                return permission == null || permission.isEmpty();
+                return permission.isEmpty();
             }
         }
 
@@ -420,7 +420,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         String exportValue = element.getAttributeNS(ANDROID_URI, ATTR_EXPORTED);
         // Content providers are exported by default
         boolean exported = true;
-        if (exportValue != null && !exportValue.isEmpty()) {
+        if (!exportValue.isEmpty()) {
             exported = Boolean.parseBoolean(exportValue);
         }
 
@@ -429,11 +429,11 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
             // of the permissions. We'll accept the permission, readPermission, or writePermission
             // attributes on the provider element, or a path-permission element.
             String permission = element.getAttributeNS(ANDROID_URI, ATTR_READ_PERMISSION);
-            if (permission == null || permission.isEmpty()) {
+            if (permission.isEmpty()) {
                 permission = element.getAttributeNS(ANDROID_URI, ATTR_WRITE_PERMISSION);
-                if (permission == null || permission.isEmpty()) {
+                if (permission.isEmpty()) {
                     permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-                    if (permission == null || permission.isEmpty()) {
+                    if (permission.isEmpty()) {
                         // No permission attributes? Check for path-permission.
 
                         // TODO: Add a Lint check to ensure the path-permission is good, similar to
@@ -445,6 +445,12 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
                                 hasPermission = true;
                                 break;
                             }
+                        }
+
+                        Node parent = element.getParentNode();
+                        if (parent != null && !parent.getNodeName().equals(TAG_APPLICATION)) {
+                            // Ignore <provider> in queries and other non-application contexts
+                            return;
                         }
 
                         if (SliceDetector.Companion.isSliceProvider(element)) {

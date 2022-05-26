@@ -224,6 +224,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      * @deprecated Use the new lint testing infrastructure instead; the entry point is {@link
      *     #lint()}
      */
+    @Deprecated
     protected String checkLint(List<File> files) throws Exception {
         TestLintClient lintClient = createClient();
         return checkLint(lintClient, files);
@@ -548,6 +549,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
      *
      * @deprecated Use the version with a checksum instead
      */
+    @Deprecated
     public static CompiledSourceFile bytecode(
             @NonNull String into, @NonNull TestFile source, @NonNull String... encoded) {
         return TestFiles.bytecode(into, source, encoded);
