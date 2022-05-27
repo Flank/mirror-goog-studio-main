@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -373,7 +374,7 @@ public class AdbInstaller implements Installer {
             throws TimeoutException {
         try {
             channel.write(request, timeOutMs);
-        } catch (IOException e) {
+        } catch (IOException | ClosedSelectorException e) {
             // If the connection has been broken an IOException 'broken pipe' will be received here.
             return false;
         }
