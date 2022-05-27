@@ -31,7 +31,8 @@ class PackageManager : public BashCommandRunner {
   bool GetAppBaseFolder(const std::string &package_name, std::string *path,
                         std::string *error_string) const;
 
-  // Return app data folder absolute path (e.g: /data/data/com.google.calendar/)
+  // Return app data folder absolute path (e.g:
+  // /data/user/0/com.google.calendar/)
   bool GetAppDataPath(const std::string &package_name, const std::string &user,
                       std::string *path, std::string *error_string) const;
 };

@@ -39,8 +39,8 @@ bool BashCommandRunner::RunAs(const string &parameters,
     // Since Android Pie (API 28), JVMTI agent can be attached to non-debuggable
     // apps. Therefore, we use "su root" on non-user-build devices (such as
     // userdebug build) to support non-debuggable apps.
-    oss << kSuExecutable << " root sh -c 'cd /data/data/" << package_name
-        << " && ";
+    oss << kSuExecutable << " root sh -c 'cd /data/user/" << user << "/"
+        << package_name << " && ";
   } else {
     oss << kRunAsExecutable << " " << package_name << " " << kRunAsUserFlag
         << " "
