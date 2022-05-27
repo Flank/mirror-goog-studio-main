@@ -100,14 +100,8 @@ public class AdbInstaller extends Installer {
         }
     }
 
-    protected Deploy.InstallerResponse sendInstallerRequest(
-            Deploy.InstallerRequest request, long timeOutMs) throws IOException {
-        Trace.begin("./installer " + request.getCommandName());
-        long start = System.nanoTime();
-        Deploy.InstallerResponse response = sendInstallerRequest(request, OnFail.RETRY, timeOutMs);
-        logEvents(response.getEventsList());
-        long end = System.nanoTime();
-
+    // Merge traces from the device with the local traces.
+    private void traceEvents(Deploy.InstallerResponse response, long start, long end) {
         long maxNs = Long.MIN_VALUE;
         long minNs = Long.MAX_VALUE;
         for (Deploy.Event event : response.getEventsList()) {
@@ -148,8 +142,19 @@ public class AdbInstaller extends Installer {
                     break;
             }
         }
-        Trace.end();
-        return response;
+    }
+
+    protected Deploy.InstallerResponse sendInstallerRequest(
+            Deploy.InstallerRequest request, long timeOutMs) throws IOException {
+        try (Trace ignore = Trace.begin("./installer " + request.getCommandName())) {
+            long start = System.nanoTime();
+            Deploy.InstallerResponse response =
+                    sendInstallerRequest(request, OnFail.RETRY, timeOutMs);
+            long end = System.nanoTime();
+            logEvents(response.getEventsList());
+            traceEvents(response, start, end);
+            return response;
+        }
     }
 
     // Invoke command on device. The command must be known by installer android executable.
