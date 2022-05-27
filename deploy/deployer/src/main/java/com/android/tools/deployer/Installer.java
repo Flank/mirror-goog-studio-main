@@ -22,8 +22,14 @@ import com.android.utils.NullLogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Installer {
+
+    // The Installer protocol must return an InstallerResponse tagged with the same InstallerRequest
+    // id.
+    public static final long FIRST_ID = 1000;
+    private AtomicLong id = new AtomicLong(FIRST_ID);
 
     protected final ILogger logger;
 
@@ -42,7 +48,7 @@ public abstract class Installer {
         this.logger = logger;
     }
 
-    private void asymetryThrow(Deploy.InstallerRequest req, Deploy.InstallerResponse resp)
+    private void errorAsymetry(Deploy.InstallerRequest req, Deploy.InstallerResponse resp)
             throws IOException {
         onAsymetry(req, resp);
         String msg =
@@ -51,6 +57,14 @@ public abstract class Installer {
                         "Unexpected response '%s' for request '%s'",
                         resp.getExtraCase().name(),
                         req.getRequestCase().name());
+        if (mismatch(req, resp)) {
+            msg +=
+                    String.format(
+                            Locale.US,
+                            ", SeqNumber mismatched req=(%d), res=(%d)",
+                            resp.getId(),
+                            req.getId());
+        }
         throw new IOException(msg);
     }
 
@@ -70,8 +84,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_INSTALL_COROUTINE);
         if (!resp.hasInstallCoroutineAgentResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.InstallCoroutineAgentResponse response = resp.getInstallCoroutineAgentResponse();
@@ -90,8 +103,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DUMP_MS);
         if (!resp.hasDumpResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.DumpResponse response = resp.getDumpResponse();
@@ -106,8 +118,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_SWAP_MS);
         if (!resp.hasSwapResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.SwapResponse response = resp.getSwapResponse();
@@ -123,8 +134,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_OSWAP_MS);
         if (!resp.hasSwapResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.SwapResponse response = resp.getSwapResponse();
@@ -140,8 +150,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_OINSTALL_MS);
         if (!resp.hasOverlayInstallResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.OverlayInstallResponse response = resp.getOverlayInstallResponse();
@@ -164,8 +173,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_VERIFY_OID_MS);
         if (!resp.hasOverlayidpushResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.OverlayIdPushResponse response = resp.getOverlayidpushResponse();
@@ -181,8 +189,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_NETTEST);
         if (!resp.hasNetworkTestResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         return resp.getNetworkTestResponse();
@@ -206,8 +213,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DELTA_PREINSTALL_MS);
         if (!resp.hasDeltapreinstallResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.DeltaPreinstallResponse response = resp.getDeltapreinstallResponse();
@@ -222,8 +228,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_DELTA_INSTALL_MS);
         if (!resp.hasDeltainstallResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.DeltaInstallResponse response = resp.getDeltainstallResponse();
@@ -239,8 +244,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_UPDATE_LL);
         if (!resp.hasLiveLiteralResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.LiveLiteralUpdateResponse response = resp.getLiveLiteralResponse();
@@ -255,8 +259,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_LIVE_EDIT);
         if (!resp.hasLeResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.LiveEditResponse response = resp.getLeResponse();
@@ -281,8 +284,7 @@ public abstract class Installer {
 
         Deploy.InstallerResponse resp = send(req, Timeouts.CMD_TIMEOUT);
         if (!resp.hasTimeoutResponse()) {
-            onAsymetry(req, resp);
-            asymetryThrow(req, resp);
+            errorAsymetry(req, resp);
         }
 
         Deploy.TimeoutResponse response = resp.getTimeoutResponse();
@@ -297,8 +299,13 @@ public abstract class Installer {
         Deploy.InstallerRequest.Builder request =
                 Deploy.InstallerRequest.newBuilder()
                         .setCommandName(commandName)
+                        .setId(id.getAndIncrement())
                         .setVersion(getVersion());
         return request;
+    }
+
+    private static boolean mismatch(Deploy.InstallerRequest req, Deploy.InstallerResponse resp) {
+        return req.getId() != resp.getId();
     }
 
     private Deploy.InstallerResponse send(Deploy.InstallerRequest req, long timeOutMs)
@@ -307,6 +314,11 @@ public abstract class Installer {
         logger.verbose("Sent request %s", req.getRequestCase().name());
         Deploy.InstallerResponse.ExtraCase respCase = resp.getExtraCase();
         logger.verbose("Received response %s", respCase.name());
+
+        if (mismatch(req, resp)) {
+            errorAsymetry(req, resp);
+        }
+
         return resp;
     }
 }

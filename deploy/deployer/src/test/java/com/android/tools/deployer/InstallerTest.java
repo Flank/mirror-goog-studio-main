@@ -39,6 +39,7 @@ public class InstallerTest {
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
         respBuilder.setInstallCoroutineAgentResponse(
                 Deploy.InstallCoroutineAgentResponse.newBuilder().build());
+        respBuilder.setId(Installer.FIRST_ID + 1);
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.installCoroutineAgent("foo.bar", Deploy.Arch.ARCH_32_BIT);
     }
@@ -54,6 +55,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setDumpResponse(Deploy.DumpResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.dump(new ArrayList<>());
@@ -71,6 +73,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setSwapResponse(Deploy.SwapResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.swap(Deploy.SwapRequest.newBuilder().build());
@@ -88,6 +91,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setSwapResponse(Deploy.SwapResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.overlaySwap(Deploy.OverlaySwapRequest.newBuilder().build());
@@ -106,6 +110,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setOverlayInstallResponse(Deploy.OverlayInstallResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.overlayInstall(Deploy.OverlayInstallRequest.newBuilder().build());
@@ -122,6 +127,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setOverlayidpushResponse(Deploy.OverlayIdPushResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.verifyOverlayId("foo.bar", "id");
@@ -139,6 +145,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setNetworkTestResponse(Deploy.NetworkTestResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.networkTest(Deploy.NetworkTestRequest.newBuilder().build());
@@ -156,6 +163,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setDeltapreinstallResponse(Deploy.DeltaPreinstallResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.deltaPreinstall(Deploy.InstallInfo.newBuilder().build());
@@ -173,6 +181,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setDeltainstallResponse(Deploy.DeltaInstallResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.deltaInstall(Deploy.InstallInfo.newBuilder().build());
@@ -191,6 +200,7 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setLiveLiteralResponse(Deploy.LiveLiteralUpdateResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.updateLiveLiterals(
@@ -209,9 +219,30 @@ public class InstallerTest {
         }
 
         Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setId(Installer.FIRST_ID + 1);
         respBuilder.setLeResponse(Deploy.LiveEditResponse.newBuilder().build());
         programmableInstaller.setResp(respBuilder.build());
         programmableInstaller.liveEdit(Deploy.LiveEditRequest.newBuilder().build());
+    }
+
+    @Test
+    public void testSequenceNumberMismatch() throws Exception {
+        ProgrammableInstaller programmableInstaller = new ProgrammableInstaller();
+        Deploy.InstallerResponse.Builder respBuilder = Deploy.InstallerResponse.newBuilder();
+        respBuilder.setDumpResponse(Deploy.DumpResponse.newBuilder().build());
+        respBuilder.setId(Installer.FIRST_ID);
+        programmableInstaller.setResp(respBuilder.build());
+
+        // This should succeed because the ID matches
+        programmableInstaller.dump(new ArrayList<>());
+
+        // This should fail
+        try {
+            programmableInstaller.dump(new ArrayList<>());
+            Assert.fail("Mismatched ID not detected");
+        } catch (IOException e) {
+            // Expected
+        }
     }
 
     @Test

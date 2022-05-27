@@ -429,6 +429,9 @@ message InstallerRequest {
     NetworkTestRequest network_test_request = 12;
     TimeoutRequest timeout_request = 13;
   }
+
+  // The InstallerResponse should match the ID of the request.
+  int64 id = 14;
 }
 
 // Message returned by the Android native IRR installer. There are two layers :
@@ -461,6 +464,9 @@ message InstallerResponse {
   }
 
   string error_message = 14;
+
+  // The InstallerResponse should match the ID of the request.
+  int64 id = 15;
 }
 
 message Event {
