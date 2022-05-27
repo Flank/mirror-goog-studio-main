@@ -144,13 +144,11 @@ abstract class CompileArtProfileTask: NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     CompileArtProfileTask::binaryArtProfile
-            ).withName(SdkConstants.FN_BINARY_ART_PROFILE
             ).on(InternalArtifactType.BINARY_ART_PROFILE)
 
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompileArtProfileTask::binaryArtProfileMetadata
-            ).withName(SdkConstants.FN_BINARY_ART_PROFILE_METADATA
             ).on(InternalArtifactType.BINARY_ART_PROFILE_METADATA)
         }
 

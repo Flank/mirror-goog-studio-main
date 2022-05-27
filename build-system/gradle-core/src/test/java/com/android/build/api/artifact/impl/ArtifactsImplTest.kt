@@ -61,12 +61,17 @@ class ArtifactsImplTest {
 
     @Suppress("ClassName")
     sealed class TestSingleArtifactType<T : FileSystemLocation>(
-        kind: ArtifactKind<T>
+        kind: ArtifactKind<T>,
+        private val fileName: String? = null,
     ) : Artifact.Single<T>(kind, Category.INTERMEDIATES) {
+
+        override fun getFileSystemLocationName(): String {
+            return fileName ?: super.getFileSystemLocationName()
+        }
 
         object TEST_FILE : TestSingleArtifactType<RegularFile>(FILE)
         object TEST_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY)
-        object TEST_TRANSFORMABLE_FILE : TestSingleArtifactType<RegularFile>(FILE), Transformable
+        object TEST_TRANSFORMABLE_FILE : TestSingleArtifactType<RegularFile>(FILE, fileName = "transformed.jar"), Transformable
         object TEST_TRANSFORMABLE_DIRECTORY : TestSingleArtifactType<Directory>(DIRECTORY),
             Transformable
         object TEST_REPLACABLE_FILE : TestSingleArtifactType<RegularFile>(FILE), Replaceable
@@ -125,7 +130,8 @@ class ArtifactsImplTest {
                 Artifact.Category.INTERMEDIATES.name.lowercase(Locale.getDefault()),
                 TEST_FILE.getFolderName(),
                 "debug",
-                "out"))
+                "out.jar")
+        )
     }
 
     @Test
@@ -319,7 +325,7 @@ class ArtifactsImplTest {
         // transform output should not have the task name in its output.
         val transformerOut = transformerProvider.get().outputFile.get().asFile.absolutePath
         Truth.assertThat(transformerOut).contains(TEST_TRANSFORMABLE_FILE.name().lowercase())
-        Truth.assertThat(transformerOut).endsWith("out")
+        Truth.assertThat(transformerOut).endsWith("transformed.jar")
         Truth.assertThat(transformerOut).doesNotContain("transformer")
 
         // final artifact value should be the transformer task output

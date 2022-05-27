@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
 import com.android.build.api.artifact.SingleArtifact
@@ -36,6 +37,7 @@ InternalArtifactType<T : FileSystemLocation>(
     kind: ArtifactKind<T>,
     category: Category = Category.INTERMEDIATES,
     private val folderName: String? = null,
+    private val fileName: String? = null,
     val finalizingArtifact: List<Artifact<*>> = listOf(),
 ) : Artifact.Single<T>(kind, category) {
 
@@ -557,17 +559,39 @@ InternalArtifactType<T : FileSystemLocation>(
     object MICRO_APK_RES: InternalArtifactType<Directory>(DIRECTORY)
 
     // Human readable Art profile artifacts
-    object MERGED_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
-    object LIBRARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
+    object MERGED_ART_PROFILE: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = SdkConstants.FN_ART_PROFILE
+    )
+    object LIBRARY_ART_PROFILE: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = SdkConstants.FN_ART_PROFILE
+    )
 
     // binary art profile artifacts.
-    object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(FILE)
-    object BINARY_ART_PROFILE_METADATA: InternalArtifactType<RegularFile>(FILE)
-
+    object BINARY_ART_PROFILE: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = SdkConstants.FN_BINARY_ART_PROFILE
+    )
+    object BINARY_ART_PROFILE_METADATA: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = SdkConstants.FN_BINARY_ART_PROFILE_METADATA
+    )
 
     // Sync dynamic properties file artifacts
-    object VARIANT_MODEL: InternalArtifactType<RegularFile>(FILE)
-    object APP_ID_LIST_MODEL: InternalArtifactType<RegularFile>(FILE)
+    object VARIANT_MODEL: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = "variant_model.json",
+    )
+
+    object APP_ID_LIST_MODEL: InternalArtifactType<RegularFile>(
+        FILE,
+        fileName = "app_id_list.json"
+    )
+
+    override fun getFileSystemLocationName(): String {
+        return fileName ?: super.getFileSystemLocationName()
+    }
 
     override fun getFolderName(): String {
         return folderName ?: super.getFolderName()

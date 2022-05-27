@@ -77,7 +77,6 @@ abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     ProcessLibraryArtProfileTask::outputFile
-            ).withName(SdkConstants.FN_ART_PROFILE
             ).on(InternalArtifactType.LIBRARY_ART_PROFILE)
         }
 
