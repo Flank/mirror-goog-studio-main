@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channel;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -184,7 +185,7 @@ class AdbInstallerChannel implements AutoCloseable {
         ByteBuffer bytes = wrap(request);
         try {
             write(bytes, timeOutMs);
-        } catch (IOException e) {
+        } catch (IOException | ClosedSelectorException e) {
             // If the connection has been broken an IOException 'broken pipe' will be received here.
             return false;
         }

@@ -26,6 +26,7 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
+import java.nio.channels.ClosedSelectorException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
@@ -90,6 +91,45 @@ public class AdbInstallerTest {
         String[] expectedHistory = {"getprop", INVOCATION, RM_DIR, MK_DIR, CHMOD, INVOCATION};
 
         assertHistory(device, expectedHistory);
+    }
+
+    @Test
+    @ApiLevel.InRange(min = 30, max = 30)
+    public void testClosedChannel() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        File installersPath = DeployerTestUtils.prepareInstaller();
+
+        AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
+        AndroidDebugBridge bridge = AndroidDebugBridge.createBridge();
+        while (!bridge.hasInitialDeviceList()) {
+            Thread.sleep(100);
+        }
+
+        List<DeployMetric> unusedMetric = new ArrayList<>();
+        AdbClient client = new AdbClient(getDevice(bridge), logger);
+
+        AdbInstaller installer =
+                new AdbInstaller(
+                        installersPath.getAbsolutePath(),
+                        client,
+                        unusedMetric,
+                        logger,
+                        AdbInstaller.Mode.DAEMON);
+
+        try {
+            installer.dump(ImmutableList.of("foo"));
+        } catch (IOException e) {
+            // Expected
+        }
+
+        try {
+            installer.dump(ImmutableList.of("foo"));
+        } catch (IOException e) {
+            // Expected
+        } catch (ClosedSelectorException e) {
+            Assert.fail("Failed to detect closed selector");
+        }
     }
 
     private static void assertHistory(FakeDevice device, String... expected) {
