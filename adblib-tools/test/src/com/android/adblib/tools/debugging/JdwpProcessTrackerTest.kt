@@ -18,19 +18,16 @@ package com.android.adblib.tools.debugging
 import com.android.adblib.DeviceSelector
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
+import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.fakeadbserver.DeviceState
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.yield
 import org.junit.Assert
 import org.junit.Test
 import java.util.Collections
@@ -226,30 +223,5 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
 
     private fun <T> synchronizedList(): MutableList<T> {
         return Collections.synchronizedList(mutableListOf())
-    }
-
-    private fun <T> runBlockingWithTimeout(block: suspend CoroutineScope.() -> T): T {
-        return runBlocking {
-            try {
-                withTimeout(10_000) {
-                    block(this)
-                }
-            } catch(e: TimeoutCancellationException) {
-                throw AssertionError(
-                    "A test did not terminate within the specified timeout, " +
-                            "there is a bug somewhere (in the test or in the tested code)", e)
-            }
-        }
-    }
-
-    private suspend fun yieldUntil(predicate: suspend () -> Boolean) {
-        withTimeoutOrNull(5_000) {
-            while (!predicate()) {
-                yield()
-            }
-        } ?: throw AssertionError(
-            "A yieldUntil condition was not satisfied within " +
-                    "5 seconds, there is a bug somewhere (in the test or in the tested code)"
-        )
     }
 }

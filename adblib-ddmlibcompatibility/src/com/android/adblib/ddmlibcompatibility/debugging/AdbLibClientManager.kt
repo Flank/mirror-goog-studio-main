@@ -26,7 +26,7 @@ import com.android.ddmlib.clientmanager.DeviceClientManagerListener
 /**
  * Implementation of ddmlib's [ClientManager] using [AdbLibSession] services.
  */
-class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
+internal class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
 
     private val logger = thisLogger(session)
 
@@ -34,8 +34,10 @@ class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
         bridge: AndroidDebugBridge,
         device: IDevice,
         listener: DeviceClientManagerListener
-    ): DeviceClientManager {
+    ): AdbLibDeviceClientManager {
         logger.debug { "Creating device client manager for device $device" }
-        return AdbLibDeviceClientManager(this, bridge, device, listener)
+        return AdbLibDeviceClientManager(this, bridge, device, listener).apply {
+            startDeviceTracking()
+        }
     }
 }

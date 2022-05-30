@@ -56,6 +56,7 @@ kotlin_test(
     deps = [
         ":adblib.ddmlibcompatibility",
         "//tools/base/adblib:adblib.tests.testlib",
+        "//tools/base/adblib-tools:adblib.tools.tests.testlib",
         # For "JarTestSuite"
         "//tools/base/testutils:tools.testutils",
         # For JUnit4 support

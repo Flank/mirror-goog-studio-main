@@ -15,7 +15,6 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
-import com.android.adblib.ddmlibcompatibility.debugging.AdbLibClientManager
 import com.android.adblib.testing.FakeAdbLibSession
 import junit.framework.Assert
 import org.junit.Test
