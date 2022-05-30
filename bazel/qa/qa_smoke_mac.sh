@@ -40,7 +40,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
         --keep_going \
         ${config_options} \
         --test_strategy=exclusive \
-        --test_output=streamed \
+        --strategy=TestRunner=local \
         --invocation_id=${invocation_id} \
         --define=meta_android_build_number=${build_number} \
         --build_tag_filters=${target_filters} \
