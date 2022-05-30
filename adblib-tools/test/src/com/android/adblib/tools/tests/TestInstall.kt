@@ -16,14 +16,12 @@
 package com.android.adblib.tools.tests
 
 import com.android.adblib.DeviceSelector
-import com.android.adblib.INFINITE_DURATION
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.INSTALL_APK_STAGING
 import com.android.adblib.tools.InstallException
 import com.android.adblib.tools.PMAbb
 import com.android.adblib.tools.PMDriver
 import com.android.adblib.tools.PMDriver.Companion.cleanFilename
-import com.android.adblib.tools.PMLegacy
 import com.android.adblib.tools.install
 import com.android.fakeadbserver.services.PackageManager
 import kotlinx.coroutines.flow.first
@@ -32,7 +30,6 @@ import org.junit.Assert
 import org.junit.Test
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 class TestInstall : TestInstallBase() {
 

@@ -20,6 +20,7 @@ kotlin_library(
     name = "adblib.tools",
     srcs = glob([
         "src/com/android/adblib/tools/*.kt",
+        "src/com/android/adblib/tools/debugging/*.kt",
     ]),
     friends = [
         "//tools/base/adblib:adblib",
