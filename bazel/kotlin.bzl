@@ -63,9 +63,16 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
     # Dependency jars may be compiled with a new kotlinc IR backend.
     args.add("-Xallow-unstable-dependencies")
 
+    # Use the Compiler Compose plugin
+    if ctx.attr.kotlin_use_compose:
+        tools.append(ctx.file._compose_plugin)
+        args.add(ctx.file._compose_plugin, format = "-Xplugin=%s")
+        args.add("-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true")
+
     # Add "use-ir" to enable the new IR backend for kotlinc tasks when the
     # attribute "kotlin_use_ir" is set
-    if ctx.attr.kotlin_use_ir:
+    # Using the Compose Plugin implies the use of the IR backend
+    if ctx.attr.kotlin_use_ir or ctx.attr.kotlin_use_compose:
         args.add("-Xuse-ir")
 
     # Use custom JRE instead of the default one picked by kotlinc.
@@ -186,6 +193,7 @@ def kotlin_library(
         compress_resources = False,
         testonly = False,
         stdlib = "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+        kotlin_use_compose = False,
         **kwargs):
     """Compiles a library jar from Java and Kotlin sources
 
@@ -229,6 +237,7 @@ def kotlin_library(
         kotlin_srcs = kotlins,
         source_jars = source_jars,
         compress_resources = compress_resources,
+        kotlin_use_compose = kotlin_use_compose,
         kotlin_use_ir = test_kotlin_use_ir(),
         javacopts = javacopts,
         kotlinc_opts = kotlinc_opts,
@@ -388,6 +397,7 @@ _kotlin_library = rule(
         "resource_strip_prefix": attr.string(),
         "javacopts": attr.string_list(),
         "kotlinc_opts": attr.string_list(),
+        "kotlin_use_compose": attr.bool(),
         "kotlin_use_ir": attr.bool(),
         "compress_resources": attr.bool(),
         "plugins": attr.label_list(

@@ -373,6 +373,7 @@ _iml_module_ = rule(
         ),
         "java_srcs": attr.label_list(allow_files = True),
         "kotlin_srcs": attr.label_list(allow_files = True),
+        "kotlin_use_compose": attr.bool(),
         "kotlin_use_ir": attr.bool(),
         "form_srcs": attr.label_list(allow_files = True),
         "java_test_srcs": attr.label_list(allow_files = True),
@@ -426,6 +427,11 @@ _iml_module_ = rule(
             default = Label("//tools/base/bazel:kotlinc"),
             cfg = "host",
             executable = True,
+        ),
+        "_compose_plugin": attr.label(
+            default = Label("//prebuilts/tools/common/m2:compose-compiler-hosted"),
+            cfg = "host",
+            allow_single_file = [".jar"],
         ),
         "_jvm_abi_gen": attr.label(
             default = Label("//prebuilts/tools/common/m2:jvm-abi-gen-plugin"),
@@ -557,7 +563,8 @@ def iml_module(
         lint_baseline = None,
         lint_timeout = None,
         back_deps = [],
-        exec_properties = {}):
+        exec_properties = {},
+        kotlin_use_compose = False):
     prod_deps = []
     test_deps = []
     for dep in deps:
@@ -574,6 +581,7 @@ def iml_module(
         visibility = visibility,
         java_srcs = srcs.javas,
         kotlin_srcs = srcs.kotlins,
+        kotlin_use_compose = kotlin_use_compose,
         kotlin_use_ir = test_kotlin_use_ir(),
         form_srcs = srcs.forms,
         resources = srcs.resources,
