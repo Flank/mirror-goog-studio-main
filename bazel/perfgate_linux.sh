@@ -51,7 +51,7 @@ if [[ -d "${dist_dir}" ]]; then
   # Generate a simple html page that redirects to the test results page.
   echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
+  readonly java="prebuilts/studio/jdk/jdk11/linux/bin/java"
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
