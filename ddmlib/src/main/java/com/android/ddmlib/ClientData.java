@@ -151,7 +151,7 @@ public class ClientData {
     private static IAllocationTrackingHandler sAllocationTrackingHandler;
 
     // owning Client
-    private final ClientImpl mClient;
+    private final Client mClient;
 
     // the client's process ID
     private final int mPid;
@@ -489,7 +489,7 @@ public class ClientData {
     }
 
     /** Generic constructor. */
-    public ClientData(@NonNull ClientImpl client, int pid) {
+    public ClientData(@NonNull Client client, int pid) {
         mClient = client;
         mPid = pid;
 
