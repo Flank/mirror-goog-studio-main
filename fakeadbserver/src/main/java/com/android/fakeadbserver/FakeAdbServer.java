@@ -345,7 +345,10 @@ public final class FakeAdbServer implements AutoCloseable {
         return mMainServerThreadExecutor.submit(
                 () -> {
                     assert mDevices.containsKey(deviceId);
-                    mDevices.remove(deviceId);
+                    DeviceState removedDevice = mDevices.remove(deviceId);
+                    if (removedDevice != null) {
+                        removedDevice.stop();
+                    }
                     mDeviceChangeHub.deviceListChanged(mDevices.values());
                 });
     }
