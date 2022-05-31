@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_TEST_PROJECT_NAME;
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.GRADLE_TEST_VERSION;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -103,9 +102,8 @@ public final class GradleTestProjectBuilder {
                 androidNdkDir = new File(envCustomAndroidNdkHome);
                 Preconditions.checkState(
                         androidNdkDir.isDirectory(),
-                        "CUSTOM_ANDROID_NDK_ROOT must point to a directory, "
-                                + androidNdkDir.getAbsolutePath()
-                                + " is not a directory");
+                        "CUSTOM_ANDROID_NDK_ROOT must point to a directory, %s is not a directory",
+                        androidNdkDir.getAbsolutePath());
             } else {
                 if (sideBySideNdkVersion != null) {
                     androidNdkDir =
@@ -329,7 +327,7 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder fromDir(@NonNull File dir) {
         Preconditions.checkArgument(
-                dir.isDirectory(), dir.getAbsolutePath() + " is not a directory");
+                dir.isDirectory(), "%s is not a directory", dir.getAbsolutePath());
         GradleProject app = new EmptyTestApp();
         addAllFiles(app, dir);
         return fromTestApp(app);
