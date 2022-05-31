@@ -243,7 +243,6 @@ maven_repository(
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     # Don't add new targets here, see above for how to migrate
     visibility = [
-        "//tools/adt/idea/android:__pkg__",
         "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/adt/idea/app-inspection/ide:__pkg__",
         "//tools/adt/idea/build-attribution:__pkg__",
