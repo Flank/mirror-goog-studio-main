@@ -9,9 +9,8 @@ readonly script_dir="$(dirname "$0")"
 readonly bazel_dir="${script_dir}/.."
 readonly script_name="$(basename "$0")"
 readonly invocation_id="$(uuidgen)"
-readonly config_options="--config=ci"
+readonly config_options="--config=ci --config=ants"
 readonly bin_dir="$("${bazel_dir}"/bazel info ${config_options} bazel-bin)"
-readonly java="${script_dir}/../../../../prebuilts/studio/jdk/linux/jre/bin/java"
 
 "${bazel_dir}/bazel" \
   --max_idle_secs=60 \
@@ -19,6 +18,9 @@ readonly java="${script_dir}/../../../../prebuilts/studio/jdk/linux/jre/bin/java
   ${config_options} \
   --invocation_id=${invocation_id} \
   --tool_tag=${script_name} \
+  --ab_build_id="${BUILD_NUMBER}" \
+  --ab_target="studio-lldb" \
+  --build_metadata="test_definition_name=android_studio/studio_lldb" \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
   --flaky_test_attempts=3 \
   //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
@@ -29,12 +31,7 @@ readonly bazel_status=$?
 if [[ -d "${DIST_DIR}" ]]; then
 
   # Generate a HTML page redirecting to test results.
-  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${invocation_id}'\" /></head>" > "${DIST_DIR}"/upsalite_test_results.html
-
-  # Generate logs/junit/logs-summary.xml file that will be consumed by ATP.
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
-    -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
-    -testlogs "${DIST_DIR}/logs/junit"
+  echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${DIST_DIR}"/upsalite_test_results.html
 fi
 
 BAZEL_EXITCODE_TEST_FAILURES=3
