@@ -133,7 +133,7 @@ abstract class FusedLibraryClassesRewriteTask : NonIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 FusedLibraryClassesRewriteTask::rewrittenClassesDirectory
-            ).on(FusedLibraryInternalArtifactType.FINAL_CLASSES)
+            ).on(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS)
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 FusedLibraryClassesRewriteTask::fusedLibraryRClass

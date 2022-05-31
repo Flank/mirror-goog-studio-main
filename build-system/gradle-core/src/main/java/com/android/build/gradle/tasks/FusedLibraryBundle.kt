@@ -116,8 +116,9 @@ abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
             super.configure(task)
             task.archiveFileName.set("classes.jar")
             task.from(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS),
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FUSED_R_CLASS),
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
             )
         }
     }

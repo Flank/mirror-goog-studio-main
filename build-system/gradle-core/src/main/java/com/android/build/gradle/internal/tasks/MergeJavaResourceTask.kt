@@ -22,17 +22,22 @@ import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
+import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableInputChanges
+import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -309,6 +314,63 @@ abstract class MergeJavaResourceTask
             }
             task.noCompress.disallowChanges()
         }
+    }
+
+    class CreationActionFusedLibrary(
+            val creationConfig: FusedLibraryVariantScope
+    ) : TaskCreationAction<MergeJavaResourceTask>() {
+
+        override val name: String
+            get() = "mergeLibraryJavaResources"
+        override val type: Class<MergeJavaResourceTask>
+            get() = MergeJavaResourceTask::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<MergeJavaResourceTask>) {
+            super.handleProvider(taskProvider)
+
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    MergeJavaResourceTask::outputFile
+            ).withName("base.jar").on(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
+        }
+
+        override fun configure(task: MergeJavaResourceTask) {
+            task.analyticsService.set(
+                    getBuildService(task.project.gradle.sharedServices)
+            )
+            task.subProjectJavaRes.from(
+                    creationConfig.dependencies.getArtifactFileCollection(
+                            Usage.JAVA_RUNTIME,
+                            creationConfig.mergeSpec,
+                            AndroidArtifacts.ArtifactType.JAVA_RES
+                    )
+            )
+
+            // For configuring the merging rules (we may want to add DSL for this in the future.
+            task.excludes.setDisallowChanges(emptySet())
+            task.pickFirsts.setDisallowChanges(emptySet())
+            task.merges.setDisallowChanges(emptySet())
+
+            task.intermediateDir = creationConfig.layout.buildDirectory
+                    .dir(SdkConstants.FD_INTERMEDIATES)
+                    .map { it.dir("mergeJavaRes") }.get().asFile
+            task.cacheDir = File(task.intermediateDir, "zip-cache")
+            task.incrementalStateFile = File(task.intermediateDir, "merge-state")
+
+            // External libraries can just be consumed via the subProjectJavaRes (the inputs are
+            // only intended for finer grain incremental runs.
+            task.externalLibJavaRes.disallowChanges()
+
+            // No sources in fused library projects, so none of the below need set.
+            task.projectJavaRes.disallowChanges()
+            task.projectJavaResAsJars.disallowChanges()
+            task.unfilteredProjectJavaRes = task.project.files()
+            task.featureJavaRes.disallowChanges()
+
+            // mergeScopes is unused by the task.
+            task.mergeScopes = setOf()
+        }
+
     }
 
     companion object {

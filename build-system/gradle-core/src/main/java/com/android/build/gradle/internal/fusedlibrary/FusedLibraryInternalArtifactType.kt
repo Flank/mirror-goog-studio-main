@@ -30,7 +30,7 @@ FusedLibraryInternalArtifactType<T : FileSystemLocation>(
 ) : Artifact.Single<T>(kind, category) {
 
     // Directory of classes for use in the fused library.
-    object FINAL_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
+    object CLASSES_WITH_REWRITTEN_R_CLASS_REFS: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     object MERGED_CLASSES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
     // Directory containing merged resources from all libraries and their dependencies.
     object MERGED_RES: FusedLibraryInternalArtifactType<Directory>(ArtifactKind.DIRECTORY), Replaceable
@@ -52,4 +52,5 @@ FusedLibraryInternalArtifactType<T : FileSystemLocation>(
     object MERGED_JNI: FusedLibraryInternalArtifactType<Directory>(DIRECTORY), Replaceable
     object MERGED_NAVIGATION_JSON: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
     object MERGED_AAR_METADATA: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
+    object MERGED_JAVA_RES: FusedLibraryInternalArtifactType<RegularFile>(FILE), Replaceable
 }

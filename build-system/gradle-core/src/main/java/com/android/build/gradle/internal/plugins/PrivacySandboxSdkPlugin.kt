@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
@@ -140,9 +141,11 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                 project,
                 variantScope,
                 listOf(
+                        AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
                         FusedLibraryBundleClasses.CreationAction(variantScope),
                         FusedLibraryClassesRewriteTask.CreationAction(variantScope),
                         FusedLibraryMergeClasses.CreationAction(variantScope),
+                        MergeJavaResourceTask.CreationActionFusedLibrary(variantScope),
                         PrivacySandboxSdkMergeResourcesTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),
@@ -150,7 +153,6 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                         PrivacySandboxSdkDexTask.CreationAction(variantScope),
                         PrivacySandboxSdkMergeDexTask.CreationAction(variantScope),
                         PerModuleBundleTask.PrivacySandboxSdkCreationAction(variantScope),
-                        AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
                         PackagePrivacySandboxSdkBundle.CreationAction(variantScope),
                 ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )

@@ -19,8 +19,14 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.artifact.ArtifactKind
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.*
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_AAR_METADATA
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_AIDL
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_ASSETS
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_JNI
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_NAVIGATION_JSON
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_PREFAB_PACKAGE
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_PREFAB_PACKAGE_CONFIGURATION
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
@@ -46,7 +52,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.configurationcache.extensions.capitalized
-import org.jetbrains.kotlin.gradle.utils.minSupportedGradleVersion
 import java.io.File
 
 /**
@@ -103,12 +108,12 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                     ArtifactType.ASSETS -> {
                         val aarOutputAssetsOutputDir =
                                 File(output.get().asFile, SdkConstants.FD_ASSETS)
-                        copyFilesRecursivelyWithOverriding(inputFiles, aarOutputAssetsOutputDir)
+                        copyFilesToDirRecursivelyWithOverriding(inputFiles, aarOutputAssetsOutputDir)
                     }
                     ArtifactType.JNI -> {
                         val aarOutputJniOutputDir =
                                 File(output.get().asFile, SdkConstants.FD_JNI)
-                        copyFilesRecursivelyWithOverriding(inputFiles, aarOutputJniOutputDir) {
+                        copyFilesToDirRecursivelyWithOverriding(inputFiles, aarOutputJniOutputDir) {
                             it.toString().substringAfterLast("${File.separator}jni${File.separator}")
                         }
                     }
@@ -130,7 +135,7 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
         TaskCreationAction<FusedLibraryMergeArtifactTask>() {
 
         override val name: String
-            get() = "fusingArtifact${androidArtifactType.name.capitalized()}"
+            get() = "mergingArtifact${androidArtifactType.name.capitalized()}"
         override val type: Class<FusedLibraryMergeArtifactTask>
             get() = FusedLibraryMergeArtifactTask::class.java
 
@@ -178,11 +183,10 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                         ArtifactType.ASSETS to MERGED_ASSETS,
                         ArtifactType.JNI to MERGED_JNI,
                         ArtifactType.NAVIGATION_JSON to MERGED_NAVIGATION_JSON,
-                        ArtifactType.AAR_METADATA to MERGED_AAR_METADATA
+                        ArtifactType.AAR_METADATA to MERGED_AAR_METADATA,
                 )
         fun getCreationActions(creationConfig: FusedLibraryVariantScope) :
                 List<FusedLibraryMergeArtifactTask.CreateAction> {
-
             return mergeArtifactMap.map { CreateAction(creationConfig, it.first, it.second) }
         }
     }

@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
-import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -82,7 +81,7 @@ internal class FusedLibraryClassesRewriteTaskTest {
         val rewrittenClasses =
             project.getSubproject("fusedLib1")
                 .getIntermediateFile(
-                    FusedLibraryInternalArtifactType.FINAL_CLASSES.getFolderName(),
+                    FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS.getFolderName(),
                     "single"
                 )
         val fusedLibraryRjar =

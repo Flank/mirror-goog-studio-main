@@ -52,6 +52,7 @@ internal class AndroidProjectBuilderImpl(
     private var androidResources: AndroidResourcesImpl? = null
     private var compileOptions: CompileOptionsImpl? = null
     private var prefabContainer = PrefabContainerBuilderImpl()
+    private var sourceSetsContainer = SourceSetsContainerBuilderImpl()
     override fun defaultCompileSdk() {
         compileSdk = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()
     }
@@ -78,6 +79,10 @@ internal class AndroidProjectBuilderImpl(
 
     override fun prefab(action: ContainerBuilder<PrefabBuilder>.() -> Unit) {
         action(prefabContainer)
+    }
+
+    override fun sourceSets(action: ContainerBuilder<SourceSetsBuilder>.() -> Unit) {
+        action(sourceSetsContainer)
     }
 
     override fun addFile(relativePath: String, content: String) {
@@ -272,6 +277,27 @@ internal class AndroidProjectBuilderImpl(
             )}]\n")
         }
 
+        if (sourceSetsContainer.items.isNotEmpty()) {
+            sb.append("    sourceSets {\n")
+            sourceSetsContainer.items.forEach { (sourceSetName, sourceSet) ->
+                sb.append("        $sourceSetName {\n")
+                sourceSet.manifestSrcFile?.let { sb.append("            manifest.srcFile = '$it'") }
+                val toGroovyStrArray: (list: List<String>) -> String = { list ->
+                    list.joinToString(prefix = "[", postfix = "]", separator = ",") { "'$it'" }
+                }
+                if (sourceSet.javaSrcDirs.isNotEmpty()) {
+                    sb.append("            java.srcDirs = ${toGroovyStrArray(sourceSet.javaSrcDirs)}\n")
+                }
+                if (sourceSet.resSrcDirs.isNotEmpty()) {
+                    sb.append("            res.srcDirs = ${toGroovyStrArray(sourceSet.resSrcDirs)}\n")
+                }
+                if (sourceSet.resourcesSrcDirs.isNotEmpty()) {
+                    sb.append("            resources.srcDirs = ${toGroovyStrArray(sourceSet.resourcesSrcDirs)}\n")
+                }
+                sb.append("        }\n") // sourceSetName
+            }
+            sb.append("    }\n") // sourceSets
+        }
         sb.append("}\n") // ANDROID
     }
 }
@@ -359,7 +385,15 @@ internal class PrefabContainerBuilderImpl: ContainerBuilder<PrefabBuilder> {
         action(newItem)
     }
 }
+internal class SourceSetsContainerBuilderImpl : ContainerBuilder<SourceSetsBuilder> {
+    internal val items = mutableMapOf<String, SourceSetsBuilder>()
 
+    override fun named(name: String, action: SourceSetsBuilder.() -> Unit) {
+        val newItem = items.computeIfAbsent(name) {SourceSetsBuilderImpl(name)}
+        action(newItem)
+    }
+
+}
 internal class ProductFlavorBuilderImpl(override val name: String): ProductFlavorBuilder {
     override var isDefault: Boolean? = null
     override var dimension: String? = null
@@ -423,4 +457,12 @@ internal class CompileOptionsImpl: CompileOptions {
     override fun targetCompatibility(targetCompatibility: Any) {
         throw RuntimeException("Not yet implemented")
     }
+}
+
+internal class SourceSetsBuilderImpl(override val name: String) : SourceSetsBuilder {
+
+    override var manifestSrcFile: String? = null
+    override var javaSrcDirs: List<String> = emptyList()
+    override var resSrcDirs: List<String> = emptyList()
+    override var resourcesSrcDirs: List<String> = emptyList()
 }

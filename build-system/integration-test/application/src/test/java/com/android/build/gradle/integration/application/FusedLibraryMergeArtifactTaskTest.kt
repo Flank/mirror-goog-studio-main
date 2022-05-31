@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
-import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.internal.tasks.AarMetadataReader
 import com.android.utils.FileUtils
@@ -28,6 +27,7 @@ import org.junit.Test
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 /** Tests for [FusedLibraryMergeArtifactTask] */
 internal class FusedLibraryArtifactMergeTaskTest {
@@ -52,8 +52,14 @@ internal class FusedLibraryArtifactMergeTaskTest {
                     minAgpVersion = "3.0.0"
                     minCompileSdkExtension = 2
                 }
+                sourceSets {
+                    named("main") {
+                        resourcesSrcDirs = listOf("src/main/resources")
+                    }
+                }
             }
             addFile("src/main/assets/android_lib_one_asset.txt", "androidLib1")
+            addFile("src/main/resources/my_java_resource.txt", "androidLib1")
             addFile("src/main/rs/com/example/androidLib1/ip.rsh",
                     "#pragma version(1)\n" +
                             "#pragma rs java_package_name(com.android.rs.image2)")
@@ -71,6 +77,11 @@ internal class FusedLibraryArtifactMergeTaskTest {
                 defaultCompileSdk()
                 namespace = "com.example.androidLib2"
                 minSdk = 19
+                sourceSets {
+                    named("main") {
+                        resourcesSrcDirs = listOf("src/main/resources")
+                    }
+                }
             }
             dependencies {
                 implementation(project(":androidLib1"))
@@ -188,6 +199,53 @@ internal class FusedLibraryArtifactMergeTaskTest {
                                 "jni/x86/librs.copy.so"
                         )
                 )
+            }
+        }
+    }
+
+    @Test
+    fun testJavaResourcesMerge() {
+        val androidLib2 = project.getSubproject("androidLib2")
+        val fusedLib1 = project.getSubproject("fusedLib1")
+
+        androidLib2.let {
+            FileUtils.createFile(
+                    FileUtils.join(it.projectDir,
+                            "src", "main", "resources", "my_java_resource.txt"),
+                    "This java resource has the same name as another resource in androidlib1."
+            )
+        }
+        val result = project.executor()
+                .expectFailure()
+                .run(":fusedLib1:packageJar")
+        result.stderr.use { out ->
+            assertThat(out).contains("2 files found with path 'my_java_resource.txt' from inputs:")
+        }
+        androidLib2.let {
+            val javaResource =
+                    FileUtils.join(it.projectDir,
+                            "src",
+                            "main",
+                            "resources",
+                            "my_java_resource.txt")
+            // Removing the duplicate java resource resolves the merge conflict.
+            FileUtils.delete(javaResource)
+        }
+        project.execute( ":fusedLib1:packageJar")
+        val fusedLibraryClassesJar =
+                FileUtils.join(fusedLib1.buildDir, "packageJar", "classes.jar")
+        fusedLibraryClassesJar?.let { jar ->
+            ZipFile(jar).use { zip ->
+                val mergedEntry = zip.getEntry("base.jar")
+                ZipInputStream(zip.getInputStream(mergedEntry)).use { zis ->
+                    val entries = mutableListOf<String>()
+                    var entry = zis.nextEntry
+                    while (entry != null) {
+                        entry.let { entry -> entries.add(entry.name) }
+                        entry = zis.nextEntry
+                    }
+                    assertThat(entries).contains("my_java_resource.txt")
+                }
             }
         }
     }
