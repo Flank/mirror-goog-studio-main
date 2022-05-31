@@ -16,27 +16,44 @@
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.google.common.io.ByteStreams;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-// Handle a JDWP packet wrapping a DDMS packet
-public class JdwpDdmsPacket {
+// Handle a JDWP packet.
+public class JdwpPacket {
 
     private static final int JDWP_DDMS_HEADER_LENGTH = 19; // 11 for jdwp header + 8 for ddms header
-    private static final byte IS_RESPONSE_FLAG = (byte) 0x80;
-    public static final byte DDMS_CMD_SET = (byte) 0xc7;
-    public static final byte DDMS_CMD = (byte) 0x01;
+
+    private static final byte IS_RESPONSE_FLAG = (byte)0x80;
+
+    public static final byte DDMS_CMD_SET = (byte)0xc7;
+
+    public static final byte DDMS_CMD = (byte)0x01;
 
     private final int myId;
+
     private final boolean myIsResponse;
+
     private final short myErrorCode;
+
     private final int myChunkType;
+
     private final byte[] myPayload;
 
+    private JdwpPacket(
+            int id, boolean isResponse, short errorCode, int chunkType, byte[] payload) {
+        myId = id;
+        myIsResponse = isResponse;
+        myErrorCode = errorCode;
+        myChunkType = chunkType;
+        myPayload = payload;
+    }
+
     // Reads a packet from a stream
-    public static JdwpDdmsPacket readFrom(InputStream iStream) throws IOException {
+    public static JdwpPacket readFrom(InputStream iStream) throws IOException {
         byte[] packetHeader = new byte[JDWP_DDMS_HEADER_LENGTH];
         ByteStreams.readFully(iStream, packetHeader);
 
@@ -62,26 +79,17 @@ public class JdwpDdmsPacket {
             assert payload.length == readCount;
         }
 
-        return new JdwpDdmsPacket(id, isResponse(flags), (short) 0, chunkType, payload);
+        return new JdwpPacket(id, isResponse(flags), (short)0, chunkType, payload);
     }
 
     // Create a response packet
-    public static JdwpDdmsPacket createResponse(int id, int chunkType, byte[] payload) {
-        return new JdwpDdmsPacket(id, true, (short) 0, chunkType, payload);
+    public static JdwpPacket createResponse(int id, int chunkType, byte[] payload) {
+        return new JdwpPacket(id, true, (short)0, chunkType, payload);
     }
 
     // create a non-response packet
-    public static JdwpDdmsPacket create(int chunkType, byte[] payload) {
-        return new JdwpDdmsPacket(1234, false, (short) 0, chunkType, payload);
-    }
-
-    private JdwpDdmsPacket(
-            int id, boolean isResponse, short errorCode, int chunkType, byte[] payload) {
-        myId = id;
-        myIsResponse = isResponse;
-        myErrorCode = errorCode;
-        myChunkType = chunkType;
-        myPayload = payload;
+    public static JdwpPacket create(int chunkType, byte[] payload) {
+        return new JdwpPacket(1234, false, (short)0, chunkType, payload);
     }
 
     public int getChunkType() {

@@ -15,26 +15,29 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacket.encodeChunkType;
-
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
 import com.android.fakeadbserver.CommandHandler;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+
+import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
 
 public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler {
 
     public static final int CHUNK_TYPE = encodeChunkType("HELO");
 
     private static final String VM_IDENTIFIER = "FakeVM";
+
     private static final int HELO_CHUNK_HEADER_LENGTH = 16;
+
     private static final int VERSION = 9999;
 
     @Override
     public boolean handlePacket(
-            @NonNull JdwpDdmsPacket packet,
+            @NonNull JdwpPacket packet,
             @NonNull ClientState client,
             @NonNull OutputStream oStream) {
         // ADB has an issue of reporting the process name instead of the real not reporting the real package name.
@@ -55,12 +58,13 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
             payloadBuffer.putChar(c);
         }
 
-        JdwpDdmsPacket responsePacket =
-                JdwpDdmsPacket.createResponse(packet.getId(), CHUNK_TYPE, payload);
+        JdwpPacket responsePacket =
+                JdwpPacket.createResponse(packet.getId(), CHUNK_TYPE, payload);
 
         try {
             responsePacket.write(oStream);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             writeFailResponse(oStream, "Could not write HELO response packet");
             return false;
         }
@@ -68,7 +72,7 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
         if (client.getIsWaiting()) {
 
             byte[] waitPayload = new byte[1];
-            JdwpDdmsPacket waitPacket = JdwpDdmsPacket.create(encodeChunkType("WAIT"), waitPayload);
+            JdwpPacket waitPacket = JdwpPacket.create(encodeChunkType("WAIT"), waitPayload);
             try {
                 waitPacket.write(oStream);
             } catch (IOException e) {

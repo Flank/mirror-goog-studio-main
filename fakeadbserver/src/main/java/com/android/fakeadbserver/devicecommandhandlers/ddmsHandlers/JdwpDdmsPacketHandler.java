@@ -17,6 +17,7 @@ package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
+
 import java.io.OutputStream;
 
 public interface JdwpDdmsPacketHandler {
@@ -31,7 +32,7 @@ public interface JdwpDdmsPacketHandler {
      *     terminate the session
      */
     boolean handlePacket(
-            @NonNull JdwpDdmsPacket packet,
+            @NonNull JdwpPacket packet,
             @NonNull ClientState client,
             @NonNull OutputStream oStream);
 }
