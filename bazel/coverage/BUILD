@@ -138,16 +138,6 @@ coverage_report(
 )
 
 coverage_report(
-    name = "android-apk",
-    srcpath_include = [
-        "tools/vendor/google/android-apk",
-    ],
-    tests = [
-        "//tools/vendor/google/android-apk:android-apk.tests_tests",
-    ],
-)
-
-coverage_report(
     name = "build-attribution",
     srcpath_include = [
         "tools/adt/idea/build-attribution/src",
@@ -845,7 +835,6 @@ combine_report_definitions(
     reports = [
         "adb-wireless",
         "all",
-        "android-apk",
         "app-inspection",
         "background-task-inspector",
         "build-attribution",
@@ -1085,7 +1074,8 @@ coverage_report(
         "//tools/data-binding:studio.compilerCommon_tests",
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
-        "//tools/vendor/google/android-apk:android-apk.tests_tests",
+        # TODO(b/234053228) too flaky on Linux
+        # "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
         "//tools/vendor/google/firebase:firebase_tests",
     ],
