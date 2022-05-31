@@ -21,10 +21,12 @@ import com.android.adblib.DeviceState
 import com.android.adblib.createDeviceScope
 import com.android.adblib.thisLogger
 import com.android.adblib.tools.debugging.JdwpProcess
+import com.android.adblib.tools.debugging.JdwpProcessProperties
 import com.android.adblib.tools.debugging.JdwpTracker
 import com.android.adblib.trackDeviceInfo
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.Client
+import com.android.ddmlib.ClientData
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.DeviceClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
@@ -130,6 +132,7 @@ internal class AdbLibDeviceClientManager(
             val jdwpProcess = newJdwpProcessList.first { it.pid == pid }
             val clientWrapper = AdblibClientWrapper(this, iDevice, jdwpProcess)
             currentProcessEntryMap[pid] = clientWrapper
+            launchProcessInfoTracking(clientWrapper)
         }
 
         assert(currentProcessEntryMap.keys.size == newJdwpProcessList.size)
@@ -137,6 +140,75 @@ internal class AdbLibDeviceClientManager(
         invokeListener {
             listener.processListUpdated(bridge, this@AdbLibDeviceClientManager)
         }
+    }
+
+    private fun launchProcessInfoTracking(clientWrapper: AdblibClientWrapper) {
+        // Track process changes as long as process coroutine scope is active
+        clientWrapper.jdwpProcess.scope.launch {
+            trackProcessInfo(clientWrapper)
+        }
+    }
+
+    private suspend fun trackProcessInfo(clientWrapper: AdblibClientWrapper) {
+        var lastProcessInfo = clientWrapper.jdwpProcess.processPropertiesFlow.value
+        clientWrapper.jdwpProcess.processPropertiesFlow.collect { processInfo ->
+            try {
+                updateProcessInfo(clientWrapper, lastProcessInfo, processInfo)
+            } finally {
+                lastProcessInfo = processInfo
+            }
+        }
+    }
+
+    private fun updateProcessInfo(
+        clientWrapper: AdblibClientWrapper,
+        previousProcessInfo: JdwpProcessProperties,
+        newProcessInfo: JdwpProcessProperties
+    ) {
+        fun <T> hasChanged(x: T?, y: T?): Boolean {
+            return x != y
+        }
+
+        // Always update "Client" wrapper data
+        val names =
+            ClientData.Names(
+                newProcessInfo.processName ?: "",
+                newProcessInfo.userId,
+                newProcessInfo.packageName
+            )
+        clientWrapper.clientData.setNames(names)
+        clientWrapper.clientData.vmIdentifier = newProcessInfo.vmIdentifier
+        clientWrapper.clientData.abi = newProcessInfo.abi
+        clientWrapper.clientData.jvmFlags = newProcessInfo.jvmFlags
+        clientWrapper.clientData.isNativeDebuggable = newProcessInfo.isNativeDebuggable
+
+        // Check if anything related to process info has changed
+        if (hasChanged(previousProcessInfo.processName, newProcessInfo.processName) ||
+            hasChanged(previousProcessInfo.userId, newProcessInfo.userId) ||
+            hasChanged(previousProcessInfo.packageName, newProcessInfo.packageName) ||
+            hasChanged(previousProcessInfo.vmIdentifier, newProcessInfo.vmIdentifier) ||
+            hasChanged(previousProcessInfo.abi, newProcessInfo.abi) ||
+            hasChanged(previousProcessInfo.jvmFlags, newProcessInfo.jvmFlags) ||
+            hasChanged(previousProcessInfo.isNativeDebuggable, newProcessInfo.isNativeDebuggable)
+        ) {
+            invokeListener {
+                // Note that "name" is really "any property"
+                listener.processNameUpdated(
+                    bridge,
+                    this@AdbLibDeviceClientManager,
+                    clientWrapper
+                )
+            }
+        }
+
+        // TODO: Invoke debugger status updated once implemented
+        //invokeListener {
+        //    listener.processDebuggerStatusUpdated(
+        //        bridge,
+        //        this@AdbLibDeviceClientManager,
+        //        clientWrapper
+        //    )
+        //}
     }
 
     private fun invokeListener(block: () -> Unit) {

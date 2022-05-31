@@ -36,40 +36,40 @@ data class JdwpProcessProperties(
      * [AndroidManifest.xml](https://developer.android.com/guide/topics/manifest/application-element)
      * file.
      */
-    val processName: String?,
+    val processName: String? = null,
 
     /**
      * The User ID this process is running in context of, or `null` if the value is not known yet or
      * the device does not support retrieving this information (R+ only).
      */
-    val userId: Int?,
+    val userId: Int? = null,
 
     /**
      * The package name of the process, or `null` if the value is not known yet or if the device
      * does not support retrieving this information (R+ only)
      */
-    val packageName: String?,
+    val packageName: String? = null,
 
     /**
      * The Android VM identifier, or `null` if the value is not known yet.
      */
-    val vmIdentifier: String?,
+    val vmIdentifier: String? = null,
 
     /**
      * The ABI identifier, or `null` if the value is not known yet.
      */
-    val abi: String?,
+    val abi: String? = null,
 
     /**
      * The JVM flags, or `null` if the value is not known yet.
      */
-    val jvmFlags: String?,
+    val jvmFlags: String? = null,
 
     /**
      *
      */
     @Deprecated("This property was never fully supported and is now completely deprecated")
-    val isNativeDebuggable: Boolean,
+    val isNativeDebuggable: Boolean = false,
 
     /**
      * Captures an error related to retrieving properties other than [pid].
@@ -77,5 +77,5 @@ data class JdwpProcessProperties(
      * For example, it is sometimes not possible to retrieve any information about a process ID
      * from the Android VM if there is already a JDWP session active for that process.
      */
-    val exception: Throwable?,
+    val exception: Throwable? = null,
 )

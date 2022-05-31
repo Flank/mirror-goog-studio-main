@@ -108,7 +108,7 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertEquals(10, client.clientData.pid)
         assertThrows { client.isDdmAware }
         assertThrows { client.kill() }
-        assertThrows { client.isValid }
+        Assert.assertTrue(client.isValid)
         assertThrows { client.debuggerListenPort }
         assertThrows { client.isDebuggerAttached }
         assertThrows { client.executeGarbageCollector() }
@@ -228,6 +228,37 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertSame(fakeAdb.bridge, listener.events.last().bridge)
         Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED, listener.events.last().kind)
         Assert.assertNull(listener.events.last().client)
+    }
+
+    @Test
+    fun testListenerIsCalledWhenProcessPropertiesChange() = runBlockingWithTimeout {
+        // Prepare
+        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val clientManager = AdbLibClientManager(session)
+        val listener = TestDeviceClientManagerListener()
+        val (device, deviceState) = fakeAdb.connectTestDevice()
+        val deviceClientManager =
+            clientManager.createDeviceClientManager(
+                fakeAdb.bridge,
+                device,
+                listener
+            )
+
+        // Act
+        deviceState.startClient(10, 0, "foo.bar", false)
+        yieldUntil {
+            // Temporary implementation updates process properties every 100 millis
+            listener.events.size >= 5
+        }
+
+        // Assert
+        Assert.assertTrue(listener.events.size >= 5)
+
+        val event = listener.events.last()
+        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED, event.kind)
+        Assert.assertSame(event.deviceClientManager, deviceClientManager)
+        Assert.assertNotNull(event.client)
+        Assert.assertEquals("MyFakeVM", event.client!!.clientData.vmIdentifier)
     }
 
     private fun assertThrows(block: () -> Unit) {

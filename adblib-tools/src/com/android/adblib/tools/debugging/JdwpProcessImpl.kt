@@ -22,25 +22,51 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 
 /**
  * Implementation of [JdwpProcess]
  */
 internal class JdwpProcessImpl(
-  private val session: AdbLibSession,
-  override val device: DeviceSelector,
-  private val deviceScope: CoroutineScope,
-  override val pid: Int
+    session: AdbLibSession,
+    override val device: DeviceSelector,
+    deviceScope: CoroutineScope,
+    override val pid: Int
 ) : JdwpProcess, AutoCloseable {
 
     private val logger = thisLogger(session)
 
+    private val processPropertiesStateFlow = MutableStateFlow(JdwpProcessProperties(pid))
+
     override val scope = deviceScope.createChildScope()
 
     override val processPropertiesFlow: StateFlow<JdwpProcessProperties>
-        get() = TODO("Not yet implemented")
+        get() = processPropertiesStateFlow
+
+    init {
+        //TODO: Start a JDWP session for the process and collect info
+        scope.launch {
+            var index = 1
+            while (true) {
+                delay(200)
+                val temp = JdwpProcessProperties(
+                    pid,
+                    processName = "PID-$pid",
+                    userId = index++,
+                    packageName = "a.b.c.",
+                    vmIdentifier = "MyFakeVM",
+                    abi = "x64",
+                    jvmFlags = "-foo",
+                    isNativeDebuggable = false
+                )
+                processPropertiesStateFlow.emit(temp)
+            }
+        }
+    }
 
     override fun close() {
         val msg = "Closing coroutine scope of JDWP process $pid"
