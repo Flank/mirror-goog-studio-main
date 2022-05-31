@@ -18,6 +18,7 @@ package com.android.fakeadbserver;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.fakeadbserver.services.Service;
 import com.android.fakeadbserver.services.ServiceManager;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHandlerFactory;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHub;
@@ -376,6 +377,10 @@ public class DeviceState {
 
     public ServiceManager getServiceManager() {
         return mServiceManager;
+    }
+
+    public void setActivityManager(Service newActivityManager) {
+        mServiceManager.setActivityManager(newActivityManager);
     }
 
     public void addPmLog(String cmd) {

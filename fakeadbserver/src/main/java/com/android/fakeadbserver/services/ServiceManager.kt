@@ -15,17 +15,22 @@
  */
 package com.android.fakeadbserver.services
 
-import com.google.common.collect.ImmutableCollection
 import java.util.Collections
 
 class ServiceManager {
 
+    companion object {
+
+        val ACTIVITY_MANAGER_SERVICE_NAME = "activity"
+    }
+
     private val packageManager = PackageManager()
+    private var activityManager: Service? = null
     private val log = java.util.Collections.synchronizedList(mutableListOf<List<String>>())
 
     // Returns a list of all service request received.
     // Each entry is a list of all parameters for that request.
-    fun getLogs() : List<ServiceRequest> {
+    fun getLogs(): List<ServiceRequest> {
         return Collections.unmodifiableList(log)
     }
 
@@ -45,11 +50,14 @@ class ServiceManager {
         service.process(args.slice(1 until args.size), output)
     }
 
-    private fun getService(name : String) : Service? {
-        if (name == PackageManager.SERVICE_NAME) {
-            return packageManager
-        }
-        return null
+    fun setActivityManager(newActivityManager: Service) {
+        activityManager = newActivityManager
+    }
+
+    private fun getService(name: String): Service? = when (name) {
+        PackageManager.SERVICE_NAME -> packageManager
+        ACTIVITY_MANAGER_SERVICE_NAME -> activityManager
+        else -> null
     }
 }
 
