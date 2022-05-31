@@ -48,20 +48,6 @@ if [[ $lsb_release == "crostini" ]]; then
   ps -ef | grep "/usr/bin/dbus-daemon --syslog-only" | awk '{print $2}' | xargs kill -9
 
   # Generate a UUID for use as the bazel invocation id
-  readonly logs_collector_invocation_id="$(uuidgen)"
-
-  #Build  logs collector jar
-  "${script_dir}/../bazel" \
-    --max_idle_secs=60 \
-    build \
-    ${config_options} \
-    ${bazel_flags} \
-    --invocation_id=${logs_collector_invocation_id} \
-    --define=meta_android_build_number=${build_number} \
-    --tool_tag=${script_name} \
-    -- \
-    //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar
-
   readonly test_invocation_id="$(uuidgen)"
 
   # Run the tests one at a time after all dependencies get built
@@ -93,12 +79,13 @@ if [[ $lsb_release == "crostini" ]]; then
     echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${test_invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
   fi
 
-  readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
-  readonly bin_dir="$("${script_dir}"/../bazel info bazel-bin)"
-
   # Generate the perfgate zip from the test bes
   # Copy it as part of build artifacts under dist_dir
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+  "${script_dir}/../bazel" \
+    --max_idle_secs=60 \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
+    ${config_options} \
+    -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -perfzip "${dist_dir}/perfgate_data.zip"
 

@@ -43,7 +43,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --runs_per_test=//prebuilts/studio/buildbenchmarks:.*@5 ^
  --runs_per_test=//tools/adt/idea/sync-perf-tests:intellij.android.sync-perf-tests.*@5 ^
  --jobs=250 ^
- -- //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar ^
+ -- ^
  %TARGETS%
 
 SET EXITCODE=%errorlevel%
@@ -52,9 +52,12 @@ IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 
 echo "<head><meta http-equiv="refresh" content="0; URL='https://fusion2.corp.google.com/invocations/%INVOCATIONID%'" /></head>" > %DISTDIR%\upsalite_test_results.html
 
-set JAVA=%BASEDIR%\prebuilts\studio\jdk\win64\jre\bin\java.exe
 @rem Extract test logs and perfgate data
-%JAVA% -jar %BASEDIR%\bazel-bin\tools\vendor\adt_infra_internal\rbe\logscollector\logs-collector_deploy.jar ^
+CALL %SCRIPTDIR%bazel.cmd ^
+  --max_idle_secs=60 ^
+  run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector ^
+  --config=ci ^
+  -- ^
  -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
  -perfzip %DISTDIR%\perfgate_data.zip
 
