@@ -244,7 +244,6 @@ maven_repository(
     # Don't add new targets here, see above for how to migrate
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/adt/idea/compose-ide-plugin:__pkg__",
         "//tools/adt/idea/databinding:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/adt/idea/designer-perf-tests:__pkg__",
