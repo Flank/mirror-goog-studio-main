@@ -245,7 +245,6 @@ maven_repository(
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
         "//tools/adt/idea/app-inspection/ide:__pkg__",
-        "//tools/adt/idea/build-attribution:__pkg__",
         "//tools/adt/idea/compose-designer:__pkg__",
         "//tools/adt/idea/compose-ide-plugin:__pkg__",
         "//tools/adt/idea/databinding:__pkg__",
