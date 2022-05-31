@@ -20170,6 +20170,17 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.android.tools.external.com-intellij.intellij-core_27.2.0",
+    pom = "repository/com/android/tools/external/com-intellij/intellij-core/27.2.0/intellij-core-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/external/com-intellij/intellij-core/27.2.0",
+    deps = [
+        "org.jetbrains.intellij.deps.trove4j_1.0.20181211",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.android.tools.external.com-intellij.intellij-core_30.0.0",
     pom = "repository/com/android/tools/external/com-intellij/intellij-core/30.0.0/intellij-core-30.0.0.pom",
     repo_root_path = "repository",
@@ -20242,6 +20253,14 @@ maven_artifact(
     pom = "repository/com/android/tools/external/com-intellij/kotlin-compiler/27.1.0/kotlin-compiler-27.1.0.pom",
     repo_root_path = "repository",
     repo_path = "com/android/tools/external/com-intellij/kotlin-compiler/27.1.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.external.com-intellij.kotlin-compiler_27.2.0",
+    pom = "repository/com/android/tools/external/com-intellij/kotlin-compiler/27.2.0/kotlin-compiler-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/external/com-intellij/kotlin-compiler/27.2.0",
     visibility = ["//visibility:public"],
 )
 
@@ -20341,6 +20360,14 @@ maven_artifact(
     pom = "repository/com/android/tools/external/org-jetbrains/uast/27.1.0/uast-27.1.0.pom",
     repo_root_path = "repository",
     repo_path = "com/android/tools/external/org-jetbrains/uast/27.1.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.external.org-jetbrains.uast_27.2.0",
+    pom = "repository/com/android/tools/external/org-jetbrains/uast/27.2.0/uast-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/external/org-jetbrains/uast/27.2.0",
     visibility = ["//visibility:public"],
 )
 
@@ -20793,6 +20820,28 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.android.tools.lint.lint-api_27.2.0",
+    pom = "repository/com/android/tools/lint/lint-api/27.2.0/lint-api-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/lint/lint-api/27.2.0",
+    deps = [
+        "com.android.tools.sdk-common_27.2.0",
+        "com.android.tools.lint.lint-model_27.2.0",
+        "com.google.guava.guava_28.1-jre",
+        "com.android.tools.external.com-intellij.intellij-core_27.2.0",
+        "com.android.tools.external.com-intellij.kotlin-compiler_27.2.0",
+        "com.android.tools.external.org-jetbrains.uast_27.2.0",
+        "com.android.tools.build.manifest-merger_27.2.0",
+        "org.ow2.asm.asm_7.0",
+        "org.ow2.asm.asm-tree_7.0",
+        "org.jetbrains.kotlin.kotlin-reflect_1.4.31",
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.4.31",
+        "com.android.tools.build.builder-model_4.2.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.android.tools.lint.lint-api_30.0.0",
     pom = "repository/com/android/tools/lint/lint-api/30.0.0/lint-api-30.0.0.pom",
     repo_root_path = "repository",
@@ -21008,6 +21057,23 @@ maven_artifact(
         "com.android.tools.external.com-intellij.kotlin-compiler_27.1.0",
         "com.android.tools.external.org-jetbrains.uast_27.1.0",
         "org.ow2.asm.asm-analysis_7.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.lint.lint-checks_27.2.0",
+    pom = "repository/com/android/tools/lint/lint-checks/27.2.0/lint-checks-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/lint/lint-checks/27.2.0",
+    deps = [
+        "com.android.tools.lint.lint-api_27.2.0",
+        "com.google.guava.guava_28.1-jre",
+        "com.android.tools.external.com-intellij.intellij-core_27.2.0",
+        "com.android.tools.external.com-intellij.kotlin-compiler_27.2.0",
+        "com.android.tools.external.org-jetbrains.uast_27.2.0",
+        "org.ow2.asm.asm-analysis_7.0",
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.4.31",
     ],
     visibility = ["//visibility:public"],
 )
@@ -21322,6 +21388,29 @@ maven_artifact(
         "org.codehaus.groovy.groovy-all_2.4.15",
         "org.jetbrains.kotlin.kotlin-reflect_1.3.72",
         "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.3.72",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.lint.lint-gradle_27.2.0",
+    pom = "repository/com/android/tools/lint/lint-gradle/27.2.0/lint-gradle-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/lint/lint-gradle/27.2.0",
+    deps = [
+        "com.android.tools.sdk-common_27.2.0",
+        "com.android.tools.build.builder_4.2.0",
+        "com.android.tools.build.builder-model_4.2.0",
+        "com.android.tools.external.com-intellij.intellij-core_27.2.0",
+        "com.android.tools.external.com-intellij.kotlin-compiler_27.2.0",
+        "com.android.tools.external.org-jetbrains.uast_27.2.0",
+        "com.android.tools.build.manifest-merger_27.2.0",
+        "com.android.tools.lint.lint_27.2.0",
+        "com.android.tools.lint.lint-gradle-api_27.2.0",
+        "com.android.zipflinger_4.2.0",
+        "org.codehaus.groovy.groovy-all_2.4.15",
+        "org.jetbrains.kotlin.kotlin-reflect_1.4.31",
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.4.31",
     ],
     visibility = ["//visibility:public"],
 )
@@ -21647,6 +21736,26 @@ maven_artifact(
         "com.android.tools.analytics-library.tracker_27.1.0",
         "org.jetbrains.kotlin.kotlin-reflect_1.3.72",
         "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.3.72",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.android.tools.lint.lint_27.2.0",
+    pom = "repository/com/android/tools/lint/lint/27.2.0/lint-27.2.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/android/tools/lint/lint/27.2.0",
+    deps = [
+        "com.android.tools.lint.lint-checks_27.2.0",
+        "com.google.guava.guava_28.1-jre",
+        "com.android.tools.external.org-jetbrains.uast_27.2.0",
+        "com.android.tools.external.com-intellij.kotlin-compiler_27.2.0",
+        "com.android.tools.build.manifest-merger_27.2.0",
+        "com.android.tools.analytics-library.shared_27.2.0",
+        "com.android.tools.analytics-library.protos_27.2.0",
+        "com.android.tools.analytics-library.tracker_27.2.0",
+        "org.jetbrains.kotlin.kotlin-reflect_1.4.31",
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.4.31",
     ],
     visibility = ["//visibility:public"],
 )

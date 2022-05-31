@@ -292,6 +292,7 @@ DATA = [
     "com.android.tools.lint:lint-gradle:26.5.0",
     "com.android.tools.lint:lint-gradle:27.0.0",
     "com.android.tools.lint:lint-gradle:27.1.0",
+    "com.android.tools.lint:lint-gradle:27.2.0",
     "com.android.tools.lint:lint-gradle:30.0.0",
     "com.android.tools.lint:lint-gradle:30.1.0",
     "com.android.tools.lint:lint-gradle:30.2.0",
