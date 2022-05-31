@@ -16,7 +16,6 @@
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.google.common.io.ByteStreams;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,13 +24,9 @@ import java.nio.ByteBuffer;
 // Handle a JDWP packet.
 public class JdwpPacket {
 
-    private static final int JDWP_DDMS_HEADER_LENGTH = 19; // 11 for jdwp header + 8 for ddms header
+    private static final int JDWP_HEADER_LENGTH = 11;
 
     private static final byte IS_RESPONSE_FLAG = (byte)0x80;
-
-    public static final byte DDMS_CMD_SET = (byte)0xc7;
-
-    public static final byte DDMS_CMD = (byte)0x01;
 
     private final int myId;
 
@@ -39,61 +34,40 @@ public class JdwpPacket {
 
     private final short myErrorCode;
 
-    private final int myChunkType;
-
     private final byte[] myPayload;
 
-    private JdwpPacket(
-            int id, boolean isResponse, short errorCode, int chunkType, byte[] payload) {
+    private final int mCmdSet;
+
+    private final int mCmd;
+
+    protected JdwpPacket(
+            int id, boolean isResponse, short errorCode, byte[] payload, int cmdSet, int cmd) {
         myId = id;
         myIsResponse = isResponse;
         myErrorCode = errorCode;
-        myChunkType = chunkType;
         myPayload = payload;
+        mCmdSet = cmdSet;
+        mCmd = cmd;
     }
 
-    // Reads a packet from a stream
-    public static JdwpPacket readFrom(InputStream iStream) throws IOException {
-        byte[] packetHeader = new byte[JDWP_DDMS_HEADER_LENGTH];
-        ByteStreams.readFully(iStream, packetHeader);
-
-        ByteBuffer headerBuffer = ByteBuffer.wrap(packetHeader);
-        int length = headerBuffer.getInt();
-        int id = headerBuffer.getInt();
-        byte flags = headerBuffer.get();
-        byte commandSet = headerBuffer.get();
-        byte command = headerBuffer.get();
-        int chunkType = headerBuffer.getInt();
-        int chunkLength = headerBuffer.getInt();
-        int readCount;
-
-        assert length >= JDWP_DDMS_HEADER_LENGTH;
-        assert commandSet == DDMS_CMD_SET;
-        assert command == DDMS_CMD;
-        assert (flags & ~IS_RESPONSE_FLAG) == 0;
-        assert chunkLength == length - JDWP_DDMS_HEADER_LENGTH;
-
-        byte[] payload = new byte[chunkLength];
-        if (chunkLength > 0) {
-            readCount = iStream.read(payload);
-            assert payload.length == readCount;
-        }
-
-        return new JdwpPacket(id, isResponse(flags), (short)0, chunkType, payload);
+    public byte[] getPayload() {
+        return myPayload;
     }
 
-    // Create a response packet
-    public static JdwpPacket createResponse(int id, int chunkType, byte[] payload) {
-        return new JdwpPacket(id, true, (short)0, chunkType, payload);
+    public int getCmdSet() {
+        return mCmdSet;
     }
 
-    // create a non-response packet
-    public static JdwpPacket create(int chunkType, byte[] payload) {
-        return new JdwpPacket(1234, false, (short)0, chunkType, payload);
+    public int getCmd() {
+        return mCmd;
     }
 
-    public int getChunkType() {
-        return myChunkType;
+    public boolean isResponse() {
+        return myIsResponse;
+    }
+
+    public short getErrorCode() {
+        return myErrorCode;
     }
 
     public int getId() {
@@ -101,7 +75,7 @@ public class JdwpPacket {
     }
 
     public void write(OutputStream oStream) throws IOException {
-        byte[] response = new byte[JDWP_DDMS_HEADER_LENGTH + myPayload.length];
+        byte[] response = new byte[JDWP_HEADER_LENGTH + myPayload.length];
         ByteBuffer responseBuffer = ByteBuffer.wrap(response);
         responseBuffer.putInt(response.length);
         responseBuffer.putInt(myId);
@@ -109,29 +83,51 @@ public class JdwpPacket {
         if (myIsResponse) {
             responseBuffer.putShort(myErrorCode);
         } else {
-            responseBuffer.put(DDMS_CMD_SET);
-            responseBuffer.put(DDMS_CMD);
+            responseBuffer.put((byte) mCmdSet);
+            responseBuffer.put((byte) mCmd);
         }
-        responseBuffer.putInt(myChunkType);
-        responseBuffer.putInt(myPayload.length);
         responseBuffer.put(myPayload);
 
         oStream.write(response);
     }
 
-    private static boolean isResponse(byte flags) {
-        return (flags & IS_RESPONSE_FLAG) != 0;
-    }
+    // Reads a packet from a stream
+    public static JdwpPacket readFrom(InputStream iStream) throws IOException {
+        byte[] packetHeader = new byte[JDWP_HEADER_LENGTH];
+        ByteStreams.readFully(iStream, packetHeader);
 
-    protected static int encodeChunkType(String typeName) {
-        assert typeName.length() == 4;
+        ByteBuffer headerBuffer = ByteBuffer.wrap(packetHeader);
+        int length = headerBuffer.getInt();
+        int id = headerBuffer.getInt();
+        int flags = headerBuffer.get() & 0xff;
+        int commandSet = headerBuffer.get() & 0xff;
+        int command = headerBuffer.get() & 0xff;
+        int readCount;
 
-        int val = 0;
-        for (int i = 0; i < 4; i++) {
-            val <<= 8;
-            val |= (byte) typeName.charAt(i);
+        int payloadLength = length - JDWP_HEADER_LENGTH;
+        byte[] payload = new byte[payloadLength];
+        if (payloadLength > 0) {
+            readCount = iStream.read(payload);
+            assert payload.length == readCount;
         }
 
-        return val;
+        assert length >= JDWP_HEADER_LENGTH;
+        assert (flags & ~IS_RESPONSE_FLAG) == 0;
+
+        return new JdwpPacket(id, isResponse(flags), (short) 0, payload, commandSet, command);
+    }
+
+    // Create a response packet
+    public static JdwpPacket createResponse(int id, byte[] payload, int cmdSet, int cmd) {
+        return new JdwpPacket(id, true, (short) 0, payload, cmdSet, cmd);
+    }
+
+    // create a non-response packet
+    public static JdwpPacket create(byte[] payload, int cmdSet, int cmd) {
+        return new JdwpPacket(1234, false, (short) 0, payload, cmdSet, cmd);
+    }
+
+    private static boolean isResponse(int flags) {
+        return (flags & IS_RESPONSE_FLAG) != 0;
     }
 }

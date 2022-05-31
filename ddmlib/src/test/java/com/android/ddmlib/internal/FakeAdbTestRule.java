@@ -15,6 +15,10 @@
  */
 package com.android.ddmlib.internal;
 
+import static com.android.ddmlib.IntegrationTest.getPathToAdb;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
+
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
@@ -23,9 +27,6 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.JdwpHandshake;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.devicecommandhandlers.JdwpCommandHandler;
-import org.junit.rules.ExternalResource;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
@@ -33,10 +34,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
-import static com.android.ddmlib.IntegrationTest.getPathToAdb;
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertNotNull;
+import org.junit.rules.ExternalResource;
 
 public class FakeAdbTestRule extends ExternalResource {
 
@@ -61,7 +59,6 @@ public class FakeAdbTestRule extends ExternalResource {
     @Override
     public void before() throws Throwable {
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.addDeviceHandler(new JdwpCommandHandler());
         builder.installDefaultCommandHandlers();
         myServer = builder.build();
         // Start server execution.
@@ -147,11 +144,16 @@ public class FakeAdbTestRule extends ExternalResource {
                         }
                     }
                 };
+        // If the client is waiting for debugger attachment then we wait for the debugger status
+        // change, otherwise we just wait for the
+        // application ID to be returned
+        int desiredEvent = waitingForDebugger ? Client.CHANGE_DEBUGGER_STATUS : Client.CHANGE_NAME;
+
         AndroidDebugBridge.IClientChangeListener clientListener =
                 (client, changeMask) -> {
-                    if (changeMask == Client.CHANGE_NAME) {
+                    if (changeMask == desiredEvent) {
                         assertThat(client.isValid()).isTrue();
-                        launchedClient[0] = (ClientImpl)client;
+                        launchedClient[0] = (ClientImpl) client;
                         latch.countDown();
                     }
                 };

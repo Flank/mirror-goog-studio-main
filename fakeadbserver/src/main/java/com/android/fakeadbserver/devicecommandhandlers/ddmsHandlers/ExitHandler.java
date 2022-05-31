@@ -17,20 +17,15 @@ package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
-
 import java.io.OutputStream;
 
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
+public class ExitHandler implements DDMPacketHandler {
 
-public class ExitHandler implements JdwpDdmsPacketHandler {
-
-    public static final int CHUNK_TYPE = encodeChunkType("EXIT");
+    public static final int CHUNK_TYPE = DdmPacket.encodeChunkType("EXIT");
 
     @Override
     public boolean handlePacket(
-            @NonNull JdwpPacket packet,
-            @NonNull ClientState client,
-            @NonNull OutputStream oStream) {
+            @NonNull DdmPacket packet, @NonNull ClientState client, @NonNull OutputStream oStream) {
         // Kill the connection
         return false;
     }
