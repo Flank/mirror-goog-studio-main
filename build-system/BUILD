@@ -285,7 +285,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     ":agp_gradle_build_files",
     "//prebuilts/tools/common/aapt/protos:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
-    "//tools/base:agp_artifacts.zip",
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
     "//tools/base/build-system/aapt2-proto:agp_gradle_build_files",
     "//tools/base/build-system/aaptcompiler:agp_gradle_build_files",
