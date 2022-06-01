@@ -15,6 +15,6 @@
  */
 package com.android.fakeadbserver.services
 
-interface Service {
+fun interface Service {
     fun process(args: List<String>, serviceOutput: ServiceOutput)
 }
