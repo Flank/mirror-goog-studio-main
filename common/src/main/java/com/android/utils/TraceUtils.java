@@ -22,6 +22,7 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 
 /** Static methods useful for tracing. */
 public class TraceUtils {
@@ -82,6 +83,27 @@ public class TraceUtils {
             t.printStackTrace(writer);
             return stringWriter.toString();
         }
+    }
+
+    /** Returns stack traces of all threads as a single string. */
+    @NonNull
+    public static String getStacksOfAllThreads() {
+        StringBuilder buf = new StringBuilder();
+        for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
+            if (buf.length() != 0) {
+                buf.append('\n');
+            }
+            Thread thread = entry.getKey();
+            buf.append(thread.toString());
+            buf.append('\n');
+            StackTraceElement[] stackTrace = entry.getValue();
+            for (StackTraceElement frame : stackTrace) {
+                buf.append("  at ");
+                buf.append(frame.toString());
+                buf.append('\n');
+            }
+        }
+        return buf.toString();
     }
 
     /**
