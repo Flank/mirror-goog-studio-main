@@ -3173,10 +3173,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                    build.gradle:7: Error: log4j:log4j version 1.2.13 has an associated message from its author [RiskyLibrary]
+                    build.gradle:7: Error: log4j:log4j version 1.2.13 has blocking issues with an associated message from its author [RiskyLibrary]
                         compile 'log4j:log4j:1.2.13' // Critical BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibrary]
+                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author and will block publishing [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.12' // OUTDATED BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
