@@ -255,9 +255,9 @@ public final class ReadWriteProcessLock {
         long lockFileSize = Files.size(lockFilePath);
         Preconditions.checkArgument(
                 lockFileSize == 0,
-                String.format(
-                        "File '%1$s' with size=%2$d cannot be used as a lock file.",
-                        lockFilePath.toAbsolutePath(), lockFileSize));
+                "File '%s' with size=%s cannot be used as a lock file.",
+                lockFilePath.toAbsolutePath(),
+                lockFileSize);
 
         return lockFilePath;
     }
