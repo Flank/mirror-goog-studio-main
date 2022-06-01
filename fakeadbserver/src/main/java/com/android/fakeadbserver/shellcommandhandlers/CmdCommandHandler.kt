@@ -33,6 +33,11 @@ class CmdCommandHandler : SimpleShellHandler("cmd") {
         return
       }
 
+      // Save command to logs so tests can consult them.
+      args.let{
+        state.addCmdLog(args)
+      }
+
       CommandHandler.writeOkay(output)
 
       val response: String = when {

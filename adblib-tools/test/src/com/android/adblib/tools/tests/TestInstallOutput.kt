@@ -16,9 +16,11 @@
 package com.android.adblib.tools.tests
 
 import com.android.adblib.tools.InstallException
-import com.android.adblib.tools.PMClient
-import com.android.adblib.tools.PMClient.Companion.parseInstallResult
-import com.android.adblib.tools.PMClient.Companion.parseSessionID
+import com.android.adblib.tools.InstallResult
+import com.android.adblib.tools.PMDriver
+import com.android.adblib.tools.PMDriver.Companion.parseInstallResult
+import com.android.adblib.tools.PMDriver.Companion.parseSessionID
+import com.android.adblib.tools.SUCCESS_OUTPUT
 import org.junit.Assert
 import org.junit.Test
 
@@ -38,7 +40,7 @@ class TestInstallOutput {
 
         // Check SUCCESS is SUCCESS
         try {
-            parseInstallResult(PMClient.SUCCESS_OUTPUT)
+            parseInstallResult(SUCCESS_OUTPUT)
         } catch (e : Exception) {
             Assert.fail("Empty is a valid successful output")
         }

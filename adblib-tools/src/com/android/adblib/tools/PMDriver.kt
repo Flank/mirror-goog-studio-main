@@ -17,7 +17,6 @@ package com.android.adblib.tools
 
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.DeviceSelector
-import com.android.adblib.utils.TextShellCollector
 import kotlinx.coroutines.flow.first
 import java.nio.file.Files
 import java.nio.file.Path
@@ -57,87 +56,69 @@ import java.util.regex.Pattern
 //   "install" or "multiple-install" is used is based on API.
 
 // Currently supported: "Streamed install" over ABB_EXEC"
-// TODO: Add feature check
 // TODO: Support for device located APKs.
-// TODO: Support for pm
-// TODO: Support for cmd
-// TODO: Support for SHELL and EXEC service
 // TODO: Add progress callback so that caller is notified of overall progress
 //       (similar to AdbDeviceSyncServices.send )
 
-private val PACKAGE_SERVICE_NAME : String = "package"
 
-internal class PMClient(private val service : AdbDeviceServices, private val device: DeviceSelector) {
+
+
+internal class PMDriver(private val service : AdbDeviceServices, private val device: DeviceSelector) {
+
+    private val logger = service.session.host.logger
 
     suspend fun install(
         apks: List<Path>,
         options: List<String> = listOf()
     ) {
+
+        // Before we start, decide of an install strategy
+        val features = service.session.hostServices.availableFeatures(device)
+        val api = getDeviceAPILevel(service, device)
+        val pm : PM = when {
+            // Test API level
+            api < 21 -> PMLegacy(service)
+            features.contains("abb_exec") -> PMAbb(service)
+            features.contains("cmd") -> PMCmd(service)
+            else -> PMPm(service)
+        }
+
+        // Report our strategy
+        val strategy = pm.getStrategy()
+        logger.info{ "PMDriver installing via '$strategy' " }
+        val optionsString = options.joinToString(" ")
+        logger.info{ "  options: '$optionsString' " }
+        apks.forEach{
+            logger.info{ "  apk: '$it' " }
+        }
+
+        // Finally, installing!
+
         // 1/ Create session
-        val sessionID = createSession(device, options)
+        val flow = pm.createSession(device, options)
+        val sessionID = parseSessionID(flow.first())
 
         try {
+
             // 2/ Write all apks
             apks.forEach {
-                streamApk(device, sessionID, it)
+                val size = Files.size(it)
+                // Make sure we have a filename that won't mess with our command
+                val filename = cleanFilename(it.fileName.toString())
+                val flow = pm.streamApk(device, sessionID, it, filename, size)
+                parseInstallResult(flow.first())
             }
+
             // 3/ Finalize
-            commit(device, sessionID)
+            val flow = pm.commit(device, sessionID)
+            parseInstallResult(flow.first())
         } catch (t: Throwable) {
             runCatching {
-                abandon(device, sessionID)
+                val flow = pm.abandon(device, sessionID)
+                flow.first();
             }.onFailure { t.addSuppressed(it) }
             throw t
         }
-    }
-
-    private suspend fun createSession(
-        device: DeviceSelector,
-        options: List<String>
-    ): String {
-        val opts = options.joinToString(" ")
-        val cmd = "$PACKAGE_SERVICE_NAME install-create $opts"
-        val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector())
-
-        // Parse Result
-        val output = flow.first()
-        return parseSessionID(output)
-    }
-
-
-    private suspend fun streamApk(
-        device: DeviceSelector,
-        sessionID: String,
-        apk: Path
-    ) {
-        val size = Files.size(apk)
-
-        // Make sure we have a filename that won't mess with our command
-        val filename = cleanFilename(apk.fileName.toString())
-
-        val cmd = "$PACKAGE_SERVICE_NAME install-write -S $size $sessionID $filename -"
-        service.session.channelFactory.openFile(apk).use {
-            val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector(), it, shutdownOutput = false)
-            parseInstallResult(flow.first())
-        }
-    }
-
-    internal suspend fun commit(
-        device: DeviceSelector,
-        sessionID: String
-    ) {
-        val cmd = "$PACKAGE_SERVICE_NAME install-commit $sessionID"
-        val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector())
-        parseInstallResult(flow.first())
-    }
-
-    private suspend fun abandon(
-        device: DeviceSelector,
-        sessionID: String
-    ) {
-        val cmd = "$PACKAGE_SERVICE_NAME install-abandon $sessionID"
-        val flow = service.abb_exec(device, cmd.split(" "), TextShellCollector())
-        flow.first()
     }
 
     companion object {
@@ -151,24 +132,19 @@ internal class PMClient(private val service : AdbDeviceServices, private val dev
             if (matcher.matches()) {
                 return matcher.group(1)
             } else {
-                throw InstallException(output)
+                throw InstallException(InstallResult(output))
             }
         }
 
-        // Parse install-write and install-commit output. A typical output from "install-write" is
-        // "Success: streamed 13740091 bytes"
-        // A typical success output from "install-commit" is:
-        // "Success"
-        internal val SUCCESS_OUTPUT = "Success"
         internal fun parseInstallResult(output: String) {
-            if (output.isEmpty()) {
-                return
-            }
-
-            if (!output.startsWith(SUCCESS_OUTPUT)) {
-                throw InstallException(output)
+            val res = InstallResult(output)
+            if (!res.success) {
+                throw InstallException(res)
             }
         }
+
+
+
 
         // Replace everything not in A-Z, a-z, '_', '-', or '.' to '_'
         private val fileNameCleaner = "[^A-Za-z\\-_\\.-]".toRegex()

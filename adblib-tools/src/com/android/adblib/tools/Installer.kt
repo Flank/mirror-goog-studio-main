@@ -36,16 +36,16 @@ import java.time.Duration
  * This function throws [AdbProtocolErrorException], [AdbFailResponseException], or [IOException]
  * if there was a lower level communication error during execution of the underlying install commands.
  */
+
 suspend fun AdbDeviceServices.install(
     device: DeviceSelector,
     apks : List<Path>,
     options : List<String> = listOf(),
     timeout : Duration = Duration.ofSeconds(120),
 ) {
-    val deviceService = this
     withContext(session.host.ioDispatcher) { // Make sure we NEVER run on EDT
         session.host.timeProvider.withErrorTimeout(timeout) {
-            val client = PMClient(deviceService, device)
+            val client = PMDriver(this@install, device)
             client.install(apks, options)
         }
     }

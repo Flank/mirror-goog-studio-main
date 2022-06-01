@@ -31,29 +31,53 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 import java.util.stream.Collectors;
 
 public class DeviceState {
 
     private final ClientStateChangeHub mClientStateChangeHub = new ClientStateChangeHub();
+
     private final Map<String, DeviceFileState> mFiles = new HashMap<>();
+
     private final List<String> mLogcatMessages = new ArrayList<>();
+
     private final Map<Integer, ClientState> mClients = new HashMap<>();
+
     private final Map<Integer, PortForwarder> mPortForwarders = new HashMap<>();
+
     private final Map<Integer, PortForwarder> mReversePortForwarders = new HashMap<>();
+
     private final FakeAdbServer mServer;
+
     private final HostConnectionType mHostConnectionType;
+
     private final Set<String> mFeatures;
 
     private final int myTransportId;
 
     private final String mDeviceId;
+
     private final String mManufacturer;
+
     private final String mModel;
+
     private final String mBuildVersionRelease;
+
     private final String mBuildVersionSdk;
+
     private DeviceStatus mDeviceStatus;
+
     private final ServiceManager mServiceManager;
+
+    // Keep track of all PM commands invocation
+    private final Vector<String> mPmLogs = new Vector<>();
+
+    // Keep track of all cmd commands invocation
+    private final Vector<String> mCmdLogs = new Vector<>();
+
+    // Keep track of all ABB/ABB_EXEC commands invocation
+    private final Vector<String> mAbbLogs = new Vector<>();
 
     DeviceState(
             @NonNull FakeAdbServer server,
@@ -157,8 +181,8 @@ public class DeviceState {
                 return null;
             }
 
-            return new LogcatChangeHandlerSubscriptionResult(queue,
-                    new ArrayList<>(mLogcatMessages));
+            return new LogcatChangeHandlerSubscriptionResult(
+                    queue, new ArrayList<>(mLogcatMessages));
         }
     }
 
@@ -314,7 +338,9 @@ public class DeviceState {
     }
 
     private static Set<String> initFeatures(String sdk) {
-        Set<String> features = new HashSet<>(Arrays.asList("push_sync", "fixed_push_mkdir", "shell_v2", "apex,stat_v2"));
+        Set<String> features =
+                new HashSet<>(
+                        Arrays.asList("push_sync", "fixed_push_mkdir", "shell_v2", "apex,stat_v2"));
         try {
             int api = Integer.parseInt(sdk);
             if (api >= 24) {
@@ -339,6 +365,30 @@ public class DeviceState {
 
     public ServiceManager getServiceManager() {
         return mServiceManager;
+    }
+
+    public void addPmLog(String cmd) {
+        mPmLogs.add(cmd);
+    }
+
+    public List<String> getPmLogs() {
+        return (List<String>) mPmLogs.clone();
+    }
+
+    public void addCmdLog(String cmd) {
+        mCmdLogs.add(cmd);
+    }
+
+    public List<String> getCmdLogs() {
+        return (List<String>) mCmdLogs.clone();
+    }
+
+    public void addAbbLog(String cmd) {
+        mAbbLogs.add(cmd);
+    }
+
+    public List<String> getAbbLogs() {
+        return (List<String>) mAbbLogs.clone();
     }
 
     /**
@@ -392,9 +442,9 @@ public class DeviceState {
     }
 
     /**
-     * This class represents the result of calling {@link #subscribeLogcatChangeHandler(ClientStateChangeHandlerFactory)}.
-     * This is needed to synchronize between adding the listener and getting the correct lines from
-     * the logcat buffer.
+     * This class represents the result of calling {@link
+     * #subscribeLogcatChangeHandler(ClientStateChangeHandlerFactory)}. This is needed to
+     * synchronize between adding the listener and getting the correct lines from the logcat buffer.
      */
     public static final class LogcatChangeHandlerSubscriptionResult {
 
