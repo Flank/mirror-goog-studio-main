@@ -18,8 +18,8 @@ readonly bin_dir="$("${bazel_dir}"/bazel info ${config_options} bazel-bin)"
   ${config_options} \
   --invocation_id=${invocation_id} \
   --tool_tag=${script_name} \
-  --ab_build_id="${BUILD_NUMBER}" \
-  --ab_target="studio-lldb" \
+  --build_metadata="ab_build_id=${BUILD_NUMBER}" \
+  --build_metadata="ab_target=studio-lldb" \
   --build_metadata="test_definition_name=android_studio/studio_lldb" \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
   --flaky_test_attempts=3 \
