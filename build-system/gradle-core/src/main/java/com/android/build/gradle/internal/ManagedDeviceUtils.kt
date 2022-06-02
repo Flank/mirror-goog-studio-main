@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.api.dsl.Device
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
@@ -64,9 +65,9 @@ fun computeAvdName(
 fun sanitizeProfileName(hardwareProfile: String) =
     hardwareProfile.replace(Regex("[() ]"), "_")
 
-fun setupTaskName(device: ManagedVirtualDevice): String = "${device.name}Setup"
+fun setupTaskName(device: Device): String = "${device.name}Setup"
 
-fun managedDeviceAllVariantsTaskName(device: ManagedVirtualDevice): String = "${device.name}Check"
+fun managedDeviceAllVariantsTaskName(device: Device): String = "${device.name}Check"
 
 fun managedDeviceGroupAllVariantsTaskName(deviceGroup: DeviceGroup): String =
     "${deviceGroup.name}GroupCheck"

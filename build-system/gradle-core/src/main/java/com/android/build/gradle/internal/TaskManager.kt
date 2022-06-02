@@ -24,6 +24,7 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.DataBinding
+import com.android.build.api.dsl.Device
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.api.transform.QualifiedContent
@@ -1774,7 +1775,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 ManagedDeviceCleanTask.CreationAction(
                     "cleanManagedDevices",
                     globalConfig,
-                    managedDevices))
+                    managedDevices.filterIsInstance<ManagedVirtualDevice>()))
         val allDevices = taskFactory.register(
             ALL_DEVICES_CHECK
         ) { allDevicesCheckTask: Task ->
@@ -1784,12 +1785,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
 
         for (device in managedDevices) {
-            val setupTask = taskFactory.register(
-                ManagedDeviceSetupTask.CreationAction(
-                    setupTaskName(device),
-                    device,
-                    globalConfig))
-            setupTask.configure {
+            val setupTask = when (device) {
+                is ManagedVirtualDevice -> taskFactory.register(
+                    ManagedDeviceSetupTask.CreationAction(
+                        setupTaskName(device),
+                        device,
+                        globalConfig))
+                else -> null
+            }
+            setupTask?.configure {
                 it.mustRunAfter(cleanTask)
             }
 
@@ -1882,18 +1886,21 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
         for (managedDevice in managedDevices) {
-            val managedDeviceTestTask = taskFactory.register(
-                ManagedDeviceInstrumentationTestTask.CreationAction(
-                    creationConfig,
-                    managedDevice,
-                    testData,
-                    File(resultsDir, managedDevice.name),
-                    File(reportDir, managedDevice.name),
-                    File(additionalTestOutputDir, managedDevice.name),
-                    File(coverageOutputDir, managedDevice.name),
-                    testTaskSuffix
+            val managedDeviceTestTask = when (managedDevice) {
+                is ManagedVirtualDevice -> taskFactory.register(
+                    ManagedDeviceInstrumentationTestTask.CreationAction(
+                        creationConfig,
+                        managedDevice,
+                        testData,
+                        File(resultsDir, managedDevice.name),
+                        File(reportDir, managedDevice.name),
+                        File(additionalTestOutputDir, managedDevice.name),
+                        File(coverageOutputDir, managedDevice.name),
+                        testTaskSuffix
+                    )
                 )
-            )
+                else -> error("Unsupported managed device type: ${managedDevice.javaClass}")
+            }
             managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
             allDevicesVariantTask.dependsOn(managedDeviceTestTask)
             taskFactory.configure(
@@ -3280,21 +3287,12 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    private fun getManagedDevices(): List<ManagedVirtualDevice> {
-        val managedDevices = mutableListOf<ManagedVirtualDevice>()
-        // First add devices from within the managed device block in testOptions.
-        extension
+    private fun getManagedDevices(): List<Device> {
+        return extension
             .testOptions
             .managedDevices
             .devices
-            .forEach { device ->
-                if (device is ManagedVirtualDevice) {
-                    managedDevices.add(device)
-                } else {
-                    error("Unsupported managed device type: ${device.javaClass}")
-                }
-            }
-        return managedDevices
+            .toList()
     }
 
     private fun getDeviceGroups(): Collection<DeviceGroup> =

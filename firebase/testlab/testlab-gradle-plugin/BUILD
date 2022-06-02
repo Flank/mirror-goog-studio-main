@@ -24,5 +24,9 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/build-system:gradle-api_neverlink",
+        "//tools/base/build-system/gradle-api",
+        "@maven//:com.google.apis.google-api-services-storage",
+        "@maven//:com.google.apis.google-api-services-testing",
+        "@maven//:com.google.apis.google-api-services-toolresults",
     ],
 )

@@ -33,6 +33,10 @@ gradlePlugin {
 }
 
 dependencies {
+    implementation libs.google_testing_client
+    implementation libs.google_toolresults_client
+    implementation libs.google_storage_client
+    compileOnly project(':base:gradle-api')
 }
 
 sourceSets {
