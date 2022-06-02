@@ -732,6 +732,68 @@ maven_import(
 )
 
 maven_artifact(
+    name = "com.google.apis.google-api-services-testing_v1-rev82-1.22.0",
+    pom = "repository/com/google/apis/google-api-services-testing/v1-rev82-1.22.0/google-api-services-testing-v1-rev82-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-testing/v1-rev82-1.22.0",
+    parent = "org.sonatype.oss.oss-parent_7",
+    deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.apis.google-api-services-testing",
+    classifiers = [],
+    parent = "org.sonatype.oss.oss-parent_7",
+    jars = [
+        "repository/com/google/apis/google-api-services-testing/v1-rev82-1.22.0/google-api-services-testing-v1-rev82-1.22.0.jar"
+    ],
+    exports = [
+        "com.google.api-client.google-api-client",
+    ],
+    original_deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    pom = "repository/com/google/apis/google-api-services-testing/v1-rev82-1.22.0/google-api-services-testing-v1-rev82-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-testing/v1-rev82-1.22.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.google.apis.google-api-services-toolresults_v1beta3-rev82-1.22.0",
+    pom = "repository/com/google/apis/google-api-services-toolresults/v1beta3-rev82-1.22.0/google-api-services-toolresults-v1beta3-rev82-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-toolresults/v1beta3-rev82-1.22.0",
+    parent = "org.sonatype.oss.oss-parent_7",
+    deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.apis.google-api-services-toolresults",
+    classifiers = [],
+    parent = "org.sonatype.oss.oss-parent_7",
+    jars = [
+        "repository/com/google/apis/google-api-services-toolresults/v1beta3-rev82-1.22.0/google-api-services-toolresults-v1beta3-rev82-1.22.0.jar"
+    ],
+    exports = [
+        "com.google.api-client.google-api-client",
+    ],
+    original_deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    pom = "repository/com/google/apis/google-api-services-toolresults/v1beta3-rev82-1.22.0/google-api-services-toolresults-v1beta3-rev82-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-toolresults/v1beta3-rev82-1.22.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.auth.google-auth-library-credentials_0.22.2",
     pom = "repository/com/google/auth/google-auth-library-credentials/0.22.2/google-auth-library-credentials-0.22.2.pom",
     repo_root_path = "repository",

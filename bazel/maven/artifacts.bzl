@@ -15,6 +15,8 @@ ARTIFACTS = [
     "com.google.auto.value:auto-value-annotations:1.6.2",
     "com.google.auth:google-auth-library-credentials:0.17.1",
     "com.google.auth:google-auth-library-oauth2-http:0.17.1",
+    "com.google.apis:google-api-services-testing:v1-rev82-1.22.0",
+    "com.google.apis:google-api-services-toolresults:v1beta3-rev82-1.22.0",
     "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.6",
     "com.google.crypto.tink:tink:1.3.0-rc2",
