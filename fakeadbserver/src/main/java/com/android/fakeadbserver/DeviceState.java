@@ -175,6 +175,12 @@ public class DeviceState {
         }
     }
 
+    public void deleteFile(@NonNull String filepath) {
+        synchronized (mFiles) {
+            mFiles.remove(filepath);
+        }
+    }
+
     @NonNull
     public ClientState startClient(
             int pid, int uid, @NonNull String packageName, boolean isWaiting) {
