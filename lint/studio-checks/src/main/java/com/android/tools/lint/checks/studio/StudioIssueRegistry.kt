@@ -59,35 +59,36 @@ class StudioIssueRegistry : IssueRegistry() {
     }
 
     override val issues = listOf(
+        ByLazyDetector.ISSUE,
         CheckResultDetector.CHECK_RESULT,
         ExternalAnnotationsDetector.ISSUE,
         FileComparisonDetector.ISSUE,
+        ForbiddenStudioCallDetector.INTERN,
         ForkJoinPoolDetector.COMMON_FJ_POOL,
         ForkJoinPoolDetector.NEW_FJ_POOL,
-        ImplicitExecutorDetector.ISSUE,
-        IntellijThreadDetector.ISSUE,
-        RegexpPathDetector.ISSUE,
-        SwingWorkerDetector.ISSUE,
         GradleApiUsageDetector.ISSUE,
         HdpiDetector.ISSUE,
-        LintDetectorDetector.ID,
-        LintDetectorDetector.PSI_COMPARE,
+        HtmlPaneDetector.ISSUE,
+        ImplicitExecutorDetector.ISSUE,
+        IntellijThreadDetector.ISSUE,
         LintDetectorDetector.CHECK_URL,
         LintDetectorDetector.DOLLAR_STRINGS,
+        LintDetectorDetector.ID,
         LintDetectorDetector.MISSING_DOC_EXAMPLE,
         // We're not including this check here;
         // a vendor is not required for built-in checks
-        // LintDetectorDetector.MISSING_VENDOR,
+        //LintDetectorDetector.MISSING_VENDOR,
+        LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.TEXT_FORMAT,
         LintDetectorDetector.TRIM_INDENT,
         LintDetectorDetector.UNEXPECTED_DOMAIN,
         LintDetectorDetector.USE_KOTLIN,
         LintDetectorDetector.USE_UAST,
-        ShortNameCacheDetector.ISSUE,
-        HtmlPaneDetector.ISSUE,
-        ForbiddenStudioCallDetector.INTERN,
-        TerminologyDetector.ISSUE,
+        NoOpDetector.ISSUE,
         PathAsIterableDetector.ISSUE,
-        NoOpDetector.ISSUE
+        RegexpPathDetector.ISSUE,
+        ShortNameCacheDetector.ISSUE,
+        SwingWorkerDetector.ISSUE,
+        TerminologyDetector.ISSUE,
     )
 }
