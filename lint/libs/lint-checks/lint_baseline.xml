@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 7.1.0-dev">
+<issues format="5" by="lint 7.4.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -78,7 +78,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="2147"/>
+            line="2146"/>
     </issue>
 
     <issue
@@ -86,7 +86,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/IconDetector.java"
-            line="2157"/>
+            line="2156"/>
     </issue>
 
     <issue
@@ -158,7 +158,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/DuplicateResourceDetector.java"
-            line="132"/>
+            line="120"/>
     </issue>
 
     <issue
