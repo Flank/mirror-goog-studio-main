@@ -17,25 +17,13 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel
-import com.android.build.gradle.internal.cxx.model.CxxProjectModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.lookup
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ANDROID_GRADLE_IS_HOSTING
 
 /**
  * Look up [Macro] equivalent value from the C/C++ build abi model.
  */
 fun CxxAbiModel.resolveMacroValue(macro : Macro) : String {
-    fun fail() = "Could not resolve the C/C++ macro ${macro.ref}"
-    return when(macro.bindingType) {
-        Macro::class -> macro.takeFrom(macro) ?: fail()
-        CxxAbiModel::class -> macro.takeFrom(this) ?: fail()
-        CxxCmakeAbiModel::class -> cmake?.let { macro.takeFrom(it) ?: fail() } ?: ""
-        CxxVariantModel::class -> macro.takeFrom(variant) ?: fail()
-        CxxModuleModel::class -> macro.takeFrom(variant.module) ?: fail()
-        CxxProjectModel::class -> macro.takeFrom(variant.module.project) ?: fail()
-        CxxCmakeModuleModel::class -> variant.module.cmake?.let { macro.takeFrom(it) ?: fail() } ?: ""
-        else -> fail()
-    }
+    if (macro == NDK_ANDROID_GRADLE_IS_HOSTING) return "1"
+    return lookup(macro.bind ?: return "$macro") ?: ""
 }

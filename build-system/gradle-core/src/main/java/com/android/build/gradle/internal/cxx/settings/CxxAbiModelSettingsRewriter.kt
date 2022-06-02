@@ -48,6 +48,30 @@ import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.ModelField
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_CONFIGURATION_ARGUMENTS
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_CXX_BUILD_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_INTERMEDIATES_PARENT_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_PREFAB_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_SO_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_ABI_MODEL_STL_LIBRARY_FILE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_CMAKE_ABI_MODEL_BUILD_COMMAND_ARGS
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_CMAKE_MODULE_MODEL_CMAKE_EXE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_CONFIGURE_SCRIPT
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_CXX_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_INTERMEDIATES_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_MAKE_FILE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_MODULE_ROOT_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_NDK_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_MODULE_MODEL_NINJA_EXE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_PROJECT_MODEL_ROOT_BUILD_GRADLE_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_PROJECT_MODEL_SDK_FOLDER
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_VARIANT_MODEL_OPTIMIZATION_TAG
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_VARIANT_MODEL_STL_TYPE
+import com.android.build.gradle.internal.cxx.model.ModelField.CXX_VARIANT_MODEL_VERBOSE_MAKEFILE
+import com.android.build.gradle.internal.cxx.model.ModelField.ENVIRONMENT_VARIABLE_NAME
+import com.android.build.gradle.internal.cxx.model.ModelField.ENVIRONMENT_VARIABLE_VALUE
 import com.android.build.gradle.internal.cxx.model.buildIsPrefabCapable
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE_DIR
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
@@ -66,7 +90,6 @@ import com.google.common.collect.Lists
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
-import kotlin.reflect.KProperty1
 
 /**
  * Rewrite the CxxAbiModel in three phases:
@@ -393,64 +416,64 @@ private fun CxxAbiModel.getNdkBuildCommandLine(): List<String> {
  * This function also rewrites the referenced [CxxVariantModel] which continues on to the rest of
  * the model.
  */
-fun CxxAbiModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
+fun CxxAbiModel.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
         variant = variant.rewrite(rewrite),
         cmake = cmake?.rewrite(rewrite),
-        cxxBuildFolder = rewrite(CxxAbiModel::cxxBuildFolder, cxxBuildFolder.path).toFile(),
-        prefabFolder = rewrite(CxxAbiModel::prefabFolder, prefabFolder.path).toFile(),
-        soFolder = rewrite(CxxAbiModel::soFolder, soFolder.path).toFile(),
-        intermediatesParentFolder = rewrite(CxxAbiModel::intermediatesParentFolder, intermediatesParentFolder.path).toFile(),
-        stlLibraryFile = rewrite.fileOrNull(CxxAbiModel::stlLibraryFile, stlLibraryFile),
+        cxxBuildFolder = rewrite(CXX_ABI_MODEL_CXX_BUILD_FOLDER, cxxBuildFolder.path).toFile(),
+        prefabFolder = rewrite(CXX_ABI_MODEL_PREFAB_FOLDER, prefabFolder.path).toFile(),
+        soFolder = rewrite(CXX_ABI_MODEL_SO_FOLDER, soFolder.path).toFile(),
+        intermediatesParentFolder = rewrite(CXX_ABI_MODEL_INTERMEDIATES_PARENT_FOLDER, intermediatesParentFolder.path).toFile(),
+        stlLibraryFile = rewrite.fileOrNull(CXX_ABI_MODEL_STL_LIBRARY_FILE, stlLibraryFile),
         buildSettings = buildSettings.rewrite(rewrite),
-        configurationArguments = configurationArguments.map { rewrite(CxxAbiModel::configurationArguments, it ) }
+        configurationArguments = configurationArguments.map { rewrite(CXX_ABI_MODEL_CONFIGURATION_ARGUMENTS, it ) }
 )
 
 // Rewriter for CxxProjectModel
-private fun CxxProjectModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
-        rootBuildGradleFolder = rewrite(CxxProjectModel::rootBuildGradleFolder, rootBuildGradleFolder.path).toFile(),
-        sdkFolder = rewrite(CxxProjectModel::sdkFolder, sdkFolder.path).toFile()
+private fun CxxProjectModel.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
+        rootBuildGradleFolder = rewrite(CXX_PROJECT_MODEL_ROOT_BUILD_GRADLE_FOLDER, rootBuildGradleFolder.path).toFile(),
+        sdkFolder = rewrite(CXX_PROJECT_MODEL_SDK_FOLDER, sdkFolder.path).toFile()
 )
 
 // Rewriter for CxxCmakeModuleModel
-private fun CxxCmakeModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, String: String) -> String) = copy(
-        cmakeExe = rewrite.fileOrNull(CxxCmakeModuleModel::cmakeExe, cmakeExe),
+private fun CxxCmakeModuleModel.rewrite(rewrite : (property: ModelField, String: String) -> String) = copy(
+        cmakeExe = rewrite.fileOrNull(CXX_CMAKE_MODULE_MODEL_CMAKE_EXE, cmakeExe),
 )
 
 // Rewriter for CxxModuleModel
-private fun CxxModuleModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
+private fun CxxModuleModel.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
         project = project.rewrite(rewrite),
         cmake = cmake?.rewrite(rewrite),
-        cmakeToolchainFile = rewrite(CxxModuleModel::cmakeToolchainFile, cmakeToolchainFile.path).toFile(),
-        cxxFolder = rewrite(CxxModuleModel::cxxFolder, cxxFolder.path).toFile(),
-        intermediatesFolder = rewrite(CxxModuleModel::intermediatesFolder, intermediatesFolder.path).toFile(),
-        moduleRootFolder = rewrite(CxxModuleModel::moduleRootFolder, moduleRootFolder.path).toFile(),
-        ndkFolder = rewrite(CxxModuleModel::ndkFolder, ndkFolder.path).toFile(),
-        ninjaExe = rewrite.fileOrNull(CxxModuleModel::ninjaExe, ninjaExe),
-        makeFile = rewrite.fileOrNull(CxxModuleModel::makeFile, makeFile)!!,
-        configureScript = rewrite.fileOrNull(CxxModuleModel::configureScript, configureScript)
+        cmakeToolchainFile = rewrite(CXX_MODULE_MODEL_CMAKE_TOOLCHAIN_FILE, cmakeToolchainFile.path).toFile(),
+        cxxFolder = rewrite(CXX_MODULE_MODEL_CXX_FOLDER, cxxFolder.path).toFile(),
+        intermediatesFolder = rewrite(CXX_MODULE_MODEL_INTERMEDIATES_FOLDER, intermediatesFolder.path).toFile(),
+        moduleRootFolder = rewrite(CXX_MODULE_MODEL_MODULE_ROOT_FOLDER, moduleRootFolder.path).toFile(),
+        ndkFolder = rewrite(CXX_MODULE_MODEL_NDK_FOLDER, ndkFolder.path).toFile(),
+        ninjaExe = rewrite.fileOrNull(CXX_MODULE_MODEL_NINJA_EXE, ninjaExe),
+        makeFile = rewrite.fileOrNull(CXX_MODULE_MODEL_MAKE_FILE, makeFile)!!,
+        configureScript = rewrite.fileOrNull(CXX_MODULE_MODEL_CONFIGURE_SCRIPT, configureScript)
 )
 
 // Rewriter for CxxVariantModel
-private fun CxxVariantModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
+private fun CxxVariantModel.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
         module = module.rewrite(rewrite),
-        optimizationTag = rewrite(CxxVariantModel::optimizationTag, optimizationTag),
-        stlType = rewrite(CxxVariantModel::stlType, stlType),
-        verboseMakefile = rewrite.booleanOrNull(CxxVariantModel::verboseMakefile, verboseMakefile),
+        optimizationTag = rewrite(CXX_VARIANT_MODEL_OPTIMIZATION_TAG, optimizationTag),
+        stlType = rewrite(CXX_VARIANT_MODEL_STL_TYPE, stlType),
+        verboseMakefile = rewrite.booleanOrNull(CXX_VARIANT_MODEL_VERBOSE_MAKEFILE, verboseMakefile),
 )
 
 // Rewriter for CxxCmakeAbiModel
-private fun CxxCmakeAbiModel.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
-        buildCommandArgs = rewrite.stringOrNull(CxxCmakeAbiModel::buildCommandArgs, buildCommandArgs)
+private fun CxxCmakeAbiModel.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
+      buildCommandArgs = rewrite.stringOrNull(CXX_CMAKE_ABI_MODEL_BUILD_COMMAND_ARGS, buildCommandArgs)
 )
 
 // Rewriter for EnvironmentVariable
-private fun EnvironmentVariable.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
-        name = rewrite(EnvironmentVariable::name, name),
-        value = rewrite.stringOrNull(EnvironmentVariable::value, value)
+private fun EnvironmentVariable.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
+        name = rewrite(ENVIRONMENT_VARIABLE_NAME, name),
+        value = rewrite.stringOrNull(ENVIRONMENT_VARIABLE_VALUE, value)
 )
 
 // Rewriter for BuildSettingsConfiguration
-private fun BuildSettingsConfiguration.rewrite(rewrite : (property: KProperty1<*, *>, value: String) -> String) = copy(
+private fun BuildSettingsConfiguration.rewrite(rewrite : (property: ModelField, value: String) -> String) = copy(
         environmentVariables = environmentVariables.map { it.rewrite(rewrite) }
 )
 
@@ -460,7 +483,7 @@ private fun String.toFile() : File = File(this)
 /**
  * Rewrite a String?. Use isBlank() to transmit null.
  */
-private fun ((KProperty1<*, *>, String) -> String).stringOrNull(property: KProperty1<*, *>, string : String?) : String? {
+private fun ((ModelField, String) -> String).stringOrNull(property: ModelField, string : String?) : String? {
     val result = invoke(property, string ?: "")
     if (result.isBlank()) return null
     return result
@@ -469,7 +492,7 @@ private fun ((KProperty1<*, *>, String) -> String).stringOrNull(property: KPrope
 /**
  * Rewrite a File?. Use isBlank() to transmit null.
  */
-private fun ((KProperty1<*, *>, String) -> String).fileOrNull(property: KProperty1<*, *>, file : File?) : File? {
+private fun ((ModelField, String) -> String).fileOrNull(property: ModelField, file : File?) : File? {
     val result = invoke(property, file?.path ?: "")
     if (result.isBlank()) return null
     return result.toFile()
@@ -478,8 +501,8 @@ private fun ((KProperty1<*, *>, String) -> String).fileOrNull(property: KPropert
 /**
  * Rewrite a Boolean?. Use isBlank() to transmit null.
  */
-private fun ((KProperty1<*, *>, String) -> String).booleanOrNull(
-    property: KProperty1<*, *>,
+private fun ((ModelField, String) -> String).booleanOrNull(
+    property: ModelField,
     flag: Boolean?
 ): Boolean? {
     val value = when (flag) {
