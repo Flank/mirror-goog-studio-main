@@ -97,7 +97,8 @@ class FakeAdbRule : ExternalResource() {
       model: String,
       release: String,
       sdk: String,
-      hostConnectionType: DeviceState.HostConnectionType,
+      abi: String = "x86_64",
+      hostConnectionType: DeviceState.HostConnectionType = DeviceState.HostConnectionType.USB,
       avdName: String? = null,
       avdPath: String? = null
   ): DeviceState {
@@ -106,7 +107,7 @@ class FakeAdbRule : ExternalResource() {
     if (avdName != null && avdPath != null) {
       EmulatorConsole.registerConsoleForTest(deviceId, consoleFactory(avdName, avdPath))
     }
-    val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, hostConnectionType).get()
+    val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, abi, hostConnectionType).get()
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
     assertThat(startLatch.await(30, TimeUnit.SECONDS)).isTrue()
     return device
@@ -175,5 +176,4 @@ class FakeEmulatorConsole(
     override fun stopScreenRecording(): String {
         TODO("Not yet implemented")
     }
-
 }

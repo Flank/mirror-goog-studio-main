@@ -66,6 +66,8 @@ public class DeviceState {
 
     private final String mBuildVersionSdk;
 
+    private final String mCpuAbi;
+
     private DeviceStatus mDeviceStatus;
 
     private final ServiceManager mServiceManager;
@@ -86,6 +88,7 @@ public class DeviceState {
             @NonNull String model,
             @NonNull String release,
             @NonNull String sdk,
+            @NonNull String cpuAbi,
             @NonNull HostConnectionType hostConnectionType,
             int transportId) {
         mServer = server;
@@ -94,6 +97,7 @@ public class DeviceState {
         mModel = model;
         mBuildVersionRelease = release;
         mBuildVersionSdk = sdk;
+        mCpuAbi = cpuAbi;
         mFeatures = initFeatures(sdk);
         mHostConnectionType = hostConnectionType;
         myTransportId = transportId;
@@ -109,6 +113,7 @@ public class DeviceState {
                 config.getModel(),
                 config.getBuildVersionRelease(),
                 config.getBuildVersionSdk(),
+                config.getCpuAbi(),
                 config.getHostConnectionType(),
                 transportId);
         config.getFiles().forEach(fileState -> mFiles.put(fileState.getPath(), fileState));
@@ -124,6 +129,11 @@ public class DeviceState {
     @NonNull
     public String getDeviceId() {
         return mDeviceId;
+    }
+
+    @NonNull
+    public String getCpuAbi() {
+        return mCpuAbi;
     }
 
     @NonNull
@@ -334,6 +344,7 @@ public class DeviceState {
                 mModel,
                 mBuildVersionRelease,
                 mBuildVersionSdk,
+                mCpuAbi,
                 mDeviceStatus);
     }
 

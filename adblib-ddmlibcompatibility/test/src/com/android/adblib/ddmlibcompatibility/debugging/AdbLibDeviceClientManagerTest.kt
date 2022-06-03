@@ -76,8 +76,7 @@ class AdbLibDeviceClientManagerTest {
             "manuf",
             "model",
             "2022",
-            "31",
-            DeviceState.HostConnectionType.USB
+            "31"
         )
 
         // Ensure device is online

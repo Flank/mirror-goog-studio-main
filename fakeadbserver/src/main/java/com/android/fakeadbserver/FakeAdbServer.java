@@ -254,6 +254,7 @@ public final class FakeAdbServer implements AutoCloseable {
      * @param deviceModel        is the model name of the device
      * @param release            is the Android OS version of the device
      * @param sdk                is the SDK version of the device
+     * @param cpuAbi             is the ABI of the device CPU
      * @param hostConnectionType is the simulated connection type to the device @return the future
      * @return a future to allow synchronization of the side effects of the call
      */
@@ -263,6 +264,7 @@ public final class FakeAdbServer implements AutoCloseable {
             @NonNull String deviceModel,
             @NonNull String release,
             @NonNull String sdk,
+            @NonNull String cpuAbi,
             @NonNull DeviceState.HostConnectionType hostConnectionType) {
         DeviceState device =
                 new DeviceState(
@@ -272,6 +274,7 @@ public final class FakeAdbServer implements AutoCloseable {
                         deviceModel,
                         release,
                         sdk,
+                        cpuAbi,
                         hostConnectionType,
                         newTransportId());
         if (mConnectionHandlerTask == null) {
@@ -287,6 +290,23 @@ public final class FakeAdbServer implements AutoCloseable {
                         return device;
                     });
         }
+    }
+
+    public Future<DeviceState> connectDevice(
+            @NonNull String deviceId,
+            @NonNull String manufacturer,
+            @NonNull String deviceModel,
+            @NonNull String release,
+            @NonNull String sdk,
+            @NonNull DeviceState.HostConnectionType hostConnectionType) {
+        return connectDevice(
+                deviceId,
+                manufacturer,
+                deviceModel,
+                release,
+                sdk,
+                "x86_64",
+                hostConnectionType);
     }
 
     void addDevice(DeviceStateConfig deviceConfig) {

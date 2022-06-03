@@ -45,6 +45,9 @@ public class GetPropCommandHandler extends SimpleShellHandler {
             String builder =
                     "# This is some build info\n"
                             + "# This is more build info\n\n"
+                            + "[ro.product.cpu.abi]: ["
+                            + device.getCpuAbi()
+                            + "]\n"
                             + "[ro.product.manufacturer]: ["
                             + device.getManufacturer()
                             + "]\n"
