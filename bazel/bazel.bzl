@@ -719,6 +719,7 @@ def _gen_split_tests(
         name = name + "_tests__all",
         data = test_data + _get_unique_split_data(split_test_targets),
         tags = ["manual"],
+        jvm_flags = jvm_flags,
         **kwargs
     )
     split_tests = []
