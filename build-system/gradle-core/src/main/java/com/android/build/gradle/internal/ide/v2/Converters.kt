@@ -18,10 +18,13 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
-import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.dsl.Lint
+import com.android.build.api.variant.Sources
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
+import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
@@ -31,6 +34,7 @@ import com.android.builder.model.v2.ide.AaptOptions.Namespacing.DISABLED
 import com.android.builder.model.v2.ide.AaptOptions.Namespacing.REQUIRED
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaCompileOptions
+import com.android.builder.model.v2.ide.SourceProvider
 import com.android.builder.model.v2.ide.TestInfo
 import com.android.build.api.dsl.ApkSigningConfig as DslSigningConfig
 import com.android.build.gradle.internal.dsl.BuildType as DslBuildType
@@ -189,21 +193,27 @@ internal fun DslApiVersion.convert() = ApiVersionImpl(
 
 internal fun DefaultAndroidSourceSet.convert(
         features: BuildFeatureValues,
-) = SourceProviderImpl(
+        variantSources: VariantCreationConfig? = null
+): SourceProvider {
+    val mixin = variantSources?.sources
+    return SourceProviderImpl(
         name = name,
         manifestFile = manifestFile,
-        javaDirectories = javaDirectories,
-        kotlinDirectories = kotlinDirectories,
+        javaDirectories = javaDirectories + variantSourcesForModel(mixin?.java),
+        kotlinDirectories = kotlinDirectories + variantSourcesForModel(mixin?.kotlin),
         resourcesDirectories = resourcesDirectories,
         aidlDirectories = if (features.aidl) aidlDirectories else null,
         renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,
         resDirectories = if (features.androidResources) resDirectories else null,
-        assetsDirectories = assetsDirectories,
-        jniLibsDirectories = jniLibsDirectories,
-        shadersDirectories = if (features.shaders) shadersDirectories else null,
+        assetsDirectories = assetsDirectories + variantSourcesForModel(mixin?.assets),
+        jniLibsDirectories = jniLibsDirectories + variantSourcesForModel(mixin?.jniLibs),
+        shadersDirectories = if (features.shaders) {
+            shadersDirectories + variantSourcesForModel(mixin?.shaders)
+        } else null,
         mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
         customDirectories = customDirectories,
-)
+    )
+}
 
 internal fun DefaultAndroidSourceSet.convert(
     features: BuildFeatureValues,
@@ -224,8 +234,8 @@ internal fun DefaultAndroidSourceSet.convert(
     customDirectories = customDirectories,
 )
 
-private fun variantSourcesForModel(sourceDirectories: SourceDirectoriesImpl) =
-    sourceDirectories.variantSourcesForModel { it.shouldBeAddedToIdeModel }
+private fun variantSourcesForModel(sourceDirectories: SourceDirectoriesImpl?) =
+    sourceDirectories?.variantSourcesForModel { it.shouldBeAddedToIdeModel } ?: emptyList()
 
 internal fun AndroidResources.convert() = AaptOptionsImpl(
     namespacing = if (namespaced) REQUIRED else DISABLED

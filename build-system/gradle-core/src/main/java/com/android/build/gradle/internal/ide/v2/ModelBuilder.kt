@@ -270,9 +270,16 @@ class ModelBuilder<
             val buildTypeName = buildType.buildType.name
 
             if (variantDimensionInfo.buildTypes.contains(buildTypeName)) {
+                // Mixin works only when there are no flavours.
+                // When a flavour is there source provider will be initialized
+                // with variant sources.
+                val mixinVariantSources: VariantCreationConfig? =
+                    if (variantInputs.productFlavors.values.isEmpty()) {
+                        variants.find { it.name == buildTypeName }
+                    } else null
                 buildTypes.add(
                     SourceSetContainerImpl(
-                        sourceProvider = buildType.sourceSet.convert(buildFeatures),
+                        sourceProvider = buildType.sourceSet.convert(buildFeatures, mixinVariantSources),
                         androidTestSourceProvider = buildType.getTestSourceSet(ComponentTypeImpl.ANDROID_TEST)
                             ?.takeIf { androidTests.buildTypes.contains(buildTypeName) }
                             ?.convert(buildFeatures),

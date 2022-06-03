@@ -106,7 +106,7 @@ internal class SourceDirectoriesImplTest {
         val addedSourceFromTask = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
         val testTarget = createTestTarget(addedSrcDir)
-        val fileTrees = testTarget.variantSourcesForModel { true }
+        val fileTrees = testTarget.variantSourcesForModel { it.shouldBeAddedToIdeModel }
         Truth.assertThat(fileTrees).hasSize(2)
         Truth.assertThat(fileTrees.map { it.absolutePath }).containsExactly(
             addedSourceFromTask.absolutePath,
@@ -146,9 +146,7 @@ internal class SourceDirectoriesImplTest {
         val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java)
         testTarget.addGeneratedSourceDirectory(taskProvider, AddingTask::output)
 
-        testTarget.addStaticSourceDirectory(
-            addedSrcDir.absolutePath,
-        )
+        testTarget.addStaticSourceDirectory(addedSrcDir.absolutePath)
 
         return testTarget
     }

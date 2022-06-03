@@ -59,7 +59,9 @@ abstract class SourceDirectoriesImpl(
             TaskProviderBasedDirectoryEntryImpl(
                 "$_name-${taskProvider.name}",
                 mappedValue,
+                isGenerated = true,
                 isUserAdded = true,
+                shouldBeAddedToIdeModel = true
             )
         )
     }
@@ -76,7 +78,8 @@ abstract class SourceDirectoriesImpl(
                 name = "variant",
                 directory = directory.asFile,
                 filter = filter,
-                isUserAdded = true
+                isUserAdded = true,
+                shouldBeAddedToIdeModel = true
             )
         )
     }
