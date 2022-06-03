@@ -87,10 +87,12 @@ public class View {
 
     @VisibleForTesting public Consumer<Canvas> drawHandler = canvas -> {};
 
+    @VisibleForTesting Picture mPictureCapture;
+
     /** If set, used to fake what is normally more complex Matrix math */
     private float[] mTransformedPoints = null;
 
-    @Nullable private AttachInfo mAttachInfo = null;
+    @Nullable AttachInfo mAttachInfo = null;
 
     public View(Context context) {
         mContext = context;
@@ -227,6 +229,13 @@ public class View {
 
     public void invalidate() {
         mInvalidateCount++;
+        if (mPictureCapture != null) {
+            // If a capture picture is specified in a test,
+            // notify the callback (delayed) on the UI thread.
+            // This would allow a test to avoid calling forcePictureCapture explicitly.
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(() -> forcePictureCapture(mPictureCapture));
+        }
     }
 
     @VisibleForTesting
@@ -259,7 +268,6 @@ public class View {
     }
 
     // Only works with views where setAttachInfo was called on them
-    @VisibleForTesting
     public void forcePictureCapture(Picture picture) {
         if (mAttachInfo != null) {
             mAttachInfo.forcePictureCapture(picture);
@@ -267,5 +275,17 @@ public class View {
         if (mViewTreeObserver != null) {
             mViewTreeObserver.fireFrameCommit();
         }
+    }
+
+    // In tests this can be used to specify the picture that will be intercepted with a
+    // HardwareRenderer callback when the View root is invalidated.
+    @VisibleForTesting
+    public void setPictureCapture(Picture picture) {
+        mPictureCapture = picture;
+    }
+
+    @VisibleForTesting
+    public Picture getPictureCapture() {
+        return mPictureCapture;
     }
 }
