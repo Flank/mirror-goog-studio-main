@@ -130,6 +130,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * the system to stop as soon as possible.
          */
         val handle: AutoCloseable,
+        val capturingType: Screenshot.Type,
         val root: View,
         val captureExecutor: Executor,
         val os: OutputStream,
@@ -339,7 +340,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun updateAllViewChangeNotifications() {
-        for ((_, root, captureExecutor, os, _, _) in state.contextMap.values) {
+        for ((_, _, root, captureExecutor, os, _, _) in state.contextMap.values) {
             updateViewChangeNotification(root, captureExecutor, os)
         }
     }
@@ -348,9 +349,19 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         // Starting rendering captures must be called on the View thread or else it throws
         ThreadUtils.runOnMainThread {
             synchronized(stateLock) {
-                var handle = if (state.snapshotRequests.isNotEmpty() ||
-                    state.screenshotSettings.type == Screenshot.Type.SKP
-                ) {
+                var type =
+                    if (state.snapshotRequests.isNotEmpty()) Screenshot.Type.SKP
+                    else state.screenshotSettings.type
+                if (type == state.contextMap[root.uniqueDrawingId]?.capturingType) {
+                    // We already have this rendering type, just return
+                    return@runOnMainThread
+                }
+
+                // The AutoClose implementation in ViewDebug will set the picture capture callback
+                // to null in the renderer. Do not call this after creating a new callback.
+                state.contextMap[root.uniqueDrawingId]?.handle?.close()
+
+                var handle = if (type == Screenshot.Type.SKP) {
                     try {
                         // If we get null the view is gone. It will be removed by the roots detector
                         // later.
@@ -367,17 +378,20 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     }
                 } else null
 
-                handle = handle ?: registerScreenshotCallback(root, executor, os)
+                if (handle == null) {
+                    handle = registerScreenshotCallback(root, executor, os)
+                    type = Screenshot.Type.BITMAP
+                }
 
                 // We might get multiple callbacks for the same view while still processing an earlier
                 // one. Let's avoid processing these in parallel to avoid confusion.
                 val sequentialExecutor =
                     Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
 
-                state.contextMap[root.uniqueDrawingId]?.handle?.close()
                 state.contextMap[root.uniqueDrawingId] =
                     CaptureContext(
                         handle,
+                        type,
                         root,
                         executor,
                         os,
@@ -507,7 +521,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             if (!rootsDetector.lastRootIds.contains(root.uniqueDrawingId)) {
                 return@run
             }
-
             sendLayoutEvent(root, context, screenshotSettings, os, snapshotResponse)
         }
         if (snapshotResponse != null || context.isLastCapture) {
@@ -774,7 +787,6 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             // At this point we need to switch to capturing SKPs if we aren't already.
             updateAllViewChangeNotifications()
             ThreadUtils.runOnMainThread { roots.forEach { it.invalidate() } }
-
             val reply = LayoutInspectorViewProtocol.CaptureSnapshotResponse.newBuilder().apply {
                 windowRoots = WindowRootsEvent.newBuilder().apply {
                     addAllIds(roots.map { it.uniqueDrawingId })

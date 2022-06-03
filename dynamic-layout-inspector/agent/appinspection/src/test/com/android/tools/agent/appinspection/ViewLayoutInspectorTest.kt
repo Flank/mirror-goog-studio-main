@@ -1052,7 +1052,6 @@ abstract class ViewLayoutInspectorTestBase {
         }
     }
 
-
     @Test
     fun correctBitmapTypesCaptured() = createViewInspector { viewInspector ->
         val eventQueue = ArrayBlockingQueue<ByteArray>(5)
@@ -1161,9 +1160,6 @@ abstract class ViewLayoutInspectorTestBase {
             }
         }
     }
-
-    // TODO: Add test for testing snapshot mode (which will require adding more support for fetching
-    //  view properties in fake-android.
 
     @Test
     fun canFetchPropertiesForView() = createViewInspector { viewInspector ->
@@ -1794,7 +1790,7 @@ abstract class ViewLayoutInspectorTestBase {
     }
 
     @Test
-    fun progressEventsSent()  = createViewInspector { viewInspector ->
+    fun progressEventsSent() = createViewInspector { viewInspector ->
         val responseQueue = ArrayBlockingQueue<ByteArray>(1)
         inspectorRule.commandCallback.replyListeners.add { bytes ->
             responseQueue.add(bytes)
@@ -2029,6 +2025,100 @@ abstract class ViewLayoutInspectorTestBase {
         assertThat(exception).isNull()
     }
 
+    // Check that taking a snapshot doesn't result a missing capturing callback: b/234407838
+    // TODO: Add check of properties.
+    @Test
+    fun takeSnapshot() = createViewInspector { viewInspector ->
+        val responseQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.commandCallback.replyListeners.add { bytes ->
+            responseQueue.add(bytes)
+        }
+
+        val eventQueue = ArrayBlockingQueue<ByteArray>(10)
+        inspectorRule.connection.eventListeners.add { bytes ->
+            eventQueue.add(bytes)
+        }
+
+        val packageName = "view.inspector.test"
+        val resources = createResources(packageName)
+        val context = Context(packageName, resources)
+        val root = ViewGroup(context).apply {
+            width = 100
+            height = 200
+            setAttachInfo(View.AttachInfo())
+            pictureCapture = Picture(byteArrayOf(1, 2, 3))
+            viewRootImpl = ViewRootImpl().apply {
+                mSurface = Surface().apply {
+                    bitmapBytes = byteArrayOf(1, 2, 3) // trailed by 0s
+                }
+            }
+        }
+        WindowManagerGlobal.getInstance().rootViews.addAll(listOf(root))
+
+        val updateScreenshotTypeCommand = Command.newBuilder().apply {
+            updateScreenshotTypeCommandBuilder.apply {
+                type = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            updateScreenshotTypeCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.UPDATE_SCREENSHOT_TYPE_RESPONSE)
+        }
+
+        val startFetchCommand = Command.newBuilder().apply {
+            startFetchCommandBuilder.apply {
+                // Set continuous to false since we don't need it to be true to clear the root IDs
+                // as a side effect
+                continuous = true
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            startFetchCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.START_FETCH_RESPONSE)
+            assertThat(response.startFetchResponse.error).isEmpty()
+        }
+
+        ThreadUtils.runOnMainThread { }.get() // Wait for startCommand to finish initializing
+
+        checkNonProgressEvents(eventQueue,
+            Event.SpecializedCase.ROOTS_EVENT,
+            Event.SpecializedCase.LAYOUT_EVENT,
+        )
+
+        val captureSnapshotCommand = Command.newBuilder().apply {
+            captureSnapshotCommandBuilder.apply {
+                screenshotType = Screenshot.Type.SKP
+            }
+        }.build()
+        viewInspector.onReceiveCommand(
+            captureSnapshotCommand.toByteArray(),
+            inspectorRule.commandCallback
+        )
+        ThreadUtils.runOnMainThread { }.get() // Wait for captureCommand to finish initializing
+
+        responseQueue.take().let { bytes ->
+            val response = Response.parseFrom(bytes)
+            assertThat(response.specializedCase).isEqualTo(Response.SpecializedCase.CAPTURE_SNAPSHOT_RESPONSE)
+            assertThat(response.captureSnapshotResponse.windowRoots.idsList).containsExactly(root.uniqueDrawingId)
+        }
+
+        // Make sure the live mode is still active:
+        root.invalidate()
+        ThreadUtils.runOnMainThread { }.get() // Wait for the capture to happen
+
+        checkNonProgressEvents(eventQueue,
+            Event.SpecializedCase.LAYOUT_EVENT,
+        )
+    }
+
     private fun checkNonProgressEvent(
         eventQueue: BlockingQueue<ByteArray>, block: (Event) -> Unit
     ) {
@@ -2046,6 +2136,15 @@ abstract class ViewLayoutInspectorTestBase {
             break
         }
         assertThat(found).isTrue()
+    }
+
+    private fun checkNonProgressEvents(
+        eventQueue: BlockingQueue<ByteArray>,
+        vararg expectedEventTypes: Event.SpecializedCase
+    ) {
+        for (type in expectedEventTypes) {
+            checkNonProgressEvent(eventQueue) { assertThat(it.specializedCase).isEqualTo(type) }
+        }
     }
 
     private fun createViewInspector(block: (ViewLayoutInspector) -> Unit) {
