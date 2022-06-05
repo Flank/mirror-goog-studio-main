@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.errors
 
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.Version
 
@@ -106,6 +107,11 @@ interface DeprecationReporter {
                 There is no single replacement for the Transform API—there are new, targeted
                 APIs for each use case. All the replacement APIs are in the
                 `androidComponents {}` block.
+
+                The Transform API uses incremental APIs deprecated since Gradle 7.5. Please add
+                `${BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL.propertyName}=true` to
+                `gradle.properties` to fix this issue. Note that this will run transforms
+                non-incrementally and may have a build performance impact.
             """.trimIndent()
         )
         ;
