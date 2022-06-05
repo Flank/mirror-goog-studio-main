@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -40,6 +41,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier
 
@@ -68,15 +70,11 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
     inline fun <reified TASK_SCOPE: FusedLibraryVariantScope> createTasks(
         project: Project,
         variantScope: TASK_SCOPE,
-        tasksCreationActions: List<Class<out TaskCreationAction<out Task>>>,
+        tasksCreationActions: List<TaskCreationAction<out DefaultTask>>,
     ) {
         val taskProviders = TaskFactoryImpl(project.tasks).let { taskFactory ->
             tasksCreationActions.map { creationAction ->
-                taskFactory.register(
-                    creationAction
-                        .getConstructor(TASK_SCOPE::class.java)
-                        .newInstance(variantScope)
-                )
+                taskFactory.register(creationAction)
             }
         }
 

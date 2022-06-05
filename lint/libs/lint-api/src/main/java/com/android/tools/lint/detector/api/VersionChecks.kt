@@ -391,37 +391,61 @@ class VersionChecks(
                 tokenType === UastBinaryOperator.EQUALS ||
                 tokenType === UastBinaryOperator.IDENTITY_EQUALS
             ) {
-                val left = binary.leftOperand.skipParenthesizedExprDown() ?: return null
-                if (left is UReferenceExpression) {
-                    if (SDK_INT == left.resolvedName) {
-                        val right = binary.rightOperand.skipParenthesizedExprDown() ?: return null
-                        var level = -1
-                        if (right is UReferenceExpression) {
-                            val codeName = right.resolvedName ?: return null
-                            level = SdkVersionInfo.getApiByBuildCode(codeName, true)
-                        } else if (right is ULiteralExpression) {
-                            val value = right.value
-                            if (value is Int) {
-                                level = value
-                            }
+                val left = binary.leftOperand
+                val right = binary.rightOperand
+                return getVersionCheckBinaryConditional(left, right, tokenType)
+                    // reverse order, SDK_INT on the right. Handle it but reverse the constraint
+                    ?: getVersionCheckBinaryConditional(right, left, tokenType.flip() ?: return null)
+            }
+            return null
+        }
+
+        // From "X op Y" to "Y op X" -- e.g. "a > b" = "b < a" and "a >= b" = "b <= a"
+        private fun UastBinaryOperator.flip(): UastBinaryOperator? {
+            return when (this) {
+                UastBinaryOperator.GREATER -> UastBinaryOperator.LESS
+                UastBinaryOperator.GREATER_OR_EQUALS -> UastBinaryOperator.LESS_OR_EQUALS
+                UastBinaryOperator.LESS_OR_EQUALS -> UastBinaryOperator.GREATER_OR_EQUALS
+                UastBinaryOperator.LESS -> UastBinaryOperator.GREATER
+                else -> null
+            }
+        }
+
+        private fun getVersionCheckBinaryConditional(
+            leftOperand: UExpression,
+            rightOperand: UExpression,
+            tokenType: UastBinaryOperator
+        ): ApiConstraint? {
+            val left = leftOperand.skipParenthesizedExprDown() ?: return null
+            if (left is UReferenceExpression) {
+                if (SDK_INT == left.resolvedName) {
+                    val right = rightOperand.skipParenthesizedExprDown() ?: return null
+                    var level = -1
+                    if (right is UReferenceExpression) {
+                        val codeName = right.resolvedName ?: return null
+                        level = SdkVersionInfo.getApiByBuildCode(codeName, true)
+                    } else if (right is ULiteralExpression) {
+                        val value = right.value
+                        if (value is Int) {
+                            level = value
                         }
-                        if (level != -1) {
-                            if (tokenType === UastBinaryOperator.GREATER_OR_EQUALS) {
-                                // SDK_INT >= ICE_CREAM_SANDWICH
-                                return atLeast(level)
-                            } else if (tokenType === UastBinaryOperator.GREATER) {
-                                // SDK_INT > ICE_CREAM_SANDWICH
-                                return above(level)
-                            } else if (tokenType === UastBinaryOperator.LESS_OR_EQUALS) {
-                                return atMost(level)
-                            } else if (tokenType === UastBinaryOperator.LESS) {
-                                // SDK_INT < ICE_CREAM_SANDWICH
-                                return below(level)
-                            } else if (tokenType === UastBinaryOperator.EQUALS ||
-                                tokenType === UastBinaryOperator.IDENTITY_EQUALS
-                            ) {
-                                return range(level, level + 1)
-                            }
+                    }
+                    if (level != -1) {
+                        if (tokenType === UastBinaryOperator.GREATER_OR_EQUALS) {
+                            // SDK_INT >= ICE_CREAM_SANDWICH
+                            return atLeast(level)
+                        } else if (tokenType === UastBinaryOperator.GREATER) {
+                            // SDK_INT > ICE_CREAM_SANDWICH
+                            return above(level)
+                        } else if (tokenType === UastBinaryOperator.LESS_OR_EQUALS) {
+                            return atMost(level)
+                        } else if (tokenType === UastBinaryOperator.LESS) {
+                            // SDK_INT < ICE_CREAM_SANDWICH
+                            return below(level)
+                        } else if (tokenType === UastBinaryOperator.EQUALS ||
+                            tokenType === UastBinaryOperator.IDENTITY_EQUALS
+                        ) {
+                            return range(level, level + 1)
                         }
                     }
                 }

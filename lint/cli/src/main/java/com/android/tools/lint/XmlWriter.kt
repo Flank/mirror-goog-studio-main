@@ -457,7 +457,7 @@ open class XmlWriter constructor(
             }
 
             if (path == null) {
-                if (assertionsEnabled()) assert(file.isAbsolute)
+                if (assertionsEnabled()) assert(file.isAbsolute) { file.path }
                 path = pathVariables.toPathStringIfMatched(file, unix = type.unixPaths())
 
                 if (path != null && PathVariables.startsWithVariable(path, "HOME")) {

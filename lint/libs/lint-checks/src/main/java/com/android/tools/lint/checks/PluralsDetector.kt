@@ -38,9 +38,8 @@ import java.util.EnumSet
 /**
  * Checks for issues with quantity strings
  *
- *
- * https://code.google.com/p/android/issues/detail?id=53015 53015: lint could report incorrect
- * usage of Resource.getQuantityString
+ * https://code.google.com/p/android/issues/detail?id=53015 53015: lint
+ * could report incorrect usage of Resource.getQuantityString
  */
 class PluralsDetector : ResourceXmlDetector() {
     override fun appliesTo(folderType: ResourceFolderType) = folderType == VALUES
@@ -157,7 +156,10 @@ class PluralsDetector : ResourceXmlDetector() {
             PluralsDetector::class.java, Scope.RESOURCE_FILE_SCOPE
         )
 
-        /** This locale should define a quantity string for the given quantity */
+        /**
+         * This locale should define a quantity string for the given
+         * quantity
+         */
         @JvmField
         val MISSING = create(
             id = "MissingQuantity",
@@ -202,7 +204,7 @@ class PluralsDetector : ResourceXmlDetector() {
             moreInfo = "https://developer.android.com/guide/topics/resources/string-resource.html#Plurals"
         )
 
-        /** This plural does not use the quantity value  */
+        /** This plural does not use the quantity value */
         @JvmField
         val IMPLIED_QUANTITY = create(
             id = "ImpliedQuantity",
@@ -223,8 +225,9 @@ class PluralsDetector : ResourceXmlDetector() {
         )
 
         /**
-         * Returns true if the given string/plurals item element contains a formatting parameter,
-         * possibly within HTML markup or xliff metadata tags
+         * Returns true if the given string/plurals item element
+         * contains a formatting parameter, possibly within HTML markup
+         * or xliff metadata tags
          */
         private fun haveFormattingParameter(element: Element): Boolean {
             val children = element.childNodes

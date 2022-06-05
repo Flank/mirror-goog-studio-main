@@ -63,6 +63,7 @@ class WrappedUrlConnectionTest {
 
             override fun addRule(ruleId: Int, rule: InterceptionRule) = Unit
             override fun removeRule(ruleId: Int) = Unit
+            override fun reorderRules(ruleIdList: List<Int>) = Unit
         }
 
         // Test WrappedHttpsUrlConnection

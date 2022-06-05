@@ -117,11 +117,11 @@ class HeaderReplacedTransformation(
         }.toMutableMap()
 
         // Add the replaced header and value.
-        newHeaders.entries.forEach { entry ->
+        newHeaders.entries.forEach { (key, value) ->
             val valueSet = mutableSetOf<String>()
-            valueSet.addAll(headers.getOrDefault(entry.key, listOf()))
-            valueSet.addAll(entry.value)
-            headers[entry.key] = valueSet.toList()
+            valueSet.addAll(headers.getOrDefault(key, listOf()))
+            valueSet.addAll(value)
+            headers[key] = valueSet.toList()
         }
         return response.copy(responseHeaders = headers)
     }

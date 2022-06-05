@@ -516,7 +516,7 @@ abstract class Reporter protected constructor(
                     SyntheticAccessorDetector.ISSUE,
                     TextFieldDetector.ISSUE,
                     TextViewDetector.SELECTABLE,
-                    TileProviderDetector.ISSUE,
+                    TileProviderDetector.TILE_PROVIDER_PERMISSIONS,
                     TitleDetector.ISSUE,
                     ToastDetector.ISSUE,
                     TranslationDetector.EXTRA,

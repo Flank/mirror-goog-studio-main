@@ -276,6 +276,36 @@ public class ToolsInstructionsCleanerTest extends TestCase {
         assertNull(activity.get().getAttributeNodeNS("http://schemas.android.com/tools", "ignore"));
     }
 
+    public void testKeepingRuntimeAllowedAttribute()
+            throws ParserConfigurationException, SAXException, IOException {
+        MockLog mockLog = new MockLog();
+        String main =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <uses-permission android:name=\"android.permission.ACCESS_WIFI_STATE\"\n"
+                        + "         tools:requiredByPrivacySandboxSdk=\"true\"/>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument mainDocument =
+                loadXmlDoc(TestUtils.sourceFile(getClass(), "testNodeRemoveOperation"), main);
+
+        Element rootElement = mainDocument.getRootNode().getXml();
+        ToolsInstructionsCleaner.cleanToolsReferences(
+                ManifestMerger2.MergeType.PRIVACY_SANDOX_LIBRARY, mainDocument.getXml(), mockLog);
+
+        Optional<Element> usesPermission = getChildElementByName(rootElement, "uses-permission");
+        assertTrue(usesPermission.isPresent());
+
+        String requiredByPrivacySandboxSdk =
+                usesPermission.get().getAttribute("tools:requiredByPrivacySandboxSdk");
+        assertTrue(requiredByPrivacySandboxSdk.equals("true"));
+    }
+
     private static Optional<Element> getChildElementByName(Element parent, String name) {
         NodeList childNodes = parent.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {

@@ -38,6 +38,17 @@ public class AdbInstallerChannelManager {
     public synchronized AdbInstallerChannel getChannel(AdbClient client, String version)
             throws IOException {
         String deviceId = client.getSerial();
+
+        // Make sure the Channel was not closed. Returning a closed Channel would not fail the
+        // Installer client but it would cause the installer binary to be pushed again to the
+        // device. This is an optimization.
+        if (channels.containsKey(deviceId)) {
+            AdbInstallerChannel channel = channels.get(deviceId);
+            if (channel.isClosed()) {
+                channels.remove(deviceId);
+            }
+        }
+
         if (!channels.containsKey(deviceId)) {
             logger.info("Created SocketChannel to '" + deviceId + "'");
             AdbInstallerChannel channel = createChannel(client, version);
@@ -62,7 +73,7 @@ public class AdbInstallerChannelManager {
             try (SocketChannel c = channel) {}
             throw new IOException(e);
         }
-        return new AdbInstallerChannel(channel);
+        return new AdbInstallerChannel(channel, logger);
     }
 
     public synchronized void reset(AdbClient client) throws IOException {

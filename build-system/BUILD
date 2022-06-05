@@ -99,6 +99,12 @@ filegroup(
 )
 
 filegroup(
+    name = "gradle-distrib-7.3.3",
+    srcs = ["//tools/external/gradle:gradle-distrib-7.3.3"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "gradle-distrib-7.2",
     srcs = ["//tools/external/gradle:gradle-distrib-7.2"],
     visibility = ["//visibility:public"],
@@ -237,12 +243,7 @@ maven_repository(
     artifacts = GRADLE_PLUGIN_ARTIFACTS,
     # Don't add new targets here, see above for how to migrate
     visibility = [
-        "//tools/adt/idea/android:__pkg__",
         "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/adt/idea/app-inspection/ide:__pkg__",
-        "//tools/adt/idea/build-attribution:__pkg__",
-        "//tools/adt/idea/compose-designer:__pkg__",
-        "//tools/adt/idea/compose-ide-plugin:__pkg__",
         "//tools/adt/idea/databinding:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/adt/idea/designer-perf-tests:__pkg__",
@@ -279,7 +280,6 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
     ":agp_gradle_build_files",
     "//prebuilts/tools/common/aapt/protos:agp_gradle_build_files",
     "//tools:agp_gradle_build_files",
-    "//tools/base:agp_artifacts.zip",
     "//tools/base/build-system/aapt2:agp_gradle_build_files",
     "//tools/base/build-system/aapt2-proto:agp_gradle_build_files",
     "//tools/base/build-system/aaptcompiler:agp_gradle_build_files",
@@ -300,7 +300,7 @@ ANDROID_GRADLE_PLUGIN_SOURCE_FILES = [
 gradle_build(
     name = "android_gradle_plugin",
     build_file = "//tools:agp_gradle_build_root_build_file",
-    data = ["//prebuilts/studio/jdk"] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
+    data = ["//prebuilts/studio/jdk:jdk11"] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
         "hybrid-build-embedded-in-bazel": "true",
         "release": "true",
@@ -432,7 +432,7 @@ gradle_test(
     # keep sorted
     data = [
         ":agp_gradle_build_files",
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//tools:agp_gradle_build_files",
         "//tools/base/build-system/builder-model:agp_gradle_build_files",
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
@@ -460,7 +460,7 @@ gradle_build(
     name = "android_gradle_plugin_dackka_docs",
     build_file = "//tools:agp_gradle_build_root_build_file",
     data = [
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//prebuilts/tools/common/dackka",
     ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
@@ -489,7 +489,7 @@ gradle_build(
     name = "android_gradle_plugin_metalava_api",
     build_file = "//tools:agp_gradle_build_root_build_file",
     data = [
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//prebuilts/tools/common/dackka",
     ] + ANDROID_GRADLE_PLUGIN_SOURCE_FILES,
     gradle_properties = {
@@ -514,7 +514,7 @@ gradle_test(
     # keep sorted
     data = [
         ":agp_gradle_build_files",
-        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk:jdk11",
         "//tools:agp_gradle_build_files",
         "//tools/base/build-system/builder-model:agp_gradle_build_files",
         "//tools/base/build-system/builder-test-api:agp_gradle_build_files",

@@ -64,33 +64,15 @@ class KotlinNullnessAnnotationDetector : Detector(), SourceCodeScanner {
             enabledByDefault = true
         )
 
-        const val ANDROIDX_NULLABLE = "androidx.annotation.Nullable"
-        const val ANDROIDX_NOTNULL = "androidx.annotation.NonNull"
-        const val SUPPORT_NULLABLE = "android.support.annotation.Nullable"
-        const val SUPPORT_NOTNULL = "android.support.annotation.NonNull"
         const val IDEA_NULLABLE = "org.jetbrains.annotations.Nullable"
         const val IDEA_NOTNULL = "org.jetbrains.annotations.NotNull"
-        const val ANDROID_NULLABLE = "android.annotation.Nullable"
-        const val ANDROID_NOTNULL = "android.annotation.NonNull"
     }
 
     override fun applicableAnnotations(): List<String> = listOf(
-        ANDROIDX_NULLABLE,
-        ANDROIDX_NOTNULL,
-        SUPPORT_NULLABLE,
-        SUPPORT_NOTNULL,
-        "org.jspecify.nullness.Nullable",
-        ANDROID_NULLABLE,
-        ANDROID_NOTNULL,
-        // These are the same annotations that UAST will use to record the KotlinType null type,
-        // so we have to be careful to make sure we don't confuse explicit usage of these
-        // with the UAST usages
-        IDEA_NULLABLE,
-        IDEA_NOTNULL,
-        // JSR 305 annotations. These have runtime retention, so in theory you could want them
-        // present for some sort of runtime introspection, though that seems unlikely.
-        "javax.annotation.Nullable",
-        "javax.annotation.Nonnull"
+        "Nullable", // everybody
+        "NonNull", // androidx
+        "NotNull", // jetbrains
+        "Nonnull" // jsr305
     )
 
     override fun inheritAnnotation(annotation: String): Boolean {

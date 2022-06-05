@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 java_binary(
@@ -14,6 +15,27 @@ java_binary(
     deps = [
         "//tools/base/annotations",
         "//tools/base/threading-agent-callback:agent_callback",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
+    ],
+)
+
+coverage_java_test(
+    name = "agent_tests",
+    srcs = glob(["testSrc/**/*.java"]),
+    jvm_flags = ["-Dtest.suite.jar=agent_tests.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        ":agent_binary",
+        "//tools/base/annotations",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/threading-agent-callback:agent_callback",
+        "@maven//:com.google.code.gson.gson",
+        "@maven//:com.google.guava.guava",
+        "@maven//:junit.junit",
+        "@maven//:org.mockito.mockito-core",
+        "@maven//:org.ow2.asm.asm",
+        "@maven//:org.ow2.asm.asm-commons",
     ],
 )
 

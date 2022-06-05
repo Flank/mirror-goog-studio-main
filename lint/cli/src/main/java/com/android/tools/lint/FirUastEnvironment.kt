@@ -34,9 +34,7 @@ import org.jetbrains.uast.kotlin.internal.FirCliKotlinUastResolveProviderService
 import java.io.File
 import kotlin.concurrent.withLock
 
-/**
- * This class is FIR version of [UastEnvironment]
- */
+/** This class is FIR version of [UastEnvironment] */
 class FirUastEnvironment private constructor(
     // TODO: we plan to redesign Analysis API facade to not use KotlinCoreEnvironment (which is FE1.0 specific)
     private val kotlinCompilerEnv: KotlinCoreEnvironment,
@@ -58,13 +56,12 @@ class FirUastEnvironment private constructor(
 
         companion object {
             @JvmStatic
-            fun create(): Configuration = Configuration(createKotlinCompilerConfig())
+            fun create(enableKotlinScripting: Boolean = true): Configuration =
+                Configuration(createKotlinCompilerConfig(enableKotlinScripting))
         }
     }
 
-    /**
-     * In FIR UAST, even Kotlin files are analyzed lazily.
-     */
+    /** In FIR UAST, even Kotlin files are analyzed lazily. */
     override fun analyzeFiles(ktFiles: List<File>) {
         // TODO: addKtFilesFromSrcJars ?
     }
@@ -79,12 +76,12 @@ class FirUastEnvironment private constructor(
     }
 }
 
-private fun createKotlinCompilerConfig(): CompilerConfiguration {
+private fun createKotlinCompilerConfig(enableKotlinScripting: Boolean): CompilerConfiguration {
     val config = createCommonKotlinCompilerConfig()
 
     // TODO: NO_JDK ?
 
-    // TODO: register FIR version of scripting compiler plugin if any
+    // TODO: if [enableKotlinScripting], register FIR version of scripting compiler plugin if any
 
     return config
 }

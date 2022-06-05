@@ -20,15 +20,16 @@ import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.FusedLibraryExtension
 import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
+import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
+import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
 import com.google.wireless.android.sdk.stats.GradleBuildProject
-import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.file.RegularFile
@@ -39,12 +40,12 @@ import javax.inject.Inject
 class FusedLibraryPlugin @Inject constructor(
     private val softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
-): AbstractFusedLibraryPlugin<FusedLibraryVariantScope>(softwareComponentFactory, listenerRegistry) {
+): AbstractFusedLibraryPlugin<FusedLibraryVariantScopeImpl>(softwareComponentFactory, listenerRegistry) {
 
     // so far, there is only one variant.
     override val variantScope by lazy {
         withProject("variantScope") { project ->
-            FusedLibraryVariantScope(
+            FusedLibraryVariantScopeImpl(
                 project
             ) { extension }
         }
@@ -85,16 +86,16 @@ class FusedLibraryPlugin @Inject constructor(
 
     override fun createTasks(project: Project) {
         createTasks(
-            project,
-            variantScope,
-            listOf(
-                FusedLibraryClassesRewriteTask.CreateAction::class.java,
-                FusedLibraryManifestMergerTask.CreationAction::class.java,
-                FusedLibraryMergeResourcesTask.CreationAction::class.java,
-                FusedLibraryMergeClasses.CreationAction::class.java,
-                FusedLibraryBundleClasses.CreationAction::class.java,
-                FusedLibraryBundleAar.CreationAction::class.java,
-            ),
+                project,
+                variantScope,
+                listOf(
+                        FusedLibraryClassesRewriteTask.CreationAction(variantScope),
+                        FusedLibraryManifestMergerTask.CreationAction(variantScope),
+                        FusedLibraryMergeResourcesTask.CreationAction(variantScope),
+                        FusedLibraryMergeClasses.CreationAction(variantScope),
+                        FusedLibraryBundleClasses.CreationAction(variantScope),
+                        FusedLibraryBundleAar.CreationAction(variantScope),
+                ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
     }
 

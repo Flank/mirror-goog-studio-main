@@ -1494,7 +1494,13 @@ package com.android.build.api.dsl {
     property public abstract String name;
   }
 
-  public interface PrivacySandboxSdkExtension extends com.android.build.api.dsl.FusedLibraryExtension {
+  @org.gradle.api.Incubating public interface PrivacySandboxSdkExtension extends com.android.build.api.dsl.FusedLibraryExtension {
+    method @org.gradle.api.Incubating public String getBuildToolsVersion();
+    method @org.gradle.api.Incubating public Integer? getCompileSdk();
+    method @org.gradle.api.Incubating public void setBuildToolsVersion(String buildToolsVersion);
+    method @org.gradle.api.Incubating public void setCompileSdk(Integer? compileSdk);
+    property @org.gradle.api.Incubating public abstract String buildToolsVersion;
+    property @org.gradle.api.Incubating public abstract Integer? compileSdk;
   }
 
   public interface ProductFlavor extends org.gradle.api.Named com.android.build.api.dsl.BaseFlavor org.gradle.api.plugins.ExtensionAware com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {

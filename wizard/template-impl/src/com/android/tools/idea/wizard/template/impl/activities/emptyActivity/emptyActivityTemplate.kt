@@ -90,7 +90,7 @@ val emptyActivityTemplate get() = template {
   )
 
   thumb {
-    File("template_empty_activity.png")
+    File("empty-activity").resolve("template_empty_activity.png")
   }
 
   recipe = { data ->

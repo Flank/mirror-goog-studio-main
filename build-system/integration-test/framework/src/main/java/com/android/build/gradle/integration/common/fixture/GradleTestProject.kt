@@ -722,6 +722,10 @@ allprojects { proj ->
         get() = FileUtils.join(projectDir, "build", SdkConstants.FD_OUTPUTS)
 
     /** Return the output directory from Android plugins.  */
+    val bundleDir: File
+        get() = FileUtils.join(projectDir, "build", SdkConstants.FD_BUNDLE)
+
+    /** Return the output directory from Android plugins.  */
     val intermediatesDir: File
         get() = FileUtils
             .join(projectDir, "build", SdkConstants.FD_INTERMEDIATES)

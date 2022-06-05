@@ -116,7 +116,7 @@ val viewModelActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_blank_activity.png") }
+    thumb { File("viewmodel-activity").resolve("template_blank_activity.png") }
 
     recipe = { data: TemplateData ->
       viewModelActivityRecipe(data as ModuleTemplateData, activityClass.value, activityLayout.value, fragmentClass.value,

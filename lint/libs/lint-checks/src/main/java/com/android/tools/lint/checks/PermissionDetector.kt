@@ -583,7 +583,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         const val KEY_LAST_API = "lastApi"
         const val KEY_REQUIREMENT = "requirement"
         const val KEY_LOCAL_PERMISSION = "local"
-        private const val KEY_MESSAGE = "message"
+        const val KEY_MESSAGE = "message"
 
         private val IMPLEMENTATION = Implementation(
             PermissionDetector::class.java,

@@ -26,11 +26,11 @@ using std::string;
 namespace profiler {
 
 bool BashCommandRunner::RunAs(const string &parameters,
-                              const string &package_name,
+                              const string &package_name, const string &user,
                               string *output) const {
   // This version of the file only runs on host, for our host we don't need
   // to use runas to copy or execute files, as such we simply forward this
-  // command onto the run function.
+  // command onto the run function. Neither do we need care about the user.
   return Run(parameters, output);
 }
 

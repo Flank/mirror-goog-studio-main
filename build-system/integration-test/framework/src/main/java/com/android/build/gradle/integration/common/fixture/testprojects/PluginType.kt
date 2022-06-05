@@ -89,6 +89,11 @@ enum class PluginType(
         isAndroid = true,
         useNewDsl = true,
     ),
+    PRIVACY_SANDBOX_SDK(
+        id = "com.android.privacy-sandbox-sdk",
+        isAndroid = true,
+        useNewDsl = true,
+    ),
     ANDROID_SETTINGS(
         id = "com.android.settings",
         isAndroid = true,

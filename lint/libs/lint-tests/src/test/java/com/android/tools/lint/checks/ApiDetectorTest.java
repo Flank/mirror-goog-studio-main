@@ -5561,6 +5561,62 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    @SuppressWarnings("all") // sample code
+    public void testObsoleteVersionCheckReverseOrder() {
+        // Tests having the SDK_INT on the RHS
+        lint().files(
+                        manifest().minSdk(23),
+                        java(
+                                "src/test/pkg/TestVersionCheck.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.os.Build;\n"
+                                        + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                                        + "public class TestVersionCheck {\n"
+                                        + "    public void something() {\n"
+                                        + "        if (21 < Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (22 < Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (23 < Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (24 < Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (23 <= Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (24 <= Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (21 > Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (22 > Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (23 > Build.VERSION.SDK_INT) { }\n"
+                                        + "        if (24 > Build.VERSION.SDK_INT) { }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .checkMessage(this::checkReportedError)
+                // We *don't* want to use provisional computation for this:
+                // limit suggestions around SDK_INT checks to those implied
+                // by the minSdkVersion of the library.
+                .skipTestModes(PARTIAL)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TestVersionCheck.java:7: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                                + "        if (21 < Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestVersionCheck.java:8: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                                + "        if (22 < Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestVersionCheck.java:11: Warning: Unnecessary; SDK_INT is always >= 23 [ObsoleteSdkInt]\n"
+                                + "        if (23 <= Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestVersionCheck.java:13: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                                + "        if (21 > Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestVersionCheck.java:14: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                                + "        if (22 > Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestVersionCheck.java:15: Warning: Unnecessary; SDK_INT is never < 23 [ObsoleteSdkInt]\n"
+                                + "        if (23 > Build.VERSION.SDK_INT) { }\n"
+                                + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 6 warnings");
+    }
+
     public void testDocumentationExampleObsoleteSdkInt() {
         lint().files(
                         manifest(

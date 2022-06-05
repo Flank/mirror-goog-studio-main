@@ -24,7 +24,7 @@ fi
 readonly SCRIPT_DIR="$(dirname "$0")"
 readonly SCRIPT_NAME="$(basename "$0")"
 
-readonly CONFIG_OPTIONS="--config=ci --config=datasize_aspect"
+readonly CONFIG_OPTIONS="--config=ci"
 
 ####################################
 # Copies bazel artifacts to an output directory named 'artifacts'.
@@ -56,8 +56,6 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/base/lint/libs/lint-tests/lint-tests.jar ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/deploy/deployer/deployer.runner_deploy.jar ${artifacts_dir}/deployer.jar
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
-  cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
-  cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/deploy/service/deploy.service_deploy.jar ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/gmaven/gmaven.zip ${artifacts_dir}/gmaven_repo.zip
   cp -a ${bin_dir}/tools/base/build-system/documentation.zip ${artifacts_dir}/android_gradle_plugin_reference_docs.zip
@@ -175,15 +173,13 @@ function run_bazel_test() {
     //tools/base/profiler/native/trace_processor_daemon \
     //tools/base/deploy/deployer:deployer.runner_deploy.jar \
     //tools/adt/idea/studio:test_studio \
-    //tools/vendor/google/game-tools/packaging:packaging-linux \
-    //tools/vendor/google/game-tools/packaging:packaging-win \
     //tools/base/deploy/service:deploy.service_deploy.jar \
     //tools/base/ddmlib:tools.ddmlib \
     //tools/base/ddmlib:incfs \
     //tools/base/lint/libs/lint-tests:lint-tests \
     //tools/base/bazel:local_maven_repository_generator_deploy.jar \
     //tools/base/build-system:documentation.zip \
-    $(< "${SCRIPT_DIR}/targets")
+    $(< "${SCRIPT_DIR}/targets") -//tools/vendor/google/game-tools/packaging/...
 }
 
 ####################################

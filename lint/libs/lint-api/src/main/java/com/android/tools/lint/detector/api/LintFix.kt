@@ -1544,7 +1544,8 @@ open class LintFix protected constructor(
     class ShowUrl(
         displayName: String?,
         familyName: String?,
-        val url: String
+        val url: String,
+        val onUrlOpen: (() -> Unit)? = null
     ) : LintFix(displayName, familyName)
 
     /** An annotation to add to the element */

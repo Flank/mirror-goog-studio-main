@@ -28,6 +28,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
+            - applicationId                 = "pkg.name.app"
             - sourceGenTaskName             = "generateDebugSources"
             - resGenTaskName                = "generateDebugResources"
             - generatedResourceFolders:
@@ -62,6 +63,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = true
             - signingConfigName             = "debug"
+            - applicationId                 = "pkg.name.app.test"
             - sourceGenTaskName             = "generateDebugAndroidTestSources"
             - resGenTaskName                = "generateDebugAndroidTestResources"
             - generatedResourceFolders:
@@ -116,6 +118,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
+            - applicationId                 = "pkg.name.app"
             - sourceGenTaskName             = "generateReleaseSources"
             - resGenTaskName                = "generateReleaseResources"
             - generatedResourceFolders:

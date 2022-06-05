@@ -294,6 +294,8 @@ fun runR8(
         }
     }
 
+    // Enable workarounds for missing library APIs in R8 (see b/231547906).
+    r8CommandBuilder.setEnableExperimentalMissingLibraryApiModeling(true);
     ClassFileProviderFactory(libraries).use { libraryClasses ->
         ClassFileProviderFactory(classpath).use { classpathClasses ->
             r8CommandBuilder.addLibraryResourceProvider(libraryClasses.orderedProvider)

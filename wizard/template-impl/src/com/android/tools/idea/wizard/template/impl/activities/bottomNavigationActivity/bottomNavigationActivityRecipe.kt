@@ -106,9 +106,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
   )
   open(resOut.resolve("navigation/${navGraphName}.xml"))
 
-  copy(File("ic_dashboard_black_24dp.xml"), resOut.resolve("drawable/ic_dashboard_black_24dp.xml"))
-  copy(File("ic_home_black_24dp.xml"), resOut.resolve("drawable/ic_home_black_24dp.xml"))
-  copy(File("ic_notifications_black_24dp.xml"), resOut.resolve("drawable/ic_notifications_black_24dp.xml"))
+  copy(File("bottom-navigation-activity").resolve("drawable"), resOut.resolve("drawable"))
 
   // navHostFragmentId needs to be unique, thus appending layoutName since it's
   // guaranteed to be unique

@@ -13,7 +13,6 @@ iml_module(
         "//prebuilts/studio/intellij-sdk:studio-sdk",
         "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
         "//tools/base/adblib:studio.android.sdktools.adblib[module]",
-        "//tools/adt/idea/android-adb:intellij.android.adb[module]",
     ],
 )
 

@@ -28,6 +28,7 @@
 
 #include "commands/attach_agent.h"
 #include "connector.h"
+#include "utils/activity_manager.h"
 #include "utils/android_studio_version.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -67,26 +68,26 @@ const char* const kConnectorRelativePath = "./code_cache/transport";
 const char* const kAgentJarFileName = "perfa.jar";
 
 // Delete file executable from package's data folder.
-void DeleteFileFromPackageFolder(const string& package_name,
+void DeleteFileFromPackageFolder(const string& package_name, const string& user,
                                  const string& file_name) {
   BashCommandRunner rm{"rm"};
   std::ostringstream args;
   args << "-f " << kCodeCacheRelativeDir << file_name;
-  if (!rm.RunAs(args.str(), package_name, nullptr)) {
+  if (!rm.RunAs(args.str(), package_name, user, nullptr)) {
     perror("rm");
   }
 }
 
 // Copy file executable from this process's folder (daemon's folder) to
 // package's data folder.
-void CopyFileToPackageFolder(const string& package_name,
+void CopyFileToPackageFolder(const string& package_name, const string& user,
                              const string& file_name) {
   // Remove old agent first to avoid attaching mismatched version of agent.
   // If old agent exists and it fails to copy the new one, the app would attach
   // the old one and some weird bugs may occur.
   // After removing old agent, the app would fail to attach the agent with a
   // 'file not found' error.
-  DeleteFileFromPackageFolder(package_name, file_name);
+  DeleteFileFromPackageFolder(package_name, user, file_name);
 
   // Make sure the code cache directory is present before copying file.
   // The -p flag ensures the command returns successfully even if the directory
@@ -94,14 +95,14 @@ void CopyFileToPackageFolder(const string& package_name,
   BashCommandRunner mkdir{"mkdir"};
   std::ostringstream mkdir_args;
   mkdir_args << "-p " << kCodeCacheRelativeDir;
-  if (!mkdir.RunAs(mkdir_args.str(), package_name, nullptr)) {
+  if (!mkdir.RunAs(mkdir_args.str(), package_name, user, nullptr)) {
     perror("mkdir");
   }
 
   BashCommandRunner cp{"cp"};
   std::ostringstream args;
   args << CurrentProcess::dir() << file_name << " " << kCodeCacheRelativeDir;
-  if (!cp.RunAs(args.str(), package_name, nullptr)) {
+  if (!cp.RunAs(args.str(), package_name, user, nullptr)) {
     perror("cp");
   }
 }
@@ -111,9 +112,9 @@ void CopyFileToPackageFolder(const string& package_name,
 //
 // By using execl(), the client-side socket that's connected to daemon can be
 // used by connector.
-// By using run-as, connector is under the same user as the agent, and thus it
+// By using run-as, connector is under the same uid as the agent, and thus it
 // can talk to the agent who is waiting for the client socket.
-void RunConnector(int app_pid, const string& package_name,
+void RunConnector(int app_pid, const string& package_name, const string& user,
                   const string& daemon_address) {
   // Use connect() to create a client socket that can talk to the server.
   int fd;  // The client socket that's connected to daemon.
@@ -138,9 +139,10 @@ void RunConnector(int app_pid, const string& package_name,
 
   int return_value = -1;
   if (DeviceInfo::is_user_build()) {
-    return_value = execl(kRunAsExecutable, kRunAsExecutable,
-                         package_name.c_str(), kConnectorRelativePath,
-                         connect_arg.str().c_str(), (char*)nullptr);
+    return_value =
+        execl(kRunAsExecutable, kRunAsExecutable, package_name.c_str(),
+              kRunAsUserFlag, user.c_str(), kConnectorRelativePath,
+              connect_arg.str().c_str(), (char*)nullptr);
   } else {
     std::ostringstream connector_absolute_path;
     connector_absolute_path << "/data/data/" << package_name << "/"
@@ -158,15 +160,15 @@ void RunConnector(int app_pid, const string& package_name,
 // Copy over the agent so and jar to the package's directory as specified by
 // |package_name| and invoke attach-agent on the app as specified by |app_name|
 bool RunAgent(const string& app_name, const string& package_name,
-              const std::string& config_path,
+              const string& user, const std::string& config_path,
               const string& agent_lib_file_name) {
-  CopyFileToPackageFolder(package_name, kAgentJarFileName);
-  CopyFileToPackageFolder(package_name, agent_lib_file_name);
+  CopyFileToPackageFolder(package_name, user, kAgentJarFileName);
+  CopyFileToPackageFolder(package_name, user, agent_lib_file_name);
   string data_path;
   string error;
   PackageManager package_manager;
   bool success =
-      package_manager.GetAppDataPath(package_name, &data_path, &error);
+      package_manager.GetAppDataPath(package_name, user, &data_path, &error);
   if (success) {
     const std::string& attach_params = ProcessManager::GetAttachAgentParams(
         app_name, data_path, config_path, agent_lib_file_name);
@@ -244,10 +246,11 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
   assert(profiler::DeviceInfo::feature_level() >= profiler::DeviceInfo::O);
 
   string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+  string user = ActivityManager::Instance()->GetCurrentUser();
   PackageManager package_manager;
   string data_path;
   string error;
-  if (!package_manager.GetAppDataPath(package_name, &data_path, &error)) {
+  if (!package_manager.GetAppDataPath(package_name, user, &data_path, &error)) {
     // Cannot access the app's data folder.
     return false;
   }
@@ -260,12 +263,13 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
 
   // Copies the connector over to the package's data folder so we can run it
   // to send messages to perfa's Unix socket server.
-  CopyFileToPackageFolder(package_name, kConnectorFileName);
+  CopyFileToPackageFolder(package_name, user, kConnectorFileName);
   // Only attach agent if one is not detected. Note that an agent can already
   // exist if we have profiled the same app before, and either Studio/daemon
   // has restarted and has lost any knowledge about such agent.
-  if (!IsAppAgentAlive(app_pid, package_name)) {
-    RunAgent(app_name, package_name, agent_config_path, agent_lib_file_name);
+  if (!IsAppAgentAlive(app_pid, package_name, user)) {
+    RunAgent(app_name, package_name, user, agent_config_path,
+             agent_lib_file_name);
   }
 
   // Only reconnect to perfa if an existing connection has not been detected.
@@ -280,7 +284,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
       // child process
       string socket_name;
       socket_name.append(config_->GetConfig().common().service_socket_name());
-      RunConnector(app_pid, package_name, socket_name);
+      RunConnector(app_pid, package_name, user, socket_name);
       // RunConnector calls execl() at the end. It returns only if an error
       // has occurred.
       exit(EXIT_FAILURE);
@@ -343,12 +347,13 @@ std::vector<proto::EventGroup> Daemon::GetEventGroups(
 // (e.g. |kHeartBeatRequest|) to the agent via unix socket. If the agent's
 // unix socket server is up, the send operation should be sucessful, in which
 // case this will return true, false otherwise.
-bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name) {
+bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name,
+                             const string& user) {
   std::ostringstream args;
   args << "--" << kConnectCmdLineArg << "=" << app_pid << ":"
        << kHeartBeatRequest;
   BashCommandRunner ping(kConnectorRelativePath);
-  return ping.RunAs(args.str(), app_name, nullptr);
+  return ping.RunAs(args.str(), app_name, user, nullptr);
 }
 
 AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
@@ -380,11 +385,12 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
   // In O+, we can attach an jvmti agent as long as the app is debuggable
   // and the app's data folder is available to us.
   string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+  string user = ActivityManager::Instance()->GetCurrentUser();
   PackageManager package_manager;
   string data_path;
   string error;
   bool has_data_path =
-      package_manager.GetAppDataPath(package_name, &data_path, &error);
+      package_manager.GetAppDataPath(package_name, user, &data_path, &error);
   agent_attachable_map_[pid] = has_data_path;
   return has_data_path ? AgentData::UNSPECIFIED : AgentData::UNATTACHABLE;
 }

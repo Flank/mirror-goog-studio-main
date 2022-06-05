@@ -306,7 +306,7 @@ public class ExtractAnnotationsDriver {
 
         LintClient.setClientName(LintClient.CLIENT_CLI);
 
-        UastEnvironment.Configuration config = UastEnvironment.Configuration.create();
+        UastEnvironment.Configuration config = UastEnvironment.Configuration.create(false);
         if (sourceRoots == null) {
             sourceRoots = findSourceRoots(sources);
             if (sourceRoots == null) {

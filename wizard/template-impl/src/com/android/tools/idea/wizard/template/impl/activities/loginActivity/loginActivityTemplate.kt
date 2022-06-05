@@ -70,7 +70,7 @@ val loginActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_login_activity.png") }
+    thumb { File("login-activity").resolve("template_login_activity.png") }
 
     recipe = { data: TemplateData ->
       loginActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, packageName.value)

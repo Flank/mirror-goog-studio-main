@@ -85,7 +85,7 @@ val bottomNavigationActivityTemplate
       TextFieldWidget(navGraphName)
     )
 
-    thumb { File("template_bottom_navigation_activity.png") }
+    thumb { File("bottom-navigation-activity").resolve("template_bottom_navigation_activity.png") }
 
     recipe = { data: TemplateData ->
       bottomNavigationActivityRecipe(

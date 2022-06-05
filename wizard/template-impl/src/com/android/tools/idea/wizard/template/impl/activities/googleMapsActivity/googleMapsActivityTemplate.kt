@@ -82,7 +82,7 @@ val googleMapsActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_map_activity.png") }
+    thumb { File("google-maps-activity").resolve("template_map_activity.png") }
 
     recipe = { data: TemplateData ->
       googleMapsActivityRecipe(data as ModuleTemplateData, activityClass.value, isLauncher.value,

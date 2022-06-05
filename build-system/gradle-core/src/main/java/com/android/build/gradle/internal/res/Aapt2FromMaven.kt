@@ -24,7 +24,7 @@ package com.android.build.gradle.internal.res
 import com.android.SdkConstants
 import com.android.Version
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
-import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.Option
 import com.android.build.gradle.options.StringOption
 import com.google.common.collect.Sets
 import com.google.common.io.ByteStreams
@@ -83,11 +83,12 @@ class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
          * creating the project services.
          */
         @JvmStatic
-        fun create(project: Project, projectOptions: ProjectOptions): Aapt2FromMaven {
+        fun create(project: Project, stringOption: (option: StringOption) -> String?): Aapt2FromMaven {
             // Use custom AAPT2 if it was overridden.
-            val customAapt2 = projectOptions[StringOption.AAPT2_FROM_MAVEN_OVERRIDE] ?: ""
+            val customAapt2: String = stringOption(StringOption.AAPT2_FROM_MAVEN_OVERRIDE) ?: ""
             // Use custom maven coordinates if specified.
-            val overriddenVersion = projectOptions[StringOption.AAPT2_FROM_MAVEN_VERSION_OVERRIDE] ?: ""
+            val overriddenVersion: String =
+                    stringOption(StringOption.AAPT2_FROM_MAVEN_VERSION_OVERRIDE) ?: ""
             val defaultVersion = "${Version.ANDROID_GRADLE_PLUGIN_VERSION}-${Aapt2Version.BUILD_NUMBER}"
 
             if (customAapt2.any() && overriddenVersion.any()) {
@@ -111,7 +112,8 @@ class Aapt2FromMaven(val aapt2Directory: FileCollection, val version: String) {
                     else
                         defaultVersion
 
-            val overriddenPlatform = projectOptions[StringOption.AAPT2_FROM_MAVEN_PLATFORM_OVERRIDE] ?: ""
+            val overriddenPlatform: String =
+                    stringOption(StringOption.AAPT2_FROM_MAVEN_PLATFORM_OVERRIDE) ?: ""
             // See tools/base/aapt2 for the classifiers to use.
             val classifier =
                     if (overriddenPlatform.any()) {

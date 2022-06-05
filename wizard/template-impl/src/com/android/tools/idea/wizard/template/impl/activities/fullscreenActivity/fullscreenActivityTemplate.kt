@@ -79,7 +79,7 @@ val fullscreenActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_fullscreen_activity.png") }
+    thumb { File("fullscreen-activity").resolve("template_fullscreen_activity.png") }
 
     recipe = { data: TemplateData ->
       fullscreenActivityRecipe(

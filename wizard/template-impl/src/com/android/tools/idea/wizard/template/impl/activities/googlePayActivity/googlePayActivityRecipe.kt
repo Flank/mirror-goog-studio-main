@@ -64,7 +64,7 @@ fun RecipeExecutor.googlePayActivityRecipe(
 
   // Copy static resources
   val resLocation: File = if (moduleData.isDynamic) moduleData.baseFeature!!.resDir else resOut
-  copy(File("google-pay"), resLocation)
+  copy(File("google-pay-activity"), resLocation)
 
   // Generated resources
   mergeXml(stringsXml(activityClass, simpleName), resLocation.resolve("values/strings.xml"))

@@ -15,11 +15,12 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacket.encodeChunkType;
-
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
+
 import java.io.OutputStream;
+
+import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
 
 public class ExitHandler implements JdwpDdmsPacketHandler {
 
@@ -27,7 +28,7 @@ public class ExitHandler implements JdwpDdmsPacketHandler {
 
     @Override
     public boolean handlePacket(
-            @NonNull JdwpDdmsPacket packet,
+            @NonNull JdwpPacket packet,
             @NonNull ClientState client,
             @NonNull OutputStream oStream) {
         // Kill the connection

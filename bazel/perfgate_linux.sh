@@ -39,8 +39,8 @@ readonly invocation_id="$(uuidgen)"
   --profile=${dist_dir}/perfgate-profile-${build_number}.json.gz \
   --nocache_test_results \
   --runs_per_test=//prebuilts/studio/buildbenchmarks:.*@5 \
+  --jobs=250 \
   -- \
-  //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector_deploy.jar \
   $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
@@ -50,11 +50,14 @@ if [[ -d "${dist_dir}" ]]; then
   # Generate a simple html page that redirects to the test results page.
   echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly java="prebuilts/studio/jdk/linux/jre/bin/java"
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
 
-  ${java} -jar "${bin_dir}/tools/vendor/adt_infra_internal/rbe/logscollector/logs-collector_deploy.jar" \
+  "${script_dir}/bazel" \
+    --max_idle_secs=60 \
+    run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
+    ${config_options} \
+    -- \
     -bes "${dist_dir}/bazel-${build_number}.bes" \
     -perfzip "${dist_dir}/perfgate_data.zip"
 

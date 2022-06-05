@@ -22,7 +22,6 @@ import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.detector.api.Detector;
 
-@SuppressWarnings("javadoc")
 public class SecurityDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
@@ -980,6 +979,24 @@ public class SecurityDetectorTest extends AbstractCheckTest {
         ProjectDescription lib = project(noExportButIntentFilter).type(LIBRARY);
         ProjectDescription app = project(manifest().minSdk(16).targetSdk(31)).dependsOn(lib);
         lint().projects(lib, app).run().expectClean();
+    }
+
+    public void testQueries() {
+        // Regression test for 233656713: ignore providers in queries
+        // Sample snippet from
+        // https://developer.android.com/training/package-visibility/declaring#provider-authority
+        lint().files(
+                        xml(
+                                "AndroidManifest.xml",
+                                ""
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"com.example.suite.enterprise\">\n"
+                                        + "    <queries>\n"
+                                        + "        <provider android:authorities=\"com.example.settings.files\" />\n"
+                                        + "    </queries>\n"
+                                        + "</manifest>"))
+                .run()
+                .expectClean();
     }
 
     private final TestFile noExportButIntentFilter =

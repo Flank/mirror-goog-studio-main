@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.artifact.impl.SingleInitialProviderRequestImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.google.common.truth.Truth
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -57,7 +58,7 @@ internal class FusedLibraryBundleTest {
         val project: Project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         val taskProvider = project.tasks.register("bundle", T::class.java)
 
-        val variantScope = Mockito.mock(FusedLibraryVariantScope::class.java)
+        val variantScope = Mockito.mock(FusedLibraryVariantScopeImpl::class.java)
         val artifacts = Mockito.mock(ArtifactsImpl::class.java)
         Mockito.`when`(variantScope.artifacts).thenReturn(artifacts)
 

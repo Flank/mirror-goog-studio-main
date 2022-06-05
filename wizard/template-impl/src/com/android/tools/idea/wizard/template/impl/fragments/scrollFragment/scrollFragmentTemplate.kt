@@ -69,7 +69,7 @@ val scrollFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_scroll_fragment.png") }
+    thumb { File("scrolling-fragment").resolve("template_scroll_fragment.png") }
 
     recipe = { data: TemplateData ->
       scrollFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, packageName.value)

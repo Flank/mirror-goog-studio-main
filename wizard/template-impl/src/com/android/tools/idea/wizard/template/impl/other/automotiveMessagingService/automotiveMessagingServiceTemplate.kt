@@ -79,5 +79,5 @@ val automotiveMessagingServiceTemplate
                                        packageName.value)
     }
 
-    thumb { File("automotive-messaging-service.png") }
+    thumb { File("automotive-messaging-service").resolve("automotive-messaging-service.png") }
   }

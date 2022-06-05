@@ -29,12 +29,6 @@ dependencies {
     testImplementation libs.equalsverifier
 }
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
-
 javadoc {
   classpath += configurations.compileOnly
 }

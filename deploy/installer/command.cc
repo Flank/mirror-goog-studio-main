@@ -30,6 +30,7 @@
 #include "tools/base/deploy/installer/overlay_install.h"
 #include "tools/base/deploy/installer/overlay_swap.h"
 #include "tools/base/deploy/installer/swap.h"
+#include "tools/base/deploy/installer/timeout.h"
 
 namespace deploy {
 
@@ -56,6 +57,7 @@ std::unique_ptr<Command> GetCommand(const char* command_name,
            [&]() { return new InstallCoroutineAgentCommand(workspace); }},
           {"liveedit", [&]() { return new LiveEditCommand(workspace); }},
           {"networktest", [&]() { return new NetworkTestCommand(workspace); }},
+          {"timeout", [&]() { return new TimeoutCommand(workspace); }},
           // Add here more commands (e.g: version, install, patch, agent, ...)
       };
 

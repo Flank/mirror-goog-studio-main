@@ -85,6 +85,7 @@ abstract class IssueReporter {
         COMPILE_SDK_VERSION_TOO_HIGH(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_HIGH),
         COMPILE_SDK_VERSION_TOO_LOW(SyncIssue.TYPE_COMPILE_SDK_VERSION_TOO_LOW),
         ACCESSING_DISABLED_FEATURE_VARIANT_API(SyncIssue.TYPE_ACCESSING_DISABLED_FEATURE_VARIANT_API),
+        APPLICATION_ID_MUST_NOT_BE_DYNAMIC(SyncIssue.TYPE_APPLICATION_ID_MUST_NOT_BE_DYNAMIC)
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)

@@ -102,6 +102,9 @@ public class XmlElement extends OrphanXmlElement {
             Node attribute = namedNodeMap.item(i);
             if (SdkConstants.TOOLS_URI.equals(attribute.getNamespaceURI())) {
                 String instruction = attribute.getLocalName();
+                if (NodeOperationType.LIST_OF_ALLOWED_RUNTIME_ATTRIBUTES.contains(instruction)) {
+                    continue;
+                }
                 if (instruction.equals(NodeOperationType.NODE_LOCAL_NAME)) {
                     // should we flag an error when there are more than one operation type on a node ?
                     lastNodeOperationType = NodeOperationType.valueOf(

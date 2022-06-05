@@ -61,6 +61,24 @@ interface AndroidArtifact : AbstractArtifact, AndroidModel {
     val signingConfigName: String?
 
     /**
+     * Returns the application ID of this artifact.
+     *
+     * Known for:
+     *  - Application plugin main artifacts
+     *  - AndroidTest components of all project types
+     *  - Test-only plugin main artifacts
+     *
+     *  Not included (null) for:
+     *   - Library plugin main artifacts, as no APK is produced
+     *   - UnitTest components, also as no APK is produced
+     *   - Dynamic feature plugin main artifacts, as the application ID comes from the base
+     *     application, and is therefore not available in dynamic feature projects during
+     *     configuration. In this case Android Studio must look at the dependency graph to find the
+     *     base application to find this value.
+     */
+    val applicationId: String?
+
+    /**
      * Returns the name of the task used to generate the source code. The actual value might
      * depend on the build system front end.
      *

@@ -38,6 +38,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.UnixStat;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
 /**
  * Utility methods to deal with loading the test data.
@@ -52,6 +56,13 @@ public class TestUtils {
      * tools/base/bazel/README.md).
      */
     public static final String KOTLIN_VERSION_FOR_TESTS = "1.6.20";
+
+    /**
+     * Unix file-mode mask indicating that the file is executable by owner, group, and other.
+     *
+     * <p>See https://askubuntu.com/a/485001
+     */
+    public static final int UNIX_EXECUTABLE_MODE = 1 | 1 << 3 | 1 << 6;
 
     /** Default timeout for the {@link #eventually(Runnable)} check. */
     private static final Duration DEFAULT_EVENTUALLY_TIMEOUT = Duration.ofSeconds(10);
@@ -666,5 +677,43 @@ public class TestUtils {
         assumeFalse(
                 (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
                         && System.getenv("TEST_TMPDIR") != null);
+    }
+
+    private static void archiveFile(Path root, ArchiveOutputStream out, Path path)
+            throws IOException {
+        ZipArchiveEntry archiveEntry =
+                (ZipArchiveEntry)
+                        out.createArchiveEntry(path.toFile(), root.relativize(path).toString());
+        out.putArchiveEntry(archiveEntry);
+        if (Files.isSymbolicLink(path)) {
+            archiveEntry.setUnixMode(UnixStat.LINK_FLAG | archiveEntry.getUnixMode());
+            out.write(
+                    path.getParent()
+                            .relativize(Files.readSymbolicLink(path))
+                            .toString()
+                            .getBytes());
+        } else if (!Files.isDirectory(path)) {
+            if (Files.isExecutable(path)) {
+                archiveEntry.setUnixMode(archiveEntry.getUnixMode() | UNIX_EXECUTABLE_MODE);
+            }
+            out.write(Files.readAllBytes(path));
+        }
+        out.closeArchiveEntry();
+    }
+
+    public static void zipDirectory(@NonNull Path root, @NonNull Path zipPath) throws IOException {
+        try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(zipPath.toFile())) {
+            Files.walk(root)
+                    .forEach(
+                            path -> {
+                                try {
+                                    archiveFile(root, out, path);
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            });
+        } catch (UncheckedIOException e) {
+            throw e.getCause();
+        }
     }
 }

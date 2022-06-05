@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.swing.JComponent;
 import javax.swing.UIManager;
 import javax.swing.event.AncestorEvent;
@@ -72,19 +71,23 @@ public class ImageViewer extends JComponent {
     /** The fraction of the window size that the 9patch should occupy. */
     private static final float IDEAL_IMAGE_FRACTION_OF_WINDOW = 0.7f;
 
-    /** Default zoom level for the 9patch image. */
-    public static final int DEFAULT_ZOOM = 8;
+    /** Default zoom level (in percentage) for the 9patch image. */
+    public static final int DEFAULT_ZOOM = 100;
 
-    /** Minimum zoom level for the 9patch image. */
-    public static final int MIN_ZOOM = 1;
+    /** Minimum zoom level (in percentage) for the 9patch image. */
+    public static final int MIN_ZOOM = 30;
 
-    /** Maximum zoom level for the 9patch image. */
-    public static final int MAX_ZOOM = 16;
+    /** Maximum zoom level (in percentage) for the 9patch image. */
+    public static final int MAX_ZOOM = 800;
 
     private final AWTEventListener mAwtKeyEventListener;
 
-    /** Current 9patch zoom level, {@link #MIN_ZOOM} &lt;= zoom &lt;= {@link #MAX_ZOOM} */
+    /**
+     * Current 9patch zoom level (in percentage), {@link #MIN_ZOOM} &lt;= zoom &lt;= {@link
+     * #MAX_ZOOM}
+     */
     private int zoom = DEFAULT_ZOOM;
+
     private boolean showPatches;
     private boolean showLock = false;
 
@@ -749,12 +752,12 @@ public class ImageViewer extends JComponent {
 
     private int imageYCoordinate(int y) {
         int top = (getHeight() - size.height) / 2;
-        return (y - top) / zoom;
+        return Math.round((y - top) / (zoom * 0.01f));
     }
 
     private int imageXCoordinate(int x) {
         int left = (getWidth() - size.width) / 2;
-        return (x - left) / zoom;
+        return Math.round((x - left) / (zoom * 0.01f));
     }
 
     private Point getImageOrigin() {
@@ -766,10 +769,11 @@ public class ImageViewer extends JComponent {
     private Rectangle displayCoordinates(Rectangle r) {
         Point imageOrigin = getImageOrigin();
 
-        int x = r.x * zoom + imageOrigin.x;
-        int y = r.y * zoom + imageOrigin.y;
-        int w = r.width * zoom;
-        int h = r.height * zoom;
+        float zoomFraction = zoom * 0.01f;
+        int x = Math.round(r.x * zoomFraction + imageOrigin.x);
+        int y = Math.round(r.y * zoomFraction + imageOrigin.y);
+        int w = Math.round(r.width * zoomFraction);
+        int h = Math.round(r.height * zoomFraction);
 
         return new Rectangle(x, y, w, h);
     }
@@ -948,11 +952,21 @@ public class ImageViewer extends JComponent {
 
         if (locked != previousLock) {
             repaint();
-        } else if (showCursor || (showCursor != previousCursor)) {
-            Rectangle clip = new Rectangle(lastPositionX - 1 - zoom / 2,
-                    lastPositionY - 1 - zoom / 2, zoom + 2, zoom + 2);
-            clip = clip.union(new Rectangle(oldX - 1 - zoom / 2,
-                    oldY - 1 - zoom / 2, zoom + 2, zoom + 2));
+        } else if (showCursor || previousCursor) {
+            float zoomFraction = zoom * 0.01f;
+            Rectangle clip =
+                    new Rectangle(
+                            Math.round(lastPositionX - 1 - zoomFraction / 2),
+                            Math.round(lastPositionY - 1 - zoomFraction / 2),
+                            Math.round(zoomFraction + 2),
+                            Math.round(zoomFraction + 2));
+            clip =
+                    clip.union(
+                            new Rectangle(
+                                    Math.round(oldX - 1 - zoomFraction / 2),
+                                    Math.round(oldY - 1 - zoomFraction / 2),
+                                    Math.round(zoomFraction + 2),
+                                    Math.round(zoomFraction + 2)));
             repaint(clip);
         }
 
@@ -972,7 +986,8 @@ public class ImageViewer extends JComponent {
         g2.setPaint(texture);
         g2.fillRect(0, 0, size.width, size.height);
 
-        g2.scale(zoom, zoom);
+        float zoomFraction = zoom * 0.01f;
+        g2.scale(zoomFraction, zoomFraction);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
           RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -999,11 +1014,16 @@ public class ImageViewer extends JComponent {
 
         if (corruptedPatches != null) {
             g2.setColor(CORRUPTED_COLOR);
-            g2.setStroke(new BasicStroke(3.0f / zoom));
+            g2.setStroke(new BasicStroke(3.0f / zoomFraction));
             for (Rectangle patch : corruptedPatches) {
-                g2.draw(new RoundRectangle2D.Float(patch.x - 2.0f / zoom, patch.y - 2.0f / zoom,
-                        patch.width + 2.0f / zoom, patch.height + 2.0f / zoom,
-                        6.0f / zoom, 6.0f / zoom));
+                g2.draw(
+                        new RoundRectangle2D.Float(
+                                patch.x - 2.0f / zoomFraction,
+                                patch.y - 2.0f / zoomFraction,
+                                patch.width + 2.0f / zoomFraction,
+                                patch.height + 2.0f / zoomFraction,
+                                6.0f / zoomFraction,
+                                6.0f / zoomFraction));
             }
         }
 
@@ -1032,10 +1052,10 @@ public class ImageViewer extends JComponent {
             int w = Math.abs(lineFromX - lineToX) + 1;
             int h = Math.abs(lineFromY - lineToY) + 1;
 
-            x = x * zoom;
-            y = y * zoom;
-            w = w * zoom;
-            h = h * zoom;
+            x = Math.round(x * zoomFraction);
+            y = Math.round(y * zoomFraction);
+            w = Math.round(w * zoomFraction);
+            h = Math.round(h * zoomFraction);
 
             int left = (getWidth() - size.width) / 2;
             int top = (getHeight() - size.height) / 2;
@@ -1051,7 +1071,11 @@ public class ImageViewer extends JComponent {
             Graphics cursor = g.create();
             cursor.setXORMode(Color.WHITE);
             cursor.setColor(Color.BLACK);
-            cursor.drawRect(lastPositionX - zoom / 2, lastPositionY - zoom / 2, zoom, zoom);
+            cursor.drawRect(
+                    Math.round(lastPositionX - zoomFraction / 2),
+                    Math.round(lastPositionY - zoomFraction) / 2,
+                    Math.round(zoomFraction),
+                    Math.round(zoomFraction));
             cursor.dispose();
         }
 
@@ -1126,7 +1150,7 @@ public class ImageViewer extends JComponent {
             float current = Math.max(w, h);
             float ideal = IDEAL_IMAGE_FRACTION_OF_WINDOW;
 
-            z = clamp(Math.round(ideal / current), 1, MAX_ZOOM);
+            z = clamp(Math.round(ideal / current), MIN_ZOOM, MAX_ZOOM);
         }
         setZoom(z);
     }
@@ -1146,14 +1170,9 @@ public class ImageViewer extends JComponent {
     }
 
     private void updateSize() {
-        int width = image.getWidth();
-        int height = image.getHeight();
-
-        if (size.height == 0 || (getHeight() - size.height) == 0) {
-            size.setSize(width * zoom, height * zoom);
-        } else {
-            size.setSize(width * zoom, height * zoom);
-        }
+        int width = Math.round(image.getWidth() * zoom * 0.01f);
+        int height = Math.round(image.getHeight() * zoom * 0.01f);
+        size.setSize(width, height);
     }
 
     void setPatchesVisible(boolean visible) {

@@ -5,5 +5,5 @@ dependencies {
     compileOnly "com.android.tools.lint:lint-checks:$baseVersion"
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "11"
+targetCompatibility = "11"

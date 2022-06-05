@@ -118,6 +118,13 @@ if errorlevel 1 (
   goto endscript
 )
 
+@rem build Windows Launcher
+call %BASEDIR%\tools\base\intellij-native\build-win-launcher.cmd %OUTDIR% %DISTDIR% %BUILDNUMBER%
+if errorlevel 1 (
+  set /a EXITCODE=1
+  goto endscript
+)
+
 @echo studio_win.cmd time: %time%
 
 :collect_logs

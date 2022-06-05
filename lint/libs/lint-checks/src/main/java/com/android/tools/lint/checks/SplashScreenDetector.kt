@@ -59,7 +59,7 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
         PROHIBITED_SUPERCLASSES.any { context.evaluator.extendsClass(cls, it) }
 
     companion object {
-        private val SPLASH_SCREEN_KEYWORDS = listOf("SplashScreen", "LaunchScreen", "SplashActivity")
+        private val SPLASH_SCREEN_KEYWORDS = listOf("SplashScreen", "SplashActivity", "LaunchActivity", "LaunchScreen")
         private val PROHIBITED_SUPERCLASSES = listOf(
             CLASS_ACTIVITY,
             CLASS_V4_FRAGMENT.oldName(),
@@ -74,7 +74,7 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
             explanation = """
                 Starting in Android 12 (API 31+), the application's Launch Screen is provided by \
                 the system and the application should not create its own, otherwise the user will \
-                see two splashscreen. Please check the `SplashScreen` class to check how the \
+                see two splashscreens. Please check the `SplashScreen` class to check how the \
                 Splash Screen can be controlled and customized.
             """,
             category = Category.CORRECTNESS,
@@ -83,5 +83,8 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
             implementation = Implementation(SplashScreenDetector::class.java, Scope.JAVA_FILE_SCOPE),
             androidSpecific = true
         )
+            .addMoreInfo(
+                "https://developer.android.com/guide/topics/ui/splash-screen"
+            )
     }
 }

@@ -60,7 +60,7 @@ fun RecipeExecutor.appWidgetRecipe(
 
   mergeXml(androidManifestXml(className, configurable, layoutName, packageName), manifestOut.resolve("AndroidManifest.xml"))
 
-  copy(File("example_appwidget_preview.png"), resOut.resolve("drawable-nodpi/example_appwidget_preview.png"))
+  copy(File("app-widget").resolve("drawable-nodpi"), resOut.resolve("drawable-nodpi"))
   save(appWidgetBackgroundXml(), resOut.resolve("drawable-v21/app_widget_background.xml"))
   save(appWidgetInnerViewBackgroundXml(), resOut.resolve("drawable-v21/app_widget_inner_view_background.xml"))
   save(appwidgetXml(moduleData.themesData), resOut.resolve("layout/${layoutName}.xml"))

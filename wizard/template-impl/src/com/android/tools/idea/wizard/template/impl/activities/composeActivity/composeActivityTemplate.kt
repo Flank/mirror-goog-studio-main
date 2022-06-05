@@ -88,7 +88,7 @@ val composeActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_compose_empty_activity.png") }
+    thumb { File("compose-activity").resolve("template_compose_empty_activity.png") }
 
     recipe = { data: TemplateData ->
       composeActivityRecipe(data as ModuleTemplateData, activityClass.value, packageName.value, isLauncher.value,

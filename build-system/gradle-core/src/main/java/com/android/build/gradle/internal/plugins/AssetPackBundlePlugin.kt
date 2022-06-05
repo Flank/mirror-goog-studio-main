@@ -51,7 +51,6 @@ import com.android.builder.errors.IssueReporter
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import java.io.File
 
 /**
  * Plugin that allows to build asset-pack bundles.
@@ -91,7 +90,7 @@ class AssetPackBundlePlugin : Plugin<Project> {
             projectOptions,
             project.gradle.sharedServices,
             LintFromMaven.from(project, projectOptions, syncIssueHandler),
-            create(project, projectOptions),
+            create(project, projectOptions::get),
             project.gradle.startParameter.maxWorkerCount,
             ProjectInfo(project),
             project::file,

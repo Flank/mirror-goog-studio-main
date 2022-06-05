@@ -32,8 +32,8 @@ class PackageManager : public BashCommandRunner {
                         std::string *error_string) const;
 
   // Return app data folder absolute path (e.g: /data/data/com.google.calendar/)
-  bool GetAppDataPath(const std::string &package_name, std::string *path,
-                      std::string *error_string) const;
+  bool GetAppDataPath(const std::string &package_name, const std::string &user,
+                      std::string *path, std::string *error_string) const;
 };
 }  // namespace profiler
 

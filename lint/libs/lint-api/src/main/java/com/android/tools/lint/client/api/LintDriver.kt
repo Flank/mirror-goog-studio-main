@@ -196,7 +196,10 @@ class LintDriver(
             }
     }
 
-    /** The scope for the lint job. */
+    /**
+     * The scope for the lint job. The scope may be narrowed and then
+     * restored during [runExtraPhases].
+     */
     var scope: EnumSet<Scope> = request.getScope() ?: Scope.infer(projectRoots)
 
     /**
@@ -2855,8 +2858,13 @@ class LintDriver(
         override fun getAssetFolders(project: Project): List<File> =
             delegate.getAssetFolders(project)
 
+        @Suppress("DEPRECATION")
+        @Deprecated("Use the List<File> version")
         override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader =
             delegate.createUrlClassLoader(urls, parent)
+
+        override fun createUrlClassLoader(files: List<File>, parent: ClassLoader): ClassLoader =
+            delegate.createUrlClassLoader(files, parent)
 
         override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 

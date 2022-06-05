@@ -110,8 +110,8 @@ fun RecipeExecutor.generateCppGameActivity(
     )
 
     copy(
-        File("android_robot.png"),
-        moduleData.resDir.resolve("../assets/android_robot.png")
+        File("cpp-game-activity").resolve("assets"),
+        moduleData.resDir.resolve("../assets")
     )
 
     open(simpleActivityPath)

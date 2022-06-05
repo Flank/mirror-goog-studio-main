@@ -1,0 +1,1 @@
+rule org.objectweb.** com.android.tools.instrumentation.threading.org.objectweb.@1

@@ -62,13 +62,20 @@ import java.util.EnumSet
 
 class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-        CHECK_RESULT_ANNOTATION.oldName(),
-        CHECK_RESULT_ANNOTATION.newName(),
-        FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE,
-        JAVAX_ANNOTATION_CHECK_RETURN_VALUE,
-        ERRORPRONE_CAN_IGNORE_RETURN_VALUE,
-        "io.reactivex.annotations.CheckReturnValue",
-        "com.google.errorprone.annotations.CheckReturnValue"
+        // Match all annotations named *.CheckResult or *.CheckReturnValue; there are many:
+        // android.support.annotation.CheckResult
+        // androidx.annotation.CheckResult
+        // edu.umd.cs.findbugs.annotations.CheckReturnValue
+        // javax.annotation.CheckReturnValue
+        // io.reactivex.annotations.CheckReturnValue
+        // io.reactivex.rxjava3.annotations.CheckReturnValue
+        // com.google.errorprone.annotations.CheckReturnValue
+        // com.google.protobuf.CheckReturnValue
+        // org.mockito.CheckReturnValue
+        // as well as com.google.errorprone.annotations.CanIgnoreReturnValue
+        "CheckResult",
+        "CheckReturnValue",
+        "CanIgnoreReturnValue"
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
@@ -81,7 +88,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         annotationInfo: AnnotationInfo,
         usageInfo: AnnotationUsageInfo
     ) {
-        if (annotationInfo.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE) {
+        if (annotationInfo.qualifiedName.endsWith(".CanIgnoreReturnValue")) {
             return
         }
 
@@ -120,7 +127,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
             // If this CheckResult annotation is from a class, check to see
             // if it's been reversed with @CanIgnoreReturnValue
-            if (usageInfo.anyCloser { it.qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE }) {
+            if (usageInfo.anyCloser { it.qualifiedName.endsWith(".CanIgnoreReturnValue") }) {
                 return
             }
             if (context.isTestSource && expectsSideEffect(context, element)) {

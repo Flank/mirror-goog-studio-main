@@ -24,7 +24,6 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.describeApi
-import com.android.utils.SdkUtils
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
@@ -250,10 +249,9 @@ private constructor(
             skipVerification: Boolean
         ): IssueRegistry? {
             // Make a class loader for this jar
-            val url = SdkUtils.fileToUrl(jarFile)
             return try {
                 val loader = client.createUrlClassLoader(
-                    arrayOf(url),
+                    listOf(jarFile),
                     JarFileIssueRegistry::class.java.classLoader
                 )
                 val registryClass = Class.forName(className, true, loader)

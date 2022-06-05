@@ -81,9 +81,9 @@ fun RecipeExecutor.generateNavigationDrawer(
   mergeXml(dimens(), resOut.resolve("values/dimens.xml"))
   save(navigationDrawerMain(), resOut.resolve("menu/${menuName}.xml"))
 
-  copy(File("drawable"), resOut.resolve("drawable"))
+  copy(File("navigation-drawer-activity").resolve("drawable"), resOut.resolve("drawable"))
   val drawable = if (includeImageDrawables) "drawable-v21" else "drawable"
-  copy(File("drawable-v21"), resOut.resolve(drawable))
+  copy(File("navigation-drawer-activity").resolve("drawable-v21"), resOut.resolve(drawable))
 
   if (includeImageDrawables) {
     save(navigationDrawerDrawables(), resOut.resolve("values/drawables.xml"))

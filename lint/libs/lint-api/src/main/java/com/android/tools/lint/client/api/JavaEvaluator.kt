@@ -1112,15 +1112,10 @@ class JavaEvaluator {
         val relevant = relevantAnnotations ?: this.relevantAnnotations ?: return emptyList()
         var result: MutableList<UAnnotation>? = null
         for (annotation in annotations) {
-            val signature = annotation.qualifiedName
-            if (signature == null || (signature.startsWith("kotlin.") || signature.startsWith("java.")) &&
-                !relevant.contains(signature)
-            ) {
-                // @Override, @SuppressWarnings etc. Ignore
-                continue
-            }
-
-            if (relevant.contains(signature)) {
+            val signature = annotation.qualifiedName ?: continue
+            val name = signature.substringAfterLast('.')
+            val isRelevant = relevant.contains(signature) || relevant.contains(name)
+            if (isRelevant) {
                 val uAnnotation = annotation.toUElement(UAnnotation::class.java) ?: continue
 
                 // Common case: there's just one annotation; no need to create a list copy
@@ -1131,6 +1126,10 @@ class JavaEvaluator {
                     result = ArrayList(2)
                 }
                 result.add(uAnnotation)
+                continue
+            } else if (signature.startsWith("java.") || signature.startsWith("kotlin.")) {
+                // @Override, @SuppressWarnings etc. Ignore, because they're not a possible typedef match, which
+                // is the only remaining thing we're looking for.
                 continue
             } else if (isPlatformAnnotation(signature)) {
                 if (result == null) {
@@ -1188,17 +1187,10 @@ class JavaEvaluator {
         val relevant = relevantAnnotations ?: this.relevantAnnotations ?: return emptyList()
         var result: MutableList<UAnnotation>? = null
         for (annotation in annotations) {
-            val signature = annotation.qualifiedName
-            if (signature == null || (signature.startsWith("kotlin.") || signature.startsWith("java.")) &&
-                !relevant.contains(signature)
-            ) {
-                // @Override, @SuppressWarnings etc. Ignore
-                continue
-            }
-
-            if (relevant.contains(signature)) {
-                val uAnnotation = annotation
-
+            val signature = annotation.qualifiedName ?: continue
+            val name = signature.substringAfterLast('.')
+            val isRelevant = relevant.contains(signature) || relevant.contains(name)
+            if (isRelevant) {
                 // Common case: there's just one annotation; no need to create a list copy
                 if (length == 1) {
                     return annotations
@@ -1206,7 +1198,11 @@ class JavaEvaluator {
                 if (result == null) {
                     result = ArrayList(2)
                 }
-                result.add(uAnnotation)
+                result.add(annotation)
+                continue
+            } else if (signature.startsWith("java.") || signature.startsWith("kotlin.")) {
+                // @Override, @SuppressWarnings etc. Ignore, because they're not a possible typedef match, which
+                // is the only remaining thing we're looking for.
                 continue
             } else if (isPlatformAnnotation(signature)) {
                 if (result == null) {

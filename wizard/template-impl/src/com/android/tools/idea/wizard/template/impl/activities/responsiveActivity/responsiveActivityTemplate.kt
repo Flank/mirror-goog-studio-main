@@ -121,7 +121,7 @@ val responsiveActivityTemplate = template {
     LanguageWidget()
   )
 
-  thumb { File("template_responsive_activity.png") }
+  thumb { File("responsive-activity").resolve("template_responsive_activity.png") }
 
   recipe = { data: TemplateData ->
     generateResponsiveActivity(

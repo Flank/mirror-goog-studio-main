@@ -195,8 +195,11 @@ void ProcessRequest(std::unique_ptr<proto::InstallerRequest> request,
 
   // Finally! Run !
   proto::InstallerResponse response;
+
   task->Run(&response);
   response.set_status(proto::InstallerResponse::OK);
+  response.set_id(request->id());
+
   EndPhase();
   SendResponse(&response, workspace);
 }

@@ -37,29 +37,38 @@ interface InterceptionRuleService {
     fun interceptResponse(connection: NetworkConnection, response: NetworkResponse): NetworkResponse
     fun addRule(ruleId: Int, rule: InterceptionRule)
     fun removeRule(ruleId: Int)
+    fun reorderRules(ruleIdList: List<Int>)
 }
 
 class InterceptionRuleServiceImpl : InterceptionRuleService {
 
     private val rules = mutableMapOf<Int, InterceptionRule>()
+    private var ruleIdList = mutableListOf<Int>()
 
     override fun interceptResponse(
         connection: NetworkConnection,
         response: NetworkResponse
-    ): NetworkResponse {
-        return rules.values.fold(response) { intermediateResponse, rule ->
+    ): NetworkResponse = ruleIdList.mapNotNull { id -> rules[id] }
+        .fold(response) { intermediateResponse, rule ->
             rule.transform(
                 connection,
                 intermediateResponse
             )
         }
-    }
 
     override fun addRule(ruleId: Int, rule: InterceptionRule) {
+        if (!rules.containsKey(ruleId)) {
+            ruleIdList.add(ruleId)
+        }
         rules[ruleId] = rule
     }
 
     override fun removeRule(ruleId: Int) {
+        ruleIdList.remove(ruleId)
         rules.remove(ruleId)
+    }
+
+    override fun reorderRules(ruleIdList: List<Int>) {
+        this.ruleIdList = ruleIdList.toMutableList()
     }
 }

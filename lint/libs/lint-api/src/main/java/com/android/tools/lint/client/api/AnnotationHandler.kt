@@ -504,22 +504,41 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             usageInfo.index = index
             val signature = info.qualifiedName
             val uastScanners = scanners.get(signature)
-            if (uastScanners != null) {
-                // Don't flag annotations that have already appeared in a closer scope
-                if (usageInfo.anyCloser { it.qualifiedName == signature }) {
+            if (uastScanners.isNotEmpty()) {
+                checkAnnotations(context, uastScanners, signature, argument, type, info, usageInfo)
+            }
+
+            // Also check just the name; we allow annotation checkers to just match by basename
+            val name = signature.substringAfterLast('.')
+            val simpleNameScanners = scanners.get(name)
+            if (simpleNameScanners.isNotEmpty()) {
+                checkAnnotations(context, simpleNameScanners, signature, argument, type, info, usageInfo)
+            }
+        }
+    }
+
+    private fun checkAnnotations(
+        context: JavaContext,
+        uastScanners: Collection<SourceCodeScanner>,
+        signature: String,
+        argument: UElement,
+        type: AnnotationUsageType,
+        info: AnnotationInfo,
+        usageInfo: AnnotationUsageInfo
+    ) {
+        // Don't flag annotations that have already appeared in a closer scope
+        if (usageInfo.anyCloser { it.qualifiedName == signature }) {
+            return
+        }
+        for (scanner in uastScanners) {
+            if (scanner.isApplicableAnnotationUsage(type)) {
+                // Some annotations should not be treated as inherited though
+                // the hierarchy: if that's the case for this annotation in
+                // this scanner, check whether it's inherited and if so, skip it
+                if (type != DEFINITION && !scanner.inheritAnnotation(signature) && info.isInherited()) {
                     continue
                 }
-                for (scanner in uastScanners) {
-                    if (scanner.isApplicableAnnotationUsage(type)) {
-                        // Some annotations should not be treated as inherited though
-                        // the hierarchy: if that's the case for this annotation in
-                        // this scanner, check whether it's inherited and if so, skip it
-                        if (type != DEFINITION && !scanner.inheritAnnotation(signature) && info.isInherited()) {
-                            continue
-                        }
-                        scanner.visitAnnotationUsage(context, argument, info, usageInfo)
-                    }
-                }
+                scanner.visitAnnotationUsage(context, argument, info, usageInfo)
             }
         }
     }
@@ -811,15 +830,10 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             return annotations
         }
         for (annotation in annotations) {
-            val signature = annotation.qualifiedName
-            if (signature == null ||
-                signature.startsWith("java.") && !relevantAnnotations.contains(signature)
-            ) {
-                // @Override, @SuppressWarnings etc. Ignore
-                continue
-            }
-
-            if (relevantAnnotations.contains(signature)) {
+            val signature = annotation.qualifiedName ?: continue
+            val name = signature.substringAfterLast('.')
+            val relevant = relevantAnnotations.contains(signature) || relevantAnnotations.contains(name)
+            if (relevant) {
                 // Common case: there's just one annotation; no need to create a list copy
                 if (length == 1) {
                     return annotations
@@ -828,6 +842,10 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                     result = ArrayList(2)
                 }
                 result.add(annotation)
+                continue
+            } else if (signature.startsWith("java.") || signature.startsWith("kotlin.")) {
+                // @Override, @SuppressWarnings etc. Ignore, because they're not a possible typedef match, which
+                // is the only remaining thing we're looking for.
                 continue
             } else if (isPlatformAnnotation(signature)) {
                 if (result == null) {

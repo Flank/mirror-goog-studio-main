@@ -64,6 +64,7 @@ import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.describeCounts
@@ -1396,6 +1397,26 @@ open class LintCliClient : LintClient {
         return flags.enabledIds.contains(issue.id)
     }
 
+    /**
+     * Returns true if Kotlin scripting may be required based on the
+     * [driver]'s [LintDriver.scope] and the files in [allProjects].
+     */
+    private fun mayNeedKotlinScripting(allProjects: Set<Project>): Boolean {
+        if (::driver.isInitialized && !driver.scope.contains(Scope.GRADLE_FILE)) {
+            return false
+        }
+
+        for (project in allProjects) {
+            val files = project.subset ?: project.gradleBuildScripts
+            for (file in files) {
+                if (file.name.endsWith(DOT_KTS)) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
     public override fun initializeProjects(knownProjects: Collection<Project>) {
         // Initialize the associated idea project to use
         val includeTests = !flags.isIgnoreTestSources
@@ -1461,7 +1482,9 @@ open class LintCliClient : LintClient {
             require(file.isAbsolute) { "Relative Path found: $file. All paths should be absolute." }
         }
 
-        val config = UastEnvironment.Configuration.create()
+        val config = UastEnvironment.Configuration.create(
+            enableKotlinScripting = mayNeedKotlinScripting(allProjects)
+        )
         config.javaLanguageLevel = maxLevel
         config.addSourceRoots(sourceRoots.toList())
         config.addClasspathRoots(classpathRoots.toList())
@@ -1622,7 +1645,18 @@ open class LintCliClient : LintClient {
         return errorCount > 0
     }
 
+    @Suppress("DeprecatedCallableAddReplaceWith")
+    @Deprecated("Use the List<File> version")
     override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader {
+        return if (isGradle || currentPlatform() == PLATFORM_WINDOWS) {
+            createUrlClassLoader(urls.map { File(UrlClassLoader.urlToFilePath(it.path)) }.toList(), parent)
+        } else {
+            @Suppress("DEPRECATION")
+            super.createUrlClassLoader(urls, parent)
+        }
+    }
+
+    override fun createUrlClassLoader(files: List<File>, parent: ClassLoader): ClassLoader {
         return if (isGradle || currentPlatform() == PLATFORM_WINDOWS) {
             // When lint is invoked from Gradle, it's normally running in the Gradle
             // daemon which sticks around for a while, And URLClassLoader will on
@@ -1631,9 +1665,9 @@ open class LintCliClient : LintClient {
             // succeeding. So here we'll use the IntelliJ platform's UrlClassLoader
             // instead which does not lock files. See
             // JarFileIssueRegistry#loadAndCloseURLClassLoader for more details.
-            UrlClassLoader.build().parent(parent).urls(urls.toList()).get()
+            UrlClassLoader.build().parent(parent).files(files.map { it.toPath() }).get()
         } else {
-            super.createUrlClassLoader(urls, parent)
+            super.createUrlClassLoader(files, parent)
         }
     }
 

@@ -31,7 +31,7 @@ public final class FragmentWrapper {
         try {
             Method method = fragment.getClass().getMethod("getActivity");
             Object activity = method.invoke(fragment);
-            int activityCode = (activity != null ? activity.hashCode() : -1);
+            int activityCode = activity != null ? activity.hashCode() : -1;
             sendFragmentAdded(
                     fragment.getClass().getSimpleName(), fragment.hashCode(), activityCode);
         } catch (NoSuchMethodException e) {
@@ -47,8 +47,9 @@ public final class FragmentWrapper {
         try {
             Method method = fragment.getClass().getMethod("getActivity");
             Object activity = method.invoke(fragment);
+            int activityCode = activity != null ? activity.hashCode() : -1;
             sendFragmentRemoved(
-                    fragment.getClass().getSimpleName(), fragment.hashCode(), activity.hashCode());
+                    fragment.getClass().getSimpleName(), fragment.hashCode(), activityCode);
         } catch (NoSuchMethodException e) {
             StudioLog.e("Failed to get method getActivity from Fragment class");
         } catch (IllegalAccessException e) {

@@ -148,6 +148,7 @@ iml_module(
         "//tools/base/lint:studio.android.sdktools.lint-checks[module, test]",
         "//prebuilts/studio/intellij-sdk:studio-sdk[test]",
         "//tools/base/lint/libs/lint-tests:liblint-checks-proto",
+        "//tools/adt/idea/.idea/libraries:kotlin-test[test]",
     ],
 )
 

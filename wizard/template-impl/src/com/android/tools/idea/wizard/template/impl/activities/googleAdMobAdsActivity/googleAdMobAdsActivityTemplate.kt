@@ -105,7 +105,7 @@ val googleAdMobAdsActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_admob_activity_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
+    thumb { File("google-admob-ads-activity").resolve("template_admob_activity_" + adFormat.value.name.toLowerCase(Locale.US) + ".png") }
 
     recipe = { data: TemplateData ->
       googleAdMobAdsActivityRecipe(

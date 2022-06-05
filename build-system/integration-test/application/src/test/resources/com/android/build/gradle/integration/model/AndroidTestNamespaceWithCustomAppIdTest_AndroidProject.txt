@@ -1,2 +1,12 @@
-- AndroidProject:
+> AndroidProject:
    - androidTestNamespace = "com.custom.appid.test"
+   - variants:
+      - debug:
+         - mainArtifact:
+            - applicationId = "com.custom.appid"
+         - androidTestArtifact:
+            - applicationId = "com.custom.appid.test"
+      - release:
+         - mainArtifact:
+            - applicationId = "com.custom.appid"
+< AndroidProject

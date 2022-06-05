@@ -35,7 +35,6 @@ import com.android.tools.lint.checks.GradleDetector.Companion.DEPENDENCY
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_CONFIGURATION
 import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY
-import com.android.tools.lint.checks.GradleDetector.Companion.DEPRECATED_LIBRARY_BLOCKING
 import com.android.tools.lint.checks.GradleDetector.Companion.DEV_MODE_OBSOLETE
 import com.android.tools.lint.checks.GradleDetector.Companion.DUPLICATE_CLASSES
 import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRED_TARGET_SDK_VERSION
@@ -52,7 +51,6 @@ import com.android.tools.lint.checks.GradleDetector.Companion.MINIMUM_TARGET_SDK
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
 import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
 import com.android.tools.lint.checks.GradleDetector.Companion.PATH
-import com.android.tools.lint.checks.GradleDetector.Companion.PLAY_SDK_INDEX_BLOCKING_MESSAGE
 import com.android.tools.lint.checks.GradleDetector.Companion.PLAY_SDK_INDEX_NON_COMPLIANT
 import com.android.tools.lint.checks.GradleDetector.Companion.PLUS
 import com.android.tools.lint.checks.GradleDetector.Companion.PREVIOUS_MINIMUM_TARGET_SDK_VERSION
@@ -3135,6 +3133,8 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testSdkIndexLibrary() {
         val expectedFixes = if (GooglePlaySdkIndex.DEFAULT_SHOW_LINKS)
             """
+                Show URL for build.gradle line 7: View details in Google Play SDK Index:
+                http://index.example.url/
                 Show URL for build.gradle line 8: View details in Google Play SDK Index:
                 http://index.example.url/
                 Show URL for build.gradle line 5: View details in Google Play SDK Index:
@@ -3169,11 +3169,14 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
                 """
             ).indented()
-        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY, PLAY_SDK_INDEX_NON_COMPLIANT, DEPRECATED_LIBRARY_BLOCKING, PLAY_SDK_INDEX_BLOCKING_MESSAGE)
+        ).issues(RISKY_LIBRARY, DEPRECATED_LIBRARY, DEPENDENCY, PLAY_SDK_INDEX_NON_COMPLIANT)
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibraryBlocking]
+                    build.gradle:7: Error: log4j:log4j version 1.2.13 has an associated message from its author [RiskyLibrary]
+                        compile 'log4j:log4j:1.2.13' // Critical BLOCKING
+                                ~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.12' // OUTDATED BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
@@ -3182,7 +3185,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                     build.gradle:13: Warning: com.example.ads.third.party:example version 7.2.0 has been marked as outdated by its author [OutdatedLibrary]
                         compile 'com.example.ads.third.party:example:7.2.0' // Outdated & Non compliant & Critical
                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    1 errors, 2 warnings
+                    2 errors, 2 warnings
                 """
             ).expectFixDiffs(expectedFixes)
     }

@@ -83,7 +83,7 @@ val blankWearActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("templates-WatchViewStub-Wear.png") }
+    thumb { File("blank-wear-activity").resolve("templates-WatchViewStub-Wear.png") }
 
     recipe = { data: TemplateData ->
       blankWearActivityRecipe(data as ModuleTemplateData, activityClass.value, layoutName.value, isLauncher.value, packageName.value)

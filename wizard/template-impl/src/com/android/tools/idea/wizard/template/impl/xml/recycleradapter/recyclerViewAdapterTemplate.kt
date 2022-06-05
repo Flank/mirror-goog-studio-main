@@ -109,7 +109,7 @@ val recyclerViewAdapterFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_list_fragment.png") }
+    thumb { File("recycler-adapter").resolve("template_list_fragment.png") }
 
     recipe = { data: TemplateData ->
       recyclerViewAdapterRecipe(data as ModuleTemplateData, packageName.value,

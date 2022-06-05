@@ -1005,34 +1005,30 @@ open class GradleDetector : Detector(), GradleScanner {
         if (sdkIndex.isReady()) {
             val versionString = version.toString()
             var reportCreated = false
-            if (sdkIndex.isLibraryNonCompliant(groupId, artifactId, versionString, context.file)) {
+            val buildFile = context.file
+            if (sdkIndex.isLibraryNonCompliant(groupId, artifactId, versionString, buildFile)) {
                 val message = "$groupId:$artifactId version $versionString has policy issues that will block publishing"
-                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
+                val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                 reportCreated = report(context, cookie, PLAY_SDK_INDEX_NON_COMPLIANT, message, fix)
             }
             if (!reportCreated) {
                 val isBlocking = sdkIndex.hasLibraryBlockingIssues(groupId, artifactId, versionString)
                 if (isBlocking) {
-                    if (sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, context.file)) {
+                    if (sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has an associated message from its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        reportCreated = report(context, cookie, PLAY_SDK_INDEX_BLOCKING_MESSAGE, message, fix)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
+                        reportCreated = report(context, cookie, RISKY_LIBRARY, message, fix, overrideSeverity = Severity.ERROR)
                     }
-                    if ((!reportCreated) && sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
+                    if ((!reportCreated) && sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        report(context, cookie, DEPRECATED_LIBRARY_BLOCKING, message, fix)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
+                        report(context, cookie, DEPRECATED_LIBRARY, message, fix, overrideSeverity = Severity.ERROR)
                     }
                 } else {
-                    if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, context.file)) {
+                    if (sdkIndex.isLibraryOutdated(groupId, artifactId, versionString, buildFile)) {
                         val message = "$groupId:$artifactId version $versionString has been marked as outdated by its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        reportCreated = report(context, cookie, DEPRECATED_LIBRARY, message, fix)
-                    }
-                    if ((!reportCreated) && sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, context.file)) {
-                        val message = "$groupId:$artifactId version $versionString has an associated message from its author"
-                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId)
-                        report(context, cookie, RISKY_LIBRARY, message, fix)
+                        val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
+                        report(context, cookie, DEPRECATED_LIBRARY, message, fix)
                     }
                 }
             }
@@ -1806,7 +1802,8 @@ open class GradleDetector : Detector(), GradleScanner {
         issue: Issue,
         message: String,
         fix: LintFix? = null,
-        partial: Boolean = false
+        partial: Boolean = false,
+        overrideSeverity: Severity? = null
     ): Boolean {
         // Some methods in GradleDetector are run without the PSI read lock in order
         // to accommodate network requests, so we grab the read lock here.
@@ -1825,6 +1822,7 @@ open class GradleDetector : Detector(), GradleScanner {
 
                     val location = context.getLocation(cookie)
                     val incident = Incident(issue, location, message, fix)
+                    overrideSeverity?.let { incident.overrideSeverity(it) }
                     if (partial) {
                         context.report(incident, map())
                     } else {
@@ -2674,27 +2672,6 @@ open class GradleDetector : Detector(), GradleScanner {
             moreInfo = GOOGLE_PLAY_SDK_INDEX_URL
         )
 
-        /** Using a deprecated library. */
-        @JvmField
-        val DEPRECATED_LIBRARY_BLOCKING = Issue.create(
-            id = "OutdatedLibraryBlocking",
-            briefDescription = "Outdated Library Blocking Publishing",
-            explanation = """
-                Your app is using an outdated version of a library that causes violations \
-                of Google Play policies (see https://play.google.com/about/monetization-ads/ads/) \
-                and/or may affect your app’s visibility on the Play Store.
-
-                Please try updating your app with an updated version of this library, or remove \
-                it from your app.
-                """,
-            category = Category.COMPLIANCE,
-            priority = 6,
-            severity = Severity.ERROR,
-            androidSpecific = true,
-            implementation = IMPLEMENTATION,
-            moreInfo = GOOGLE_PLAY_SDK_INDEX_URL
-        )
-
         /**
          * Using data binding with Kotlin but not Kotlin annotation
          * processing.
@@ -2852,20 +2829,7 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION,
             moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
-        )
-
-        @JvmField
-        val PLAY_SDK_INDEX_BLOCKING_MESSAGE = Issue.create(
-            id = "PlaySdkIndexBlockingMessage",
-            briefDescription = "Libraries with blocking Privacy or Security Risks",
-            explanation = """
-                This library version has privacy or security issues that will block publishing in the Google Play Store.
-            """,
-            category = Category.COMPLIANCE,
-            priority = 7,
-            severity = Severity.ERROR,
-            implementation = IMPLEMENTATION,
-            moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
+            androidSpecific = true
         )
 
         /** Gradle plugin IDs based on the Java plugin. */

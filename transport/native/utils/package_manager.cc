@@ -45,14 +45,15 @@ bool PackageManager::GetAppBaseFolder(const string &package_name, string *path,
   return true;
 }
 
-bool PackageManager::GetAppDataPath(const string &package_name, string *path,
+bool PackageManager::GetAppDataPath(const string &package_name,
+                                    const string &user, string *path,
                                     string *error_string) const {
   Trace trace("PackageManager::GetAppDataPath");
 
   BashCommandRunner pwd("pwd");
   string parameters;
   std::string output;
-  bool success = pwd.RunAs(parameters, package_name, &output);
+  bool success = pwd.RunAs(parameters, package_name, user, &output);
   if (!success) {
     *error_string = "Unable to retrieve App Data Path";
     return false;

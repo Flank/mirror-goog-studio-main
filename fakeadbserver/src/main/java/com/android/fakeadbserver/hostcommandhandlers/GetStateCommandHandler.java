@@ -18,24 +18,11 @@ package com.android.fakeadbserver.hostcommandhandlers;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.fakeadbserver.ClientState;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
-import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.ExitHandler;
-import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.HeloHandler;
-import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacket;
-import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacketHandler;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacket.readFrom;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
  * host-prefix:get-state return the last known state of the device

@@ -22,10 +22,13 @@ import com.android.build.gradle.internal.cxx.configure.NdkLocator
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
 import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
 import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
@@ -38,6 +41,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.OptionalLibrary
 import com.android.tools.analytics.Environment
+import org.gradle.api.DefaultTask
 import org.gradle.api.NonExtensible
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
@@ -436,6 +440,15 @@ fun AndroidJarInput.initialize(creationConfig: ComponentCreationConfig) {
         getBuildService(creationConfig.services.buildServiceRegistry))
     this.compileSdkVersion.setDisallowChanges(creationConfig.global.compileSdkHashString)
     this.buildToolsRevision.setDisallowChanges(creationConfig.global.buildToolsRevision)
+}
+
+fun AndroidJarInput.initialize(creationConfig: PrivacySandboxSdkVariantScope, task: DefaultTask) {
+    sdkBuildService.setDisallowChanges(
+            getBuildService(task.project.gradle.sharedServices))
+    this.compileSdkVersion.setDisallowChanges("android-${creationConfig.extension.compileSdk}")
+    this.buildToolsRevision.setDisallowChanges(
+            Revision.parseRevision(creationConfig.extension.buildToolsVersion)
+    )
 }
 
 /** This can be used by tasks requiring build-tools executables as input with [org.gradle.api.tasks.Nested]. */

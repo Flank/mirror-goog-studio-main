@@ -235,7 +235,7 @@ class ClassContext(
             }
         }
 
-        return Location.create(file)
+        return Location.create(jarFile ?: file)
     }
 
     /**

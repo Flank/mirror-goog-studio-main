@@ -23,6 +23,8 @@ import static com.android.SdkConstants.QUOT_ENTITY;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.escape.string.StringResourceEscaper;
+import com.android.ide.common.resources.escape.xml.CharacterDataEscaper;
 import com.google.common.annotations.VisibleForTesting;
 import org.jetbrains.annotations.Contract;
 
@@ -30,6 +32,7 @@ import org.jetbrains.annotations.Contract;
  * Helper class to help with XML values resource file.
  */
 public class ValueXmlHelper {
+
     /**
      * Replaces escapes in an XML resource string with the actual characters, performing unicode
      * substitutions (replacing any {@code \\uNNNN} references in the given string with the
@@ -241,23 +244,13 @@ public class ValueXmlHelper {
         if (index == 0 || index == s.length()) {
             return false;
         }
-        int prevPos = index - 1;
-        char prev = s.charAt(prevPos);
-        if (prev != '\\') {
-            return false;
+        // Count how many backslashes come before the character.
+        int consecutivePrecedingBackslashes = 0;
+        for (int j = index - 1; j >= 0 && s.charAt(j) == '\\'; --j) {
+            ++consecutivePrecedingBackslashes;
         }
-        // The character *may* be escaped; not sure if the \ we ran into is
-        // an escape character, or an escaped backslash; we have to search backwards
-        // to be certain.
-        int j = prevPos - 1;
-        while (j >= 0) {
-            if (s.charAt(j) != '\\') {
-                break;
-            }
-            j--;
-        }
-        // If we passed an odd number of \'s, the space is escaped
-        return (prevPos - j) % 2 == 1;
+        // If we passed an odd number of \'s, the character is escaped
+        return consecutivePrecedingBackslashes % 2 == 1;
     }
 
     /**
@@ -277,10 +270,12 @@ public class ValueXmlHelper {
      * </ol>
      *
      * @throws IllegalArgumentException If the XML is not valid
+     * @deprecated Call {@link CharacterDataEscaper#unescape(String)} directly instead.
      */
+    @Deprecated
     @NonNull
     public static String unescapeResourceStringAsXml(@NonNull String xml) {
-        return new StringResourceUnescaper().unescapeCharacterData(xml);
+        return CharacterDataEscaper.unescape(xml);
     }
 
     /**
@@ -304,69 +299,76 @@ public class ValueXmlHelper {
      *
      * <p>If the string contains markup it will lose its semantics and become plain character data.
      * If that is not desired, use {@link #escapeResourceStringAsXml(String)} which is XML aware.
+     *
+     * @deprecated Call {@link StringResourceEscaper#escape(String)} directly instead.
      */
+    @Deprecated
     @NonNull
     public static String escapeResourceString(@NonNull String string) {
         return escapeResourceString(string, true);
     }
 
     /**
-     * <p>Escapes a string resource value in compliance with the
-     * <a href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a>
-     * and
-     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook recipe</a>.
+     * Escapes a string resource value in compliance with the <a
+     * href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a> and
+     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook
+     * recipe</a>.
      *
      * <p>The entire string is escaped as follows:
      *
      * <ol>
-     * <li>{@code '"'} and {@code '\\'} are escaped with backslashes
-     * <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
-     * <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
-     * <li>If the string does not start or end with a space, {@code '\''} is escaped with a
-     * backslash
-     * <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with a
-     * backslash
-     * <li>If escapeMarkupDelimiters is true, {@code '&'} and {@code '<'} are escaped with
-     * {@code "&amp;"} and {@code "&lt;"}
+     *   <li>{@code '"'} and {@code '\\'} are escaped with backslashes
+     *   <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
+     *   <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
+     *   <li>If the string does not start or end with a space, {@code '\''} is escaped with a
+     *       backslash
+     *   <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with
+     *       a backslash
+     *   <li>If escapeMarkupDelimiters is true, {@code '&'} and {@code '<'} are escaped with {@code
+     *       "&amp;"} and {@code "&lt;"}
      * </ol>
      *
      * <p>If the string contains markup with attributes, the quotes will be escaped which will
      * result in invalid XML. If escapeMarkupDelimiters is true, the markup will lose its semantics
-     * and become plain character data. If that is not desired, use
-     * {@link #escapeResourceStringAsXml(String)} which is XML aware.
+     * and become plain character data. If that is not desired, use {@link
+     * #escapeResourceStringAsXml(String)} which is XML aware.
      *
      * @param escapeMarkupDelimiters if true escape {@code '&'} and {@code '<'} with their entity
-     *                               references
+     *     references
+     * @deprecated Call {@link StringResourceEscaper#escape(String, boolean)} directly instead.
      */
+    @Deprecated
     @NonNull
-    public static String escapeResourceString(@NonNull String string,
-            boolean escapeMarkupDelimiters) {
+    public static String escapeResourceString(
+            @NonNull String string, boolean escapeMarkupDelimiters) {
         return StringResourceEscaper.escape(string, escapeMarkupDelimiters);
     }
 
     /**
-     * <p>Escapes a string resource value in compliance with the
-     * <a href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a>
-     * and
-     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook recipe</a>.
+     * Escapes a string resource value in compliance with the <a
+     * href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a> and
+     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook
+     * recipe</a>.
      *
      * <p>The argument is expected to be valid XML. Character data outside of CDATA sections is
      * escaped as follows:
      *
      * <ol>
-     * <li>{@code '"'} and {@code '\\'} are escaped with backslashes
-     * <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
-     * <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
-     * <li>If the string does not start or end with a space, {@code '\''} is escaped with a
-     * backslash
-     * <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with a
-     * backslash
+     *   <li>{@code '"'} and {@code '\\'} are escaped with backslashes
+     *   <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
+     *   <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
+     *   <li>If the string does not start or end with a space, {@code '\''} is escaped with a
+     *       backslash
+     *   <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with
+     *       a backslash
      * </ol>
      *
      * @throws IllegalArgumentException If the XML is not valid
+     * @deprecated Call {@link CharacterDataEscaper#escape(String)} directly instead.
      */
+    @Deprecated
     @NonNull
     public static String escapeResourceStringAsXml(@NonNull String xml) {
-        return new StringResourceEscaper().escapeCharacterData(xml);
+        return CharacterDataEscaper.escape(xml);
     }
 }

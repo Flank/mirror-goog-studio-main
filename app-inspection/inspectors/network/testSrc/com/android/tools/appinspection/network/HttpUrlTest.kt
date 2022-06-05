@@ -23,6 +23,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol
+import studio.network.inspection.NetworkInspectorProtocol.InterceptCommand
+import studio.network.inspection.NetworkInspectorProtocol.InterceptRuleAdded
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executor
@@ -67,38 +69,31 @@ class HttpUrlTest {
 
     @Test
     fun httpIntercept() {
-        inspectorRule.inspector.onReceiveCommand(NetworkInspectorProtocol.Command.newBuilder()
-            .apply {
-                interceptCommandBuilder.apply {
-                    interceptRuleAddedBuilder.apply {
-                        ruleBuilder.apply {
-                            criteriaBuilder.apply {
-                                protocol = FAKE_URL.protocol
-                                host = FAKE_URL.host
-                                port = ""
-                                path = FAKE_URL.path
-                                query = FAKE_URL.query
-                                method = ""
-                            }
-                            addTransformation(
-                                NetworkInspectorProtocol.Transformation.newBuilder().apply {
-                                    bodyReplacedBuilder.apply {
-                                        body =
-                                            ByteString.copyFrom("InterceptedBody".toByteArray())
-                                    }
-                                })
-                        }
-                    }
+        // Step1: add a new body rule.
+        val ruleAddedBuilder = InterceptRuleAdded.newBuilder().apply {
+            ruleId = 1
+            ruleBuilder.apply {
+                criteriaBuilder.apply {
+                    protocol = FAKE_URL.protocol
+                    host = FAKE_URL.host
+                    port = ""
+                    path = FAKE_URL.path
+                    query = FAKE_URL.query
+                    method = ""
                 }
+                addTransformation(
+                    NetworkInspectorProtocol.Transformation.newBuilder().apply {
+                        bodyReplacedBuilder.apply {
+                            body =
+                                ByteString.copyFrom("InterceptedBody1".toByteArray())
+                        }
+                    })
             }
-            .build()
-            .toByteArray(), object : Inspector.CommandCallback {
-            override fun reply(response: ByteArray) {
-            }
+        }
 
-            override fun addCancellationListener(executor: Executor, runnable: Runnable) {
-            }
-        })
+        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleAdded = ruleAddedBuilder.build()
+        }.build())
 
         with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
             val inputStream = inputStream
@@ -108,9 +103,74 @@ class HttpUrlTest {
             inspectorRule.connection.findHttpEvent(
                 NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
             )!!.responsePayload.payload.toStringUtf8()
-        ).isEqualTo("InterceptedBody")
+        ).isEqualTo("InterceptedBody1")
 
         assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
+
+        // Step2: add another body rule with different content.
+        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleAdded = ruleAddedBuilder.apply {
+                ruleId = 2
+                ruleBuilder.transformationBuilderList[0].bodyReplacedBuilder.body =
+                    ByteString.copyFrom("InterceptedBody2".toByteArray())
+            }.build()
+        }.build())
+        with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
+            val inputStream = inputStream
+            inputStream.use { it.readBytes() }
+        }
+        assertThat(
+            inspectorRule.connection.findLastHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
+            )!!.responsePayload.payload.toStringUtf8()
+        ).isEqualTo("InterceptedBody2")
+
+        // Step3: reorder two body rules.
+        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            reorderInterceptRulesBuilder.apply {
+                addAllRuleId(listOf(2, 1))
+            }.build()
+        }.build())
+        with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
+            val inputStream = inputStream
+            inputStream.use { it.readBytes() }
+        }
+        assertThat(
+            inspectorRule.connection.findLastHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
+            )!!.responsePayload.payload.toStringUtf8()
+        ).isEqualTo("InterceptedBody1")
+
+        // Step4: remove the last body rule.
+        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleRemovedBuilder.apply {
+                ruleId = 1
+            }.build()
+        }.build())
+        with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
+            val inputStream = inputStream
+            inputStream.use { it.readBytes() }
+        }
+        assertThat(
+            inspectorRule.connection.findLastHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
+            )!!.responsePayload.payload.toStringUtf8()
+        ).isEqualTo("InterceptedBody2")
+    }
+
+    private fun receiveInterceptCommand(interceptCommand: InterceptCommand) {
+        inspectorRule.inspector.onReceiveCommand(NetworkInspectorProtocol.Command.newBuilder()
+            .apply {
+                this.interceptCommand = interceptCommand
+            }
+            .build()
+            .toByteArray(), object : Inspector.CommandCallback {
+            override fun reply(response: ByteArray) {
+            }
+
+            override fun addCancellationListener(executor: Executor, runnable: Runnable) {
+            }
+        })
     }
 
     @Test

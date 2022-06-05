@@ -69,7 +69,7 @@ val settingsActivityTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_settings_activity.png") }
+    thumb { File("settings-activity").resolve("template_settings_activity.png") }
 
     recipe = { data: TemplateData ->
       settingsActivityRecipe(data as ModuleTemplateData, activityClass.value, multipleScreens.value, packageName.value)

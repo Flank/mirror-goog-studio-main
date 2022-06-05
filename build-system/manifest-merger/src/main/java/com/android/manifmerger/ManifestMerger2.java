@@ -16,6 +16,12 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
+import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -38,14 +44,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.dom.DOMSource;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,12 +59,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.ATTR_SPLIT;
-import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
-import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
-import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * merges android manifest files, idempotent.
@@ -565,7 +564,8 @@ public class ManifestMerger2 {
         }
 
         // perform tools: annotations removal if requested.
-        if (mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
+        if (mMergeType != MergeType.FUSED_LIBRARY
+                && mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
             ToolsInstructionsCleaner.cleanToolsReferences(mMergeType, document, mLogger);
         }
 
@@ -1317,12 +1317,27 @@ public class ManifestMerger2 {
          * placeholder replacements are non-exhaustive and final validation is not performed.
          * merging.
          */
-        FUSED_LIBRARY(false, false);
+        FUSED_LIBRARY(false, false),
+
+        /**
+         * Privacy sandbox library merging similar to fused library merging except that resulting
+         * manifest is expected to be processed by aapt2 and shipped into an .asb file to the Play
+         * Store.
+         */
+        PRIVACY_SANDOX_LIBRARY(true, true);
 
         private final boolean isKeepToolsAttributeRequired;
         private final boolean isFullPlaceholderSubstitutionRequired;
 
-        public boolean isKeepToolsAttributeRequired() { return isKeepToolsAttributeRequired; }
+        /**
+         * Return true if the localName attribute should be removed from the node declaring it.
+         *
+         * @param localName the XML no namespace local name
+         */
+        public boolean isKeepToolsAttributeRequired(String localName) {
+            return isKeepToolsAttributeRequired
+                    && !NodeOperationType.LIST_OF_ALLOWED_RUNTIME_ATTRIBUTES.contains(localName);
+        }
 
         public boolean isFullPlaceholderSubstitutionRequired() {
             return isFullPlaceholderSubstitutionRequired;

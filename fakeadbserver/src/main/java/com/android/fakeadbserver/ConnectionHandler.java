@@ -50,6 +50,7 @@ final class ConnectionHandler implements Runnable {
                                     "devices",
                                     "devices-l",
                                     "track-devices",
+                                    "track-devices-l",
                                     "emulator",
                                     "transport",
                                     "transport-usb",

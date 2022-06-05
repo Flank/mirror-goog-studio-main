@@ -30,7 +30,7 @@ fun RecipeExecutor.intentServiceRecipe(
   includeHelper: Boolean
 ) {
 
-  val (projectData, srcOut, resOut, manifestOut) = moduleData
+  val (projectData, srcOut, _, manifestOut) = moduleData
   val ktOrJavaExt = projectData.language.extension
   val packageName = moduleData.packageName
   addAllKotlinDependencies(moduleData)

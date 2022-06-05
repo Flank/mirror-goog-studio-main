@@ -18,6 +18,7 @@ readonly INVOCATION_ID="$(uuidgen)"
 # (linux, windows, mac, mac_arm), and the cache cannot be shared, we exclude
 # them.
 readonly BUILD_TARGETS="//tools/... -//tools/adt/idea/studio/..."
+export USE_BAZEL_VERSION=last_rc
 
 "${SCRIPT_DIR}/bazel" \
   --max_idle_secs=60 \

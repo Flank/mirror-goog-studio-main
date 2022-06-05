@@ -16,6 +16,7 @@
 
 package com.android.builder.dexing
 
+import com.android.builder.dexing.testdata.ClassWithAssertions
 import com.android.builder.packaging.JarFlinger
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -628,7 +629,7 @@ class R8ToolTest {
 
     @Test
     fun testAssertionsGeneration() {
-        val testClass = DexArchiveBuilderTest.ClassWithAssertions::class.java
+        val testClass = ClassWithAssertions::class.java
         val proguardConfig = ProguardConfig(
             listOf(),
             null,

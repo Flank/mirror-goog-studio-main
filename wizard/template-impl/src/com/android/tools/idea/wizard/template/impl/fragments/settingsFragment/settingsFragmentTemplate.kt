@@ -58,7 +58,7 @@ val settingsFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_settings_fragment.png") }
+    thumb { File("settings-fragment").resolve("template_settings_fragment.png") }
 
     recipe = { data: TemplateData ->
       settingsFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, packageName.value)

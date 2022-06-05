@@ -85,7 +85,7 @@ abstract class AndroidPluginBaseServices(
                 projectOptions,
                 project.gradle.sharedServices,
                 from(project, projectOptions, syncIssueReporter),
-                create(project, projectOptions),
+                create(project, projectOptions::get),
                 project.gradle.startParameter.maxWorkerCount,
                 ProjectInfo(project),
                 { o: Any -> project.file(o) },
@@ -115,6 +115,7 @@ abstract class AndroidPluginBaseServices(
 
         this.project = project
         AndroidLocationsBuildService.RegistrationAction(project).execute()
+
         checkMinJvmVersion()
         val projectOptions: ProjectOptions = projectServices.projectOptions
         if (projectOptions.isAnalyticsEnabled) {
@@ -125,6 +126,13 @@ abstract class AndroidPluginBaseServices(
                 NoOpAnalyticsService::class.java
             ) { }
         }
+
+        SyncIssueReporterImpl.GlobalSyncIssueService.RegistrationAction(
+            project,
+            SyncOptions.getModelQueryMode(projectOptions),
+            SyncOptions.getErrorFormatMode(projectOptions)
+        ).execute()
+
         registerDependencyCheck(project, projectOptions)
         checkPathForErrors()
         val attributionFileLocation =

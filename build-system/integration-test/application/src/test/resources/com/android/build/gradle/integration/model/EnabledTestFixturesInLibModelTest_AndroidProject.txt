@@ -17,6 +17,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
+            - applicationId                 = (null)
             - sourceGenTaskName             = "generateDebugTestFixturesSources"
             - resGenTaskName                = (null)
             - generatedResourceFolders      = []
@@ -43,6 +44,7 @@
             - maxSdkVersion                 = (null)
             - isSigned                      = false
             - signingConfigName             = (null)
+            - applicationId                 = (null)
             - sourceGenTaskName             = "generateReleaseTestFixturesSources"
             - resGenTaskName                = (null)
             - generatedResourceFolders      = []

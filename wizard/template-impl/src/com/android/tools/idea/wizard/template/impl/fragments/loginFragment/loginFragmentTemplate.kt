@@ -68,7 +68,7 @@ val loginFragmentTemplate
       LanguageWidget()
     )
 
-    thumb { File("template_login_fragment.png") }
+    thumb { File("login-fragment").resolve("template_login_fragment.png") }
 
     recipe = { data: TemplateData ->
       loginFragmentRecipe(data as ModuleTemplateData, fragmentClass.value, layoutName.value, packageName.value)

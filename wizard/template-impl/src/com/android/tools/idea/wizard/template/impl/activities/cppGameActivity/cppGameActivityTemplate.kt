@@ -83,7 +83,7 @@ val cppGameActivityTemplate
     )
 
     thumb {
-      File("template_game_activity.png")
+      File("cpp-game-activity").resolve("template_game_activity.png")
     }
 
     recipe = { data ->

@@ -147,11 +147,14 @@ interface SubProjectBuilder {
 interface AndroidProjectBuilder {
     var packageName: String
     var applicationId: String?
+    var buildToolsRevision: String?
     var namespace: String?
     var compileSdk: Int?
     var minSdk: Int?
     var minSdkPreview: String?
     var targetProjectPath: String?
+    var renderscriptTargetApi: Int?
+    var renderscriptSupportModeEnabled: Boolean?
 
     val dynamicFeatures: MutableSet<String>
 
@@ -168,6 +171,7 @@ interface AndroidProjectBuilder {
 
     fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit)
     fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit)
+    fun prefab(action: ContainerBuilder<PrefabBuilder>.() -> Unit)
 
     fun addFile(relativePath: String, content: String)
 
@@ -197,6 +201,8 @@ interface AarMetadataBuilder {
 interface BuildFeaturesBuilder {
     var aidl: Boolean?
     var buildConfig: Boolean?
+    var prefab: Boolean?
+    var prefabPublishing: Boolean?
     var renderScript: Boolean?
     var resValues: Boolean?
     var shaders: Boolean?
@@ -216,14 +222,27 @@ interface BuildTypeBuilder {
     val name: String
     var isDefault: Boolean?
     var testCoverageEnabled: Boolean?
+
+    fun ndk(action: NdkBuilder.() -> Unit)
+    var ndk: NdkBuilder?
+
     fun resValue(type: String, name: String, value: String)
     val resValues: List<Triple<String, String, String>>
+}
+
+interface PrefabBuilder {
+    val name: String
+    var headers: String?
 }
 
 interface ProductFlavorBuilder {
     val name: String
     var isDefault: Boolean?
     var dimension: String?
+}
+
+interface NdkBuilder {
+    var abiFilters: List<String>
 }
 
 interface DependenciesBuilder {

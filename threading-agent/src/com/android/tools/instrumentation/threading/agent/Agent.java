@@ -19,14 +19,21 @@ package com.android.tools.instrumentation.threading.agent;
 import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 
+/**
+ * The main entry point of the threading annotations agent.
+ *
+ * <p>Instruments code by installing the {@link Transformer} that inject runtime checks for
+ * threading annotations.
+ */
 public class Agent {
 
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
+
     static Instrumentation instrumentation;
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
         Agent.instrumentation = instrumentation;
+        instrumentation.addTransformer(new Transformer(AnnotationMappings.create()));
         LOGGER.info("Threading agent has been loaded.");
-        // TODO: add transformer
     }
 }

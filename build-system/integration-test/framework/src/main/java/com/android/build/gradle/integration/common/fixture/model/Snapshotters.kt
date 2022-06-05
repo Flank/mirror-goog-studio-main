@@ -473,6 +473,7 @@ private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
     item("maxSdkVersion", AndroidArtifact::maxSdkVersion)
     item("isSigned", AndroidArtifact::isSigned)
     item("signingConfigName", AndroidArtifact::signingConfigName)
+    item("applicationId", AndroidArtifact::applicationId)
     item("sourceGenTaskName", AndroidArtifact::sourceGenTaskName)
     item("resGenTaskName", AndroidArtifact::resGenTaskName)
     valueList("generatedResourceFolders", AndroidArtifact::generatedResourceFolders) { it?.sorted() }
