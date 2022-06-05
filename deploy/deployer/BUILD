@@ -44,6 +44,8 @@ iml_module(
         "//tools/base/deploy/deployer:libjava_sites",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/manifest-parser:studio.android.sdktools.manifest-parser[module]",
+        "//tools/base/adblib:studio.android.sdktools.adblib[module]",
+        "//tools/base/adblib-tools:studio.android.sdktools.adblib.tools[module]",
     ],
 )
 
@@ -64,6 +66,8 @@ coverage_java_library(
     deps = [
         ":java_version",
         "//prebuilts/r8",
+        "//tools/base/adblib",
+        "//tools/base/adblib-tools:adblib.tools",
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/bazel:langtools",

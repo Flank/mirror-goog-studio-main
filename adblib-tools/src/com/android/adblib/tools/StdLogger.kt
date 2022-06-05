@@ -13,23 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib.tools.cli
+package com.android.adblib.tools
 
 import com.android.adblib.AdbLogger
-import com.android.adblib.AdbLoggerFactory
 
-internal class StdLoggerFactory : AdbLoggerFactory {
+internal class StdLogger : AdbLogger(){
+    override val minLevel: Level
+        get() = Level.INFO
 
-    private val log = StdLogger()
-
-    override val logger: AdbLogger
-        get() = log
-
-    override fun createLogger(cls: Class<*>): AdbLogger {
-        return log
+    override fun log(level: Level, message: String) {
+        println(message)
     }
 
-    override fun createLogger(category: String): AdbLogger {
-        return log
+    override fun log(level: Level, exception: Throwable?, message: String) {
+        println(message)
+        exception?.printStackTrace(System.out)
     }
 }

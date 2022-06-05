@@ -16,6 +16,8 @@
 
 package com.android.tools.deployer;
 
+import com.android.adblib.AdbSession;
+import com.android.adblib.tools.AdbLibSessionFactoryKt;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.AdbInitOptions;
 import com.android.ddmlib.AndroidDebugBridge;
@@ -64,6 +66,8 @@ public class DeployerRunner {
     public static void main(String[] args) {
         Trace.start();
         Trace.begin("main");
+        // Only use adblib when DeployerRunner is invoked from CLI
+        System.setProperty(AdbClient.ALLOW_ADBLIB_PROP_KEY, AdbClient.ALLOW_ADBLIB_PROP_VALUE);
         int errorCode = tracedMain(args, new StdLogger(StdLogger.Level.VERBOSE));
         Trace.end();
         Trace.flush();
@@ -71,6 +75,7 @@ public class DeployerRunner {
     }
 
     public static int tracedMain(String[] args, ILogger logger) {
+
         DeployerRunner runner =
                 new DeployerRunner(
                         new File(DEPLOY_DB_PATH), new File(DEX_DB_PATH), new CommandLineService());
@@ -149,7 +154,12 @@ public class DeployerRunner {
         }
 
         metrics.getDeployMetrics().clear();
-        AdbClient adb = new AdbClient(device, logger);
+
+        // Use an adblib connection. This is piggybagging on the adb server guaranteed to be
+        // spawned by DDMLIB.
+        AdbSession session = AdbLibSessionFactoryKt.createStandaloneSession();
+
+        AdbClient adb = new AdbClient(device, logger, session);
         Installer installer =
                 new AdbInstaller(
                         parameters.getInstallersPath(), adb, metrics.getDeployMetrics(), logger);

@@ -16,6 +16,7 @@
 package com.android.adblib.tools
 
 import com.android.adblib.AdbDeviceServices
+import com.android.adblib.AdbInputChannel
 import com.android.adblib.DeviceSelector
 import kotlinx.coroutines.flow.Flow
 import java.nio.file.Path
@@ -48,7 +49,7 @@ internal abstract class PM(val deviceService : AdbDeviceServices) {
      * @param [filename] the filename to provide to the package manager upon streaming
      * @param [size] the filesize of [apk]
      */
-    abstract suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: Path, filename: String, size: Long) : Flow<String>
+    abstract suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: AdbInputChannel, filename: String, size: Long) : Flow<String>
 
     /**
      * Commit the app installation with the Package Manager. The session is destroyed.

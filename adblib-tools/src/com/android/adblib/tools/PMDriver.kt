@@ -19,6 +19,7 @@ import com.android.adblib.AdbDeviceServices
 import com.android.adblib.DeviceSelector
 import com.android.adblib.deviceProperties
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Matcher
@@ -68,7 +69,17 @@ internal class PMDriver(private val service : AdbDeviceServices, private val dev
 
     private val logger = service.session.host.logger
 
+
     suspend fun install(
+        apks: List<Path>,
+        options: List<String> = listOf()
+    ) {
+        withContext(service.session.host.ioDispatcher){
+           installOnIODispatcher(apks, options)
+        }
+    }
+
+    private suspend fun installOnIODispatcher(
         apks: List<Path>,
         options: List<String> = listOf()
     ) {
@@ -102,12 +113,14 @@ internal class PMDriver(private val service : AdbDeviceServices, private val dev
         try {
 
             // 2/ Write all apks
-            apks.forEach {
-                val size = Files.size(it)
+            apks.forEach { apk ->
+                val size = Files.size(apk)
                 // Make sure we have a filename that won't mess with our command
-                val filename = cleanFilename(it.fileName.toString())
-                val flow = pm.streamApk(device, sessionID, it, filename, size)
-                parseInstallResult(flow.first())
+                val filename = cleanFilename(apk.fileName.toString())
+                service.session.channelFactory.openFile(apk).use {
+                    val flow = pm.streamApk(device, sessionID, it, filename, size)
+                    parseInstallResult(flow.first())
+                }
             }
 
             // 3/ Finalize

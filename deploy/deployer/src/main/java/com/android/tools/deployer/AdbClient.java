@@ -16,6 +16,11 @@
 
 package com.android.tools.deployer;
 
+import com.android.adblib.AdbDeviceServices;
+import com.android.adblib.AdbSession;
+import com.android.adblib.DeviceSelector;
+import com.android.adblib.tools.InstallerKt;
+import com.android.adblib.tools.JavaBridge;
 import com.android.ddmlib.AdbCommandRejectedException;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
@@ -37,11 +42,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -56,9 +66,18 @@ public class AdbClient {
     private final IDevice device;
     private final ILogger logger;
 
+    public static final String ALLOW_ADBLIB_PROP_KEY = "com.android.tools.deployer.allow.adblib";
+    public static final String ALLOW_ADBLIB_PROP_VALUE = "true";
+    private final Optional<AdbSession> adbSession;
+
     public AdbClient(IDevice device, ILogger logger) {
+        this(device, logger, null);
+    }
+
+    public AdbClient(IDevice device, ILogger logger, AdbSession adbSession) {
         this.device = device;
         this.logger = logger;
+        this.adbSession = Optional.ofNullable(adbSession);
     }
 
     public static class InstallResult {
@@ -132,40 +151,88 @@ public class AdbClient {
 
     public InstallResult install(List<String> apks, List<String> options, boolean reinstall) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
+
+        String allowAdbLibProp = System.getProperty(ALLOW_ADBLIB_PROP_KEY);
+        boolean allowAdbLib = Boolean.parseBoolean(allowAdbLibProp);
+
+        if (adbSession.isPresent() && allowAdbLib) {
+            logger.info("Installing with adblib");
+            return installWithAdbLib(files, options, reinstall);
+        } else {
+            logger.info("Installing with ddmlib");
+            return installWithDdmLib(files, options, reinstall);
+        }
+    }
+
+    private InstallResult makeInstallResult(String code, String message, Throwable t) {
+        if (code != null) {
+            try {
+                return ApkInstaller.toInstallerResult(code, message);
+            } catch (IllegalArgumentException | NullPointerException ignored) {
+                logger.warning("Unrecognized Installation Failure: %s\n%s\n", code, message);
+            }
+        } else {
+            if (t instanceof ShellCommandUnresponsiveException) {
+                return new InstallResult(InstallStatus.SHELL_UNRESPONSIVE, message);
+            } else {
+                logger.warning("Installation Failure: %s\n", message);
+                return new InstallResult(InstallStatus.UNKNOWN_ERROR, message, null);
+            }
+        }
+        return new InstallResult(InstallStatus.UNKNOWN_ERROR, "Unknown Error");
+    }
+
+    private InstallResult installWithAdbLib(
+            List<File> files, List<String> options, boolean reinstall) {
+        try {
+            if (reinstall) {
+                options.add("-r");
+            }
+            List<Path> apks = new ArrayList<>();
+            for (File f : files) {
+                apks.add(Paths.get(f.getAbsolutePath()));
+            }
+            DeviceSelector deviceSelector =
+                    DeviceSelector.fromSerialNumber(device.getSerialNumber());
+            Duration timeout = Duration.of(Timeouts.CMD_OINSTALL_MS, ChronoUnit.MILLIS);
+            AdbDeviceServices deviceServices = adbSession.get().getDeviceServices();
+            JavaBridge.runBlocking(
+                    deviceServices.getSession(),
+                    c ->
+                            InstallerKt.install(
+                                    deviceServices, deviceSelector, apks, options, timeout, c));
+            return new InstallResult(InstallStatus.OK, null, device.getLastInstallMetrics());
+        } catch (com.android.adblib.tools.InstallException e) {
+            String code = e.getErrorCode();
+            String message = e.getMessage();
+            return makeInstallResult(code, message, e);
+        }
+    }
+
+    private InstallResult installWithDdmLib(
+            List<File> files, List<String> options, boolean reinstall) {
         try {
             if (device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.LOLLIPOP)) {
                 device.installPackages(files, reinstall, options, 5, TimeUnit.MINUTES);
                 return new InstallResult(InstallStatus.OK, null, device.getLastInstallMetrics());
             } else {
-                if (apks.size() != 1) {
+                if (files.size() != 1) {
                     return new InstallResult(
                             InstallStatus.MULTI_APKS_NO_SUPPORTED_BELOW21,
                             "Splits are not supported below API 21");
                 } else {
-                    device.installPackage(apks.get(0), reinstall, options.toArray(new String[0]));
+                    device.installPackage(
+                            files.get(0).getAbsolutePath(),
+                            reinstall,
+                            options.toArray(new String[0]));
                     return new InstallResult(
                             InstallStatus.OK, null, device.getLastInstallMetrics());
                 }
             }
         } catch (InstallException e) {
             String code = e.getErrorCode();
-            if (code != null) {
-                try {
-                    return ApkInstaller.toInstallerResult(code, e.getMessage());
-                } catch (IllegalArgumentException | NullPointerException ignored) {
-                    logger.warning(
-                            "Unrecognized Installation Failure: %s\n%s\n", code, e.getMessage());
-                }
-            } else {
-                Throwable cause = e.getCause();
-                if (cause instanceof ShellCommandUnresponsiveException) {
-                    return new InstallResult(InstallStatus.SHELL_UNRESPONSIVE, e.getMessage());
-                } else {
-                    logger.warning("Installation Failure: %s\n", e.getMessage());
-                    return new InstallResult(InstallStatus.UNKNOWN_ERROR, e.getMessage(), null);
-                }
-            }
-            return new InstallResult(InstallStatus.UNKNOWN_ERROR, "Unknown Error");
+            String message = e.getMessage();
+            return makeInstallResult(code, message, e);
         }
     }
 
