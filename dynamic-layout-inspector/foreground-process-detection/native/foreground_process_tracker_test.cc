@@ -31,29 +31,25 @@ class SynchronizedEvents {
   SynchronizedEvents() {}
 
   void add(profiler::proto::Event event) {
-    mutex.lock();
+    const std::lock_guard<std::mutex> lock(mutex);
     data_.push_back(event);
-    mutex.unlock();
   }
 
   int size() {
-    mutex.lock();
+    const std::lock_guard<std::mutex> lock(mutex);
     int size = data_.size();
-    mutex.unlock();
     return size;
   }
 
   profiler::proto::Event get(int index) {
-    mutex.lock();
+    const std::lock_guard<std::mutex> lock(mutex);
     profiler::proto::Event event = data_[index];
-    mutex.unlock();
     return event;
   }
 
   void clear() {
-    mutex.lock();
+    const std::lock_guard<std::mutex> lock(mutex);
     data_.clear();
-    mutex.unlock();
   }
 
   std::mutex mutex;
@@ -80,6 +76,7 @@ class TestEventWriter final : public profiler::EventWriter {
 
 int mock_bash_command_runner_invocation_counter = 0;
 
+// TODO refactor. This synchronization method is fragile.
 // The command runner is called on another thread from ForegroundProcessTracker.
 // These variables allow the tests to synchronize the two threads.
 std::atomic_bool waiting = false;
