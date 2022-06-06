@@ -5,12 +5,14 @@ load("//tools/base/transport/test-framework:transport_test.bzl", "transport_test
 cc_library(
     name = "foreground_process_tracker",
     srcs = [
+        "native/commands/is_tracking_foreground_process_supported.cc",
         "native/commands/start_tracking_foreground_process.cc",
         "native/commands/stop_tracking_foreground_process.cc",
         "native/foreground_process_tracker.cc",
         "native/run_dumpsys.cc",
     ],
     hdrs = [
+        "native/commands/is_tracking_foreground_process_supported.h",
         "native/commands/start_tracking_foreground_process.h",
         "native/commands/stop_tracking_foreground_process.h",
         "native/foreground_process_tracker.h",
@@ -29,12 +31,14 @@ cc_library(
 cc_library(
     name = "mock_foreground_process_tracker",
     srcs = [
+        "native/commands/is_tracking_foreground_process_supported.cc",
         "native/commands/start_tracking_foreground_process.cc",
         "native/commands/stop_tracking_foreground_process.cc",
         "native/foreground_process_tracker.cc",
         "native/test-utils/mock_run_dumpsys.cc",
     ],
     hdrs = [
+        "native/commands/is_tracking_foreground_process_supported.h",
         "native/commands/start_tracking_foreground_process.h",
         "native/commands/stop_tracking_foreground_process.h",
         "native/foreground_process_tracker.h",

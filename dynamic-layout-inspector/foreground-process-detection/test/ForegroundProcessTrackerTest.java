@@ -134,6 +134,48 @@ public class ForegroundProcessTrackerTest {
         assertThat(count[0]).isEqualTo(2);
     }
 
+    @Test
+    public void testHandshake() {
+        TransportAsyncStubWrapper transportWrapper =
+                TransportAsyncStubWrapper.create(myTransportRule.getGrpc());
+        TransportServiceGrpc.TransportServiceBlockingStub transportStub =
+                TransportServiceGrpc.newBlockingStub(myTransportRule.getGrpc().getChannel());
+
+        sendStartHandShakeCommand(transportStub);
+
+        final int[] count = {0};
+
+        transportWrapper.getEvents(
+                event -> {
+                    if (event.getKind()
+                            == Common.Event.Kind
+                                    .LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED) {
+                        Boolean supported =
+                                event.getLayoutInspectorTrackingForegroundProcessSupported()
+                                        .getSupported();
+                        assertThat(supported).isTrue();
+
+                        count[0] += 1;
+                    }
+
+                    return count[0] == 1;
+                },
+                event ->
+                        (event.getKind()
+                                == Common.Event.Kind
+                                        .LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED),
+                () -> {});
+
+        assertThat(count[0]).isEqualTo(1);
+    }
+
+    private void sendStartHandShakeCommand(
+            TransportServiceGrpc.TransportServiceBlockingStub transportStub) {
+        sendCommand(
+                transportStub,
+                Commands.Command.CommandType.IS_TRACKING_FOREGROUND_PROCESS_SUPPORTED);
+    }
+
     private void sendStartPollingCommand(
             TransportServiceGrpc.TransportServiceBlockingStub transportStub) {
         sendCommand(transportStub, Commands.Command.CommandType.START_TRACKING_FOREGROUND_PROCESS);

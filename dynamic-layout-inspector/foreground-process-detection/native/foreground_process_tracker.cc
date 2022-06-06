@@ -22,6 +22,11 @@
 
 namespace layout_inspector {
 
+bool ForegroundProcessTracker::IsTrackingForegroundProcessSupported() {
+  ProcessInfo processInfo = runDumpsysCommand();
+  return !processInfo.isEmpty;
+}
+
 void ForegroundProcessTracker::StartTracking() {
   if (shouldDoPolling_.load() || isThreadRunning_.load()) {
     return;
