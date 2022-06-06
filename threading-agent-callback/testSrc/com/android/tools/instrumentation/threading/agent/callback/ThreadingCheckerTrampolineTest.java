@@ -24,7 +24,7 @@ import org.junit.Test;
 public class ThreadingCheckerTrampolineTest {
 
     @Test
-    public void threadingViolationChecks_notEnforecedOnMethodInBaselineFile() {
+    public void threadingViolationChecks_notEnforcedOnMethodInBaselineFile() {
         final int[] verifyOnUiThreadCallCount = {0};
         ThreadingCheckerTrampoline.installHook(
                 new ThreadingCheckerHook() {
