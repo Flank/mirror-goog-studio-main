@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.TAG_ITEM;
+import static com.android.SdkConstants.TAG_RESOURCES;
 import static com.android.ide.common.resources.ResourcesUtil.resourceNameToFieldName;
 
 import com.android.SdkConstants;
@@ -134,10 +135,11 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
 
         String tag = element.getTagName();
         String typeString = tag;
+        String parentTag = element.getParentNode().getNodeName();
         if (tag.equals(TAG_ITEM)) {
             typeString = element.getAttribute(ATTR_TYPE);
-            if (typeString == null || typeString.isEmpty()) {
-                if (element.getParentNode().getNodeName().equals(ResourceType.STYLE.getName())
+            if (typeString.isEmpty()) {
+                if (parentTag.equals(ResourceType.STYLE.getName())
                         && isFirstElementChild(element)) {
                     checkUniqueNames(context, (Element) element.getParentNode());
                 }
@@ -160,13 +162,15 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             return;
         }
 
-        if (type == ResourceType.ATTR
-                && element.getParentNode()
-                        .getNodeName()
-                        .equals(SdkConstants.TAG_DECLARE_STYLEABLE)) {
+        if (type == ResourceType.ATTR && parentTag.equals(SdkConstants.TAG_DECLARE_STYLEABLE)) {
             if (isFirstElementChild(element)) {
                 checkUniqueNames(context, (Element) element.getParentNode());
             }
+            return;
+        }
+
+        if (!parentTag.equals(TAG_RESOURCES)) {
+            // Ignore run time resource overlays (RRO)
             return;
         }
 
