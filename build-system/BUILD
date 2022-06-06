@@ -254,7 +254,6 @@ maven_repository(
         "//tools/adt/idea/project-system-gradle-sync:__pkg__",
         "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//tools/data-binding/compilationTests:__pkg__",
         "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )
