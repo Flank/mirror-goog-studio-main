@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package android.view;
 
-import androidx.annotation.NonNull;
+import android.graphics.Point;
 
-public interface WindowManager {
-    class LayoutParams extends ViewGroup.LayoutParams {
-        public int flags = 0;
-        public static final int FLAG_HARDWARE_ACCELERATED = 0x01000000;
+public class Display {
+    private final Point mRealSize;
+
+    public Display(Point realSize) {
+        mRealSize = realSize;
     }
 
-    @NonNull
-    WindowMetrics getCurrentWindowMetrics();
-
-    @NonNull
-    Display getDefaultDisplay();
+    public void getRealSize(Point outSize) {
+        outSize.x = mRealSize.x;
+        outSize.y = mRealSize.y;
+    }
 }

@@ -19,6 +19,7 @@ package com.android.tools.agent.appinspection.proto
 import android.content.res.Resources
 import android.graphics.Matrix
 import android.graphics.Point
+import android.os.Build
 import android.util.AndroidRuntimeException
 import android.view.View
 import android.view.ViewGroup
@@ -145,12 +146,29 @@ fun View.getNamespace(attributeId: Int): String =
     if (attributeId != 0) resources.getResourcePackageName(attributeId) else ""
 
 fun View.createAppContext(stringTable: StringTable): AppContext {
+    val size = windowSize
     return AppContext.newBuilder().apply {
         createResource(stringTable, context.themeResId)?.let { themeResource ->
             theme = themeResource
         }
+        screenWidth = size.x
+        screenHeight = size.y
     }.build()
 }
+
+private val View.windowSize: Point
+  get() {
+      val windowManager = context.getSystemService(WindowManager::class.java)
+      return if (Build.VERSION.SDK_INT >= 30) {
+          val bounds = windowManager.currentWindowMetrics.bounds
+          Point(bounds.width(), bounds.height())
+      } else {
+          val display = windowManager.defaultDisplay
+          val size = Point()
+          display.getRealSize(size)
+          size
+      }
+  }
 
 fun View.createConfiguration(stringTable: StringTable) =
     context.resources.configuration.convert(stringTable)

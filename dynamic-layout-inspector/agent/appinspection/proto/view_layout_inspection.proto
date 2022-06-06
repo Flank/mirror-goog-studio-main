@@ -131,11 +131,11 @@ message Configuration {
     int32 navigation = 11;
     int32 navigation_hidden = 12;
     int32 ui_mode = 13;
-    int32 smallest_screen_width = 14;
+    int32 smallest_screen_width_dp = 14;
     int32 density = 15;
     int32 orientation = 16;
-    int32 screen_width = 17;
-    int32 screen_height = 18;
+    int32 screen_width_dp = 17; // excludes window decor
+    int32 screen_height_dp = 18; // excludes window decor
 }
 
 // Event set when the angle, orientation, or posture of a foldable device changes.
@@ -167,6 +167,8 @@ message FoldEvent {
 // device's Configuration.
 message AppContext {
     Resource theme = 1;
+    int32 screen_width = 2; // includes window decor
+    int32 screen_height = 3; // includes window decor
 }
 
 // Handles properties whose values are bit flags, e.g. "top|left"

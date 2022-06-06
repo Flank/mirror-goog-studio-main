@@ -17,6 +17,8 @@ package android.content;
 
 import android.content.res.Resources;
 import android.hardware.SensorManager;
+import android.view.WindowManager;
+import android.view.WindowManagerImpl;
 import androidx.annotation.VisibleForTesting;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,6 +31,8 @@ public class Context {
     private final Resources mResources;
 
     @VisibleForTesting public SensorManager sensorManager = new SensorManager();
+
+    @VisibleForTesting public WindowManager windowManager = new WindowManagerImpl();
 
     @VisibleForTesting
     public Context(String packageName, Resources resources) {
@@ -52,6 +56,10 @@ public class Context {
         if (serviceClass.equals(SensorManager.class)) {
             //noinspection unchecked
             return (T) sensorManager;
+        }
+        if (serviceClass.equals(WindowManager.class)) {
+            //noinspection unchecked
+            return (T) windowManager;
         }
         return null;
     }
