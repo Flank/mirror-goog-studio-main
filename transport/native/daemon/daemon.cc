@@ -145,8 +145,8 @@ void RunConnector(int app_pid, const string& package_name, const string& user,
               connect_arg.str().c_str(), (char*)nullptr);
   } else {
     std::ostringstream connector_absolute_path;
-    connector_absolute_path << "/data/data/" << package_name << "/"
-                            << kConnectorRelativePath;
+    connector_absolute_path << "/data/user/" << user << "/" << package_name
+                            << "/" << kConnectorRelativePath;
     return_value = execl(kSuExecutable, kSuExecutable, "root",
                          connector_absolute_path.str().c_str(),
                          connect_arg.str().c_str(), (char*)nullptr);

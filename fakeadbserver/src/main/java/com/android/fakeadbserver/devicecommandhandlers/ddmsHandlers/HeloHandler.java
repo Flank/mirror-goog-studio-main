@@ -15,17 +15,15 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
+import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
+
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
-import com.android.fakeadbserver.CommandHandler;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
-
-public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler {
+public class HeloHandler implements JdwpDdmsPacketHandler {
 
     public static final int CHUNK_TYPE = encodeChunkType("HELO");
 
@@ -63,9 +61,8 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
 
         try {
             responsePacket.write(oStream);
-        }
-        catch (IOException e) {
-            writeFailResponse(oStream, "Could not write HELO response packet");
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
 
@@ -76,7 +73,7 @@ public class HeloHandler extends CommandHandler implements JdwpDdmsPacketHandler
             try {
                 waitPacket.write(oStream);
             } catch (IOException e) {
-                writeFailResponse(oStream, "Could not write WAIT packet");
+                e.printStackTrace();
                 return false;
             }
         }

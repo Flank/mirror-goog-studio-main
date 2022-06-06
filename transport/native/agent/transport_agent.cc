@@ -51,7 +51,7 @@ static bool ParseConfigFromPath(const std::string& path, AgentConfig* config) {
 }
 
 void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
-  // Load in perfa.jar which should be in to data/data.
+  // Load perfa.jar which should be in /data/user/<USER>/<PACKAGE_NAME>.
   std::string agent_lib_path(GetAppDataCodeCachePath());
   agent_lib_path.append("perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
