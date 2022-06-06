@@ -109,9 +109,10 @@ class ForegroundProcessTracker {
   // Constructor used for non-test scenarios. Uses BashCommandRunner to call
   // dumpsys
   ForegroundProcessTracker(profiler::EventBuffer* buffer)
-      : ForegroundProcessTracker(buffer,
-                                 new profiler::BashCommandRunner{
-                                     "dumpsys activity processes", false}) {}
+      : ForegroundProcessTracker(
+            buffer,
+            new profiler::BashCommandRunner{
+                "dumpsys activity processes | grep top-activity", false}) {}
 
   ProcessInfo runDumpsysCommand();
 

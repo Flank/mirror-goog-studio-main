@@ -76,6 +76,8 @@ ProcessInfo ForegroundProcessTracker::parseProcessInfo(
   std::smatch matches;
 
   // Regexp used to extract PID:PROCESS_NAME from the output of dumpsys
+  // TODO use tracer to measure the performance difference between grep and
+  // regexp
   std::regex regexp("(\\d*):(\\S*)\\/\\S* \\(top-activity\\)");
   regex_search(dumpsysOutput, matches, regexp);
 
