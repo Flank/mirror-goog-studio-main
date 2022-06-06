@@ -43,6 +43,7 @@ void ForegroundProcessTracker::StopTracking() {
   shouldDoPolling_.store(false);
   workerThread_.join();
   isThreadRunning_.store(false);
+  latestForegroundProcess_ = {};
 }
 
 void ForegroundProcessTracker::sendForegroundProcessEvent(

@@ -335,4 +335,31 @@ TEST_F(ForegroundProcessTrackerTest, EventIsSentOnlyOnProcessChange) {
       "dup.process6");
 }
 
+TEST_F(ForegroundProcessTrackerTest, StartStopForegroundProcessNotChanged) {
+  ForegroundProcessTracker* process_tracker =
+      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+
+  WaitForEvents(process_tracker, 6);
+
+  EXPECT_THAT(events_.size(), 4);
+
+  EXPECT_THAT(events_.get(3).kind(),
+              profiler::proto::Event::LAYOUT_INSPECTOR_FOREGROUND_PROCESS);
+  EXPECT_THAT(events_.get(3).layout_inspector_foreground_process().pid(), "6");
+  EXPECT_THAT(
+      events_.get(3).layout_inspector_foreground_process().process_name(),
+      "dup.process6");
+
+  WaitForEvents(process_tracker, 1);
+
+  EXPECT_THAT(events_.size(), 5);
+
+  EXPECT_THAT(events_.get(4).kind(),
+              profiler::proto::Event::LAYOUT_INSPECTOR_FOREGROUND_PROCESS);
+  EXPECT_THAT(events_.get(4).layout_inspector_foreground_process().pid(), "6");
+  EXPECT_THAT(
+      events_.get(4).layout_inspector_foreground_process().process_name(),
+      "dup.process6");
+}
+
 }  // namespace layout_inspector
