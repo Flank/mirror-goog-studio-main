@@ -174,13 +174,14 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
             }
             ATTR_NAME -> {
                 if (TAG_META_DATA == attribute.ownerElement.tagName &&
-                    APP_ACTIONS == attribute.value) {
+                    APP_ACTIONS == attribute.value
+                ) {
                     val incident = Incident(
                         ISSUE,
                         attribute,
                         context.getLocation(attribute),
                         "App actions via actions.xml is deprecated; Please migrate to " +
-                                "shortcuts.xml. See $APP_ACTIONS_MIGRATION_URL.",
+                            "shortcuts.xml. See $APP_ACTIONS_MIGRATION_URL.",
                         fix().url(APP_ACTIONS_MIGRATION_URL).build()
                     )
                     context.report(

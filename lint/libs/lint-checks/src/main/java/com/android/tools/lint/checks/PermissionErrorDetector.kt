@@ -419,9 +419,10 @@ class PermissionErrorDetector : Detector(), XmlScanner {
         }
 
         /**
-         * When looking for SDK permission typos, we only want to check against permissions
-         * whose package prefixes look *close enough* to the platform package (`android.permission`),
-         * based on both edit distance and commonly found mistakes.
+         * When looking for SDK permission typos, we only want to check
+         * against permissions whose package prefixes look *close
+         * enough* to the platform package (`android.permission`), based
+         * on both edit distance and commonly found mistakes.
          */
         private fun platformPermissionPackageUnlikely(requiredPermission: String): Boolean {
             val requiredPermissionPackage = requiredPermission.substringBeforeLast('.').lowercase()

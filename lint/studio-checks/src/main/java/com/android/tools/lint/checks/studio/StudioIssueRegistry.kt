@@ -77,7 +77,7 @@ class StudioIssueRegistry : IssueRegistry() {
         LintDetectorDetector.MISSING_DOC_EXAMPLE,
         // We're not including this check here;
         // a vendor is not required for built-in checks
-        //LintDetectorDetector.MISSING_VENDOR,
+        // LintDetectorDetector.MISSING_VENDOR,
         LintDetectorDetector.PSI_COMPARE,
         LintDetectorDetector.TEXT_FORMAT,
         LintDetectorDetector.TRIM_INDENT,

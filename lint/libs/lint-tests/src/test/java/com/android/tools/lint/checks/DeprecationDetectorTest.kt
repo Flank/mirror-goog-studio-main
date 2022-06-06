@@ -354,7 +354,7 @@ class DeprecationDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expect(expected).expectFixDiffs(
             "Show URL for AndroidManifest.xml line 9: https://developers.google.com/assistant/app/legacy/migration-guide"
-         )
+        )
     }
 
     fun testChooserTargetServiceDeprecation() {
