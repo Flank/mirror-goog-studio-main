@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 3.6.0-dev">
+<issues format="5" by="lint 7.4.0-dev">
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/builder/files/IncrementalChanges.kt"
+            line="50"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/builder/files/ZipCentralDirectory.kt"
+            line="45"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/builder/files/ZipCentralDirectory.kt"
+            line="47"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/builder/dexing/r8Tool.kt"
+            line="434"/>
+    </issue>
 
     <issue
         id="FileComparisons"
@@ -13,8 +45,8 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-                file="src/main/java/com/android/builder/signing/DefaultSigningConfig.kt"
-                line="134"/>
+            file="src/main/java/com/android/builder/signing/DefaultSigningConfig.kt"
+            line="113"/>
     </issue>
 
     <issue
@@ -38,7 +70,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/builder/merge/MergeOutputWriters.java"
-            line="118"/>
+            line="119"/>
     </issue>
 
     <issue
@@ -46,7 +78,23 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/builder/files/RelativeFile.java"
-            line="65"/>
+            line="64"/>
+    </issue>
+
+    <issue
+        id="CommonForkJoinPool"
+        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/builder/internal/packaging/AabFlinger.kt"
+            line="73"/>
+    </issue>
+
+    <issue
+        id="CommonForkJoinPool"
+        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
+        <location
+            file="src/main/java/com/android/builder/internal/packaging/ApkFlinger.kt"
+            line="79"/>
     </issue>
 
     <issue
@@ -54,23 +102,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/builder/multidex/D8MainDexList.java"
-            line="100"/>
-    </issue>
-
-    <issue
-            id="CommonForkJoinPool"
-            message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
-                file="src/main/java/com/android/builder/internal/packaging/ApkFlinger.kt"
-                line="60"/>
-    </issue>
-
-    <issue
-            id="CommonForkJoinPool"
-            message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
-                file="src/main/java/com/android/builder/internal/packaging/AabFlinger.kt"
-                line="73"/>
+            line="101"/>
     </issue>
 
 </issues>

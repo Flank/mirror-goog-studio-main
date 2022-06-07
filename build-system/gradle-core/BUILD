@@ -1,5 +1,4 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:proto.bzl", "java_proto_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
@@ -26,7 +25,7 @@ java_proto_library(
     visibility = ["//visibility:public"],
 )
 
-maven_library(
+kotlin_library(
     name = "gradle-core",
     srcs = glob([
         "src/fromGradle/java/**/*.kt",
@@ -34,19 +33,8 @@ maven_library(
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    bundled_deps = [
-        ":proto",
-        "//tools/base/mlkit-common:tools.mlkit-common",
-        "//tools/base/profgen/profgen",
-        ":jacoco.core_neverlink",
-        ":jacoco.report_neverlink",
-        ":jetbrains.kotlin-gradle-plugin_neverlink",
-        "//tools/base/build-system:gradle-api_neverlink",
-    ],
-    coordinates = "com.android.tools.build:gradle:" + BUILD_VERSION,
     lint_baseline = "lint_baseline.xml",
     lint_timeout = "long",
-    manifest_lines = ["Plugin-Version: unspecified"],
     module_name = "gradle_core",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
@@ -57,8 +45,13 @@ maven_library(
         "//tools/base/build-system/gradle-api",
     ],
     deps = [
+        ":jacoco.core_neverlink",
+        ":jacoco.report_neverlink",
+        ":jetbrains.kotlin-gradle-plugin_neverlink",
+        ":proto",
         "//tools/analytics-library/crash:tools.analytics-crash",
         "//tools/analytics-library/shared:tools.analytics-shared",
+        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/aapt2-proto",
         "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
@@ -68,6 +61,8 @@ maven_library(
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-model",
         "//tools/base/lint/libs/lint-typedef-remover",
+        "//tools/base/mlkit-common:tools.mlkit-common",
+        "//tools/base/profgen/profgen",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

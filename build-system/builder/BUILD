@@ -1,5 +1,4 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
-load("//tools/base/bazel:maven.bzl", "maven_library")
 load("//tools/base/bazel:utils.bzl", "fileset")
 load("//tools/base/common:version.bzl", "BUILD_VERSION")
 
@@ -13,17 +12,12 @@ fileset(
     },
 )
 
-maven_library(
+kotlin_library(
     name = "builder",
     srcs = glob([
         "src/main/java/**/*.kt",
         "src/main/java/**/*.java",
     ]),
-    bundled_deps = [
-        "//tools/base/build-system/profile",
-        "//prebuilts/r8",
-    ],
-    coordinates = "com.android.tools.build:builder:" + BUILD_VERSION,
     lint_baseline = "lint_baseline.xml",
     module_name = "builder",
     notice = "NOTICE",
@@ -31,9 +25,11 @@ maven_library(
     resources = [":resources"],
     visibility = ["//visibility:public"],
     exports = [
+        "//prebuilts/r8",
         "//tools/apkzlib",
         "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.manifest-merger",
+        "//tools/base/build-system/profile",
         "//tools/base/zipflinger",
         "@maven//:com.squareup.javawriter",
     ],
