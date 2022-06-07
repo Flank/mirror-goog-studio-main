@@ -163,6 +163,8 @@ interface ComponentCreationConfig : ComponentIdentity {
         generatedBytecodeKey: Any? = null
     ): FileCollection
 
+    val compileClasspath: FileCollection
+
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 
     fun getDependenciesClassesJarsPostAsmInstrumentation(scope: AndroidArtifacts.ArtifactScope): FileCollection

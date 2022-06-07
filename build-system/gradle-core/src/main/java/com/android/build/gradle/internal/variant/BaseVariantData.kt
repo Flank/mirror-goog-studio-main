@@ -72,10 +72,11 @@ abstract class BaseVariantData(
     abstract val description: String
 
     fun getGeneratedBytecode(generatorKey: Any?): FileCollection {
-        return if (generatorKey == null) {
+        val fileCollection = if (generatorKey == null) {
             allPreJavacGeneratedBytecode
         } else preJavacGeneratedBytecodeMap?.get(generatorKey)
             ?: throw RuntimeException("Bytecode generator key not found")
+        return fileCollection.filter { it.exists() }
     }
 
     fun addJavaSourceFoldersToModel(generatedSourceFolder: File) {
