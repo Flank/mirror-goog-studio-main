@@ -32,6 +32,14 @@ message HttpConnectionEvent {
         string fields = 1;
     }
 
+    message ResponseIntercepted {
+        bool status_code = 1;
+        bool header_added = 2;
+        bool header_replaced = 3;
+        bool body_replaced = 4;
+        bool body_modified = 5;
+    }
+
     message ResponseCompleted {
     }
 
@@ -61,11 +69,12 @@ message HttpConnectionEvent {
         RequestStarted http_request_started = 11;
         RequestCompleted http_request_completed = 12;
         ResponseStarted http_response_started = 13;
-        ResponseCompleted http_response_completed = 14;
-        Closed http_closed = 15;
-        Payload request_payload = 16;
-        Payload response_payload = 17;
-        ThreadData http_thread = 18;
+        ResponseIntercepted http_response_intercepted = 14;
+        ResponseCompleted http_response_completed = 15;
+        Closed http_closed = 16;
+        Payload request_payload = 17;
+        Payload response_payload = 18;
+        ThreadData http_thread = 19;
     }
 }
 

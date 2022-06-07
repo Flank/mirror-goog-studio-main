@@ -105,6 +105,11 @@ class HttpUrlTest {
             )!!.responsePayload.payload.toStringUtf8()
         ).isEqualTo("InterceptedBody1")
 
+        assertThat(
+            inspectorRule.connection.findHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.HTTP_RESPONSE_INTERCEPTED
+            )!!.httpResponseIntercepted.bodyReplaced
+        ).isTrue()
         assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
 
         // Step2: add another body rule with different content.

@@ -161,6 +161,7 @@ class InterceptionRuleTest {
             newCode = "404"
         }.build()
         var transformedResponse = StatusCodeReplacedTransformation(proto).transform(response)
+        assertThat(transformedResponse.interception.statusCode).isTrue()
         assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404 OK")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
         val responseWithoutMessage = NetworkResponse(
@@ -169,6 +170,7 @@ class InterceptionRuleTest {
         )
         transformedResponse =
             StatusCodeReplacedTransformation(proto).transform(responseWithoutMessage)
+        assertThat(transformedResponse.interception.statusCode).isTrue()
         assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
     }
@@ -185,6 +187,7 @@ class InterceptionRuleTest {
         }.build()
         var transformedResponse =
             HeaderAddedTransformation(addingNewHeaderAndValue).transform(response)
+        assertThat(transformedResponse.interception.headerAdded).isTrue()
         assertThat(transformedResponse.responseHeaders["Name"]!![0]).isEqualTo("Value")
 
         val addingValueToExitingHeader = HeaderAdded.newBuilder().apply {
@@ -194,6 +197,7 @@ class InterceptionRuleTest {
 
         transformedResponse =
             HeaderAddedTransformation(addingValueToExitingHeader).transform(transformedResponse)
+        assertThat(transformedResponse.interception.headerAdded).isTrue()
         assertThat(transformedResponse.responseHeaders["Name"])
             .containsExactly("Value", "Value2")
     }
@@ -218,18 +222,21 @@ class InterceptionRuleTest {
         }.build()
         var transformedResponse =
             HeaderReplacedTransformation(headerNotMatchedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isFalse()
         assertThat(transformedResponse.responseHeaders["newName"]).isNull()
 
         val valueNotMatchedProto = headerNotMatchedProto.toBuilder().apply {
             targetNameBuilder.text = "header1"
         }.build()
         transformedResponse = HeaderReplacedTransformation(valueNotMatchedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isFalse()
         assertThat(transformedResponse.responseHeaders["newName"]).isNull()
 
         val matchedProto = valueNotMatchedProto.toBuilder().apply {
             targetValueBuilder.text = "value1"
         }.build()
         transformedResponse = HeaderReplacedTransformation(matchedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isTrue()
         assertThat(transformedResponse.responseHeaders["newName"]!![0]).isEqualTo("newValue")
         assertThat(transformedResponse.responseHeaders["header1"]).containsExactly("value2")
 
@@ -240,6 +247,7 @@ class InterceptionRuleTest {
             }
         }.build()
         transformedResponse = HeaderReplacedTransformation(multipleMatchedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isTrue()
         assertThat(transformedResponse.responseHeaders["newName"]!![0]).isEqualTo("newValue")
         assertThat(transformedResponse.responseHeaders["header1"]).isNull()
     }
@@ -263,6 +271,7 @@ class InterceptionRuleTest {
         }.build()
         var transformedResponse =
             HeaderReplacedTransformation(headerValueReplacedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isTrue()
         assertThat(transformedResponse.responseHeaders["newName"]).isNull()
         assertThat(transformedResponse.responseHeaders["header"])
             .containsExactly("newValue", "value2")
@@ -280,6 +289,7 @@ class InterceptionRuleTest {
         }.build()
         transformedResponse =
             HeaderReplacedTransformation(headerNameReplacedProto).transform(response)
+        assertThat(transformedResponse.interception.headerReplaced).isTrue()
         assertThat(transformedResponse.responseHeaders["header"]).containsExactly("value2")
         assertThat(transformedResponse.responseHeaders["newName"]).containsExactly("value")
     }
@@ -301,6 +311,7 @@ class InterceptionRuleTest {
             newText = "Test"
         }.build()
         var transformedResponse = BodyModifiedTransformation(bodyModifiedProto).transform(response)
+        assertThat(transformedResponse.interception.bodyModified).isTrue()
         assertThat(transformedResponse.body.reader().use { it.readText() })
             .isEqualTo("TestXTestXTestXBoody")
 
@@ -313,6 +324,7 @@ class InterceptionRuleTest {
         )
         transformedResponse = BodyModifiedTransformation(bodyModifiedProto)
             .transform(responseWithJsonContent)
+        assertThat(transformedResponse.interception.bodyModified).isTrue()
         assertThat(transformedResponse.body.reader().use { it.readText() })
             .isEqualTo("Test")
     }
@@ -335,6 +347,7 @@ class InterceptionRuleTest {
         }.build()
         val transformedResponse =
             BodyModifiedTransformation(bodyModifiedRegexProto).transform(response)
+        assertThat(transformedResponse.interception.bodyModified).isTrue()
         assertThat(transformedResponse.body.reader().use { it.readText() })
             .isEqualTo("TestXTestXTestXTest")
     }
@@ -360,8 +373,10 @@ class InterceptionRuleTest {
             }
             newText = "Test"
         }.build()
+
         val transformedResponse = BodyModifiedTransformation(bodyModifiedProto).transform(response)
 
+        assertThat(transformedResponse.interception.bodyModified).isTrue()
         assertThat(GZIPInputStream(transformedResponse.body).reader().use { it.readText() })
             .isEqualTo("Test")
     }
@@ -385,6 +400,7 @@ class InterceptionRuleTest {
         }.build()
         val transformedResponse = BodyReplacedTransformation(bodyReplaced).transform(response)
 
+        assertThat(transformedResponse.interception.bodyReplaced).isTrue()
         assertThat(GZIPInputStream(transformedResponse.body).reader().use { it.readText() })
             .isEqualTo("Test")
     }

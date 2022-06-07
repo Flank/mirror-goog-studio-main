@@ -50,7 +50,9 @@ class InterceptionRule(proto: InterceptRule) {
         response: NetworkResponse
     ): NetworkResponse {
         if (criteria.appliesTo(connection)) {
-            return transformations.fold(response) { intermediateResponse, transformation ->
+            return transformations.fold(
+                response.copy(interception = response.interception.copy(criteriaMatched = true))
+            ) { intermediateResponse, transformation ->
                 transformation.transform(intermediateResponse)
             }
         }

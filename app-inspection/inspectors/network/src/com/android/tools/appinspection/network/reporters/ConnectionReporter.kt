@@ -17,6 +17,7 @@
 package com.android.tools.appinspection.network.reporters
 
 import androidx.inspection.Connection
+import com.android.tools.appinspection.network.rules.NetworkInterceptionMetrics
 import com.android.tools.appinspection.network.utils.ConnectionIdGenerator
 import com.android.tools.appinspection.network.utils.sendHttpConnectionEvent
 import studio.network.inspection.NetworkInspectorProtocol
@@ -35,6 +36,8 @@ interface ConnectionReporter : ThreadReporter {
     )
 
     fun onResponse(fields: String)
+
+    fun onInterception(interception: NetworkInterceptionMetrics)
 
     fun onError(status: String)
 
@@ -96,6 +99,23 @@ private class ConnectionReporterImpl(
                 )
                 .setConnectionId(connectionId)
         )
+    }
+
+    override fun onInterception(interception: NetworkInterceptionMetrics) {
+        if (interception.criteriaMatched) {
+            connection.sendHttpConnectionEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.newBuilder().apply {
+                    httpResponseInterceptedBuilder.apply {
+                        statusCode = interception.statusCode
+                        headerAdded = interception.headerAdded
+                        headerReplaced = interception.headerReplaced
+                        bodyReplaced = interception.bodyReplaced
+                        bodyModified = interception.bodyModified
+                    }
+                    this.connectionId = this@ConnectionReporterImpl.connectionId
+                }
+            )
+        }
     }
 
     override fun onError(status: String) {

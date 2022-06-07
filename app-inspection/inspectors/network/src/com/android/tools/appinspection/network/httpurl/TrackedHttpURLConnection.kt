@@ -123,6 +123,7 @@ class TrackedHttpURLConnection(
                 // Don't call our getHeaderFields overrides, as it would call
                 // this method recursively.
                 connectionTracker.trackResponseHeaders(interceptedResponse.responseHeaders)
+                connectionTracker.trackResponseInterception(interceptedResponse.interception)
             } finally {
                 responseTracked = true
             }
