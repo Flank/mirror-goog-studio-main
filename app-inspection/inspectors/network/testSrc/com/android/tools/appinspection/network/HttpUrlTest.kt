@@ -16,7 +16,6 @@
 
 package com.android.tools.appinspection.network
 
-import androidx.inspection.Inspector
 import com.android.tools.appinspection.network.http.FakeHttpUrlConnection
 import com.android.tools.idea.protobuf.ByteString
 import com.google.common.truth.Truth.assertThat
@@ -24,10 +23,8 @@ import org.junit.Rule
 import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol
 import studio.network.inspection.NetworkInspectorProtocol.InterceptCommand
-import studio.network.inspection.NetworkInspectorProtocol.InterceptRuleAdded
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.Executor
 
 private const val URL_PARAMS = "activity=http"
 private val FAKE_URL = URL("https://www.google.com?$URL_PARAMS")
@@ -70,29 +67,10 @@ class HttpUrlTest {
     @Test
     fun httpIntercept() {
         // Step1: add a new body rule.
-        val ruleAddedBuilder = InterceptRuleAdded.newBuilder().apply {
-            ruleId = 1
-            ruleBuilder.apply {
-                criteriaBuilder.apply {
-                    protocol = FAKE_URL.protocol
-                    host = FAKE_URL.host
-                    port = ""
-                    path = FAKE_URL.path
-                    query = FAKE_URL.query
-                    method = ""
-                }
-                addTransformation(
-                    NetworkInspectorProtocol.Transformation.newBuilder().apply {
-                        bodyReplacedBuilder.apply {
-                            body =
-                                ByteString.copyFrom("InterceptedBody1".toByteArray())
-                        }
-                    })
-            }
-        }
+        val ruleAdded = createFakeRuleAddedEvent(FAKE_URL)
 
-        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
-            interceptRuleAdded = ruleAddedBuilder.build()
+        inspectorRule.inspector.receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleAdded = ruleAdded
         }.build())
 
         with(FakeHttpUrlConnection(FAKE_URL, "Test".toByteArray(), "GET").triggerHttpExitHook()) {
@@ -113,8 +91,8 @@ class HttpUrlTest {
         assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
 
         // Step2: add another body rule with different content.
-        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
-            interceptRuleAdded = ruleAddedBuilder.apply {
+        inspectorRule.inspector.receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleAdded = ruleAdded.toBuilder().apply {
                 ruleId = 2
                 ruleBuilder.transformationBuilderList[0].bodyReplacedBuilder.body =
                     ByteString.copyFrom("InterceptedBody2".toByteArray())
@@ -131,7 +109,7 @@ class HttpUrlTest {
         ).isEqualTo("InterceptedBody2")
 
         // Step3: reorder two body rules.
-        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+        inspectorRule.inspector.receiveInterceptCommand(InterceptCommand.newBuilder().apply {
             reorderInterceptRulesBuilder.apply {
                 addAllRuleId(listOf(2, 1))
             }.build()
@@ -147,7 +125,7 @@ class HttpUrlTest {
         ).isEqualTo("InterceptedBody1")
 
         // Step4: remove the last body rule.
-        receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+        inspectorRule.inspector.receiveInterceptCommand(InterceptCommand.newBuilder().apply {
             interceptRuleRemovedBuilder.apply {
                 ruleId = 1
             }.build()
@@ -161,21 +139,6 @@ class HttpUrlTest {
                 NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
             )!!.responsePayload.payload.toStringUtf8()
         ).isEqualTo("InterceptedBody2")
-    }
-
-    private fun receiveInterceptCommand(interceptCommand: InterceptCommand) {
-        inspectorRule.inspector.onReceiveCommand(NetworkInspectorProtocol.Command.newBuilder()
-            .apply {
-                this.interceptCommand = interceptCommand
-            }
-            .build()
-            .toByteArray(), object : Inspector.CommandCallback {
-            override fun reply(response: ByteArray) {
-            }
-
-            override fun addCancellationListener(executor: Executor, runnable: Runnable) {
-            }
-        })
     }
 
     @Test

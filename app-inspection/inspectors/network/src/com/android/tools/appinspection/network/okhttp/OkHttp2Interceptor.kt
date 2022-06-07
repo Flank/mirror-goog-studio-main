@@ -17,6 +17,9 @@ package com.android.tools.appinspection.network.okhttp
 
 import com.android.tools.appinspection.common.logError
 import com.android.tools.appinspection.network.HttpTrackerFactory
+import com.android.tools.appinspection.network.rules.InterceptionRuleService
+import com.android.tools.appinspection.network.rules.NetworkConnection
+import com.android.tools.appinspection.network.rules.NetworkResponse
 import com.android.tools.appinspection.network.trackers.HttpConnectionTracker
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.Request
@@ -25,7 +28,10 @@ import com.squareup.okhttp.ResponseBody
 import okio.Okio
 import java.io.IOException
 
-class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Interceptor {
+class OkHttp2Interceptor(
+    private val trackerFactory: HttpTrackerFactory,
+    private val interceptionRuleService: InterceptionRuleService
+) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
@@ -50,7 +56,7 @@ class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         }
         try {
             if (tracker != null) {
-                response = trackResponse(tracker, response)
+                response = trackResponse(tracker, request, response)
             }
         } catch (ex: Exception) {
             logError("Could not track an OkHttp2 response", ex)
@@ -77,13 +83,23 @@ class OkHttp2Interceptor(private val trackerFactory: HttpTrackerFactory) : Inter
         return tracker
     }
 
-    private fun trackResponse(tracker: HttpConnectionTracker, response: Response): Response {
+    private fun trackResponse(
+        tracker: HttpConnectionTracker,
+        request: Request,
+        response: Response
+    ): Response {
         val fields = mutableMapOf<String?, List<String>>()
         fields.putAll(response.headers().toMultimap())
         fields["response-status-code"] = listOf(response.code().toString())
-        tracker.trackResponseHeaders(fields)
+
+        val interceptedResponse = interceptionRuleService.interceptResponse(
+            NetworkConnection(request.urlString(), request.method()),
+            NetworkResponse(fields, response.body().source().inputStream())
+        )
+
+        tracker.trackResponseHeaders(interceptedResponse.responseHeaders)
         val source = Okio.buffer(
-            Okio.source(tracker.trackResponseBody(response.body().source().inputStream()))
+            Okio.source(tracker.trackResponseBody(interceptedResponse.body))
         )
         val body = ResponseBody.create(
             response.body().contentType(), response.body().contentLength(), source
