@@ -74,6 +74,7 @@ import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
+import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -408,13 +409,14 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
         UCallableReferenceExpression::class.java,
         UCallExpression::class.java,
         UField::class.java,
-        USimpleNameReferenceExpression::class.java
+        USimpleNameReferenceExpression::class.java,
+        UQualifiedReferenceExpression::class.java,
     )
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
         // If using data binding / view binding, we also have to look for references to the
         // Binding classes which could be implicit usages of layout resources
-        when (bindingClasses) {
+        when (val bindingClasses = bindingClasses) {
             null -> null
             else -> object : UElementHandler() {
                 private fun markReachableLayout(resourceName: String?) {
@@ -430,13 +432,24 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
                 }
 
                 override fun visitCallExpression(node: UCallExpression) =
-                    visitClass(node.resolve()?.containingClass, { bindingClasses!![it.name] })
+                    visitClass(node.resolve()?.containingClass, { bindingClasses[it.name] })
 
                 override fun visitSimpleNameReferenceExpression(expression: USimpleNameReferenceExpression) =
-                    visitClass(expression.resolve() as? PsiClass, { bindingClasses!![expression.identifier] })
+                    visitClass(expression.resolve() as? PsiClass, { bindingClasses[expression.identifier] })
 
                 override fun visitCallableReferenceExpression(node: UCallableReferenceExpression) =
-                    visitClass((node.resolve() as? PsiMember)?.containingClass, { bindingClasses!![it.name] })
+                    visitClass((node.resolve() as? PsiMember)?.containingClass, { bindingClasses[it.name] })
+
+                override fun visitQualifiedReferenceExpression(node: UQualifiedReferenceExpression) {
+                    // referencing a binding class's field marks the corresponding id as reachable
+                    val className = (node.receiver.getExpressionType() as? PsiClassType)?.className
+                    if (className in bindingClasses) {
+                        val id = node.resolvedName
+                        if (id != null) {
+                            ResourceUsageModel.markReachable(model.getResource(ResourceType.ID, id))
+                        }
+                    }
+                }
 
                 override fun visitField(node: UField) {
                     val classType = (node.type as? PsiClassType)
