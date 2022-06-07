@@ -186,14 +186,6 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-GRADLE_PLUGIN_ARTIFACTS = [
-    "//tools/base/build-system/aapt2:aapt2",
-    "//tools/base/build-system/gradle-core:gradle-core",
-    "//tools/base/lint:tools.lint-gradle",
-    "@maven//:com.github.javaparser.javaparser-core",
-    "//tools/data-binding:tools.compiler",
-]
-
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
@@ -225,37 +217,6 @@ maven_repository(
         "@maven//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
-)
-
-# Legacy maven repository representing what used to be packaged inside Studio
-#
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "studio_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    # Don't add new targets here, see above for how to migrate
-    visibility = [
-        "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/adt/idea/designer:__pkg__",
-        "//tools/adt/idea/designer-perf-tests:__pkg__",
-        "//tools/adt/idea/ide-perf-tests:__pkg__",
-        "//tools/adt/idea/kotlin-integration:__pkg__",
-        "//tools/adt/idea/mlkit:__pkg__",
-        "//tools/adt/idea/nav/safeargs:__pkg__",
-        "//tools/adt/idea/project-system-gradle-sync:__pkg__",
-        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
-        "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//tools/vendor/google/lldb-integration-tests:__pkg__",
-    ],
 )
 
 filegroup(
