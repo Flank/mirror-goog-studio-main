@@ -62,13 +62,11 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getInternalName
+import com.android.tools.lint.detector.api.hasImplicitDefaultConstructor
 import com.android.tools.lint.detector.api.resolvePlaceHolders
 import com.android.utils.SdkUtils.endsWith
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiModifier
-import com.intellij.psi.util.PsiUtil
-import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -413,39 +411,6 @@ class MissingClassDetector : LayoutDetector(), ClassScanner {
         } else {
             context.getLocation(nameNode)
         }
-    }
-
-    private fun hasImplicitDefaultConstructor(psiClass: PsiClass): Boolean {
-        if (psiClass is KtLightClassForFacade) {
-            // Top level kt classes (FooKt for Foo.kt) do not have implicit default constructor
-            return false
-        }
-
-        val constructors = psiClass.constructors
-        if (constructors.isEmpty() && !psiClass.isInterface && !psiClass.isAnnotationType && !psiClass.isEnum) {
-            if (PsiUtil.hasDefaultConstructor(psiClass)) {
-                return true
-            }
-
-            // The above method isn't always right; for example, for the ContactsContract.Presence class
-            // in the framework, which looks like this:
-            //    @Deprecated
-            //    public static final class Presence extends StatusUpdates {
-            //    }
-            // javac makes a default constructor:
-            //    public final class android.provider.ContactsContract$Presence extends android.provider.ContactsContract$StatusUpdates {
-            //        public android.provider.ContactsContract$Presence();
-            //    }
-            // but the above method returns false. So add some of our own heuristics:
-            if (psiClass.hasModifierProperty(PsiModifier.FINAL) &&
-                !psiClass.hasModifierProperty(PsiModifier.ABSTRACT) &&
-                psiClass.hasModifierProperty(PsiModifier.PUBLIC)
-            ) {
-                return true
-            }
-        }
-
-        return false
     }
 
     private fun reportMissing(

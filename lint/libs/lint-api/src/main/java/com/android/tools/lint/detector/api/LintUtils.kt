@@ -106,6 +106,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
@@ -116,9 +117,12 @@ import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
 import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.annotations.Contract
+import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
@@ -128,6 +132,7 @@ import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UExpressionList
@@ -2407,6 +2412,50 @@ private fun search(path: List<Element>, index: Int, parent: Element): Element? {
     }
 
     return null
+}
+
+fun hasImplicitDefaultConstructor(uClass: UClass?): Boolean {
+    val sourcePsi = uClass?.sourcePsi ?: return false
+    return if (sourcePsi is KtClass) {
+        sourcePsi.declarations.none { it is KtConstructor<*> }
+    } else {
+        hasImplicitDefaultConstructor(sourcePsi as? PsiClass)
+    }
+}
+
+fun hasImplicitDefaultConstructor(psiClass: PsiClass?): Boolean {
+    psiClass ?: return false
+
+    if (psiClass is KtLightClassForFacade || psiClass is UClass && psiClass.sourcePsi == null) {
+        // Top level kt classes (FooKt for Foo.kt) do not have implicit default constructor
+        return false
+    }
+
+    val constructors = psiClass.constructors
+    if (constructors.isEmpty() && !psiClass.isInterface && !psiClass.isAnnotationType && !psiClass.isEnum) {
+        if (PsiUtil.hasDefaultConstructor(psiClass)) {
+            return true
+        }
+
+        // The above method isn't always right; for example, for the ContactsContract.Presence class
+        // in the framework, which looks like this:
+        //    @Deprecated
+        //    public static final class Presence extends StatusUpdates {
+        //    }
+        // javac makes a default constructor:
+        //    public final class android.provider.ContactsContract$Presence extends android.provider.ContactsContract$StatusUpdates {
+        //        public android.provider.ContactsContract$Presence();
+        //    }
+        // but the above method returns false. So add some of our own heuristics:
+        if (psiClass.hasModifierProperty(PsiModifier.FINAL) &&
+            !psiClass.hasModifierProperty(PsiModifier.ABSTRACT) &&
+            psiClass.hasModifierProperty(PsiModifier.PUBLIC)
+        ) {
+            return true
+        }
+    }
+
+    return false
 }
 
 // For compatibility reasons

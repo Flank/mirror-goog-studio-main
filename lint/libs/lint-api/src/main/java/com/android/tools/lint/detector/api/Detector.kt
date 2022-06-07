@@ -660,11 +660,17 @@ abstract class Detector {
     open fun applicableAnnotations(): List<String>? = null
 
     open fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-        // Only some annotations apply to [AnnotationUsage.COMBINED] so default to
-        // turning this off to avoid false positives when this has not been explicitly
-        // requested
-        @Suppress("UseExpressionBody")
-        return type != AnnotationUsageType.BINARY && type != AnnotationUsageType.EQUALITY && type != AnnotationUsageType.DEFINITION
+        // Some annotation usages are off by default (typically because they were introduced
+        // later and might introduce false positives in third party checks; checks should
+        // opt into these.
+        return when (type) {
+            AnnotationUsageType.BINARY,
+            AnnotationUsageType.EQUALITY,
+            AnnotationUsageType.DEFINITION,
+            AnnotationUsageType.IMPLICIT_CONSTRUCTOR,
+            AnnotationUsageType.IMPLICIT_CONSTRUCTOR_CALL -> false
+            else -> true
+        }
     }
 
     open fun inheritAnnotation(annotation: String): Boolean = true

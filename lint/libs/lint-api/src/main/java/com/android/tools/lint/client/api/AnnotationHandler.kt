@@ -44,6 +44,8 @@ import com.android.tools.lint.detector.api.AnnotationUsageType.DEFINITION
 import com.android.tools.lint.detector.api.AnnotationUsageType.EQUALITY
 import com.android.tools.lint.detector.api.AnnotationUsageType.EXTENDS
 import com.android.tools.lint.detector.api.AnnotationUsageType.FIELD_REFERENCE
+import com.android.tools.lint.detector.api.AnnotationUsageType.IMPLICIT_CONSTRUCTOR
+import com.android.tools.lint.detector.api.AnnotationUsageType.IMPLICIT_CONSTRUCTOR_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_OVERRIDE
@@ -53,6 +55,7 @@ import com.android.tools.lint.detector.api.AnnotationUsageType.VARIABLE_REFERENC
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.asCall
+import com.android.tools.lint.detector.api.hasImplicitDefaultConstructor
 import com.android.tools.lint.detector.api.resolveKotlinCall
 import com.android.tools.lint.detector.api.resolveOperator
 import com.google.common.collect.Multimap
@@ -72,10 +75,12 @@ import org.jetbrains.kotlin.asJava.elements.KtLightParameter
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtConstructorDelegationCall
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
@@ -97,10 +102,12 @@ import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
+import org.jetbrains.uast.USuperExpression
 import org.jetbrains.uast.UUnaryExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastFacade
+import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
@@ -579,7 +586,17 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             }
         }
 
-        val superMethod = evaluator.getSuperMethod(method) ?: return
+        val superMethod = evaluator.getSuperMethod(method)
+        if (superMethod == null) {
+            // getSuperMethod does not return a PsiMethod for implicit default constructors
+            if (method.isConstructor) {
+                val uClass = method.getContainingUClass() ?: return
+                if (!hasImplicitDefaultConstructor(uClass)) { // already reported as IMPLICIT_CONSTRUCTOR
+                    checkSuperImplicitConstructor(context, method, uClass, method, METHOD_OVERRIDE, method.uastParameters.isEmpty())
+                }
+            }
+            return
+        }
         val annotations = getMemberAnnotations(context, superMethod)
         checkAnnotations(context, method, METHOD_OVERRIDE, superMethod, annotations)
     }
@@ -597,6 +614,70 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             val annotations = getRelevantAnnotations(evaluator, resolved, CLASS)
             checkAnnotations(context, superType, EXTENDS, resolved, annotations)
         }
+
+        if (hasImplicitDefaultConstructor(node)) {
+            // Search for explicit constructors up to hierarchy
+            checkSuperImplicitConstructor(context, node, node, null, IMPLICIT_CONSTRUCTOR, true)
+        }
+    }
+
+    /**
+     * From [uClass], check its super constructor (recursively) to see
+     * if it extends/delegates to an annotated super constructor. This
+     * is special-cased because when there are implicit constructors,
+     * resolve will return null.
+     */
+    private fun checkSuperImplicitConstructor(
+        context: JavaContext,
+        argument: UElement,
+        uClass: UClass,
+        method: UMethod?,
+        usageType: AnnotationUsageType,
+        canOverride: Boolean
+    ) {
+        val base = uClass.uastSuperTypes.firstOrNull() ?: return
+        var cls = PsiTypesUtil.getPsiClass(base.type)
+        while (cls != null) {
+            val constructors = cls.constructors
+            if (constructors.isNotEmpty()) {
+                val defaultConstructor = constructors.firstOrNull { it.parameterList.parametersCount == 0 }
+                if (defaultConstructor != null) {
+                    val evaluator = context.evaluator
+                    val annotations = getRelevantAnnotations(evaluator, defaultConstructor, METHOD)
+
+                    if (canOverride) {
+                        checkAnnotations(context, argument, usageType, defaultConstructor, annotations)
+                    }
+
+                    if (method != null && annotations.isNotEmpty() && method.isConstructor) {
+                        val body = method.uastBody
+                        if (body is UBlockExpression) {
+                            val implicit = body.expressions.firstOrNull()?.isSuperCall()?.not() ?: true
+                            if (implicit) {
+                                checkAnnotations(context, argument, IMPLICIT_CONSTRUCTOR_CALL, defaultConstructor, annotations)
+                            }
+                        }
+                    }
+                }
+            }
+            cls = cls.superClass
+        }
+    }
+
+    /**
+     * Returns whether this call is a constructor delegation call. It
+     * *should* be a [USuperExpression], but sometimes it shows up as
+     * a plain [UCallExpression]. Note that this method should only
+     * be called for known calls to constructors; it does not check
+     * for this. In other words, this method can return true if you
+     * call it on a random `super` call in a method referencing a
+     * non-constructor.
+     */
+    private fun UExpression.isSuperCall(): Boolean {
+        return this is USuperExpression ||
+            sourcePsi is KtSuperTypeCallEntry ||
+            sourcePsi is KtConstructorDelegationCall ||
+            this is UCallExpression && receiver == null && methodIdentifier?.name == "super"
     }
 
     fun visitSimpleNameReferenceExpression(
@@ -768,6 +849,16 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             ?: (call.sourcePsi as? PsiNewExpression)?.anonymousClass?.baseClassType?.let { evaluator.getTypeClass(it) }
             ?: resolveKotlinCall(call.classReference?.sourcePsi) as? PsiClass
         doCheckCall(context, null, call, containingClass)
+
+        if (call.isSuperCall() && call.valueArgumentCount == 0) {
+            // When invoking an implicit super constructor, PSI does not resolve the call (because there isn't a modeled
+            // light PsiMethod representing the implicit constructor), but we still want to check these
+            val method = call.getParentOfType(UMethod::class.java) ?: return
+            if (method.isConstructor) {
+                val uClass = method.getContainingUClass() ?: return
+                checkSuperImplicitConstructor(context, call, uClass, method, IMPLICIT_CONSTRUCTOR, true)
+            }
+        }
     }
 
     /**
