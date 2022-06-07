@@ -17,8 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.DokkaParallelBuildService
 import com.android.build.gradle.internal.services.getBuildService
@@ -260,7 +258,7 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
 
             task.classpath.fromDisallowChanges(
                 creationConfig.global.bootClasspath,
-                creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
+                creationConfig.compileClasspath
             )
         }
     }
