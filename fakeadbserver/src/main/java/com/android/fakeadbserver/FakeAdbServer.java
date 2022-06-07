@@ -22,6 +22,7 @@ import com.android.fakeadbserver.devicecommandhandlers.AbbCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.AbbExecCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.FakeSyncCommandHandler;
+import com.android.fakeadbserver.devicecommandhandlers.JdwpCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ReverseForwardCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.TrackJdwpCommandHandler;
 import com.android.fakeadbserver.execcommandhandlers.CatExecCommandHandler;
@@ -508,6 +509,7 @@ public final class FakeAdbServer implements AutoCloseable {
             addDeviceHandler(new ShellProtocolEchoV2CommandHandler());
             addDeviceHandler(new AbbCommandHandler());
             addDeviceHandler(new AbbExecCommandHandler());
+            addDeviceHandler(new JdwpCommandHandler());
 
             return this;
         }
