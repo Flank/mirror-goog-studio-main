@@ -231,6 +231,11 @@ java_import(
     ],
 )
 
+platform_filegroup(
+    name = "platforms/android-Tiramisu",
+    visibility = ["//visibility:private"],
+)
+
 # Version-specific rule public while tests transition to platform 32
 platform_filegroup(
     name = "platforms/android-32",
