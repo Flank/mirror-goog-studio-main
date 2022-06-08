@@ -186,6 +186,11 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val javaCompilation: JavaCompilation
 
+    /**
+     * Returns the artifact name modified depending on the component type.
+     */
+    fun getArtifactName(name: String): String
+
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------

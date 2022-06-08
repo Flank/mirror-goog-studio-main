@@ -872,4 +872,6 @@ abstract class ComponentImpl(
             "Turn on with by putting '${BooleanOption.ENABLE_LEGACY_API.propertyName}=true in gradle.properties'\n" +
                     "Using this deprecated API may still fail, depending on usage of the new Variant API, like computing applicationId via a task output."
     }
+
+    override fun getArtifactName(name: String) = name
 }
