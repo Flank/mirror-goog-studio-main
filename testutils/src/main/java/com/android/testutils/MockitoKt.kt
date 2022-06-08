@@ -23,6 +23,8 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.mockito.Mockito.withSettings
 import org.mockito.invocation.InvocationOnMock
+import org.mockito.stubbing.OngoingStubbing
+import org.mockito.stubbing.Stubber
 import kotlin.reflect.KMutableProperty
 
 object MockitoKt {
@@ -108,6 +110,20 @@ object MockitoKt {
    * @see Mockito.same
    */
    fun <T> same(value: T): T = Mockito.same(value)
+
+   /**
+    * Wrapper around [Mockito.when] that isn't called "when", which is a reserved word in Kotlin.
+    *
+    * @see Mockito.when
+    */
+   fun <T> whenever(methodCall: T): OngoingStubbing<T> = Mockito.`when`(methodCall)
+
+   /**
+    * Wrapper around [Stubber.when] that isn't called "when", which is a reserved word in Kotlin.
+    *
+    * @See Stubber.when
+    */
+    fun <T> Stubber.whenever(mock: T): T = `when`(mock)
 }
 
 /**
