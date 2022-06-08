@@ -564,4 +564,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                 .lowercase(Locale.US)
                 .endsWith(SdkConstants.DOT_JAR)
         }
+
+    override fun getArtifactName(name: String) = name
 }

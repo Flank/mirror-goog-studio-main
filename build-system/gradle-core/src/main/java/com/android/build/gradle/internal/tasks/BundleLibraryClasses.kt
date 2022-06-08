@@ -262,7 +262,7 @@ abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClas
                 .setInitialProvider(
                     taskProvider,
                     BundleLibraryClassesJar::output
-                ).withName(FN_CLASSES_JAR).let {
+                ).withName(creationConfig.getArtifactName(FN_CLASSES_JAR)).let {
                     if (publishedType == PublishedConfigType.API_ELEMENTS) {
                         it.on(InternalArtifactType.COMPILE_LIBRARY_CLASSES_JAR)
                     } else {

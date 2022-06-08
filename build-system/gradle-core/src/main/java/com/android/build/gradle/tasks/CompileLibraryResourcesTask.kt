@@ -267,7 +267,8 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
                 CompileLibraryResourcesTask::outputDir
-            ).withName("out").on(InternalArtifactType.COMPILED_LOCAL_RESOURCES)
+            ).withName(creationConfig.getArtifactName("out"))
+             .on(InternalArtifactType.COMPILED_LOCAL_RESOURCES)
         }
 
         override fun configure(

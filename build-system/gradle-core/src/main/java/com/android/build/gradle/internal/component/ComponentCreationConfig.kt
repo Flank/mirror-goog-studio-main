@@ -178,6 +178,11 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     fun computeLocalPackagedJars(): FileCollection
 
+    /**
+     * Returns the artifact name modified depending on the component type.
+     */
+    fun getArtifactName(name: String): String
+
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------

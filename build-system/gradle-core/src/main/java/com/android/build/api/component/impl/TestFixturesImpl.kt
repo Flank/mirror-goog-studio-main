@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_AGP_VERSION
 import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT_MIN_COMPILE_SDK_EXTENSION
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.utils.appendCapitalized
 import com.android.utils.capitalizeAndAppend
@@ -190,6 +191,10 @@ open class TestFixturesImpl @Inject constructor(
                     dslInfo.isPseudoLocalesEnabled
                 )
             )
+    }
+
+    override fun getArtifactName(name: String): String {
+        return "$testFixturesFeatureName-$name"
     }
 
     // ---------------------------------------------------------------------------------------------
