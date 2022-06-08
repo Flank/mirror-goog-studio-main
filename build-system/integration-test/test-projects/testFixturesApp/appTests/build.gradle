@@ -1,0 +1,30 @@
+plugins {
+    id 'com.android.test'
+}
+
+android {
+    namespace = "com.example.apptests"
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+
+    targetProjectPath ':app'
+
+    defaultConfig {
+        minSdkVersion rootProject.supportLibMinSdk
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+}
+
+repositories {
+    maven {
+        url = '../testrepo'
+    }
+}
+
+dependencies {
+    implementation testFixtures(project(":app"))
+    implementation testFixtures(project(":javaLib"))
+    implementation testFixtures(project(":lib"))
+
+    implementation 'junit:junit:4.12'
+}

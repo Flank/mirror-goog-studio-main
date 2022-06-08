@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -37,6 +38,12 @@ class TestFixturesTest {
                 "project(\":javaLib\")",
                 "'com.example.javaLib:javaLib:1.0'"
             )
+
+            TestFileUtils.searchAndReplace(
+                project.getSubproject(":appTests").buildFile,
+                "project(\":javaLib\")",
+                "'com.example.javaLib:javaLib:1.0'"
+            )
         }
 
         if (publishAndroidLib) {
@@ -48,6 +55,12 @@ class TestFixturesTest {
 
             TestFileUtils.searchAndReplace(
                 project.getSubproject(":lib2").buildFile,
+                "project(\":lib\")",
+                "'com.example.lib:lib:1.0'"
+            )
+
+            TestFileUtils.searchAndReplace(
+                project.getSubproject(":appTests").buildFile,
                 "project(\":lib\")",
                 "'com.example.lib:lib:1.0'"
             )
@@ -259,6 +272,125 @@ class TestFixturesTest {
         )
     }
 
+    @Test
+    fun `test plugin consumes test fixtures`() {
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        useAndroidX()
+
+        project.executor().run(":appTests:packageDebug")
+
+        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
+
+        testApk.mainDexFile.get().classes.keys.let { classes ->
+            // test fixtures classes
+            Truth.assertThat(classes).containsAtLeastElementsIn(
+                listOf(
+                    "Lcom/example/app/testFixtures/AppInterfaceTester;",
+                    "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibResourcesTester;"
+                )
+            )
+
+            // lib and java lib classes
+            Truth.assertThat(classes).containsAtLeastElementsIn(
+                listOf(
+                    "Lcom/example/javalib/JavaLibInterface;",
+                    "Lcom/example/lib/LibInterface;",
+                    "Lcom/example/lib/BuildConfig;",
+                )
+            )
+
+            // app classes shouldn't be packaged in the test apk
+            Truth.assertThat(classes).doesNotContain(
+                "Lcom/example/app/AppInterface;"
+            )
+        }
+    }
+
+    @Test
+    fun `test plugin consumes published test fixtures`() {
+        setUpProject(
+            publishAndroidLib = true,
+            publishJavaLib = true
+        )
+        useAndroidX()
+
+        project.executor().run(":appTests:packageDebug")
+
+        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
+
+        testApk.mainDexFile.get().classes.keys.let { classes ->
+            // test fixtures classes
+            Truth.assertThat(classes).containsAtLeastElementsIn(
+                listOf(
+                    "Lcom/example/app/testFixtures/AppInterfaceTester;",
+                    "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibResourcesTester;"
+                )
+            )
+
+            // lib and java lib classes
+            Truth.assertThat(classes).containsAtLeastElementsIn(
+                listOf(
+                    "Lcom/example/javalib/JavaLibInterface;",
+                    "Lcom/example/lib/LibInterface;",
+                    "Lcom/example/lib/BuildConfig;",
+                )
+            )
+
+            // app classes shouldn't be packaged in the test apk
+            Truth.assertThat(classes).doesNotContain(
+                "Lcom/example/app/AppInterface;"
+            )
+        }
+    }
+
+    @Test
+    fun `test plugin excludes main lib classes but includes test fixtures`() {
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        useAndroidX()
+
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app").buildFile,
+            "compileOnly",
+            "implementation"
+        )
+
+        project.executor().run(":appTests:packageDebug")
+
+        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
+
+        testApk.mainDexFile.get().classes.keys.let { classes ->
+            // test fixtures classes
+            Truth.assertThat(classes).containsAtLeastElementsIn(
+                listOf(
+                    "Lcom/example/app/testFixtures/AppInterfaceTester;",
+                    "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibInterfaceTester;",
+                    "Lcom/example/lib/testFixtures/LibResourcesTester;"
+                )
+            )
+
+            // lib and java lib classes shouldn't be packaged in the test apk
+            Truth.assertThat(classes).doesNotContain("Lcom/example/javalib/JavaLibInterface;")
+            Truth.assertThat(classes).doesNotContain("Lcom/example/lib/LibInterface;")
+            Truth.assertThat(classes).doesNotContain("Lcom/example/lib/BuildConfig;")
+
+            // app classes shouldn't be packaged in the test apk
+            Truth.assertThat(classes).doesNotContain(
+                "Lcom/example/app/AppInterface;"
+            )
+        }
+    }
+
     private fun setUpProjectForLint(ignoreTestFixturesSourcesInApp: Boolean) {
         project.getSubproject(":app").buildFile.appendText(
             """
@@ -304,7 +436,7 @@ class TestFixturesTest {
                     methodWithUnavailablePermission();
             """.trimIndent()
         )
-        FileUtils.createFile(project.file("gradle.properties"), "android.useAndroidX=true")
+        useAndroidX()
     }
 
     private fun addNewPublishingDslForAndroidLibrary() {
@@ -318,5 +450,9 @@ class TestFixturesTest {
                 }
             """.trimIndent()
         )
+    }
+
+    private fun useAndroidX() {
+        FileUtils.createFile(project.file("gradle.properties"), "android.useAndroidX=true")
     }
 }

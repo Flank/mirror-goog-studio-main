@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.ide.dependencies.getIdString
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -36,7 +37,7 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -71,7 +72,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
         get() = transitivePackagedDeps.artifactFiles
 
     @get:Input
-    abstract val projectPathAndVariant: Property<String>
+    abstract val currentProjectIds: ListProperty<String>
 
     override fun doTaskAction() {
         val apkFilters = mutableSetOf<String>()
@@ -88,7 +89,7 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             contentFilters.addAll(lines)
         }
 
-        val contentWithProject = content + projectPathAndVariant.get()
+        val contentWithProject = content + currentProjectIds.get()
 
         // compute the overall content
         val filteredContent =
@@ -132,7 +133,35 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
             task: PackagedDependenciesWriterTask
         ) {
             super.configure(task)
-            task.projectPathAndVariant.setDisallowChanges("${creationConfig.services.projectInfo.path}::${task.variantName}")
+            val apiAndRuntimeConfigurations = listOfNotNull(
+                creationConfig.variantDependencies.getElements(
+                    PublishedConfigSpec(
+                        AndroidArtifacts.PublishedConfigType.API_ELEMENTS
+                    )
+                ),
+                creationConfig.variantDependencies.getElements(
+                    PublishedConfigSpec(
+                        AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
+                    )
+                )
+            )
+            task.currentProjectIds.setDisallowChanges(
+                apiAndRuntimeConfigurations.let { configurations ->
+
+                    val capabilitiesList = configurations.map { it.outgoing.capabilities }.filter {
+                        it.isNotEmpty()
+                    }.ifEmpty {
+                        listOf(listOf(creationConfig.services.projectInfo.defaultProjectCapability))
+                    }
+
+                    val projectId = "${creationConfig.services.projectInfo.path}::${task.variantName}"
+                    capabilitiesList.map { capabilities ->
+                        encodeCapabilitiesInId(projectId) {
+                            capabilities.joinToString(";") { it.toString() }
+                        }
+                    }.distinct()
+                }
+            )
             task.runtimeAarOrJarDeps =
                 creationConfig.variantDependencies
                     .runtimeClasspath
@@ -151,13 +180,17 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 }
 
 fun ResolvedArtifactResult.toIdString(): String {
-    return id.componentIdentifier.toIdString {
-        variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
-    }
+    return id.componentIdentifier.toIdString(
+        variantProvider = { variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name },
+        capabilitiesProvider = { variant.capabilities.joinToString(";") { it.toString() } },
+    )
 }
 
-private inline fun ComponentIdentifier.toIdString(variantProvider: () -> String?) : String {
-    return when (this) {
+private fun ComponentIdentifier.toIdString(
+    variantProvider: () -> String?,
+    capabilitiesProvider: () -> String
+) : String {
+    val id = when (this) {
         is ProjectComponentIdentifier -> {
             val variant = variantProvider()
             if (variant == null) {
@@ -168,5 +201,26 @@ private inline fun ComponentIdentifier.toIdString(variantProvider: () -> String?
         }
         is ModuleComponentIdentifier -> "$group:$module"
         else -> toString()
+    }
+
+    return encodeCapabilitiesInId(id, capabilitiesProvider)
+}
+
+private fun encodeCapabilitiesInId(
+    id: String,
+    capabilitiesProvider: () -> String
+): String {
+    return "$id;${capabilitiesProvider.invoke()}"
+}
+
+fun removeVariantNameFromId(
+    id: String
+): String {
+    return if (id.contains("::")) {
+        val libraryWithoutVariant = id.substringBeforeLast("::")
+        val capabilities = id.substringAfter(";")
+        "$libraryWithoutVariant;$capabilities"
+    } else {
+        id
     }
 }

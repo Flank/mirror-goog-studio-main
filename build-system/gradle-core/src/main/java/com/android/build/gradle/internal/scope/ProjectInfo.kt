@@ -22,13 +22,14 @@ import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.builder.core.BuilderConstants
 import com.google.common.base.Preconditions
 import org.gradle.api.Project
+import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
-import org.gradle.api.invocation.Gradle
 import org.gradle.api.plugins.BasePluginConvention
 import org.gradle.api.provider.Provider
 import org.gradle.api.resources.TextResource
+import org.gradle.internal.component.external.model.ImmutableCapability
 import java.io.File
 
 /**
@@ -60,6 +61,9 @@ class ProjectInfo(private val project: Project) {
 
     val version: String
         get() = project.version.toString()
+
+    val defaultProjectCapability: Capability
+        get() = ImmutableCapability(project.group.toString(), project.name, "unspecified")
 
     val projectDirectory: Directory
         get() = project.layout.projectDirectory
