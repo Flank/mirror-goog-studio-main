@@ -2856,6 +2856,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilderImpl, VariantT : Vari
             task.mavenCoordinateCache.setDisallowChanges(
                 getBuildService<MavenCoordinatesCacheBuildService>(project.gradle.sharedServices).get()
             )
+
+            task.notCompatibleWithConfigurationCache("Task is not compatible.")
         }
         val signingReportComponents = allPropertiesList.stream()
                 .filter { component: ComponentCreationConfig ->
