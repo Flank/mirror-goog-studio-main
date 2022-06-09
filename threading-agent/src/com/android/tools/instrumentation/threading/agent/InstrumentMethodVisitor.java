@@ -77,6 +77,18 @@ public class InstrumentMethodVisitor extends AdviceAdapter {
         if (threadingAnnotations == null && classThreadingAnnotation == null) {
             return;
         }
+        if ((methodAccess & ACC_SYNTHETIC) != 0) {
+            // Do not process synthetic methods such as synthetic accessors, lambdas, and bridge
+            // methods.
+            if (threadingAnnotations != null && (methodAccess & ACC_BRIDGE) == 0) {
+                LOGGER.warning(
+                        "Threading annotation found on a generated method which is not a bridge method. "
+                                + className
+                                + "#"
+                                + methodName);
+            }
+            return;
+        }
         // When annotations are present on a method then the class level annotations should be
         // ignored.
         // TODO: Figure out how to handle inheritance and interface implementations.

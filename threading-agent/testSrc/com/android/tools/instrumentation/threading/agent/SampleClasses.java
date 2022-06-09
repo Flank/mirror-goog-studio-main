@@ -97,5 +97,36 @@ public class SampleClasses {
         public void slowThreadMethod1() {
             // Do nothing
         }
+
+        @Slow
+        public void executeWithLambda() throws Exception {
+            Runnable doSomething =
+                    () -> {
+                        /* Do nothing */
+                    };
+            Thread t = new Thread(doSomething);
+            t.start();
+            t.join();
+        }
+    }
+
+    @UiThread
+    public static class AnnotatedClassWithInnerClass {
+        private int a = 5;
+
+        @Slow
+        public void createAndCallInnerClassMethod() {
+            InnerClass innerClass = new InnerClass();
+            innerClass.method1();
+        }
+
+        public class InnerClass {
+            public void method1() {
+                ++a;
+                a++;
+                --a;
+                a--;
+            }
+        }
     }
 }
