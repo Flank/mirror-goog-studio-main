@@ -269,7 +269,7 @@ public class ManifestMerger2 {
                                 ? String.format(
                                         "Overlay manifest:package attribute declared at %1$s value=(%2$s)\n"
                                                 + "\tdoes not match the module's namespace (%3$s).\n"
-                                                + "\tSuggestion: remove the overlay declaration at %4$s.\n"
+                                                + "\tSuggestion: remove the package=\"%2$s\" declaration at %4$s.\n"
                                                 + "\tIf you want to customize the applicationId for a "
                                                 + "buildType or productFlavor, consider setting "
                                                 + "applicationIdSuffix or using the Variant API.\n"
@@ -278,15 +278,15 @@ public class ManifestMerger2 {
                                         packageAttribute.get().printPosition(),
                                         packageAttribute.get().getValue(),
                                         loadedMainManifestInfo.getNamespace(),
-                                        packageAttribute.get().getSourceFile().print(true))
+                                        packageAttribute.get().getSourceFile().print(false))
                                 : String.format(
                                         "Overlay manifest:package attribute declared at %1$s value=(%2$s)\n"
                                                 + "\tdoes not match the module's namespace (%3$s).\n"
-                                                + "\tSuggestion: remove the overlay declaration at %4$s.",
+                                                + "\tSuggestion: remove the package=\"%2$s\" declaration at %4$s.",
                                         packageAttribute.get().printPosition(),
                                         packageAttribute.get().getValue(),
                                         loadedMainManifestInfo.getNamespace(),
-                                        packageAttribute.get().getSourceFile().print(true));
+                                        packageAttribute.get().getSourceFile().print(false));
                 mergingReportBuilder.addMessage(
                         overlayDocument.getXmlDocument().getSourceFile(),
                         MergingReport.Record.Severity.ERROR,

@@ -30,6 +30,9 @@ import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -463,5 +466,19 @@ public class ManifestMergingTest {
         ScannerSubject.assertThat(buildResult.getStdout())
                 .contains(
                         "package=\"com.android.tests.flavors\" found in source AndroidManifest.xml");
+    }
+
+    @Test
+    public void checkErrorIfDifferentPackageSpecifiedInOverlayManifest() throws Exception {
+        Path overlayManifest =
+                new File(flavors.getLocation().getProjectDir(), "src/f1/AndroidManifest.xml")
+                        .toPath();
+        Files.write(overlayManifest, List.of("<manifest package=\"wrong.package\"/>"));
+        GradleBuildResult buildResult =
+                flavors.executor().expectFailure().run("clean", "assembleF1FaDebug");
+        ScannerSubject.assertThat(buildResult.getStderr())
+                .contains(
+                        "Suggestion: remove the package=\"wrong.package\" declaration at "
+                                + overlayManifest);
     }
 }
