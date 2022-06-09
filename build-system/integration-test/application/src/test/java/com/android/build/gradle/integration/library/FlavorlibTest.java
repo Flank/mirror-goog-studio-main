@@ -24,11 +24,11 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
@@ -68,10 +68,14 @@ public class FlavorlibTest {
 
     @Test
     public void report() throws Exception {
-        project.executor()
-                // https://github.com/gradle/gradle/issues/19959
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("androidDependencies", "signingReport");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "afterEvaluate {\n"
+                        + disableConfigCacheForTasksInProject(":app")
+                        + disableConfigCacheForTasksInProject(":lib1")
+                        + disableConfigCacheForTasksInProject(":lib2")
+                        + "}\n");
+        project.executor().run("androidDependencies", "signingReport");
     }
 
     @Test
@@ -127,5 +131,16 @@ public class FlavorlibTest {
         assertThat(subModules.mapTo(VARIANT))
                 .named(variantName + " sub-modules as variant name")
                 .containsExactly(depVariantName);
+    }
+
+    private String disableConfigCacheForTasksInProject(String project) {
+        return String.format(
+                "tasks.findByPath('%s:signingReport').configure {\n"
+                        + "  notCompatibleWithConfigurationCache('broken')\n"
+                        + "}\n"
+                        + "tasks.findByPath('%s:androidDependencies').configure {\n"
+                        + "  notCompatibleWithConfigurationCache('broken')\n"
+                        + "}\n",
+                project, project);
     }
 }

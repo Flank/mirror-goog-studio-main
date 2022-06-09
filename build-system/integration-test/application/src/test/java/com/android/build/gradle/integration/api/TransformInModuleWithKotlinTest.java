@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.api;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -52,10 +51,6 @@ public class TransformInModuleWithKotlinTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    // Legacy transforms are incompatible with config caching and will be
-                    // deprecated.
-                    // b/226434049
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .fromTestProject("transformInModuleWithKotlin")
                     .create();
 

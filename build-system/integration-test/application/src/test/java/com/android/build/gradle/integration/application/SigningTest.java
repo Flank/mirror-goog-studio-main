@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.RELEASE;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
 import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
@@ -29,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelBuilder;
@@ -292,11 +290,15 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        // SigningReportTask is not compatible
-        // https://github.com/gradle/gradle/issues/19959
-        project.executor()
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("signingReport");
+        // SigningReportTask is not compatible with config caching
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "afterEvaluate {\n"
+                        + "  tasks.findByPath(':signingReport').configure {\n"
+                        + "    notCompatibleWithConfigurationCache('broken')\n"
+                        + "  }\n"
+                        + "}\n");
+        project.executor().run("signingReport");
     }
 
     @Test
