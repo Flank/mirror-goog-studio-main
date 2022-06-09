@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSI
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject
@@ -111,39 +112,36 @@ class PrivacySandboxSdkTest {
         ).create()
 
     @Test
-    fun testMergedClasses() {
-        project.execute(":sdkLib1:assemble")
-        val sdkLib1BuildDir = project.getSubproject(":sdkLib1").buildDir
-        assertThat(sdkLib1BuildDir.resolve("packageJar/classes.jar").isFile).isTrue()
-    }
-
-    @Test
     fun testDexing() {
+        val dexLocation = project.getSubproject(":sdkLib1")
+                .getIntermediateFile("dex", "single", "classes.dex")
+
         project.execute(":sdkLib1:mergeDex")
 
-        val dex = Dex(
-            FileUtils.join(
-                project.getSubproject(":sdkLib1").intermediatesDir,
-                "dex",
-                "single",
-                "classes.dex"
-            )
-        )
-
-        assertThat(dex.classes.keys).containsAtLeastElementsIn(
-            listOf(
+        Dex(dexLocation).also { dex ->
+            assertThat(dex.classes.keys).containsAtLeast(
                 "Lcom/example/androidlib1/Example;",
                 "Lcom/example/androidlib2/Example;",
             )
+            assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map { it.name }).contains("f1")
+            assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map { it.name }).contains("f2")
+        }
+
+        // Check incremental changes are handled
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("androidLib1")
+                        .file("src/main/java/com/example/androidlib1/Example.java"),
+                "public void f1() {}",
+                "public void g() {}"
         )
 
-        assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map {
-            it.name
-        }).contains("f1")
+        project.execute(":sdkLib1:mergeDex")
 
-        assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map {
-            it.name
-        }).contains("f2")
+        Dex(dexLocation).also { dex ->
+            assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map { it.name }).contains("g")
+            assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map { it.name }).contains("f2")
+        }
+
     }
 
     @Test
