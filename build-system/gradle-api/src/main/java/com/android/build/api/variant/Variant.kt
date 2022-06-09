@@ -43,6 +43,10 @@ interface Variant : Component, HasAndroidResources {
     /**
      * Gets the target SDK Version for this variant.
      */
+    @Deprecated(
+        "Will be removed in v9.0",
+        replaceWith = ReplaceWith("GeneratesApk.targetSdkVersion")
+    )
     val targetSdkVersion: AndroidVersion
 
     /**

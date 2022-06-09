@@ -114,7 +114,7 @@ internal class FusedLibraryManifestMergerTaskTest {
 
         assertThat(parsedManifestFile.packageName).isEqualTo("com.example.fusedLib1")
         assertThat(parsedManifestFile.minSdkVersion?.apiLevel).isEqualTo(19)
-        assertThat(parsedManifestFile.targetSdkVersion?.apiLevel).isEqualTo(19)
+        assertThat(parsedManifestFile.targetSdkVersion).isNull()
         // Permission merged transitively androidLib1 -> androidLib2 -> fusedLib1
         assertThat(mergedManifestFile.readText())
                 .contains("<uses-permission android:name=\"android.permission.SEND_SMS\" />")

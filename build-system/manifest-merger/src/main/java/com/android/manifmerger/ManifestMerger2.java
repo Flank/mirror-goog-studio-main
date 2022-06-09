@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
@@ -383,6 +384,12 @@ public class ManifestMerger2 {
 
         // perform system property injection again.
         performSystemPropertiesInjection(mergingReportBuilder, xmlDocumentOptional);
+
+        // if it's a library of any kind - need to remove targetSdk
+        if (!mOptionalFeatures.contains(Invoker.Feature.DISABLE_STRIP_LIBRARY_TARGET_SDK)
+                && mMergeType != MergeType.APPLICATION) {
+            stripTargetSdk(xmlDocumentOptional);
+        }
 
         XmlDocument finalMergedDocument = xmlDocumentOptional;
 
@@ -1456,6 +1463,17 @@ public class ManifestMerger2 {
         }
     }
 
+    private void stripTargetSdk(@NonNull XmlDocument xmlDocument) {
+        Optional<XmlElement> usesSdk = xmlDocument.getByTypeAndKey(USES_SDK, null);
+        usesSdk.ifPresent(
+                xmlElement ->
+                        xmlElement
+                                .getXml()
+                                .removeAttributeNS(
+                                        SdkConstants.ANDROID_URI,
+                                        SdkConstants.ATTR_TARGET_SDK_VERSION));
+    }
+
     /**
      * This class will hold all invocation parameters for the manifest merging tool.
      *
@@ -1679,7 +1697,10 @@ public class ManifestMerger2 {
              *
              * <p>This is used in AGP because users should migrate to the new namespace DSL.
              */
-            WARN_IF_PACKAGE_IN_SOURCE_MANIFEST
+            WARN_IF_PACKAGE_IN_SOURCE_MANIFEST,
+
+            /** Removes target SDK for library manifest */
+            DISABLE_STRIP_LIBRARY_TARGET_SDK
         }
 
         /**

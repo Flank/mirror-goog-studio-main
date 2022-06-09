@@ -53,6 +53,8 @@ interface DeprecationReporter {
          */
         private val additionalMessage: String? = null
     ) {
+        VERSION_9_0(Version.VERSION_9_0),
+
         VERSION_8_0(Version.VERSION_8_0),
 
         // Obsolete dx Dex Options

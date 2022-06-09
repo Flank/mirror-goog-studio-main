@@ -2833,6 +2833,70 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testRemoveTargetSdkFromLibraryManifest() throws Exception {
+        String libInput =
+                "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "    <uses-sdk android:targetSdkVersion=\"32\" />\n"
+                        + "</manifest>";
+        File libFile = TestUtils.inputAsFile("testDisableMinSdkLibraryFlagLib", libInput);
+        assertTrue(libFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    libFile, new MockLog(), ManifestMerger2.MergeType.LIBRARY)
+                            .merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document mergedDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertEquals(
+                    0,
+                    mergedDocument
+                            .getElementsByTagName(SdkConstants.TAG_USES_SDK)
+                            .item(0)
+                            .getAttributes()
+                            .getLength());
+        } finally {
+            assertThat(libFile.delete()).named("libFile was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testRemoveTargetSdkFromLibraryManifestWhenOverride() throws Exception {
+        String libInput =
+                "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "    <uses-sdk/>\n"
+                        + "</manifest>";
+
+        File libFile = TestUtils.inputAsFile("testDisableMinSdkLibraryFlagLib", libInput);
+        assertTrue(libFile.exists());
+        try {
+            ManifestMerger2.Invoker invoker =
+                    ManifestMerger2.newMerger(
+                            libFile, new MockLog(), ManifestMerger2.MergeType.LIBRARY);
+
+            invoker.setOverride(ManifestSystemProperty.UsesSdk.TARGET_SDK_VERSION, "32");
+            MergingReport mergingReport = invoker.merge();
+            assertThat(mergingReport.getResult()).isEqualTo(MergingReport.Result.SUCCESS);
+            Document mergedDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertEquals(
+                    0,
+                    mergedDocument
+                            .getElementsByTagName(SdkConstants.TAG_USES_SDK)
+                            .item(0)
+                            .getAttributes()
+                            .getLength());
+        } finally {
+            assertThat(libFile.delete()).named("libFile was deleted").isTrue();
+        }
+    }
+
+    @Test
     public void testSingleWordAppPackageNamesNotAllowed() throws Exception {
         MockLog mockLog = new MockLog();
         String input =

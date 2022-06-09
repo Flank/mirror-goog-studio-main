@@ -28,7 +28,8 @@ package com.android.build.api.variant
  */
 interface ApplicationVariantBuilder : VariantBuilder,
     HasAndroidTestBuilder,
-    HasTestFixturesBuilder {
+    HasTestFixturesBuilder,
+    GeneratesApkBuilder{
 
     val debuggable: Boolean
 

@@ -21,7 +21,6 @@ import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
-import com.android.build.gradle.internal.ide.dependencies.ArtifactCollectionsInputs
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.getBuildService
@@ -30,34 +29,23 @@ import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
-import com.android.build.gradle.tasks.ShaderCompile.WorkAction
 import com.android.manifmerger.ManifestMerger2
-import com.android.manifmerger.ManifestProvider
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.attributes.Usage
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.jetbrains.kotlin.gradle.utils.ProviderDelegate
-import org.jetbrains.kotlin.gradle.utils.property
-import org.jetbrains.kotlin.gradle.utils.provider
 import java.io.File
 
 /**
@@ -77,10 +65,6 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
 
     @get:Input
     abstract val minSdk: Property<Int>
-
-    @get:Input
-    @get:Optional
-    abstract val targetSdk: Property<Int>
 
     @get:Internal
     abstract val tmpDir: DirectoryProperty
@@ -111,7 +95,6 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
         parameters.dependencies.set(identifierToManifestDependencyFile)
         parameters.namespace.set(namespace)
         parameters.minSdk.set(minSdk)
-        parameters.targetSdk.set(targetSdk)
         parameters.outMergedManifestLocation.set(mergedFusedLibraryManifest)
         parameters.reportFile.set(reportFile)
     }
@@ -121,7 +104,6 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
         abstract val dependencies: MapProperty<String, File>
         abstract val namespace: Property<String>
         abstract val minSdk: Property<Int>
-        abstract val targetSdk: Property<Int>
         abstract val outMergedManifestLocation: RegularFileProperty
         abstract val reportFile: RegularFileProperty
     }
@@ -144,7 +126,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
                         versionCode = null,
                         versionName = null,
                         minSdkVersion = minSdk.get().toString(),
-                        targetSdkVersion = targetSdk.orNull?.toString() ?: minSdk.get().toString(),
+                        targetSdkVersion = null,
                         maxSdkVersion = null,
                         testOnly = false,
                         outMergedManifestLocation = outMergedManifestLocation.get().asFile.absolutePath,
@@ -197,7 +179,6 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
             )
             task.libraryManifests.set(libraryManifests)
             task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
-            task.targetSdk.setDisallowChanges(creationConfig.extension.targetSdk)
             task.namespace.set(creationConfig.extension.namespace)
             task.tmpDir.setDisallowChanges(
                     creationConfig.layout.buildDirectory.dir("tmp/FusedLibraryManifestMerger")

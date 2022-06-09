@@ -52,8 +52,14 @@ interface VariantBuilder: ComponentBuilder {
      * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
      * Only one of [targetSdk] and [targetSdkPreview] should be set.
      *
+     * targetSdk is now managed by [GeneratesApkBuilder] instead of [VariantBuilder].
+     *
      * @return the target SDK Version or null if [targetSdkPreview] was used to set it.
      */
+    @Deprecated(
+        "Will be removed in v9.0",
+        replaceWith = ReplaceWith("GeneratesApkBuilder.targetSdk")
+    )
     var targetSdk: Int?
 
     /**
@@ -61,8 +67,14 @@ interface VariantBuilder: ComponentBuilder {
      * Setting this it will override previous calls of [targetSdk] and [targetSdkPreview] setters.
      * Only one of [targetSdk] and [targetSdkPreview] should be set.
      *
+     * targetSdkPreview is now managed by [GeneratesApkBuilder] instead of [VariantBuilder].
+     *
      * @return the target supported SDK Version or null if [targetSdkPreview] was used to set it.
      */
+    @Deprecated(
+        "Will be removed in v9.0",
+        replaceWith = ReplaceWith("GeneratesApkBuilder.targetSdkPreview")
+    )
     var targetSdkPreview: String?
 
     /**
