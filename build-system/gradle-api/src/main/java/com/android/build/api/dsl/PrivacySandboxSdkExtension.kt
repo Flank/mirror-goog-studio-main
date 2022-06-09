@@ -43,6 +43,14 @@ interface PrivacySandboxSdkExtension: FusedLibraryExtension {
     @set:Incubating
     var compileSdk: Int?
 
+    @get:Incubating
+    @set:Incubating
+    var compileSdkExtension: Int?
+
+    @get:Incubating
+    @set:Incubating
+    var compileSdkPreview: String?
+
     /**
      * Specifies the version of the
      * [SDK Build Tools](https://developer.android.com/studio/releases/build-tools.html)

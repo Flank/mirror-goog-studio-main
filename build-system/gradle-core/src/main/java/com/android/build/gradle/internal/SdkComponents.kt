@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.build.gradle.internal.utils.validatePreviewTargetValue
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
@@ -445,7 +446,7 @@ fun AndroidJarInput.initialize(creationConfig: ComponentCreationConfig) {
 fun AndroidJarInput.initialize(creationConfig: PrivacySandboxSdkVariantScope, task: DefaultTask) {
     sdkBuildService.setDisallowChanges(
             getBuildService(task.project.gradle.sharedServices))
-    this.compileSdkVersion.setDisallowChanges("android-${creationConfig.extension.compileSdk}")
+    this.compileSdkVersion.setDisallowChanges(creationConfig.compileSdkVersion)
     this.buildToolsRevision.setDisallowChanges(
             Revision.parseRevision(creationConfig.extension.buildToolsVersion)
     )

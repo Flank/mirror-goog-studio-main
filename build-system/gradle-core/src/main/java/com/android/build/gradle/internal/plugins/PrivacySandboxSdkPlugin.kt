@@ -59,11 +59,7 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                 dslServices,
                 project,
                 {
-                    extension.compileSdk?.let {
-                        "android-$it"
-                    } ?: throw RuntimeException(
-                        "compileSdk version is not set"
-                    )
+                    variantScope.compileSdkVersion
                 },
                 {
                     Revision.parseRevision(extension.buildToolsVersion, Revision.Precision.MICRO)
