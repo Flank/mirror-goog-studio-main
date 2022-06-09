@@ -71,7 +71,6 @@ internal val multiDexSupportLibClasses = listOf(
     "Landroid/support/multidex/MultiDexExtractor\$ExtractedDex;",
     "Landroid/support/multidex/MultiDex\$V14;",
     "Landroid/support/multidex/MultiDex\$V19;",
-    "Landroid/support/multidex/MultiDex\$V4;",
     "Landroid/support/multidex/ZipUtil;",
     "Landroid/support/multidex/ZipUtil\$CentralDirectory;"
 )
