@@ -20,6 +20,7 @@ import com.android.ide.common.blame.SourceFile.UNKNOWN
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.SourcePosition
 import com.android.manifmerger.NavGraphExpander.expandNavGraphs
+import com.android.testutils.MockitoKt.whenever
 import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -44,7 +45,7 @@ class NavGraphExpanderTest {
     @Before
     fun setUp(){
         MockitoAnnotations.initMocks(this)
-        Mockito.`when`(mergingReportBuilder.actionRecorder).thenReturn(actionRecorder)
+        whenever(mergingReportBuilder.actionRecorder).thenReturn(actionRecorder)
     }
 
     @Test

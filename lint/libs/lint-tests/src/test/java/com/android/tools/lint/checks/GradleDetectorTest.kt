@@ -24,6 +24,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
+import com.android.testutils.MockitoKt.whenever
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
 import com.android.tools.lint.checks.GradleDetector.Companion.AGP_DEPENDENCY
@@ -70,7 +71,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.utils.FileUtils
 import junit.framework.TestCase
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -4720,8 +4720,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
                     override fun getCompileTarget(project: Project): IAndroidTarget {
                         val target = mock(IAndroidTarget::class.java)
-                        `when`(target.revision).thenReturn(revision)
-                        `when`(target.version).thenReturn(version)
+                        whenever(target.revision).thenReturn(revision)
+                        whenever(target.version).thenReturn(version)
                         return target
                     }
                 }

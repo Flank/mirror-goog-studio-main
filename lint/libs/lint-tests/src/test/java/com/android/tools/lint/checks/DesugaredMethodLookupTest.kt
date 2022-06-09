@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.testutils.MockitoKt.whenever
 import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.model.LintModelVariant
@@ -27,7 +28,6 @@ import org.junit.Test
 import org.mockito.Mockito.mock
 import java.io.File
 import kotlin.test.assertNotEquals
-import org.mockito.Mockito.`when` as whenCalling
 
 class DesugaredMethodLookupTest {
     @Test
@@ -147,8 +147,8 @@ class DesugaredMethodLookupTest {
         val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
         val project = mock(Project::class.java)
         val variant = mock(LintModelVariant::class.java)
-        whenCalling(project.buildVariant).thenReturn(variant)
-        whenCalling(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+        whenever(project.buildVariant).thenReturn(variant)
+        whenever(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
         assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project))
         assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project))
         assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", project))
@@ -157,11 +157,11 @@ class DesugaredMethodLookupTest {
         assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", project))
 
         // Make sure we handle missing desugared-metadata gracefully
-        whenCalling(variant.desugaredMethodsFiles).thenReturn(null)
+        whenever(variant.desugaredMethodsFiles).thenReturn(null)
         val project2 = mock(Project::class.java)
         val variant2 = mock(LintModelVariant::class.java)
-        whenCalling(project2.buildVariant).thenReturn(variant2)
-        whenCalling(variant2.desugaredMethodsFiles).thenReturn(emptyList())
+        whenever(project2.buildVariant).thenReturn(variant2)
+        whenever(variant2.desugaredMethodsFiles).thenReturn(emptyList())
         assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project2))
         assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project2))
         // make sure we're picking up the defaults in that case

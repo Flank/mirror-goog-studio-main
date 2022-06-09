@@ -662,9 +662,9 @@ class GradleModelMocker @JvmOverloads constructor(
                     GraphItem::class.java
                 )
                 result.add(item)
-                Mockito.`when`(item.artifactAddress).thenReturn(name)
-                Mockito.`when`(item.requestedCoordinates).thenReturn(name)
-                Mockito.`when`(item.dependencies).thenReturn(mutableListOf())
+                MockitoKt.whenever(item.artifactAddress).thenReturn(name)
+                MockitoKt.whenever(item.requestedCoordinates).thenReturn(name)
+                MockitoKt.whenever(item.dependencies).thenReturn(mutableListOf())
                 if (library is AndroidLibrary) {
                     addGraphItems(
                         if (fullDependencies) item.dependencies else result,
@@ -701,28 +701,28 @@ class GradleModelMocker @JvmOverloads constructor(
                     '@' +
                     coordinates.packaging
                 )
-            Mockito.`when`(lib.artifactAddress).thenReturn(name)
+            MockitoKt.whenever(lib.artifactAddress).thenReturn(name)
             if (library is AndroidLibrary) {
                 val folder = library.folder
-                Mockito.`when`(lib.type)
+                MockitoKt.whenever(lib.type)
                     .thenReturn(Library.LIBRARY_ANDROID)
-                Mockito.`when`(lib.folder).thenReturn(folder)
-                Mockito.`when`(lib.lintJar).thenReturn("lint.jar")
-                Mockito.`when`(lib.localJars).thenReturn(emptyList())
-                Mockito.`when`(lib.externalAnnotations).thenReturn(SdkConstants.FN_ANNOTATIONS_ZIP)
-                Mockito.`when`(lib.jarFile).thenReturn("jars/" + SdkConstants.FN_CLASSES_JAR)
+                MockitoKt.whenever(lib.folder).thenReturn(folder)
+                MockitoKt.whenever(lib.lintJar).thenReturn("lint.jar")
+                MockitoKt.whenever(lib.localJars).thenReturn(emptyList())
+                MockitoKt.whenever(lib.externalAnnotations).thenReturn(SdkConstants.FN_ANNOTATIONS_ZIP)
+                MockitoKt.whenever(lib.jarFile).thenReturn("jars/" + SdkConstants.FN_CLASSES_JAR)
                 val jar = File(folder, "jars/" + SdkConstants.FN_CLASSES_JAR)
                 if (!jar.exists()) {
                     createEmptyJar(jar)
                 }
                 // when(l2.isProvided).thenReturn(androidLibrary.isProvided());
             } else if (library is JavaLibrary) {
-                Mockito.`when`(lib.type).thenReturn(Library.LIBRARY_JAVA)
+                MockitoKt.whenever(lib.type).thenReturn(Library.LIBRARY_JAVA)
                 val jars: List<String> = mutableListOf()
-                Mockito.`when`(lib.localJars).thenReturn(jars)
+                MockitoKt.whenever(lib.localJars).thenReturn(jars)
                 val jarFile = library.jarFile
-                Mockito.`when`(lib.artifact).thenReturn(jarFile)
-                Mockito.`when`(lib.folder).thenThrow(UnsupportedOperationException())
+                MockitoKt.whenever(lib.artifact).thenReturn(jarFile)
+                MockitoKt.whenever(lib.folder).thenThrow(UnsupportedOperationException())
             }
             return lib
         }

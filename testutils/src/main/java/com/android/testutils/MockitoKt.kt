@@ -117,7 +117,7 @@ object MockitoKt {
     *
     * @see Mockito.when
     */
-   fun <T> whenever(methodCall: T): OngoingStubbing<T> = Mockito.`when`(methodCall)
+   fun <T> whenever(methodCall: T): OngoingStubbing<T> = Mockito.`when`(methodCall)!!
 
    /**
     * Wrapper around [Stubber.when] that isn't called "when", which is a reserved word in Kotlin.

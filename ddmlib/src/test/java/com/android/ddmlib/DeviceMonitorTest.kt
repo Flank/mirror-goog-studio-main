@@ -18,12 +18,11 @@ package com.android.ddmlib
 import com.android.ddmlib.internal.DeviceListMonitorTask
 import com.android.ddmlib.internal.DeviceMonitor.DeviceListComparisonResult
 import com.android.ddmlib.testing.FakeAdbRule
-import com.android.fakeadbserver.DeviceState.HostConnectionType.USB
 import com.android.testutils.MockitoKt.mock
+import com.android.testutils.MockitoKt.whenever
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import java.util.Arrays
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -104,8 +103,8 @@ class DeviceMonitorTest {
 
     private fun mockDevice(serial: String, state: IDevice.DeviceState): IDevice {
         val device: IDevice = mock()
-        `when`(device.serialNumber).thenReturn(serial)
-        `when`(device.state).thenReturn(state)
+        whenever(device.serialNumber).thenReturn(serial)
+        whenever(device.state).thenReturn(state)
         return device
     }
 
