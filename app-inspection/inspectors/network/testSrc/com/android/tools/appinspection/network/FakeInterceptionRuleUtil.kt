@@ -26,6 +26,7 @@ fun createFakeRuleAddedEvent(url: URL): NetworkInspectorProtocol.InterceptRuleAd
     NetworkInspectorProtocol.InterceptRuleAdded.newBuilder().apply {
         ruleId = 1
         ruleBuilder.apply {
+            enabled = true
             criteriaBuilder.apply {
                 protocol = url.protocol
                 host = url.host

@@ -26,7 +26,7 @@ import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
 import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
 import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
-import com.android.tools.appinspection.network.rules.InterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRuleImpl
 import com.android.tools.appinspection.network.rules.InterceptionRuleServiceImpl
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
@@ -97,7 +97,7 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            InterceptionRule(rule)
+                            InterceptionRuleImpl(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
@@ -106,7 +106,7 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            InterceptionRule(rule)
+                            InterceptionRuleImpl(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }

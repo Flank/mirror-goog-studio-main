@@ -128,8 +128,9 @@ message InterceptRuleRemoved {
 // The InterceptRule matches the request with its url criteria before
 // applying its transformations to the response.
 message InterceptRule {
-    InterceptCriteria criteria = 1;
-    repeated Transformation transformation = 2;
+    bool enabled = 1;
+    InterceptCriteria criteria = 2;
+    repeated Transformation transformation = 3;
 }
 
 // The MatchingText matches the text with its plain content, wild cards or regex.
