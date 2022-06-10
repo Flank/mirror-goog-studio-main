@@ -2954,8 +2954,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             task.mavenCoordinateCache.setDisallowChanges(
                 getBuildService<MavenCoordinatesCacheBuildService>(project.gradle.sharedServices).get()
             )
-
-            task.notCompatibleWithConfigurationCache("Task is not compatible.")
+            task.notCompatibleWithConfigurationCache(
+                "DependencyReportTask not compatible with config caching"
+            )
         }
         val signingReportComponents = allPropertiesList.stream()
                 .filter { component: ComponentCreationConfig ->
@@ -2971,6 +2972,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 task.description = "Displays the signing info for the base and test modules"
                 task.setComponents(signingReportComponents)
                 task.group = ANDROID_GROUP
+                task.notCompatibleWithConfigurationCache(
+                    "SigningReportTask is not compatible with config caching")
             }
         }
         createDependencyAnalyzerTask()

@@ -19,11 +19,8 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
-import java.io.IOException;
 import java.util.Scanner;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,16 +33,6 @@ public class SourceSetsTaskTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
-
-    @Before
-    public void setUp() throws IOException {
-        // http://b/158286766
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "tasks.findByPath(':sourceSets').configure {\n"
-                        + "  notCompatibleWithConfigurationCache('broken')\n"
-                        + "}\n");
-    }
 
     @Test
     public void runsSuccessfully() throws Exception {

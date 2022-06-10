@@ -290,14 +290,6 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        // SigningReportTask is not compatible with config caching
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "afterEvaluate {\n"
-                        + "  tasks.findByPath(':signingReport').configure {\n"
-                        + "    notCompatibleWithConfigurationCache('broken')\n"
-                        + "  }\n"
-                        + "}\n");
         project.executor().run("signingReport");
     }
 
