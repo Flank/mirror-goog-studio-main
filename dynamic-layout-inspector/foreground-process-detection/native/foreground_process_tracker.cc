@@ -93,7 +93,6 @@ ProcessInfo ForegroundProcessTracker::parseProcessInfo(
   processInfo.processName = processName;
   processInfo.isEmpty = false;
 
-  // No match found
   return processInfo;
 }
 
