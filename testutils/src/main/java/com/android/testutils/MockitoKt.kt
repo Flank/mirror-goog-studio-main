@@ -20,6 +20,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers
 import org.mockito.MockSettings
 import org.mockito.MockedStatic
+import org.mockito.MockedStatic.Verification
 import org.mockito.Mockito
 import org.mockito.Mockito.withSettings
 import org.mockito.invocation.InvocationOnMock
@@ -124,6 +125,13 @@ object MockitoKt {
     * @See Stubber.when
     */
     fun <T> Stubber.whenever(mock: T): T = `when`(mock)
+
+   /**
+    * Wrapper around [MockedStatic.when] that isn't called "when", which is a reserved word in Kotlin.
+    *
+    * @See MockedStatic.when
+    */
+    fun <T> MockedStatic<*>.whenever(verification: Verification): OngoingStubbing<T> = `when`(verification)
 }
 
 /**
