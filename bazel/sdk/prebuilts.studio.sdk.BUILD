@@ -233,7 +233,9 @@ java_import(
 
 platform_filegroup(
     name = "platforms/android-Tiramisu",
-    visibility = ["//visibility:private"],
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
 )
 
 # Version-specific rule public while tests transition to platform 32
