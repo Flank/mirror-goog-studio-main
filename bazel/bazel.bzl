@@ -721,6 +721,7 @@ def _gen_split_tests(
         test_tags = None,
         test_data = None,
         timeout = None,
+        exec_properties = None,
         jvm_flags = [],
         **kwargs):
     """Generates split test targets.
@@ -745,6 +746,7 @@ def _gen_split_tests(
         name = name + "_tests__all",
         data = test_data + _get_unique_split_data(split_test_targets),
         tags = ["manual"],
+        exec_properties = exec_properties,
         jvm_flags = jvm_flags,
         **kwargs
     )
@@ -767,6 +769,7 @@ def _gen_split_tests(
         test_jvm_flags = []
         test_jvm_flags.extend(jvm_flags)
         test_jvm_flags.extend(_gen_split_test_jvm_flags(split_name, split_test_targets))
+        test_exec_properties = split_target.get("exec_properties", default = exec_properties)
 
         coverage_java_test(
             name = test_name,
@@ -775,6 +778,7 @@ def _gen_split_tests(
             flaky = flaky,
             data = data,
             tags = tags,
+            exec_properties = test_exec_properties,
             jvm_flags = test_jvm_flags,
             **kwargs
         )
