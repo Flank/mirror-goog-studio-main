@@ -104,7 +104,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
 
     // Implements SourceFileScanner
 
-    override fun getApplicableUastTypes(): List<Class<out UElement?>>? {
+    override fun getApplicableUastTypes(): List<Class<out UElement?>> {
         return listOf(
             UFile::class.java,
             UVariable::class.java,
@@ -114,7 +114,7 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
         )
     }
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
+    override fun createUastHandler(context: JavaContext): UElementHandler {
         // We're using a UAST visitor here instead of just visiting the file
         // as raw text since we'd like to only visit declarations, comments and strings,
         // not for example class, method and field *references* to APIs outside of
@@ -348,369 +348,345 @@ class TerminologyDetector : Detector(), SourceCodeScanner, OtherFileScanner {
                 }
                 2 -> {
                     state = when (c) {
-                        'l', 'L' -> 7
-                        else -> {
-                            i--; 1
-                        }
+                        'l', 'L' -> 8
+                        else -> { i--; 1 }
                     }
                 }
                 3 -> {
                     state = when (c) {
-                        'u', 'U' -> 8
-                        else -> {
-                            i--; 1
-                        }
+                        '*' -> 7
+                        'u', 'U' -> 9
+                        else -> { i--; 1 }
                     }
                 }
                 4 -> {
                     state = when (c) {
-                        'r', 'R' -> 11
-                        else -> {
-                            i--; 1
-                        }
+                        'r', 'R' -> 13
+                        else -> { i--; 1 }
                     }
                 }
                 5 -> {
                     state = when (c) {
-                        'l', 'L' -> 10
-                        else -> {
-                            i--; 1
-                        }
+                        'h', 'H' -> 11
+                        'l', 'L' -> 12
+                        else -> { i--; 1 }
                     }
                 }
                 6 -> {
                     state = when (c) {
-                        'h', 'H' -> 9
-                        else -> {
-                            i--; 1
-                        }
+                        'h', 'H' -> 10
+                        else -> { i--; 1 }
                     }
                 }
                 7 -> {
                     state = when (c) {
-                        'a', 'A' -> 14
-                        else -> {
-                            i--; 1
-                        }
+                        'c', 'C' -> 19
+                        else -> { i--; 1 }
                     }
                 }
                 8 -> {
                     state = when (c) {
-                        'c', 'C' -> 16
-                        else -> {
-                            i--; 1
-                        }
+                        'a', 'A' -> 17
+                        else -> { i--; 1 }
                     }
                 }
                 9 -> {
                     state = when (c) {
-                        'i', 'I' -> 13
-                        else -> {
-                            i--; 1
-                        }
+                        'c', 'C' -> 20
+                        else -> { i--; 1 }
                     }
                 }
                 10 -> {
                     state = when (c) {
-                        'a', 'A' -> 12
-                        else -> {
-                            i--; 1
-                        }
+                        'i', 'I' -> 16
+                        else -> { i--; 1 }
                     }
                 }
                 11 -> {
                     state = when (c) {
-                        'a', 'A' -> 15
-                        else -> {
-                            i--; 1
-                        }
+                        'i', 'I' -> 15
+                        else -> { i--; 1 }
                     }
                 }
                 12 -> {
                     state = when (c) {
-                        'v', 'V' -> 21
-                        else -> {
-                            i--; 1
-                        }
+                        'a', 'A' -> 14
+                        else -> { i--; 1 }
                     }
                 }
                 13 -> {
                     state = when (c) {
-                        't', 'T' -> 17
-                        else -> {
-                            i--; 1
-                        }
+                        'a', 'A' -> 18
+                        else -> { i--; 1 }
                     }
                 }
                 14 -> {
                     state = when (c) {
-                        'c', 'C' -> 18
-                        else -> {
-                            i--; 1
-                        }
+                        'v', 'V' -> 27
+                        else -> { i--; 1 }
                     }
                 }
                 15 -> {
                     state = when (c) {
-                        'n', 'N' -> 20
-                        else -> {
-                            i--; 1
+                        't', 'T' -> {
+                            report(context, element, source, begin, i, "?", true)
+                            1
                         }
+                        else -> { i--; 1 }
                     }
                 }
                 16 -> {
                     state = when (c) {
-                        'k', 'K' -> {
-                            report(context, element, source, i - 4, i, "?", false)
-                            1
-                        }
-                        else -> {
-                            i--; 1
-                        }
+                        't', 'T' -> 21
+                        else -> { i--; 1 }
                     }
                 }
                 17 -> {
                     state = when (c) {
-                        'e', 'E' -> 22
-                        else -> {
-                            i--; 1
-                        }
+                        'c', 'C' -> 22
+                        else -> { i--; 1 }
                     }
                 }
                 18 -> {
                     state = when (c) {
-                        'k', 'K' -> 24
-                        else -> {
-                            i--; 1
+                        'n', 'N' -> 25
+                        else -> { i--; 1 }
+                    }
+                }
+                19 -> {
+                    state = when (c) {
+                        'k', 'K' -> {
+                            report(context, element, source, begin, i, "?", true)
+                            1
                         }
+                        else -> { i--; 1 }
                     }
                 }
                 20 -> {
                     state = when (c) {
-                        'd', 'D' -> 25
-                        else -> {
-                            i--; 1
+                        'k', 'K' -> {
+                            report(context, element, source, begin, i, "?", true)
+                            1
                         }
+                        else -> { i--; 1 }
                     }
                 }
                 21 -> {
+                    state = when (c) {
+                        'e', 'E' -> 29
+                        else -> { i--; 1 }
+                    }
+                }
+                22 -> {
+                    state = when (c) {
+                        'k', 'K' -> 32
+                        else -> { i--; 1 }
+                    }
+                }
+                25 -> {
+                    state = when (c) {
+                        'd', 'D' -> 33
+                        else -> { i--; 1 }
+                    }
+                }
+                27 -> {
                     state = when (c) {
                         'e', 'E' -> {
                             report(context, element, source, begin, i, "secondary", true)
                             1
                         }
-                        else -> {
-                            i--; 1
-                        }
-                    }
-                }
-                22 -> {
-                    state = when (c) {
-                        'l', 'L' -> 27
-                        '-' -> 29
-                        else -> {
-                            i--; 1
-                        }
-                    }
-                }
-                24 -> {
-                    state = when (c) {
-                        'l', 'L' -> 26
-                        '-' -> 28
-                        else -> {
-                            i--; 1
-                        }
-                    }
-                }
-                25 -> {
-                    state = when (c) {
-                        'f', 'F' -> 30
-                        else -> {
-                            i--; 1
-                        }
-                    }
-                }
-                26 -> {
-                    state = when (c) {
-                        'i', 'I' -> 33
-                        else -> {
-                            i--; 1
-                        }
-                    }
-                }
-                27 -> {
-                    state = when (c) {
-                        'i', 'I' -> 31
-                        else -> {
-                            i--; 1
-                        }
+                        else -> { i--; 1 }
                     }
                 }
                 28 -> {
                     state = when (c) {
-                        'l', 'L' -> 34
-                        else -> {
-                            i--; 1
-                        }
+                        'n', 'N' -> 40
+                        else -> { i--; 1 }
                     }
                 }
                 29 -> {
                     state = when (c) {
-                        'l', 'L' -> 32
-                        else -> {
-                            i--; 1
-                        }
+                        'l', 'L' -> 35
+                        '-' -> 38
+                        else -> { i--; 1 }
                     }
                 }
                 30 -> {
                     state = when (c) {
-                        'a', 'A' -> 35
-                        else -> {
-                            i--; 3
-                        }
-                    }
-                }
-                31 -> {
-                    state = when (c) {
-                        's', 'S' -> 36
-                        else -> {
-                            i--; 1
-                        }
+                        'n', 'N' -> 36
+                        else -> { i--; 1 }
                     }
                 }
                 32 -> {
                     state = when (c) {
-                        'i', 'I' -> 38
-                        else -> {
-                            i--; 1
-                        }
+                        'l', 'L' -> 34
+                        '-' -> 37
+                        else -> { i--; 1 }
                     }
                 }
                 33 -> {
                     state = when (c) {
-                        's', 'S' -> 37
-                        else -> {
-                            i--; 1
-                        }
+                        'f', 'F' -> 39
+                        else -> { i--; 1 }
                     }
                 }
                 34 -> {
                     state = when (c) {
-                        'i', 'I' -> 40
-                        else -> {
-                            i--; 1
-                        }
+                        'i', 'I' -> 44
+                        else -> { i--; 1 }
                     }
                 }
                 35 -> {
                     state = when (c) {
-                        't', 'T' -> 39
-                        else -> {
-                            i--; 1
-                        }
+                        'i', 'I' -> 42
+                        else -> { i--; 1 }
                     }
                 }
                 36 -> {
+                    state = when (c) {
+                        'g', 'G' -> {
+                            report(context, element, source, begin, i, "?", true)
+                            1
+                        }
+                        else -> { i--; 1 }
+                    }
+                }
+                37 -> {
+                    state = when (c) {
+                        'l', 'L' -> 45
+                        else -> { i--; 1 }
+                    }
+                }
+                38 -> {
+                    state = when (c) {
+                        'l', 'L' -> 43
+                        else -> { i--; 1 }
+                    }
+                }
+                39 -> {
+                    state = when (c) {
+                        'a', 'A' -> 46
+                        else -> { i--; 3 }
+                    }
+                }
+                40 -> {
+                    state = when (c) {
+                        'g', 'G' -> {
+                            report(context, element, source, begin, i, "?", true)
+                            1
+                        }
+                        else -> { i--; 1 }
+                    }
+                }
+                42 -> {
+                    state = when (c) {
+                        's', 'S' -> 48
+                        else -> { i--; 1 }
+                    }
+                }
+                43 -> {
+                    state = when (c) {
+                        'i', 'I' -> 50
+                        else -> { i--; 1 }
+                    }
+                }
+                44 -> {
+                    state = when (c) {
+                        's', 'S' -> 49
+                        else -> { i--; 1 }
+                    }
+                }
+                45 -> {
+                    state = when (c) {
+                        'i', 'I' -> 52
+                        else -> { i--; 1 }
+                    }
+                }
+                46 -> {
+                    state = when (c) {
+                        't', 'T' -> 51
+                        else -> { i--; 1 }
+                    }
+                }
+                48 -> {
                     state = when (c) {
                         't', 'T' -> {
                             report(context, element, source, i - 9, i, "include", false)
                             1
                         }
-                        else -> {
-                            i--; 5
-                        }
+                        else -> { i--; 5 }
                     }
                 }
-                37 -> {
+                49 -> {
                     state = when (c) {
                         't', 'T' -> {
                             report(context, element, source, i - 9, i, "exclude", false)
                             1
                         }
-                        else -> {
-                            i--; 5
-                        }
+                        else -> { i--; 5 }
                     }
                 }
-                38 -> {
+                50 -> {
                     state = when (c) {
-                        's', 'S' -> 44
-                        else -> {
-                            i--; 1
-                        }
+                        's', 'S' -> 56
+                        else -> { i--; 1 }
                     }
                 }
-                39 -> {
+                51 -> {
                     state = when (c) {
-                        'h', 'H' -> 41
-                        else -> {
-                            i--; 1
-                        }
+                        'h', 'H' -> 53
+                        else -> { i--; 1 }
                     }
                 }
-                40 -> {
+                52 -> {
                     state = when (c) {
-                        's', 'S' -> 42
-                        else -> {
-                            i--; 1
-                        }
+                        's', 'S' -> 54
+                        else -> { i--; 1 }
                     }
                 }
-                41 -> {
+                53 -> {
                     state = when (c) {
-                        'e', 'E' -> 48
-                        else -> {
-                            i--; 1
-                        }
+                        'e', 'E' -> 60
+                        else -> { i--; 1 }
                     }
                 }
-                42 -> {
+                54 -> {
                     state = when (c) {
                         't', 'T' -> {
                             report(context, element, source, i - 10, i, "exclude", false)
                             1
                         }
-                        else -> {
-                            i--; 5
-                        }
+                        else -> { i--; 5 }
                     }
                 }
-                44 -> {
+                56 -> {
                     state = when (c) {
                         't', 'T' -> {
                             report(context, element, source, i - 10, i, "include", false)
                             1
                         }
-                        else -> {
-                            i--; 5
-                        }
+                        else -> { i--; 5 }
                     }
                 }
-                48 -> {
+                60 -> {
                     state = when (c) {
-                        'r', 'R' -> 49
-                        else -> {
-                            i--; 1
-                        }
+                        'r', 'R' -> 61
+                        else -> { i--; 1 }
                     }
                 }
-                49 -> {
+                61 -> {
                     state = when (c) {
-                        'e', 'E' -> 50
-                        else -> {
-                            i--; 1
-                        }
+                        'e', 'E' -> 62
+                        else -> { i--; 1 }
                     }
                 }
-                50 -> {
+                62 -> {
                     state = when (c) {
                         'd', 'D' -> {
                             report(context, element, source, begin, i, "baseline", true)
                             1
                         }
-                        else -> {
-                            i--; 1
-                        }
+                        else -> { i--; 1 }
                     }
                 }
             }
