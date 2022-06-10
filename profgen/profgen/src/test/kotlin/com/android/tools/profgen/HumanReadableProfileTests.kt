@@ -87,6 +87,19 @@ class HumanReadableProfileTests {
     }
 
     @Test
+    fun testMultiDimensionalArraysAreSkipped() {
+        val hrp = HumanReadableProfile(
+                "[Lkotlin/jvm/functions/Function;",
+                "[[Lkotlin/jvm/functions/Function;",
+                "Lcom/anything/can/go/here;",
+                "[[[Lkotlin/jvm/functions/Function;",
+                "[[[[Lkotlin/jvm/functions/Function;",
+        )
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(MethodFlags.STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
     fun testWhiteSpaceAndBlankLines() {
         with(HumanReadableProfile(
                 "",
