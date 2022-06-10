@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
@@ -111,10 +112,11 @@ class ProcessManifestForMetadataFeatureTaskTest {
                 </manifest>""".trimIndent()
             )
         }
-
+        val expectedNamespace = "com.foo.namespace"
         task.dynamicFeature.set(true)
         task.bundleManifest.set(sourceManifest)
         task.metadataFeatureManifest.set(temporaryFolder.newFile("output_manifest.xml"))
+        task.namespace.set(expectedNamespace)
         task.taskAction()
 
         val xmlDocument =
@@ -162,6 +164,9 @@ class ProcessManifestForMetadataFeatureTaskTest {
         Truth.assertThat(
             xmlDocument
                 .getElementsByTagName(SdkConstants.TAG_USES_SPLIT).length).isEqualTo(0)
+
+        Truth.assertThat(xmlDocument.documentElement.getAttribute(ATTR_PACKAGE))
+            .isEqualTo(expectedNamespace)
     }
 
     @Test
