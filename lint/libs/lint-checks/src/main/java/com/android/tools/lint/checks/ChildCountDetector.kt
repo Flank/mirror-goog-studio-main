@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.CLASS_NESTED_SCROLL_VIEW
+import com.android.AndroidXConstants.CLASS_NESTED_SCROLL_VIEW
 import com.android.SdkConstants.GRID_VIEW
 import com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW
 import com.android.SdkConstants.LIST_VIEW
@@ -75,12 +75,12 @@ class ChildCountDetector : LayoutDetector() {
     }
 
     override fun getApplicableElements(): Collection<String> = listOf(
-        SCROLL_VIEW,
-        HORIZONTAL_SCROLL_VIEW,
-        LIST_VIEW,
-        GRID_VIEW,
-        CLASS_NESTED_SCROLL_VIEW.oldName(),
-        CLASS_NESTED_SCROLL_VIEW.newName()
+      SCROLL_VIEW,
+      HORIZONTAL_SCROLL_VIEW,
+      LIST_VIEW,
+      GRID_VIEW,
+      CLASS_NESTED_SCROLL_VIEW.oldName(),
+      CLASS_NESTED_SCROLL_VIEW.newName()
         // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
     )
 

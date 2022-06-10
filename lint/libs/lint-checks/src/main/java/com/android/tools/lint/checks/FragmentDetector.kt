@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.CLASS_FRAGMENT
-import com.android.SdkConstants.CLASS_V4_FRAGMENT
+import com.android.AndroidXConstants.CLASS_V4_FRAGMENT
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation

@@ -16,14 +16,14 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER;
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN;
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS;
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_GROUP;
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_LAYER;
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_REFERENCE;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_REFERENCE;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;

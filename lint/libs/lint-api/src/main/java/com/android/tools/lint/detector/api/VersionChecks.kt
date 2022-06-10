@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.detector.api
 
+import com.android.AndroidXConstants
 import com.android.SdkConstants
 import com.android.sdklib.SdkVersionInfo
 import com.android.support.AndroidxName
@@ -135,7 +136,7 @@ class VersionChecks(
         private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
 
         @JvmField
-        val REQUIRES_API_ANNOTATION = AndroidxName.of(SdkConstants.SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
+        val REQUIRES_API_ANNOTATION = AndroidxName.of(AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
 
         /** SDK int method used by the data binding compiler. */
         private const val GET_BUILD_SDK_INT = "getBuildSdkInt"

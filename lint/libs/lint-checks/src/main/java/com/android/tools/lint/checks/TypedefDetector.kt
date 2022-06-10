@@ -17,9 +17,9 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROIDX_PKG_PREFIX
-import com.android.SdkConstants.INT_DEF_ANNOTATION
-import com.android.SdkConstants.LONG_DEF_ANNOTATION
-import com.android.SdkConstants.STRING_DEF_ANNOTATION
+import com.android.AndroidXConstants.INT_DEF_ANNOTATION
+import com.android.AndroidXConstants.LONG_DEF_ANNOTATION
+import com.android.AndroidXConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.toAndroidxAnnotation
@@ -80,17 +80,17 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class TypedefDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-        INT_DEF_ANNOTATION.oldName(),
-        INT_DEF_ANNOTATION.newName(),
-        LONG_DEF_ANNOTATION.oldName(),
-        LONG_DEF_ANNOTATION.newName(),
-        STRING_DEF_ANNOTATION.oldName(),
-        STRING_DEF_ANNOTATION.newName(),
+      INT_DEF_ANNOTATION.oldName(),
+      INT_DEF_ANNOTATION.newName(),
+      LONG_DEF_ANNOTATION.oldName(),
+      LONG_DEF_ANNOTATION.newName(),
+      STRING_DEF_ANNOTATION.oldName(),
+      STRING_DEF_ANNOTATION.newName(),
 
         // Such that the annotation is considered relevant by the annotation handler
         // even if the range check itself is disabled
-        INT_RANGE_ANNOTATION.oldName(),
-        INT_RANGE_ANNOTATION.newName()
+      INT_RANGE_ANNOTATION.oldName(),
+      INT_RANGE_ANNOTATION.newName()
     )
 
     override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =

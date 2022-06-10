@@ -21,12 +21,12 @@ import com.android.SdkConstants.ATTR_LAYOUT_HEIGHT
 import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.ATTR_LAYOUT_WIDTH
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
-import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_FLOW
-import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
-import com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
-import com.android.SdkConstants.CONSTRAINT_LAYOUT
-import com.android.SdkConstants.MOTION_LAYOUT
+import com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER
+import com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_FLOW
+import com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_GROUP
+import com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE
+import com.android.AndroidXConstants.CONSTRAINT_LAYOUT
+import com.android.AndroidXConstants.MOTION_LAYOUT
 import com.android.SdkConstants.TAG_INCLUDE
 import com.android.SdkConstants.VALUE_MATCH_PARENT
 import com.android.tools.lint.detector.api.Category
@@ -47,10 +47,10 @@ import org.w3c.dom.Node
 class ConstraintLayoutDetector : LayoutDetector() {
     override fun getApplicableElements(): Collection<String> {
         return setOf(
-            CONSTRAINT_LAYOUT.oldName(),
-            CONSTRAINT_LAYOUT.newName(),
-            MOTION_LAYOUT.oldName(),
-            MOTION_LAYOUT.newName()
+          CONSTRAINT_LAYOUT.oldName(),
+          CONSTRAINT_LAYOUT.newName(),
+          MOTION_LAYOUT.oldName(),
+          MOTION_LAYOUT.newName()
         )
     }
 

@@ -28,7 +28,7 @@ import com.android.SdkConstants.CLASS_BROADCASTRECEIVER
 import com.android.SdkConstants.CLASS_CONTENTPROVIDER
 import com.android.SdkConstants.CLASS_FRAGMENT
 import com.android.SdkConstants.CLASS_SERVICE
-import com.android.SdkConstants.CLASS_V4_FRAGMENT
+import com.android.AndroidXConstants.CLASS_V4_FRAGMENT
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.SdkConstants.TAG_ACTIVITY
 import com.android.SdkConstants.TAG_APPLICATION
