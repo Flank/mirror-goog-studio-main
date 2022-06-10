@@ -150,12 +150,8 @@ class PrivacySandboxSdkTest {
     fun testAsb() {
         project.execute(":sdkLib1:assemble")
 
-        val asbFile = FileUtils.join(
-            project.getSubproject(":sdkLib1").intermediatesDir,
-            "asb",
-            "single",
-            "sdkLib1.asb"
-        )
+        val asbFile =
+            project.getSubproject(":sdkLib1").getOutputFile("asb", "single", "sdkLib1.asb")
 
         assertThat(asbFile.exists()).isTrue()
 
