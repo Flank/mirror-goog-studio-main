@@ -119,7 +119,7 @@ class PluralsDetector : ResourceXmlDetector() {
         val missing = relevant.clone()
         missing.removeAll(defined)
         if (!missing.isEmpty()) {
-            val examplesLookup = PluralExamplesLookup.instance
+            val examplesLookup = PluralExamplesLookup.getInstance()
             val withExamples = missing.map { form ->
                 val example = examplesLookup.findExample(language, form.name)
                 form to example?.formattedWithNumber()
@@ -216,7 +216,7 @@ class PluralsDetector : ResourceXmlDetector() {
 
                 In these locales, it is usually an error to have a message which does not include a formatting argument (such as '%d'), \
                 since it will not be clear from the grammar what quantity the quantity string is describing.
-            """.trimIndent(),
+                """,
             category = Category.MESSAGES,
             priority = 5,
             severity = Severity.ERROR,

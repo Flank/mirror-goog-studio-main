@@ -24,18 +24,22 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
-import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
@@ -54,6 +58,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -75,8 +80,13 @@ import javax.inject.Inject
 abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 
+    @get:Optional
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
+
+    @get:Optional
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -119,6 +129,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     @get:Optional
     abstract val appMetadata: RegularFileProperty
 
+    @get:Optional
     @get:Input
     abstract val fileName: Property<String>
 
@@ -126,9 +137,11 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     val jarCreatorType: Property<JarCreatorType> = objects.property(JarCreatorType::class.java)
 
     public override fun doTaskAction() {
+        val outputPath =
+            (outputFile.orNull?.asFile ?: File(outputDir.get().asFile, fileName.get())).toPath()
         val jarCreator =
             JarCreatorFactory.make(
-                jarFile = File(outputDir.get().asFile, fileName.get()).toPath(),
+                jarFile = outputPath,
                 type = jarCreatorType.get()
             )
 
@@ -214,6 +227,58 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     }
 
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
+
+    class PrivacySandboxSdkCreationAction(
+        private val creationConfig: PrivacySandboxSdkVariantScope
+    ): TaskCreationAction<PerModuleBundleTask>() {
+
+        override val name: String = "buildModuleForBundle"
+        override val type: Class<PerModuleBundleTask> = PerModuleBundleTask::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<PerModuleBundleTask>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(
+                taskProvider,
+                PerModuleBundleTask::outputFile
+            ).withName("base.zip").on(PrivacySandboxSdkInternalArtifactType.MODULE_BUNDLE)
+        }
+
+        override fun configure(task: PerModuleBundleTask) {
+            task.dexFiles.fromDisallowChanges(
+                creationConfig.artifacts.get(
+                    PrivacySandboxSdkInternalArtifactType.DEX
+                )
+            )
+
+            task.assetsFilesDirectory.setDisallowChanges(
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS)
+            )
+            task.resFiles.setDisallowChanges(
+                creationConfig.artifacts.get(
+                    PrivacySandboxSdkInternalArtifactType.LINKED_MERGE_RES_FOR_ASB
+                )
+            )
+
+            // TODO(b/234613831): Support java resources
+            //    task.javaResFiles.fromDisallowChanges(
+            //        creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
+            //    )
+
+            // Not applicable
+            task.featureDexFiles.fromDisallowChanges()
+            task.featureJavaResFiles.fromDisallowChanges()
+            task.nativeLibsFiles.fromDisallowChanges()
+            task.abiFilters.setDisallowChanges(emptySet())
+
+            task.jarCreatorType.setDisallowChanges(
+                if (creationConfig.services.projectOptions.get(BooleanOption.USE_NEW_JAR_CREATOR)) {
+                    JarCreatorType.JAR_FLINGER
+                } else {
+                    JarCreatorType.JAR_MERGER
+                }
+            )
+        }
+    }
 
     class CreationAction(
         creationConfig: ApkCreationConfig

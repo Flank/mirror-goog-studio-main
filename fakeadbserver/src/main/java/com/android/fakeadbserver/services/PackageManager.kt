@@ -93,6 +93,9 @@ class PackageManager : Service {
                 serviceOutput.writeStdout("Success\n")
                 serviceOutput.writeExitCode(0)
             }
+            cmd.startsWith("install") -> {
+                commit(args.drop(1), serviceOutput)
+            }
 
             else -> {
                 serviceOutput.writeStderr("Error: Package command '$cmd' is not supported")

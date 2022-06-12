@@ -23,6 +23,7 @@ import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Zip;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -193,5 +194,19 @@ public class ExtractAnnotationsTest {
                         throw new UncheckedIOException(e);
                     }
                 });
+    }
+
+    /** Regression test for Issue 234865137 */
+    @Test
+    public void checkNonExistentGeneratedBytecodeDirectory() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n\n"
+                        + "android.libraryVariants.all { variant ->\n"
+                        + "    variant.registerPreJavacGeneratedBytecode(\n"
+                        + "        project.files('/does/not/exist')\n"
+                        + "    )\n"
+                        + "}\n");
+        project.execute("clean", "assembleDebug");
     }
 }

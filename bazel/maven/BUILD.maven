@@ -205,7 +205,6 @@ maven_import(
     ],
     exports = [
         "com.google.guava.guava",
-        "org.slf4j.slf4j-api",
     ],
     deps = [
         "com.android.tools.build.aapt2-proto",
@@ -216,6 +215,7 @@ maven_import(
         "com.google.dagger.dagger",
         "javax.inject.javax.inject",
         "org.bitbucket.b_c.jose4j",
+        "org.slf4j.slf4j-api",
     ],
     original_deps = [
         "com.android.tools.build.aapt2-proto_7.3.0-alpha07-8248216",
@@ -589,25 +589,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.github.javaparser.javaparser-core_3.23.0",
-    pom = "repository/com/github/javaparser/javaparser-core/3.23.0/javaparser-core-3.23.0.pom",
+    name = "com.github.javaparser.javaparser-core_3.24.0",
+    pom = "repository/com/github/javaparser/javaparser-core/3.24.0/javaparser-core-3.24.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/github/javaparser/javaparser-core/3.23.0",
-    parent = "com.github.javaparser.javaparser-parent_3.23.0",
+    repo_path = "com/github/javaparser/javaparser-core/3.24.0",
+    parent = "com.github.javaparser.javaparser-parent_3.24.0",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.github.javaparser.javaparser-core",
     classifiers = [],
-    parent = "com.github.javaparser.javaparser-parent_3.23.0",
+    parent = "com.github.javaparser.javaparser-parent_3.24.0",
     jars = [
-        "repository/com/github/javaparser/javaparser-core/3.23.0/javaparser-core-3.23.0.jar"
+        "repository/com/github/javaparser/javaparser-core/3.24.0/javaparser-core-3.24.0.jar"
     ],
     original_deps = [],
-    pom = "repository/com/github/javaparser/javaparser-core/3.23.0/javaparser-core-3.23.0.pom",
+    pom = "repository/com/github/javaparser/javaparser-core/3.24.0/javaparser-core-3.24.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/github/javaparser/javaparser-core/3.23.0",
+    repo_path = "com/github/javaparser/javaparser-core/3.24.0",
     visibility = ["//visibility:public"],
 )
 
@@ -4349,36 +4349,36 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-antlr_1.10.11",
-    pom = "repository/org/apache/ant/ant-antlr/1.10.11/ant-antlr-1.10.11.pom",
+    name = "org.apache.ant.ant-antlr_1.10.12",
+    pom = "repository/org/apache/ant/ant-antlr/1.10.12/ant-antlr-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-antlr/1.10.11",
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    repo_path = "org/apache/ant/ant-antlr/1.10.12",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.apache.ant.ant-antlr",
     classifiers = [],
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     jars = [
-        "repository/org/apache/ant/ant-antlr/1.10.11/ant-antlr-1.10.11.jar"
+        "repository/org/apache/ant/ant-antlr/1.10.12/ant-antlr-1.10.12.jar"
     ],
     original_deps = [],
-    pom = "repository/org/apache/ant/ant-antlr/1.10.11/ant-antlr-1.10.11.pom",
+    pom = "repository/org/apache/ant/ant-antlr/1.10.12/ant-antlr-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-antlr/1.10.11",
+    repo_path = "org/apache/ant/ant-antlr/1.10.12",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-junit_1.10.11",
-    pom = "repository/org/apache/ant/ant-junit/1.10.11/ant-junit-1.10.11.pom",
+    name = "org.apache.ant.ant-junit_1.10.12",
+    pom = "repository/org/apache/ant/ant-junit/1.10.12/ant-junit-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-junit/1.10.11",
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    repo_path = "org/apache/ant/ant-junit/1.10.12",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     deps = [
-        "org.apache.ant.ant_1.10.11",
+        "org.apache.ant.ant_1.10.12",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4386,53 +4386,53 @@ maven_artifact(
 maven_import(
     name = "org.apache.ant.ant-junit",
     classifiers = [],
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     jars = [
-        "repository/org/apache/ant/ant-junit/1.10.11/ant-junit-1.10.11.jar"
+        "repository/org/apache/ant/ant-junit/1.10.12/ant-junit-1.10.12.jar"
     ],
     exports = [
         "org.apache.ant.ant",
     ],
     original_deps = [
-        "org.apache.ant.ant_1.10.11",
+        "org.apache.ant.ant_1.10.12",
     ],
-    pom = "repository/org/apache/ant/ant-junit/1.10.11/ant-junit-1.10.11.pom",
+    pom = "repository/org/apache/ant/ant-junit/1.10.12/ant-junit-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-junit/1.10.11",
+    repo_path = "org/apache/ant/ant-junit/1.10.12",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-launcher_1.10.11",
-    pom = "repository/org/apache/ant/ant-launcher/1.10.11/ant-launcher-1.10.11.pom",
+    name = "org.apache.ant.ant-launcher_1.10.12",
+    pom = "repository/org/apache/ant/ant-launcher/1.10.12/ant-launcher-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-launcher/1.10.11",
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    repo_path = "org/apache/ant/ant-launcher/1.10.12",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.apache.ant.ant-launcher",
     classifiers = [],
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     jars = [
-        "repository/org/apache/ant/ant-launcher/1.10.11/ant-launcher-1.10.11.jar"
+        "repository/org/apache/ant/ant-launcher/1.10.12/ant-launcher-1.10.12.jar"
     ],
     original_deps = [],
-    pom = "repository/org/apache/ant/ant-launcher/1.10.11/ant-launcher-1.10.11.pom",
+    pom = "repository/org/apache/ant/ant-launcher/1.10.12/ant-launcher-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-launcher/1.10.11",
+    repo_path = "org/apache/ant/ant-launcher/1.10.12",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant_1.10.11",
-    pom = "repository/org/apache/ant/ant/1.10.11/ant-1.10.11.pom",
+    name = "org.apache.ant.ant_1.10.12",
+    pom = "repository/org/apache/ant/ant/1.10.12/ant-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant/1.10.11",
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    repo_path = "org/apache/ant/ant/1.10.12",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     deps = [
-        "org.apache.ant.ant-launcher_1.10.11",
+        "org.apache.ant.ant-launcher_1.10.12",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4440,19 +4440,19 @@ maven_artifact(
 maven_import(
     name = "org.apache.ant.ant",
     classifiers = [],
-    parent = "org.apache.ant.ant-parent_1.10.11",
+    parent = "org.apache.ant.ant-parent_1.10.12",
     jars = [
-        "repository/org/apache/ant/ant/1.10.11/ant-1.10.11.jar"
+        "repository/org/apache/ant/ant/1.10.12/ant-1.10.12.jar"
     ],
     exports = [
         "org.apache.ant.ant-launcher",
     ],
     original_deps = [
-        "org.apache.ant.ant-launcher_1.10.11",
+        "org.apache.ant.ant-launcher_1.10.12",
     ],
-    pom = "repository/org/apache/ant/ant/1.10.11/ant-1.10.11.pom",
+    pom = "repository/org/apache/ant/ant/1.10.12/ant-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant/1.10.11",
+    repo_path = "org/apache/ant/ant/1.10.12",
     visibility = ["//visibility:public"],
 )
 
@@ -5009,33 +5009,33 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-all_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-all/3.0.9/groovy-all-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-all_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-all/3.0.10/groovy-all-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-all/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-all/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-ant_3.0.9",
-        "org.codehaus.groovy.groovy-astbuilder_3.0.9",
-        "org.codehaus.groovy.groovy-cli-picocli_3.0.9",
-        "org.codehaus.groovy.groovy-console_3.0.9",
-        "org.codehaus.groovy.groovy-datetime_3.0.9",
-        "org.codehaus.groovy.groovy-docgenerator_3.0.9",
-        "org.codehaus.groovy.groovy-groovydoc_3.0.9",
-        "org.codehaus.groovy.groovy-groovysh_3.0.9",
-        "org.codehaus.groovy.groovy-jmx_3.0.9",
-        "org.codehaus.groovy.groovy-json_3.0.9",
-        "org.codehaus.groovy.groovy-jsr223_3.0.9",
-        "org.codehaus.groovy.groovy-macro_3.0.9",
-        "org.codehaus.groovy.groovy-nio_3.0.9",
-        "org.codehaus.groovy.groovy-servlet_3.0.9",
-        "org.codehaus.groovy.groovy-sql_3.0.9",
-        "org.codehaus.groovy.groovy-swing_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-test_3.0.9",
-        "org.codehaus.groovy.groovy-test-junit5_3.0.9",
-        "org.codehaus.groovy.groovy-testng_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-ant_3.0.10",
+        "org.codehaus.groovy.groovy-astbuilder_3.0.10",
+        "org.codehaus.groovy.groovy-cli-picocli_3.0.10",
+        "org.codehaus.groovy.groovy-console_3.0.10",
+        "org.codehaus.groovy.groovy-datetime_3.0.10",
+        "org.codehaus.groovy.groovy-docgenerator_3.0.10",
+        "org.codehaus.groovy.groovy-groovydoc_3.0.10",
+        "org.codehaus.groovy.groovy-groovysh_3.0.10",
+        "org.codehaus.groovy.groovy-jmx_3.0.10",
+        "org.codehaus.groovy.groovy-json_3.0.10",
+        "org.codehaus.groovy.groovy-jsr223_3.0.10",
+        "org.codehaus.groovy.groovy-macro_3.0.10",
+        "org.codehaus.groovy.groovy-nio_3.0.10",
+        "org.codehaus.groovy.groovy-servlet_3.0.10",
+        "org.codehaus.groovy.groovy-sql_3.0.10",
+        "org.codehaus.groovy.groovy-swing_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-test_3.0.10",
+        "org.codehaus.groovy.groovy-test-junit5_3.0.10",
+        "org.codehaus.groovy.groovy-testng_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5070,47 +5070,47 @@ maven_import(
         "org.codehaus.groovy.groovy-xml",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-ant_3.0.9",
-        "org.codehaus.groovy.groovy-astbuilder_3.0.9",
-        "org.codehaus.groovy.groovy-cli-picocli_3.0.9",
-        "org.codehaus.groovy.groovy-console_3.0.9",
-        "org.codehaus.groovy.groovy-datetime_3.0.9",
-        "org.codehaus.groovy.groovy-docgenerator_3.0.9",
-        "org.codehaus.groovy.groovy-groovydoc_3.0.9",
-        "org.codehaus.groovy.groovy-groovysh_3.0.9",
-        "org.codehaus.groovy.groovy-jmx_3.0.9",
-        "org.codehaus.groovy.groovy-json_3.0.9",
-        "org.codehaus.groovy.groovy-jsr223_3.0.9",
-        "org.codehaus.groovy.groovy-macro_3.0.9",
-        "org.codehaus.groovy.groovy-nio_3.0.9",
-        "org.codehaus.groovy.groovy-servlet_3.0.9",
-        "org.codehaus.groovy.groovy-sql_3.0.9",
-        "org.codehaus.groovy.groovy-swing_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-test_3.0.9",
-        "org.codehaus.groovy.groovy-test-junit5_3.0.9",
-        "org.codehaus.groovy.groovy-testng_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-ant_3.0.10",
+        "org.codehaus.groovy.groovy-astbuilder_3.0.10",
+        "org.codehaus.groovy.groovy-cli-picocli_3.0.10",
+        "org.codehaus.groovy.groovy-console_3.0.10",
+        "org.codehaus.groovy.groovy-datetime_3.0.10",
+        "org.codehaus.groovy.groovy-docgenerator_3.0.10",
+        "org.codehaus.groovy.groovy-groovydoc_3.0.10",
+        "org.codehaus.groovy.groovy-groovysh_3.0.10",
+        "org.codehaus.groovy.groovy-jmx_3.0.10",
+        "org.codehaus.groovy.groovy-json_3.0.10",
+        "org.codehaus.groovy.groovy-jsr223_3.0.10",
+        "org.codehaus.groovy.groovy-macro_3.0.10",
+        "org.codehaus.groovy.groovy-nio_3.0.10",
+        "org.codehaus.groovy.groovy-servlet_3.0.10",
+        "org.codehaus.groovy.groovy-sql_3.0.10",
+        "org.codehaus.groovy.groovy-swing_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-test_3.0.10",
+        "org.codehaus.groovy.groovy-test-junit5_3.0.10",
+        "org.codehaus.groovy.groovy-testng_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-all/3.0.9/groovy-all-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-all/3.0.10/groovy-all-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-all/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-all/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-ant_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-ant/3.0.9/groovy-ant-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-ant_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-ant/3.0.10/groovy-ant-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-ant/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-ant/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.apache.ant.ant_1.10.11",
-        "org.apache.ant.ant-junit_1.10.11",
-        "org.apache.ant.ant-launcher_1.10.11",
-        "org.apache.ant.ant-antlr_1.10.11",
-        "org.codehaus.groovy.groovy-groovydoc_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.apache.ant.ant_1.10.12",
+        "org.apache.ant.ant-junit_1.10.12",
+        "org.apache.ant.ant-launcher_1.10.12",
+        "org.apache.ant.ant-antlr_1.10.12",
+        "org.codehaus.groovy.groovy-groovydoc_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5119,7 +5119,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-ant",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-ant/3.0.9/groovy-ant-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-ant/3.0.10/groovy-ant-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5132,26 +5132,26 @@ maven_import(
         "org.codehaus.groovy.groovy-groovydoc",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.apache.ant.ant_1.10.11",
-        "org.apache.ant.ant-junit_1.10.11",
-        "org.apache.ant.ant-launcher_1.10.11",
-        "org.apache.ant.ant-antlr_1.10.11",
-        "org.codehaus.groovy.groovy-groovydoc_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.apache.ant.ant_1.10.12",
+        "org.apache.ant.ant-junit_1.10.12",
+        "org.apache.ant.ant-launcher_1.10.12",
+        "org.apache.ant.ant-antlr_1.10.12",
+        "org.codehaus.groovy.groovy-groovydoc_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-ant/3.0.9/groovy-ant-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-ant/3.0.10/groovy-ant-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-ant/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-ant/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-astbuilder_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-astbuilder/3.0.9/groovy-astbuilder-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-astbuilder_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-astbuilder/3.0.10/groovy-astbuilder-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-astbuilder/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-astbuilder/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5160,27 +5160,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-astbuilder",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-astbuilder/3.0.9/groovy-astbuilder-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-astbuilder/3.0.10/groovy-astbuilder-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-astbuilder/3.0.9/groovy-astbuilder-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-astbuilder/3.0.10/groovy-astbuilder-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-astbuilder/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-astbuilder/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-cli-picocli_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.9/groovy-cli-picocli-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-cli-picocli_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.10/groovy-cli-picocli-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-cli-picocli/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-cli-picocli/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
         "info.picocli.picocli_4.6.1",
     ],
     visibility = ["//visibility:public"],
@@ -5190,7 +5190,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-cli-picocli",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.9/groovy-cli-picocli-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.10/groovy-cli-picocli-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5199,24 +5199,24 @@ maven_import(
         "info.picocli.picocli",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
         "info.picocli.picocli_4.6.1",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.9/groovy-cli-picocli-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-cli-picocli/3.0.10/groovy-cli-picocli-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-cli-picocli/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-cli-picocli/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-console_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-console/3.0.9/groovy-console-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-console_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-console/3.0.10/groovy-console-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-console/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-console/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-swing_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-swing_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5225,7 +5225,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-console",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-console/3.0.9/groovy-console-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-console/3.0.10/groovy-console-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5233,23 +5233,23 @@ maven_import(
         "org.codehaus.groovy.groovy-swing",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-swing_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-swing_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-console/3.0.9/groovy-console-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-console/3.0.10/groovy-console-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-console/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-console/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-datetime_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-datetime/3.0.9/groovy-datetime-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-datetime_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-datetime/3.0.10/groovy-datetime-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-datetime/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-datetime/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5258,28 +5258,28 @@ maven_import(
     name = "org.codehaus.groovy.groovy-datetime",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-datetime/3.0.9/groovy-datetime-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-datetime/3.0.10/groovy-datetime-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-datetime/3.0.9/groovy-datetime-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-datetime/3.0.10/groovy-datetime-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-datetime/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-datetime/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-docgenerator_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-docgenerator/3.0.9/groovy-docgenerator-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-docgenerator_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-docgenerator/3.0.10/groovy-docgenerator-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-docgenerator/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-docgenerator/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy_3.0.10",
         "com.thoughtworks.qdox.qdox_1.12.1",
     ],
     visibility = ["//visibility:public"],
@@ -5289,7 +5289,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-docgenerator",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-docgenerator/3.0.9/groovy-docgenerator-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-docgenerator/3.0.10/groovy-docgenerator-3.0.10.jar"
     ],
     deps = [
         "org.codehaus.groovy.groovy-templates",
@@ -5297,26 +5297,26 @@ maven_import(
         "com.thoughtworks.qdox.qdox",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy_3.0.10",
         "com.thoughtworks.qdox.qdox_1.12.1",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-docgenerator/3.0.9/groovy-docgenerator-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-docgenerator/3.0.10/groovy-docgenerator-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-docgenerator/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-docgenerator/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-groovydoc_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-groovydoc/3.0.9/groovy-groovydoc-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-groovydoc_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-groovydoc/3.0.10/groovy-groovydoc-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-groovydoc/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-groovydoc/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "com.github.javaparser.javaparser-core_3.23.0",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-docgenerator_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "com.github.javaparser.javaparser-core_3.24.0",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-docgenerator_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5325,7 +5325,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-groovydoc",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-groovydoc/3.0.9/groovy-groovydoc-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-groovydoc/3.0.10/groovy-groovydoc-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5336,27 +5336,27 @@ maven_import(
         "org.codehaus.groovy.groovy-docgenerator",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "com.github.javaparser.javaparser-core_3.23.0",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-docgenerator_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "com.github.javaparser.javaparser-core_3.24.0",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-docgenerator_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-groovydoc/3.0.9/groovy-groovydoc-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-groovydoc/3.0.10/groovy-groovydoc-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-groovydoc/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-groovydoc/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-groovysh_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-groovysh/3.0.9/groovy-groovysh-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-groovysh_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-groovysh/3.0.10/groovy-groovysh-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-groovysh/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-groovysh/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-console_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-console_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
         "jline.jline_2.14.6",
     ],
     visibility = ["//visibility:public"],
@@ -5366,7 +5366,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-groovysh",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-groovysh/3.0.9/groovy-groovysh-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-groovysh/3.0.10/groovy-groovysh-3.0.10.jar"
     ],
     deps = [
         "org.codehaus.groovy.groovy-templates",
@@ -5376,25 +5376,25 @@ maven_import(
         "jline.jline",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-console_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-console_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
         "jline.jline_2.14.6",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-groovysh/3.0.9/groovy-groovysh-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-groovysh/3.0.10/groovy-groovysh-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-groovysh/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-groovysh/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-jmx_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-jmx/3.0.9/groovy-jmx-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-jmx_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-jmx/3.0.10/groovy-jmx-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-jmx/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-jmx/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5403,27 +5403,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-jmx",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-jmx/3.0.9/groovy-jmx-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-jmx/3.0.10/groovy-jmx-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-jmx/3.0.9/groovy-jmx-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-jmx/3.0.10/groovy-jmx-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-jmx/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-jmx/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-json_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-json/3.0.9/groovy-json-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-json_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-json/3.0.10/groovy-json-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-json/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-json/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5432,27 +5432,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-json",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-json/3.0.9/groovy-json-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-json/3.0.10/groovy-json-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-json/3.0.9/groovy-json-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-json/3.0.10/groovy-json-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-json/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-json/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-jsr223_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-jsr223/3.0.9/groovy-jsr223-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-jsr223_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-jsr223/3.0.10/groovy-jsr223-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-jsr223/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-jsr223/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5461,27 +5461,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-jsr223",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-jsr223/3.0.9/groovy-jsr223-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-jsr223/3.0.10/groovy-jsr223-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-jsr223/3.0.9/groovy-jsr223-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-jsr223/3.0.10/groovy-jsr223-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-jsr223/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-jsr223/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-macro_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-macro/3.0.9/groovy-macro-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-macro_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-macro/3.0.10/groovy-macro-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-macro/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-macro/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5490,27 +5490,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-macro",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-macro/3.0.9/groovy-macro-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-macro/3.0.10/groovy-macro-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-macro/3.0.9/groovy-macro-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-macro/3.0.10/groovy-macro-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-macro/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-macro/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-nio_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-nio/3.0.9/groovy-nio-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-nio_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-nio/3.0.10/groovy-nio-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-nio/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-nio/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5519,29 +5519,29 @@ maven_import(
     name = "org.codehaus.groovy.groovy-nio",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-nio/3.0.9/groovy-nio-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-nio/3.0.10/groovy-nio-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-nio/3.0.9/groovy-nio-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-nio/3.0.10/groovy-nio-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-nio/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-nio/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-servlet_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-servlet/3.0.9/groovy-servlet-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-servlet_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-servlet/3.0.10/groovy-servlet-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-servlet/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-servlet/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5550,7 +5550,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-servlet",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-servlet/3.0.9/groovy-servlet-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-servlet/3.0.10/groovy-servlet-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5560,23 +5560,23 @@ maven_import(
         "org.codehaus.groovy.groovy-xml",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-templates_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-templates_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-servlet/3.0.9/groovy-servlet-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-servlet/3.0.10/groovy-servlet-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-servlet/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-servlet/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-sql_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-sql/3.0.9/groovy-sql-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-sql_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-sql/3.0.10/groovy-sql-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-sql/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-sql/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5585,27 +5585,27 @@ maven_import(
     name = "org.codehaus.groovy.groovy-sql",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-sql/3.0.9/groovy-sql-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-sql/3.0.10/groovy-sql-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-sql/3.0.9/groovy-sql-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-sql/3.0.10/groovy-sql-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-sql/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-sql/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-swing_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-swing/3.0.9/groovy-swing-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-swing_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-swing/3.0.10/groovy-swing-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-swing/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-swing/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5614,28 +5614,28 @@ maven_import(
     name = "org.codehaus.groovy.groovy-swing",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-swing/3.0.9/groovy-swing-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-swing/3.0.10/groovy-swing-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-swing/3.0.9/groovy-swing-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-swing/3.0.10/groovy-swing-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-swing/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-swing/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-templates_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-templates/3.0.9/groovy-templates-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-templates_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-templates/3.0.10/groovy-templates-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-templates/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-templates/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5644,32 +5644,32 @@ maven_import(
     name = "org.codehaus.groovy.groovy-templates",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-templates/3.0.9/groovy-templates-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-templates/3.0.10/groovy-templates-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
         "org.codehaus.groovy.groovy-xml",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.codehaus.groovy.groovy-xml_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.codehaus.groovy.groovy-xml_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-templates/3.0.9/groovy-templates-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-templates/3.0.10/groovy-templates-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-templates/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-templates/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-test-junit5_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-test-junit5/3.0.9/groovy-test-junit5-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-test-junit5_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-test-junit5/3.0.10/groovy-test-junit5-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-test-junit5/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-test-junit5/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.junit.jupiter.junit-jupiter-api_5.7.2",
-        "org.junit.platform.junit-platform-launcher_1.7.2",
-        "org.junit.jupiter.junit-jupiter-engine_5.7.2",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.junit.jupiter.junit-jupiter-api_5.8.2",
+        "org.junit.platform.junit-platform-launcher_1.8.2",
+        "org.junit.jupiter.junit-jupiter-engine_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5678,7 +5678,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-test-junit5",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-test-junit5/3.0.9/groovy-test-junit5-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-test-junit5/3.0.10/groovy-test-junit5-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5689,24 +5689,24 @@ maven_import(
         "org.junit.jupiter.junit-jupiter-engine",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.junit.jupiter.junit-jupiter-api_5.7.2",
-        "org.junit.platform.junit-platform-launcher_1.7.2",
-        "org.junit.jupiter.junit-jupiter-engine_5.7.2",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.junit.jupiter.junit-jupiter-api_5.8.2",
+        "org.junit.platform.junit-platform-launcher_1.8.2",
+        "org.junit.jupiter.junit-jupiter-engine_5.8.2",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-test-junit5/3.0.9/groovy-test-junit5-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-test-junit5/3.0.10/groovy-test-junit5-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-test-junit5/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-test-junit5/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-test_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-test/3.0.9/groovy-test-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-test_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-test/3.0.10/groovy-test-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-test/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-test/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
         "junit.junit_4.13.2",
     ],
     visibility = ["//visibility:public"],
@@ -5716,30 +5716,30 @@ maven_import(
     name = "org.codehaus.groovy.groovy-test",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-test/3.0.9/groovy-test-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-test/3.0.10/groovy-test-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
         "junit.junit",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
         "junit.junit_4.13.2",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-test/3.0.9/groovy-test-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-test/3.0.10/groovy-test-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-test/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-test/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-testng_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-testng/3.0.9/groovy-testng-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-testng_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-testng/3.0.10/groovy-testng-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-testng/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-testng/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.testng.testng_7.4.0",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.testng.testng_7.5",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5748,7 +5748,7 @@ maven_import(
     name = "org.codehaus.groovy.groovy-testng",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-testng/3.0.9/groovy-testng-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-testng/3.0.10/groovy-testng-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
@@ -5757,22 +5757,22 @@ maven_import(
         "org.testng.testng",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
-        "org.testng.testng_7.4.0",
+        "org.codehaus.groovy.groovy_3.0.10",
+        "org.testng.testng_7.5",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-testng/3.0.9/groovy-testng-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-testng/3.0.10/groovy-testng-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-testng/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-testng/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy-xml_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy-xml/3.0.9/groovy-xml-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy-xml_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy-xml/3.0.10/groovy-xml-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-xml/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-xml/3.0.10",
     deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
     visibility = ["//visibility:public"],
 )
@@ -5781,25 +5781,25 @@ maven_import(
     name = "org.codehaus.groovy.groovy-xml",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy-xml/3.0.9/groovy-xml-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy-xml/3.0.10/groovy-xml-3.0.10.jar"
     ],
     exports = [
         "org.codehaus.groovy.groovy",
     ],
     original_deps = [
-        "org.codehaus.groovy.groovy_3.0.9",
+        "org.codehaus.groovy.groovy_3.0.10",
     ],
-    pom = "repository/org/codehaus/groovy/groovy-xml/3.0.9/groovy-xml-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy-xml/3.0.10/groovy-xml-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy-xml/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy-xml/3.0.10",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.codehaus.groovy.groovy_3.0.9",
-    pom = "repository/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.pom",
+    name = "org.codehaus.groovy.groovy_3.0.10",
+    pom = "repository/org/codehaus/groovy/groovy/3.0.10/groovy-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy/3.0.10",
     visibility = ["//visibility:public"],
 )
 
@@ -5807,12 +5807,12 @@ maven_import(
     name = "org.codehaus.groovy.groovy",
     classifiers = [],
     jars = [
-        "repository/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.jar"
+        "repository/org/codehaus/groovy/groovy/3.0.10/groovy-3.0.10.jar"
     ],
     original_deps = [],
-    pom = "repository/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.pom",
+    pom = "repository/org/codehaus/groovy/groovy/3.0.10/groovy-3.0.10.pom",
     repo_root_path = "repository",
-    repo_path = "org/codehaus/groovy/groovy/3.0.9",
+    repo_path = "org/codehaus/groovy/groovy/3.0.10",
     visibility = ["//visibility:public"],
 )
 
@@ -6414,10 +6414,10 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.gradle.gradle-tooling-api_7.4",
-    pom = "repository/org/gradle/gradle-tooling-api/7.4/gradle-tooling-api-7.4.pom",
+    name = "org.gradle.gradle-tooling-api_7.5-rc-1",
+    pom = "repository/org/gradle/gradle-tooling-api/7.5-rc-1/gradle-tooling-api-7.5-rc-1.pom",
     repo_root_path = "repository",
-    repo_path = "org/gradle/gradle-tooling-api/7.4",
+    repo_path = "org/gradle/gradle-tooling-api/7.5-rc-1",
     deps = [
         "org.slf4j.slf4j-api_1.7.30",
     ],
@@ -6428,7 +6428,7 @@ maven_import(
     name = "org.gradle.gradle-tooling-api",
     classifiers = [],
     jars = [
-        "repository/org/gradle/gradle-tooling-api/7.4/gradle-tooling-api-7.4.jar"
+        "repository/org/gradle/gradle-tooling-api/7.5-rc-1/gradle-tooling-api-7.5-rc-1.jar"
     ],
     exports = [
         "org.slf4j.slf4j-api",
@@ -6436,9 +6436,9 @@ maven_import(
     original_deps = [
         "org.slf4j.slf4j-api_1.7.30",
     ],
-    pom = "repository/org/gradle/gradle-tooling-api/7.4/gradle-tooling-api-7.4.pom",
+    pom = "repository/org/gradle/gradle-tooling-api/7.5-rc-1/gradle-tooling-api-7.5-rc-1.pom",
     repo_root_path = "repository",
-    repo_path = "org/gradle/gradle-tooling-api/7.4",
+    repo_path = "org/gradle/gradle-tooling-api/7.5-rc-1",
     visibility = ["//visibility:public"],
 )
 
@@ -6467,38 +6467,38 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.jacoco.org.jacoco.agent_0.8.7",
-    pom = "repository/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7.pom",
+    name = "org.jacoco.org.jacoco.agent_0.8.8",
+    pom = "repository/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.agent/0.8.7",
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    repo_path = "org/jacoco/org.jacoco.agent/0.8.8",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.jacoco.org.jacoco.agent",
     classifiers = [],
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     jars = [
-        "repository/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7.jar"
+        "repository/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8.jar"
     ],
     original_deps = [],
-    pom = "repository/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7.pom",
+    pom = "repository/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.agent/0.8.7",
+    repo_path = "org/jacoco/org.jacoco.agent/0.8.8",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.jacoco.org.jacoco.core_0.8.7",
-    pom = "repository/org/jacoco/org.jacoco.core/0.8.7/org.jacoco.core-0.8.7.pom",
+    name = "org.jacoco.org.jacoco.core_0.8.8",
+    pom = "repository/org/jacoco/org.jacoco.core/0.8.8/org.jacoco.core-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.core/0.8.7",
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    repo_path = "org/jacoco/org.jacoco.core/0.8.8",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-commons_9.1",
-        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-commons_9.2",
+        "org.ow2.asm.asm-tree_9.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -6506,9 +6506,9 @@ maven_artifact(
 maven_import(
     name = "org.jacoco.org.jacoco.core",
     classifiers = [],
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     jars = [
-        "repository/org/jacoco/org.jacoco.core/0.8.7/org.jacoco.core-0.8.7.jar"
+        "repository/org/jacoco/org.jacoco.core/0.8.8/org.jacoco.core-0.8.8.jar"
     ],
     exports = [
         "org.ow2.asm.asm",
@@ -6516,24 +6516,24 @@ maven_import(
         "org.ow2.asm.asm-tree",
     ],
     original_deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-commons_9.1",
-        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-commons_9.2",
+        "org.ow2.asm.asm-tree_9.2",
     ],
-    pom = "repository/org/jacoco/org.jacoco.core/0.8.7/org.jacoco.core-0.8.7.pom",
+    pom = "repository/org/jacoco/org.jacoco.core/0.8.8/org.jacoco.core-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.core/0.8.7",
+    repo_path = "org/jacoco/org.jacoco.core/0.8.8",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.jacoco.org.jacoco.report_0.8.7",
-    pom = "repository/org/jacoco/org.jacoco.report/0.8.7/org.jacoco.report-0.8.7.pom",
+    name = "org.jacoco.org.jacoco.report_0.8.8",
+    pom = "repository/org/jacoco/org.jacoco.report/0.8.8/org.jacoco.report-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.report/0.8.7",
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    repo_path = "org/jacoco/org.jacoco.report/0.8.8",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     deps = [
-        "org.jacoco.org.jacoco.core_0.8.7",
+        "org.jacoco.org.jacoco.core_0.8.8",
     ],
     visibility = ["//visibility:public"],
 )
@@ -6541,19 +6541,19 @@ maven_artifact(
 maven_import(
     name = "org.jacoco.org.jacoco.report",
     classifiers = [],
-    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
     jars = [
-        "repository/org/jacoco/org.jacoco.report/0.8.7/org.jacoco.report-0.8.7.jar"
+        "repository/org/jacoco/org.jacoco.report/0.8.8/org.jacoco.report-0.8.8.jar"
     ],
     exports = [
         "org.jacoco.org.jacoco.core",
     ],
     original_deps = [
-        "org.jacoco.org.jacoco.core_0.8.7",
+        "org.jacoco.org.jacoco.core_0.8.8",
     ],
-    pom = "repository/org/jacoco/org.jacoco.report/0.8.7/org.jacoco.report-0.8.7.pom",
+    pom = "repository/org/jacoco/org.jacoco.report/0.8.8/org.jacoco.report-0.8.8.pom",
     repo_root_path = "repository",
-    repo_path = "org/jacoco/org.jacoco.report/0.8.7",
+    repo_path = "org/jacoco/org.jacoco.report/0.8.8",
     visibility = ["//visibility:public"],
 )
 
@@ -7807,14 +7807,14 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.junit.jupiter.junit-jupiter-api_5.7.2",
-    pom = "repository/org/junit/jupiter/junit-jupiter-api/5.7.2/junit-jupiter-api-5.7.2.pom",
+    name = "org.junit.jupiter.junit-jupiter-api_5.8.2",
+    pom = "repository/org/junit/jupiter/junit-jupiter-api/5.8.2/junit-jupiter-api-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/jupiter/junit-jupiter-api/5.7.2",
+    repo_path = "org/junit/jupiter/junit-jupiter-api/5.8.2",
     deps = [
         "org.opentest4j.opentest4j_1.2.0",
-        "org.junit.platform.junit-platform-commons_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-commons_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -7823,7 +7823,7 @@ maven_import(
     name = "org.junit.jupiter.junit-jupiter-api",
     classifiers = [],
     jars = [
-        "repository/org/junit/jupiter/junit-jupiter-api/5.7.2/junit-jupiter-api-5.7.2.jar"
+        "repository/org/junit/jupiter/junit-jupiter-api/5.8.2/junit-jupiter-api-5.8.2.jar"
     ],
     exports = [
         "org.opentest4j.opentest4j",
@@ -7831,24 +7831,24 @@ maven_import(
     ],
     original_deps = [
         "org.opentest4j.opentest4j_1.2.0",
-        "org.junit.platform.junit-platform-commons_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-commons_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
-    pom = "repository/org/junit/jupiter/junit-jupiter-api/5.7.2/junit-jupiter-api-5.7.2.pom",
+    pom = "repository/org/junit/jupiter/junit-jupiter-api/5.8.2/junit-jupiter-api-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/jupiter/junit-jupiter-api/5.7.2",
+    repo_path = "org/junit/jupiter/junit-jupiter-api/5.8.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.junit.jupiter.junit-jupiter-engine_5.7.2",
-    pom = "repository/org/junit/jupiter/junit-jupiter-engine/5.7.2/junit-jupiter-engine-5.7.2.pom",
+    name = "org.junit.jupiter.junit-jupiter-engine_5.8.2",
+    pom = "repository/org/junit/jupiter/junit-jupiter-engine/5.8.2/junit-jupiter-engine-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/jupiter/junit-jupiter-engine/5.7.2",
+    repo_path = "org/junit/jupiter/junit-jupiter-engine/5.8.2",
     deps = [
-        "org.junit.platform.junit-platform-engine_1.7.2",
-        "org.junit.jupiter.junit-jupiter-api_5.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-engine_1.8.2",
+        "org.junit.jupiter.junit-jupiter-api_5.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -7857,7 +7857,7 @@ maven_import(
     name = "org.junit.jupiter.junit-jupiter-engine",
     classifiers = [],
     jars = [
-        "repository/org/junit/jupiter/junit-jupiter-engine/5.7.2/junit-jupiter-engine-5.7.2.jar"
+        "repository/org/junit/jupiter/junit-jupiter-engine/5.8.2/junit-jupiter-engine-5.8.2.jar"
     ],
     exports = [
         "org.junit.jupiter.junit-jupiter-api",
@@ -7866,23 +7866,23 @@ maven_import(
         "org.junit.platform.junit-platform-engine",
     ],
     original_deps = [
-        "org.junit.platform.junit-platform-engine_1.7.2",
-        "org.junit.jupiter.junit-jupiter-api_5.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-engine_1.8.2",
+        "org.junit.jupiter.junit-jupiter-api_5.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
-    pom = "repository/org/junit/jupiter/junit-jupiter-engine/5.7.2/junit-jupiter-engine-5.7.2.pom",
+    pom = "repository/org/junit/jupiter/junit-jupiter-engine/5.8.2/junit-jupiter-engine-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/jupiter/junit-jupiter-engine/5.7.2",
+    repo_path = "org/junit/jupiter/junit-jupiter-engine/5.8.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.junit.platform.junit-platform-commons_1.7.2",
-    pom = "repository/org/junit/platform/junit-platform-commons/1.7.2/junit-platform-commons-1.7.2.pom",
+    name = "org.junit.platform.junit-platform-commons_1.8.2",
+    pom = "repository/org/junit/platform/junit-platform-commons/1.8.2/junit-platform-commons-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-commons/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-commons/1.8.2",
     deps = [
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.junit-bom_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -7891,26 +7891,26 @@ maven_import(
     name = "org.junit.platform.junit-platform-commons",
     classifiers = [],
     jars = [
-        "repository/org/junit/platform/junit-platform-commons/1.7.2/junit-platform-commons-1.7.2.jar"
+        "repository/org/junit/platform/junit-platform-commons/1.8.2/junit-platform-commons-1.8.2.jar"
     ],
     original_deps = [
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.junit-bom_5.8.2",
     ],
-    pom = "repository/org/junit/platform/junit-platform-commons/1.7.2/junit-platform-commons-1.7.2.pom",
+    pom = "repository/org/junit/platform/junit-platform-commons/1.8.2/junit-platform-commons-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-commons/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-commons/1.8.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.junit.platform.junit-platform-engine_1.7.2",
-    pom = "repository/org/junit/platform/junit-platform-engine/1.7.2/junit-platform-engine-1.7.2.pom",
+    name = "org.junit.platform.junit-platform-engine_1.8.2",
+    pom = "repository/org/junit/platform/junit-platform-engine/1.8.2/junit-platform-engine-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-engine/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-engine/1.8.2",
     deps = [
         "org.opentest4j.opentest4j_1.2.0",
-        "org.junit.platform.junit-platform-commons_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-commons_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -7919,7 +7919,7 @@ maven_import(
     name = "org.junit.platform.junit-platform-engine",
     classifiers = [],
     jars = [
-        "repository/org/junit/platform/junit-platform-engine/1.7.2/junit-platform-engine-1.7.2.jar"
+        "repository/org/junit/platform/junit-platform-engine/1.8.2/junit-platform-engine-1.8.2.jar"
     ],
     exports = [
         "org.opentest4j.opentest4j",
@@ -7927,23 +7927,23 @@ maven_import(
     ],
     original_deps = [
         "org.opentest4j.opentest4j_1.2.0",
-        "org.junit.platform.junit-platform-commons_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-commons_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
-    pom = "repository/org/junit/platform/junit-platform-engine/1.7.2/junit-platform-engine-1.7.2.pom",
+    pom = "repository/org/junit/platform/junit-platform-engine/1.8.2/junit-platform-engine-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-engine/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-engine/1.8.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.junit.platform.junit-platform-launcher_1.7.2",
-    pom = "repository/org/junit/platform/junit-platform-launcher/1.7.2/junit-platform-launcher-1.7.2.pom",
+    name = "org.junit.platform.junit-platform-launcher_1.8.2",
+    pom = "repository/org/junit/platform/junit-platform-launcher/1.8.2/junit-platform-launcher-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-launcher/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-launcher/1.8.2",
     deps = [
-        "org.junit.platform.junit-platform-engine_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-engine_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -7952,26 +7952,26 @@ maven_import(
     name = "org.junit.platform.junit-platform-launcher",
     classifiers = [],
     jars = [
-        "repository/org/junit/platform/junit-platform-launcher/1.7.2/junit-platform-launcher-1.7.2.jar"
+        "repository/org/junit/platform/junit-platform-launcher/1.8.2/junit-platform-launcher-1.8.2.jar"
     ],
     deps = [
         "org.junit.platform.junit-platform-engine",
     ],
     original_deps = [
-        "org.junit.platform.junit-platform-engine_1.7.2",
-        "org.junit.junit-bom_5.7.2",
+        "org.junit.platform.junit-platform-engine_1.8.2",
+        "org.junit.junit-bom_5.8.2",
     ],
-    pom = "repository/org/junit/platform/junit-platform-launcher/1.7.2/junit-platform-launcher-1.7.2.pom",
+    pom = "repository/org/junit/platform/junit-platform-launcher/1.8.2/junit-platform-launcher-1.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/platform/junit-platform-launcher/1.7.2",
+    repo_path = "org/junit/platform/junit-platform-launcher/1.8.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.junit.junit-bom_5.7.2",
-    pom = "repository/org/junit/junit-bom/5.7.2/junit-bom-5.7.2.pom",
+    name = "org.junit.junit-bom_5.8.2",
+    pom = "repository/org/junit/junit-bom/5.8.2/junit-bom-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/junit-bom/5.7.2",
+    repo_path = "org/junit/junit-bom/5.8.2",
     visibility = ["//visibility:public"],
 )
 
@@ -7981,9 +7981,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/org/junit/junit-bom/5.7.2/junit-bom-5.7.2.pom",
+    pom = "repository/org/junit/junit-bom/5.8.2/junit-bom-5.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/junit/junit-bom/5.7.2",
+    repo_path = "org/junit/junit-bom/5.8.2",
     visibility = ["//visibility:public"],
 )
 
@@ -8126,13 +8126,13 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.ow2.asm.asm-analysis_9.1",
-    pom = "repository/org/ow2/asm/asm-analysis/9.1/asm-analysis-9.1.pom",
+    name = "org.ow2.asm.asm-analysis_9.2",
+    pom = "repository/org/ow2/asm/asm-analysis/9.2/asm-analysis-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-analysis/9.1",
+    repo_path = "org/ow2/asm/asm-analysis/9.2",
     parent = "org.ow2.ow2_1.5",
     deps = [
-        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm-tree_9.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -8142,30 +8142,30 @@ maven_import(
     classifiers = [],
     parent = "org.ow2.ow2_1.5",
     jars = [
-        "repository/org/ow2/asm/asm-analysis/9.1/asm-analysis-9.1.jar"
+        "repository/org/ow2/asm/asm-analysis/9.2/asm-analysis-9.2.jar"
     ],
     exports = [
         "org.ow2.asm.asm-tree",
     ],
     original_deps = [
-        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm-tree_9.2",
     ],
-    pom = "repository/org/ow2/asm/asm-analysis/9.1/asm-analysis-9.1.pom",
+    pom = "repository/org/ow2/asm/asm-analysis/9.2/asm-analysis-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-analysis/9.1",
+    repo_path = "org/ow2/asm/asm-analysis/9.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.ow2.asm.asm-commons_9.1",
-    pom = "repository/org/ow2/asm/asm-commons/9.1/asm-commons-9.1.pom",
+    name = "org.ow2.asm.asm-commons_9.2",
+    pom = "repository/org/ow2/asm/asm-commons/9.2/asm-commons-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-commons/9.1",
+    repo_path = "org/ow2/asm/asm-commons/9.2",
     parent = "org.ow2.ow2_1.5",
     deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-tree_9.1",
-        "org.ow2.asm.asm-analysis_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-tree_9.2",
+        "org.ow2.asm.asm-analysis_9.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -8175,7 +8175,7 @@ maven_import(
     classifiers = [],
     parent = "org.ow2.ow2_1.5",
     jars = [
-        "repository/org/ow2/asm/asm-commons/9.1/asm-commons-9.1.jar"
+        "repository/org/ow2/asm/asm-commons/9.2/asm-commons-9.2.jar"
     ],
     exports = [
         "org.ow2.asm.asm",
@@ -8183,24 +8183,24 @@ maven_import(
         "org.ow2.asm.asm-analysis",
     ],
     original_deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-tree_9.1",
-        "org.ow2.asm.asm-analysis_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-tree_9.2",
+        "org.ow2.asm.asm-analysis_9.2",
     ],
-    pom = "repository/org/ow2/asm/asm-commons/9.1/asm-commons-9.1.pom",
+    pom = "repository/org/ow2/asm/asm-commons/9.2/asm-commons-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-commons/9.1",
+    repo_path = "org/ow2/asm/asm-commons/9.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.ow2.asm.asm-tree_9.1",
-    pom = "repository/org/ow2/asm/asm-tree/9.1/asm-tree-9.1.pom",
+    name = "org.ow2.asm.asm-tree_9.2",
+    pom = "repository/org/ow2/asm/asm-tree/9.2/asm-tree-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-tree/9.1",
+    repo_path = "org/ow2/asm/asm-tree/9.2",
     parent = "org.ow2.ow2_1.5",
     deps = [
-        "org.ow2.asm.asm_9.1",
+        "org.ow2.asm.asm_9.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -8210,30 +8210,30 @@ maven_import(
     classifiers = [],
     parent = "org.ow2.ow2_1.5",
     jars = [
-        "repository/org/ow2/asm/asm-tree/9.1/asm-tree-9.1.jar"
+        "repository/org/ow2/asm/asm-tree/9.2/asm-tree-9.2.jar"
     ],
     exports = [
         "org.ow2.asm.asm",
     ],
     original_deps = [
-        "org.ow2.asm.asm_9.1",
+        "org.ow2.asm.asm_9.2",
     ],
-    pom = "repository/org/ow2/asm/asm-tree/9.1/asm-tree-9.1.pom",
+    pom = "repository/org/ow2/asm/asm-tree/9.2/asm-tree-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-tree/9.1",
+    repo_path = "org/ow2/asm/asm-tree/9.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.ow2.asm.asm-util_9.1",
-    pom = "repository/org/ow2/asm/asm-util/9.1/asm-util-9.1.pom",
+    name = "org.ow2.asm.asm-util_9.2",
+    pom = "repository/org/ow2/asm/asm-util/9.2/asm-util-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-util/9.1",
+    repo_path = "org/ow2/asm/asm-util/9.2",
     parent = "org.ow2.ow2_1.5",
     deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-tree_9.1",
-        "org.ow2.asm.asm-analysis_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-tree_9.2",
+        "org.ow2.asm.asm-analysis_9.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -8243,7 +8243,7 @@ maven_import(
     classifiers = [],
     parent = "org.ow2.ow2_1.5",
     jars = [
-        "repository/org/ow2/asm/asm-util/9.1/asm-util-9.1.jar"
+        "repository/org/ow2/asm/asm-util/9.2/asm-util-9.2.jar"
     ],
     exports = [
         "org.ow2.asm.asm",
@@ -8251,21 +8251,21 @@ maven_import(
         "org.ow2.asm.asm-analysis",
     ],
     original_deps = [
-        "org.ow2.asm.asm_9.1",
-        "org.ow2.asm.asm-tree_9.1",
-        "org.ow2.asm.asm-analysis_9.1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-tree_9.2",
+        "org.ow2.asm.asm-analysis_9.2",
     ],
-    pom = "repository/org/ow2/asm/asm-util/9.1/asm-util-9.1.pom",
+    pom = "repository/org/ow2/asm/asm-util/9.2/asm-util-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm-util/9.1",
+    repo_path = "org/ow2/asm/asm-util/9.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.ow2.asm.asm_9.1",
-    pom = "repository/org/ow2/asm/asm/9.1/asm-9.1.pom",
+    name = "org.ow2.asm.asm_9.2",
+    pom = "repository/org/ow2/asm/asm/9.2/asm-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm/9.1",
+    repo_path = "org/ow2/asm/asm/9.2",
     parent = "org.ow2.ow2_1.5",
     visibility = ["//visibility:public"],
 )
@@ -8275,12 +8275,12 @@ maven_import(
     classifiers = [],
     parent = "org.ow2.ow2_1.5",
     jars = [
-        "repository/org/ow2/asm/asm/9.1/asm-9.1.jar"
+        "repository/org/ow2/asm/asm/9.2/asm-9.2.jar"
     ],
     original_deps = [],
-    pom = "repository/org/ow2/asm/asm/9.1/asm-9.1.pom",
+    pom = "repository/org/ow2/asm/asm/9.2/asm-9.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/ow2/asm/asm/9.1",
+    repo_path = "org/ow2/asm/asm/9.2",
     visibility = ["//visibility:public"],
 )
 
@@ -8316,25 +8316,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.slf4j.slf4j-api_1.7.30",
-    pom = "repository/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.pom",
+    name = "org.slf4j.slf4j-api_1.7.32",
+    pom = "repository/org/slf4j/slf4j-api/1.7.32/slf4j-api-1.7.32.pom",
     repo_root_path = "repository",
-    repo_path = "org/slf4j/slf4j-api/1.7.30",
-    parent = "org.slf4j.slf4j-parent_1.7.30",
+    repo_path = "org/slf4j/slf4j-api/1.7.32",
+    parent = "org.slf4j.slf4j-parent_1.7.32",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.slf4j.slf4j-api",
     classifiers = [],
-    parent = "org.slf4j.slf4j-parent_1.7.30",
+    parent = "org.slf4j.slf4j-parent_1.7.32",
     jars = [
-        "repository/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar"
+        "repository/org/slf4j/slf4j-api/1.7.32/slf4j-api-1.7.32.jar"
     ],
     original_deps = [],
-    pom = "repository/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.pom",
+    pom = "repository/org/slf4j/slf4j-api/1.7.32/slf4j-api-1.7.32.pom",
     repo_root_path = "repository",
-    repo_path = "org/slf4j/slf4j-api/1.7.30",
+    repo_path = "org/slf4j/slf4j-api/1.7.32",
     visibility = ["//visibility:public"],
 )
 
@@ -8516,11 +8516,12 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.testng.testng_7.4.0",
-    pom = "repository/org/testng/testng/7.4.0/testng-7.4.0.pom",
+    name = "org.testng.testng_7.5",
+    pom = "repository/org/testng/testng/7.5/testng-7.5.pom",
     repo_root_path = "repository",
-    repo_path = "org/testng/testng/7.4.0",
+    repo_path = "org/testng/testng/7.5",
     deps = [
+        "org.slf4j.slf4j-api_1.7.32",
         "com.beust.jcommander_1.78",
         "org.webjars.jquery_3.5.1",
     ],
@@ -8531,19 +8532,23 @@ maven_import(
     name = "org.testng.testng",
     classifiers = [],
     jars = [
-        "repository/org/testng/testng/7.4.0/testng-7.4.0.jar"
+        "repository/org/testng/testng/7.5/testng-7.5.jar"
+    ],
+    exports = [
+        "org.slf4j.slf4j-api",
     ],
     deps = [
         "com.beust.jcommander",
         "org.webjars.jquery",
     ],
     original_deps = [
+        "org.slf4j.slf4j-api_1.7.32",
         "com.beust.jcommander_1.78",
         "org.webjars.jquery_3.5.1",
     ],
-    pom = "repository/org/testng/testng/7.4.0/testng-7.4.0.pom",
+    pom = "repository/org/testng/testng/7.5/testng-7.5.pom",
     repo_root_path = "repository",
-    repo_path = "org/testng/testng/7.4.0",
+    repo_path = "org/testng/testng/7.5",
     visibility = ["//visibility:public"],
 )
 
@@ -24363,6 +24368,15 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.github.javaparser.javaparser-core_3.23.0",
+    pom = "repository/com/github/javaparser/javaparser-core/3.23.0/javaparser-core-3.23.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/github/javaparser/javaparser-core/3.23.0",
+    parent = "com.github.javaparser.javaparser-parent_3.23.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.github.javaparser.javaparser-core_3.5.14",
     pom = "repository/com/github/javaparser/javaparser-core/3.5.14/javaparser-core-3.5.14.pom",
     repo_root_path = "repository",
@@ -28647,6 +28661,14 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.codehaus.groovy.groovy_3.0.9",
+    pom = "repository/org/codehaus/groovy/groovy/3.0.9/groovy-3.0.9.pom",
+    repo_root_path = "repository",
+    repo_path = "org/codehaus/groovy/groovy/3.0.9",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.codehaus.mojo.animal-sniffer-annotations_1.14",
     pom = "repository/org/codehaus/mojo/animal-sniffer-annotations/1.14/animal-sniffer-annotations-1.14.pom",
     repo_root_path = "repository",
@@ -28851,6 +28873,15 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.jacoco.org.jacoco.agent_0.8.7",
+    pom = "repository/org/jacoco/org.jacoco.agent/0.8.7/org.jacoco.agent-0.8.7.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jacoco/org.jacoco.agent/0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.jacoco.org.jacoco.ant_0.8.7",
     pom = "repository/org/jacoco/org.jacoco.ant/0.8.7/org.jacoco.ant-0.8.7.pom",
     repo_root_path = "repository",
@@ -28860,6 +28891,20 @@ maven_artifact(
         "org.jacoco.org.jacoco.core_0.8.7",
         "org.jacoco.org.jacoco.report_0.8.7",
         "org.jacoco.org.jacoco.agent_0.8.7",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.jacoco.org.jacoco.ant_0.8.8",
+    pom = "repository/org/jacoco/org.jacoco.ant/0.8.8/org.jacoco.ant-0.8.8.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jacoco/org.jacoco.ant/0.8.8",
+    parent = "org.jacoco.org.jacoco.build_0.8.8",
+    deps = [
+        "org.jacoco.org.jacoco.core_0.8.8",
+        "org.jacoco.org.jacoco.report_0.8.8",
+        "org.jacoco.org.jacoco.agent_0.8.8",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28889,6 +28934,20 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.jacoco.org.jacoco.core_0.8.7",
+    pom = "repository/org/jacoco/org.jacoco.core/0.8.7/org.jacoco.core-0.8.7.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jacoco/org.jacoco.core/0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    deps = [
+        "org.ow2.asm.asm_9.1",
+        "org.ow2.asm.asm-commons_9.1",
+        "org.ow2.asm.asm-tree_9.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.jacoco.org.jacoco.report_0.7.4.201502262128",
     pom = "repository/org/jacoco/org.jacoco.report/0.7.4.201502262128/org.jacoco.report-0.7.4.201502262128.pom",
     repo_root_path = "repository",
@@ -28909,6 +28968,18 @@ maven_artifact(
     deps = [
         "org.jacoco.org.jacoco.core_0.7.5.201505241946",
         "org.ow2.asm.asm-debug-all_5.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.jacoco.org.jacoco.report_0.8.7",
+    pom = "repository/org/jacoco/org.jacoco.report/0.8.7/org.jacoco.report-0.8.7.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jacoco/org.jacoco.report/0.8.7",
+    parent = "org.jacoco.org.jacoco.build_0.8.7",
+    deps = [
+        "org.jacoco.org.jacoco.core_0.8.7",
     ],
     visibility = ["//visibility:public"],
 )
@@ -32612,6 +32683,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.ow2.asm.asm-analysis_9.1",
+    pom = "repository/org/ow2/asm/asm-analysis/9.1/asm-analysis-9.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-analysis/9.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm-tree_9.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.ow2.asm.asm-commons_5.0.4",
     pom = "repository/org/ow2/asm/asm-commons/5.0.4/asm-commons-5.0.4.pom",
     repo_root_path = "repository",
@@ -32671,6 +32754,20 @@ maven_artifact(
         "org.ow2.asm.asm_8.0.1",
         "org.ow2.asm.asm-tree_8.0.1",
         "org.ow2.asm.asm-analysis_8.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm-commons_9.1",
+    pom = "repository/org/ow2/asm/asm-commons/9.1/asm-commons-9.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-commons/9.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_9.1",
+        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm-analysis_9.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -32769,6 +32866,18 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.ow2.asm.asm-tree_9.1",
+    pom = "repository/org/ow2/asm/asm-tree/9.1/asm-tree-9.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-tree/9.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_9.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.ow2.asm.asm-util_5.1",
     pom = "repository/org/ow2/asm/asm-util/5.1/asm-util-5.1.pom",
     repo_root_path = "repository",
@@ -32816,6 +32925,20 @@ maven_artifact(
         "org.ow2.asm.asm_8.0.1",
         "org.ow2.asm.asm-tree_8.0.1",
         "org.ow2.asm.asm-analysis_8.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm-util_9.1",
+    pom = "repository/org/ow2/asm/asm-util/9.1/asm-util-9.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm-util/9.1",
+    parent = "org.ow2.ow2_1.5",
+    deps = [
+        "org.ow2.asm.asm_9.1",
+        "org.ow2.asm.asm-tree_9.1",
+        "org.ow2.asm.asm-analysis_9.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -32888,6 +33011,15 @@ maven_artifact(
     pom = "repository/org/ow2/asm/asm/9.0/asm-9.0.pom",
     repo_root_path = "repository",
     repo_path = "org/ow2/asm/asm/9.0",
+    parent = "org.ow2.ow2_1.5",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.ow2.asm.asm_9.1",
+    pom = "repository/org/ow2/asm/asm/9.1/asm-9.1.pom",
+    repo_root_path = "repository",
+    repo_path = "org/ow2/asm/asm/9.1",
     parent = "org.ow2.ow2_1.5",
     visibility = ["//visibility:public"],
 )
@@ -33083,6 +33215,15 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.slf4j.slf4j-api_1.7.30",
+    pom = "repository/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.pom",
+    repo_root_path = "repository",
+    repo_path = "org/slf4j/slf4j-api/1.7.30",
+    parent = "org.slf4j.slf4j-parent_1.7.30",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.tensorflow.tensorflow-lite-metadata_0.1.0",
     pom = "repository/org/tensorflow/tensorflow-lite-metadata/0.1.0/tensorflow-lite-metadata-0.1.0.pom",
     repo_root_path = "repository",
@@ -33134,6 +33275,18 @@ maven_artifact(
     repo_path = "org/testng/testng/7.3.0",
     deps = [
         "com.beust.jcommander_1.78",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.testng.testng_7.4.0",
+    pom = "repository/org/testng/testng/7.4.0/testng-7.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "org/testng/testng/7.4.0",
+    deps = [
+        "com.beust.jcommander_1.78",
+        "org.webjars.jquery_3.5.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -33291,6 +33444,13 @@ maven_artifact(
     pom = "repository/com/github/javaparser/javaparser-parent/3.23.0/javaparser-parent-3.23.0.pom",
     repo_root_path = "repository",
     repo_path = "com/github/javaparser/javaparser-parent/3.23.0",
+)
+
+maven_artifact(
+    name = "com.github.javaparser.javaparser-parent_3.24.0",
+    pom = "repository/com/github/javaparser/javaparser-parent/3.24.0/javaparser-parent-3.24.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/github/javaparser/javaparser-parent/3.24.0",
 )
 
 maven_artifact(
@@ -34212,10 +34372,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-parent_1.10.11",
-    pom = "repository/org/apache/ant/ant-parent/1.10.11/ant-parent-1.10.11.pom",
+    name = "org.apache.ant.ant-parent_1.10.12",
+    pom = "repository/org/apache/ant/ant-parent/1.10.12/ant-parent-1.10.12.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-parent/1.10.11",
+    repo_path = "org/apache/ant/ant-parent/1.10.12",
 )
 
 maven_artifact(
@@ -34884,6 +35044,13 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.jacoco.org.jacoco.build_0.8.8",
+    pom = "repository/org/jacoco/org.jacoco.build/0.8.8/org.jacoco.build-0.8.8.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jacoco/org.jacoco.build/0.8.8",
+)
+
+maven_artifact(
     name = "org.jdeferred.jdeferred-android-parent_1.2.2",
     pom = "repository/org/jdeferred/jdeferred-android-parent/1.2.2/jdeferred-android-parent-1.2.2.pom",
     repo_root_path = "repository",
@@ -35002,6 +35169,13 @@ maven_artifact(
     pom = "repository/org/slf4j/slf4j-parent/1.7.30/slf4j-parent-1.7.30.pom",
     repo_root_path = "repository",
     repo_path = "org/slf4j/slf4j-parent/1.7.30",
+)
+
+maven_artifact(
+    name = "org.slf4j.slf4j-parent_1.7.32",
+    pom = "repository/org/slf4j/slf4j-parent/1.7.32/slf4j-parent-1.7.32.pom",
+    repo_root_path = "repository",
+    repo_path = "org/slf4j/slf4j-parent/1.7.32",
 )
 
 maven_artifact(

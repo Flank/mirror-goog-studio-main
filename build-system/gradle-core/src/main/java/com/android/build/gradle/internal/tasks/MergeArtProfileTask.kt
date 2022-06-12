@@ -81,7 +81,6 @@ abstract class MergeArtProfileTask: MergeFileTask() {
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
                     MergeFileTask::outputFile
-            ).withName(SdkConstants.FN_ART_PROFILE
             ).on(InternalArtifactType.MERGED_ART_PROFILE)
         }
 

@@ -489,7 +489,6 @@ class DexArchiveBuilderDelegateDesugaringTest {
             ),
             desugarClasspathChangedClasses = emptySet(),
             desugarGraphDir =  desugarGraphDir.toFile(),
-            projectVariant = "myVariant",
             inputJarHashesFile = inputJarHashes,
             numberOfBuckets = 2,
             workerExecutor = workerExecutor,

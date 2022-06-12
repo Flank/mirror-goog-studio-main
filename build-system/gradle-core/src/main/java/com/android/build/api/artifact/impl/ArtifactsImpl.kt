@@ -452,4 +452,4 @@ internal class SingleInitialProviderRequestImpl<TASK: Task, FILE_TYPE: FileSyste
     }
 }
 
-const val DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS = "out"
+const val DEFAULT_FILE_NAME_OF_REGULAR_FILE_ARTIFACTS = "out.jar"

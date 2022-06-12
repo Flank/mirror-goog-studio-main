@@ -19,6 +19,7 @@
 #include "daemon/connector.h"
 #include "daemon/daemon.h"
 #include "echo.h"
+#include "foreground_process_tracker.h"
 #include "gflags/gflags.h"
 #include "perfd/perfd.h"
 #include "proto/common.pb.h"
@@ -44,6 +45,8 @@ void RegisterTransports(profiler::Daemon* daemon) {
   if (profiler::Perfd::Initialize(daemon) != 0) {
     Log::E(Log::Tag::TRANSPORT, "Failed to initialize perfd");
   }
+
+  layout_inspector::ForegroundProcessTracker::Initialize(daemon);
 
   // Initializing the agent to handle daemon commands. This is only needed if
   // we want the daemon to handle commands. If we only want the agent to handle

@@ -16,6 +16,7 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.clientmanager.ClientManager;
 import com.android.ddmlib.internal.ClientImpl;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -54,6 +55,8 @@ public class AdbInitOptions {
      * the applications to debug. See {@link ClientImpl#getDebuggerListenPort()}.
      */
     public final boolean clientSupport;
+
+    public final ClientManager clientManager;
 
     /**
      * Enable user managed ADB mode where ddmlib will not start, restart, or terminate the ADB
@@ -95,6 +98,7 @@ public class AdbInitOptions {
     /** {@link AdbInitOptions.Builder} for default values. */
     private AdbInitOptions(
             boolean clientSupport,
+            ClientManager clientManager,
             boolean userManagedAdbMode,
             int userManagedAdbPort,
             ImmutableMap<String, String> adbEnvVars,
@@ -102,6 +106,7 @@ public class AdbInitOptions {
             boolean useDdmlibCommandService,
             int maxJdwpPacketSize) {
         this.clientSupport = clientSupport;
+        this.clientManager = clientManager;
         this.userManagedAdbMode = userManagedAdbMode;
         this.userManagedAdbPort = userManagedAdbPort;
         this.adbEnvVars = adbEnvVars;
@@ -122,6 +127,7 @@ public class AdbInitOptions {
      */
     public static class Builder {
         boolean clientSupport = false;
+        private ClientManager clientManager;
         boolean userManagedAdbMode = false;
         // Default to DDMLIB_JDWP_PROXY_ENABLED environment variable.
         boolean useJdwpProxyService = DdmPreferences.isJdwpProxyEnabled();
@@ -133,6 +139,12 @@ public class AdbInitOptions {
         /** See {@link AdbInitOptions#clientSupport}. */
         public Builder setClientSupportEnabled(boolean enabled) {
             clientSupport = enabled;
+            return this;
+        }
+
+        /** See {@link AdbInitOptions#clientManager}. */
+        public Builder setClientManager(ClientManager clientManager) {
+            this.clientManager = clientManager;
             return this;
         }
 
@@ -186,6 +198,7 @@ public class AdbInitOptions {
         public AdbInitOptions build() {
             return new AdbInitOptions(
                     clientSupport,
+                    clientManager,
                     userManagedAdbMode,
                     userManagedAdbPort,
                     envVarBuilder.build(),

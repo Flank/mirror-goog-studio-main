@@ -57,6 +57,32 @@ kotlin_library(
     ],
 )
 
+# Compile ddmlib tests as a stand alone library so that test classes (e.g. FakeAdbRule)
+# can be re-used from other "kotlin_test" targets.
+kotlin_library(
+    name = "test-utils",
+    srcs = glob([
+        "src/test/java/**/*.kt",
+        "src/test/java/**/*.java",
+    ]),
+    data = ["//prebuilts/studio/sdk:platform-tools"],
+    resources = glob(["src/test/resources/**"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tools.ddmlib",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/fakeadbserver:tools.fakeadbserver",
+        "//tools/base/testutils:tools.testutils",
+        "@maven//:com.google.guava.guava",
+        "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:com.google.truth.truth",
+        "@maven//:junit.junit",
+        "@maven//:org.easymock.easymock",
+        "@maven//:org.mockito.mockito-core",
+    ],
+)
+
 # Incremental library in ddmlib is standalone
 java_library(
     name = "incfs",

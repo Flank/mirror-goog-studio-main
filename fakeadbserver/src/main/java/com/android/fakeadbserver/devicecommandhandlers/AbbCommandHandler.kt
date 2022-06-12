@@ -36,6 +36,9 @@ class AbbCommandHandler : DeviceCommandHandler(COMMAND) {
         // Acknowledge "abb_exec" is supported
         writeOkay(socket.getOutputStream())
 
+        // Save command to logs so tests can consult them.
+        device.addAbbLog(args)
+
         // Wrap stdin/stdout and execute abb command
         val serviceOutput = ShellProtocolServiceOutput(socket)
         device.serviceManager.processCommand(args.split("\u0000"), serviceOutput)

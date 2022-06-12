@@ -94,6 +94,8 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
     @Test
     fun `test via model`() {
         val model = project.modelV2()
+            // legacy incremental transform uses deprecated gradle api
+            .withFailOnWarning(false)
             .with(BooleanOption.DEBUG_OBSOLETE_API, true)
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchModels()
@@ -130,7 +132,10 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     @Test
     fun `Test from command line`() {
-        val result = project.executor().with(BooleanOption.DEBUG_OBSOLETE_API, true).run("help")
+        val result = project.executor()
+            // legacy incremental transform uses deprecated gradle api
+            .withFailOnWarning(false)
+            .with(BooleanOption.DEBUG_OBSOLETE_API, true).run("help")
 
         result.stdout.use {
             when(provider.name) {

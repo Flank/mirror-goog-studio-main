@@ -71,6 +71,13 @@ abstract class DataMerger<I extends DataItem<F>, F extends DataFile<I>, S extend
         mFactory.setIgnoringComments(true);
     }
 
+    public DataMerger(DocumentBuilderFactory factory) {
+        mFactory = factory;
+        mFactory.setNamespaceAware(true);
+        mFactory.setValidating(false);
+        mFactory.setIgnoringComments(true);
+    }
+
     protected abstract S createFromXml(Node node, @Nullable String aaptEnv) throws MergingException;
 
     protected abstract boolean requiresMerge(@NonNull String dataItemKey);

@@ -46,6 +46,7 @@ import com.android.ddmlib.SplitApkInstaller;
 import com.android.ddmlib.SyncException;
 import com.android.ddmlib.SyncService;
 import com.android.ddmlib.TimeoutException;
+import com.android.ddmlib.clientmanager.DeviceClientManager;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.annotations.VisibleForTesting;
@@ -74,6 +75,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /** A Device. It can be a physical device or an emulator. */
 public final class DeviceImpl implements IDevice {
@@ -109,6 +111,8 @@ public final class DeviceImpl implements IDevice {
     private final List<ProfileableClientImpl> mProfileableClients = new ArrayList<>();
 
     private final ClientTracker mClientTracer;
+
+    @Nullable private final Function<IDevice, DeviceClientManager> mDeviceClientManagerProvider;
 
     private static final String LOG_TAG = "Device";
     private static final char SEPARATOR = '-';
@@ -152,6 +156,10 @@ public final class DeviceImpl implements IDevice {
 
     @Nullable private AndroidVersion mVersion;
     private String mName;
+
+    @GuardedBy("this")
+    @Nullable
+    private DeviceClientManager mDeviceClientManager;
 
     @NonNull
     @Override
@@ -822,7 +830,17 @@ public final class DeviceImpl implements IDevice {
 
     // @VisibleForTesting
     public DeviceImpl(ClientTracker clientTracer, String serialNumber, DeviceState deviceState) {
+        this(clientTracer, null, serialNumber, deviceState);
+    }
+
+    // @VisibleForTesting
+    public DeviceImpl(
+            ClientTracker clientTracer,
+            Function<IDevice, DeviceClientManager> deviceClientManagerProvider,
+            String serialNumber,
+            DeviceState deviceState) {
         mClientTracer = clientTracer;
+        mDeviceClientManagerProvider = deviceClientManagerProvider;
         mSerialNumber = serialNumber;
         mState = deviceState;
     }
@@ -833,6 +851,9 @@ public final class DeviceImpl implements IDevice {
 
     @Override
     public boolean hasClients() {
+        if (mDeviceClientManagerProvider != null) {
+            return !getClientManager().getClients().isEmpty();
+        }
         synchronized (mClients) {
             return !mClients.isEmpty();
         }
@@ -840,6 +861,9 @@ public final class DeviceImpl implements IDevice {
 
     @Override
     public Client[] getClients() {
+        if (mDeviceClientManagerProvider != null) {
+            return getClientManager().getClients().toArray(new Client[0]);
+        }
         synchronized (mClients) {
             return mClients.toArray(new Client[0]);
         }
@@ -866,6 +890,22 @@ public final class DeviceImpl implements IDevice {
     ProfileableClientImpl[] getProfileableClientImpls() {
         synchronized (mProfileableClients) {
             return mProfileableClients.toArray(new ProfileableClientImpl[0]);
+        }
+    }
+
+    @Override
+    @NonNull
+    public DeviceClientManager getClientManager() {
+        // Fast exit if feature not supported
+        if (mDeviceClientManagerProvider == null) {
+            // This throws an exception
+            return IDevice.super.getClientManager();
+        }
+        synchronized (this) {
+            if (mDeviceClientManager == null) {
+                mDeviceClientManager = mDeviceClientManagerProvider.apply(this);
+            }
+            return mDeviceClientManager;
         }
     }
 

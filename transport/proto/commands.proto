@@ -61,6 +61,8 @@ message Command {
 
     // Layout inspector command.
     LAYOUT_INSPECTOR = 1100;
+    START_TRACKING_FOREGROUND_PROCESS = 1101;
+    STOP_TRACKING_FOREGROUND_PROCESS = 1102;
 
     // App inspection command
     APP_INSPECTION = 1200;

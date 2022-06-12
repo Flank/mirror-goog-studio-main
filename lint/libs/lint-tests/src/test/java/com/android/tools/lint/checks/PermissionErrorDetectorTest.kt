@@ -168,7 +168,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                AndroidManifest.xml:4: Error: android.permission.BIND_APPWIDGET is a reserved permission for the system [ReservedSystemPermission]
+                AndroidManifest.xml:4: Error: android.permission.BIND_APPWIDGET is a reserved permission [ReservedSystemPermission]
                   <permission android:name="android.permission.BIND_APPWIDGET" />
                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
@@ -410,9 +410,28 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             "android.permission.BIND_NFC_SERVICE",
             findAlmostPlatformPermission(project, "adroid.prmission.BIND_NCF_SERVICE") // typos in package name
         )
+
+        //  assure we don't match one valid permission against another
         for (systemPermission in SYSTEM_PERMISSIONS) {
             assertNull(findAlmostPlatformPermission(project, systemPermission))
         }
+
+        //  assure we don't match against a clearly custom package
+        assertNull(
+            findAlmostPlatformPermission(project, "my.custom.package.CAMERA")
+        )
+        assertNull(
+            findAlmostPlatformPermission(project, "my.custom.package.CMERA")
+        )
+
+        // assure the edit distance logic behaves as expected per the MAX_EDIT_DISTANCE const
+        assertEquals(
+            "android.permission.BIND_NFC_SERVICE",
+            findAlmostPlatformPermission(project, "android.permission.BIND_NFC_SERVZZZ")
+        )
+        assertNull(
+            findAlmostPlatformPermission(project, "android.permission.BIND_NFC_SERZZZZ")
+        )
 
         Disposer.dispose(disposable)
     }
@@ -567,8 +586,15 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
             "my.custom.permission.FOO_BAR"
         )
         assertEquals(
-            findAlmostCustomPermission("my.custom.permission.QUXX", customPermissions),
+            findAlmostCustomPermission("my.custom.permission.BAZQUXX", customPermissions),
             "my.custom.permission.BAZ_QUXX"
+        )
+        assertEquals(
+            findAlmostCustomPermission("my.custom.permission.BAZ_QZZZ", customPermissions),
+            "my.custom.permission.BAZ_QUXX"
+        )
+        assertNull(
+            findAlmostCustomPermission("my.custom.permission.BAZ_ZZZZ", customPermissions),
         )
     }
 

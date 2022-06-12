@@ -36,6 +36,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
@@ -147,7 +148,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
             File valuesXml = new File(values, "values.xml");
 
             ValueResourceParser2 parser = new ValueResourceParser2(valuesXml, null, null);
-            sResources = parser.parseFile();
+            sResources = parser.parseFile(DocumentBuilderFactory.newInstance());
 
             // create a fake resource file to allow calling ResourceMergerItem.getKey()
             //noinspection ResultOfObjectAllocationIgnored
@@ -184,7 +185,9 @@ public class ValueResourceParser2Test extends BaseTestCase {
         writer.write(xml);
         writer.close();
 
-        Document document = ValueResourceParser2.parseDocument(file, false);
+        Document document =
+                ValueResourceParser2.parseDocument(
+                        file, false, DocumentBuilderFactory.newInstance());
         assertNotNull(document);
         assertNotNull(document.getDocumentElement());
         assertEquals("LinearLayout", document.getDocumentElement().getTagName());
@@ -217,7 +220,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
         writer.close();
 
         ValueResourceParser2 parser = new ValueResourceParser2(file, null, null);
-        List<ResourceMergerItem> items = parser.parseFile();
+        List<ResourceMergerItem> items = parser.parseFile(DocumentBuilderFactory.newInstance());
         assertEquals(3, items.size());
         assertEquals(ResourceType.BOOL, items.get(0).getType());
         assertEquals("truthy", items.get(0).getName());
@@ -238,7 +241,7 @@ public class ValueResourceParser2Test extends BaseTestCase {
         Files.write(file.toPath(), xml.getBytes());
 
         ValueResourceParser2 parser = new ValueResourceParser2(file, null, null);
-        List<ResourceMergerItem> items = parser.parseFile();
+        List<ResourceMergerItem> items = parser.parseFile(DocumentBuilderFactory.newInstance());
         ResourceMergerItem publicTag = Iterables.getOnlyElement(items);
 
         // Make sure the name is invalid, so it cannot conflict with anything the user would type.

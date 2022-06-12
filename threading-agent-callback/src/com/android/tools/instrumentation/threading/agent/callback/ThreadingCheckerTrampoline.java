@@ -16,6 +16,8 @@
 
 package com.android.tools.instrumentation.threading.agent.callback;
 
+import java.util.logging.Logger;
+
 /**
  * Java agent is loaded by the bootstrap class loader, and we cannot emit bytecode that calls into
  * the core Android Studio code which is loaded by the system classloader.
@@ -23,18 +25,45 @@ package com.android.tools.instrumentation.threading.agent.callback;
  * <p>So, we install a layer of indirection between these two worlds.
  */
 public class ThreadingCheckerTrampoline {
+    private static final Logger LOGGER =
+            Logger.getLogger(ThreadingCheckerTrampoline.class.getName());
+
     private static ThreadingCheckerHook hook = null;
+
+    static BaselineViolations baselineViolations;
 
     // This method should be called from Android Studio startup code.
     public static void installHook(ThreadingCheckerHook newHook) {
         hook = newHook;
+        baselineViolations = BaselineViolations.fromResource();
     }
 
     // This method is called from instrumented bytecode.
     public static void verifyOnUiThread() {
         if (hook == null) {
+            LOGGER.warning(
+                    "Threading annotation check skipped for method '"
+                            + getInstrumentedMethodSignature()
+                            + "'. No ThreadingCheckerHook installed.");
+            return;
+        }
+        if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
             return;
         }
         hook.verifyOnUiThread();
+    }
+
+    private static String getInstrumentedMethodSignature() {
+        // Stack trace here will look like
+        // Thread#getStackTrace
+        // ThreadingCheckerTrampoline#getInstrumentedMethodSignature
+        // ThreadingCheckerTrampoline.verifyOnUiThread
+        // [method-of-interest]
+        // ...
+        //
+        // And so we are interested in the fourth frame. If this changes please update the frame
+        // index below
+        StackTraceElement stackTraceElement = Thread.currentThread().getStackTrace()[3];
+        return stackTraceElement.getClassName() + "#" + stackTraceElement.getMethodName();
     }
 }

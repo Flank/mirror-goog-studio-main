@@ -36,6 +36,9 @@ class AsyncResourceProcessorTest {
     val forkJoinPool: ForkJoinPool by lazy {
         ForkJoinPool(2).also { closer.register(Closeable { it.shutdown() }) }
     }
+    // Instantiate build service outside of test cases to avoid build errors swallowed
+    // in FolkJoinTask see b/232575232
+    private val analyticsService = FakeNoOpAnalyticsService()
 
     @After
     fun close() {
@@ -47,7 +50,7 @@ class AsyncResourceProcessorTest {
         val counter = AtomicInteger()
 
         createAsyncResourceProcessor(counter).use { processor ->
-            processor.submit(FakeNoOpAnalyticsService()) {
+            processor.submit(analyticsService) {
                 it.incrementAndGet()
             }
             assertThat(counter.get()).isEqualTo(0)
@@ -69,7 +72,7 @@ class AsyncResourceProcessorTest {
 
         forkJoinPool.submit {
             createAsyncResourceProcessor(counter).use { processor ->
-                processor.submit(FakeNoOpAnalyticsService()) {
+                processor.submit(analyticsService) {
                     it.incrementAndGet()
                 }
                 compileSubmitted.signal()
@@ -79,7 +82,7 @@ class AsyncResourceProcessorTest {
                 awaitComplete.signal()
                 Thread.yield()
 
-                processor.submit(FakeNoOpAnalyticsService()) {
+                processor.submit(analyticsService) {
                    it.incrementAndGet()
                 }
                 linkSubmitted.signal()

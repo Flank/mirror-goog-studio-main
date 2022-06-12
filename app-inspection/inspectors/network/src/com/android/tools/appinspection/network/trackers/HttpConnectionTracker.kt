@@ -15,6 +15,7 @@
  */
 package com.android.tools.appinspection.network.trackers
 
+import com.android.tools.appinspection.network.rules.NetworkInterceptionMetrics
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -78,4 +79,12 @@ interface HttpConnectionTracker {
      * @return an input stream which may wrap the original stream
      */
     fun trackResponseBody(stream: InputStream): InputStream
+
+    /**
+     * Tracks an optional response interception after the response is received
+     * and intercepted.
+     *
+     * @param interception metadata about how the response is intercepted.
+     */
+    fun trackResponseInterception(interception: NetworkInterceptionMetrics)
 }

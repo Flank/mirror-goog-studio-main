@@ -90,7 +90,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.4"
+GRADLE_VERSION = "7.5-rc-1"
 
 filegroup(
     name = "gradle-distrib",
@@ -244,7 +244,6 @@ maven_repository(
     # Don't add new targets here, see above for how to migrate
     visibility = [
         "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/adt/idea/databinding:__pkg__",
         "//tools/adt/idea/designer:__pkg__",
         "//tools/adt/idea/designer-perf-tests:__pkg__",
         "//tools/adt/idea/ide-perf-tests:__pkg__",
@@ -254,7 +253,6 @@ maven_repository(
         "//tools/adt/idea/project-system-gradle-sync:__pkg__",
         "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//tools/data-binding/compilationTests:__pkg__",
         "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )

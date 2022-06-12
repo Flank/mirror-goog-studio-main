@@ -93,6 +93,13 @@ enum class IntegerOption(
      */
     GRADLE_MANAGED_DEVICE_SETUP_TIMEOUT_MINUTES("android.experimental.testOptions.managedDevices.setupTimeoutMinutes", ApiStage.Experimental),
 
+    /**
+     * Maximum number of concurrent Gradle Managed Devices (AVDs) to be active at any one point in time.
+     *
+     * If the value is 0 or negative value, there is no maximum devices.
+     */
+    GRADLE_MANAGED_DEVICE_MAX_CONCURRENT_DEVICES("android.experimental.testOptions.managedDevices.maxConcurrentDevices", ApiStage.Experimental),
+
     /* ------------
      * REMOVED APIS
      */

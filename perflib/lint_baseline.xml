@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 4.2.0-dev">
+<issues format="5" by="lint 7.4.0-dev">
 
     <issue
         id="DefaultLocale"
@@ -38,7 +38,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/tools/perflib/vmtrace/VmTraceParser.java"
-            line="344"/>
+            line="347"/>
     </issue>
 
     <issue
@@ -46,7 +46,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/tools/perflib/vmtrace/VmTraceParser.java"
-            line="383"/>
+            line="386"/>
     </issue>
 
     <issue
@@ -54,7 +54,15 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="src/main/java/com/android/tools/perflib/vmtrace/VmTraceParser.java"
-            line="537"/>
+            line="540"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/tools/perflib/heap/analysis/LinkEvalDominators.kt"
+            line="163"/>
     </issue>
 
 </issues>

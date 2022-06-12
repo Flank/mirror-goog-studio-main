@@ -17,6 +17,7 @@
 package com.android.tools.appinspection.network.trackers
 
 import com.android.tools.appinspection.network.reporters.ConnectionReporter
+import com.android.tools.appinspection.network.rules.NetworkInterceptionMetrics
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -71,5 +72,9 @@ class ConnectionTracker(
 
     override fun trackResponseBody(stream: InputStream): InputStream {
         return InputStreamTracker(stream, reporter.createInputStreamReporter())
+    }
+
+    override fun trackResponseInterception(interception: NetworkInterceptionMetrics) {
+        reporter.onInterception(interception)
     }
 }

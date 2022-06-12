@@ -15,10 +15,27 @@
  */
 package com.android.utils;
 
+import static com.android.SdkConstants.UTF_8;
+import static com.android.utils.XmlUtils.CDATA_PREFIX;
+
 import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -35,24 +52,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static com.android.SdkConstants.UTF_8;
-import static com.android.utils.XmlUtils.CDATA_PREFIX;
 
 /**
  * A simple DOM XML parser which can retrieve exact beginning and end offsets
@@ -96,7 +95,14 @@ public class PositionXmlParser {
     @NonNull
     public static Document parse(@NonNull InputStream input, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
-        return parse(readAllBytes(input), namespaceAware);
+        return parse(readAllBytes(input), namespaceAware, DOCUMENT_BUILDER_FACTORY);
+    }
+
+    @NonNull
+    public static Document parse(
+            @NonNull InputStream input, boolean namespaceAware, DocumentBuilderFactory factory)
+            throws ParserConfigurationException, SAXException, IOException {
+        return parse(readAllBytes(input), namespaceAware, factory);
     }
 
     /**
@@ -130,13 +136,21 @@ public class PositionXmlParser {
         return parse(input, true);
     }
 
+    /** @see #parse(InputStream, boolean) */
+    @NonNull
+    public static Document parse(
+            @NonNull InputStream input, @NonNull DocumentBuilderFactory factory)
+            throws IOException, SAXException, ParserConfigurationException {
+        return parse(input, true, factory);
+    }
+
     /**
      * @see #parse(byte[], boolean)
      */
     @NonNull
     public static Document parse(@NonNull byte[] data)
             throws ParserConfigurationException, SAXException, IOException {
-        return parse(data, true);
+        return parse(data, true, DOCUMENT_BUILDER_FACTORY);
     }
 
     /**
@@ -157,14 +171,15 @@ public class PositionXmlParser {
      * @throws ParserConfigurationException if a SAX parser is not available
      * @throws SAXException if the document contains a parsing error
      * @throws IOException if something is seriously wrong. This should not happen since the input
-     *         source is known to be constructed from a string.
+     *     source is known to be constructed from a string.
      */
     @NonNull
-    public static Document parse(@NonNull byte[] data, boolean namespaceAware)
+    public static Document parse(
+            @NonNull byte[] data, boolean namespaceAware, @NonNull DocumentBuilderFactory factory)
             throws ParserConfigurationException, SAXException, IOException {
         String xml = getXmlString(data);
         xml = XmlUtils.stripBom(xml);
-        return parseInternal(xml, namespaceAware);
+        return parseInternal(xml, namespaceAware, factory);
     }
 
     /**
@@ -206,16 +221,17 @@ public class PositionXmlParser {
     public static Document parse(@NonNull String xml, boolean namespaceAware)
             throws ParserConfigurationException, SAXException, IOException {
         xml = XmlUtils.stripBom(xml);
-        return parseInternal(xml, namespaceAware);
+        return parseInternal(xml, namespaceAware, DOCUMENT_BUILDER_FACTORY);
     }
 
     @NonNull
-    private static Document parseInternal(@NonNull String xml, boolean namespaceAware)
+    private static Document parseInternal(
+            @NonNull String xml, boolean namespaceAware, @NonNull DocumentBuilderFactory factory)
             throws ParserConfigurationException, SAXException, IOException {
         DomBuilder domBuilder;
         boolean retry = false;
         while (true) {
-            domBuilder = new DomBuilder(xml);
+            domBuilder = new DomBuilder(xml, factory);
             try {
                 parseInternal(xml, namespaceAware, domBuilder);
                 break;
@@ -240,7 +256,7 @@ public class PositionXmlParser {
         DomBuilder domBuilder;
         boolean retry = false;
         while (true) {
-            domBuilder = new DomBuilder(xml);
+            domBuilder = new DomBuilder(xml, DOCUMENT_BUILDER_FACTORY);
             try {
                 parseInternal(xml, namespaceAware, domBuilder);
                 break;
@@ -790,10 +806,10 @@ public class PositionXmlParser {
         @SuppressWarnings("StringBufferField")
         private final StringBuilder mPendingText = new StringBuilder();
 
-        DomBuilder(String xml) throws ParserConfigurationException {
+        DomBuilder(String xml, DocumentBuilderFactory factory) throws ParserConfigurationException {
             mXml = xml;
 
-            DocumentBuilder docBuilder = DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+            DocumentBuilder docBuilder = factory.newDocumentBuilder();
             mDocument = docBuilder.newDocument();
             mDocument.setUserData(CONTENT_KEY, xml, null);
         }

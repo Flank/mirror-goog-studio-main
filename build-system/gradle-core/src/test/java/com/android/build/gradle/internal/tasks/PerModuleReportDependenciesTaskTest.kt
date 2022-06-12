@@ -53,6 +53,7 @@ import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.repositories.IvyArtifactRepository
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.artifacts.result.ResolvedVariantResult
 import org.gradle.api.internal.artifacts.repositories.DefaultIvyArtifactRepository
 import org.gradle.api.internal.artifacts.repositories.DefaultMavenArtifactRepository
 import org.gradle.api.internal.artifacts.result.ResolvedComponentResultInternal
@@ -224,4 +225,7 @@ private fun createModuleComponentInternal(group:String, name:String, version:Str
 private class FakeResolvedComponentResultInternal(thingy: ResolvedComponentResult, private val repositoryName:String ) :
     ResolvedComponentResult by thingy, ResolvedComponentResultInternal {
     override fun getRepositoryName(): String = repositoryName
+    override fun getAllVariants(): MutableList<ResolvedVariantResult> {
+        TODO("Not yet implemented")
+    }
 }

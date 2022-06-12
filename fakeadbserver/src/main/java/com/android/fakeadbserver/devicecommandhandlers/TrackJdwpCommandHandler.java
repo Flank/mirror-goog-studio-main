@@ -60,7 +60,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
                                             createClientListChangedHandler() {
                                         return () -> {
                                             try {
-                                                sendDeviceList(device, stream);
+                                                sendClientList(device, stream);
                                                 return new StateChangeHandlerFactory.HandlerResult(
                                                         true);
                                             } catch (IOException ignored) {
@@ -86,7 +86,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
         try {
             writeOkay(stream); // Send ok first.
 
-            sendDeviceList(device, stream); // Then send the initial device list.
+            sendClientList(device, stream); // Then send the initial client list.
 
             while (true) {
                 if (!queue.take().call().mShouldContinue) {
@@ -101,7 +101,7 @@ public class TrackJdwpCommandHandler extends DeviceCommandHandler {
         return;
     }
 
-    private static void sendDeviceList(@NonNull DeviceState device, @NonNull OutputStream stream)
+    private static void sendClientList(@NonNull DeviceState device, @NonNull OutputStream stream)
             throws IOException {
         String clientListString = device.getClientListString();
         write4ByteHexIntString(stream, clientListString.length());

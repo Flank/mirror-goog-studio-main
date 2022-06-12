@@ -641,6 +641,7 @@ com/android/tools/ddms/ddmlib
   com/android/commands/
   com/android/commands/am/
   com/android/ddmlib/
+  com/android/ddmlib/clientmanager/
   com/android/ddmlib/internal/
   com/android/ddmlib/internal/commands/
   com/android/ddmlib/internal/jdwp/

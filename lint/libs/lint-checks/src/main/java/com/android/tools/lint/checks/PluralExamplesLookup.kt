@@ -31,9 +31,9 @@ class PluralExamplesLookup {
 
     companion object {
         private const val filename = "/plural-examples.txt"
-        val instance: PluralExamplesLookup by lazy {
-            PluralExamplesLookup()
-        }
+        private var instance: PluralExamplesLookup? = null
+        fun getInstance(): PluralExamplesLookup =
+            instance ?: PluralExamplesLookup().also { instance = it }
 
         private fun parseLine(line: String): Pair<String, Map<String, PluralExample>> {
             val lineParts = line.split('/')

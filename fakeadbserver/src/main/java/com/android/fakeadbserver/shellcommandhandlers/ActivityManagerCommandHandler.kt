@@ -18,49 +18,32 @@ package com.android.fakeadbserver.shellcommandhandlers
 import com.android.fakeadbserver.CommandHandler
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
-import java.io.IOException
+import com.android.fakeadbserver.services.ExecServiceOutput
+import com.android.fakeadbserver.services.ServiceManager
 import java.net.Socket
 
-class ActivityManagerCommandHandler(
-  private val commandHandlerAdapter: CommandHandlerAdapter
-) : SimpleShellHandler("am") {
+class ActivityManagerCommandHandler : SimpleShellHandler("am") {
 
-  override fun execute(fakeAdbServer: FakeAdbServer, responseSocket: Socket, device: DeviceState, args: String?) {
-    try {
-      val output = responseSocket.getOutputStream()
+    override fun execute(
+        fakeAdbServer: FakeAdbServer,
+        responseSocket: Socket,
+        device: DeviceState,
+        args: String?
+    ) {
+        val output = responseSocket.getOutputStream()
 
-      if (args == null) {
-        CommandHandler.writeFail(output)
-        return
-      }
+        if (args == null) {
+            CommandHandler.writeFail(output)
+            return
+        }
 
-      CommandHandler.writeOkay(output)
+        CommandHandler.writeOkay(output)
 
-      val response: String = when {
-          args.startsWith("start") -> commandHandlerAdapter.start(
-              device,
-              args.substringAfter("start").trimStart()
-          )
-          args.startsWith("force-stop") -> commandHandlerAdapter.forceStop(
-              device,
-              args.substringAfter("force-stop").trimStart()
-          )
-          else -> ""
-      }
+        val serviceOutput = ExecServiceOutput(responseSocket)
 
-        CommandHandler.writeString(output, response)
-    } catch (ignored: IOException) {
-        // Unable to write to socket. Can't communicate anything with client. Just swallow
-        // the exception and move on
+        // Create a service request
+        val params = mutableListOf(ServiceManager.ACTIVITY_MANAGER_SERVICE_NAME)
+        params.addAll(args.split(" "))
+        device.serviceManager.processCommand(params, serviceOutput)
     }
-
-      return
-  }
-
-    interface CommandHandlerAdapter {
-
-        fun start(deviceState: DeviceState, args: String): String = throw NotImplementedError()
-        fun forceStop(deviceState: DeviceState, args: String): String = throw NotImplementedError()
-    }
-
 }

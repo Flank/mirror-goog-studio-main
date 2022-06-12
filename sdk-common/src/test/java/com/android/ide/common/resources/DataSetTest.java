@@ -160,12 +160,14 @@ public class DataSetTest {
             }
 
             @Override
-            protected void readSourceFolder(File sourceFolder, ILogger logger)
+            protected void readSourceFolder(
+                    File sourceFolder, ILogger logger, DocumentBuilderFactory factory)
                     throws MergingException {}
 
-            @Override
             @Nullable
-            protected DataFile createFileAndItems(File sourceFolder, File file, ILogger logger)
+            @Override
+            protected DataFile createFileAndItems(
+                    File sourceFolder, File file, ILogger logger, DocumentBuilderFactory factory)
                     throws MergingException {
                 return null;
             }

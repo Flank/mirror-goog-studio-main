@@ -22,6 +22,7 @@ import com.android.fakeadbserver.devicecommandhandlers.AbbCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.AbbExecCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.FakeSyncCommandHandler;
+import com.android.fakeadbserver.devicecommandhandlers.JdwpCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ReverseForwardCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.TrackJdwpCommandHandler;
 import com.android.fakeadbserver.execcommandhandlers.CatExecCommandHandler;
@@ -44,12 +45,14 @@ import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.VersionCommandHandler;
+import com.android.fakeadbserver.shellcommandhandlers.ActivityManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.CatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.CmdCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.DumpsysCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.LogcatCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.PackageManagerCommandHandler;
+import com.android.fakeadbserver.shellcommandhandlers.RmCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.SetPropCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WindowManagerCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.WriteNoStopCommandHandler;
@@ -253,6 +256,7 @@ public final class FakeAdbServer implements AutoCloseable {
      * @param deviceModel        is the model name of the device
      * @param release            is the Android OS version of the device
      * @param sdk                is the SDK version of the device
+     * @param cpuAbi             is the ABI of the device CPU
      * @param hostConnectionType is the simulated connection type to the device @return the future
      * @return a future to allow synchronization of the side effects of the call
      */
@@ -262,6 +266,7 @@ public final class FakeAdbServer implements AutoCloseable {
             @NonNull String deviceModel,
             @NonNull String release,
             @NonNull String sdk,
+            @NonNull String cpuAbi,
             @NonNull DeviceState.HostConnectionType hostConnectionType) {
         DeviceState device =
                 new DeviceState(
@@ -271,6 +276,7 @@ public final class FakeAdbServer implements AutoCloseable {
                         deviceModel,
                         release,
                         sdk,
+                        cpuAbi,
                         hostConnectionType,
                         newTransportId());
         if (mConnectionHandlerTask == null) {
@@ -286,6 +292,23 @@ public final class FakeAdbServer implements AutoCloseable {
                         return device;
                     });
         }
+    }
+
+    public Future<DeviceState> connectDevice(
+            @NonNull String deviceId,
+            @NonNull String manufacturer,
+            @NonNull String deviceModel,
+            @NonNull String release,
+            @NonNull String sdk,
+            @NonNull DeviceState.HostConnectionType hostConnectionType) {
+        return connectDevice(
+                deviceId,
+                manufacturer,
+                deviceModel,
+                release,
+                sdk,
+                "x86_64",
+                hostConnectionType);
     }
 
     void addDevice(DeviceStateConfig deviceConfig) {
@@ -344,7 +367,10 @@ public final class FakeAdbServer implements AutoCloseable {
         return mMainServerThreadExecutor.submit(
                 () -> {
                     assert mDevices.containsKey(deviceId);
-                    mDevices.remove(deviceId);
+                    DeviceState removedDevice = mDevices.remove(deviceId);
+                    if (removedDevice != null) {
+                        removedDevice.stop();
+                    }
                     mDeviceChangeHub.deviceListChanged(mDevices.values());
                 });
     }
@@ -468,6 +494,7 @@ public final class FakeAdbServer implements AutoCloseable {
             addDeviceHandler(new GetPropExecCommandHandler());
             addDeviceHandler(new PackageExecCommandHandler());
             addDeviceHandler(new PingExecCommandHandler());
+            addDeviceHandler(new RmCommandHandler());
 
             addDeviceHandler(new LogcatCommandHandler());
             addDeviceHandler(new GetPropCommandHandler());
@@ -483,6 +510,8 @@ public final class FakeAdbServer implements AutoCloseable {
             addDeviceHandler(new ShellProtocolEchoV2CommandHandler());
             addDeviceHandler(new AbbCommandHandler());
             addDeviceHandler(new AbbExecCommandHandler());
+            addDeviceHandler(new ActivityManagerCommandHandler());
+            addDeviceHandler(new JdwpCommandHandler());
 
             return this;
         }

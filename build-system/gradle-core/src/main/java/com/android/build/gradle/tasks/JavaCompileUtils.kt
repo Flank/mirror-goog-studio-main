@@ -26,11 +26,9 @@ import com.android.build.gradle.internal.dependency.getJdkImageFromTransform
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.builder.errors.IssueReporter
 import com.android.sdklib.AndroidTargetHash
 import com.android.utils.FileUtils
@@ -88,11 +86,11 @@ fun JavaCompile.configureProperties(creationConfig: ComponentCreationConfig, tas
             // classes(e.g. android.jar) that were previously passed through bootstrapClasspath need to be provided
             // through classpath
             creationConfig.global.bootClasspath,
-            creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
+            creationConfig.compileClasspath
         )
     } else {
         this.options.bootstrapClasspath = task.project.files(creationConfig.global.bootClasspath)
-        this.classpath = creationConfig.getJavaClasspath(COMPILE_CLASSPATH, CLASSES_JAR, null)
+        this.classpath = creationConfig.compileClasspath
     }
 
     this.sourceCompatibility = compileOptions.sourceCompatibility.toString()

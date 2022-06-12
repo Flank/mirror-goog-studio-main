@@ -50,8 +50,7 @@ public final class NameAnonymizer {
      */
     public long anonymizeProjectPath(@NonNull String projectPath) {
         Preconditions.checkArgument(
-                projectPath.startsWith(":"),
-                "Project path '" + projectPath + "' should be absolute");
+                projectPath.startsWith(":"), "Project path '%s' should be absolute", projectPath);
         try {
             return mProjects.get(projectPath).mId;
         } catch (ExecutionException e) {

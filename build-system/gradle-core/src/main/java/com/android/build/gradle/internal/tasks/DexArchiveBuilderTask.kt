@@ -222,7 +222,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             ),
             desugarGraphDir = desugarGraphDir.get().asFile.takeIf { dexParams.withDesugaring.get() },
 
-            projectVariant = projectVariant.get(),
             inputJarHashesFile = inputJarHashesFile.get().asFile,
             numberOfBuckets = numberOfBuckets.get(),
             workerExecutor = workerExecutor,
@@ -230,32 +229,6 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             taskPath = path,
             analyticsService = analyticsService
         ).doProcess()
-    }
-
-    /**
-     * Some files will be reported as both added and removed, as order of inputs may shift and we
-     * are using @Classpath on inputs. For those, ignore the removed change,
-     * and just handle them as added. For non-incremental builds return an empty set as dexing
-     * pipeline traverses directories and we'd like to avoid serializing this information to the
-     * worker action.
-     */
-    private fun getChanged(
-        canRunIncrementally: Boolean,
-        inputChanges: InputChanges,
-        input: FileCollection
-    ): Set<FileChange> {
-        if (!canRunIncrementally) {
-            return emptySet()
-        }
-        val fileChanges = mutableMapOf<File, FileChange>()
-
-        inputChanges.getFileChanges(input).forEach { change ->
-            val currentValue = fileChanges[change.file]
-            if (currentValue == null || (currentValue.changeType == ChangeType.REMOVED && change.changeType == ChangeType.ADDED)) {
-                fileChanges[change.file] = change
-            }
-        }
-        return fileChanges.values.toSet()
     }
 
     class CreationAction(
@@ -636,9 +609,37 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         @get:OutputDirectory
         abstract val keepRules: DirectoryProperty
     }
+
+    companion object {
+        /**
+         * Some files will be reported as both added and removed, as order of inputs may shift and we
+         * are using @Classpath on inputs. For those, ignore the removed change,
+         * and just handle them as added. For non-incremental builds return an empty set as dexing
+         * pipeline traverses directories and we'd like to avoid serializing this information to the
+         * worker action.
+         */
+        fun getChanged(
+            canRunIncrementally: Boolean,
+            inputChanges: InputChanges,
+            input: FileCollection
+        ): Set<FileChange> {
+            if (!canRunIncrementally) {
+                return emptySet()
+            }
+            val fileChanges = mutableMapOf<File, FileChange>()
+
+            inputChanges.getFileChanges(input).forEach { change ->
+                val currentValue = fileChanges[change.file]
+                if (currentValue == null || (currentValue.changeType == ChangeType.REMOVED && change.changeType == ChangeType.ADDED)) {
+                    fileChanges[change.file] = change
+                }
+            }
+            return fileChanges.values.toSet()
+        }
+    }
 }
 
-private val DEFAULT_NUM_BUCKETS = max(Runtime.getRuntime().availableProcessors() / 2, 1)
+val DEFAULT_NUM_BUCKETS = max(Runtime.getRuntime().availableProcessors() / 2, 1)
 
 /** Parameters required for dexing (with D8). */
 abstract class DexParameterInputs {

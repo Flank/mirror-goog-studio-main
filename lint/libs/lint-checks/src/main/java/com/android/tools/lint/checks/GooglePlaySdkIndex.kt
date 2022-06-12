@@ -267,9 +267,9 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
      *
      * @param groupId: group id for library coordinates
      * @param artifactId: artifact id for library coordinates
-     * @param versionString: version of the library (only used for logging)
+     * @param versionString: version of the library (only used for
+     *     logging)
      * @param buildFile: build file where this library is being used
-     *
      * @return a link to the SDK url this library belongs to if the
      *     index has information about it and [showLinks] is true.
      */

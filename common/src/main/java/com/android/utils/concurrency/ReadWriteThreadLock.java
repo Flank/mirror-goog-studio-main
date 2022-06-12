@@ -133,9 +133,8 @@ public final class ReadWriteThreadLock {
                         lockObject::getClass);
         Preconditions.checkArgument(
                 lockObject.getClass() == lockObjectClass,
-                String.format(
-                        "Lock object's class %1$s must be loaded once but is loaded twice",
-                        lockObject.getClass().getName()));
+                "Lock object's class %s must be loaded once but is loaded twice",
+                lockObject.getClass().getName());
 
         this.lockObject = lockObject;
         this.lock =

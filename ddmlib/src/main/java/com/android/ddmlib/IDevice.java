@@ -17,6 +17,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ddmlib.clientmanager.DeviceClientManager;
 import com.android.ddmlib.log.LogReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
@@ -340,6 +341,13 @@ public interface IDevice extends IShellEnabledDevice {
     /** Returns the array of profileable clients. */
     default ProfileableClient[] getProfileableClients() {
         return new ProfileableClient[0]; // Returns an empty array by default
+    }
+
+    @NonNull
+    default DeviceClientManager getClientManager() {
+        String message =
+                String.format("%s is not supported", DeviceClientManager.class.getSimpleName());
+        throw new UnsupportedOperationException(message);
     }
 
     /**

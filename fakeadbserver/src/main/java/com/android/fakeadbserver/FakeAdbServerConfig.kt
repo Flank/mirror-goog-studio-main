@@ -49,5 +49,6 @@ class DeviceStateConfig(
     val model: String,
     val buildVersionRelease: String,
     val buildVersionSdk: String,
+    val cpuAbi: String,
     var deviceStatus: DeviceState.DeviceStatus,
 )

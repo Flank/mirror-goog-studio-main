@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.Log.LogLevel;
+import com.android.ddmlib.clientmanager.ClientManager;
 import com.android.ddmlib.internal.ClientImpl;
 import com.android.ddmlib.internal.DeviceMonitor;
 import com.android.ddmlib.internal.MonitorThread;
@@ -109,6 +110,7 @@ public class AndroidDebugBridge {
     private static AndroidDebugBridge sThis;
     private static boolean sInitialized = false;
     private static boolean sClientSupport;
+    private static ClientManager sClientManager;
     private static Map<String, String> sAdbEnvVars; // env vars to set while launching adb
 
     /** Full path to adb. */
@@ -276,6 +278,11 @@ public class AndroidDebugBridge {
         Preconditions.checkState(!sInitialized, "AndroidDebugBridge.init() has already been called.");
         sInitialized = true;
         sClientSupport = options.clientSupport;
+        sClientManager = options.clientManager;
+        if (sClientManager != null) {
+            // A custom client manager is not compatible with "client support"
+            sClientSupport = false;
+        }
         sAdbEnvVars = options.adbEnvVars;
         sUserManagedAdbMode = options.userManagedAdbMode;
         sLastKnownGoodAddress = null;
@@ -384,6 +391,16 @@ public class AndroidDebugBridge {
      */
     public static boolean getClientSupport() {
         return sClientSupport;
+    }
+
+    /**
+     * Returns the current {@link ClientManager} instance if {@link Client} process tracking is
+     * delegated to an external implementation, or {@code null} if {@link Client} processes are
+     * monitored with the default {@link #getClientSupport()} implementation.
+     */
+    @Nullable
+    public ClientManager getClientManager() {
+        return sClientManager;
     }
 
     /**
@@ -1307,7 +1324,7 @@ public class AndroidDebugBridge {
      * @param client the modified <code>Client</code>.
      * @param changeMask the mask indicating what changed in the <code>Client</code>
      */
-    public static void clientChanged(@NonNull ClientImpl client, int changeMask) {
+    public static void clientChanged(@NonNull Client client, int changeMask) {
         // Notify the listeners
         for (IClientChangeListener listener : sClientListeners) {
             // we attempt to catch any exception so that a bad listener doesn't kill our

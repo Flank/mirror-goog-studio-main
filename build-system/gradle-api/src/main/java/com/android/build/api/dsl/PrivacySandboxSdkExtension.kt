@@ -70,4 +70,10 @@ interface PrivacySandboxSdkExtension: FusedLibraryExtension {
     @get:Incubating
     @set:Incubating
     var buildToolsVersion: String
+
+    @get:Incubating
+    val bundle: PrivacySandboxSdkBundle
+
+    @Incubating
+    fun bundle(action: PrivacySandboxSdkBundle.() -> Unit)
 }

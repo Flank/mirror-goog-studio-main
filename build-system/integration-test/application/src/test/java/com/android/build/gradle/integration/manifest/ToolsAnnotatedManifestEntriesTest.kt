@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.build.api.artifact.Artifact
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
@@ -43,12 +44,12 @@ apply plugin: 'com.android.privacy-sandbox-sdk'
 android {
     namespace 'com.example.sdk'
     minSdk 13
-    compileSdk ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()}
+    compileSdk $DEFAULT_COMPILE_SDK_VERSION
 }
             """
         )
 
-        project.execute("assemble")
+        project.execute("mainManifestGenerator")
         // check that merged manifest still has the tools: entries.
         // eventually, once the bundletool is ready, we should check there as well.
         val manifestFile = FileUtils.join(project.buildDir,

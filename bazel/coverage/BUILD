@@ -597,6 +597,8 @@ coverage_report(
     name = "upgrade-assistant",
     srcpath_include = [
         "tools/adt/idea/android/src/com/android/tools/idea/gradle/project/upgrade",
+        "tools/adt/idea/project-system-gradle-sync/src/com/android/tools/idea/gradle/project/upgrade",
+        "tools/adt/idea/project-system-gradle-upgrade/src/com/android/tools/idea/gradle/project/upgrade",
     ],
     tests = [
         "//tools/adt/idea/android:intellij.android.core.tests_tests",
@@ -829,6 +831,17 @@ coverage_report(
     ],
 )
 
+# Coverage report for AQI
+coverage_report(
+    name = "aqi",
+    srcpath_include = [
+        "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
+    ],
+    tests = [
+        "//tools/vendor/google/firebase:firebase_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -836,6 +849,7 @@ combine_report_definitions(
         "adb-wireless",
         "all",
         "app-inspection",
+        "aqi",
         "background-task-inspector",
         "build-attribution",
         "cmake-vnext",

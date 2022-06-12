@@ -24,7 +24,10 @@ public class ViewDebug {
     @SuppressWarnings("unused") // invoked by reflection
     public static AutoCloseable startRenderingCommandsCapture(
             View tree, Executor executor, Callable<OutputStream> output) {
-        View.AttachInfo attachInfo = new View.AttachInfo();
+        View.AttachInfo attachInfo = tree.mAttachInfo;
+        if (attachInfo == null) {
+            throw new IllegalArgumentException("Given view isn't attached");
+        }
         attachInfo
                 .getRenderer()
                 .setPictureCaptureCallback(
@@ -37,7 +40,6 @@ public class ViewDebug {
                                                 throw new RuntimeException(e);
                                             }
                                         }));
-        tree.setAttachInfo(attachInfo);
         return () -> attachInfo.getRenderer().setPictureCaptureCallback(null);
     }
 }

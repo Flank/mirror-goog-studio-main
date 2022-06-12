@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -71,6 +72,11 @@ public class ResourceMerger extends DataMerger<ResourceMergerItem, ResourceFile,
      * @param minSdk the minimum SDK, used for filtering.
      */
     public ResourceMerger(int minSdk) {
+        mMinSdk = minSdk;
+    }
+
+    public ResourceMerger(int minSdk, DocumentBuilderFactory factory) {
+        super(factory);
         mMinSdk = minSdk;
     }
 

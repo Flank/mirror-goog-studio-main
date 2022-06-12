@@ -20,6 +20,7 @@ import com.android.tools.fakeandroid.ProcessRunner
 import com.android.tools.profiler.proto.Agent.AgentConfig
 import com.android.tools.profiler.proto.Commands
 import com.android.tools.profiler.proto.Common.CommonConfig
+import com.android.tools.profiler.proto.Transport.DaemonConfig.LayoutInspectorConfig
 import com.android.tools.profiler.proto.Transport
 import com.android.tools.profiler.proto.Transport.DaemonConfig
 import com.android.tools.profiler.proto.TransportServiceGrpc
@@ -58,6 +59,7 @@ class TransportRule @JvmOverloads constructor(
     open class Config {
         open fun initDaemonConfig(daemonConfig: CommonConfig.Builder) {}
         open fun initAgentConfig(agentConfig: AgentConfig.Builder) {}
+        open fun initLayoutInspectorConfig(layoutInspectorConfig: LayoutInspectorConfig.Builder) {}
         open fun onBeforeActivityLaunched(transportRule: TransportRule) {}
     }
 
@@ -84,6 +86,12 @@ class TransportRule @JvmOverloads constructor(
         CommonConfig.newBuilder()
                 .setServiceAddress("$LOCAL_HOST:$serverPort")
                 .apply { ruleConfig.initDaemonConfig(this) }
+                .build()
+    }
+
+    val layoutInspectorConfig: LayoutInspectorConfig by lazy {
+        LayoutInspectorConfig.newBuilder()
+                .apply { ruleConfig.initLayoutInspectorConfig(this) }
                 .build()
     }
 
@@ -171,7 +179,10 @@ class TransportRule @JvmOverloads constructor(
     private fun buildDaemonConfig(): File {
         val file = temporaryFolder.newFile()
         val outputStream = FileOutputStream(file)
-        val config = DaemonConfig.newBuilder().setCommon(commonConfig).build()
+        val config = DaemonConfig.newBuilder()
+            .setCommon(commonConfig)
+            .setLayoutInspectorConfig(layoutInspectorConfig)
+            .build()
         config.writeTo(outputStream)
         outputStream.flush()
         outputStream.close()

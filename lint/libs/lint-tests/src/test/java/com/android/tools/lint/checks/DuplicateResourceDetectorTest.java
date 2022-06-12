@@ -364,6 +364,25 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                                 + "1 errors, 0 warnings");
     }
 
+    public void testOverlays() {
+        // Regression test for 234876440: DuplicateDefinition when including `overlayable.xml`
+        // resource
+        lint().files(
+                        xml(
+                                "res/values/overlayable.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "  <item type=\"anim\" name=\"car_ui_app_styled_view_exit_anim\"/>\n"
+                                        + "  <overlayable name=\"car-ui-lib\">\n"
+                                        + "    <policy type=\"odm|oem|product|signature|system|vendor\">\n"
+                                        + "      <item type=\"anim\" name=\"car_ui_app_styled_view_exit_anim\"/>\n"
+                                        + "    </policy>\n"
+                                        + "  </overlayable>\n"
+                                        + "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile customattr =
             xml(

@@ -61,7 +61,10 @@ class StatusCodeReplacedTransformation(
                     if (newHeaders.containsKey(FIELD_RESPONSE_STATUS_CODE)) {
                         newHeaders[FIELD_RESPONSE_STATUS_CODE] = listOf(replacingCode)
                     }
-                    return response.copy(responseHeaders = newHeaders)
+                    return response.copy(
+                        responseHeaders = newHeaders,
+                        interception = response.interception.copy(statusCode = true)
+                    )
                 }
             }
         }
@@ -81,7 +84,10 @@ class HeaderAddedTransformation(
         val values = headers.getOrPut(headerAdded.name) { listOf() }.toMutableList()
         values.add(headerAdded.value)
         headers[headerAdded.name] = values
-        return response.copy(responseHeaders = headers)
+        return response.copy(
+            responseHeaders = headers,
+            interception = response.interception.copy(headerAdded = true)
+        )
     }
 }
 
@@ -123,7 +129,10 @@ class HeaderReplacedTransformation(
             valueSet.addAll(value)
             headers[key] = valueSet.toList()
         }
-        return response.copy(responseHeaders = headers)
+        return response.copy(
+            responseHeaders = headers,
+            interception = response.interception.copy(headerReplaced = newHeaders.isNotEmpty())
+        )
     }
 }
 
@@ -138,7 +147,10 @@ class BodyReplacedTransformation(
     private val gzipBody: InputStream get() = bodyReplaced.body.toByteArray().gzip().inputStream()
 
     override fun transform(response: NetworkResponse): NetworkResponse {
-        return response.copy(body = if (isContentCompressed(response)) gzipBody else body)
+        return response.copy(
+            body = if (isContentCompressed(response)) gzipBody else body,
+            interception = response.interception.copy(bodyReplaced = true)
+        )
     }
 }
 
@@ -158,13 +170,14 @@ class BodyModifiedTransformation(
         try {
             val inputStream = if (isCompressed) GZIPInputStream(response.body) else response.body
             val body = inputStream.bufferedReader().use { it.readText() }
-            var newBody = bodyModified.targetText.toRegex()
+            val newBody = bodyModified.targetText.toRegex()
                 .replace(body, bodyModified.newText)
-                .toByteArray()
-            if (isCompressed) {
-                newBody = newBody.gzip()
-            }
-            return response.copy(body = newBody.inputStream())
+            val isBodyModified = body != newBody
+            val newBodyBytes = newBody.toByteArray()
+            return response.copy(
+                body = (if (isCompressed) newBodyBytes.gzip() else newBodyBytes).inputStream(),
+                interception = response.interception.copy(bodyModified = isBodyModified)
+            )
         } catch (ignored: IOException) {
             // If we got here, it means we failed to unzip data that was supposedly zipped.
             return response

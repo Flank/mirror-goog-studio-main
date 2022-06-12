@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProjectBuilder;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
@@ -91,15 +92,24 @@ public class CheckAll {
     public void assembleAndLint() throws Exception {
         AssumeUtil.assumeNotWindows(); // b/73306170
         Assume.assumeTrue(canAssemble(project));
-        project
-                .executor()
-                .withEnableInfoLogging(false)
-                .run("assembleDebug", "assembleAndroidTest", "lint");
+        executor().withEnableInfoLogging(false).run("assembleDebug", "assembleAndroidTest", "lint");
+    }
+
+    private GradleTaskExecutor executor() {
+        if (LEGACY_INCREMENTAL_TRANSFORM.contains(project.getName())) {
+            return project.executor().withFailOnWarning(false);
+        } else {
+            return project.executor();
+        }
     }
 
     private static boolean canAssemble(@NonNull GradleTestProject project) {
         return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
     }
+
+    // legacy incremental transform uses deprecated gradle api
+    private static final ImmutableSet<String> LEGACY_INCREMENTAL_TRANSFORM =
+            ImmutableSet.of("transformVariantApiTest", "jarjarIntegration");
 
     // https://github.com/gradle/gradle/issues/19765
     private static final ImmutableSet<String> CONFIG_CACHE_DISABLED =

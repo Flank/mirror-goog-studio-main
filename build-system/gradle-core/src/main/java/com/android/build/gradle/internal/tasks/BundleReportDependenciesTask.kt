@@ -148,7 +148,6 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         }
     }
 
-
     class CreationAction(
         creationConfig: VariantCreationConfig
     ) : VariantTaskCreationAction<BundleReportDependenciesTask, VariantCreationConfig>(

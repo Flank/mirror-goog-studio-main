@@ -29,6 +29,8 @@ import com.android.ddmlib.EmulatorConsole;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IDevice.DeviceState;
 import com.android.ddmlib.Log;
+import com.android.ddmlib.clientmanager.DeviceClientManager;
+import com.android.ddmlib.clientmanager.DeviceClientManagerUtils;
 import com.android.ddmlib.internal.commands.DisconnectCommand;
 import com.android.ddmlib.internal.jdwp.JdwpProxyServer;
 import com.google.common.annotations.VisibleForTesting;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * The {@link DeviceMonitor} monitors devices attached to adb.
@@ -389,9 +392,22 @@ public final class DeviceMonitor implements ClientTracker {
 
         @Override
         public void deviceListUpdate(@NonNull Map<String, DeviceState> devices) {
+            // Inject a DeviceClientManager only if ClientManager is active
+            Function<IDevice, DeviceClientManager> deviceClientManagerProvider =
+                    mServer.getClientManager() == null
+                            ? null
+                            : (device) ->
+                                    DeviceClientManagerUtils.createDeviceClientManager(
+                                            mServer, device);
+
             List<DeviceImpl> l = Lists.newArrayListWithExpectedSize(devices.size());
             for (Map.Entry<String, DeviceState> entry : devices.entrySet()) {
-                l.add(new DeviceImpl(DeviceMonitor.this, entry.getKey(), entry.getValue()));
+                l.add(
+                        new DeviceImpl(
+                                DeviceMonitor.this,
+                                deviceClientManagerProvider,
+                                entry.getKey(),
+                                entry.getValue()));
             }
             // now merge the new devices with the old ones.
             updateDevices(l);

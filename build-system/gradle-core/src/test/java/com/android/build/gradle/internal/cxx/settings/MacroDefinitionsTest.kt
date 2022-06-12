@@ -17,11 +17,6 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel
-import com.android.build.gradle.internal.cxx.model.CxxModuleModel
-import com.android.build.gradle.internal.cxx.model.CxxProjectModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
 import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK
@@ -32,6 +27,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class MacroDefinitionsTest {
+
     @Test
     fun `macro lookup checks`() {
         assertThat(Macro.lookup("thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
@@ -88,19 +84,19 @@ class MacroDefinitionsTest {
                     }
                     NDK_PLATFORM -> assertThat(macro.name).startsWith("NDK_PLATFORM")
                     GRADLE -> {
-                        when (macro.bindingType) {
+                        when  {
                             //Macro::class -> macro.takeFrom(macro) ?: fail()
-                            CxxCmakeAbiModel::class,
-                            CxxAbiModel::class -> {
+                            macro.bind.toString().startsWith("CXX_CMAKE_ABI_MODEL") ||
+                            macro.bind.toString().startsWith("CXX_ABI_MODEL") -> {
                                 assertThat(macro.name).startsWith("NDK_")
                                 assertThat(macro.name.startsWith("NDK_VARIANT")).isFalse()
                                 assertThat(macro.name.startsWith("NDK_MODULE")).isFalse()
                                 assertThat(macro.name.startsWith("NDK_PROJECT")).isFalse()
                             }
-                            CxxVariantModel::class -> assertThat(macro.name).startsWith("NDK_VARIANT_")
-                            CxxCmakeModuleModel::class,
-                            CxxModuleModel::class -> assertThat(macro.name).startsWith("NDK_MODULE_")
-                            CxxProjectModel::class -> assertThat(macro.name).startsWith("NDK_PROJECT_")
+                            macro.bind.toString().startsWith("CXX_VARIANT_MODEL") -> assertThat(macro.name).startsWith("NDK_VARIANT_")
+                            macro.bind.toString().startsWith("CXX_CMAKE_MODULE_MODEL") ||
+                            macro.bind.toString().startsWith("CXX_MODULE_MODEL") -> assertThat(macro.name).startsWith("NDK_MODULE_")
+                            macro.bind.toString().startsWith("CXX_PROJECT_MODEL") -> assertThat(macro.name).startsWith("NDK_PROJECT_")
                             else -> error("$macro")
                         }
                     }

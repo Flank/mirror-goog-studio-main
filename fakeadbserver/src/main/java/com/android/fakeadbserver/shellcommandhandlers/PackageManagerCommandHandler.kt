@@ -26,6 +26,11 @@ class PackageManagerCommandHandler : SimpleShellHandler("pm") {
 
       val serviceOutput = ExecServiceOutput(respSocket)
 
+      // Save command to logs so tests can consult them.
+      args?.let {
+          state.addPmLog(it)
+      }
+
       // Create a service request
       val params = mutableListOf("package")
       args?.let{

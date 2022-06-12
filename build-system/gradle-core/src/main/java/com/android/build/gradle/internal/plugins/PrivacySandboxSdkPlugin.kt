@@ -18,21 +18,31 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
+import com.android.build.gradle.internal.dsl.InternalPrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.res.PrivacySandboxSdkLinkAndroidResourcesTask
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
+import com.android.build.gradle.internal.services.TaskCreationServicesImpl
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService
+import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.internal.tasks.PerModuleBundleTask
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
-import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
+import com.android.build.gradle.tasks.PackagePrivacySandboxSdkBundle
+import com.android.build.gradle.tasks.PrivacySandboxSdkDexTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkManifestGeneratorTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkManifestMergerTask
+import com.android.build.gradle.tasks.PrivacySandboxSdkMergeDexTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkMergeResourcesTask
+import com.android.repository.Revision
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.component.SoftwareComponentFactory
 import org.gradle.api.file.RegularFile
 import org.gradle.build.event.BuildEventsListenerRegistry
@@ -43,12 +53,42 @@ class PrivacySandboxSdkPlugin @Inject constructor(
     listenerRegistry: BuildEventsListenerRegistry,
 ): AbstractFusedLibraryPlugin<PrivacySandboxSdkVariantScope>(softwareComponentFactory, listenerRegistry) {
 
+    private val versionedSdkLoaderService: VersionedSdkLoaderService by lazy {
+        withProject("versionedSdkLoaderService") { project ->
+            VersionedSdkLoaderService(
+                dslServices,
+                project,
+                {
+                    extension.compileSdk?.let {
+                        "android-$it"
+                    } ?: throw RuntimeException(
+                        "compileSdk version is not set"
+                    )
+                },
+                {
+                    Revision.parseRevision(extension.buildToolsVersion, Revision.Precision.MICRO)
+                },
+            )
+        }
+    }
+
     // so far, there is only one variant.
     override val variantScope by lazy {
         withProject("variantScope") { project ->
             PrivacySandboxSdkVariantScope(
-                project
-            ) { extension }
+                project,
+                TaskCreationServicesImpl(projectServices),
+                { extension },
+                {
+                    BootClasspathConfigImpl(
+                        project,
+                        projectServices,
+                        versionedSdkLoaderService,
+                        null,
+                        false
+                    )
+                }
+            )
         }
     }
 
@@ -65,6 +105,14 @@ class PrivacySandboxSdkPlugin @Inject constructor(
         extension
     }
 
+    override fun maybePublishToMaven(
+        project: Project,
+        includeApiElements: Configuration,
+        includeRuntimeElements: Configuration,
+        includeRuntimeUnmerged: Configuration
+    ) {
+        // ASB only get published to Play Store, not maven
+    }
 
     override fun apply(project: Project) {
         super.apply(project)
@@ -81,7 +129,7 @@ class PrivacySandboxSdkPlugin @Inject constructor(
 
         abstract class Extension(
             val publicExtensionImpl: PrivacySandboxSdkExtensionImpl,
-        ): PrivacySandboxSdkExtension by publicExtensionImpl
+        ): InternalPrivacySandboxSdkExtension by publicExtensionImpl
 
         return project.extensions.create(
             PrivacySandboxSdkExtension::class.java,
@@ -102,7 +150,12 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                         PrivacySandboxSdkMergeResourcesTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),
-                        PrivacySandboxSdkLinkAndroidResourcesTask.CreationAction(variantScope)
+                        PrivacySandboxSdkLinkAndroidResourcesTask.CreationAction(variantScope),
+                        PrivacySandboxSdkDexTask.CreationAction(variantScope),
+                        PrivacySandboxSdkMergeDexTask.CreationAction(variantScope),
+                        PerModuleBundleTask.PrivacySandboxSdkCreationAction(variantScope),
+                        AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
+                        PackagePrivacySandboxSdkBundle.CreationAction(variantScope),
                 ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
     }

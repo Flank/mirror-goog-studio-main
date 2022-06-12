@@ -25,7 +25,17 @@ class NetworkConnection(
 
 data class NetworkResponse(
     val responseHeaders: Map<String?, List<String>>,
-    val body: InputStream
+    val body: InputStream,
+    val interception: NetworkInterceptionMetrics = NetworkInterceptionMetrics()
+)
+
+data class NetworkInterceptionMetrics(
+    val criteriaMatched: Boolean = false,
+    val statusCode: Boolean = false,
+    val headerAdded: Boolean = false,
+    val headerReplaced: Boolean = false,
+    val bodyReplaced: Boolean = false,
+    val bodyModified: Boolean = false
 )
 
 /**

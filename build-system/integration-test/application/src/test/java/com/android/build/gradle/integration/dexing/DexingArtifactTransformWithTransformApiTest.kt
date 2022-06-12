@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.dexing
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
@@ -37,7 +37,7 @@ class DexingArtifactTransformWithTransformApiTest {
 
     @Test
     fun testArtifactTransformsUsedForDebugVariant() {
-        project.executor().run("assembleDebug")
+        executor().run("assembleDebug")
         project.buildResult.stdout.use { scanner ->
             ScannerSubject.assertThat(scanner)
                 .contains(DexingNoClasspathTransform::class.java.simpleName)
@@ -46,10 +46,13 @@ class DexingArtifactTransformWithTransformApiTest {
 
     @Test
     fun testArtifactTransformsNotUsedForReleaseVariant() {
-        project.executor().run("assembleRelease")
+        executor().run("assembleRelease")
         project.buildResult.stdout.use { scanner ->
             ScannerSubject.assertThat(scanner)
                 .doesNotContain(DexingNoClasspathTransform::class.java.simpleName)
         }
     }
+
+    // legacy incremental transform uses deprecated gradle api
+    fun executor(): GradleTaskExecutor = project.executor().withFailOnWarning(false)
 }

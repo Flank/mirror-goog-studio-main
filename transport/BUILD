@@ -3,10 +3,18 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 
 cc_binary(
     name = "transport_main",
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+    deps = [":transport_main_lib"],
+)
+
+cc_library(
+    name = "transport_main_lib",
     srcs = ["native/main/transport.cc"],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/echo-sample",
+        "-Itools/base/dynamic-layout-inspector/foreground-process-detection/native",
     ],
     linkopts = ANDROID_LINKOPTS + [
         "-ldl",  # Needed for dladdr referenced in TermincationService
@@ -14,6 +22,7 @@ cc_binary(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/dynamic-layout-inspector/foreground-process-detection:foreground_process_tracker",
         "//tools/base/echo-sample:echo",
         "//tools/base/profiler/native/perfd",
         "//tools/base/transport/native/daemon",

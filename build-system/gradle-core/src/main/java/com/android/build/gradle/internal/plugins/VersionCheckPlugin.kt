@@ -23,6 +23,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
 import java.io.File.separator
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Plugin that only checks the version of Gradle vs our min required version.
@@ -38,9 +39,15 @@ class VersionCheckPlugin: Plugin<Project> {
         // version of Gradle that has all the features that Studio uses directly.
         @JvmField
         val GRADLE_MIN_VERSION = GradleVersion.parse(SdkConstants.GRADLE_LATEST_VERSION)
+
+        // marked as internal for testing reasons.
+        internal val isCheckDone = AtomicBoolean(false)
     }
 
     override fun apply(project: Project) {
+        // we only need one project to do this check, so we just check on a static field.
+        if (isCheckDone.getAndSet(true)) return
+
         val logger = project.logger
 
         val currentVersion = project.gradle.gradleVersion

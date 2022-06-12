@@ -15,28 +15,19 @@
  */
 package com.android.adblib.tools
 
-import java.util.regex.Matcher
-import java.util.regex.Pattern
-
-internal const val NOT_SET : String = "Unknown"
-
-// Example of failure message:
-// Failure [INSTALL_FAILED_TEST_ONLY: installPackageLI]
-// Note that some failure output can be StackTraceExceptio
-private val FAILURE_PATTERN = Pattern.compile("Failure\\s+\\[(([^:]*)(:.*)?)\\]")
-
-class InstallException(output: String, exception: Exception? = null) : RuntimeException(exception) {
+class InstallException internal constructor(installResult: InstallResult? = null, exception: Exception? = null) :
+    RuntimeException("Error code: '" + (installResult?.errorCode ?: "") + "', message='" + (installResult?.errorMessage ?: "") + "'", exception) {
     val errorMessage : String
     val errorCode: String
 
     init {
-        val m: Matcher = FAILURE_PATTERN.matcher(output)
-        if (m.matches()) {
-            errorMessage = m.group(1) // e.g.: INSTALL_FAILED_TEST_ONLY: installPackageLI
-            errorCode = m.group(2) // e.g.: INSTALL_FAILED_TEST_ONLY
+        if (installResult != null) {
+            errorCode = installResult.errorCode
+            errorMessage = installResult.errorMessage
         } else {
-            errorMessage = output
-            errorCode = NOT_SET
+            errorCode = "Unknown"
+            errorMessage = "Unknown"
         }
+
     }
 }

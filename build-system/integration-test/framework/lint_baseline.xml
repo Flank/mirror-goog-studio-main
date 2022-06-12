@@ -1,11 +1,28 @@
-<!--
-This is an empty baseline file, used by modules that don't have any preexisting Lint issues.
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 7.4.0-dev">
 
-It exists, because providing a baseline is how Bazel targets opt into running Lint on their
-source code, and to allow the introduction of new lint checks without having to fix every
-problem before being able to land the check.
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/integration/common/fixture/GradleBuildResult.kt"
+            line="61"/>
+    </issue>
 
-Please don't add anything here. If your change introduces a Lint warning, suppress it with
-@Suppress (in Koltin) or @SuppressWarnings (in Java) and include a comment explaining why
-Lint was wrong. Please also consider fixing Lint if you see false positives.
--->
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/integration/common/fixture/model/ReferenceModelComparator.kt"
+            line="68"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/integration/common/fixture/model/ReferenceModelComparator.kt"
+            line="72"/>
+    </issue>
+
+</issues>

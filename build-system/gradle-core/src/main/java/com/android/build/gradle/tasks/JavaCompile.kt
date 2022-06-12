@@ -35,6 +35,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
@@ -43,6 +44,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.process.CommandLineArgumentProvider
 
 /**
@@ -109,6 +111,15 @@ class JavaCompileCreationAction(
     override fun configure(task: JavaCompile) {
         task.dependsOn(creationConfig.taskContainer.preBuildTask)
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, creationConfig.name)
+
+        // Use Gradle toolchain configured via java extension
+        task.project.extensions.getByType(JavaPluginExtension::class.java).let {
+            if (it.toolchain.languageVersion.isPresent) {
+                val toolchainService =
+                    task.project.extensions.getByType(JavaToolchainService::class.java)
+                task.javaCompiler.set(toolchainService.compilerFor(it.toolchain))
+            }
+        }
 
         task.configureProperties(creationConfig, task)
         // Set up the annotation processor classpath even when Kapt is used, because Java compiler

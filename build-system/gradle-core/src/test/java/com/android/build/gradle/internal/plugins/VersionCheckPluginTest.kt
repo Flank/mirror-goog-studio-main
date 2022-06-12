@@ -50,6 +50,12 @@ class VersionCheckPluginTest {
         `when`(mockGradle.gradleVersion).thenReturn("0.0.0")
         val spyProject = spy(project)
         `when`(spyProject.gradle).thenReturn(mockGradle)
+
+        // Because the class could have been loaded by other tests in the same JVM, the
+        // flag may have been set to true already, so we reset it.
+        // This is potentially fragile if other tests are running concurrently in the same JVM.
+        VersionCheckPlugin.isCheckDone.set(false)
+
         try {
             plugin.apply(spyProject)
             fail("A RuntimeException was expected but not generated")

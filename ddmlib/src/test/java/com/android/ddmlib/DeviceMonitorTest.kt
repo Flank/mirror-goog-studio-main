@@ -72,7 +72,7 @@ class DeviceMonitorTest {
 
     @Test
     fun testDeviceUpdate() {
-        adbRule.attachDevice("42", "Google", "Pix3l", "versionX", "29", USB)
+        adbRule.attachDevice("42", "Google", "Pix3l", "versionX", "29")
         val device: IDevice = adbRule.bridge.devices.single()
         assertThat(device.avdName).isNull()
         assertThat(device.avdPath).isNull()
@@ -81,7 +81,7 @@ class DeviceMonitorTest {
 
     @Test
     fun testEmulatorUpdate() {
-        adbRule.attachDevice("emulator-123", "Google", "Pixel", "29", "29", USB, "MyAvd", "/path")
+        adbRule.attachDevice("emulator-123", "Google", "Pixel", "29", "29", avdName = "MyAvd", avdPath = "/path")
         val device: IDevice = adbRule.bridge.devices.single()
 
         assertThat(device.avdName).isNull()
