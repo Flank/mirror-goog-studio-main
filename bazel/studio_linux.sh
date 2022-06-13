@@ -282,9 +282,9 @@ if [[ $IS_FLAKY_RUN && $BAZEL_STATUS -eq $BAZEL_EXITCODE_NO_TESTS_FOUND  ]]; the
   exit 0
 fi
 
-# For post-submit builds, if the tests fail we still want to report success
-# otherwise ATP will think the build failed and there are no tests. b/152755167
-if [[ $BUILD_TYPE == "POSTSUBMIT" && $BAZEL_STATUS -eq $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+# If the tests fail we report success, test results get displayed from other
+# systems. b/192362688
+if [[ $BAZEL_STATUS -eq $BAZEL_EXITCODE_TEST_FAILURES ]]; then
   exit 0
 else
   exit $BAZEL_STATUS
