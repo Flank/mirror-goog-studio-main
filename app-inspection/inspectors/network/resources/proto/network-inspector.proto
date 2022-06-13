@@ -146,12 +146,22 @@ message MatchingText {
 }
 
 message InterceptCriteria {
-    string protocol = 1;
+    enum Protocol {
+        PROTOCOL_UNSPECIFIED = 0;
+        PROTOCOL_HTTPS = 1;
+        PROTOCOL_HTTP = 2;
+    }
+    enum Method {
+        METHOD_UNSPECIFIED = 0;
+        METHOD_GET = 1;
+        METHOD_POST = 2;
+    }
+    Protocol protocol = 1;
     string host = 2;
     string port = 3;
     string path = 4;
     string query = 5;
-    string method = 6;
+    Method method = 6;
 }
 
 message Transformation {

@@ -28,12 +28,16 @@ fun createFakeRuleAddedEvent(url: URL): NetworkInspectorProtocol.InterceptRuleAd
         ruleBuilder.apply {
             enabled = true
             criteriaBuilder.apply {
-                protocol = url.protocol
+                protocol = when (url.protocol) {
+                    "https" -> NetworkInspectorProtocol.InterceptCriteria.Protocol.PROTOCOL_HTTPS
+                    "http" -> NetworkInspectorProtocol.InterceptCriteria.Protocol.PROTOCOL_HTTP
+                    else -> NetworkInspectorProtocol.InterceptCriteria.Protocol.PROTOCOL_UNSPECIFIED
+                }
                 host = url.host
                 port = ""
                 path = url.path
                 query = url.query
-                method = ""
+                method = NetworkInspectorProtocol.InterceptCriteria.Method.METHOD_GET
             }
             addTransformation(
                 NetworkInspectorProtocol.Transformation.newBuilder().apply {
