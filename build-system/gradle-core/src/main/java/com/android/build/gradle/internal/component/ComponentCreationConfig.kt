@@ -171,6 +171,8 @@ interface ComponentCreationConfig : ComponentIdentity {
         generatedBytecodeKey: Any? = null
     ): FileCollection
 
+    val compileClasspath: FileCollection
+
     val needsMainDexListForBundle: Boolean
         get() = false
 
