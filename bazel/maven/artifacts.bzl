@@ -245,6 +245,7 @@ DATA = [
     "androidx.test:core:1.4.0-alpha06",
     "androidx.test.espresso:espresso-core:3.1.0",
     "androidx.test.espresso:espresso-core:3.2.0",
+    "androidx.test.espresso:espresso-core:3.4.0",
     "androidx.test.ext:junit:1.1.1",
     "androidx.test.ext:junit:1.1.3-alpha02",
     "androidx.test:orchestrator:1.4.0-alpha06",
