@@ -832,15 +832,16 @@ coverage_report(
 )
 
 # Coverage report for AQI
-coverage_report(
-    name = "aqi",
-    srcpath_include = [
-        "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
-    ],
-    tests = [
-        "//tools/vendor/google/firebase:firebase_tests",
-    ],
-)
+# TODO(b/235625101): firebase_tests too flaky in studio-coverage.
+#coverage_report(
+#    name = "aqi",
+#    srcpath_include = [
+#        "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
+#    ],
+#    tests = [
+#        "//tools/vendor/google/firebase:firebase_tests",
+#    ],
+#)
 
 combine_report_definitions(
     prefix = "comps",
@@ -849,7 +850,8 @@ combine_report_definitions(
         "adb-wireless",
         "all",
         "app-inspection",
-        "aqi",
+        # TODO(b/235625101): firebase_tests too flaky in studio-coverage.
+        # "aqi",
         "background-task-inspector",
         "build-attribution",
         "cmake-vnext",
@@ -1092,6 +1094,7 @@ coverage_report(
         # TODO(b/234053228) too flaky on Linux
         # "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
-        "//tools/vendor/google/firebase:firebase_tests",
+        # TODO(b/235625101) too flaky in studio-coverage.
+        # "//tools/vendor/google/firebase:firebase_tests",
     ],
 )
