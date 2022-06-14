@@ -165,6 +165,7 @@ function run_bazel_test() {
     --tool_tag=${SCRIPT_NAME} \
     --embed_label="${AS_BUILD_NUMBER}" \
     --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
+    --jobs=500 \
     "${extra_test_flags[@]}" \
     "${conditional_flags[@]}" \
     -- \
