@@ -240,8 +240,11 @@ public final class DeviceImpl implements IDevice {
             StringBuilder sb = new StringBuilder(20);
 
             if (manufacturer != null) {
-                sb.append(manufacturer);
-                sb.append(SEPARATOR);
+                if (model == null || !model.toUpperCase(Locale.US)
+                        .startsWith(manufacturer.toUpperCase(Locale.US))) {
+                    sb.append(manufacturer);
+                    sb.append(SEPARATOR);
+                }
             }
 
             if (model != null) {
