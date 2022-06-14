@@ -25,10 +25,9 @@
 #include "tools/base/deploy/common/utils.h"
 
 namespace {
-const int kRwFileMode =
-    S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH;
+const int kRwFileMode = S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP;
 const int kRwxFileMode = S_IRUSR | S_IXUSR | S_IWUSR | S_IRGRP | S_IXGRP |
-                         S_IWGRP | S_IROTH | S_IXOTH | S_IWOTH;
+                         S_IWGRP | S_IROTH | S_IXOTH;
 }  // namespace
 
 namespace deploy {

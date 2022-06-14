@@ -26,16 +26,35 @@ public class Chmod extends ShellCommand {
     public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         FakeDevice device = context.getDevice();
-        if (args.length < 2 || !args[0].equals("+x")) {
+        if (args.length < 2) {
             stdout.println("Usage chmod ...");
             return 1;
         }
-        if (!device.hasFile(args[1])) {
-            stdout.printf("chmod: %s: No such file or directory\n", args[1]);
+
+        if (args[0].equals("+x")) {
+            if (!device.hasFile(args[1])) {
+                stdout.printf("chmod: %s: No such file or directory\n", args[1]);
+                return 1;
+            } else {
+                device.makeExecutable(args[1], false);
+                return 0;
+            }
+        } else if (args[0].equals("-R")) {
+            if (!args[1].equals("775")) {
+                stdout.printf("chmod: %s: Unsupported mask\n", args[1]);
+                return 1;
+            }
+
+            if (!device.hasFile(args[2])) {
+                stdout.printf("chmod: %s: No such file or directory\n", args[2]);
+                return 1;
+            }
+            device.makeExecutable(args[2], true);
+            return 0;
+        } else {
+            stdout.printf("chmod: Unsupported usage");
             return 1;
         }
-        device.makeExecutable(args[1]);
-        return 0;
     }
 
     @Override

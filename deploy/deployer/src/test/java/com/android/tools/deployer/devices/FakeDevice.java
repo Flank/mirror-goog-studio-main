@@ -230,7 +230,7 @@ public class FakeDevice {
         File file = new File(getStorage(), name);
         Files.write(file.toPath(), data);
         if (isModeExecutable(mode)) {
-            makeExecutable(name);
+            makeExecutable(name, false);
         }
     }
 
@@ -491,9 +491,25 @@ public class FakeDevice {
         }
     }
 
-    public void makeExecutable(String path) throws IOException {
-        File exe = new File(getStorage(), path);
-        exe.setExecutable(true);
+    public void makeExecutable(String path, boolean recursive) throws IOException {
+        File target = new File(getStorage(), path);
+        target.setExecutable(true);
+
+        if (recursive && target.isDirectory()) {
+            for (File file : target.listFiles()) {
+                makeExecutableRecursive(file);
+            }
+        }
+    }
+
+    private void makeExecutableRecursive(File target) {
+        target.setExecutable(true);
+
+        if (target.isDirectory()) {
+            for (File file : target.listFiles()) {
+                makeExecutableRecursive(file);
+            }
+        }
     }
 
     public File getStorage() {

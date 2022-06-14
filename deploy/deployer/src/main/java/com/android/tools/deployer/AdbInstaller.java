@@ -268,14 +268,19 @@ public class AdbInstaller extends Installer {
                 },
                 Timeouts.SHELL_RMFR);
         runShell(
+                // mkdir -m 775 -p unfortunately only set 775 to the last child directory so
+                // we are going to fix the permission in one go at the end.
                 new String[] {
                     "mkdir", "-p", Deployer.INSTALLER_DIRECTORY, Deployer.INSTALLER_TMP_DIRECTORY
                 },
                 Timeouts.SHELL_MKDIR);
+        runShell(
+                new String[] {"chmod", "-R", "775", Deployer.BASE_DIRECTORY}, Timeouts.SHELL_CHMOD);
 
         // No need to check result here. If something wrong happens, an IOException is thrown.
         adb.push(installerFile.getAbsolutePath(), INSTALLER_PATH);
 
+        // Make sure the installer has +x.
         runShell(new String[] {"chmod", "+x", INSTALLER_PATH}, Timeouts.SHELL_CHMOD);
     }
 
