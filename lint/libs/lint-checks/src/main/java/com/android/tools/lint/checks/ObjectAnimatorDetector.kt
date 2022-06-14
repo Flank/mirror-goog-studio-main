@@ -627,8 +627,8 @@ class ObjectAnimatorDetector : Detector(), SourceCodeScanner, XmlScanner {
         private const val MOTION_LAYOUT_URI = AUTO_URI
 
         val KEEP_ANNOTATION = AndroidxName.of(
-          SUPPORT_ANNOTATIONS_PREFIX,
-          "Keep"
+            SUPPORT_ANNOTATIONS_PREFIX,
+            "Keep"
         )
 
         private val IMPLEMENTATION =

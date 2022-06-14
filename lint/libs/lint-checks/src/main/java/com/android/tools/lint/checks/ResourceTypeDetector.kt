@@ -200,11 +200,11 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                                 RESOURCE_TYPE, expression,
                                 context.getLocation(expression),
                                 String.format(
-                                  "Comparing resource types (`@%1\$s`) other " +
+                                    "Comparing resource types (`@%1\$s`) other " +
                                         "than equality is dangerous and usually " +
                                         "wrong;  some resource types set top bit " +
                                         "which turns the value negative",
-                                  SUPPORT_ANNOTATIONS_PREFIX.removeFrom(qualifiedName)
+                                    SUPPORT_ANNOTATIONS_PREFIX.removeFrom(qualifiedName)
                                 )
                             )
                             return

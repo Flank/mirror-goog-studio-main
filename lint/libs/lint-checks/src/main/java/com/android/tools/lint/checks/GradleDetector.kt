@@ -1015,7 +1015,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 val isBlocking = sdkIndex.hasLibraryBlockingIssues(groupId, artifactId, versionString)
                 if (isBlocking) {
                     if (sdkIndex.hasLibraryCriticalIssues(groupId, artifactId, versionString, buildFile)) {
-                        val message =sdkIndex.generateBlockingCriticalMessage(groupId, artifactId, versionString)
+                        val message = sdkIndex.generateBlockingCriticalMessage(groupId, artifactId, versionString)
                         val fix = sdkIndex.generateSdkLinkLintFix(groupId, artifactId, versionString, buildFile)
                         reportCreated = report(context, cookie, RISKY_LIBRARY, message, fix, overrideSeverity = Severity.ERROR)
                     }

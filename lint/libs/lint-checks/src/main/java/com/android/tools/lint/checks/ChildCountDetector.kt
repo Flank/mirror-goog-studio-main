@@ -75,12 +75,12 @@ class ChildCountDetector : LayoutDetector() {
     }
 
     override fun getApplicableElements(): Collection<String> = listOf(
-      SCROLL_VIEW,
-      HORIZONTAL_SCROLL_VIEW,
-      LIST_VIEW,
-      GRID_VIEW,
-      CLASS_NESTED_SCROLL_VIEW.oldName(),
-      CLASS_NESTED_SCROLL_VIEW.newName()
+        SCROLL_VIEW,
+        HORIZONTAL_SCROLL_VIEW,
+        LIST_VIEW,
+        GRID_VIEW,
+        CLASS_NESTED_SCROLL_VIEW.oldName(),
+        CLASS_NESTED_SCROLL_VIEW.newName()
         // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
     )
 

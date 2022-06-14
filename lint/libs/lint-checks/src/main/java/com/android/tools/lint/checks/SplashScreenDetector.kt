@@ -61,10 +61,10 @@ class SplashScreenDetector : Detector(), SourceCodeScanner {
     companion object {
         private val SPLASH_SCREEN_KEYWORDS = listOf("SplashScreen", "SplashActivity", "LaunchActivity", "LaunchScreen")
         private val PROHIBITED_SUPERCLASSES = listOf(
-          CLASS_ACTIVITY,
-          CLASS_V4_FRAGMENT.oldName(),
-          CLASS_V4_FRAGMENT.newName(),
-          CLASS_VIEW
+            CLASS_ACTIVITY,
+            CLASS_V4_FRAGMENT.oldName(),
+            CLASS_V4_FRAGMENT.newName(),
+            CLASS_VIEW
         )
 
         @JvmField

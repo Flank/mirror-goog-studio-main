@@ -52,20 +52,20 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 
 class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = listOf(
-      INT_RANGE_ANNOTATION.oldName(),
-      INT_RANGE_ANNOTATION.newName(),
-      FLOAT_RANGE_ANNOTATION.oldName(),
-      FLOAT_RANGE_ANNOTATION.newName(),
-      SIZE_ANNOTATION.oldName(),
-      SIZE_ANNOTATION.newName(),
+        INT_RANGE_ANNOTATION.oldName(),
+        INT_RANGE_ANNOTATION.newName(),
+        FLOAT_RANGE_ANNOTATION.oldName(),
+        FLOAT_RANGE_ANNOTATION.newName(),
+        SIZE_ANNOTATION.oldName(),
+        SIZE_ANNOTATION.newName(),
 
         // Such that the annotation is considered relevant by the annotation handler
         // even if the typedef check itself is disabled
-      INT_DEF_ANNOTATION.oldName(),
-      INT_DEF_ANNOTATION.newName(),
+        INT_DEF_ANNOTATION.oldName(),
+        INT_DEF_ANNOTATION.newName(),
 
-      LONG_DEF_ANNOTATION.oldName(),
-      LONG_DEF_ANNOTATION.newName()
+        LONG_DEF_ANNOTATION.oldName(),
+        LONG_DEF_ANNOTATION.newName()
 
         // Consider including org.jetbrains.annotations.Range here, but be careful
         // such that we don't end up with a double set of warnings in the IDE (one

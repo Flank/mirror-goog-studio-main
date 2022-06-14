@@ -47,10 +47,10 @@ import org.w3c.dom.Node
 class ConstraintLayoutDetector : LayoutDetector() {
     override fun getApplicableElements(): Collection<String> {
         return setOf(
-          CONSTRAINT_LAYOUT.oldName(),
-          CONSTRAINT_LAYOUT.newName(),
-          MOTION_LAYOUT.oldName(),
-          MOTION_LAYOUT.newName()
+            CONSTRAINT_LAYOUT.oldName(),
+            CONSTRAINT_LAYOUT.newName(),
+            MOTION_LAYOUT.oldName(),
+            MOTION_LAYOUT.newName()
         )
     }
 
