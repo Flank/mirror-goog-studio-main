@@ -138,14 +138,13 @@ class ArtifactsImpl(
 
     fun calculateOutputPath(type: Single<*>, taskProvider: Task): File {
         with(getArtifactContainer(type)) {
-            val fileName = calculateFileName(type)
+            val fileName = finalFilename?.orNull ?: calculateFileName(type)
             return if (getFinalProvider() == null || taskProvider.name == getFinalProvider()?.name) {
-                val finalName = finalFilename?.orNull ?: fileName
                 if (buildOutputLocation?.isPresent == true)
                     //final transformer with
-                    FileUtils.join(buildOutputLocation!!.get().asFile, finalName)
+                    FileUtils.join(buildOutputLocation!!.get().asFile, fileName)
                 else
-                    getOutputPath(type, forceFilename = finalName)
+                    getOutputPath(type, forceFilename = fileName)
             } else getIntermediateOutputPath(
                 type,
                 taskProvider.name,
