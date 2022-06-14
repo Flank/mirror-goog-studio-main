@@ -25,6 +25,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 
@@ -46,6 +47,10 @@ internal class JdwpProcessImpl(
 
     override val processPropertiesFlow: StateFlow<JdwpProcessProperties>
         get() = processPropertiesStateFlow
+
+    override fun toString(): String {
+        return "${this.javaClass.simpleName}(pid=$pid, active=${scope.isActive}, properties=${processPropertiesFlow.value})"
+    }
 
     init {
         //TODO: Start a JDWP session for the process and collect info

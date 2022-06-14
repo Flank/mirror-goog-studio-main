@@ -82,6 +82,10 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         // Assert
         Assert.assertTrue(listOfProcessList.size >= 3)
 
+        // Help debug test failures:
+        listOfProcessList.forEachIndexed { index, jdwpProcesses ->
+            println("Process list #$index: $jdwpProcesses")
+        }
         // First list has one process
         Assert.assertEquals(1, listOfProcessList[0].size)
         Assert.assertEquals(listOf(pid10), listOfProcessList[0].map { it.pid }.toList())
