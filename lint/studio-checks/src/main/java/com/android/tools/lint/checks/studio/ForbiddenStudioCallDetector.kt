@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.CommonClassNames.JAVA_LANG_STRING
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
@@ -69,9 +70,24 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
             implementation = IMPLEMENTATION,
             moreInfo = "https://issuetracker.google.com/182063560"
         )
+
+        @JvmField
+        val MOCKITO_WHEN = Issue.create(
+            id = "MockitoWhen",
+            briefDescription = "Do not use Mockito's `when` from Kotlin",
+            explanation = """
+                Using Mockito's `when` from Kotlin requires you to surround the method \
+                call in backticks, since `when` is a hard keyword in Kotlin. Instead, use \
+                the `whenever` extension method.
+                """,
+            category = CORRECTNESS,
+            severity = Severity.ERROR,
+            platforms = STUDIO_PLATFORMS,
+            implementation = IMPLEMENTATION
+        )
     }
 
-    override fun getApplicableMethodNames(): List<String> = listOf("intern", "copy")
+    override fun getApplicableMethodNames(): List<String> = listOf("intern", "copy", "when")
 
     override fun visitMethodCall(
         context: JavaContext,
@@ -108,6 +124,34 @@ class ForbiddenStudioCallDetector : Detector(), SourceCodeScanner {
                 ),
                 "Do not use `java.nio.file.Files.copy(Path, Path)`. " +
                     "Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin's `File#copyTo(File)`"
+            )
+        }
+
+        // Mockito#when
+        if (method.name == "when" &&
+            isKotlin(node.sourcePsi) &&
+            (
+                context.evaluator.isMemberInClass(method, "org.mockito.Mockito") ||
+                    context.evaluator.isMemberInClass(method, "org.mockito.MockedStatic") ||
+                    context.evaluator.isMemberInClass(method, "org.mockito.stubbing.Stubber")
+                )
+        ) {
+            val fix = fix().replace()
+                .name("Use `whenever`")
+                .range(context.getCallLocation(node, includeReceiver = true, includeArguments = false))
+                .all()
+                .with("whenever")
+                .imports("com.android.testutils.MockitoKt.whenever")
+                .build()
+            context.report(
+                MOCKITO_WHEN, node,
+                context.getCallLocation(
+                    node,
+                    includeReceiver = false,
+                    includeArguments = true
+                ),
+                "Do not use `Mockito.when` from Kotlin; use `MocktioKt.whenever` instead",
+                fix
             )
         }
     }
