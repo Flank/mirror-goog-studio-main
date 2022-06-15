@@ -22,4 +22,10 @@ public interface ThreadingCheckerHook {
      * annotation.
      */
     void verifyOnUiThread();
+
+    /**
+     * This method is called by a java agent when encountering methods annotated with @WorkerThread
+     * annotation.
+     */
+    void verifyOnWorkerThread();
 }

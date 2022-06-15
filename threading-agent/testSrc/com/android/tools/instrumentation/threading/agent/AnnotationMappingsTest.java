@@ -54,7 +54,11 @@ public class AnnotationMappingsTest {
                         AnnotationMappings.create()
                                 .getCheckerMethodForThreadingAnnotation(
                                         "Lcom/android/annotations/concurrency/WorkerThread;"))
-                .isEqualTo(Optional.empty());
+                .isEqualTo(
+                        Optional.of(
+                                new CheckerMethodRef(
+                                        "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
+                                        "verifyOnWorkerThread")));
     }
 
     @Test
