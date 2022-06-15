@@ -17,6 +17,7 @@ package com.android.adblib.tools
 
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.DeviceSelector
+import com.android.adblib.deviceProperties
 import kotlinx.coroutines.flow.first
 import java.nio.file.Files
 import java.nio.file.Path
@@ -74,7 +75,7 @@ internal class PMDriver(private val service : AdbDeviceServices, private val dev
 
         // Before we start, decide of an install strategy
         val features = service.session.hostServices.availableFeatures(device)
-        val api = getDeviceAPILevel(service, device)
+        val api = service.deviceProperties(device).api()
         val pm : PM = when {
             // Test API level
             api < 21 -> PMLegacy(service)

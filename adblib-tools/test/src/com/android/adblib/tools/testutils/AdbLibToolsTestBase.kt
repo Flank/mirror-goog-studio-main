@@ -43,8 +43,6 @@ open class AdbLibToolsTestBase {
         return closeables.register(item)
     }
 
-    private lateinit var channelProvider: FakeAdbServerProvider.TestingChannelProvider
-
     protected fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
         val host = registerCloseable(TestingAdbLibHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
@@ -73,7 +71,7 @@ open class AdbLibToolsTestBase {
 
     internal fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
         val host = registerCloseable(TestingAdbLibHost())
-        channelProvider = fakeAdb.createChannelProvider(host)
+        val channelProvider = fakeAdb.createChannelProvider(host)
         val session = registerCloseable(createSession(host, channelProvider))
         return session.hostServices
     }

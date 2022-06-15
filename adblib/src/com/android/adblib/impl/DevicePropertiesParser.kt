@@ -13,13 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib.tools
+package com.android.adblib.impl
 
-import com.android.adblib.AdbDeviceServices
-import com.android.adblib.AdbLibSession
-import com.android.adblib.DeviceSelector
-import com.android.adblib.shellAsLines
-import kotlinx.coroutines.flow.toList
+import com.android.adblib.DeviceProperty
 
 /**
  * A single line property
@@ -42,7 +38,7 @@ private val EndLinePattern = Regex("(.*)]$") //$NON-NLS-1$
  *         line 2\n
  *         line 3]
  */
-class DevicePropertiesParser {
+internal class DevicePropertiesParser {
 
     fun parse(lines: Sequence<String>): List<DeviceProperty> {
         val result = ArrayList<DeviceProperty>()
@@ -59,7 +55,7 @@ class DevicePropertiesParser {
         return matchOneLine(line) ?: matchMultiLine(line, iterator)
     }
 
-    fun matchOneLine(line: String): DeviceProperty? {
+    private fun matchOneLine(line: String): DeviceProperty? {
         val matchResult = SingleLinePattern.matchEntire(line)
         return matchResult?.let {
             DeviceProperty(matchResult.groupValues[1], matchResult.groupValues[2])
@@ -86,22 +82,5 @@ class DevicePropertiesParser {
             DeviceProperty(propName, sb.toString())
         }
     }
-
-    companion object {
-
-        /**
-         * The shell command to run on the device
-         */
-        const val ShellCommand = "getprop" //$NON-NLS-1$
-    }
 }
 
-data class DeviceProperty(val name: String, val value: String)
-
-/**
- * Execute a `getprop` shell command on [device] and returns a [List] of [DeviceProperty] entries
- */
-suspend fun AdbDeviceServices.getprop(device: DeviceSelector): List<DeviceProperty> {
-    val lines = shellAsLines(device, DevicePropertiesParser.ShellCommand).toList()
-    return DevicePropertiesParser().parse(lines.asSequence())
-}
