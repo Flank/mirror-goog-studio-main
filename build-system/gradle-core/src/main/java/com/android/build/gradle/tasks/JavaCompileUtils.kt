@@ -22,6 +22,7 @@ import com.android.build.api.component.impl.AnnotationProcessorImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.dependency.CONFIG_NAME_ANDROID_JDK_IMAGE
 import com.android.build.gradle.internal.dependency.JDK_IMAGE_OUTPUT_DIR
+import com.android.build.gradle.internal.dependency.JRT_FS_JAR
 import com.android.build.gradle.internal.dependency.getJdkImageFromTransform
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
@@ -38,6 +39,7 @@ import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.process.CommandLineArgumentProvider
@@ -327,7 +329,16 @@ private fun checkSdkCompatibility(compileSdkVersion: String, issueReporter: Issu
     }
 }
 
-class JdkImageInput(@get:Classpath val jdkImage: FileCollection) : CommandLineArgumentProvider {
+class JdkImageInput(private val jdkImage: FileCollection) : CommandLineArgumentProvider {
+
+    /** This is the actual system image */
+    @get:Classpath
+    val generatedModuleFile: Provider<File> = jdkImage.elements.map { it.single().asFile.resolve(JDK_IMAGE_OUTPUT_DIR).resolve("lib/modules") }
+
+    /** This jar contains logic for loading the custom system image. */
+    @get:Classpath
+    val jrtFsJar: Provider<File> = jdkImage.elements.map { it.single().asFile.resolve(JDK_IMAGE_OUTPUT_DIR).resolve("lib/$JRT_FS_JAR") }
+
     override fun asArguments() = listOf("--system", jdkImage.singleFile.resolve(JDK_IMAGE_OUTPUT_DIR).absolutePath)
 }
 

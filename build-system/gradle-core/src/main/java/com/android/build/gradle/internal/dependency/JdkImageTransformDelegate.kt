@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessExecutor
@@ -26,6 +27,7 @@ import com.android.utils.FileUtils
 import com.android.utils.ILogger
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions
+import org.gradle.api.JavaVersion
 import java.io.File
 import java.util.zip.Deflater
 import java.util.zip.ZipFile
@@ -165,7 +167,15 @@ class JdkTools(
             processOutputHandler
         ).rethrowFailure().assertNormalExitValue()
 
-        processOutputHandler.processOutput.standardOutputAsString.trim()
+        val processOutput = processOutputHandler.processOutput.standardOutputAsString.trim()
+
+        // Try to extract only major version in order to reduce build cache misses - b/234820480.
+        // If we fail, get the whole version.
+        return@lazy  try {
+            JavaVersion.toVersion(processOutput).majorVersion
+        } catch (t: Throwable) {
+            processOutput
+        }
     }
 
     fun compileModuleDescriptor(
@@ -284,10 +294,15 @@ private fun copyJrtFsJar(outDir: File, jdkTools: JdkTools) {
 
     val copiedLibsDir = FileUtils.mkdirs(outDir.resolve("lib"))
     val destination = copiedLibsDir.resolve(source.name)
-    source.copyTo(destination)
+
+    // Ignore manifest.mf as it contains unnecessary data causing build cache misses, b/234820480.
+    JarFlinger(destination.toPath()) { !it.equals("meta-inf/manifest.mf", ignoreCase = true) }.use {
+        it.addJar(source.toPath())
+    }
 }
 
 internal fun String.optionalExe() =
     if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) this + ".exe" else this
 
 
+internal const val JRT_FS_JAR = "jrt-fs.jar"

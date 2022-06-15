@@ -244,7 +244,7 @@ class JdkImageTransformDelegateTest {
         ).rethrowFailure().assertNormalExitValue()
 
         Truth.assertThat(processHandler.processOutput.standardOutputAsString).apply {
-            startsWith("java.base@11.0")
+            startsWith("java.base@11")
             contains("exports java.lang")
             contains("exports android.icu.lang")
             contains("exports dalvik.system")
@@ -275,8 +275,11 @@ class JdkImageTransformDelegateTest {
         delegate.run()
         Truth.assertThat(outDir.list()).asList().containsExactly("release", "lib")
 
-        val jrtFsJar = outDir.resolve("lib").resolve("jrt-fs.jar")
+        val jrtFsJar = outDir.resolve("lib").resolve(JRT_FS_JAR)
         assertThat(jrtFsJar).exists()
+        ZipFileSubject.assertThat(jrtFsJar) {
+            it.doesNotContain("META-INF/MANIFEST.MF")
+        }
 
         val compiledJava11Dir = tmp.newFolder("compiledJava11")
 
