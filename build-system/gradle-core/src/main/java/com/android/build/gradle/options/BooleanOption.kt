@@ -201,6 +201,8 @@ enum class BooleanOption(
             FeatureStage.Experimental
     ),
 
+    PRIVACY_SANDBOX_SDK_SUPPORT("android.experimental.privacysandboxsdk.enable", false, FeatureStage.Experimental),
+
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
