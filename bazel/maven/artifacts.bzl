@@ -111,7 +111,7 @@ ARTIFACTS = [
     "org.eclipse.aether:aether-transport-http:1.0.2.v20150114",
     "org.glassfish.jaxb:jaxb-runtime:2.3.2",
     "org.glassfish.jaxb:jaxb-xjc:2.3.2",
-    "org.gradle:gradle-tooling-api:7.5-rc-1",
+    "org.gradle:gradle-tooling-api:7.5-rc-2",
     "org.hamcrest:hamcrest-core:1.3",
     "org.jacoco:org.jacoco.agent:0.8.8",
     "org.jacoco:org.jacoco.core:0.8.8",
