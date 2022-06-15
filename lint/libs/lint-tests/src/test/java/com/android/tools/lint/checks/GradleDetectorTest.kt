@@ -4318,6 +4318,46 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testEmptyKtWithGradleKts() {
+        TestLintTask.lint().files(
+            kts(
+                """
+                plugins {
+                  id("com.android.application")
+                }
+                """
+            ),
+            kotlin(
+                "src/some/pkg/Empty.kt",
+                ""
+            )
+        )
+            .allowMissingSdk()
+            .issues(UastImplementationDetector.ISSUE) // Any detector that triggers FILE-level UAST visit
+            .run()
+            .expectClean()
+    }
+
+    fun testNonEmptyRootPackageKtWithGradleKts() {
+        TestLintTask.lint().files(
+            kts(
+                """
+                plugins {
+                  id("com.android.application")
+                }
+                """
+            ),
+            kotlin(
+                "src/NonEmpty.kt",
+                "val p = 42"
+            )
+        )
+            .allowMissingSdk()
+            .issues(UastImplementationDetector.ISSUE) // Any detector that triggers FILE-level UAST visit
+            .run()
+            .expectClean()
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
