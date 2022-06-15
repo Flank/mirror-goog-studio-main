@@ -16,40 +16,50 @@
 
 package com.android.build.gradle.integration.library
 
-import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
-import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
+import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
+import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.ZipFileSubject
-import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 import java.util.Objects
 import kotlin.io.path.readText
 
+/** Smoke integration tests for the privacy sandbox SDK production and consumption */
 class PrivacySandboxSdkTest {
 
-    private val androidLib1 = MinimalSubProject.lib("com.example.androidLib1").also {
-        it.appendToBuild("""
-        dependencies {
-            implementation 'junit:junit:4.12'
-        }
-        """.trimIndent())
-        it.addFile(
-            "src/main/res/values/strings.xml",
-            """<resources>
+    @get:Rule
+    val project = createGradleProjectBuilder {
+
+        subProject(":android-lib1") {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                defaultCompileSdk()
+                namespace = "com.example.androidLib1"
+                minSdk = 12
+            }
+            dependencies {
+                implementation("junit:junit:4.12")
+            }
+            addFile(
+                    "src/main/res/values/strings.xml",
+                    """<resources>
                 <string name="string_from_android_lib_1">androidLib2</string>
               </resources>"""
-        )
-        it.addFile(
-            "src/main/java/com/example/androidlib1/Example.java",
-            // language=java
-            """
+            )
+            addFile(
+                    "src/main/java/com/example/androidlib1/Example.java",
+                    // language=java
+                    """
                 package com.example.androidlib1;
 
                 class Example {
@@ -59,13 +69,18 @@ class PrivacySandboxSdkTest {
                     public void f1() {}
                 }
             """.trimIndent()
-        )
-    }
-    private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2").also {
-        it.addFile(
-            "src/main/java/com/example/androidlib2/Example.java",
-            // language=java
-            """
+            )
+            subProject(":android-lib2") {
+                plugins.add(PluginType.ANDROID_LIB)
+                android {
+                    defaultCompileSdk()
+                    namespace = "com.example.androidLib2"
+                    minSdk = 12
+                }
+                addFile(
+                        "src/main/java/com/example/androidlib2/Example.java",
+                        // language=java
+                        """
                 package com.example.androidlib2;
 
                 class Example {
@@ -75,48 +90,56 @@ class PrivacySandboxSdkTest {
                     public void f2() {}
                 }
             """.trimIndent()
-        )
-    }
-
-    private val privacySandboxSdk = MinimalSubProject.privacySandboxSdk("com.example.sdkLib1").also {
-        it.appendToBuild(
-            """
-                dependencies {
-                    include project(":androidLib1")
-                    include project(":androidLib2")
-                }
-
+                )
+            }
+            subProject(":privacy-sandbox-sdk") {
+                plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
                 android {
-                    compileSdk = $DEFAULT_COMPILE_SDK_VERSION
-                    minSdk = $DEFAULT_MIN_SDK_VERSION
-
-                    bundle {
-                        packageName = "com.example.sdkLib1"
-                        sdkProviderClassName = "Test"
-                        setVersion(1, 2, 3)
-                    }
+                    defaultCompileSdk()
+                    minSdk = 12
+                    namespace = "com.example.privacysandboxsdk"
                 }
-                """.trimIndent()
-        )
-    }
+                appendToBuildFile {
+                    """
+                        android {
+                            bundle {
+                                packageName = "com.example.privacysandboxsdk"
+                                sdkProviderClassName = "Test"
+                                setVersion(1, 2, 3)
+                            }
+                        }
+                    """.trimIndent()
+                }
+                dependencies {
+                    include(project(":android-lib1"))
+                    include(project(":android-lib2"))
+                }
 
-    @JvmField
-    @Rule
-    val project = GradleTestProject.builder()
-        .fromTestApp(
-            MultiModuleTestProject.builder()
-                .subproject("androidLib1", androidLib1)
-                .subproject("androidLib2", androidLib2)
-                .subproject("sdkLib1", privacySandboxSdk)
-                .build()
-        ).create()
+            }
+            subProject(":example-app") {
+                plugins.add(PluginType.ANDROID_APP)
+                android {
+                    defaultCompileSdk()
+                    minSdk = 12
+                    namespace = "com.example.privacysandboxsdk.consumer"
+                }
+                dependencies {
+                    implementation(project(":privacy-sandbox-sdk"))
+                }
+            }
+        }
+    }
+            .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
+            .create()
+
+    private fun executor() = project.executor().withPerTestPrefsRoot(true)
 
     @Test
     fun testDexing() {
-        val dexLocation = project.getSubproject(":sdkLib1")
+        val dexLocation = project.getSubproject(":privacy-sandbox-sdk")
                 .getIntermediateFile("dex", "single", "classes.dex")
 
-        project.execute(":sdkLib1:mergeDex")
+        executor().run(":privacy-sandbox-sdk:mergeDex")
 
         Dex(dexLocation).also { dex ->
             assertThat(dex.classes.keys).containsAtLeast(
@@ -129,13 +152,13 @@ class PrivacySandboxSdkTest {
 
         // Check incremental changes are handled
         TestFileUtils.searchAndReplace(
-                project.getSubproject("androidLib1")
+                project.getSubproject("android-lib1")
                         .file("src/main/java/com/example/androidlib1/Example.java"),
                 "public void f1() {}",
                 "public void g() {}"
         )
 
-        project.execute(":sdkLib1:mergeDex")
+        executor().run(":privacy-sandbox-sdk:mergeDex")
 
         Dex(dexLocation).also { dex ->
             assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map { it.name }).contains("g")
@@ -146,10 +169,10 @@ class PrivacySandboxSdkTest {
 
     @Test
     fun testAsb() {
-        project.execute(":sdkLib1:assemble")
+        executor().run(":privacy-sandbox-sdk:assemble")
 
         val asbFile =
-            project.getSubproject(":sdkLib1").getOutputFile("asb", "single", "sdkLib1.asb")
+            project.getSubproject(":privacy-sandbox-sdk").getOutputFile("asb", "single", "privacy-sandbox-sdk.asb")
 
         assertThat(asbFile.exists()).isTrue()
 
@@ -173,6 +196,29 @@ class PrivacySandboxSdkTest {
                 modules.contains("base/resources.pb")
                 modules.contains("SdkModulesConfig.pb")
             }
+        }
+    }
+
+    @Test
+    fun testConsumption() {
+        // TODO(b/235469089) expand this to verify installation also
+
+        executor().run(
+                ":example-app:buildPrivacySandboxSdkApksForDebug",
+                ":example-app:assembleDebug",
+        )
+
+        val privacySandboxSdkApk = project.getSubproject(":example-app")
+                .getIntermediateFile("extracted_apks_from_privacy_sandbox_sdks", "debug", "privacy-sandbox-sdk-standalone.apk")
+
+        Apk(privacySandboxSdkApk).use {
+            assertThat(it).containsClass("Lcom/example/androidlib1/Example;")
+            assertThat(it).containsClass("Lcom/example/androidlib2/Example;")
+        }
+
+        project.getSubproject(":example-app").getApk(GradleTestProject.ApkType.DEBUG).use {
+            assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
+            assertThat(it).doesNotContainClass("Lcom/example/androidlib1/Example;")
         }
     }
 }

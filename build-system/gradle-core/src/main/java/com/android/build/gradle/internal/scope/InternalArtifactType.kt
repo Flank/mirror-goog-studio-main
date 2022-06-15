@@ -441,6 +441,8 @@ InternalArtifactType<T : FileSystemLocation>(
     // The manifest meant to be consumed by the bundle.
     object BUNDLE_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
 
+    object EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs: InternalArtifactType<Directory>(DIRECTORY), ContainsMany
+
     // file containing the metadata for the full feature set. This contains the feature names: InternalArtifactType<RegularFile>(FILE), Replaceable
     // the res ID offset: InternalArtifactType<RegularFile>(FILE), Replaceable both tied to the feature module path. Published by the base for the
     // other features to consume and find their own metadata.

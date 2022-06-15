@@ -20,8 +20,12 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
+import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreSigningConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.signing.SigningConfigData
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
@@ -33,6 +37,7 @@ import com.google.common.base.Preconditions.checkState
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
@@ -200,6 +205,41 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
                 }
             )
             task.defaultDebugKeystoreLocation.set(defaultDebugKeystoreLocation)
+            task.outputs.upToDateWhen { !task.forceRerun() }
+        }
+    }
+
+
+    class PrivacySandboxSdkCreationAction(
+            private val globalCreationConfig: GlobalTaskCreationConfig
+    ) : TaskCreationAction<ValidateSigningTask>() {
+
+        override val name: String
+            get() = "validatePrivacySandboxSdkSigning"
+        override val type: Class<ValidateSigningTask>
+            get() = ValidateSigningTask::class.java
+
+        override fun handleProvider(
+                taskProvider: TaskProvider<ValidateSigningTask>
+        ) {
+            super.handleProvider(taskProvider)
+
+            globalCreationConfig.globalArtifacts.setInitialProvider(
+                    taskProvider,
+                    ValidateSigningTask::dummyOutputDirectory
+            ).on(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
+        }
+
+        override fun configure(
+                task: ValidateSigningTask
+        ) {
+
+            val signingConfigDataProvider: Provider<SigningConfigData> = getBuildService(
+                    globalCreationConfig.services.buildServiceRegistry,
+                    AndroidLocationsBuildService::class.java
+            ).map { it.getDefaultDebugKeystoreSigningConfig() }
+            task.signingConfigData.set(signingConfigDataProvider)
+            task.defaultDebugKeystoreLocation.set(signingConfigDataProvider.map { it.storeFile!! })
             task.outputs.upToDateWhen { !task.forceRerun() }
         }
     }

@@ -88,6 +88,17 @@ internal class PrivacySandboxSdkLinkAndroidResourcesTaskTest {
             dependencies {
                 include(project(":androidLib1"))
             }
+            appendToBuildFile {
+                """
+                        android {
+                            bundle {
+                                packageName = "com.example.privacysandboxsdk"
+                                sdkProviderClassName = "Test"
+                                setVersion(1, 2, 3)
+                            }
+                        }
+                    """.trimIndent()
+            }
         }
     }
 

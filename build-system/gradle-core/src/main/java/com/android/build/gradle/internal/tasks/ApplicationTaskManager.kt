@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.component.impl.isTestApk
 import com.android.build.api.variant.ApplicationVariantBuilder
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.AbstractAppTaskManager
@@ -37,6 +38,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWr
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.tasks.BuildPrivacySandboxSdkApks
 import com.android.build.gradle.tasks.sync.ApplicationVariantModelTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
 import com.android.builder.core.ComponentType
@@ -313,6 +315,13 @@ class ApplicationTaskManager(
     }
 
     override fun createInstallTask(creationConfig: ApkCreationConfig) {
+        if ( globalConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT] && !creationConfig.componentType.isForTesting) {
+            taskFactory.register(BuildPrivacySandboxSdkApks.CreationAction(creationConfig))
+            // TODO(b/235469089): register installation of the privacy sandbox sdk too.
+            // Force installation via the bundle for now, until the fast path is implemented.
+            taskFactory.register(InstallVariantViaBundleTask.CreationAction(creationConfig))
+            return
+        }
         if (!globalConfig.hasDynamicFeatures ||
             creationConfig is AndroidTestCreationConfig
         ) {

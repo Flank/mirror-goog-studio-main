@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import AsarToApksTransform
 import com.android.build.api.attributes.AgpVersionAttr
 import com.android.build.api.attributes.BuildTypeAttr.Companion.ATTRIBUTE
 import com.android.build.api.attributes.ProductFlavorAttr
@@ -60,11 +61,13 @@ import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreSigningConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.AutoNamespacePreProcessTransform
 import com.android.build.gradle.internal.res.namespaced.AutoNamespaceTransform
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ProjectServices
-import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -466,6 +469,25 @@ class DependencyConfigurator(
             globalConfig.fullBootClasspathProvider,
             projectServices.buildServiceRegistry
         )
+
+        if (projectOptions.get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
+            registerTransform(
+                    AsarToApksTransform::class.java,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_APKS
+            ) { params ->
+                projectServices.initializeAapt2Input(params.aapt2)
+                params.signingConfigData.set(
+                        getBuildService(
+                                projectServices.buildServiceRegistry,
+                                AndroidLocationsBuildService::class.java
+                        ).map { it.getDefaultDebugKeystoreSigningConfig() }
+                )
+                params.signingConfigValidationResultDir.set(
+                        globalConfig.globalArtifacts.get(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
+                )
+            }
+        }
 
         return this
     }

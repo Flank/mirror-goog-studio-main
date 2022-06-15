@@ -167,6 +167,10 @@ public class AndroidArtifacts {
     private static final String TYPE_DESUGAR_LIB_MERGED_KEEP_RULES =
             "android-desugar-lib-merged-keep-rules";
 
+    private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE = "asar";
+    private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS =
+            "android-privacy-sandbox-sdk-apks";
+
     private static final String TYPE_FEATURE_PUBLISHED_DEX = "android-feature-published-dex";
 
     private static final String TYPE_SOURCES_JAR = "android-sources-jar";
@@ -513,8 +517,13 @@ public class AndroidArtifacts {
         NAVIGATION_JSON(TYPE_NAVIGATION_JSON),
 
         // merged desugar lib keep rules from dynamic feature modules
-        DESUGAR_LIB_MERGED_KEEP_RULES(TYPE_DESUGAR_LIB_MERGED_KEEP_RULES);
+        DESUGAR_LIB_MERGED_KEEP_RULES(TYPE_DESUGAR_LIB_MERGED_KEEP_RULES),
 
+        // The 'ASAR' file for consuming privacy sandbox SDKs
+        ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE),
+
+        // The artifact-transform derived APKs from a privacy sandbox SDK
+        ANDROID_PRIVACY_SANDBOX_SDK_APKS(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS);
         @NonNull private final String type;
 
         ArtifactType(@NonNull String type) {

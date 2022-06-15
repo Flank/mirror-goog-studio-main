@@ -101,7 +101,7 @@ class FusedLibraryPlugin @Inject constructor(
     ) {
         val bundleTaskProvider = variantScope
                 .artifacts
-                .getArtifactContainer(artifactTypeForPublication)
+                .getArtifactContainer(artifactForPublication)
                 .getTaskProviders()
                 .last()
 
@@ -216,6 +216,12 @@ class FusedLibraryPlugin @Inject constructor(
     override fun getAnalyticsPluginType(): GradleBuildProject.PluginType  =
         GradleBuildProject.PluginType.FUSED_LIBRARIES
 
-    override val artifactTypeForPublication: Artifact.Single<RegularFile>
+    override val artifactForPublication: Artifact.Single<RegularFile>
         get() = FusedLibraryInternalArtifactType.BUNDLED_LIBRARY
+
+    override val artifactTypeForPublication: AndroidArtifacts.ArtifactType
+        get() = AndroidArtifacts.ArtifactType.AAR
+
+    override val allowUnmergedArtifacts: Boolean
+        get() = true
 }
