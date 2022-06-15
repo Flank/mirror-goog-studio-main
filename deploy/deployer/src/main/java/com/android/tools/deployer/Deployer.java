@@ -179,8 +179,13 @@ public class Deployer {
                 info = packageManagerInstall(sessionUID, packageName, apks, options, installMode);
             }
 
-            Task<List<Apk>> parsedApksTask = runner.create(info.apks);
+            App app = new App(packageName, info.apks, adb.getDevice(), logger);
+            if (this.options.skipPostInstallTasks) {
+                return new Result(info.skippedInstall, false, false, app);
+            }
+
             Task<Boolean> installCoroutineDebugger = null;
+            Task<List<Apk>> parsedApksTask = runner.create(info.apks);
             if (useCoroutineDebugger()) {
                 installCoroutineDebugger =
                         runner.create(
@@ -195,7 +200,6 @@ public class Deployer {
             runner.create(Tasks.APK_CHECK, checker::log, parsedApksTask);
             runner.runAsync(canceller);
 
-            App app = new App(packageName, info.apks, adb.getDevice(), logger);
             // we call get to make sure the coroutine debugger is installer before the app can start
             boolean coroutineDebuggerInstalled =
                     installCoroutineDebugger != null ? installCoroutineDebugger.get() : false;

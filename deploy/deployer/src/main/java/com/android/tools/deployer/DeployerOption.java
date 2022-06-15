@@ -25,6 +25,7 @@ public class DeployerOption {
     public final boolean useVariableReinitialization;
     public final boolean fastRestartOnSwapFail;
     public final boolean enableCoroutineDebugger;
+    public final boolean skipPostInstallTasks;
 
     private DeployerOption(
             boolean useOptimisticSwap,
@@ -33,7 +34,8 @@ public class DeployerOption {
             boolean useStructuralRedefinition,
             boolean useVariableReinitialization,
             boolean fastRestartOnSwapFail,
-            boolean enableCoroutineDebugger) {
+            boolean enableCoroutineDebugger,
+            boolean skipPostInstallTasks) {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.optimisticInstallSupport = optimisticInstallSupport;
@@ -41,6 +43,7 @@ public class DeployerOption {
         this.useVariableReinitialization = useVariableReinitialization;
         this.fastRestartOnSwapFail = fastRestartOnSwapFail;
         this.enableCoroutineDebugger = enableCoroutineDebugger;
+        this.skipPostInstallTasks = skipPostInstallTasks;
     }
 
     public static class Builder {
@@ -51,6 +54,7 @@ public class DeployerOption {
         private boolean useVariableReinitialization;
         private boolean fastRestartOnSwapFail;
         private boolean enableCoroutineDebugger;
+        private boolean skipPostInstallTasks;
 
         public Builder setUseOptimisticSwap(boolean useOptimisticSwap) {
             this.useOptimisticSwap = useOptimisticSwap;
@@ -87,6 +91,11 @@ public class DeployerOption {
             return this;
         }
 
+        public Builder skipPostInstallTasks(boolean skipPostInstallTasks) {
+            this.skipPostInstallTasks = skipPostInstallTasks;
+            return this;
+        }
+
         public DeployerOption build() {
             return new DeployerOption(
                     useOptimisticSwap,
@@ -95,7 +104,8 @@ public class DeployerOption {
                     useStructuralRedefinition,
                     useVariableReinitialization,
                     fastRestartOnSwapFail,
-                    enableCoroutineDebugger);
+                    enableCoroutineDebugger,
+                    skipPostInstallTasks);
         }
     }
 }

@@ -164,6 +164,7 @@ public class DeployerRunner {
                         .setFastRestartOnSwapFail(false)
                         .setOptimisticInstallSupport(optimisticInstallSupport)
                         .enableCoroutineDebugger(true)
+                        .skipPostInstallTasks(parameters.getSkipPostInstallTasks())
                         .build();
 
         Deployer deployer =

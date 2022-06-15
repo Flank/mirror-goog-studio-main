@@ -35,10 +35,10 @@ public class DeployRunnerParameters {
     private final List<Command> commands = new ArrayList<>();
     private boolean forceFullInstall = false;
     private boolean optimisticInstall = false;
+    private boolean skipPostInstallTasks = false;
     private String installersPath = null;
     private String adbExecutablePath = null;
     private String targetUserId = null;
-
     private String applicationId;
     private final List<String> targetDevices = new ArrayList<>();
     private final List<String> apkPaths = new ArrayList<>();
@@ -61,6 +61,8 @@ public class DeployRunnerParameters {
             adbExecutablePath = arg.substring("--adb=".length());
         } else if (arg.startsWith("--user=")) {
             targetUserId = arg.substring("--user=".length());
+        } else if (arg.startsWith("--skip-post-install")) {
+            skipPostInstallTasks = true;
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -140,6 +142,10 @@ public class DeployRunnerParameters {
 
     public String getAdbExecutablePath() {
         return adbExecutablePath;
+    }
+
+    public boolean getSkipPostInstallTasks() {
+        return skipPostInstallTasks;
     }
 
     public String getTargetUserId() {

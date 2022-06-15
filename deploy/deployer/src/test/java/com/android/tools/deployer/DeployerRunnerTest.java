@@ -198,6 +198,34 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    public void testSkipPostInstallTasks() throws Exception {
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+        String[] args = {
+            "install",
+            "com.example.helloworld",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString(),
+            "--skip-post-install"
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.helloworld", file);
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
+        assertTrue(dexDB.dump().isEmpty());
+        assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
+    }
+
+    @Test
     @ApiLevel.InRange(min = 28)
     public void testInstallCoroutineDebuggerSuccessful() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
