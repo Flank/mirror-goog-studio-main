@@ -67,6 +67,9 @@ data class AndroidGradlePluginAttributionData(
      */
     val buildscriptDependenciesInfo: Set<String> = emptySet(),
 
+    /**
+     * Contains information about this build.
+     */
     val buildInfo: BuildInfo? = null
 ) : Serializable {
 
