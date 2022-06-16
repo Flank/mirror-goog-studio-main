@@ -16,28 +16,14 @@
 package com.android.adblib.ddmlibcompatibility.debugging
 
 import com.android.adblib.AdbLibSession
-import com.android.adblib.thisLogger
-import com.android.ddmlib.AndroidDebugBridge
-import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.ClientManager
-import com.android.ddmlib.clientmanager.DeviceClientManagerListener
 
 /**
- * Implementation of ddmlib's [ClientManager] using [AdbLibSession] services.
+ * Factory for [ClientManager] instances based on [AdbLibSession].
  */
-internal class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
-
-    private val logger = thisLogger(session)
-
-    override fun createDeviceClientManager(
-        bridge: AndroidDebugBridge,
-        device: IDevice,
-        listener: DeviceClientManagerListener
-    ): AdbLibDeviceClientManager {
-        logger.debug { "Creating device client manager for device $device" }
-        return AdbLibDeviceClientManager(this, bridge, device, listener).apply {
-            startDeviceTracking()
-        }
+object AdbLibClientManagerFactory {
+    @JvmStatic
+    fun createClientManager(session: AdbLibSession): ClientManager {
+      return AdbLibClientManager(session)
     }
 }
-
