@@ -16,24 +16,24 @@
 
 package com.android.fakeadbserver.devicecommandhandlers;
 
+import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.readFrom;
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
+import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.DDMPacketHandler;
+import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.DdmPacket;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.ExitHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.HeloHandler;
-import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpDdmsPacketHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.readFrom;
-import static java.nio.charset.StandardCharsets.US_ASCII;
 
 /**
  * jdwp:pid changes the connection to communicate with the pid's (required: Client) JDWP interface.
@@ -42,7 +42,7 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
 
     private static final String HANDSHAKE_STRING = "JDWP-Handshake";
 
-    private final Map<Integer, JdwpDdmsPacketHandler> packetHandlers = new HashMap<>();
+    private final Map<Integer, DDMPacketHandler> packetHandlers = new HashMap<>();
 
     public JdwpCommandHandler() {
         super("jdwp");
@@ -51,7 +51,7 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
     }
 
     public JdwpCommandHandler addPacketHandler(
-            int chunkType, @NonNull JdwpDdmsPacketHandler packetHandler) {
+            int chunkType, @NonNull DDMPacketHandler packetHandler) {
         packetHandlers.put(chunkType, packetHandler);
         return this;
     }
@@ -114,17 +114,20 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
         }
 
         // default - ignore the packet and keep listening
-        JdwpDdmsPacketHandler defaultHandler = (unused, unused2, unused3) -> true;
+        DDMPacketHandler defaultHandler = (unused, unused2, unused3) -> true;
 
         boolean running = true;
 
         while (running) {
             try {
                 JdwpPacket packet = readFrom(iStream);
-                running =
-                        packetHandlers
-                                .getOrDefault(packet.getChunkType(), defaultHandler)
-                                .handlePacket(packet, client, oStream);
+                if (DdmPacket.isDdmPacket(packet)) {
+                    DdmPacket ddmPacket = DdmPacket.fromJdwpPacket(packet);
+                    running =
+                            packetHandlers
+                                    .getOrDefault(ddmPacket.getChunkType(), defaultHandler)
+                                    .handlePacket(ddmPacket, client, oStream);
+                }
             } catch (IOException e) {
                 writeFailResponse(oStream, "Could not read packet.");
                 return;

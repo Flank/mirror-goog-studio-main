@@ -15,15 +15,15 @@
  */
 package com.android.tools.lint.detector.api;
 
+import static com.android.AndroidXConstants.CLASS_V4_FRAGMENT;
+import static com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.ANDROID_PKG;
 import static com.android.SdkConstants.ANDROID_PKG_PREFIX;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_RESOURCES;
-import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.SdkConstants.CLS_TYPED_ARRAY;
 import static com.android.SdkConstants.R_CLASS;
-import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.isPlatformAnnotation;
 import static com.android.tools.lint.client.api.AndroidPlatformAnnotations.toAndroidxAnnotation;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;

@@ -116,6 +116,7 @@ message Event {
 
     // Layout inspector prefix = 1100
     LAYOUT_INSPECTOR_FOREGROUND_PROCESS = 1101;
+    LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED = 1102;
 
     // App inspection prefix = 1200.
     APP_INSPECTION_EVENT = 1201;
@@ -230,6 +231,7 @@ message Event {
 
     // Layout inspector prefix = 1100
     layout_inspector.ForegroundProcess layout_inspector_foreground_process = 1101;
+    layout_inspector.TrackingForegroundProcessSupported layout_inspector_tracking_foreground_process_supported = 1102;
 
     // App inspection prefix = 1200;
     app_inspection.AppInspectionEvent app_inspection_event = 1201;

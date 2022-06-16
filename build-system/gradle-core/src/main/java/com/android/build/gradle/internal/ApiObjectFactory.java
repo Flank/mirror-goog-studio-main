@@ -59,7 +59,7 @@ public class ApiObjectFactory {
     }
 
     public BaseVariantImpl create(@NonNull VariantCreationConfig variant) {
-        BaseVariantData variantData = variant.getVariantData();
+        BaseVariantData variantData = variant.getOldVariantApiLegacySupport().getVariantData();
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(variant, variantData, readOnlyObjectProvider);
@@ -76,7 +76,9 @@ public class ApiObjectFactory {
                 TestVariantImpl androidTestVariant =
                         dslServices.newInstance(
                                 TestVariantImpl.class,
-                                androidTestVariantProperties.getVariantData(),
+                                androidTestVariantProperties
+                                        .getOldVariantApiLegacySupport()
+                                        .getVariantData(),
                                 androidTestVariantProperties,
                                 variantApi,
                                 dslServices,
@@ -95,7 +97,9 @@ public class ApiObjectFactory {
                 UnitTestVariantImpl unitTestVariant =
                         dslServices.newInstance(
                                 UnitTestVariantImpl.class,
-                                unitTestVariantProperties.getVariantData(),
+                                unitTestVariantProperties
+                                        .getOldVariantApiLegacySupport()
+                                        .getVariantData(),
                                 unitTestVariantProperties,
                                 variantApi,
                                 dslServices,

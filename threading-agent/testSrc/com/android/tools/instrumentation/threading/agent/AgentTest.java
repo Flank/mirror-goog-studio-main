@@ -21,11 +21,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerHook;
 import com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import org.junit.Before;
 import org.junit.Rule;
@@ -192,31 +194,94 @@ public class AgentTest {
         verify(mockThreadingCheckerHook).verifyOnUiThread();
     }
 
-    private static Class<?> loadAndTransform(Class<?> clazz) throws IOException {
-        TestClassLoader classLoader = new TestClassLoader(AgentTest.class.getClassLoader());
-        String binaryTestClassName = clazz.getName().replace('.', '/');
-        byte[] classInput =
-                ByteStreams.toByteArray(
-                        Objects.requireNonNull(
-                                classLoader.getResourceAsStream(binaryTestClassName + ".class")));
+    @Test
+    public void testClassAnnotation_doesNotExtendToLambda()
+            throws IOException, IllegalAccessException, InstantiationException,
+                    NoSuchMethodException, InvocationTargetException {
 
-        Transformer transformer = new Transformer(AnnotationMappings.create());
+        Class<?> transformedClass =
+                loadAndTransform(SampleClasses.ClassWithUiThreadAnnotation.class);
 
-        byte[] newClass =
-                transformer.transform(classLoader, clazz.getName(), null, null, classInput);
-        String renamedClass = binaryTestClassName + "_Transformed";
-        newClass = renameClass(newClass, binaryTestClassName, renamedClass);
+        Object instance = transformedClass.getDeclaredConstructor().newInstance();
+        callMethod(transformedClass, instance, "executeWithLambda", false);
 
-        return classLoader.defineClass(renamedClass.replace('/', '.'), newClass);
+        // One invocation is the result of a constructor call.
+        // Verify that there are no additional invocations from a call to a lambda method (note that
+        // the compiler generates a method called "lambda$executeWithLambda$0" that's executed
+        // as part of this test)
+        verify(mockThreadingCheckerHook, times(1)).verifyOnUiThread();
     }
 
-    private static byte[] renameClass(byte[] input, String oldClassName, String newClassName) {
+    @Test
+    public void testClassAnnotation_doesNotExtendToSyntheticAccessors()
+            throws IOException, IllegalAccessException, InstantiationException,
+                    NoSuchMethodException, InvocationTargetException {
+
+        Class<?> transformedParentClass =
+                loadAndTransformMultiple(
+                                SampleClasses.AnnotatedClassWithInnerClass.class,
+                                SampleClasses.AnnotatedClassWithInnerClass.InnerClass.class)
+                        .get(0);
+        Object parentClassInstance = transformedParentClass.getDeclaredConstructor().newInstance();
+
+        callMethod(
+                transformedParentClass,
+                parentClassInstance,
+                "createAndCallInnerClassMethod",
+                false);
+
+        // Inner class method that increments/decrements parent class's  field does it through
+        // synthetic
+        // methods like "SampleClasses$AnnotatedClassWithInnerClass#access$004". This test verifies
+        // that these methods do not use threading annotations from the containing class.
+        // One and only UiThread check is the result of invoking a constructor.
+        verify(mockThreadingCheckerHook, times(1)).verifyOnUiThread();
+    }
+
+    private static Class<?> loadAndTransform(Class<?> clazz) throws IOException {
+        return loadAndTransformMultiple(clazz).get(0);
+    }
+
+    /**
+     * Transforms provided classes using the {@link Transformer} and names them as
+     * OriginalName_Transformed.
+     */
+    private static ArrayList<Class<?>> loadAndTransformMultiple(Class<?>... classes)
+            throws IOException {
+        TestClassLoader classLoader = new TestClassLoader(AgentTest.class.getClassLoader());
+        Transformer transformer = new Transformer(AnnotationMappings.create());
+
+        String newNameSuffix = "_Transformed";
+        Map<String, String> nameMappings = new HashMap<>();
+        for (Class<?> clazz : classes) {
+            String internalClassName = clazz.getName().replace('.', '/');
+            nameMappings.put(internalClassName, internalClassName + newNameSuffix);
+        }
+
+        ArrayList<Class<?>> transformedClasses = new ArrayList<>();
+        for (Class<?> clazz : classes) {
+            String internalClassName = clazz.getName().replace('.', '/');
+            byte[] classInput =
+                    ByteStreams.toByteArray(
+                            Objects.requireNonNull(
+                                    classLoader.getResourceAsStream(internalClassName + ".class")));
+
+            byte[] newClass =
+                    transformer.transform(classLoader, clazz.getName(), null, null, classInput);
+
+            newClass = renameClassNames(newClass, nameMappings);
+            Class<?> newClassDef =
+                    classLoader.defineClass(clazz.getName() + newNameSuffix, newClass);
+            transformedClasses.add(newClassDef);
+        }
+
+        return transformedClasses;
+    }
+
+    private static byte[] renameClassNames(byte[] input, Map<String, String> nameMappings) {
         try {
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-            ClassVisitor visitor =
-                    new ClassRemapper(
-                            writer,
-                            new SimpleRemapper(ImmutableMap.of(oldClassName, newClassName)));
+            ClassVisitor visitor = new ClassRemapper(writer, new SimpleRemapper(nameMappings));
             ClassReader reader = new ClassReader(input);
             reader.accept(visitor, ClassReader.EXPAND_FRAMES);
             return writer.toByteArray();

@@ -18,22 +18,22 @@ package com.android.build.gradle.internal.component
 
 import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.Packaging
-import com.android.build.api.variant.Renderscript
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.builder.dexing.DexingType
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
-import java.io.Serializable
 
 /**
  * CreationConfig for variants that produces an artifact that is directly install-able to devices
  * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
  */
 interface ConsumableCreationConfig: ComponentCreationConfig {
+    val renderscriptCreationConfig: RenderscriptCreationConfig?
+
     val packaging: Packaging
 
     /**
@@ -59,25 +59,21 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
      */
     val ignoreAllLibraryKeepRules: Boolean
 
-    val renderscriptTargetApi: Int
-
     val dexingType: DexingType
 
     val minifiedEnabled: Boolean
 
     /** Returns whether we need to create a stream from the merged java resources */
-    fun getNeedsMergedJavaResStream(): Boolean
+    val needsMergedJavaResStream: Boolean
 
-    fun getJava8LangSupportType(): VariantScope.Java8LangSupport
+    fun getJava8LangSupportType(): Java8LangSupport
+
+    val postProcessingFeatures: PostprocessingFeatures?
 
     /**
      * Returns if we need to shrink desugar lib when desugaring Core Library.
      */
     val needsShrinkDesugarLibrary: Boolean
-
-    val renderscript: Renderscript?
-
-    val renderscriptNdkModeEnabled: Boolean
 
     val needsMainDexListForBundle: Boolean
 

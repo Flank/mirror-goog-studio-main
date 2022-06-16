@@ -102,6 +102,7 @@ public class HelloWorldApp extends GradleProject {
                         + "\n"
                         + "    <application android:label=\"@string/app_name\">\n"
                         + "        <activity android:name=\".HelloWorld\"\n"
+                        + "                  android:exported=\"true\"\n"
                         + "                  android:label=\"@string/app_name\">\n"
                         + "            <intent-filter>\n"
                         + "                <action android:name=\"android.intent.action.MAIN\" />\n"

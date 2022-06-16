@@ -29,8 +29,8 @@ import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.SdkConstants.ATTR_SRC_COMPAT
 import com.android.SdkConstants.ATTR_STYLE
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.CONSTRAINT_LAYOUT
-import com.android.SdkConstants.CONSTRAINT_LAYOUT_GUIDELINE
+import com.android.AndroidXConstants.CONSTRAINT_LAYOUT
+import com.android.AndroidXConstants.CONSTRAINT_LAYOUT_GUIDELINE
 import com.android.SdkConstants.TAG_LAYOUT
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VIEW_FRAGMENT

@@ -37,7 +37,8 @@ import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -59,8 +60,8 @@ open class LibraryVariantImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
     internalServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -73,8 +74,8 @@ open class LibraryVariantImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
+    taskContainer,
     transformManager,
     internalServices,
     taskCreationServices,
@@ -102,7 +103,7 @@ open class LibraryVariantImpl @Inject constructor(
     override var testFixtures: TestFixturesImpl? = null
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
     override val aarMetadata: AarMetadata =
@@ -131,6 +132,9 @@ open class LibraryVariantImpl @Inject constructor(
     override val profileable: Boolean
         get() = dslInfo.isProfileable
 
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = delegate.isCoreLibraryDesugaringEnabled
+
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
         operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
@@ -149,9 +153,9 @@ open class LibraryVariantImpl @Inject constructor(
     override val minifiedEnabled: Boolean
         get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
 
-    override fun getNeedsMergedJavaResStream(): Boolean = delegate.getNeedsMergedJavaResStream()
+    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport =
+    override fun getJava8LangSupportType(): Java8LangSupport =
         delegate.getJava8LangSupportType()
 
     override val needsShrinkDesugarLibrary: Boolean

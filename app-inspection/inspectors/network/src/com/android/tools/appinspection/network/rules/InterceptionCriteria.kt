@@ -25,11 +25,11 @@ import java.net.URL
 class InterceptionCriteria(private val interceptCriteria: InterceptCriteria) {
 
     fun appliesTo(connection: NetworkConnection): Boolean {
-        if (interceptCriteria.method.isNotBlank() && connection.method != interceptCriteria.method) {
+        if (!interceptCriteria.method.appliesTo(connection.method)) {
             return false
         }
         val url = URL(connection.url)
-        if (interceptCriteria.protocol.isNotBlank() && interceptCriteria.protocol != url.protocol) {
+        if (!interceptCriteria.protocol.appliesTo(url.protocol)) {
             return false
         }
         return wildCardMatches(interceptCriteria.port, url.port.toString()) &&
@@ -37,4 +37,26 @@ class InterceptionCriteria(private val interceptCriteria: InterceptCriteria) {
                 wildCardMatches(interceptCriteria.path, url.path) &&
                 wildCardMatches(interceptCriteria.query, url.query)
     }
+}
+
+private fun InterceptCriteria.Method.appliesTo(connectionMethod: String): Boolean {
+    val method = when (this) {
+        InterceptCriteria.Method.METHOD_UNSPECIFIED -> return true
+        InterceptCriteria.Method.METHOD_GET -> "GET"
+        InterceptCriteria.Method.METHOD_POST -> "POST"
+        else -> return false
+    }
+
+    return method == connectionMethod
+}
+
+private fun InterceptCriteria.Protocol.appliesTo(connectionProtocol: String): Boolean {
+    val protocol = when (this) {
+        InterceptCriteria.Protocol.PROTOCOL_UNSPECIFIED -> return true
+        InterceptCriteria.Protocol.PROTOCOL_HTTPS -> "https"
+        InterceptCriteria.Protocol.PROTOCOL_HTTP -> "http"
+        else -> return false
+    }
+
+    return protocol == connectionProtocol
 }

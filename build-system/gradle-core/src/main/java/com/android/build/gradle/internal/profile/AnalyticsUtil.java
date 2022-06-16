@@ -24,7 +24,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.AndroidVersion;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.Java8LangSupport;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -175,11 +175,9 @@ public class AnalyticsUtil {
     }
 
     @NonNull
-    public static GradleBuildVariant.Java8LangSupport toProto(
-            @NonNull VariantScope.Java8LangSupport type) {
+    public static GradleBuildVariant.Java8LangSupport toProto(@NonNull Java8LangSupport type) {
         Preconditions.checkArgument(
-                type != VariantScope.Java8LangSupport.UNUSED
-                        && type != VariantScope.Java8LangSupport.INVALID,
+                type != Java8LangSupport.UNUSED && type != Java8LangSupport.INVALID,
                 "Unsupported type");
         switch (type) {
             case RETROLAMBDA:

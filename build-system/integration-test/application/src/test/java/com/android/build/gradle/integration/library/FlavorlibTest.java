@@ -24,7 +24,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.AndroidProjectTypes;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
@@ -68,10 +67,7 @@ public class FlavorlibTest {
 
     @Test
     public void report() throws Exception {
-        project.executor()
-                // https://github.com/gradle/gradle/issues/19959
-                .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-                .run("androidDependencies", "signingReport");
+        project.executor().run("androidDependencies", "signingReport");
     }
 
     @Test

@@ -16,13 +16,11 @@
 package com.android.build.api.component.impl
 
 import com.android.build.api.variant.AndroidVersion
-import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.services.VariantServices
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 
@@ -64,7 +62,7 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
             DexingType.MONO_DEX
         }
 
-    open fun getNeedsMergedJavaResStream(): Boolean {
+    fun getNeedsMergedJavaResStream(): Boolean {
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (dslInfo.componentType.isAar
@@ -72,17 +70,17 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
                 || config.minifiedEnabled)
     }
 
-    open fun getJava8LangSupportType(): VariantScope.Java8LangSupport {
+    fun getJava8LangSupportType(): Java8LangSupport {
         // in order of precedence
         return if (!dslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
-            VariantScope.Java8LangSupport.UNUSED
+            Java8LangSupport.UNUSED
         } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
-            VariantScope.Java8LangSupport.RETROLAMBDA
+            Java8LangSupport.RETROLAMBDA
         } else if (config.minifiedEnabled) {
-            VariantScope.Java8LangSupport.R8
+            Java8LangSupport.R8
         } else {
             // D8 cannot be used if R8 is used
-            VariantScope.Java8LangSupport.D8
+            Java8LangSupport.D8
         }
     }
 
@@ -101,8 +99,9 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
         val libDesugarEnabled = dslInfo.compileOptions.isCoreLibraryDesugaringEnabled
         val multidexEnabled = creationConfig.isMultiDexEnabled
-        val langSupportType: VariantScope.Java8LangSupport = getJava8LangSupportType()
-        val langDesugarEnabled = langSupportType == VariantScope.Java8LangSupport.D8 || langSupportType == VariantScope.Java8LangSupport.R8
+        val langSupportType = getJava8LangSupportType()
+        val langDesugarEnabled = langSupportType == Java8LangSupport.D8 ||
+                langSupportType == Java8LangSupport.R8
         if (libDesugarEnabled && !langDesugarEnabled) {
             config
                 .services
@@ -124,15 +123,4 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
 
      open val minSdkVersionForDexing: AndroidVersion
         get() = config.minSdkVersion
-
-    fun renderscript(internalServices: VariantServices): Renderscript? {
-        return if (config.buildFeatures.renderScript) {
-            internalServices.newInstance(Renderscript::class.java).also {
-                it.supportModeEnabled.set(dslInfo.renderscriptSupportModeEnabled)
-                it.supportModeBlasEnabled.set(dslInfo.renderscriptSupportModeBlasEnabled)
-                it.ndkModeEnabled.set(dslInfo.renderscriptNdkModeEnabled)
-                it.optimLevel.set(dslInfo.renderscriptOptimLevel)
-            }
-        } else null
-    }
 }

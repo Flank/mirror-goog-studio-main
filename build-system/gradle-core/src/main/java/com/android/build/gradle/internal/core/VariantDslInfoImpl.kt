@@ -874,7 +874,7 @@ open class VariantDslInfoImpl internal constructor(
         get() = if (componentType.isDynamicFeature) setOf() else mergedNdkConfig.abiFilters
 
     override fun getProguardFiles(into: ListProperty<RegularFile>) {
-        val result: MutableList<File> = ArrayList(mergedProguardFiles(ProguardFileType.EXPLICIT))
+        val result: MutableList<File> = ArrayList(gatherProguardFiles(ProguardFileType.EXPLICIT))
         if (result.isEmpty()) {
             result.addAll(_postProcessingOptions.getDefaultProguardFiles())
         }
@@ -885,14 +885,7 @@ open class VariantDslInfoImpl internal constructor(
         }
     }
 
-    override fun gatherProguardFiles(type: ProguardFileType, into: (RegularFile) -> Unit) {
-        val projectDir = services.projectInfo.projectDirectory
-        mergedProguardFiles(type).forEach {
-            into(projectDir.file(it.absolutePath))
-        }
-    }
-
-    private fun mergedProguardFiles(type: ProguardFileType): Collection<File> {
+    override fun gatherProguardFiles(type: ProguardFileType): Collection<File> {
         val result: MutableList<File> = ArrayList(defaultConfig.getProguardFiles(type))
         for (flavor in productFlavorList) {
             result.addAll((flavor as com.android.build.gradle.internal.dsl.ProductFlavor).getProguardFiles(type))

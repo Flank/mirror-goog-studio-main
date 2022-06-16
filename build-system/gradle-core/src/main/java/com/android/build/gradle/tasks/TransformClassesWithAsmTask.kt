@@ -504,7 +504,7 @@ abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
             task.bootClasspath.from(creationConfig.global.bootClasspath)
             task.bootClasspath.disallowChanges()
 
-            task.runtimeClasspath.from(creationConfig.variantScope.providedOnlyClasspath)
+            task.runtimeClasspath.from(creationConfig.providedOnlyClasspath)
 
             task.runtimeClasspath.from(
                     creationConfig.variantDependencies.getArtifactFileCollection(

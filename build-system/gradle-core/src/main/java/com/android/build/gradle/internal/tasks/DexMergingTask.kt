@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_ALL
 import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_EXTERNAL_LIBS
 import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_LIBRARY_PROJECTS
 import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_PROJECT
+import com.android.build.gradle.internal.tasks.DexMergingAction.MERGE_TRANSFORMED_CLASSES
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
@@ -242,6 +243,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             MERGE_EXTERNAL_LIBS -> creationConfig.computeTaskName("mergeExtDex")
             MERGE_PROJECT -> creationConfig.computeTaskName("mergeProjectDex")
             MERGE_ALL -> creationConfig.computeTaskName("mergeDex")
+            MERGE_TRANSFORMED_CLASSES -> creationConfig.computeTaskName("mergeDex")
         }
 
         override val name = internalName
@@ -410,6 +412,15 @@ abstract class DexMergingTask : NewIncrementalTask() {
                             }
                         )
                     }
+                    MERGE_TRANSFORMED_CLASSES -> {
+                        // when the variant API is used to transform ALL scoped classes, the
+                        // result transformed content is a single project scoped jar file that gets
+                        // dexed individually and registered under the project scope, while all
+                        // other sources like mixed scope and external scope are empty.
+                        return creationConfig.services.fileCollection(
+                            creationConfig.artifacts.get(InternalArtifactType.PROJECT_DEX_ARCHIVE),
+                        )
+                    }
                 }
             }
 
@@ -418,7 +429,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
 
         private fun getNumberOfBuckets(projectOptions: ProjectOptions): Int {
             return when (action) {
-                MERGE_ALL, MERGE_EXTERNAL_LIBS -> 1 // No bucketing
+                MERGE_ALL, MERGE_EXTERNAL_LIBS, MERGE_TRANSFORMED_CLASSES -> 1 // No bucketing
                 MERGE_PROJECT, MERGE_LIBRARY_PROJECTS -> {
                     check(dexingType == NATIVE_MULTIDEX)
 
@@ -529,6 +540,8 @@ enum class DexMergingAction {
     MERGE_PROJECT,
     /** Merge external libraries, library projects, and project dex files. */
     MERGE_ALL,
+    /** Merge ALL scoped transformed classes (using the public variant API).  */
+    MERGE_TRANSFORMED_CLASSES,
 }
 
 @VisibleForTesting

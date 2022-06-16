@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -31,6 +30,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NdkTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.RenderscriptTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.RenderscriptTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Version
@@ -293,11 +294,10 @@ abstract class RenderscriptCompile : NdkTask() {
 
     class CreationAction(
         creationConfig: ConsumableCreationConfig,
-        private val renderscript: Renderscript,
         private val ndkConfig: CoreNdkOptions
     ) : VariantTaskCreationAction<RenderscriptCompile, ConsumableCreationConfig>(
         creationConfig
-    ) {
+    ), RenderscriptTaskCreationAction by RenderscriptTaskCreationActionImpl(creationConfig) {
 
         override val name: String
             get() = computeTaskName("compile", "Renderscript")
@@ -332,12 +332,14 @@ abstract class RenderscriptCompile : NdkTask() {
         ) {
             super.configure(task)
 
-            task.targetApi.setDisallowChanges(creationConfig.renderscriptTargetApi)
+            task.targetApi.setDisallowChanges(renderscriptCreationConfig.renderscriptTargetApi)
 
-            task.supportMode.setDisallowChanges(renderscript.supportModeEnabled)
+            task.supportMode.setDisallowChanges(
+                renderscriptCreationConfig.renderscript.supportModeEnabled
+            )
             task.useAndroidX = creationConfig.services.projectOptions.get(BooleanOption.USE_ANDROID_X)
-            task.ndkMode.setDisallowChanges(renderscript.ndkModeEnabled)
-            task.optimLevel.setDisallowChanges(renderscript.optimLevel)
+            task.ndkMode.setDisallowChanges(renderscriptCreationConfig.renderscript.ndkModeEnabled)
+            task.optimLevel.setDisallowChanges(renderscriptCreationConfig.renderscript.optimLevel)
 
             task.sourceDirs =
                 creationConfig.services.fileCollection(Callable {

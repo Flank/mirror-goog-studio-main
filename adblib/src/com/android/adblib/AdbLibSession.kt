@@ -16,7 +16,9 @@
 package com.android.adblib
 
 import com.android.adblib.AdbLibSession.Companion.create
+import com.android.adblib.CoroutineScopeCache.Key
 import com.android.adblib.impl.AdbLibSessionImpl
+import com.android.adblib.impl.ConnectedDevicesTrackerImpl
 import com.android.adblib.impl.DeviceInfoTracker
 import com.android.adblib.impl.SessionDeviceTracker
 import com.android.adblib.impl.TrackerConnecting
@@ -92,7 +94,7 @@ interface AdbLibSession : AutoCloseable {
      *
      * @throws ClosedSessionException if this [AdbLibSession] has been [closed][close].
      */
-    val cache: SessionCache
+    val cache: CoroutineScopeCache
 
     /**
      * Throws [ClosedSessionException] if this [AdbLibSession] has been [closed][close].
@@ -179,12 +181,14 @@ class ClosedSessionException(message: String) : CancellationException(message)
 fun AdbLibSession.trackDevices(
     retryDelay: Duration = Duration.ofSeconds(2)
 ): StateFlow<TrackedDeviceList> {
-    data class MyKey(val duration: Duration) :
-        SessionCache.Key<StateFlow<TrackedDeviceList>>("trackDevices")
+    data class MyKey(val duration: Duration) : Key<SessionDeviceTracker>("trackDevices")
 
+    // Note: We return the `stateFlow` outside the cache `getOrPut` method, since
+    // `getOrPut` may create multiple instances in case
+    // of concurrent first cache hit.
     return this.cache.getOrPut(MyKey(retryDelay)) {
-        SessionDeviceTracker(this).createStateFlow(retryDelay)
-    }
+        SessionDeviceTracker(this, retryDelay)
+    }.stateFlow
 }
 
 /**
@@ -273,4 +277,39 @@ fun AdbLibSession.createDeviceScope(device: DeviceSelector): CoroutineScope {
             }
         }
     }
+}
+
+/**
+ * Returns the [ConnectedDevicesTracker] associated to this session
+ */
+val AdbLibSession.connectedDevicesTracker: ConnectedDevicesTracker
+    get() {
+        return this.cache.getOrPut(ConnectedDevicesManagerKey) {
+            ConnectedDevicesTrackerImpl(this)
+        }.also {
+            // Note: We do this outside of the cache lookup to ensure `start`
+            // is called only on the instance stored in the cache.
+            (it as ConnectedDevicesTrackerImpl).start()
+        }
+    }
+
+/**
+ * The [Key] used to identify the [ConnectedDevicesTracker] in [AdbLibSession.cache].
+ */
+private object ConnectedDevicesManagerKey : Key<ConnectedDevicesTracker>(ConnectedDevicesTracker::class.java.simpleName)
+
+/**
+ * Returns a [CoroutineScopeCache] that keeps entries alive until the device corresponding
+ * to [serialNumber] is disconnected.
+ */
+fun AdbLibSession.deviceCache(serialNumber: String): CoroutineScopeCache {
+    return connectedDevicesTracker.deviceCache(serialNumber)
+}
+
+/**
+ * Returns a [CoroutineScopeCache] that keeps entries alive until the device corresponding
+ * to [selector] is disconnected.
+ */
+suspend fun AdbLibSession.deviceCache(selector: DeviceSelector): CoroutineScopeCache {
+    return connectedDevicesTracker.deviceCache(selector)
 }

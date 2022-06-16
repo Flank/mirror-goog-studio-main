@@ -29,7 +29,7 @@ interface CoreBuildType : BuildType {
     val javaCompileOptions: JavaCompileOptions
     val shaders: CoreShaderOptions
 
-    @get:Deprecated("Use {@link VariantScope#useResourceShrinker()} instead. ")
+    @get:Deprecated("Use {@link AndroidResourcesCreationConfig#useResourceShrinker()} instead. ")
     val isShrinkResources: Boolean
 
     @get:Deprecated("Use {@link VariantScope#getCodeShrinker()} instead. ")

@@ -14941,6 +14941,23 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.test.espresso.espresso-core_3.4.0",
+    pom = "repository/androidx/test/espresso/espresso-core/3.4.0/espresso-core-3.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/test/espresso/espresso-core/3.4.0",
+    deps = [
+        "androidx.test.runner_1.4.0",
+        "androidx.test.espresso.espresso-idling-resource_3.4.0",
+        "com.squareup.javawriter_2.1.1",
+        "javax.inject.javax.inject_1",
+        "org.hamcrest.hamcrest-library_1.3",
+        "org.hamcrest.hamcrest-integration_1.3",
+        "com.google.code.findbugs.jsr305_2.0.1",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.test.espresso.espresso-idling-resource_3.1.0",
     pom = "repository/androidx/test/espresso/espresso-idling-resource/3.1.0/espresso-idling-resource-3.1.0.pom",
     repo_root_path = "repository",
@@ -14961,6 +14978,14 @@ maven_artifact(
     pom = "repository/androidx/test/espresso/espresso-idling-resource/3.3.0/espresso-idling-resource-3.3.0.pom",
     repo_root_path = "repository",
     repo_path = "androidx/test/espresso/espresso-idling-resource/3.3.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.test.espresso.espresso-idling-resource_3.4.0",
+    pom = "repository/androidx/test/espresso/espresso-idling-resource/3.4.0/espresso-idling-resource-3.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/test/espresso/espresso-idling-resource/3.4.0",
     visibility = ["//visibility:public"],
 )
 
@@ -15016,6 +15041,18 @@ maven_artifact(
         "androidx.test.core_1.3.1-alpha02",
         "androidx.test.monitor_1.3.1-alpha02",
         "androidx.annotation.annotation_1.0.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.test.services.storage_1.4.0",
+    pom = "repository/androidx/test/services/storage/1.4.0/storage-1.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/test/services/storage/1.4.0",
+    deps = [
+        "androidx.test.monitor_1.4.0",
+        "com.google.code.findbugs.jsr305_2.0.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -15286,6 +15323,20 @@ maven_artifact(
     deps = [
         "androidx.annotation.annotation_1.0.0",
         "androidx.test.monitor_1.3.0",
+        "junit.junit_4.12",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "androidx.test.runner_1.4.0",
+    pom = "repository/androidx/test/runner/1.4.0/runner-1.4.0.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/test/runner/1.4.0",
+    deps = [
+        "androidx.annotation.annotation_1.0.0",
+        "androidx.test.monitor_1.4.0",
+        "androidx.test.services.storage_1.4.0",
         "junit.junit_4.12",
     ],
     visibility = ["//visibility:public"],

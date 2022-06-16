@@ -161,10 +161,8 @@ call %SCRIPTDIR%bazel.cmd shutdown
 
 set /a BAZEL_EXITCODE_TEST_FAILURES=3
 
-if %BUILD_TYPE%==POSTSUBMIT (
-  if %EXITCODE% equ %BAZEL_EXITCODE_TEST_FAILURES% (
-    exit /b 0
-  )
+if %EXITCODE% equ %BAZEL_EXITCODE_TEST_FAILURES% (
+  exit /b 0
 )
 exit /b %EXITCODE%
 

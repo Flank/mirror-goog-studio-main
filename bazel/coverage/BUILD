@@ -601,7 +601,7 @@ coverage_report(
         "tools/adt/idea/project-system-gradle-upgrade/src/com/android/tools/idea/gradle/project/upgrade",
     ],
     tests = [
-        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/project-system-gradle-upgrade:ProjectUpgradeTests_From_gradle_6.1.1_agp_4.0.0",
         "//tools/adt/idea/project-system-gradle-upgrade:intellij.android.projectSystem.gradle.upgrade.tests_tests",
     ],
 )
@@ -838,7 +838,8 @@ coverage_report(
         "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
     ],
     tests = [
-        "//tools/vendor/google/firebase:firebase_tests",
+        "//tools/vendor/google/firebase:firebase_tests__FirebaseAppManagerTest",
+        "//tools/vendor/google/firebase:firebase_tests__other",
     ],
 )
 
@@ -961,6 +962,7 @@ coverage_report(
         # TODO(b/136028658) too flaky for coverage
         #"//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
         "//tools/adt/idea/project-system-gradle-psd:intellij.android.projectSystem.gradle.psd.tests_tests",
+        "//tools/adt/idea/project-system-gradle-upgrade:ProjectUpgradeTests_From_gradle_6.1.1_agp_4.0.0",
         "//tools/adt/idea/project-system-gradle-upgrade:intellij.android.projectSystem.gradle.upgrade.tests_tests",
         "//tools/adt/idea/sdk-updates:intellij.android.sdkUpdates.tests_tests",
         "//tools/adt/idea/smali:intellij.android.smali_tests",

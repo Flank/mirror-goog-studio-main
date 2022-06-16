@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.ignore.OnLinux;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,6 +38,11 @@ public class LintResourceResolveTest {
 
     @Test
     public void checkClean() throws Exception {
+        // TODO(b/235625209) Disabled for high flakiness.
+        if (new OnLinux().present()) {
+            return;
+        }
+
         // Run twice to catch issues with configuration caching
         project.executor().run(":app:clean", ":app:lintDebug");
         project.executor().run(":app:clean", ":app:lintDebug");

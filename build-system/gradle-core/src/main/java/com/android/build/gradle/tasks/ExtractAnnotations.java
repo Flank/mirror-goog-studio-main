@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.AndroidXConstants.INT_DEF_ANNOTATION;
+import static com.android.AndroidXConstants.LONG_DEF_ANNOTATION;
+import static com.android.AndroidXConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.DOT_JAVA;
-import static com.android.SdkConstants.INT_DEF_ANNOTATION;
-import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
-import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;

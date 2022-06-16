@@ -22,6 +22,7 @@ import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
@@ -330,7 +331,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.resFiles.disallowChanges()
 
             task.dexFiles.from(
-                if (creationConfig.variantScope.consumesFeatureJars()) {
+                if ((creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true) {
                     artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {
                     artifacts.getAll(InternalMultipleArtifactType.DEX)
@@ -355,7 +356,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     creationConfig.services.fileCollection(
                         artifacts.get(InternalArtifactType.SHRUNK_JAVA_RES)
                     )
-                } else if (creationConfig.getNeedsMergedJavaResStream()) {
+                } else if (creationConfig.needsMergedJavaResStream) {
                     creationConfig.transformManager
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
                 } else {
@@ -397,7 +398,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             }
 
-            task.jarCreatorType.set(creationConfig.variantScope.jarCreatorType)
+            task.jarCreatorType.set(creationConfig.global.jarCreatorType)
             task.jarCreatorType.disallowChanges()
         }
     }

@@ -43,10 +43,8 @@ import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.ProjectInfo
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -284,19 +282,7 @@ open class BasicModuleModelMock {
 
         doReturn(splits).`when`(globalConfig).splits
 
-        val variantScope: VariantScope = mock(
-            VariantScope::class.java,
-            throwUnmocked
-        )
-
-        val baseVariantData = mock(
-            BaseVariantData::class.java,
-            throwUnmocked
-        )
-
         doReturn(globalConfig).`when`(this.variantImpl).global
-        doReturn(variantScope).`when`(this.variantImpl).variantScope
-        doReturn(baseVariantData).`when`(this.variantImpl).variantData
         doReturn(taskCreationServices).`when`(this.variantImpl).services
         doReturn(issueReporter).`when`(this.taskCreationServices).issueReporter
         doReturn(projectInfo).`when`(this.taskCreationServices).projectInfo

@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.INT_DEF_ANNOTATION
-import com.android.SdkConstants.LONG_DEF_ANNOTATION
+import com.android.AndroidXConstants.INT_DEF_ANNOTATION
+import com.android.AndroidXConstants.LONG_DEF_ANNOTATION
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType

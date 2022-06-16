@@ -91,12 +91,12 @@ class InterceptionRuleTest {
 
         val criteria = InterceptionCriteria(
             NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
-                protocol = "https"
+                protocol = NetworkInspectorProtocol.InterceptCriteria.Protocol.PROTOCOL_HTTPS
                 host = "www.google.com"
                 port = ""
                 query = ""
                 path = ""
-                method = "GET"
+                method = NetworkInspectorProtocol.InterceptCriteria.Method.METHOD_GET
             }.build()
         )
         assertThat(criteria.appliesTo(connection)).isTrue()
@@ -112,12 +112,12 @@ class InterceptionRuleTest {
 
         val detailedCriteria = InterceptionCriteria(
             NetworkInspectorProtocol.InterceptCriteria.newBuilder().apply {
-                protocol = "https"
+                protocol = NetworkInspectorProtocol.InterceptCriteria.Protocol.PROTOCOL_HTTPS
                 host = "www.google.com"
                 port = "8080"
                 query = "query"
                 path = "/path"
-                method = "GET"
+                method = NetworkInspectorProtocol.InterceptCriteria.Method.METHOD_GET
             }.build()
         )
         assertThat(

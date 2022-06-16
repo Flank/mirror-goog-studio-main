@@ -24,6 +24,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
+import com.android.testutils.MockitoKt.whenever
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
 import com.android.tools.lint.checks.GradleDetector.Companion.AGP_DEPENDENCY
@@ -70,7 +71,6 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.utils.FileUtils
 import junit.framework.TestCase
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -3173,10 +3173,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .sdkHome(mockSupportLibraryInstallation)
             .run().expect(
                 """
-                    build.gradle:7: Error: log4j:log4j version 1.2.13 has an associated message from its author [RiskyLibrary]
+                    build.gradle:7: Error: log4j:log4j version 1.2.13 has an associated message from its author that will block publishing to Play Console [RiskyLibrary]
                         compile 'log4j:log4j:1.2.13' // Critical BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author [OutdatedLibrary]
+                    build.gradle:8: Error: log4j:log4j version 1.2.12 has been marked as outdated by its author and will block publishing to Play Console [OutdatedLibrary]
                         compile 'log4j:log4j:1.2.12' // OUTDATED BLOCKING
                                 ~~~~~~~~~~~~~~~~~~~~
                     build.gradle:5: Warning: log4j:log4j version 1.2.15 has been marked as outdated by its author [OutdatedLibrary]
@@ -4720,8 +4720,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                 object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
                     override fun getCompileTarget(project: Project): IAndroidTarget {
                         val target = mock(IAndroidTarget::class.java)
-                        `when`(target.revision).thenReturn(revision)
-                        `when`(target.version).thenReturn(version)
+                        whenever(target.revision).thenReturn(revision)
+                        whenever(target.version).thenReturn(version)
                         return target
                     }
                 }

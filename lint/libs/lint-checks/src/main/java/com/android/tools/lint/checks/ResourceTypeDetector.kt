@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.resources.ResourceType
 import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.DRAWABLE

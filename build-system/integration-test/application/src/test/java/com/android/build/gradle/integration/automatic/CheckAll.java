@@ -81,11 +81,7 @@ public class CheckAll {
 
     public CheckAll(String projectName) {
         GradleTestProjectBuilder builder = GradleTestProject.builder().fromTestProject(projectName);
-        if (CONFIG_CACHE_DISABLED.contains(projectName)) {
-            this.project = builder.withConfigurationCaching(ConfigurationCaching.OFF).create();
-        } else {
-            this.project = builder.withConfigurationCaching(ConfigurationCaching.ON).create();
-        }
+        this.project = builder.withConfigurationCaching(ConfigurationCaching.ON).create();
     }
 
     @Test
@@ -110,10 +106,6 @@ public class CheckAll {
     // legacy incremental transform uses deprecated gradle api
     private static final ImmutableSet<String> LEGACY_INCREMENTAL_TRANSFORM =
             ImmutableSet.of("transformVariantApiTest", "jarjarIntegration");
-
-    // https://github.com/gradle/gradle/issues/19765
-    private static final ImmutableSet<String> CONFIG_CACHE_DISABLED =
-            ImmutableSet.of("transformInModuleWithKotlin");
 
     private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE =
             ImmutableSet.of(

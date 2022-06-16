@@ -17,14 +17,9 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
-import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.ComponentType
-import com.android.utils.appendCapitalized
-import com.android.utils.capitalizeAndAppend
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
@@ -32,35 +27,16 @@ import java.io.File
 /** Data about a variant that produce a Library bundle (.aar)  */
 class LibraryVariantData(
     componentIdentity: ComponentIdentity,
-    variantDslInfo: LibraryVariantDslInfo,
-    variantDependencies: VariantDependencies,
-    variantSources: VariantSources,
-    paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     services: VariantServices,
     taskContainer: MutableTaskContainer
 ) : BaseVariantData(
     componentIdentity,
-    variantDslInfo,
-    variantDependencies,
-    variantSources,
-    paths,
     artifacts,
     services,
     taskContainer
 ), TestedVariantData {
     private val testVariants: MutableMap<ComponentType, TestVariantData> = mutableMapOf()
-
-    override val description: String
-        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
-            val sb = StringBuilder(50)
-            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
-            sb.append(" build for flavor ")
-            componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
-            sb.toString()
-        } else {
-            componentIdentity.buildType!!.capitalizeAndAppend(" build")
-        }
 
     override fun getTestVariantData(type: ComponentType): TestVariantData? {
         return testVariants[type]

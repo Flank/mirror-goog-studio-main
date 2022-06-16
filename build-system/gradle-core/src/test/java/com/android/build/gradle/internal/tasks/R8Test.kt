@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
@@ -211,7 +211,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             disableTreeShaking = true,
             r8Keep = "class ***"
         )
@@ -249,7 +249,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration)
         )
 
@@ -262,7 +262,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             r8Keep = "class " + CarbonForm::class.java.name
         )
 
@@ -289,7 +289,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration),
             useFullR8 = true
         )
@@ -303,7 +303,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             useFullR8 = true,
             r8Keep = "class " + CarbonForm::class.java.name
         )
@@ -342,7 +342,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration),
             featureClassJars = listOf(featureClassesJar.toFile()),
             featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
@@ -380,7 +380,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             proguardRulesFiles = listOf(proguardConfiguration),
             featureClassJars = listOf(featureClassesJar.toFile()),
             featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
@@ -418,7 +418,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         runR8(
             classes = listOf(classes.toFile()),
             resources = listOf(),
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             r8Keep = "class " + CarbonForm::class.java.name,
             featureClassJars = listOf(featureClassesJar.toFile()),
             featureJavaResourceJars = listOf(featureJavaResJar.toFile()),
@@ -626,7 +626,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             classes = listOf(classes.toFile()),
             resources = listOf(),
             disableMinification = false,
-            java8Support = VariantScope.Java8LangSupport.R8,
+            java8Support = Java8LangSupport.R8,
             r8Keep = "class " + ClassWithDesugarApi::class.java.name + "{*;}",
             libConfiguration = libConfiguration,
             outputKeepRulesDir = outputKeepRulesDir
@@ -676,7 +676,7 @@ class R8Test(val r8OutputType: R8OutputType) {
         classes: List<File>,
         resources: List<File>,
         mainDexRulesFiles: List<File> = listOf(),
-        java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
+        java8Support: Java8LangSupport = Java8LangSupport.UNUSED,
         proguardRulesFiles: List<File> = listOf(),
         outputProguardMapping: File = outputDir.resolve("mapping.txt").toFile(),
         disableMinification: Boolean = true,
@@ -717,7 +717,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
             enableDesugaring =
-                java8Support == VariantScope.Java8LangSupport.R8
+                java8Support == Java8LangSupport.R8
                     && !componentType.isAar,
             disableTreeShaking = disableTreeShaking,
             disableMinification = disableMinification,

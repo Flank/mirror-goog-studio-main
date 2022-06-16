@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.CLASS_VIEW
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.tools.lint.checks.ThreadDetector.Companion.THREAD_ANNOTATION_SUFFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.PLATFORM_ANNOTATIONS_PREFIX
 import com.android.tools.lint.client.api.AndroidPlatformAnnotations.Companion.isPlatformAnnotation

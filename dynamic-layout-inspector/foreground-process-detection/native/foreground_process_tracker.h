@@ -41,6 +41,7 @@
 #include <regex>
 #include <string>
 
+#include "commands/is_tracking_foreground_process_supported.h"
 #include "commands/start_tracking_foreground_process.h"
 #include "commands/stop_tracking_foreground_process.h"
 #include "daemon/event_buffer.h"
@@ -70,6 +71,9 @@ class ForegroundProcessTracker {
       return;
     }
 
+    daemon->RegisterCommandHandler(
+        profiler::proto::Command::IS_TRACKING_FOREGROUND_PROCESS_SUPPORTED,
+        &IsTrackingForegroundProcessSupported::Create);
     daemon->RegisterCommandHandler(
         profiler::proto::Command::START_TRACKING_FOREGROUND_PROCESS,
         &StartTrackingForegroundProcess::Create);
@@ -102,6 +106,9 @@ class ForegroundProcessTracker {
     delete dumpsysCommandRunner_;
   }
 
+  // Runs dumpsys and tries to extract the foreground process for its output.
+  // Returns false if foreground process info can't be extracted.
+  bool IsTrackingForegroundProcessSupported();
   void StartTracking();
   void StopTracking();
 

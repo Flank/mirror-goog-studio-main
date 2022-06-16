@@ -21,6 +21,7 @@ import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_NAME
 import com.android.ide.common.repository.GradleVersion
 import com.android.resources.ResourceFolderType
+import com.android.testutils.MockitoKt.whenever
 import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.UastEnvironment
@@ -65,7 +66,6 @@ import org.intellij.lang.annotations.Language
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.BufferedOutputStream
@@ -450,7 +450,7 @@ class LintUtilsTest : TestCase() {
 
     fun testIsModelOlderThan() {
         var project = mock(Project::class.java)
-        `when`<GradleVersion>(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.10.4"))
+        whenever(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.10.4"))
 
         assertTrue(isModelOlderThan(project, 0, 10, 5))
         assertTrue(isModelOlderThan(project, 0, 11, 0))
@@ -458,20 +458,20 @@ class LintUtilsTest : TestCase() {
         assertTrue(isModelOlderThan(project, 1, 0, 0))
 
         project = mock(Project::class.java)
-        `when`<GradleVersion>(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.11.0"))
+        whenever(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.11.0"))
 
         assertTrue(isModelOlderThan(project, 1, 0, 0))
         assertFalse(isModelOlderThan(project, 0, 11, 0))
         assertFalse(isModelOlderThan(project, 0, 10, 4))
 
         project = mock(Project::class.java)
-        `when`<GradleVersion>(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.11.5"))
+        whenever(project.gradleModelVersion).thenReturn(GradleVersion.parse("0.11.5"))
 
         assertTrue(isModelOlderThan(project, 1, 0, 0))
         assertFalse(isModelOlderThan(project, 0, 11, 0))
 
         project = mock(Project::class.java)
-        `when`<GradleVersion>(project.gradleModelVersion).thenReturn(GradleVersion.parse("1.0.0"))
+        whenever(project.gradleModelVersion).thenReturn(GradleVersion.parse("1.0.0"))
 
         assertTrue(isModelOlderThan(project, 1, 0, 1))
         assertFalse(isModelOlderThan(project, 1, 0, 0))

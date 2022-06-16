@@ -21,8 +21,17 @@ import studio.network.inspection.NetworkInspectorProtocol.InterceptRule
 /**
  * A rule class that intercepts connections and their responses that matches certain [criteria].
  */
-class InterceptionRule(proto: InterceptRule) {
+interface InterceptionRule {
+    val isEnabled: Boolean
+    fun transform(
+        connection: NetworkConnection,
+        response: NetworkResponse
+    ): NetworkResponse
+}
 
+class InterceptionRuleImpl(proto: InterceptRule) : InterceptionRule {
+
+    override val isEnabled = proto.enabled
     private val criteria: InterceptionCriteria
     private val transformations: List<InterceptionTransformation>
 
@@ -45,7 +54,7 @@ class InterceptionRule(proto: InterceptRule) {
         }
     }
 
-    fun transform(
+    override fun transform(
         connection: NetworkConnection,
         response: NetworkResponse
     ): NetworkResponse {

@@ -149,7 +149,7 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.consumerProguardFiles.from(creationConfig.variantScope.consumerProguardFilesForFeatures)
+            task.consumerProguardFiles.from(creationConfig.consumerProguardFiles)
             task.isBaseModule = creationConfig.componentType.isBaseModule
             task.isDynamicFeature = creationConfig.componentType.isDynamicFeature
 

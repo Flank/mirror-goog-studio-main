@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -213,7 +214,7 @@ abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
             task.mainSplit = creationConfig.outputs.getMainSplit()
 
             task.dex = creationConfig.services.fileCollection(
-                if (creationConfig.variantScope.consumesFeatureJars()) {
+                if ((creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true) {
                     creationConfig.artifacts.get(InternalArtifactType.BASE_DEX)
                 } else {
                     artifacts.getAll(InternalMultipleArtifactType.DEX)

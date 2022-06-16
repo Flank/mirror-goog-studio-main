@@ -18,8 +18,8 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.MOTION_LAYOUT
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.AndroidXConstants.MOTION_LAYOUT
+import com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.LAYOUT
 import com.android.resources.ResourceFolderType.XML

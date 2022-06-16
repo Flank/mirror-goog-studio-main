@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -28,11 +29,14 @@ import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
+import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantSources
@@ -41,19 +45,22 @@ import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOption
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.utils.immutableListBuilder
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
+import com.android.utils.appendCapitalized
+import com.android.utils.capitalizeAndAppend
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import java.io.File
 import java.io.Serializable
 
 abstract class VariantImpl<DslInfoT: VariantDslInfo>(
@@ -64,8 +71,8 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     transformManager: TransformManager,
     variantServices: VariantServices,
     taskCreationServices: TaskCreationServices,
@@ -78,13 +85,24 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
+    taskContainer,
     transformManager,
     variantServices,
     taskCreationServices,
     global
 ), Variant, VariantCreationConfig {
+
+    override val description: String
+        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
+            val sb = StringBuilder(50)
+            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
+            sb.append(" build for flavor ")
+            componentIdentity.flavorName?.let { sb.appendCapitalized(it) }
+            sb.toString()
+        } else {
+            componentIdentity.buildType!!.capitalizeAndAppend(" build")
+        }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -170,6 +188,19 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         }
     }
 
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+        if (buildFeatures.renderScript) {
+            RenderscriptCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+                renderscriptTargetApi = variantBuilder.renderscriptTargetApi
+            )
+        } else {
+            null
+        }
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
@@ -195,9 +226,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
-    override val renderscriptTargetApi: Int
-        get() = variantBuilder.renderscriptTargetApi
-
     private var _isMultiDexEnabled: Boolean? = dslInfo.isMultiDexEnabled
     override val isMultiDexEnabled: Boolean
         get() {
@@ -209,31 +237,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 && global.hasDynamicFeatures
                 && dexingType.needsMainDexList
 
-    // TODO: Move down to lower type and remove from VariantScope.
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = variantScope.isCoreLibraryDesugaringEnabled(this)
-
     override var unitTest: UnitTestImpl? = null
-
-    /**
-     * adds renderscript sources if present.
-     */
-    override fun addRenderscriptSources(
-            sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        renderscript?.let {
-            if (!it.ndkModeEnabled.get()
-                && artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
-            ) {
-                sourceSets.add(
-                    TaskProviderBasedDirectoryEntryImpl(
-                        name = "generated_renderscript",
-                        directoryProvider = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR),
-                    )
-                )
-            }
-        }
-    }
 
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
         androidResourcesCreationConfig?.pseudoLocalesEnabled
@@ -285,12 +289,22 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val scopedGlslcArgs: Map<String, List<String>>
         get() = dslInfo.scopedGlslcArgs
 
-    override val renderscriptNdkModeEnabled: Boolean
-        get() = dslInfo.renderscriptNdkModeEnabled
     override val ndkConfig: MergedNdkConfig
         get() = dslInfo.ndkConfig
     override val isJniDebuggable: Boolean
         get() = dslInfo.isJniDebuggable
     override val supportedAbis: Set<String>
         get() = dslInfo.supportedAbis
+
+    override val postProcessingFeatures: PostprocessingFeatures?
+        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
+    override val consumerProguardFiles: List<File> by lazy {
+        immutableListBuilder<File> {
+            addAll(dslInfo.gatherProguardFiles(ProguardFileType.CONSUMER))
+            // We include proguardFiles if we're in a dynamic-feature module.
+            if (dslInfo.componentType.isDynamicFeature) {
+                addAll(dslInfo.gatherProguardFiles(ProguardFileType.EXPLICIT))
+            }
+        }
+    }
 }

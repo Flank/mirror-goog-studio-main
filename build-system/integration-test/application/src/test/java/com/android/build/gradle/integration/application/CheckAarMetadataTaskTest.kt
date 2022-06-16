@@ -39,7 +39,6 @@ import com.android.zipflinger.ZipArchive
 import com.google.common.base.Throwables
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -420,7 +419,6 @@ class CheckAarMetadataTaskTest {
         }
     }
 
-    @Ignore("b/231439912")
     @Test
     fun testPassingWithForceCompileSdkPreview() {
         addAarWithPossiblyInvalidAarMetadataToAppProject(

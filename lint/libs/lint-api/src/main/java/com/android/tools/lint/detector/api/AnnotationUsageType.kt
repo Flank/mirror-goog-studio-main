@@ -16,6 +16,9 @@
 
 package com.android.tools.lint.detector.api
 
+import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UMethod
+
 enum class AnnotationUsageType {
     /**
      * An actual annotation on an element. For example, if a detector
@@ -80,6 +83,23 @@ enum class AnnotationUsageType {
 
     /** A method which overrides an annotated method */
     METHOD_OVERRIDE,
+
+    /**
+     * An implicit constructor which delegates to a (possibly
+     * indirectly) annotated super constructor. This is similar to
+     * [METHOD_OVERRIDE], but for constructors (and note that the
+     * [AnnotationInfo.annotated] element will be the surrounding
+     * [UClass], not a [UMethod]
+     */
+    IMPLICIT_CONSTRUCTOR,
+
+    /**
+     * An implicit constructor call to an annotated constructor. This
+     * is used for an explicit constructor which does not explicitly
+     * invoke the super constructor, but where that super constructor is
+     * annotated.
+     */
+    IMPLICIT_CONSTRUCTOR_CALL,
 
     /** A variable whose declaration was annotated. */
     VARIABLE_REFERENCE,

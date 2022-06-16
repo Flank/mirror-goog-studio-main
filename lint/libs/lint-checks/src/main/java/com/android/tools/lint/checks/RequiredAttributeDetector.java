@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.AndroidXConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
@@ -27,7 +28,6 @@ import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.FD_RES_LAYOUT;
-import static com.android.SdkConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;

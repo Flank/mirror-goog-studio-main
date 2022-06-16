@@ -102,9 +102,7 @@ public class SwitchMultidexTest {
         assertThat(debug.getMainDexFile().get())
                 .containsExactlyClassesIn(
                         ImmutableList.of(
-                                "Landroid/support/multidex/MultiDex$V14;",
                                 "Landroid/support/multidex/MultiDex$V19;",
-                                "Landroid/support/multidex/MultiDex$V4;",
                                 "Landroid/support/multidex/MultiDex;",
                                 "Landroid/support/multidex/MultiDexApplication;",
                                 "Landroid/support/multidex/MultiDexExtractor$1;",
@@ -140,6 +138,8 @@ public class SwitchMultidexTest {
             assertThat(secondaryClasses)
                     .containsExactly(
                             "Landroid/support/multidex/BuildConfig;",
+                            "Landroid/support/multidex/MultiDex$V14;",
+                            "Landroid/support/multidex/MultiDex$V4;",
                             "Landroid/support/multidex/R;",
                             "Lcom/example/helloworld/A0;",
                             "Lcom/example/helloworld/A1;",

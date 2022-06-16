@@ -29,50 +29,50 @@ private const val FEAT_CHUNK_HEADER_LENGTH = 4
  * To use create a JdwpCommandHandler and add this as a packet handler.
  * Provide a map with the features wanted for each expected client pid.
  */
-class FeaturesHandler(private val featureMap: Map<Int, List<String>>,
-                      private val defaultFeatures: List<String>) : CommandHandler(), JdwpDdmsPacketHandler {
+class FeaturesHandler(
+    private val featureMap: Map<Int, List<String>>,
+    private val defaultFeatures: List<String>
+) : CommandHandler(),
+    DDMPacketHandler {
 
-  override fun handlePacket(
-    packet: JdwpPacket,
-    client: ClientState,
-    oStream: OutputStream
-  ): Boolean {
-    val features = featureMap[client.pid] ?: defaultFeatures
-    if (features.isEmpty()) {
-      return false
-    }
-    val featureLength = features.sumBy { 4 + 2 * it.length }
-    val payloadLength: Int = FEAT_CHUNK_HEADER_LENGTH + featureLength
+    override fun handlePacket(
+        packet: DdmPacket,
+        client: ClientState,
+        oStream: OutputStream
+    ): Boolean {
+        val features = featureMap[client.pid] ?: defaultFeatures
+        if (features.isEmpty()) {
+            return false
+        }
+        val featureLength = features.sumBy { 4 + 2 * it.length }
+        val payloadLength: Int = FEAT_CHUNK_HEADER_LENGTH + featureLength
 
-    val payload = ByteArray(payloadLength)
-    val payloadBuffer = ByteBuffer.wrap(payload)
-    payloadBuffer.putInt(features.size)
-    for (feature in features) {
-      payloadBuffer.putInt(feature.length)
-      for (c in feature) {
-        payloadBuffer.putChar(c)
-      }
-    }
+        val payload = ByteArray(payloadLength)
+        val payloadBuffer = ByteBuffer.wrap(payload)
+        payloadBuffer.putInt(features.size)
+        for (feature in features) {
+            payloadBuffer.putInt(feature.length)
+            for (c in feature) {
+                payloadBuffer.putChar(c)
+            }
+        }
 
-    val responsePacket = JdwpPacket.createResponse(packet.id, CHUNK_TYPE, payload)
+        val responsePacket = DdmPacket.createResponse(packet.id, CHUNK_TYPE, payload)
 
-    try {
-      responsePacket.write(oStream)
-    }
-    catch (e: IOException) {
-      writeFailResponse(oStream, "Could not write FEAT response packet")
-      return false
-    }
+        try {
+            responsePacket.write(oStream)
+        } catch (e: IOException) {
+            writeFailResponse(oStream, "Could not write FEAT response packet")
+            return false
+        }
 
-    if (client.isWaiting) {
-      val waitPayload = ByteArray(1)
-      val waitPacket = JdwpPacket.create(
-        JdwpPacket.encodeChunkType("WAIT"), waitPayload
-      )
-      try {
-        waitPacket.write(oStream)
-      } catch (e: IOException) {
-        writeFailResponse(oStream, "Could not write WAIT packet")
+        if (client.isWaiting) {
+            val waitPayload = ByteArray(1)
+            val waitPacket = DdmPacket.create(DdmPacket.encodeChunkType("WAIT"), waitPayload)
+            try {
+                waitPacket.write(oStream)
+            } catch (e: IOException) {
+                writeFailResponse(oStream, "Could not write WAIT packet")
         return false
       }
     }
@@ -81,7 +81,7 @@ class FeaturesHandler(private val featureMap: Map<Int, List<String>>,
 
   companion object {
 
-    @JvmField
-    val CHUNK_TYPE = JdwpPacket.encodeChunkType("FEAT")
+      @JvmField
+      val CHUNK_TYPE = DdmPacket.encodeChunkType("FEAT")
   }
 }

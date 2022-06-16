@@ -26,7 +26,7 @@ import androidx.inspection.InspectorEnvironment
 import com.android.tools.appinspection.network.httpurl.wrapURLConnection
 import com.android.tools.appinspection.network.okhttp.OkHttp2Interceptor
 import com.android.tools.appinspection.network.okhttp.OkHttp3Interceptor
-import com.android.tools.appinspection.network.rules.InterceptionRule
+import com.android.tools.appinspection.network.rules.InterceptionRuleImpl
 import com.android.tools.appinspection.network.rules.InterceptionRuleServiceImpl
 import com.squareup.okhttp.Interceptor
 import com.squareup.okhttp.OkHttpClient
@@ -97,7 +97,7 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            InterceptionRule(rule)
+                            InterceptionRuleImpl(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
@@ -106,7 +106,7 @@ class NetworkInspector(
                         val rule = interceptRuleAdded.rule
                         interceptionService.addRule(
                             interceptRuleAdded.ruleId,
-                            InterceptionRule(rule)
+                            InterceptionRuleImpl(rule)
                         )
                         callback.reply(INTERCEPT_COMMAND_RESPONSE)
                     }
@@ -191,7 +191,7 @@ class NetworkInspector(
                 ArtTooling.ExitHook<List<Interceptor>> { list ->
                     if (list.none { it is OkHttp2Interceptor }) {
                         okHttp2Interceptors = list
-                        list.add(0, OkHttp2Interceptor(trackerService))
+                        list.add(0, OkHttp2Interceptor(trackerService, interceptionService))
                     }
                     list
                 }
@@ -206,7 +206,7 @@ class NetworkInspector(
                 "networkInterceptors()Ljava/util/List;",
                 ArtTooling.ExitHook<List<okhttp3.Interceptor>> { list ->
                     val interceptors = java.util.ArrayList<okhttp3.Interceptor>()
-                    interceptors.add(OkHttp3Interceptor(trackerService))
+                    interceptors.add(OkHttp3Interceptor(trackerService, interceptionService))
                     interceptors.addAll(list)
                     interceptors as List<okhttp3.Interceptor>
                 }

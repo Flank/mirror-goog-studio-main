@@ -56,6 +56,8 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/base/lint/libs/lint-tests/lint-tests.jar ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/deploy/deployer/deployer.runner_deploy.jar ${artifacts_dir}/deployer.jar
   cp -a ${bin_dir}/tools/base/profiler/native/trace_processor_daemon/trace_processor_daemon ${artifacts_dir}
+  cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-linux.tar.gz ${artifacts_dir}
+  cp -a ${bin_dir}/tools/vendor/google/game-tools/packaging/game-tools-win.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/deploy/service/deploy.service_deploy.jar ${artifacts_dir}
   cp -a ${bin_dir}/tools/base/gmaven/gmaven.zip ${artifacts_dir}/gmaven_repo.zip
   cp -a ${bin_dir}/tools/base/build-system/documentation.zip ${artifacts_dir}/android_gradle_plugin_reference_docs.zip
@@ -163,6 +165,7 @@ function run_bazel_test() {
     --tool_tag=${SCRIPT_NAME} \
     --embed_label="${AS_BUILD_NUMBER}" \
     --profile="${DIST_DIR:-/tmp}/profile-${BUILD_NUMBER}.json.gz" \
+    --jobs=500 \
     "${extra_test_flags[@]}" \
     "${conditional_flags[@]}" \
     -- \
@@ -173,13 +176,15 @@ function run_bazel_test() {
     //tools/base/profiler/native/trace_processor_daemon \
     //tools/base/deploy/deployer:deployer.runner_deploy.jar \
     //tools/adt/idea/studio:test_studio \
+    //tools/vendor/google/game-tools/packaging:packaging-linux \
+    //tools/vendor/google/game-tools/packaging:packaging-win \
     //tools/base/deploy/service:deploy.service_deploy.jar \
     //tools/base/ddmlib:tools.ddmlib \
     //tools/base/ddmlib:incfs \
     //tools/base/lint/libs/lint-tests:lint-tests \
     //tools/base/bazel:local_maven_repository_generator_deploy.jar \
     //tools/base/build-system:documentation.zip \
-    $(< "${SCRIPT_DIR}/targets") -//tools/vendor/google/game-tools/packaging/...
+    $(< "${SCRIPT_DIR}/targets")
 }
 
 ####################################
@@ -277,9 +282,9 @@ if [[ $IS_FLAKY_RUN && $BAZEL_STATUS -eq $BAZEL_EXITCODE_NO_TESTS_FOUND  ]]; the
   exit 0
 fi
 
-# For post-submit builds, if the tests fail we still want to report success
-# otherwise ATP will think the build failed and there are no tests. b/152755167
-if [[ $BUILD_TYPE == "POSTSUBMIT" && $BAZEL_STATUS -eq $BAZEL_EXITCODE_TEST_FAILURES ]]; then
+# If the tests fail we report success, test results get displayed from other
+# systems. b/192362688
+if [[ $BAZEL_STATUS -eq $BAZEL_EXITCODE_TEST_FAILURES ]]; then
   exit 0
 else
   exit $BAZEL_STATUS

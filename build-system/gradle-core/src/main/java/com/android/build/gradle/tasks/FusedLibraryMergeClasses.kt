@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.utils.FileUtils
+import com.android.utils.PathUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -51,9 +53,10 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
 
     @TaskAction
     fun taskAction() {
+        FileUtils.cleanOutputDir(outputDirectory.get().asFile)
 
         incoming.files.forEach { file ->
-            println("Merging file: ${file.absolutePath}")
+            logger.info("Merging file: ${file.absolutePath}")
             JarFile(file).use { jarFile ->
                 jarFile.entries().asSequence().forEach { jarEntry ->
                     jarFile.getInputStream(jarEntry).use { inputStream ->

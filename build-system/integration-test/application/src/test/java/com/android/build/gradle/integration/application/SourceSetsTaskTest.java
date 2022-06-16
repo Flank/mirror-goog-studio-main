@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
@@ -33,8 +32,6 @@ public class SourceSetsTaskTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    // http://b/158286766
-                    .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
                     .create();
 
     @Test

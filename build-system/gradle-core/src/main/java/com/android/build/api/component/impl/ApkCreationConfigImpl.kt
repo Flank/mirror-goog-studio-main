@@ -20,7 +20,7 @@ import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.getFeatureLevel
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.sdklib.AndroidVersion.VersionCodes
 import kotlin.math.max
 
@@ -42,7 +42,7 @@ open class ApkCreationConfigImpl<T: ApkCreationConfig>(
             }
             // Assume Java8LangSupport is either D8 or R8 as we checked that in
             // isCoreLibraryDesugaringEnabled()
-            return !(getJava8LangSupportType() == VariantScope.Java8LangSupport.D8 && config.debuggable)
+            return !(getJava8LangSupportType() == Java8LangSupport.D8 && config.debuggable)
         }
 
     /**

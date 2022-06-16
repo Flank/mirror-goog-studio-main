@@ -46,11 +46,9 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.builder.core.ComponentType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -122,7 +120,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     // INTERNAL DELEGATES
     // ---------------------------------------------------------------------------------------------
     val buildFeatures: BuildFeatureValues
-    val variantScope: VariantScope
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
     val sources: SourcesImpl
@@ -151,9 +148,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     fun computeTaskName(prefix: String, suffix: String): String
     fun computeTaskName(prefix: String): String
 
-    // TODO : Remove BaseVariantData.
-    val variantData: BaseVariantData
-
     /**
      * Get the compile classpath for compiling sources in this component
      */
@@ -164,6 +158,8 @@ interface ComponentCreationConfig : ComponentIdentity {
     ): FileCollection
 
     val compileClasspath: FileCollection
+
+    val providedOnlyClasspath: FileCollection
 
     fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory)
 
@@ -182,14 +178,19 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     fun computeLocalPackagedJars(): FileCollection
 
+    /**
+     * Returns the artifact name modified depending on the component type.
+     */
+    fun getArtifactName(name: String): String
+
+    val needsJavaResStreams: Boolean
+
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------
     // TODO: Figure out if we should be exposing any of the below
 
     val isAndroidTestCoverageEnabled: Boolean
-
-    fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
 
     fun addDataBindingSources(sourceSets: MutableList<DirectoryEntry>)
 
@@ -210,5 +211,5 @@ interface ComponentCreationConfig : ComponentIdentity {
     val modelV1LegacySupport: ModelV1LegacySupport
 
     @Deprecated("DO NOT USE, this is just for old variant API legacy support")
-    val oldVariantApiLegacySupport: OldVariantApiLegacySupport
+    val oldVariantApiLegacySupport: OldVariantApiLegacySupport?
 }

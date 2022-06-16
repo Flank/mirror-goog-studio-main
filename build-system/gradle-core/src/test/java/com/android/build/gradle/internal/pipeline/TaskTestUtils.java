@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.fixtures.FakeProviderFactory;
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter;
 import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.scope.ProjectInfo;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.services.TaskCreationServices;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
@@ -343,8 +342,6 @@ public class TaskTestUtils {
         when(creationConfig.getBuildType()).thenReturn("debug");
         when(creationConfig.getComponentType()).thenReturn(ComponentTypeImpl.BASE_APK);
 
-        VariantScope scope = mock(VariantScope.class);
-        when(creationConfig.getVariantScope()).thenReturn(scope);
         when(creationConfig.computeTaskName(Mockito.anyString(), Mockito.eq("")))
                 .thenReturn(TASK_NAME);
 

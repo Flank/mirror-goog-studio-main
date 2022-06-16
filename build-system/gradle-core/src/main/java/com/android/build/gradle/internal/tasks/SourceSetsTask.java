@@ -150,6 +150,9 @@ public class SourceSetsTask extends ProjectBasedReportTask {
             sourceSetsTask.setDescription(
                     "Prints out all the source sets defined in this project.");
             sourceSetsTask.setGroup(TaskManager.ANDROID_GROUP);
+            // http://b/158286766
+            sourceSetsTask.notCompatibleWithConfigurationCache(
+                    "SourceSetsTask not compatible with config caching");
         }
     }
 }

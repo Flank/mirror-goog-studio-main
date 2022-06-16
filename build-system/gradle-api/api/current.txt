@@ -1509,11 +1509,17 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public String getBuildToolsVersion();
     method @org.gradle.api.Incubating public com.android.build.api.dsl.PrivacySandboxSdkBundle getBundle();
     method @org.gradle.api.Incubating public Integer? getCompileSdk();
+    method @org.gradle.api.Incubating public Integer? getCompileSdkExtension();
+    method @org.gradle.api.Incubating public String? getCompileSdkPreview();
     method @org.gradle.api.Incubating public void setBuildToolsVersion(String buildToolsVersion);
     method @org.gradle.api.Incubating public void setCompileSdk(Integer? compileSdk);
+    method @org.gradle.api.Incubating public void setCompileSdkExtension(Integer? compileSdkExtension);
+    method @org.gradle.api.Incubating public void setCompileSdkPreview(String? compileSdkPreview);
     property @org.gradle.api.Incubating public abstract String buildToolsVersion;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.PrivacySandboxSdkBundle bundle;
     property @org.gradle.api.Incubating public abstract Integer? compileSdk;
+    property @org.gradle.api.Incubating public abstract Integer? compileSdkExtension;
+    property @org.gradle.api.Incubating public abstract String? compileSdkPreview;
   }
 
   public interface ProductFlavor extends org.gradle.api.Named com.android.build.api.dsl.BaseFlavor org.gradle.api.plugins.ExtensionAware com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {

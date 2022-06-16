@@ -49,6 +49,10 @@ OLD_SDKS = [
     "//prebuilts/studio/sdk:platforms/android-24_build_only",
 ]
 
+PREVIEW_SDKS = [
+    "//prebuilts/studio/sdk:platforms/android-Tiramisu_build_only",
+]
+
 #keep sorted
 TEST_DATA = [
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
@@ -263,7 +267,7 @@ single_gradle_integration_test_per_source(
             "src/test/java/com/android/build/gradle/integration/application/JavaCompileWithToolChainTest.kt",
         ],
     ),
-    data = TEST_DATA + OLD_SDKS,
+    data = TEST_DATA + OLD_SDKS + PREVIEW_SDKS,
     maven_repo_zips = [
         "//tools/base/build-system:android_gradle_plugin",
     ],

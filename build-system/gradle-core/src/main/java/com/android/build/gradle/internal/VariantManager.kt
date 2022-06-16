@@ -26,7 +26,6 @@ import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasTestFixturesBuilder
-import com.android.build.api.variant.TestFixtures
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantExtensionConfig
@@ -67,9 +66,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.build.gradle.internal.scope.BuildFeatureValues
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.scope.VariantScopeImpl
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -83,7 +81,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfigI
 import com.android.build.gradle.internal.variant.ComponentInfo
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.build.gradle.internal.variant.DimensionCombinator
-import com.android.build.gradle.internal.variant.TestFixturesVariantData
 import com.android.build.gradle.internal.variant.TestVariantData
 import com.android.build.gradle.internal.variant.VariantComponentInfo
 import com.android.build.gradle.internal.variant.VariantFactory
@@ -387,25 +384,9 @@ class VariantManager<
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
 
-        // create the obsolete VariantScope
-        val variantScope = VariantScopeImpl(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                pathHelper,
-                artifacts,
-                taskCreationServices,
-                getCompileSdkVersion(),
-                hasDynamicFeatures(),
-                null /* testedVariantProperties*/)
-
         // and the obsolete variant data
         val variantData = variantFactory.createVariantData(
             componentIdentity,
-            variantDslInfo,
-            variantDependencies,
-            variantSources,
-            pathHelper,
             artifacts,
             variantPropertiesApiServices,
             taskContainer
@@ -421,8 +402,8 @@ class VariantManager<
             variantSources,
             pathHelper,
             artifacts,
-            variantScope,
             variantData,
+            taskContainer,
             transformManager,
             variantPropertiesApiServices,
             taskCreationServices,
@@ -506,11 +487,6 @@ class VariantManager<
         val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
             project.layout.buildDirectory
         )
-        val apiAccessStats = mainComponentInfo.stats
-
-        // todo: run actions registered at the extension level.
-//        mainComponentInfo.variantApiOperationsRegistrar.testFixturesBuilderOperations
-//            .executeOperations(testFixturesVariantBuilder)
 
         // now that we have the result of the filter, we can continue configuring the variant
         createCompoundSourceSets(productFlavorDataList, variantDslInfoBuilder)
@@ -577,36 +553,13 @@ class VariantManager<
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
-        val variantScope = VariantScopeImpl(
-            componentIdentity,
-            variantDslInfo,
-            variantDependencies,
-            pathHelper,
-            artifacts,
-            taskCreationServices,
-            getCompileSdkVersion(),
-            hasDynamicFeatures(),
-            null
-        )
-
-        // create the internal storage for this variant.
-        val testFixturesVariantData = TestFixturesVariantData(
-            componentIdentity,
-            variantDslInfo,
-            variantDependencies,
-            variantSources,
-            pathHelper,
-            artifacts,
-            variantPropertiesApiServices,
-            taskContainer
-        )
         val testFixturesBuildFeatureValues = variantFactory.createTestFixturesBuildFeatureValues(
             dslExtension.buildFeatures,
             dslServices.projectOptions,
             variantDslInfo.testFixturesAndroidResourcesEnabled
         )
 
-        val testFixturesComponent = variantFactory.createTestFixtures(
+        return variantFactory.createTestFixtures(
             variantDslInfo.componentIdentity,
             testFixturesBuildFeatureValues,
             variantDslInfo,
@@ -614,28 +567,16 @@ class VariantManager<
             variantSources,
             pathHelper,
             artifacts,
-            variantScope,
-            testFixturesVariantData,
+            taskContainer,
             mainComponentInfo.variant,
             transformManager,
             variantPropertiesApiServices,
             taskCreationServices,
             globalTaskCreationConfig
-        )
-
-        val userVisibleVariant =
-            testFixturesComponent.createUserVisibleVariantObject<TestFixtures>(
-                projectServices, variantApiOperationsRegistrar, apiAccessStats)
-        // todo: execute the actions registered at the extension level.
-//        mainComponentInfo.variantApiOperationsRegistrar.testFixturesOperations
-//            .executeOperations(userVisibleVariant)
-
-        // register testFixtures component to the main variant
-        mainComponentInfo
-            .variant
-            .testFixturesComponent = testFixturesComponent
-
-        return testFixturesComponent
+        ).also {
+            // register testFixtures component to the main variant
+            mainComponentInfo.variant.testFixturesComponent = it
+        }
     }
 
     /** Create a TestVariantData for the specified testedVariantData.  */
@@ -769,27 +710,14 @@ class VariantManager<
         val artifacts = ArtifactsImpl(project, componentIdentity.name)
         val taskContainer = MutableTaskContainer()
         val transformManager = TransformManager(project, dslServices.issueReporter)
-        val variantScope = VariantScopeImpl(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                pathHelper,
-                artifacts,
-                taskCreationServices,
-                getCompileSdkVersion(),
-                hasDynamicFeatures(),
-                testedComponentInfo.variant)
 
         // create the internal storage for this variant.
         val testVariantData = TestVariantData(
-                componentIdentity,
-                variantDslInfo,
-                variantDependencies,
-                variantSources,
-                pathHelper,
-                artifacts,
-                variantPropertiesApiServices,
-                taskContainer)
+            componentIdentity,
+            artifacts,
+            variantPropertiesApiServices,
+            taskContainer
+        )
 
         // this is ANDROID_TEST
         val testComponent = if (componentType.isApk) {
@@ -805,8 +733,8 @@ class VariantManager<
                 variantSources,
                 pathHelper,
                 artifacts,
-                variantScope,
                 testVariantData,
+                taskContainer,
                 testedComponentInfo.variant,
                 transformManager,
                 variantPropertiesApiServices,
@@ -829,8 +757,8 @@ class VariantManager<
                 variantSources,
                 pathHelper,
                 artifacts,
-                variantScope,
                 testVariantData,
+                taskContainer,
                 testedComponentInfo.variant,
                 transformManager,
                 variantPropertiesApiServices,
@@ -1027,8 +955,8 @@ class VariantManager<
                             ApiVersion.newBuilder().setApiLevel(version.toLong()))
                     }
                     val supportType = variant.getJava8LangSupportType()
-                    if (supportType != VariantScope.Java8LangSupport.INVALID
-                        && supportType != VariantScope.Java8LangSupport.UNUSED) {
+                    if (supportType != Java8LangSupport.INVALID
+                        && supportType != Java8LangSupport.UNUSED) {
                         variantAnalytics.java8LangSupport = AnalyticsUtil.toProto(supportType)
                     }
                 }

@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.variant.ScopedArtifacts
+import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -116,6 +120,9 @@ abstract class ProguardConfigurableTask(
     @get:OutputFile
     abstract val mappingFile: RegularFileProperty
 
+    @get:Input
+    abstract val hasAllAccessTransformers: Property<Boolean>
+
     /**
      * Users can have access to the default proguard file location through the
      * VariantDimension.getDefaultProguardFile API.
@@ -165,7 +172,8 @@ abstract class ProguardConfigurableTask(
         creationConfig
     ) {
 
-        private val includeFeaturesInScopes: Boolean = creationConfig.variantScope.consumesFeatureJars()
+        private val includeFeaturesInScopes: Boolean = (creationConfig as? ApplicationCreationConfig)
+            ?.consumesFeatureJars == true
         protected val componentType: ComponentType = creationConfig.componentType
         private val testedConfig = (creationConfig as? TestComponentCreationConfig)?.mainVariant
 
@@ -291,14 +299,26 @@ abstract class ProguardConfigurableTask(
 
             task.includeFeaturesInScopes.set(includeFeaturesInScopes)
 
-            task.classes.from(classes)
+            val hasAllAccessTransformers = creationConfig.artifacts.forScope(Scope.ALL)
+                .getScopedArtifactsContainer(ScopedArtifact.CLASSES).artifactsAltered.get()
 
-            if (addCompileRClass) {
-                task.classes.from(
-                        creationConfig
-                                .artifacts
-                                .get(InternalArtifactType.COMPILE_R_CLASS_JAR)
+            task.hasAllAccessTransformers.set(hasAllAccessTransformers)
+
+            // if some external plugin altered the ALL scoped classes, use that.
+            if (hasAllAccessTransformers) {
+                task.classes.setFrom(
+                    creationConfig.artifacts.forScope(Scope.ALL)
+                        .getFinalArtifacts(ScopedArtifact.CLASSES)
                 )
+            } else {
+                task.classes.from(classes)
+                if (addCompileRClass) {
+                    task.classes.from(
+                        creationConfig
+                            .artifacts
+                            .get(InternalArtifactType.COMPILE_R_CLASS_JAR)
+                    )
+                }
             }
 
             task.resources.from(resources)
@@ -377,7 +397,7 @@ abstract class ProguardConfigurableTask(
             task: ProguardConfigurableTask,
             creationConfig: ConsumableCreationConfig
         ) {
-            val postprocessingFeatures = creationConfig.variantScope.postprocessingFeatures
+            val postprocessingFeatures = creationConfig.postProcessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
             val aaptProguardFile =

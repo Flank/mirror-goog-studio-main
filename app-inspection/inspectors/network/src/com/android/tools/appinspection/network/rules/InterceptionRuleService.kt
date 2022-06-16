@@ -18,7 +18,7 @@ package com.android.tools.appinspection.network.rules
 
 import java.io.InputStream
 
-class NetworkConnection(
+data class NetworkConnection(
     val url: String,
     val method: String,
 )
@@ -44,9 +44,24 @@ data class NetworkInterceptionMetrics(
  */
 interface InterceptionRuleService {
 
+    /**
+     * Intercepts the provided [response] with the current rules.
+     */
     fun interceptResponse(connection: NetworkConnection, response: NetworkResponse): NetworkResponse
+
+    /**
+     * Adds a new rule to the service. If the rule id already exists, overwrite the existing one.
+     */
     fun addRule(ruleId: Int, rule: InterceptionRule)
+
+    /**
+     * Removes a rule from the service.
+     */
     fun removeRule(ruleId: Int)
+
+    /**
+     * Reorders rules according to the [ruleIdList].
+     */
     fun reorderRules(ruleIdList: List<Int>)
 }
 
@@ -55,10 +70,12 @@ class InterceptionRuleServiceImpl : InterceptionRuleService {
     private val rules = mutableMapOf<Int, InterceptionRule>()
     private var ruleIdList = mutableListOf<Int>()
 
+    @Synchronized
     override fun interceptResponse(
         connection: NetworkConnection,
         response: NetworkResponse
     ): NetworkResponse = ruleIdList.mapNotNull { id -> rules[id] }
+        .filter { it.isEnabled }
         .fold(response) { intermediateResponse, rule ->
             rule.transform(
                 connection,
@@ -66,6 +83,7 @@ class InterceptionRuleServiceImpl : InterceptionRuleService {
             )
         }
 
+    @Synchronized
     override fun addRule(ruleId: Int, rule: InterceptionRule) {
         if (!rules.containsKey(ruleId)) {
             ruleIdList.add(ruleId)
@@ -73,11 +91,13 @@ class InterceptionRuleServiceImpl : InterceptionRuleService {
         rules[ruleId] = rule
     }
 
+    @Synchronized
     override fun removeRule(ruleId: Int) {
         ruleIdList.remove(ruleId)
         rules.remove(ruleId)
     }
 
+    @Synchronized
     override fun reorderRules(ruleIdList: List<Int>) {
         this.ruleIdList = ruleIdList.toMutableList()
     }

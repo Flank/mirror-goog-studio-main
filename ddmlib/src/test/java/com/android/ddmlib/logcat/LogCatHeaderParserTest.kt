@@ -17,6 +17,7 @@ package com.android.ddmlib.logcat
 
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.Log.LogLevel.INFO
+import com.android.testutils.MockitoKt.whenever
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -24,7 +25,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 import java.time.Instant
 import java.time.ZoneId
@@ -64,8 +64,8 @@ class LogCatHeaderParserTest {
 
     @Before
     fun mockDevice() {
-        `when`(mockDevice.getClientName(PID_APP)).thenReturn(APP_NAME)
-        `when`(mockDevice.getClientName(PID_EMPTY_APP)).thenReturn("")
+        whenever(mockDevice.getClientName(PID_APP)).thenReturn(APP_NAME)
+        whenever(mockDevice.getClientName(PID_EMPTY_APP)).thenReturn("")
     }
 
     @Test

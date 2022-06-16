@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.annotations;
 
+import static com.android.AndroidXConstants.INT_DEF_ANNOTATION;
+import static com.android.AndroidXConstants.LONG_DEF_ANNOTATION;
+import static com.android.AndroidXConstants.STRING_DEF_ANNOTATION;
+import static com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.AMP_ENTITY;
 import static com.android.SdkConstants.ANDROIDX_PKG_PREFIX;
 import static com.android.SdkConstants.APOS_ENTITY;
@@ -28,12 +32,8 @@ import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.SdkConstants.GT_ENTITY;
-import static com.android.SdkConstants.INT_DEF_ANNOTATION;
-import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.SdkConstants.LT_ENTITY;
 import static com.android.SdkConstants.QUOT_ENTITY;
-import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
-import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
 import static com.android.SdkConstants.TYPE_DEF_VALUE_ATTRIBUTE;
 import static com.android.SdkConstants.VALUE_TRUE;

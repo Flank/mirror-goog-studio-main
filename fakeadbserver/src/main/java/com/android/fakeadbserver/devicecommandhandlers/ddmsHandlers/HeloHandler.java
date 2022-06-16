@@ -15,7 +15,6 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
-import static com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket.encodeChunkType;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
@@ -23,9 +22,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public class HeloHandler implements JdwpDdmsPacketHandler {
+public class HeloHandler implements DDMPacketHandler {
 
-    public static final int CHUNK_TYPE = encodeChunkType("HELO");
+    public static final int CHUNK_TYPE = DdmPacket.encodeChunkType("HELO");
 
     private static final String VM_IDENTIFIER = "FakeVM";
 
@@ -35,9 +34,7 @@ public class HeloHandler implements JdwpDdmsPacketHandler {
 
     @Override
     public boolean handlePacket(
-            @NonNull JdwpPacket packet,
-            @NonNull ClientState client,
-            @NonNull OutputStream oStream) {
+            @NonNull DdmPacket packet, @NonNull ClientState client, @NonNull OutputStream oStream) {
         // ADB has an issue of reporting the process name instead of the real not reporting the real package name.
         String appName = client.getProcessName();
 
@@ -56,8 +53,7 @@ public class HeloHandler implements JdwpDdmsPacketHandler {
             payloadBuffer.putChar(c);
         }
 
-        JdwpPacket responsePacket =
-                JdwpPacket.createResponse(packet.getId(), CHUNK_TYPE, payload);
+        DdmPacket responsePacket = DdmPacket.createResponse(packet.getId(), CHUNK_TYPE, payload);
 
         try {
             responsePacket.write(oStream);
@@ -69,7 +65,7 @@ public class HeloHandler implements JdwpDdmsPacketHandler {
         if (client.getIsWaiting()) {
 
             byte[] waitPayload = new byte[1];
-            JdwpPacket waitPacket = JdwpPacket.create(encodeChunkType("WAIT"), waitPayload);
+            DdmPacket waitPacket = DdmPacket.create(DdmPacket.encodeChunkType("WAIT"), waitPayload);
             try {
                 waitPacket.write(oStream);
             } catch (IOException e) {

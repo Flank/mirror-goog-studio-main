@@ -17,10 +17,14 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.transform.Format
+import com.android.build.api.variant.ScopedArtifacts
+import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -28,7 +32,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.services.R8ParallelBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.getDesugarLibConfig
@@ -237,7 +241,7 @@ abstract class R8Task @Inject constructor(
                     .withName("shrunkClasses.jar")
                     .on(InternalArtifactType.SHRUNK_CLASSES)
 
-                creationConfig.variantScope.consumesFeatureJars() -> {
+                (creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true -> {
                     creationConfig.artifacts.setInitialProvider(
                         taskProvider,
                         R8Task::baseDexDir
@@ -308,7 +312,7 @@ abstract class R8Task @Inject constructor(
             task.usesService(r8Service)
 
             task.enableDesugaring.set(
-                creationConfig.getJava8LangSupportType() == VariantScope.Java8LangSupport.R8
+                creationConfig.getJava8LangSupportType() == Java8LangSupport.R8
                         && !componentType.isAar)
 
             setBootClasspathForCodeShrinker(task)
@@ -349,7 +353,7 @@ abstract class R8Task @Inject constructor(
                     task.multiDexKeepFile.setDisallowChanges(creationConfig.multiDexKeepFile)
                 }
 
-                if (creationConfig.variantScope.consumesFeatureJars()) {
+                if ((creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true) {
                     creationConfig.artifacts.setTaskInputToFinalProduct(
                         InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                         task.baseJar
@@ -497,7 +501,7 @@ abstract class R8Task @Inject constructor(
             it.useFullR8.set(useFullR8.get())
             it.referencedInputs.from((referencedClasses + referencedResources).toList())
             it.classes.from(
-                if (includeFeaturesInScopes.get()) {
+                if (includeFeaturesInScopes.get() && !hasAllAccessTransformers.get()) {
                     listOf(baseJar.get().asFile)
                 } else {
                     classes.toList()

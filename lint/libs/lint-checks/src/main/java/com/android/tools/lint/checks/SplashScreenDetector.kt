@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.CLASS_ACTIVITY
-import com.android.SdkConstants.CLASS_V4_FRAGMENT
+import com.android.AndroidXConstants.CLASS_V4_FRAGMENT
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.sdklib.AndroidVersion.VersionCodes.S
 import com.android.tools.lint.client.api.UElementHandler

@@ -18,12 +18,12 @@ package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.desugar.DesugaringProjectConfigurator.configureR8Desugaring;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.D8;
-import static com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport.R8;
+import static com.android.build.gradle.internal.scope.Java8LangSupport.D8;
+import static com.android.build.gradle.internal.scope.Java8LangSupport.R8;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.Java8LangSupport;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +46,7 @@ public class DesugarAppWithLibraryTest {
         return new Object[] {D8, R8};
     }
 
-    @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
+    @Parameterized.Parameter public Java8LangSupport java8LangSupport;
 
     @Rule
     public GradleTestProject project =

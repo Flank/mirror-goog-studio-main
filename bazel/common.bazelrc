@@ -97,7 +97,7 @@ build:release --define release=true
 build:release --copt=-w
 
 ## Base RBE configuration
-build:_remote_base --bes_timeout=120s
+build:_remote_base --bes_timeout=240s
 build:_remote_base --project_id=908081808034
 build:_remote_base --google_default_credentials
 build:_remote_base --remote_cache=remotebuildexecution.googleapis.com

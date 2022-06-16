@@ -959,6 +959,133 @@ class AnnotationHandlerTest {
         )
     }
 
+    @Test
+    fun testImplicitConstructor() {
+        // Regression test for
+        // 234779271: com.android.tools.lint.client.api.AnnotationHandler doesn't visit implicit constructor delegations
+        lint().files(
+            java(
+                """
+                package test.pkg;
+                import pkg.kotlin.MyKotlinAnnotation;
+
+                @SuppressWarnings({"InnerClassMayBeStatic", "unused"})
+                public class Java {
+                    class Parent {
+                        @MyKotlinAnnotation
+                        Parent() {
+                        }
+
+                        Parent(int i) {
+                            this(); // (1) Invoked constructor is marked @MyKotlinAnnotation
+                        }
+                    }
+
+                    class ChildDefaultConstructor extends Parent { // (2) Implicitly delegated constructor is marked @MyKotlinAnnotation
+                    }
+
+                    class ChildExplicitConstructor extends Parent {
+                        ChildExplicitConstructor() { // (3) Implicitly invoked super constructor is marked @MyKotlinAnnotation, (4) Overrides annotated method
+                        }
+
+                        ChildExplicitConstructor(int a) {
+                            super(); // (5) Invoked constructor is marked @MyKotlinAnnotation
+                        }
+                    }
+
+                    class IndirectChildDefaultConstructor extends ChildDefaultConstructor { // (6) Implicitly invoked constructor is marked @MyKotlinAnnotation
+                    }
+
+                    class IndirectChildDefaultConstructor2 extends ChildDefaultConstructor {
+                        IndirectChildDefaultConstructor2(int a) {
+                            super(); // (7) Annotations on indirect implicit super constructor
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import pkg.kotlin.MyKotlinAnnotation;
+
+                class Kotlin {
+                    internal open inner class Parent @MyKotlinAnnotation constructor() {
+                        constructor(i: Int) : this()  { // (8) Invoked constructor is marked @MyKotlinAnnotation
+                        }
+                    }
+
+                    internal open inner class ChildDefaultConstructor : Parent() { // (9), (10) override and call of annotated constructor
+                    }
+
+                    internal inner class ChildExplicitConstructor : Parent {
+                        constructor() { // (11), (12) Extending annotated constructor, and implicitly invoking it
+                        }
+
+                        constructor(a: Int) : super() { // (13) Invoked constructor is marked @MyKotlinAnnotation
+                        }
+                    }
+
+                    internal inner class IndirectChildDefaultConstructor : ChildDefaultConstructor() { // (14) Implicitly invoked constructor is marked @MyKotlinAnnotation
+                    }
+
+                    internal inner class IndirectChildDefaultConstructor2(a: Int) : ChildDefaultConstructor() // (15) Annotations on indirect implicit super constructor
+                }
+                """
+            ).indented(),
+            kotlinAnnotation
+        ).run().expect(
+            """
+            src/test/pkg/Java.java:12: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                        this(); // (1) Invoked constructor is marked @MyKotlinAnnotation
+                        ~~~~~~
+            src/test/pkg/Java.java:16: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                class ChildDefaultConstructor extends Parent { // (2) Implicitly delegated constructor is marked @MyKotlinAnnotation
+                ^
+            src/test/pkg/Java.java:20: Error: IMPLICIT_CONSTRUCTOR_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    ChildExplicitConstructor() { // (3) Implicitly invoked super constructor is marked @MyKotlinAnnotation, (4) Overrides annotated method
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/Java.java:20: Error: METHOD_OVERRIDE usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    ChildExplicitConstructor() { // (3) Implicitly invoked super constructor is marked @MyKotlinAnnotation, (4) Overrides annotated method
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/Java.java:24: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                        super(); // (5) Invoked constructor is marked @MyKotlinAnnotation
+                        ~~~~~~~
+            src/test/pkg/Java.java:28: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                class IndirectChildDefaultConstructor extends ChildDefaultConstructor { // (6) Implicitly invoked constructor is marked @MyKotlinAnnotation
+                ^
+            src/test/pkg/Java.java:33: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                        super(); // (7) Annotations on indirect implicit super constructor
+                        ~~~~~~~
+            src/test/pkg/Kotlin.kt:6: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    constructor(i: Int) : this()  { // (8) Invoked constructor is marked @MyKotlinAnnotation
+                                          ~~~~~~
+            src/test/pkg/Kotlin.kt:10: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                internal open inner class ChildDefaultConstructor : Parent() { // (9), (10) override and call of annotated constructor
+                ^
+            src/test/pkg/Kotlin.kt:10: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                internal open inner class ChildDefaultConstructor : Parent() { // (9), (10) override and call of annotated constructor
+                                                                    ~~~~~~~~
+            src/test/pkg/Kotlin.kt:14: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    constructor() { // (11), (12) Extending annotated constructor, and implicitly invoking it
+                                 ^
+            src/test/pkg/Kotlin.kt:14: Error: METHOD_OVERRIDE usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    constructor() { // (11), (12) Extending annotated constructor, and implicitly invoking it
+                    ~~~~~~~~~~~
+            src/test/pkg/Kotlin.kt:17: Error: METHOD_CALL usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                    constructor(a: Int) : super() { // (13) Invoked constructor is marked @MyKotlinAnnotation
+                                          ~~~~~~~
+            src/test/pkg/Kotlin.kt:21: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                internal inner class IndirectChildDefaultConstructor : ChildDefaultConstructor() { // (14) Implicitly invoked constructor is marked @MyKotlinAnnotation
+                ^
+            src/test/pkg/Kotlin.kt:24: Error: IMPLICIT_CONSTRUCTOR usage associated with @MyKotlinAnnotation on METHOD [_AnnotationIssue]
+                internal inner class IndirectChildDefaultConstructor2(a: Int) : ChildDefaultConstructor() // (15) Annotations on indirect implicit super constructor
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            15 errors, 0 warnings
+            """
+        )
+    }
+
     // Simple detector which just flags annotation references
     @SuppressWarnings("ALL")
     class MyAnnotationDetector : Detector(), Detector.UastScanner {

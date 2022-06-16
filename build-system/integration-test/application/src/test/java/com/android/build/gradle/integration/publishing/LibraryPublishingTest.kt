@@ -518,6 +518,59 @@ class LibraryPublishingTest {
         library.execute("clean", "publish")
     }
 
+    // regression for b/233511980
+    // Test checks whether published library artifact has proper naming
+    // in case there is a transformation in build.
+    @Test
+    fun testPublishingWithTransformation() {
+        addPublication(RELEASE)
+        TestFileUtils.appendToFile(
+            library.buildFile, """
+                    android.publishing.singleVariant('release')
+            """.trimIndent())
+
+        TestFileUtils.appendToFile(
+            library.buildFile, """
+    import org.gradle.api.DefaultTask
+    import org.gradle.api.file.RegularFileProperty
+    import org.gradle.api.tasks.InputFiles
+    import org.gradle.api.tasks.TaskAction
+    import org.gradle.api.provider.Property
+    import org.gradle.api.tasks.Internal
+    import com.android.build.api.artifact.SingleArtifact
+    import org.gradle.api.tasks.OutputFile
+    import java.nio.file.Files
+
+    abstract class UpdateArtifactTask extends DefaultTask {
+        @InputFiles
+        abstract RegularFileProperty  getInitialArtifact()
+
+        @OutputFile
+        abstract RegularFileProperty getUpdatedArtifact()
+
+        @TaskAction
+        def taskAction() {
+            // just make a copy to new location
+            Files.copy(initialArtifact.get().asFile.toPath(), updatedArtifact.get().asFile.toPath())
+        }
+    }
+
+     androidComponents {
+            onVariants(selector().all(), { variant ->
+                TaskProvider taskProvider = project.tasks.register(variant.getName() + 'UpdateArtifact', UpdateArtifactTask.class)
+                    variant.artifacts.use(taskProvider)
+                        .wiredWithFiles(
+                            { it.getInitialArtifact() },
+                            { it.getUpdatedArtifact() })
+                        .toTransform(SingleArtifact.AAR.INSTANCE)
+        })
+    }
+            """.trimIndent())
+
+        library.execute("clean", "publish")
+        PathSubject.assertThat(project.projectDir.resolve("testrepo/com/example/android/myLib/1.0/myLib-1.0.aar")).exists()
+    }
+
     private fun addPublication(componentName: String) {
         TestFileUtils.appendToFile(
             library.buildFile,

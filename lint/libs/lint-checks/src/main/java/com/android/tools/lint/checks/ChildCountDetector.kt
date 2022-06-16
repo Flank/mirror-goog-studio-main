@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.CLASS_NESTED_SCROLL_VIEW
+import com.android.AndroidXConstants.CLASS_NESTED_SCROLL_VIEW
 import com.android.SdkConstants.GRID_VIEW
 import com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW
 import com.android.SdkConstants.LIST_VIEW

@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.profile.AnalyticsService
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
@@ -411,7 +411,7 @@ class DexArchiveBuilderDelegateTest {
         externalLibChanges: Set<FileChange> = emptySet(),
         projectOutput: File = tmpDir.newFolder(),
         externalLibsOutput: File = tmpDir.newFolder(),
-        java8Desugaring: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
+        java8Desugaring: Java8LangSupport = Java8LangSupport.UNUSED,
         desugaringClasspath: Set<File> = emptySet(),
         libConfiguration: String? = null,
         projectOutputKeepRules: File? = null,
@@ -435,13 +435,13 @@ class DexArchiveBuilderDelegateTest {
             mixedScopeOutputs =  DexArchiveBuilderTaskDelegate.DexingOutputs(tmpDir.newFolder(), null),
             inputJarHashesFile = inputJarHashesFile,
             desugarClasspathChangedClasses = emptySet(),
-            desugarGraphDir =  tmpDir.newFolder().takeIf { java8Desugaring == VariantScope.Java8LangSupport.D8 },
+            desugarGraphDir =  tmpDir.newFolder().takeIf { java8Desugaring == Java8LangSupport.D8 },
             numberOfBuckets = numberOfBuckets,
             workerExecutor = workerExecutor,
             dexParams = DexParameters(
                 minSdkVersion = minSdkVersion,
                 debuggable = isDebuggable,
-                withDesugaring = (java8Desugaring == VariantScope.Java8LangSupport.D8),
+                withDesugaring = (java8Desugaring == Java8LangSupport.D8),
                 desugarBootclasspath = emptyList(),
                 desugarClasspath = desugaringClasspath.toList(),
                 coreLibDesugarConfig = libConfiguration,

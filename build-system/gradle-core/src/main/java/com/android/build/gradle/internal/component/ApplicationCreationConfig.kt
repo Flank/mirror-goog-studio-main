@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.BundleConfigImpl
 import com.android.build.gradle.internal.dsl.NdkOptions
 
 interface ApplicationCreationConfig: ApkCreationConfig, VariantCreationConfig, PublishableCreationConfig {
+    val consumesFeatureJars: Boolean
     val needAssetPackTasks: Boolean
     val nativeDebugSymbolLevel: NdkOptions.DebugSymbolLevel
     val isWearAppUnbundled: Boolean?

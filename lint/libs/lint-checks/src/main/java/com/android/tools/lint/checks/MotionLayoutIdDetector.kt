@@ -18,7 +18,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.CLASS_VIEW
-import com.android.SdkConstants.MOTION_LAYOUT
+import com.android.AndroidXConstants.MOTION_LAYOUT
 import com.android.SdkConstants.TAG_INCLUDE
 import com.android.SdkConstants.VIEW
 import com.android.SdkConstants.VIEW_MERGE

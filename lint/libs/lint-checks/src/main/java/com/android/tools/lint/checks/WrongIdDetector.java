@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.AndroidXConstants.CLASS_CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT;
@@ -22,7 +23,6 @@ import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.AUTO_URI;
-import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_REFERENCED_IDS;
 import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.ID_PREFIX;
@@ -39,7 +39,7 @@ import static com.android.tools.lint.detector.api.Lint.editDistance;
 import static com.android.tools.lint.detector.api.Lint.isSameResourceFile;
 import static com.android.tools.lint.detector.api.Lint.stripIdPrefix;
 
-import com.android.SdkConstants;
+import com.android.AndroidXConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -203,8 +203,8 @@ public class WrongIdDetector extends LayoutDetector {
                 RELATIVE_LAYOUT,
                 TAG_ITEM,
                 PERCENT_RELATIVE_LAYOUT,
-                SdkConstants.CLASS_CONSTRAINT_LAYOUT.oldName(),
-                SdkConstants.CLASS_CONSTRAINT_LAYOUT.newName());
+                AndroidXConstants.CLASS_CONSTRAINT_LAYOUT.oldName(),
+                AndroidXConstants.CLASS_CONSTRAINT_LAYOUT.newName());
     }
 
     @Override
@@ -252,7 +252,7 @@ public class WrongIdDetector extends LayoutDetector {
         }
 
         boolean isConstraintLayout =
-                SdkConstants.CLASS_CONSTRAINT_LAYOUT.isEquals(layout.getTagName());
+                AndroidXConstants.CLASS_CONSTRAINT_LAYOUT.isEquals(layout.getTagName());
 
         for (Element element : XmlUtils.getSubTags(layout)) {
             String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));

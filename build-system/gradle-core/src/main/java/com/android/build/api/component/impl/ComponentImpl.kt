@@ -18,7 +18,6 @@ package com.android.build.api.component.impl
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.AssetsCreationConfigImpl
 import com.android.build.api.component.impl.features.ResValuesCreationConfigImpl
@@ -41,50 +40,58 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
-import com.android.build.gradle.internal.DependencyConfigurator
-import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
+import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
 import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.PublishableVariantDslInfo
+import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.dependency.AsmClassesTransform
 import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
+import com.android.build.gradle.internal.dependency.getProvidedClasspath
 import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.PublishedConfigSpec
+import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.*
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.MutableTaskContainer
+import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
+import com.android.build.gradle.internal.scope.publishArtifactToDefaultVariant
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.SelfResolvingDependency
+import com.google.common.base.Preconditions
+import org.gradle.api.attributes.DocsType
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -103,8 +110,8 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val variantSources: VariantSources,
     override val paths: VariantPathHelper,
     override val artifacts: ArtifactsImpl,
-    override val variantScope: VariantScope,
-    override val variantData: BaseVariantData,
+    private val variantData: BaseVariantData? = null,
+    override val taskContainer: MutableTaskContainer,
     override val transformManager: TransformManager,
     protected val internalServices: VariantServices,
     final override val services: TaskCreationServices,
@@ -196,9 +203,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
 
-    // Move as direct delegates
-    override val taskContainer = variantData.taskContainer
-
     override val componentType: ComponentType
         get() = dslInfo.componentType
 
@@ -207,9 +211,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val baseName: String
         get() = paths.baseName
-
-    override val description: String
-        get() = variantData.description
 
     override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
@@ -332,7 +333,11 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     ): FileCollection {
         var mainCollection = variantDependencies
             .getArtifactFileCollection(configType, ArtifactScope.ALL, classesType)
-        mainCollection = mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey))
+        oldVariantApiLegacySupport?.let {
+            mainCollection = mainCollection.plus(
+                it.variantData.getGeneratedBytecode(generatedBytecodeKey)
+            )
+        }
         // Add R class jars to the front of the classpath as libraries might also export
         // compile-only classes. This behavior is verified in CompileRClassFlowTest
         // While relying on this order seems brittle, it avoids doubling the number of
@@ -352,6 +357,21 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         return mainCollection
     }
 
+    override val providedOnlyClasspath: FileCollection by lazy {
+        getProvidedClasspath(
+            compileClasspath = variantDependencies.getArtifactCollection(
+                ConsumedConfigType.COMPILE_CLASSPATH,
+                ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR
+            ),
+            runtimeClasspath = variantDependencies.getArtifactCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.ALL,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR
+            )
+        )
+    }
+
     // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
 
     override val manifestArtifactType: InternalArtifactType<Directory>
@@ -362,7 +382,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     override fun publishBuildArtifacts() {
-        for (outputSpec in variantScope.publishingSpec.outputs) {
+        for (outputSpec in getVariantPublishingSpec(componentType).outputs) {
             val buildArtifactType = outputSpec.outputType
             // Gradle only support publishing single file.  Therefore, unless Gradle starts
             // supporting publishing multiple files, PublishingSpecs should not contain any
@@ -381,28 +401,24 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                 if (isPublicationConfigs) {
                     val components = (dslInfo as PublishableVariantDslInfo).publishInfo!!.components
                     for(component in components) {
-                        variantScope
-                            .publishIntermediateArtifact(
+                        publishIntermediateArtifact(
                                 artifactProvider,
                                 outputSpec.artifactType,
                                 outputSpec.publishedConfigTypes.map {
                                     PublishedConfigSpec(it, component) }.toSet(),
                                 outputSpec.libraryElements?.let {
                                     internalServices.named(LibraryElements::class.java, it)
-                                },
-                                componentType.isTestFixturesComponent
+                                }
                             )
                     }
                 } else {
-                    variantScope
-                        .publishIntermediateArtifact(
+                    publishIntermediateArtifact(
                             artifactProvider,
                             outputSpec.artifactType,
                             outputSpec.publishedConfigTypes.map { PublishedConfigSpec(it) }.toSet(),
                             outputSpec.libraryElements?.let {
                                 internalServices.named(LibraryElements::class.java, it)
-                            },
-                            componentType.isTestFixturesComponent
+                            }
                         )
                 }
             }
@@ -433,34 +449,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         } else {
             internalServices.fileCollection()
         }
-    }
-
-    override fun handleMissingDimensionStrategy(
-        dimension: String,
-        alternatedValues: List<String>
-    ) {
-
-        // First, setup the requested value, which isn't the actual requested value, but
-        // the variant name, modified
-        val requestedValue = VariantManager.getModifiedName(name)
-        val attributeKey = ProductFlavorAttr.of(dimension)
-        val attributeValue: ProductFlavorAttr = internalServices.named(
-            ProductFlavorAttr::class.java, requestedValue
-        )
-
-        variantDependencies.compileClasspath.attributes.attribute(attributeKey, attributeValue)
-        variantDependencies.runtimeClasspath.attributes.attribute(attributeKey, attributeValue)
-        variantDependencies
-            .annotationProcessorConfiguration
-            .attributes
-            .attribute(attributeKey, attributeValue)
-
-        // then add the fallbacks which contain the actual requested value
-        DependencyConfigurator.addFlavorStrategy(
-            services.dependencies.attributesSchema,
-            dimension,
-            ImmutableMap.of(requestedValue, alternatedValues)
-        )
     }
 
     override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
@@ -501,10 +489,12 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val modelV1LegacySupport =
         ModelV1LegacySupportImpl(dslInfo as VariantDslInfoImpl)
-    override val oldVariantApiLegacySupport by lazy {
+
+    override val oldVariantApiLegacySupport: OldVariantApiLegacySupport? by lazy {
         OldVariantApiLegacySupportImpl(
             this,
-            dslInfo as VariantDslInfoImpl
+            dslInfo as VariantDslInfoImpl,
+            variantData!!
         )
     }
 
@@ -593,4 +583,65 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                 .lowercase(Locale.US)
                 .endsWith(SdkConstants.DOT_JAR)
         }
+
+    override fun getArtifactName(name: String) = name
+
+    override val needsJavaResStreams: Boolean
+        get() {
+            // We need to create original java resource stream only if we're in a library module with
+            // custom transforms.
+            return componentType.isAar && dslInfo.transforms.isNotEmpty()
+        }
+
+    /**
+     * Publish an intermediate artifact.
+     *
+     * @param artifact Provider of File or FileSystemLocation to be published.
+     * @param artifactType the artifact type.
+     * @param configSpecs the PublishedConfigSpec.
+     * @param libraryElements the artifact's library elements
+     */
+    private fun publishIntermediateArtifact(
+        artifact: Provider<out FileSystemLocation>,
+        artifactType: AndroidArtifacts.ArtifactType,
+        configSpecs: Set<PublishedConfigSpec>,
+        libraryElements: LibraryElements?
+    ) {
+        Preconditions.checkState(configSpecs.isNotEmpty())
+        for (configSpec in configSpecs) {
+            val config = variantDependencies.getElements(configSpec)
+            val configType = configSpec.configType
+            if (config != null) {
+                if (configType.isPublicationConfig) {
+                    var classifier: String? = null
+                    val isSourcePublication = configType == PublishedConfigType.SOURCE_PUBLICATION
+                    val isJavaDocPublication =
+                        configType == PublishedConfigType.JAVA_DOC_PUBLICATION
+                    if (configSpec.isClassifierRequired) {
+                        classifier = if (isSourcePublication) {
+                            componentIdentity.name + "-" + DocsType.SOURCES
+                        } else if (isJavaDocPublication) {
+                            componentIdentity.name + "-" + DocsType.JAVADOC
+                        } else {
+                            componentIdentity.name
+                        }
+                    } else if (componentType.isTestFixturesComponent) {
+                        classifier = testFixturesClassifier
+                    } else if (isSourcePublication) {
+                        classifier = DocsType.SOURCES
+                    } else if (isJavaDocPublication) {
+                        classifier = DocsType.JAVADOC
+                    }
+                    publishArtifactToDefaultVariant(config, artifact, artifactType, classifier)
+                } else {
+                    publishArtifactToConfiguration(
+                        config,
+                        artifact,
+                        artifactType,
+                        AndroidAttributes(null, libraryElements)
+                    )
+                }
+            }
+        }
+    }
 }

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.AndroidXConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
 import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
@@ -27,7 +28,6 @@ import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.ATTR_ROW_COUNT;
 import static com.android.SdkConstants.ATTR_USE_DEFAULT_MARGINS;
 import static com.android.SdkConstants.AUTO_URI;
-import static com.android.SdkConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 

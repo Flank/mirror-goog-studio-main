@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.DOT_JAR
-import com.android.build.api.artifact.MultipleArtifact
-import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
@@ -27,9 +25,9 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -133,9 +131,8 @@ abstract class MergeClassesTask : NonIncrementalTask() {
             task: MergeClassesTask
         ) {
             super.configure(task)
-            task.inputFiles.setFrom(inputFiles)
-            task.inputFiles.disallowChanges()
-            task.jarCreatorType = creationConfig.variantScope.jarCreatorType
+            task.inputFiles.fromDisallowChanges(inputFiles)
+            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }

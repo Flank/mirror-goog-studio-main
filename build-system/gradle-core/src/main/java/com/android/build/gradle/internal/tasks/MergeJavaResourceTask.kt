@@ -209,7 +209,7 @@ abstract class MergeJavaResourceTask
             get() = MergeJavaResourceTask::class.java
 
         init {
-            if (creationConfig.variantScope.needsJavaResStreams) {
+            if (creationConfig.needsJavaResStreams) {
                 // Because ordering matters for Transform pipeline, we need to fetch the java res
                 // as soon as this creation action is instantiated, if needed.
                 projectJavaResFromStreams =
@@ -347,8 +347,12 @@ fun getProjectJavaRes(
             }
         }
     )
-    javaRes.from(creationConfig.variantData.allPreJavacGeneratedBytecode)
-    javaRes.from(creationConfig.variantData.allPostJavacGeneratedBytecode)
+    creationConfig.oldVariantApiLegacySupport?.variantData?.allPreJavacGeneratedBytecode?.let {
+        javaRes.from(it)
+    }
+    creationConfig.oldVariantApiLegacySupport?.variantData?.allPostJavacGeneratedBytecode?.let {
+        javaRes.from(it)
+    }
     if (creationConfig.global.namespacedAndroidResources) {
         javaRes.from(creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
     }

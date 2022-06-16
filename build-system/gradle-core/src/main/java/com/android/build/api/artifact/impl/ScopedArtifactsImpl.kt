@@ -36,8 +36,10 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ScopedArtifactsImpl(
+    val scope: ScopedArtifacts.Scope,
     val variantIdentifier: String,
     val projectLayout: ProjectLayout,
     val fileCollectionCreator: () -> ConfigurableFileCollection,
@@ -102,12 +104,15 @@ class ScopedArtifactsImpl(
             it.from(currentScopedContent)
         }
 
+        val artifactsAltered = AtomicBoolean(false)
+
         /**
          * Reset the current provider of the artifact the new file collection and make sure the
          * final version points to the new content.
          */
         @Synchronized
         fun setNewContent(newScopedContent: ConfigurableFileCollection) {
+            artifactsAltered.set(true)
             currentScopedContent = newScopedContent
             finalScopedContent.setFrom(currentScopedContent)
         }
@@ -198,6 +203,7 @@ class ScopedArtifactsImpl(
                 type.getIntermediateOutputPath(
                     buildDirectory = projectLayout.buildDirectory,
                     variantIdentifier = scopedArtifacts.variantIdentifier,
+                    paths = arrayOf(scopedArtifacts.scope.name) ,
                     forceFilename = type.name().lowercase().plus(".jar")
                 )
             )

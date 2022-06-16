@@ -19,6 +19,7 @@ package com.android.ide.common.util
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.IShellOutputReceiver
 import com.android.sdklib.AndroidVersion
+import com.android.testutils.MockitoKt.whenever
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
@@ -35,7 +36,7 @@ class DeviceUtilsTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
-        Mockito.`when`(device.version).thenReturn(AndroidVersion(27))
+        whenever(device.version).thenReturn(AndroidVersion(27))
     }
 
     @Test
@@ -170,7 +171,7 @@ class DeviceUtilsTest {
     }
 
     private fun setUpDeviceSerialNumber(serialNumber: String) {
-        Mockito.`when`(
+        whenever(
             device.serialNumber
         ).thenAnswer {
             serialNumber
@@ -178,7 +179,7 @@ class DeviceUtilsTest {
     }
 
     private fun setUpDeviceOutput(vararg configs: String) {
-        Mockito.`when`(
+        whenever(
             device.executeShellCommand(
                 Mockito.anyString(),
                 Mockito.any(),

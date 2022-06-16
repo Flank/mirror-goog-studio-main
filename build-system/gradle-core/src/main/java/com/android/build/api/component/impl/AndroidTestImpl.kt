@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -38,18 +39,21 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
+import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.scope.Java8LangSupport
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.VariantServices
@@ -76,8 +80,8 @@ open class AndroidTestImpl @Inject constructor(
     variantSources: VariantSources,
     paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
-    variantScope: VariantScope,
     variantData: BaseVariantData,
+    taskContainer: MutableTaskContainer,
     mainVariant: VariantCreationConfig,
     transformManager: TransformManager,
     variantServices: VariantServices,
@@ -91,8 +95,8 @@ open class AndroidTestImpl @Inject constructor(
     variantSources,
     paths,
     artifacts,
-    variantScope,
     variantData,
+    taskContainer,
     mainVariant,
     transformManager,
     variantServices,
@@ -203,15 +207,17 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override val renderscript: Renderscript? by lazy {
-        delegate.renderscript(internalServices)
+        renderscriptCreationConfig?.renderscript
     }
 
     override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantServices.listPropertyOf(
-            RegularFile::class.java) { list ->
-            dslInfo.gatherProguardFiles(ProguardFileType.TEST) {
-                list.add(it)
-            }
+        variantServices.listPropertyOf(RegularFile::class.java) {
+            val projectDir = services.projectInfo.projectDirectory
+            it.addAll(
+                dslInfo.gatherProguardFiles(ProguardFileType.TEST).map { file ->
+                    projectDir.file(file.absolutePath)
+                }
+            )
         }
     }
 
@@ -257,6 +263,19 @@ open class AndroidTestImpl @Inject constructor(
         }
     }
 
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+        if (buildFeatures.renderScript) {
+            RenderscriptCreationConfigImpl(
+                this,
+                dslInfo,
+                internalServices,
+                renderscriptTargetApi = mainVariant.renderscriptCreationConfig!!.renderscriptTargetApi
+            )
+        } else {
+            null
+        }
+    }
+
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
 
@@ -282,9 +301,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val isTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
-
-    override val renderscriptTargetApi: Int
-        get() = mainVariant.renderscriptTargetApi
 
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
@@ -336,16 +352,13 @@ open class AndroidTestImpl @Inject constructor(
 
     override val advancedProfilingTransforms: List<String> = emptyList()
 
-    override fun getNeedsMergedJavaResStream(): Boolean =
+    override val needsMergedJavaResStream: Boolean =
         delegate.getNeedsMergedJavaResStream()
 
-    override fun getJava8LangSupportType(): VariantScope.Java8LangSupport = delegate.getJava8LangSupportType()
+    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
 
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         dslInfo.signingConfig
-
-    override val renderscriptNdkModeEnabled: Boolean
-        get() = dslInfo.renderscriptNdkModeEnabled
 
     override val defaultGlslcArgs: List<String>
         get() = dslInfo.defaultGlslcArgs
@@ -365,6 +378,9 @@ open class AndroidTestImpl @Inject constructor(
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
     override val useJacocoTransformInstrumentation: Boolean
         get() = isTestCoverageEnabled && mainVariant.componentType.isAar
+
+    override val postProcessingFeatures: PostprocessingFeatures?
+        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

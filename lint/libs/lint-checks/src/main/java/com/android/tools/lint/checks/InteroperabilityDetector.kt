@@ -91,10 +91,9 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             These require the use of backticks to escape when calling from Kotlin. \
             Soft keywords, modifier keywords, and special identifiers are allowed.
 
-            For example, Mockito’s `when` function requires backticks when used from Kotlin:
+            For example, ActionEvent's `getWhen()` method requires backticks when used from Kotlin:
             ```kotlin
-            val callable = Mockito.mock(Callable::class.java)
-            Mockito.\`when\`(callable.call()).thenReturn(/* … */)
+            val timestamp = event.`when`
             ```
             """,
             moreInfo = "https://android.github.io/kotlin-guides/interop.html#no-hard-keywords",

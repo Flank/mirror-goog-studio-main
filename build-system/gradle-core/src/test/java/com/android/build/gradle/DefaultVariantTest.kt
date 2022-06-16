@@ -486,7 +486,6 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
             given, dslServices.issueReporter, given.implicitFlavorDimensions
         )
 
-        // convert to mock VariantScope
         val components = mutableListOf<VariantCreationConfig>()
 
         val globalTaskCreationConfig = Mockito.mock(GlobalTaskCreationConfig::class.java)
@@ -514,7 +513,6 @@ class DefaultVariantTest: AbstractVariantInputModelTest<String>() {
                 ignore = variantInfo.ignore
             }
 
-            // if not ignored, get the VariantScope
             // FIXME this should be simpler when we remove VariantData|Scope to use newer objects only.
             if (!ignore) {
                 val component = Mockito.mock(VariantImpl::class.java)

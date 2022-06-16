@@ -81,6 +81,7 @@ class TerminologyDetectorTest {
                             // Random $w2 comment
                             val $w11: String = ""
                       }
+                      private var hasHitLimit = false
                     """
                 ).indented(),
                 source("src/main/resources/cts/${w2}_devices.json", "something"),
@@ -171,8 +172,28 @@ class TerminologyDetectorTest {
             Recommendation(
                 replace = "\u0066\u0075\u0063\u006b",
                 with = "?",
-                words = false
-            )
+                words = true
+            ),
+            Recommendation(
+                replace = "\u0066\u0075\u0063\u006b\u0069\u006e\u0067",
+                with = "?",
+                words = true
+            ),
+            Recommendation(
+                replace = "\u0066*\u0063\u006b",
+                with = "?",
+                words = true
+            ),
+            Recommendation(
+                replace = "\u0066*\u0063\u006b\u0069\u006e\u0067",
+                with = "?",
+                words = true
+            ),
+            Recommendation(
+                replace = "\u0073\u0068\u0069\u0074",
+                with = "?",
+                words = true
+            ),
             /*
             // Consider:
             Recommendation(

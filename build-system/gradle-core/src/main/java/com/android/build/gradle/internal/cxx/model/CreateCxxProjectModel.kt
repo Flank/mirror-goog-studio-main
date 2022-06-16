@@ -32,11 +32,6 @@ fun createCxxProjectModel(
     sdkComponents: SdkComponentsBuildService,
     configurationParameters: CxxConfigurationParameters
 ) : CxxProjectModel {
-    fun localPropertyFile(property : String) : File? {
-        val path = gradleLocalProperties(configurationParameters.rootDir)
-            .getProperty(property) ?: return null
-        return File(path)
-    }
     return CxxProjectModel(
       rootBuildGradleFolder = configurationParameters.rootDir,
       sdkFolder = sdkComponents.sdkDirectoryProvider.get().asFile,

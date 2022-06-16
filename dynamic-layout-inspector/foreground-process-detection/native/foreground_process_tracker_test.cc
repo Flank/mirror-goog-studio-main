@@ -362,4 +362,20 @@ TEST_F(ForegroundProcessTrackerTest, StartStopForegroundProcessNotChanged) {
       "dup.process6");
 }
 
+TEST_F(ForegroundProcessTrackerTest, Handshake) {
+  ForegroundProcessTracker* process_tracker =
+      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+
+  released.store(true);
+  bool is_supported1 = process_tracker->IsTrackingForegroundProcessSupported();
+  bool is_supported2 = process_tracker->IsTrackingForegroundProcessSupported();
+  bool is_supported3 = process_tracker->IsTrackingForegroundProcessSupported();
+  bool is_supported4 = process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(is_supported1, true);
+  EXPECT_THAT(is_supported2, true);
+  EXPECT_THAT(is_supported3, true);
+  EXPECT_THAT(is_supported4, false);
+}
+
 }  // namespace layout_inspector

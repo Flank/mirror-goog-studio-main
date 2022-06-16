@@ -17,14 +17,9 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.VariantSources
-import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
-import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.ComponentType
-import com.android.utils.appendCapitalized
-import com.android.utils.capitalizeAndAppend
 
 /**
  * Data about a variant that produce an application APK.
@@ -34,19 +29,11 @@ import com.android.utils.capitalizeAndAppend
  */
 class ApplicationVariantData(
     componentIdentity: ComponentIdentity,
-    dslInfo: ComponentDslInfo,
-    variantDependencies: VariantDependencies,
-    variantSources: VariantSources,
-    paths: VariantPathHelper,
     artifacts: ArtifactsImpl,
     services: VariantServices,
     taskContainer: MutableTaskContainer
 ) : ApkVariantData(
     componentIdentity,
-    dslInfo,
-    variantDependencies,
-    variantSources,
-    paths,
     artifacts,
     services,
     taskContainer
@@ -61,15 +48,4 @@ class ApplicationVariantData(
     override fun getTestVariantData(type: ComponentType): TestVariantData? {
         return testVariants[type]
     }
-
-    override val description: String
-        get() = if (componentIdentity.productFlavors.isNotEmpty()) {
-            val sb = StringBuilder(50)
-            componentIdentity.buildType?.let { sb.appendCapitalized(it) }
-            sb.appendCapitalized(componentIdentity.name)
-            sb.append(" build")
-            sb.toString()
-        } else {
-            dslInfo.componentIdentity.buildType!!.capitalizeAndAppend(" build")
-        }
 }

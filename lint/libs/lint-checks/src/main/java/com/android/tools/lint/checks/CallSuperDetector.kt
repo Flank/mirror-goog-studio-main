@@ -17,7 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.CLASS_VIEW
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.support.AndroidxName
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UElementHandler

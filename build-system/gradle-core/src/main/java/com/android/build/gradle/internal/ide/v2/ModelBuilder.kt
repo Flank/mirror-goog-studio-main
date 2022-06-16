@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
 import com.android.Version
+import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
@@ -56,7 +57,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.PROVIDED_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.getBuildService
@@ -613,16 +613,17 @@ class ModelBuilder<
     }
 
     private fun createAndroidArtifact(component: ComponentCreationConfig): AndroidArtifactImpl {
-        val variantData = component.variantData
-        // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
 
+        // FIXME need to find a better way for this. We should be using PROJECT_CLASSES_DIRS.
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
         val classesFolders = mutableSetOf<File>()
-        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
-        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.add(component.artifacts.get(InternalArtifactType.JAVAC).get().asFile)
+        component.oldVariantApiLegacySupport?.let{
+            classesFolders.addAll(it.variantData.allPreJavacGeneratedBytecode.files)
+            classesFolders.addAll(it.variantData.allPostJavacGeneratedBytecode.files)
+        }
         component.androidResourcesCreationConfig?.compiledRClassArtifact?.get()?.asFile?.let {
             classesFolders.add(it)
         }
@@ -732,17 +733,17 @@ class ModelBuilder<
     }
 
     private fun createJavaArtifact(component: ComponentCreationConfig): JavaArtifact {
-        val variantData = component.variantData
-
-        // FIXME need to find a better way for this.
         val taskContainer: MutableTaskContainer = component.taskContainer
 
+        // FIXME need to find a better way for this. We should be using PROJECT_CLASSES_DIRS.
         // The class folders. This is supposed to be the output of the compilation steps + other
         // steps that create bytecode
         val classesFolders = mutableSetOf<File>()
-        classesFolders.add(component.artifacts.get(JAVAC).get().asFile)
-        classesFolders.addAll(variantData.allPreJavacGeneratedBytecode.files)
-        classesFolders.addAll(variantData.allPostJavacGeneratedBytecode.files)
+        classesFolders.add(component.artifacts.get(InternalArtifactType.JAVAC).get().asFile)
+        component.oldVariantApiLegacySupport?.let{
+            classesFolders.addAll(it.variantData.allPreJavacGeneratedBytecode.files)
+            classesFolders.addAll(it.variantData.allPostJavacGeneratedBytecode.files)
+        }
         // The separately compile R class, if applicable.
         if (extension.testOptions.unitTests.isIncludeAndroidResources) {
             classesFolders.add(component.artifacts.get(UNIT_TEST_CONFIG_DIRECTORY).get().asFile)
@@ -761,7 +762,8 @@ class ModelBuilder<
 
             classesFolders = classesFolders,
             generatedSourceFolders = ModelBuilder.getGeneratedSourceFoldersForUnitTests(component),
-            runtimeResourceFolder = component.variantData.javaResourcesForUnitTesting,
+            runtimeResourceFolder =
+                component.oldVariantApiLegacySupport!!.variantData.javaResourcesForUnitTesting,
 
             mockablePlatformJar = variantModel.mockableJarArtifact.files.singleOrNull(),
             modelSyncFiles = listOf(),

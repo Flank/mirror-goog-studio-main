@@ -18,7 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_CONSTRAINT_LAYOUT_DESCRIPTION
 import com.android.SdkConstants.AUTO_URI
-import com.android.SdkConstants.MOTION_LAYOUT
+import com.android.AndroidXConstants.MOTION_LAYOUT
 import com.android.SdkConstants.MotionSceneTags.MOTION_SCENE
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource

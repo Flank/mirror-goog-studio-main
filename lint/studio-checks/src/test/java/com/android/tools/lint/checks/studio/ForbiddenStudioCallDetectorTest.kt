@@ -19,6 +19,7 @@
 package com.android.tools.lint.checks.studio
 
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import org.junit.Test
 
 class ForbiddenStudioCallDetectorTest {
@@ -98,6 +99,78 @@ class ForbiddenStudioCallDetectorTest {
                         Files.copy(p1, p2); // ERROR
                               ~~~~~~~~~~~~
                 1 errors, 0 warnings
+                """
+            )
+    }
+
+    @Test
+    fun testWhen() {
+        studioLint()
+            .files(
+                kotlin(
+                    """
+                    package test.pkg
+                    import org.mockito.Mockito
+                    import org.mockito.stubbing.OngoingStubbing
+
+                    fun test(args: OngoingStubbing<String>) {
+                        `when`(args)  // OK, not the Mockito when
+                        Mockito.`when`(args) // WARN
+                    }
+                    fun `when`(arg: OngoingStubbing<String>) {}
+                    """
+                ).indented(),
+                java(
+                    """
+                    package test.pkg;
+                    import org.mockito.Mockito;
+                    import org.mockito.stubbing.OngoingStubbing;
+
+                    class Test {
+                        void test(OngoingStubbing<String> args) {
+                            Mockito.when(args); // OK from Java
+                        }
+                    }
+                    """
+                ).indented(),
+                // Stubs
+                java(
+                    """
+                    package org.mockito;
+                    import org.mockito.stubbing.OngoingStubbing;
+                    public class Mockito {
+                        public static <T> OngoingStubbing<T> when(T methodCall) {
+                            return null;
+                        }
+                    }
+                    """
+                ).indented(),
+                java(
+                    """
+                    package org.mockito.stubbing;
+                    public interface OngoingStubbing<T> {
+                    }
+                    """
+                ).indented(),
+            )
+            .issues(ForbiddenStudioCallDetector.MOCKITO_WHEN)
+            .run()
+            .expect(
+                """
+                src/test/pkg/test.kt:7: Error: Do not use Mockito.when from Kotlin; use MocktioKt.whenever instead [MockitoWhen]
+                    Mockito.`when`(args) // WARN
+                            ~~~~~~~~~~~~
+                1 errors, 0 warnings
+                """
+            )
+            .expectFixDiffs(
+                """
+                Fix for src/test/pkg/test.kt line 7: Use `whenever`:
+                @@ -2 +2
+                + import com.android.testutils.MockitoKt.whenever
+                @@ -7 +8
+                -     Mockito.`when`(args) // WARN
+                +     whenever(args) // WARN
                 """
             )
     }

@@ -49,7 +49,7 @@ abstract class Artifact<T: FileSystemLocation>(
     /**
      * @return The folder name under which the artifact files or folders should be stored.
      */
-    open fun getFolderName(): String = name().toLowerCase(Locale.US)
+    open fun getFolderName(): String = name().lowercase()
 
     /**
      * @return Depending on [T], returns the file name of the folder under the variant-specific folder or

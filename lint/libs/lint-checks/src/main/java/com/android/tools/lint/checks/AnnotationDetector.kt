@@ -17,10 +17,10 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.FQCN_SUPPRESS_LINT
-import com.android.SdkConstants.INT_DEF_ANNOTATION
-import com.android.SdkConstants.LONG_DEF_ANNOTATION
-import com.android.SdkConstants.STRING_DEF_ANNOTATION
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.AndroidXConstants.INT_DEF_ANNOTATION
+import com.android.AndroidXConstants.LONG_DEF_ANNOTATION
+import com.android.AndroidXConstants.STRING_DEF_ANNOTATION
+import com.android.AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.support.AndroidxName
 import com.android.tools.lint.checks.EmptySuperDetector.Companion.EMPTY_SUPER_ANNOTATION

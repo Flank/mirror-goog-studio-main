@@ -119,7 +119,7 @@ class TransformApiTest(private val artifact: String, private val plugin: String)
         check {
             assertNotNull(this)
             Truth.assertThat(output).containsMatch(
-                "initialArtifact = .+?/module/build/intermediates/(bundle/debug/signDebugBundle|aar/debug/bundleDebugAar)/out"
+                "initialArtifact = .+?/module/build/intermediates/(bundle/debug/signDebugBundle|aar/debug/bundleDebugAar)/module-debug.(aar|aab)"
             )
             Truth.assertThat(output).containsMatch(
                 "updatedArtifact = .+?/module/build/outputs/(aar|bundle/debug)/module-debug.(aar|aab)"

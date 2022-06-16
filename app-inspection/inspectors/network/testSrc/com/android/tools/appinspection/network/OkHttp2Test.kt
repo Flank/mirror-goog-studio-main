@@ -29,6 +29,7 @@ import okio.BufferedSink
 import org.junit.Rule
 import org.junit.Test
 import studio.network.inspection.NetworkInspectorProtocol
+import studio.network.inspection.NetworkInspectorProtocol.InterceptCommand
 import java.io.IOException
 import java.net.URL
 
@@ -107,6 +108,29 @@ class OkHttp2Test {
                 NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.REQUEST_PAYLOAD
             )
         assertThat(requestPayload!!.requestPayload.payload.toStringUtf8()).isEqualTo("request body")
+    }
+
+    @Test
+    fun intercept() {
+        val ruleAdded = createFakeRuleAddedEvent(FAKE_URL)
+
+        inspectorRule.inspector.receiveInterceptCommand(InterceptCommand.newBuilder().apply {
+            interceptRuleAdded = ruleAdded
+        }.build())
+
+        val client = FakeOkHttp2Client().hookInterceptors()
+        val request = Request.Builder().url(FAKE_URL).build()
+        val fakeResponse = createFakeResponse(request)
+
+        val response = client.newCall(request, fakeResponse).execute()
+        response.body().byteStream().use { it.readBytes() }
+        assertThat(
+            inspectorRule.connection.findHttpEvent(
+                NetworkInspectorProtocol.HttpConnectionEvent.UnionCase.RESPONSE_PAYLOAD
+            )!!.responsePayload.payload.toStringUtf8()
+        ).isEqualTo("InterceptedBody1")
+
+        assertThat(inspectorRule.connection.httpData.last().httpClosed.completed).isTrue()
     }
 
     @Test

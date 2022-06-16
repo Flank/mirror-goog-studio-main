@@ -22,6 +22,7 @@ import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
 
+import com.android.AndroidXConstants;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -269,7 +270,7 @@ public class ManifestMerger2 {
                                 ? String.format(
                                         "Overlay manifest:package attribute declared at %1$s value=(%2$s)\n"
                                                 + "\tdoes not match the module's namespace (%3$s).\n"
-                                                + "\tSuggestion: remove the overlay declaration at %4$s.\n"
+                                                + "\tSuggestion: remove the package=\"%2$s\" declaration at %4$s.\n"
                                                 + "\tIf you want to customize the applicationId for a "
                                                 + "buildType or productFlavor, consider setting "
                                                 + "applicationIdSuffix or using the Variant API.\n"
@@ -278,15 +279,15 @@ public class ManifestMerger2 {
                                         packageAttribute.get().printPosition(),
                                         packageAttribute.get().getValue(),
                                         loadedMainManifestInfo.getNamespace(),
-                                        packageAttribute.get().getSourceFile().print(true))
+                                        packageAttribute.get().getSourceFile().print(false))
                                 : String.format(
                                         "Overlay manifest:package attribute declared at %1$s value=(%2$s)\n"
                                                 + "\tdoes not match the module's namespace (%3$s).\n"
-                                                + "\tSuggestion: remove the overlay declaration at %4$s.",
+                                                + "\tSuggestion: remove the package=\"%2$s\" declaration at %4$s.",
                                         packageAttribute.get().printPosition(),
                                         packageAttribute.get().getValue(),
                                         loadedMainManifestInfo.getNamespace(),
-                                        packageAttribute.get().getSourceFile().print(true));
+                                        packageAttribute.get().getSourceFile().print(false));
                 mergingReportBuilder.addMessage(
                         overlayDocument.getXmlDocument().getSourceFile(),
                         MergingReport.Record.Severity.ERROR,
@@ -592,10 +593,12 @@ public class ManifestMerger2 {
 
         if (mOptionalFeatures.contains(
                 Invoker.Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME)) {
-            addMultiDexApplicationIfNoName(document, SdkConstants.MULTI_DEX_APPLICATION.newName());
+            addMultiDexApplicationIfNoName(
+                    document, AndroidXConstants.MULTI_DEX_APPLICATION.newName());
         } else if (mOptionalFeatures.contains(
                 Invoker.Feature.ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME)) {
-            addMultiDexApplicationIfNoName(document, SdkConstants.MULTI_DEX_APPLICATION.oldName());
+            addMultiDexApplicationIfNoName(
+                    document, AndroidXConstants.MULTI_DEX_APPLICATION.oldName());
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_DYNAMIC_FEATURE_ATTRIBUTES)) {
@@ -1645,13 +1648,13 @@ public class ManifestMerger2 {
             HANDLE_VALUE_CONFLICTS_AUTOMATICALLY,
 
             /**
-             * Adds the AndroidX name of {@link SdkConstants#MULTI_DEX_APPLICATION} as application
-             * name if none is specified. Used for legacy multidex.
+             * Adds the AndroidX name of {@link AndroidXConstants#MULTI_DEX_APPLICATION} as
+             * application name if none is specified. Used for legacy multidex.
              */
             ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME,
 
             /**
-             * Adds the pre-AndroidX name of {@link SdkConstants#MULTI_DEX_APPLICATION} as
+             * Adds the pre-AndroidX name of {@link AndroidXConstants#MULTI_DEX_APPLICATION} as
              * application name if none is specified. Used for legacy multidex.
              */
             ADD_SUPPORT_MULTIDEX_APPLICATION_IF_NO_NAME,

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dsl.PrivacySandboxSdkBundleImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
+import com.android.build.gradle.internal.utils.validatePreviewTargetValue
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -40,9 +41,17 @@ class PrivacySandboxSdkVariantScope(
     }
 
     override val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
-        println("In mergeSpec -> $componentIdentifier, type is ${componentIdentifier.javaClass}, merge = ${componentIdentifier is ProjectComponentIdentifier}")
         true // so far, all dependencies are consumed by the sdk library plugin.
     }
+
+    val compileSdkVersion: String by lazy {
+        extension.compileSdkPreview?.let { validatePreviewTargetValue(it) }?.let { "android-$it" } ?:
+        extension.compileSdkExtension?.let { "android-${extension.compileSdk}-ext$it" } ?:
+        extension.compileSdk?.let {"android-$it"} ?: throw RuntimeException(
+            "compileSdk version is not set"
+        )
+    }
+
     val bootClasspath: Provider<List<RegularFile>>
             get() = bootClasspathConfigProvider.invoke().bootClasspath
 

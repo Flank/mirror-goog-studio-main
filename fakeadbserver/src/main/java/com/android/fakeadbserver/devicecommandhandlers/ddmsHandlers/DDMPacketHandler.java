@@ -17,10 +17,9 @@ package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
-
 import java.io.OutputStream;
 
-public interface JdwpDdmsPacketHandler {
+public interface DDMPacketHandler {
 
     /**
      * Interface for fake debugger to handle incoming packets
@@ -32,7 +31,5 @@ public interface JdwpDdmsPacketHandler {
      *     terminate the session
      */
     boolean handlePacket(
-            @NonNull JdwpPacket packet,
-            @NonNull ClientState client,
-            @NonNull OutputStream oStream);
+            @NonNull DdmPacket packet, @NonNull ClientState client, @NonNull OutputStream oStream);
 }

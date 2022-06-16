@@ -16,38 +16,6 @@
 
 package com.android.manifmerger;
 
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.manifmerger.MergingReport.MergedManifestKind;
-import com.android.testutils.MockLog;
-import com.android.utils.XmlUtils;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.truth.Truth;
-import org.junit.Rule;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import static com.android.SdkConstants.ATTR_ON_DEMAND;
 import static com.android.SdkConstants.DIST_URI;
 import static com.android.SdkConstants.MANIFEST_ATTR_TITLE;
@@ -61,6 +29,38 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.android.AndroidXConstants;
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.manifmerger.MergingReport.MergedManifestKind;
+import com.android.testutils.MockLog;
+import com.android.utils.XmlUtils;
+import com.google.common.base.Charsets;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.truth.Truth;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Tests for the {@link ManifestMergerTestUtil} class
@@ -1241,8 +1241,8 @@ public class ManifestMerger2SmallTest {
         Document xmlDocument = parse(xmlText);
         assertEquals(
                 useAndroidX
-                        ? SdkConstants.MULTI_DEX_APPLICATION.newName()
-                        : SdkConstants.MULTI_DEX_APPLICATION.oldName(),
+                        ? AndroidXConstants.MULTI_DEX_APPLICATION.newName()
+                        : AndroidXConstants.MULTI_DEX_APPLICATION.oldName(),
                 xmlDocument
                         .getElementsByTagName(SdkConstants.TAG_APPLICATION)
                         .item(0)
