@@ -70,17 +70,20 @@ class PrivacySandboxSdkTest {
                 }
             """.trimIndent()
             )
-            subProject(":android-lib2") {
-                plugins.add(PluginType.ANDROID_LIB)
-                android {
-                    defaultCompileSdk()
-                    namespace = "com.example.androidLib2"
-                    minSdk = 12
-                }
-                addFile(
-                        "src/main/java/com/example/androidlib2/Example.java",
-                        // language=java
-                        """
+            addFile("src/main/resources/my_java_resource.txt", "some java resource")
+            addFile("src/main/assets/asset_from_androidlib1.txt", "some asset")
+        }
+        subProject(":android-lib2") {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                defaultCompileSdk()
+                namespace = "com.example.androidLib2"
+                minSdk = 12
+            }
+            addFile(
+                    "src/main/java/com/example/androidlib2/Example.java",
+                    // language=java
+                    """
                 package com.example.androidlib2;
 
                 class Example {
@@ -90,17 +93,17 @@ class PrivacySandboxSdkTest {
                     public void f2() {}
                 }
             """.trimIndent()
-                )
+            )
+        }
+        subProject(":privacy-sandbox-sdk") {
+            plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
+            android {
+                defaultCompileSdk()
+                minSdk = 12
+                namespace = "com.example.privacysandboxsdk"
             }
-            subProject(":privacy-sandbox-sdk") {
-                plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
-                android {
-                    defaultCompileSdk()
-                    minSdk = 12
-                    namespace = "com.example.privacysandboxsdk"
-                }
-                appendToBuildFile {
-                    """
+            appendToBuildFile {
+                """
                         android {
                             bundle {
                                 packageName = "com.example.privacysandboxsdk"
@@ -109,23 +112,22 @@ class PrivacySandboxSdkTest {
                             }
                         }
                     """.trimIndent()
-                }
-                dependencies {
-                    include(project(":android-lib1"))
-                    include(project(":android-lib2"))
-                }
-
             }
-            subProject(":example-app") {
-                plugins.add(PluginType.ANDROID_APP)
-                android {
-                    defaultCompileSdk()
-                    minSdk = 12
-                    namespace = "com.example.privacysandboxsdk.consumer"
-                }
-                dependencies {
-                    implementation(project(":privacy-sandbox-sdk"))
-                }
+            dependencies {
+                include(project(":android-lib1"))
+                include(project(":android-lib2"))
+            }
+
+        }
+        subProject(":example-app") {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                defaultCompileSdk()
+                minSdk = 12
+                namespace = "com.example.privacysandboxsdk.consumer"
+            }
+            dependencies {
+                implementation(project(":privacy-sandbox-sdk"))
             }
         }
     }
@@ -191,9 +193,12 @@ class PrivacySandboxSdkTest {
             ZipFileSubject.assertThat(
                 Objects.requireNonNull(it.getEntryAsFile("modules.resm"))
             ) { modules ->
+
                 modules.contains("base/dex/classes.dex")
+                modules.contains("base/assets/asset_from_androidlib1.txt")
                 modules.contains("base/manifest/AndroidManifest.xml")
                 modules.contains("base/resources.pb")
+                modules.contains("base/root/my_java_resource.txt")
                 modules.contains("SdkModulesConfig.pb")
             }
         }

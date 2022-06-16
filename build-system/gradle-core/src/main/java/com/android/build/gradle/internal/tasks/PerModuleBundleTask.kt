@@ -250,20 +250,19 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     PrivacySandboxSdkInternalArtifactType.DEX
                 )
             )
-
             task.assetsFilesDirectory.setDisallowChanges(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS).map {
+                    it.dir(SdkConstants.FD_ASSETS)
+                }
             )
             task.resFiles.setDisallowChanges(
                 creationConfig.artifacts.get(
                     PrivacySandboxSdkInternalArtifactType.LINKED_MERGE_RES_FOR_ASB
                 )
             )
-
-            // TODO(b/234613831): Support java resources
-            //    task.javaResFiles.fromDisallowChanges(
-            //        creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
-            //    )
+            task.javaResFiles.fromDisallowChanges(
+                    creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
+            )
 
             // Not applicable
             task.featureDexFiles.fromDisallowChanges()
