@@ -199,5 +199,8 @@ ERROR:Missing one of the key attributes 'name,glEsVersion' on element uses-featu
 ERROR:Missing one of the key attributes 'name,glEsVersion' on element uses-feature at ManifestMerger2Test1_lib1.xml:8:5-45
 ERROR:Attribute uses-feature#com.example.SomeFeature3_RequiredFalse@required at ManifestMerger2Test1_lib1.xml:18:9-33 has an illegal value=\(booh!\), expected 'true' or 'false'
 ERROR:Attribute uses-feature#com.example.SomeFeature4_RequiredFalse@required at ManifestMerger2Test1_lib1.xml:23:9-31 has an illegal value=\(foo\), expected 'true' or 'false'
-ERROR:Validation failed, exiting
+ERROR:Attribute application@label value=\(@string/app_name\) from ManifestMerger2Test0_main.xml:36:9-41
+    is also present at ManifestMerger2Test1_lib1.xml:35:18-51 value=\(@string/lib_name1\).
+ERROR:Attribute application@label value=\(@string/app_name\) from ManifestMerger2Test0_main.xml:36:9-41
+    is also present at ManifestMerger2Test2_lib2.xml:19:18-51 value=\(@string/lib_name2\).
 WARNING:Element uses-feature#com.example.SomeFeature3_RequiredFalse at ManifestMerger2Test0_main.xml:26:5-28:36 duplicated with element declared at ManifestMerger2Test0_main.xml:21:5-23:36

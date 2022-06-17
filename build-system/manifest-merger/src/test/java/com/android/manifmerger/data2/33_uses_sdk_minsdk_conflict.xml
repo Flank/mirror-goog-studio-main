@@ -135,3 +135,10 @@
 
 @errors
 ERROR:uses-sdk:minSdkVersion 1 cannot be smaller than version 4 declared in library .*ManifestMerger2Test1_lib1.xml as the library might be using APIs not available in 1
+ERROR:uses-sdk:minSdkVersion 1 cannot be smaller than version 10 declared in library .*ManifestMerger2Test2_lib2.xml as the library might be using APIs not available in 1
+ERROR:uses-sdk:minSdkVersion 1 cannot be smaller than version 11 declared in library .*ManifestMerger2Test3_lib3.xml as the library might be using APIs not available in 1
+ERROR:uses-sdk:minSdkVersion 1 cannot be different than version abcd declared in library .*ManifestMerger2Test4_lib4_parsingError.xml
+ERROR:Invalid value for attribute:android:minSdkVersion, value:123456789123456789
+ERROR:Invalid value for attribute:android:minSdkVersion, value:0xFFFFFFFFFFFFFFFF
+ERROR:uses-sdk:targetSdkVersion 14 cannot be different than version InvalidTargetSdk declared in library .*ManifestMerger2Test7_lib7_parsingError.xml
+ERROR:uses-sdk:targetSdkVersion 14 cannot be different than version ApiCodename10 declared in library .*ManifestMerger2Test8_lib8_parsingCodename.xml

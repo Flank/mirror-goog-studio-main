@@ -17,6 +17,7 @@
 package com.android.manifmerger;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_GLESVERSION;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -62,7 +63,7 @@ public class ElementsTrimmer {
 
         for (XmlElement childElement : xmlDocument.getRootNode().getMergeableElements()) {
             if (childElement.getType().equals(ManifestModel.NodeTypes.USES_FEATURE)) {
-                Integer value = getGlEsVersion(childElement);
+                Integer value = getGlEsVersion(childElement, mergingReport);
                 if (value != null) {
                     glEsVersionDeclarations.put(value, childElement);
                 }
@@ -113,13 +114,21 @@ public class ElementsTrimmer {
                 // if it also contains android:name, just remove the glEsVersion attribute
                 if (glEsVersionDeclaration.getValue().getXml().getAttributeNodeNS(ANDROID_URI,
                         SdkConstants.ATTR_NAME) != null) {
-                    glEsVersionDeclaration.getValue().getXml().removeAttributeNS(ANDROID_URI,
-                            AndroidManifest.ATTRIBUTE_GLESVERSION);
-                    mergingReport.getActionRecorder().recordAttributeAction(
-                            glEsVersionDeclaration.getValue().getAttribute(XmlNode.fromXmlName(
-                                    "android:" + AndroidManifest.ATTRIBUTE_GLESVERSION)).get(),
-                            Actions.ActionType.REJECTED,
-                            null /* attributeOperationType */);
+                    glEsVersionDeclaration
+                            .getValue()
+                            .getXml()
+                            .removeAttributeNS(ANDROID_URI, ATTRIBUTE_GLESVERSION);
+                    mergingReport
+                            .getActionRecorder()
+                            .recordAttributeAction(
+                                    glEsVersionDeclaration
+                                            .getValue()
+                                            .getAttribute(
+                                                    XmlNode.fromXmlName(
+                                                            "android:" + ATTRIBUTE_GLESVERSION))
+                                            .get(),
+                                    Actions.ActionType.REJECTED,
+                                    null /* attributeOperationType */);
                 } else {
                     xmlDocument.getRootNode().getXml().removeChild(
                             glEsVersionDeclaration.getValue().getXml());
@@ -134,17 +143,31 @@ public class ElementsTrimmer {
 
     }
 
-    private static Integer getGlEsVersion(@NonNull XmlElement xmlElement) {
-        Attr glEsVersion = xmlElement.getXml()
-                .getAttributeNodeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_GLESVERSION);
+    private static Integer getGlEsVersion(
+            @NonNull XmlElement xmlElement, MergingReport.Builder mergingReport) {
+        Attr glEsVersion =
+                xmlElement.getXml().getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_GLESVERSION);
         if (glEsVersion == null) {
             return null;
         }
-        return getHexValue(glEsVersion);
+        try {
+            return getHexValue(glEsVersion);
+        } catch (NumberFormatException e) {
+            String message =
+                    String.format(
+                            "Invalid value for attribute:%1$s, value:%2$s",
+                            ATTRIBUTE_GLESVERSION, glEsVersion.getValue());
+            mergingReport.addMessage(xmlElement, MergingReport.Record.Severity.ERROR, message);
+            return null;
+        }
     }
 
     private static Integer getHexValue(@NonNull Attr attribute) {
-        return Integer.decode(attribute.getValue());
+        try {
+            return Integer.decode(attribute.getValue());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
 

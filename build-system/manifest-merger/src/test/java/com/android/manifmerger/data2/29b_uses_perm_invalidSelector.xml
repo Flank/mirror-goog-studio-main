@@ -66,3 +66,5 @@
 @errors
 
 ERROR:'tools:selector="com.example.libXYZ"' is not a valid library identifier, valid identifiers are : com.example.lib1,com.example.lib2
+WARNING:uses-permission#android.permission.INTERNET was tagged at ManifestMerger2Test0_main.xml:24 to remove other declarations but no other declaration present
+

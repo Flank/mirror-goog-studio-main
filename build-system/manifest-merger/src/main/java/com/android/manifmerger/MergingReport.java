@@ -26,9 +26,11 @@ import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
@@ -186,11 +188,10 @@ public class MergingReport {
     }
 
     /**
-     * Log record. This is used to give users some information about what is happening and
-     * what might have gone wrong.
+     * Log record. This is used to give users some information about what is happening and what
+     * might have gone wrong.
      */
-    public static class Record {
-
+    public static final class Record {
 
         public enum Severity {WARNING, ERROR, INFO }
 
@@ -234,6 +235,26 @@ public class MergingReport {
                     + ":\n\t"
                     + mLog;
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (!(obj instanceof Record)) {
+                return false;
+            }
+            Record that = (Record) obj;
+
+            return Objects.equals(that.mSeverity, mSeverity)
+                    && Objects.equals(that.mSourceLocation, mSourceLocation)
+                    && Objects.equals(that.mLog, mLog);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mSeverity, mSourceLocation, mLog);
+        }
     }
 
     /**
@@ -250,8 +271,7 @@ public class MergingReport {
         private Map<MergedManifestKind, XmlDocument> mergedXmlDocuments =
                 new EnumMap<>(MergedManifestKind.class);
 
-        @NonNull
-        private ImmutableList.Builder<Record> mRecordBuilder = new ImmutableList.Builder<>();
+        @NonNull private ImmutableSet.Builder<Record> mRecordBuilder = new ImmutableSet.Builder<>();
 
         @NonNull
         private ImmutableList.Builder<String> mIntermediaryStages = new ImmutableList.Builder<>();
@@ -374,7 +394,7 @@ public class MergingReport {
                     mergedDocuments,
                     mergedXmlDocuments,
                     result,
-                    mRecordBuilder.build(),
+                    ImmutableList.copyOf(mRecordBuilder.build()),
                     mIntermediaryStages.build(),
                     mActionRecorder.build());
         }

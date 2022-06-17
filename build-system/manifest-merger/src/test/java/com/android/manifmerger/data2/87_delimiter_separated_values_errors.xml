@@ -87,4 +87,5 @@
 @errors
 ERROR:Invalid value for attribute permission#com.example.DangerWillRobinson@protectionLevel at ManifestMerger2Test1_lib1.xml:11:17-43, value=\(\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|internal\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\|instant\|runtime\|oem\|vendorPrivileged\|textClassifier\|wellbeing\|documenter\|configurator\|incidentReportApprover\|appPredictor\|companion\|retailDemo\|recents\|role\|knownSigner\)
 ERROR:Invalid value for attribute permission#com.example.WhatWereYouThinking@protectionLevel at ManifestMerger2Test1_lib1.xml:15:17-45, value=\(\|\|\), acceptable delimiter-separated values are \(normal\|dangerous\|signature\|signatureOrSystem\|internal\|privileged\|system\|development\|appop\|pre23\|installer\|verifier\|preinstalled\|setup\|ephemeral\|instant\|runtime\|oem\|vendorPrivileged\|textClassifier\|wellbeing\|documenter\|configurator\|incidentReportApprover\|appPredictor\|companion\|retailDemo\|recents\|role\|knownSigner\)
-ERROR:Validation failed, exiting
+ERROR:Attribute application@name value=\(com.example.app1.TheApp\) from ManifestMerger2Test0_main.xml:25:13-34
+    is also present at ManifestMerger2Test1_lib1.xml:5:18-39 value=\(com.example.lib1.TheApp\).
