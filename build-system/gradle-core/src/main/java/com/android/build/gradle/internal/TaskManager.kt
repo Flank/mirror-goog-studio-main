@@ -1954,6 +1954,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                     it.mustRunAfter(managedDeviceTestTask)
                 }
             }
+            taskFactory.configure(ALL_DEVICES_CHECK) { allDevices: Task ->
+                allDevices.dependsOn(reportTask)
+            }
         }
 
         // Lastly the Device Group Tasks.

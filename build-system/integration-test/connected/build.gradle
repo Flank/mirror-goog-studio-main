@@ -13,6 +13,7 @@ dependencies {
 
 
     testImplementation project(':base:build-system:integration-test:framework')
+    testImplementation project(':base:build-system:integration-test:utp')
     testImplementation libs.com.android.tools.analyticsLibrary.protos
     testImplementation libs.com.android.tools.build.apksig
     testImplementation project(':base:builder')

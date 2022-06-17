@@ -1,0 +1,15 @@
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+
+kotlin_library(
+    name = "utp",
+    srcs = glob([
+        "src/main/java/**/*.kt",
+        "src/main/java/**/*.java",
+    ]),
+    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
+    deps = [
+        "//tools/base/build-system/integration-test/framework",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/utp/android-test-plugin-host-device-info-proto",
+    ],
+)
