@@ -27,6 +27,6 @@ package com.android.build.gradle.internal.core.dsl
  * @see [com.android.build.gradle.internal.component.TestFixturesCreationConfig]
  */
 interface TestFixturesComponentDslInfo
-    : ComponentDslInfo, AarProducingComponentDslInfo, PublishableComponentDslInfo {
+    : NestedComponentDslInfo, AarProducingComponentDslInfo, PublishableComponentDslInfo {
     val testFixturesAndroidResourcesEnabled: Boolean
 }

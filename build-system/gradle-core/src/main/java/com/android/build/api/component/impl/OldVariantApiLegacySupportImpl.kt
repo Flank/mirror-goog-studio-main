@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySup
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.impl.ComponentDslInfoImpl
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -58,7 +59,7 @@ class OldVariantApiLegacySupportImpl(
     override val buildTypeObj: BuildType
         get() = (dslInfo as ComponentDslInfoImpl).buildTypeObj
     override val productFlavorList: List<ProductFlavor>
-        get() = dslInfo.productFlavorList
+        get() = (dslInfo as MultiVariantComponentDslInfo).productFlavorList
     override val mergedFlavor: MergedFlavor
         get() = (dslInfo as ComponentDslInfoImpl).mergedFlavor
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =

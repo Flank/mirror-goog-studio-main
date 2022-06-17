@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant
 
-import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
@@ -49,7 +49,7 @@ internal class VariantPathHelperTest {
     }
 
     @Mock
-    lateinit var variantDslInfo: ComponentDslInfo
+    lateinit var variantDslInfo: MultiVariantComponentDslInfo
 
     @Mock
     lateinit var dslServices: DslServices

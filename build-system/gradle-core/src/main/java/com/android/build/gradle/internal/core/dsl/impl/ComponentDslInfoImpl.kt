@@ -21,15 +21,12 @@ import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.VariantDimension
-import com.android.build.api.transform.Transform
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.ResValueKeyImpl
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -40,6 +37,7 @@ import com.android.build.gradle.internal.core.MergedOptions
 import com.android.build.gradle.internal.core.PostProcessingBlockOptions
 import com.android.build.gradle.internal.core.PostProcessingOptions
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.AbstractProductFlavor
@@ -63,14 +61,8 @@ internal abstract class ComponentDslInfoImpl internal constructor(
     override val productFlavorList: List<ProductFlavor>,
     protected val services: VariantServices,
     private val buildDirectory: DirectoryProperty,
-    @Deprecated("use extension") private val oldExtension: BaseExtension?,
     protected val extension: CommonExtension<*, *, *, *>
-): ComponentDslInfo {
-
-    override val buildType: String?
-        get() = componentIdentity.buildType
-    override val productFlavors: List<Pair<String, String>>
-        get() = componentIdentity.productFlavors
+): ComponentDslInfo, MultiVariantComponentDslInfo {
 
     /**
      * This should be mostly private and not used outside this class, but is still public for legacy
@@ -114,12 +106,8 @@ internal abstract class ComponentDslInfoImpl internal constructor(
 
     // extension delegates
 
-    override val compileOptions: CompileOptions
-        get() = extension.compileOptions
     override val androidResources: AndroidResources
         get() = extension.androidResources
-    override val transforms: List<Transform>
-        get() = oldExtension?.transforms ?: emptyList()
 
     // build type delegates
 

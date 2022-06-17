@@ -21,7 +21,6 @@ import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension
@@ -47,7 +46,6 @@ internal class ApplicationVariantDslInfoImpl(
     buildDirectory: DirectoryProperty,
     override val publishInfo: VariantPublishingInfo,
     private val signingConfigOverride: SigningConfig?,
-    oldExtension: BaseExtension?,
     extension: InternalApplicationExtension
 ) : TestedVariantDslInfoImpl(
     componentIdentity,
@@ -58,7 +56,6 @@ internal class ApplicationVariantDslInfoImpl(
     dataProvider,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), ApplicationVariantDslInfo {
 

@@ -20,7 +20,6 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.TestFixtures
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalTestedExtension
@@ -38,7 +37,6 @@ internal abstract class TestedVariantDslInfoImpl internal constructor(
     dataProvider: ManifestDataProvider,
     services: VariantServices,
     buildDirectory: DirectoryProperty,
-    oldExtension: BaseExtension?,
     extension: InternalTestedExtension<*, *, *, *>
 ) : VariantDslInfoImpl(
     componentIdentity,
@@ -49,7 +47,6 @@ internal abstract class TestedVariantDslInfoImpl internal constructor(
     dataProvider,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), TestedVariantDslInfo {
 

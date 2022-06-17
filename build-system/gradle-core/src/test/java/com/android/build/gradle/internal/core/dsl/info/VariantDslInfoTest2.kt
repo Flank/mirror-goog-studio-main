@@ -851,7 +851,7 @@ class VariantDslInfoTest2(
             given.flavors
         )
 
-        val extension = when (given.testedComponentType) {
+        val extension = when (given.mainComponentType) {
             ComponentTypeImpl.BASE_APK ->
                 Mockito.mock(InternalApplicationExtension::class.java).also {
                     configureExtension(it, given)
@@ -869,11 +869,11 @@ class VariantDslInfoTest2(
             }
         } as InternalTestedExtension<*, *, *, *>
 
-        val mainVariant = when (given.testedComponentType) {
+        val mainVariant = when (given.mainComponentType) {
             ComponentTypeImpl.BASE_APK -> {
                 ApplicationVariantDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    componentType = given.testedComponentType,
+                    componentType = given.mainComponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -882,14 +882,13 @@ class VariantDslInfoTest2(
                     buildDirectory = buildDirectory,
                     publishInfo = VariantPublishingInfo(emptyList()),
                     extension = extension as InternalApplicationExtension,
-                    oldExtension = null,
                     signingConfigOverride = null,
                 )
             }
             ComponentTypeImpl.LIBRARY -> {
                 LibraryVariantDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    componentType = given.testedComponentType,
+                    componentType = given.mainComponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -898,13 +897,12 @@ class VariantDslInfoTest2(
                     buildDirectory = buildDirectory,
                     publishInfo = VariantPublishingInfo(emptyList()),
                     extension = extension as InternalLibraryExtension,
-                    oldExtension = null,
                 )
             }
             ComponentTypeImpl.OPTIONAL_APK -> {
                 DynamicFeatureVariantDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    componentType = given.testedComponentType,
+                    componentType = given.mainComponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -912,7 +910,6 @@ class VariantDslInfoTest2(
                     services = services,
                     buildDirectory = buildDirectory,
                     extension = extension as InternalDynamicFeatureExtension,
-                    oldExtension = null,
                 )
             }
             else -> {
@@ -924,18 +921,17 @@ class VariantDslInfoTest2(
             ComponentTypeImpl.ANDROID_TEST -> {
                 AndroidTestComponentDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    componentType = given.testedComponentType,
+                    componentType = given.mainComponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
                     dataProvider = DirectManifestDataProvider(given.testManifestData, projectServices),
-                    testedVariantDslInfo = mainVariant,
+                    mainVariantDslInfo = mainVariant,
                     signingConfigOverride = null,
                     inconsistentTestAppId = inconsistentTestAppId,
                     services = services,
                     buildDirectory = buildDirectory,
                     extension = extension,
-                    oldExtension = null
                 )
             }
             ComponentTypeImpl.BASE_APK -> {
@@ -997,7 +993,7 @@ class VariantDslInfoTest2(
     }
 
     class GivenData(
-        val testedComponentType: ComponentType,
+        val mainComponentType: ComponentType,
         private val dslServices: DslServices
     ) {
         /** the manifest data that represents values coming from the manifest file */

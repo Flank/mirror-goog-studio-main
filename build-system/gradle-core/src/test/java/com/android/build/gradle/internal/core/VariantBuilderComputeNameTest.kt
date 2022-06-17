@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.NestedComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.impl.computeName
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl
 import com.android.build.gradle.internal.variant.VariantPathHelper.Companion.computeBaseName
@@ -25,6 +27,7 @@ import com.android.builder.core.ComponentType
 import com.android.builder.core.ComponentTypeImpl
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
 import org.junit.Test
+import org.mockito.Mockito
 
 class VariantBuilderComputeNameTest :
     AbstractBuildGivenBuildExpectTest<VariantBuilderComputeNameTest.GivenBuilder, VariantBuilderComputeNameTest.ResultBuilder>() {
@@ -208,13 +211,27 @@ class VariantBuilderComputeNameTest :
 
     override fun defaultWhen(given: GivenBuilder): ResultBuilder {
         val varCombo = DimensionCombinationImpl(given.buildType, given.flavors)
+        val mainDslInfo = Mockito.mock(ApplicationVariantDslInfo::class.java)
+        Mockito.`when`(mainDslInfo.componentType).thenReturn(ComponentTypeImpl.BASE_APK)
+        Mockito.`when`(mainDslInfo.buildType).thenReturn(given.buildType)
+        Mockito.`when`(mainDslInfo.productFlavors).thenReturn(given.flavors)
+
+        val dslInfo = if (given.componentType.isNestedComponent) {
+            Mockito.mock(NestedComponentDslInfo::class.java).also {
+                Mockito.`when`(it.mainVariantDslInfo).thenReturn(mainDslInfo)
+                Mockito.`when`(it.componentType).thenReturn(given.componentType)
+            }
+        } else {
+            mainDslInfo
+        }
+
         var flavorName = ""
 
         return ResultBuilder().also {
             it.name = computeName(varCombo, given.componentType) {
                 flavorName = it
             }
-            it.baseName = computeBaseName(varCombo, given.componentType)
+            it.baseName = computeBaseName(dslInfo)
             it.fullNameWithSplit = computeFullNameWithSplits(
                 ComponentIdentityImpl(
                     it.name,

@@ -16,26 +16,18 @@
 
 package com.android.build.gradle.internal.core.dsl
 
-import com.android.build.api.dsl.AarMetadata
+import com.android.build.api.dsl.ProductFlavor
+import com.android.build.gradle.internal.variant.DimensionCombination
 
 /**
- * Represents the dsl info for a library variant, initialized from the DSL object model
- * (extension, default config, build type, flavors)
- *
- * This class allows querying for the values set via the DSL model.
- *
- * Use [DslInfoBuilder] to instantiate.
- *
- * @see [com.android.build.gradle.internal.component.LibraryCreationConfig]
+ * Represents the dsl info for a component that supports multiple variants.
  */
-interface LibraryVariantDslInfo:
-    VariantDslInfo,
-    AarProducingComponentDslInfo,
-    PublishableComponentDslInfo,
-    TestedVariantDslInfo,
-    MultiVariantComponentDslInfo {
-    val aarMetadata: AarMetadata
+interface MultiVariantComponentDslInfo: ComponentDslInfo, DimensionCombination {
+    /** The list of product flavors. Items earlier in the list override later items.  */
+    val productFlavorList: List<ProductFlavor>
 
-    // TODO: Clean this up
-    val isDebuggable: Boolean
+    override val buildType: String?
+        get() = componentIdentity.buildType
+    override val productFlavors: List<Pair<String, String>>
+        get() = componentIdentity.productFlavors
 }

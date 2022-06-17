@@ -20,7 +20,6 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.MutableAndroidVersion
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -41,8 +40,7 @@ internal class UnitTestComponentDslInfoImpl(
     dataProvider: ManifestDataProvider,
     services: VariantServices,
     buildDirectory: DirectoryProperty,
-    override val testedVariantDslInfo: TestedVariantDslInfo,
-    oldExtension: BaseExtension?,
+    override val mainVariantDslInfo: TestedVariantDslInfo,
     extension: InternalTestedExtension<*, *, *, *>
 ) : ComponentDslInfoImpl(
     componentIdentity,
@@ -52,7 +50,6 @@ internal class UnitTestComponentDslInfoImpl(
     productFlavorList,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), UnitTestComponentDslInfo {
 
@@ -63,15 +60,15 @@ internal class UnitTestComponentDslInfoImpl(
     override val applicationId: Property<String> =
         services.newPropertyBackingDeprecatedApi(
             String::class.java,
-            initTestApplicationId(defaultConfig, services)
+            initTestApplicationId(productFlavorList, defaultConfig, services)
         )
 
     override val minSdkVersion: MutableAndroidVersion
-        get() = testedVariantDslInfo.minSdkVersion
+        get() = mainVariantDslInfo.minSdkVersion
     override val maxSdkVersion: Int?
-        get() = testedVariantDslInfo.maxSdkVersion
+        get() = mainVariantDslInfo.maxSdkVersion
     override val targetSdkVersion: MutableAndroidVersion?
-        get() = testedVariantDslInfo.targetSdkVersion
+        get() = mainVariantDslInfo.targetSdkVersion
 
     override val isUnitTestCoverageEnabled: Boolean
         get() = buildTypeObj.enableUnitTestCoverage || buildTypeObj.isTestCoverageEnabled

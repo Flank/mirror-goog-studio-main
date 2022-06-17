@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
@@ -57,7 +58,6 @@ import com.android.build.gradle.internal.core.dsl.impl.computeSourceSetName
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BuildType
-import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -273,7 +273,6 @@ class VariantManager<
                         defaultConfigSourceProvider.manifestFile,
                         componentType.requiresManifest) { canParseManifest() },
                 variantPropertiesApiServices,
-                oldExtension,
                 dslExtension,
                 project.layout.buildDirectory,
                 dslServices
@@ -450,7 +449,6 @@ class VariantManager<
                 testFixturesSourceSet.manifestFile,
                 testFixturesComponentType.requiresManifest) { canParseManifest() },
             variantPropertiesApiServices,
-            oldExtension = oldExtension,
             extension = dslExtension,
             buildDirectory = project.layout.buildDirectory,
             dslServices = dslServices
@@ -459,7 +457,7 @@ class VariantManager<
         variantDslInfoBuilder.productionVariant =
             mainComponentInfo.variantDslInfo as TestedVariantDslInfo
 
-        val productFlavorList = mainComponentInfo.variantDslInfo.productFlavorList
+        val productFlavorList = (mainComponentInfo.variantDslInfo as MultiVariantComponentDslInfo).productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -486,12 +484,11 @@ class VariantManager<
         // variant-specific, build type (, multi-flavor, flavor1, flavor2, ..., defaultConfig.
         // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
         // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
-        val testFixturesProductFlavors = variantDslInfo.productFlavorList
         val testFixturesVariantSourceSets: MutableList<DefaultAndroidSourceSet?> =
-            Lists.newArrayListWithExpectedSize(4 + testFixturesProductFlavors.size)
+            Lists.newArrayListWithExpectedSize(4 + productFlavorList.size)
 
         // 1. add the variant-specific if applicable.
-        if (testFixturesProductFlavors.isNotEmpty()) {
+        if (productFlavorList.isNotEmpty()) {
             testFixturesVariantSourceSets.add(variantSources.variantSourceProvider)
         }
 
@@ -502,12 +499,12 @@ class VariantManager<
         }
 
         // 3. the multi-flavor combination
-        if (testFixturesProductFlavors.size > 1) {
+        if (productFlavorList.size > 1) {
             testFixturesVariantSourceSets.add(variantSources.multiFlavorSourceProvider)
         }
 
         // 4. the flavors.
-        for (productFlavor in testFixturesProductFlavors) {
+        for (productFlavor in productFlavorList) {
             variantInputModel.productFlavors[productFlavor.name]?.let {
                 testFixturesVariantSourceSets.add(it.testFixturesSourceSet)
             }
@@ -595,7 +592,6 @@ class VariantManager<
                         testSourceSet.manifestFile,
                         componentType.requiresManifest) { canParseManifest() },
                 variantPropertiesApiServices,
-                oldExtension = oldExtension,
                 extension = dslExtension,
                 buildDirectory = project.layout.buildDirectory,
                 dslServices = dslServices
@@ -604,7 +600,7 @@ class VariantManager<
                 testedComponentInfo.variantDslInfo as TestedVariantDslInfo
         variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
 
-        val productFlavorList = testedComponentInfo.variantDslInfo.productFlavorList
+        val productFlavorList = (testedComponentInfo.variantDslInfo as MultiVariantComponentDslInfo).productFlavorList
 
         // We must first add the flavors to the variant builder, in order to get the proper
         // variant-specific and multi-flavor name as we add/create the variant providers later.
@@ -617,7 +613,6 @@ class VariantManager<
             }
         }
         val variantDslInfo = variantDslInfoBuilder.createDslInfo()
-        val apiAccessStats = testedComponentInfo.stats
         if (componentType.isApk
             && testedComponentInfo.variantBuilder is HasAndroidTestBuilder) {
             // this is ANDROID_TEST
@@ -643,12 +638,11 @@ class VariantManager<
         // variant-specific, build type (, multi-flavor, flavor1, flavor2, ..., defaultConfig.
         // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
         // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
-        val testProductFlavors = variantDslInfo.productFlavorList
         val testVariantSourceSets: MutableList<DefaultAndroidSourceSet?> =
-                Lists.newArrayListWithExpectedSize(4 + testProductFlavors.size)
+                Lists.newArrayListWithExpectedSize(4 + productFlavorList.size)
 
         // 1. add the variant-specific if applicable.
-        if (testProductFlavors.isNotEmpty()) {
+        if (productFlavorList.isNotEmpty()) {
             testVariantSourceSets.add(variantSources.variantSourceProvider)
         }
 
@@ -659,12 +653,12 @@ class VariantManager<
         }
 
         // 3. the multi-flavor combination
-        if (testProductFlavors.size > 1) {
+        if (productFlavorList.size > 1) {
             testVariantSourceSets.add(variantSources.multiFlavorSourceProvider)
         }
 
         // 4. the flavors.
-        for (productFlavor in testProductFlavors) {
+        for (productFlavor in productFlavorList) {
             variantInputModel.productFlavors[productFlavor.name]?.let {
                 testVariantSourceSets.add(it.getTestSourceSet(componentType))
             }

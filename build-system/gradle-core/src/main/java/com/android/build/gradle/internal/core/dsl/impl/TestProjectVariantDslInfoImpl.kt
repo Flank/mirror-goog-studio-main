@@ -47,7 +47,6 @@ internal class TestProjectVariantDslInfoImpl(
     services: VariantServices,
     buildDirectory: DirectoryProperty,
     private val signingConfigOverride: SigningConfig?,
-    oldExtension: BaseExtension?,
     extension: InternalTestExtension
 ) : VariantDslInfoImpl(
     componentIdentity,
@@ -58,7 +57,6 @@ internal class TestProjectVariantDslInfoImpl(
     dataProvider,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), TestProjectVariantDslInfo {
 
@@ -107,7 +105,7 @@ internal class TestProjectVariantDslInfoImpl(
     override val applicationId: Property<String> =
         services.newPropertyBackingDeprecatedApi(
             String::class.java,
-            initTestApplicationId(defaultConfig, services)
+            initTestApplicationId(productFlavorList, defaultConfig, services)
         )
 
     // TODO: Test project doesn't have isDebuggable dsl in the build type, we should only have

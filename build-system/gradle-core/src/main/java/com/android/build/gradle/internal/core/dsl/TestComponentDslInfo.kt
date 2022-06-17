@@ -16,17 +16,8 @@
 
 package com.android.build.gradle.internal.core.dsl
 
-import com.android.builder.core.ComponentType
-
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
  * build type, flavors) that are needed by test components.
  */
-interface TestComponentDslInfo: ComponentDslInfo {
-    /**
-     * Optional tested config in case this variant is used for testing another variant.
-     *
-     * @see ComponentType.isTestComponent
-     */
-    val testedVariantDslInfo: TestedVariantDslInfo
-}
+interface TestComponentDslInfo: NestedComponentDslInfo

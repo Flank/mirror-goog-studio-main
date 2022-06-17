@@ -149,7 +149,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            dslInfo.testedVariantDslInfo.packaging,
+            dslInfo.mainVariantDslInfo.packaging,
             variantServices,
             minSdkVersion.apiLevel
         )

@@ -22,7 +22,6 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.MergedOptimization
 import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -46,7 +45,6 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     productFlavorList: List<ProductFlavor>,
     services: VariantServices,
     buildDirectory: DirectoryProperty,
-    oldExtension: BaseExtension?,
     extension: CommonExtension<*, *, *, *>
 ) : ComponentDslInfoImpl(
     componentIdentity,
@@ -56,7 +54,6 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     productFlavorList,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), ConsumableComponentDslInfo {
 

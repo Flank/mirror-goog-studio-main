@@ -26,4 +26,4 @@ package com.android.build.gradle.internal.core.dsl
  *
  * @see [com.android.build.gradle.internal.component.TestVariantCreationConfig]
  */
-interface TestProjectVariantDslInfo: VariantDslInfo, ApkProducingComponentDslInfo, InstrumentedTestComponentDslInfo
+interface TestProjectVariantDslInfo: VariantDslInfo, MultiVariantComponentDslInfo, ApkProducingComponentDslInfo, InstrumentedTestComponentDslInfo

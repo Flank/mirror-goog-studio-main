@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.Nullable;
 import com.android.build.api.variant.AndroidVersion;
 import com.android.build.api.variant.impl.MutableAndroidVersion;
-import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo;
 import com.android.build.gradle.internal.core.dsl.impl.DslInfoBuilder;
 import com.android.build.gradle.internal.dsl.ApplicationPublishingImpl;
@@ -302,7 +301,6 @@ public class VariantDslInfoTest {
                         signingOverride,
                         Mockito.mock(LazyManifestParser.class),
                         variantServices,
-                        Mockito.mock(BaseExtension.class),
                         extension,
                         Mockito.mock(DirectoryProperty.class),
                         dslServices);

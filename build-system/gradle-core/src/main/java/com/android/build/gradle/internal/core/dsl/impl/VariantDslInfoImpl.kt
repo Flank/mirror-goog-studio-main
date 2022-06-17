@@ -53,7 +53,6 @@ internal abstract class VariantDslInfoImpl internal constructor(
     protected val dataProvider: ManifestDataProvider,
     services: VariantServices,
     buildDirectory: DirectoryProperty,
-    oldExtension: BaseExtension?,
     extension: CommonExtension<*, *, *, *>
 ) : ConsumableComponentDslInfoImpl(
     componentIdentity,
@@ -63,7 +62,6 @@ internal abstract class VariantDslInfoImpl internal constructor(
     productFlavorList,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), VariantDslInfo {
 

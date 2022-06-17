@@ -196,8 +196,8 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val baseName: String
         get() = paths.baseName
 
-    override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
-        ProductFlavor(it)
+    override val productFlavorList: List<ProductFlavor> = dslInfo.componentIdentity.productFlavors.map {
+        ProductFlavor(it.first, it.second)
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -475,7 +475,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         get() {
             // We need to create original java resource stream only if we're in a library module with
             // custom transforms.
-            return componentType.isAar && dslInfo.transforms.isNotEmpty()
+            return componentType.isAar && global.transforms.isNotEmpty()
         }
 
     /**

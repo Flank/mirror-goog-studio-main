@@ -21,6 +21,8 @@ import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.NestedComponentDslInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
@@ -43,6 +45,30 @@ class VariantPathHelper(
 ) {
 
     companion object {
+        private fun computeMultiVariantComponentBaseName(
+            dslInfo: ComponentDslInfo
+        ): String {
+            if (dslInfo !is MultiVariantComponentDslInfo) {
+                return ""
+            }
+            val sb = StringBuilder()
+            if (dslInfo.productFlavors.isNotEmpty()) {
+                for ((_, name) in dslInfo.productFlavors) {
+                    if (sb.isNotEmpty()) {
+                        sb.append('-')
+                    }
+                    sb.append(name)
+                }
+            }
+
+            dslInfo.buildType?.let {
+                if (sb.isNotEmpty()) {
+                    sb.append('-')
+                }
+                sb.append(it)
+            }
+            return sb.toString()
+        }
         /**
          * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
          * separated. (similar to full name but with dashes)
@@ -51,34 +77,23 @@ class VariantPathHelper(
          */
         @JvmStatic
         fun computeBaseName(
-            dimensionCombination: DimensionCombination,
-            componentType: ComponentType) : String {
+            dslInfo: ComponentDslInfo
+        ): String {
             val sb = StringBuilder()
-            if (dimensionCombination.productFlavors.isNotEmpty()) {
-                for ((_, name) in dimensionCombination.productFlavors) {
+            when (dslInfo) {
+                is NestedComponentDslInfo -> {
+                    sb.append(computeMultiVariantComponentBaseName(dslInfo.mainVariantDslInfo))
                     if (sb.isNotEmpty()) {
                         sb.append('-')
                     }
-                    sb.append(name)
+                    sb.append(dslInfo.componentType.prefix)
                 }
-            }
-
-            dimensionCombination.buildType?.let {
-                if (sb.isNotEmpty()) {
-                    sb.append('-')
+                else -> {
+                    sb.append(computeMultiVariantComponentBaseName(dslInfo))
+                    if (sb.isEmpty()) {
+                        sb.append("main")
+                    }
                 }
-                sb.append(it)
-            }
-
-            if (componentType.isNestedComponent) {
-                if (sb.isNotEmpty()) {
-                    sb.append('-')
-                }
-                sb.append(componentType.prefix)
-            }
-
-            if (sb.isEmpty()) {
-                sb.append("main")
             }
 
             return sb.toString()
@@ -130,6 +145,29 @@ class VariantPathHelper(
         Joiner.on('/').join(directorySegments)
     }
 
+    private fun getDirectorySegments(dslInfo: ComponentDslInfo): Collection<String> {
+        val builder = ImmutableList.builder<String>()
+        when (dslInfo) {
+            is NestedComponentDslInfo -> {
+                builder.add(dslInfo.componentType.prefix)
+                builder.addAll(getDirectorySegments(dslInfo.mainVariantDslInfo))
+            }
+            is MultiVariantComponentDslInfo -> {
+                if (dslInfo.productFlavorList.isNotEmpty()) {
+                    builder.add(
+                        combineAsCamelCase(
+                            dslInfo.productFlavorList, ProductFlavor::getName
+                        )
+                    )
+                }
+                builder.add(dslInfo.buildType!!)
+            }
+            else -> {
+                builder.add("main")
+            }
+        }
+        return builder.build()
+    }
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -138,20 +176,7 @@ class VariantPathHelper(
      * @return the directory name for the variant
      */
     val directorySegments: Collection<String?> by lazy {
-        val builder =
-            ImmutableList.builder<String>()
-        if (dslInfo.componentType.isNestedComponent) {
-            builder.add(dslInfo.componentType.prefix)
-        }
-        if (dslInfo.productFlavorList.isNotEmpty()) {
-            builder.add(
-                combineAsCamelCase(
-                    dslInfo.productFlavorList, ProductFlavor::getName
-                )
-            )
-        }
-        builder.add(dslInfo.buildType!!)
-        builder.build()
+        getDirectorySegments(dslInfo)
     }
 
     /**
@@ -193,9 +218,31 @@ class VariantPathHelper(
      */
     val baseName: String by lazy {
         computeBaseName(
-            dslInfo,
-            dslInfo.componentType
+            dslInfo
         )
+    }
+
+    private fun computeBaseNameWithSplits(splitName: String, dslInfo: ComponentDslInfo): String {
+        val sb = StringBuilder()
+        when (dslInfo) {
+            is NestedComponentDslInfo -> {
+                sb.append(computeBaseNameWithSplits(splitName, dslInfo.mainVariantDslInfo))
+                sb.append('-').append(dslInfo.componentType.prefix)
+            }
+            is MultiVariantComponentDslInfo -> {
+                if (dslInfo.productFlavorList.isNotEmpty()) {
+                    for (pf in dslInfo.productFlavorList) {
+                        sb.append(pf.name).append('-')
+                    }
+                }
+                sb.append(splitName).append('-')
+                sb.append(dslInfo.buildType!!)
+            }
+            else -> {
+                return "main-$splitName"
+            }
+        }
+        return sb.toString()
     }
 
     /**
@@ -205,18 +252,7 @@ class VariantPathHelper(
      * @return a unique name made up of the variant and split names.
      */
     fun computeBaseNameWithSplits(splitName: String): String {
-        val sb = StringBuilder()
-        if (dslInfo.productFlavorList.isNotEmpty()) {
-            for (pf in dslInfo.productFlavorList) {
-                sb.append(pf.name).append('-')
-            }
-        }
-        sb.append(splitName).append('-')
-        sb.append(dslInfo.buildType!!)
-        if (dslInfo.componentType.isNestedComponent) {
-            sb.append('-').append(dslInfo.componentType.prefix)
-        }
-        return sb.toString()
+        return computeBaseNameWithSplits(splitName, dslInfo)
     }
 
     fun intermediatesDir(vararg subDirs: String): Provider<Directory> =
@@ -288,19 +324,6 @@ class VariantPathHelper(
 
     val aarLocation: Provider<Directory>
             by lazy { outputDir(BuilderConstants.EXT_LIB_ARCHIVE) }
-
-    val manifestOutputDirectory: Provider<Directory>
-        get() {
-            val componentType: ComponentType = dslInfo.componentType
-            if (componentType.isTestComponent) {
-                if (componentType.isApk) { // ANDROID_TEST
-                    return intermediatesDir("manifest", dirName)
-                }
-            } else {
-                return intermediatesDir("manifests", "full", dirName)
-            }
-            throw RuntimeException("getManifestOutputDirectory called for an unexpected variant.")
-        }
 
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique

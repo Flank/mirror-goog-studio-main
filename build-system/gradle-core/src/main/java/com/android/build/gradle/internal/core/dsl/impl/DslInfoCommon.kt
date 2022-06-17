@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.core.dsl.impl
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
@@ -51,7 +52,7 @@ internal fun TestComponentDslInfo.getTestComponentNamespace(
                 it
             }
         } ?: extension.namespace?.let { services.provider {"$it.test" } }
-        ?: testedVariantDslInfo.namespace.flatMap { testedVariantNamespace ->
+        ?: mainVariantDslInfo.namespace.flatMap { testedVariantNamespace ->
             dataProvider.manifestData.map { manifestData ->
                 manifestData.packageName ?: "$testedVariantNamespace.test"
             }
@@ -60,6 +61,7 @@ internal fun TestComponentDslInfo.getTestComponentNamespace(
 
 // Special case for test components and separate test sub-projects
 internal fun ComponentDslInfo.initTestApplicationId(
+    productFlavorList: List<ProductFlavor>,
     defaultConfig: DefaultConfig,
     services: VariantServices,
 ): Provider<String> {
@@ -72,7 +74,7 @@ internal fun ComponentDslInfo.initTestApplicationId(
     return if (testAppIdFromFlavors != null) {
         services.provider { testAppIdFromFlavors }
     } else if (this is TestComponentDslInfo) {
-        this.testedVariantDslInfo.applicationId.map {
+        this.mainVariantDslInfo.applicationId.map {
             "$it.test"
         }
     } else {

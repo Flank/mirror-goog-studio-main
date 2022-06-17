@@ -21,7 +21,6 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.MutableAndroidVersion
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.dsl.PublishableComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
@@ -40,10 +39,9 @@ internal class TestFixturesDslInfoImpl(
     defaultConfig: DefaultConfig,
     buildTypeObj: BuildType,
     productFlavorList: List<ProductFlavor>,
-    private val mainVariantDslInfo: TestedVariantDslInfo,
+    override val mainVariantDslInfo: TestedVariantDslInfo,
     services: VariantServices,
     buildDirectory: DirectoryProperty,
-    oldExtension: BaseExtension?,
     extension: CommonExtension<*, *, *, *>
 ) : ComponentDslInfoImpl(
     componentIdentity,
@@ -53,7 +51,6 @@ internal class TestFixturesDslInfoImpl(
     productFlavorList,
     services,
     buildDirectory,
-    oldExtension,
     extension
 ), TestFixturesComponentDslInfo {
     override val testFixturesAndroidResourcesEnabled: Boolean

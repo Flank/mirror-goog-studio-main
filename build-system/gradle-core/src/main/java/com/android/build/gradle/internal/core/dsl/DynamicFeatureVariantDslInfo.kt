@@ -29,6 +29,7 @@ package com.android.build.gradle.internal.core.dsl
 interface DynamicFeatureVariantDslInfo:
     VariantDslInfo,
     ApkProducingComponentDslInfo,
-    TestedVariantDslInfo {
+    TestedVariantDslInfo,
+    MultiVariantComponentDslInfo {
     val isMultiDexSetFromDsl: Boolean
 }

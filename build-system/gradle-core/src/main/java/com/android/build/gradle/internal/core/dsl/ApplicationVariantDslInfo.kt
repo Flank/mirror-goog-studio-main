@@ -28,7 +28,12 @@ import org.gradle.api.provider.Provider
  *
  * @see [com.android.build.gradle.internal.component.ApplicationCreationConfig]
  */
-interface ApplicationVariantDslInfo: VariantDslInfo, ApkProducingComponentDslInfo, PublishableComponentDslInfo, TestedVariantDslInfo {
+interface ApplicationVariantDslInfo:
+    VariantDslInfo,
+    ApkProducingComponentDslInfo,
+    PublishableComponentDslInfo,
+    TestedVariantDslInfo,
+    MultiVariantComponentDslInfo {
 
     /**
      * Returns the version name for this variant. This could be specified by the product flavors,

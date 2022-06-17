@@ -68,13 +68,13 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (dslInfo.componentType.isAar
-                || dslInfo.transforms.isNotEmpty()
+                || config.global.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }
 
     fun getJava8LangSupportType(): Java8LangSupport {
         // in order of precedence
-        return if (!dslInfo.compileOptions.targetCompatibility.isJava8Compatible) {
+        return if (!config.global.compileOptions.targetCompatibility.isJava8Compatible) {
             Java8LangSupport.UNUSED
         } else if (config.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
             Java8LangSupport.RETROLAMBDA
@@ -99,7 +99,7 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
      * @param creationConfig
      */
     fun isCoreLibraryDesugaringEnabled(creationConfig: ConsumableCreationConfig): Boolean {
-        val libDesugarEnabled = dslInfo.compileOptions.isCoreLibraryDesugaringEnabled
+        val libDesugarEnabled = config.global.compileOptions.isCoreLibraryDesugaringEnabled
         val multidexEnabled = creationConfig.isMultiDexEnabled
         val langSupportType = getJava8LangSupportType()
         val langDesugarEnabled = langSupportType == Java8LangSupport.D8 ||

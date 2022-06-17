@@ -18,16 +18,11 @@ package com.android.build.gradle.internal.core
 import com.android.build.api.dsl.AarMetadata
 
 /** Used to merge multiple instances of [AarMetadata] together.  */
-class MergedAarMetadata : MergedOptions<AarMetadata> {
+class MergedAarMetadata : MergedOptions<AarMetadata>, AarMetadata {
 
-    var minCompileSdk: Int? = null
-        private set
-
-    var minCompileSdkExtension: Int? = null
-        private set
-
-    var minAgpVersion: String? = null
-        private set
+    override var minCompileSdk: Int? = null
+    override var minCompileSdkExtension: Int? = null
+    override var minAgpVersion: String? = null
 
     override fun reset() {
         minCompileSdk = null

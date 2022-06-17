@@ -141,7 +141,7 @@ open class UnitTestImpl @Inject constructor(
 
     override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
         ManifestPlaceholdersCreationConfigImpl(
-            dslInfo.testedVariantDslInfo,
+            dslInfo.mainVariantDslInfo,
             internalServices
         )
     }

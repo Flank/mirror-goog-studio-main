@@ -17,16 +17,12 @@
 package com.android.build.gradle.internal.core.dsl
 
 import com.android.build.api.dsl.AndroidResources
-import com.android.build.api.dsl.CompileOptions
-import com.android.build.api.dsl.ProductFlavor
-import com.android.build.api.transform.Transform
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.core.PostProcessingOptions
-import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.ComponentType
 import com.android.builder.model.VectorDrawablesOptions
@@ -40,13 +36,10 @@ import java.io.File
  * Contains the final dsl info computed from the DSL object model (extension, default config,
  * build type, flavors) that are needed by all components.
  */
-interface ComponentDslInfo: DimensionCombination {
+interface ComponentDslInfo {
     val componentIdentity: ComponentIdentity
 
     val componentType: ComponentType
-
-    /** The list of product flavors. Items earlier in the list override later items.  */
-    val productFlavorList: List<ProductFlavor>
 
     val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
 
@@ -97,10 +90,6 @@ interface ComponentDslInfo: DimensionCombination {
     val targetSdkVersion: MutableAndroidVersion?
 
     val javaCompileOptionsSetInDSL: JavaCompileOptions
-
-    val compileOptions: CompileOptions
-
-    val transforms: List<Transform>
 
     val androidResources: AndroidResources
 
