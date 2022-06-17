@@ -98,6 +98,11 @@ _vendor_git = [
         "name": "androidndk",
         "api_level": 21,
     },
+    # Use the Android SDK specified by the ANDROID_HOME variable (specified in
+    # platform_specific.bazelrc)
+    {
+        "name": "androidsdk",
+    },
 ]
 
 # Bazel repository mapped to archive files, containing the sources.
@@ -240,6 +245,8 @@ def _setup_git_repos(repos, prefix = ""):
         repo = dict(_repo)
         if repo["name"] == "androidndk":
             native.android_ndk_repository(**repo)
+        elif repo["name"] == "androidsdk":
+            native.android_sdk_repository(**repo)
         else:
             repo["path"] = prefix + repo["path"]
             if "build_file" in repo:
