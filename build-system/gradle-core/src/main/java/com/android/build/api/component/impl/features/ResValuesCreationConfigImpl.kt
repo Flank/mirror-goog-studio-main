@@ -17,14 +17,13 @@
 package com.android.build.api.component.impl.features
 
 import com.android.build.api.variant.ResValue
-import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
-import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.provider.MapProperty
 
 class ResValuesCreationConfigImpl(
-    private val dslInfo: ComponentDslInfo,
+    private val dslInfo: AndroidResourcesDslInfo,
     private val internalServices: VariantServices,
 ): ResValuesCreationConfig {
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {

@@ -16,17 +16,13 @@
 
 package com.android.build.gradle.internal.core.dsl.impl
 
-import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.ApplicationProductFlavor
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.DynamicFeatureBuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.dsl.VariantDimension
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.ResValue
-import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.PostprocessingFeatures
@@ -38,15 +34,13 @@ import com.android.build.gradle.internal.core.PostProcessingBlockOptions
 import com.android.build.gradle.internal.core.PostProcessingOptions
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.ComponentType
 import com.android.builder.model.BaseConfig
-import com.android.builder.model.ClassField
-import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.DirectoryProperty
 import java.io.File
 
@@ -98,33 +92,10 @@ internal abstract class ComponentDslInfoImpl internal constructor(
     override val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
         get() = ImmutableMap.copyOf(mergedFlavor.missingDimensionStrategies)
 
-    override val resourceConfigurations: ImmutableSet<String>
-        get() = ImmutableSet.copyOf(mergedFlavor.resourceConfigurations)
-
-    override val vectorDrawables: VectorDrawablesOptions
-        get() = mergedFlavor.vectorDrawables
-
-    // extension delegates
-
-    override val androidResources: AndroidResources
-        get() = extension.androidResources
-
     // build type delegates
-
-    override val isPseudoLocalesEnabled: Boolean
-        get() = buildTypeObj.isPseudoLocalesEnabled
 
     override val isAndroidTestCoverageEnabled: Boolean
         get() = buildTypeObj.enableAndroidTestCoverage || buildTypeObj.isTestCoverageEnabled
-
-    override val isCrunchPngs: Boolean?
-        get() {
-            return when (buildTypeObj) {
-                is ApplicationBuildType -> buildTypeObj.isCrunchPngs
-                is DynamicFeatureBuildType -> buildTypeObj.isCrunchPngs
-                else -> false
-            }
-        }
 
     override val postProcessingOptions: PostProcessingOptions by lazy {
         if ((buildTypeObj as com.android.build.gradle.internal.dsl.BuildType)
@@ -165,45 +136,13 @@ internal abstract class ComponentDslInfoImpl internal constructor(
         return result
     }
 
-    override val isCrunchPngsDefault: Boolean
-        // does not exist in the new DSL
-        get() = (buildTypeObj as com.android.build.gradle.internal.dsl.BuildType).isCrunchPngsDefault
-
     // helper methods
 
-    override fun getResValues(): Map<ResValue.Key, ResValue> {
-        val resValueFields = mutableMapOf<ResValue.Key, ResValue>()
-
-        fun addToListIfNotAlreadyPresent(classField: ClassField, comment: String) {
-            val key = ResValueKeyImpl(classField.type, classField.name)
-            if (!resValueFields.containsKey(key)) {
-                resValueFields[key] = ResValue(
-                    value = classField.value,
-                    comment = comment
-                )
-            }
-        }
-
-        (buildTypeObj as com.android.build.gradle.internal.dsl.BuildType).resValues.values.forEach { classField ->
-            addToListIfNotAlreadyPresent(classField, "Value from build type: ${buildTypeObj.name}")
-        }
-
-        productFlavorList.forEach { flavor ->
-            (flavor as com.android.build.gradle.internal.dsl.ProductFlavor).resValues.values.forEach { classField ->
-                addToListIfNotAlreadyPresent(
-                    classField,
-                    "Value from product flavor: ${flavor.name}"
-                )
-            }
-        }
-
-        defaultConfig.resValues.values.forEach { classField ->
-            addToListIfNotAlreadyPresent(classField, "Value from default config.")
-        }
-
-        return resValueFields
+    override val androidResourcesDsl: AndroidResourcesDslInfo by lazy {
+        AndroidResourcesDslInfoImpl(
+            defaultConfig, buildTypeObj, productFlavorList, mergedFlavor, extension
+        )
     }
-
 
     /**
      * Merge a specific option in GradleVariantConfiguration.

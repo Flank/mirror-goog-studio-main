@@ -20,11 +20,11 @@ import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
-import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.build.gradle.internal.services.VariantServices
 
 class AssetsCreationConfigImpl(
-    private val dslInfo: ComponentDslInfo,
+    private val dslInfo: AndroidResourcesDslInfo,
     private val internalServices: VariantServices,
     private val androidResourcesCreationConfig: () -> AndroidResourcesCreationConfig?
 ): AssetsCreationConfig {

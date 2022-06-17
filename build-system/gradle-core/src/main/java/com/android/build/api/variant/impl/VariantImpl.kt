@@ -227,7 +227,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
                     ResValue::class.java,
-                    dslInfo.getResValues()
+                    dslInfo.androidResourcesDsl!!.getResValues()
                 )
             )
     }
@@ -254,7 +254,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 apiName = "pseudoLocalesEnabled",
                 value = internalServices.newPropertyBackingDeprecatedApi(
                     Boolean::class.java,
-                    dslInfo.isPseudoLocalesEnabled
+                    dslInfo.androidResourcesDsl!!.isPseudoLocalesEnabled
                 )
             )
     }

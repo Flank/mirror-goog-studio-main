@@ -132,6 +132,7 @@ open class UnitTestImpl @Inject constructor(
             AndroidResourcesCreationConfigImpl(
                 this,
                 dslInfo,
+                dslInfo.androidResourcesDsl!!,
                 internalServices,
             )
         } else {

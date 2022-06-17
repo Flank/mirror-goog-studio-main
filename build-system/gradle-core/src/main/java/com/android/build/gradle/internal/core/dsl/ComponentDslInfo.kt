@@ -16,18 +16,15 @@
 
 package com.android.build.gradle.internal.core.dsl
 
-import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.core.PostProcessingOptions
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.ComponentType
-import com.android.builder.model.VectorDrawablesOptions
 import com.google.common.collect.ImmutableMap
-import com.google.common.collect.ImmutableSet
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
@@ -91,29 +88,7 @@ interface ComponentDslInfo {
 
     val javaCompileOptionsSetInDSL: JavaCompileOptions
 
-    val androidResources: AndroidResources
-
-    val resourceConfigurations: ImmutableSet<String>
-
-    val vectorDrawables: VectorDrawablesOptions
-
-    val isPseudoLocalesEnabled: Boolean
-
-    val isCrunchPngs: Boolean?
-
-    @Deprecated("Can be removed once the AaptOptions crunch method is removed.")
-    val isCrunchPngsDefault: Boolean
-
-    /**
-     * Returns a list of generated resource values.
-     *
-     *
-     * Items can be either fields (instance of [com.android.builder.model.ClassField]) or
-     * comments (instance of String).
-     *
-     * @return a list of items.
-     */
-    fun getResValues(): Map<ResValue.Key, ResValue>
+    val androidResourcesDsl: AndroidResourcesDslInfo?
 
     val postProcessingOptions: PostProcessingOptions
 

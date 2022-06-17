@@ -193,7 +193,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/features/AndroidResourcesCreationConfigImpl.kt"
-            line="48"/>
+            line="50"/>
     </issue>
 
     <issue
@@ -201,7 +201,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/features/AndroidResourcesCreationConfigImpl.kt"
-            line="51"/>
+            line="53"/>
     </issue>
 
     <issue
@@ -209,7 +209,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/AndroidTestComponentDslInfoImpl.kt"
-            line="70"/>
+            line="67"/>
     </issue>
 
     <issue
@@ -217,7 +217,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/AndroidTestComponentDslInfoImpl.kt"
-            line="133"/>
+            line="125"/>
     </issue>
 
     <issue
@@ -233,7 +233,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="145"/>
+            line="142"/>
     </issue>
 
     <issue
@@ -241,7 +241,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="153"/>
+            line="150"/>
     </issue>
 
     <issue
@@ -249,7 +249,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="227"/>
+            line="224"/>
     </issue>
 
     <issue
@@ -281,7 +281,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/ApplicationVariantDslInfoImpl.kt"
-            line="76"/>
+            line="107"/>
     </issue>
 
     <issue
@@ -465,7 +465,15 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/ComponentDslInfoImpl.kt"
-            line="79"/>
+            line="71"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/ComponentDslInfoImpl.kt"
+            line="141"/>
     </issue>
 
     <issue
@@ -505,7 +513,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/ComponentImpl.kt"
-            line="409"/>
+            line="410"/>
     </issue>
 
     <issue
@@ -529,7 +537,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/DynamicFeatureVariantImpl.kt"
-            line="100"/>
+            line="112"/>
     </issue>
 
     <issue
@@ -537,7 +545,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/DynamicFeatureVariantImpl.kt"
-            line="117"/>
+            line="129"/>
     </issue>
 
     <issue
@@ -545,7 +553,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/DynamicFeatureVariantImpl.kt"
-            line="121"/>
+            line="133"/>
     </issue>
 
     <issue
@@ -809,7 +817,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/features/ResValuesCreationConfigImpl.kt"
-            line="30"/>
+            line="29"/>
     </issue>
 
     <issue
@@ -889,7 +897,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/TestProjectVariantDslInfoImpl.kt"
-            line="128"/>
+            line="120"/>
     </issue>
 
     <issue
@@ -897,7 +905,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/TestProjectVariantDslInfoImpl.kt"
-            line="140"/>
+            line="133"/>
     </issue>
 
     <issue
@@ -945,7 +953,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/UnitTestComponentDslInfoImpl.kt"
-            line="59"/>
+            line="56"/>
     </issue>
 
     <issue
@@ -961,7 +969,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/dsl/impl/VariantDslInfoImpl.kt"
-            line="135"/>
+            line="133"/>
     </issue>
 
     <issue
@@ -985,7 +993,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="129"/>
+            line="144"/>
     </issue>
 
     <issue
@@ -993,7 +1001,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="194"/>
+            line="178"/>
     </issue>
 
     <issue
@@ -1001,7 +1009,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="235"/>
+            line="219"/>
     </issue>
 
     <issue
@@ -1009,7 +1017,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="238"/>
+            line="271"/>
     </issue>
 
     <issue
@@ -1017,7 +1025,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="246"/>
+            line="274"/>
     </issue>
 
     <issue
@@ -1025,7 +1033,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="275"/>
+            line="282"/>
     </issue>
 
     <issue
@@ -1033,7 +1041,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="285"/>
+            line="311"/>
     </issue>
 
     <issue
@@ -1041,7 +1049,15 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
-            line="290"/>
+            line="321"/>
+    </issue>
+
+    <issue
+        id="AvoidByLazy"
+        message="Avoid `by lazy` for simple lazy initialization">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/variant/VariantPathHelper.kt"
+            line="326"/>
     </issue>
 
     <issue

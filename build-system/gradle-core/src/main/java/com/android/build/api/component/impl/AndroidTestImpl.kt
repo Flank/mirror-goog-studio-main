@@ -243,7 +243,7 @@ open class AndroidTestImpl @Inject constructor(
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
                     ResValue::class.java,
-                    dslInfo.getResValues()
+                    dslInfo.androidResourcesDsl!!.getResValues()
                 )
             )
     }
@@ -261,6 +261,7 @@ open class AndroidTestImpl @Inject constructor(
         AndroidResourcesCreationConfigImpl(
             this,
             dslInfo,
+            dslInfo.androidResourcesDsl!!,
             internalServices,
         )
     }

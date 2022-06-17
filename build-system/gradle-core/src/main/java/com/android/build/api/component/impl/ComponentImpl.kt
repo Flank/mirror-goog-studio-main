@@ -378,7 +378,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val assetsCreationConfig: AssetsCreationConfig by lazy {
         AssetsCreationConfigImpl(
-            dslInfo,
+            dslInfo.androidResourcesDsl!!,
             internalServices
         ) { androidResourcesCreationConfig }
     }
@@ -388,6 +388,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             AndroidResourcesCreationConfigImpl(
                 this,
                 dslInfo,
+                dslInfo.androidResourcesDsl!!,
                 internalServices,
             )
         } else {
@@ -398,7 +399,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val resValuesCreationConfig: ResValuesCreationConfig? by lazy {
         if (buildFeatures.resValues) {
             ResValuesCreationConfigImpl(
-                dslInfo,
+                dslInfo.androidResourcesDsl!!,
                 internalServices
             )
         } else {

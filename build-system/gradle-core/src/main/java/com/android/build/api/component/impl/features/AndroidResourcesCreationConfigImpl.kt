@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -42,31 +43,32 @@ import org.gradle.api.provider.Provider
 class AndroidResourcesCreationConfigImpl(
     private val component: ComponentCreationConfig,
     private val dslInfo: ComponentDslInfo,
+    private val androidResourcesDsl: AndroidResourcesDslInfo,
     private val internalServices: VariantServices
 ): AndroidResourcesCreationConfig {
 
     override val androidResources: AndroidResources by lazy {
-        initializeAaptOptionsFromDsl(dslInfo.androidResources, internalServices)
+        initializeAaptOptionsFromDsl(androidResourcesDsl.androidResources, internalServices)
     }
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
         internalServices.newPropertyBackingDeprecatedApi(
             Boolean::class.java,
-            dslInfo.isPseudoLocalesEnabled
+            androidResourcesDsl.isPseudoLocalesEnabled
         )
     }
 
     override val isCrunchPngs: Boolean
         get() {
             // If set for this build type, respect that.
-            val buildTypeOverride = dslInfo.isCrunchPngs
+            val buildTypeOverride = androidResourcesDsl.isCrunchPngs
             if (buildTypeOverride != null) {
                 return buildTypeOverride
             }
             // Otherwise, if set globally, respect that.
-            val globalOverride = (dslInfo.androidResources as AaptOptions).cruncherEnabledOverride
+            val globalOverride = (androidResourcesDsl.androidResources as AaptOptions).cruncherEnabledOverride
 
             // If not overridden, use the default from the build type.
-            return globalOverride ?: dslInfo.isCrunchPngsDefault
+            return globalOverride ?: androidResourcesDsl.isCrunchPngsDefault
         }
 
     // Resource shrinker expects MergeResources task to have all the resources merged and with
@@ -77,9 +79,9 @@ class AndroidResourcesCreationConfigImpl(
                 !useResourceShrinker
 
     override val resourceConfigurations: Set<String>
-        get() = dslInfo.resourceConfigurations
+        get() = androidResourcesDsl.resourceConfigurations
     override val vectorDrawables: VectorDrawablesOptions
-        get() = dslInfo.vectorDrawables
+        get() = androidResourcesDsl.vectorDrawables
 
     override val useResourceShrinker: Boolean
         get() {

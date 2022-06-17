@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.core.dsl
 
+import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import org.gradle.api.provider.Provider
 
 /**
@@ -57,4 +58,6 @@ interface ApplicationVariantDslInfo:
     val isEmbedMicroApp: Boolean
 
     val isProfileable: Boolean
+
+    override val androidResourcesDsl: AndroidResourcesDslInfo
 }

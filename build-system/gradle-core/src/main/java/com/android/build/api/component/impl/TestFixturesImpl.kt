@@ -168,7 +168,7 @@ open class TestFixturesImpl @Inject constructor(
                 value = internalServices.mapPropertyOf(
                     ResValue.Key::class.java,
                     ResValue::class.java,
-                    dslInfo.getResValues()
+                    dslInfo.androidResourcesDsl!!.getResValues()
                 )
             )
     }
@@ -182,7 +182,7 @@ open class TestFixturesImpl @Inject constructor(
                 apiName = "pseudoLocalesEnabled",
                 value = internalServices.newPropertyBackingDeprecatedApi(
                     Boolean::class.java,
-                    dslInfo.isPseudoLocalesEnabled
+                    dslInfo.androidResourcesDsl!!.isPseudoLocalesEnabled
                 )
             )
     }
