@@ -16,6 +16,7 @@
 
 package com.android.tools.instrumentation.threading.agent.callback;
 
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 /**
@@ -24,23 +25,28 @@ import java.util.logging.Logger;
  *
  * <p>So, we install a layer of indirection between these two worlds.
  */
-public class ThreadingCheckerTrampoline {
+public final class ThreadingCheckerTrampoline {
     private static final Logger LOGGER =
             Logger.getLogger(ThreadingCheckerTrampoline.class.getName());
 
-    private static ThreadingCheckerHook hook = null;
+    private static final CopyOnWriteArrayList<ThreadingCheckerHook> hooks =
+            new CopyOnWriteArrayList<>();
 
     static BaselineViolations baselineViolations;
 
     // This method should be called from Android Studio startup code.
     public static void installHook(ThreadingCheckerHook newHook) {
-        hook = newHook;
+        hooks.add(newHook);
         baselineViolations = BaselineViolations.fromResource();
+    }
+
+    static void clearHooks() {
+        hooks.clear();
     }
 
     // This method is called from instrumented bytecode.
     public static void verifyOnUiThread() {
-        if (hook == null) {
+        if (hooks.isEmpty()) {
             LOGGER.warning(
                     "Threading annotation check skipped for method '"
                             + getInstrumentedMethodSignature()
@@ -50,12 +56,14 @@ public class ThreadingCheckerTrampoline {
         if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
             return;
         }
-        hook.verifyOnUiThread();
+        for (ThreadingCheckerHook hook : hooks) {
+            hook.verifyOnUiThread();
+        }
     }
 
     // This method is called from instrumented bytecode.
     public static void verifyOnWorkerThread() {
-        if (hook == null) {
+        if (hooks.isEmpty()) {
             LOGGER.warning(
                     "Threading annotation check skipped for method '"
                             + getInstrumentedMethodSignature()
@@ -65,7 +73,9 @@ public class ThreadingCheckerTrampoline {
         if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
             return;
         }
-        hook.verifyOnWorkerThread();
+        for (ThreadingCheckerHook hook : hooks) {
+            hook.verifyOnWorkerThread();
+        }
     }
 
     private static String getInstrumentedMethodSignature() {
