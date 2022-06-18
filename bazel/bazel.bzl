@@ -547,6 +547,7 @@ def iml_module(
         jvm_target = None,
         javacopts = [],
         javacopts_from_jps = [],
+        enable_tests = True,
         test_data = [],
         test_flaky = False,
         test_jvm_flags = [],
@@ -658,36 +659,61 @@ def iml_module(
         fail("must use the Flaky attribute per split_test_target")
     if split_test_targets and test_shard_count:
         fail("test_shard_count and split_test_targets should not both be specified")
-    test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
-    if split_test_targets:
-        _gen_split_tests(
-            name = name,
-            split_test_targets = split_test_targets,
-            test_tags = test_tags,
-            test_data = test_data,
-            runtime_deps = [":" + name + "_testlib"] + test_utils,
-            timeout = test_timeout,
-            jvm_flags = test_jvm_flags + ["-Dtest.suite.jar=" + name + "_test.jar"],
-            test_class = test_class,
-            visibility = visibility,
-            main_class = test_main_class,
-            exec_properties = exec_properties,
-        )
+    if enable_tests:
+        test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
+        if split_test_targets:
+            _gen_split_tests(
+                name = name,
+                split_test_targets = split_test_targets,
+                test_tags = test_tags,
+                test_data = test_data,
+                runtime_deps = [":" + name + "_testlib"] + test_utils,
+                timeout = test_timeout,
+                jvm_flags = test_jvm_flags + ["-Dtest.suite.jar=" + name + "_test.jar"],
+                test_class = test_class,
+                visibility = visibility,
+                main_class = test_main_class,
+                exec_properties = exec_properties,
+            )
+        else:
+            coverage_java_test(
+                name = name + "_tests",
+                tags = test_tags,
+                runtime_deps = [":" + name + "_testlib"] + test_utils,
+                flaky = test_flaky,
+                timeout = test_timeout,
+                shard_count = test_shard_count,
+                data = test_data,
+                jvm_flags = test_jvm_flags + ["-Dtest.suite.jar=" + name + "_test.jar"],
+                test_class = test_class,
+                visibility = visibility,
+                main_class = test_main_class,
+                exec_properties = exec_properties,
+            )
     else:
-        coverage_java_test(
-            name = name + "_tests",
-            tags = test_tags,
-            runtime_deps = [":" + name + "_testlib"] + test_utils,
-            flaky = test_flaky,
-            timeout = test_timeout,
-            shard_count = test_shard_count,
-            data = test_data,
-            jvm_flags = test_jvm_flags + ["-Dtest.suite.jar=" + name + "_test.jar"],
-            test_class = test_class,
-            visibility = visibility,
-            main_class = test_main_class,
-            exec_properties = exec_properties,
-        )
+        if test_tags:
+            fail("enable_tests is False but test_tags was specified.")
+        if test_data:
+            fail("enable_tests is False but test_data was specified.")
+        if test_flaky:
+            fail("enable_tests is False but test_flaky was specified.")
+        if test_jvm_flags:
+            fail("enable_tests is False but test_jvm_flags was specified.")
+        if test_shard_count:
+            fail("enable_tests is False but test_shard_count was specified.")
+        if split_test_targets:
+            fail("enable_tests is False but split_test_targets was specified.")
+
+def iml_test(
+        name,
+        module,
+        runtime_deps = [],
+        **kwargs):
+    native.java_test(
+        name = name,
+        runtime_deps = runtime_deps + [module + "_testlib"],
+        **kwargs
+    )
 
 def _gen_split_tests(
         name,
