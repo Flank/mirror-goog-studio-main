@@ -15,10 +15,8 @@
  */
 package com.android.adblib.tools.debugging
 
-import com.android.adblib.AdbLogger
 import com.android.adblib.DeviceSelector
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.testingutils.setTestLoggerMinLevel
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
 import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
 import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil

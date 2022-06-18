@@ -15,22 +15,19 @@
  */
 package com.android.adblib.tools.testutils
 
-import com.android.adblib.AdbChannel
 import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.AdbHostServices
+import com.android.adblib.AdbSessionHost
 import com.android.adblib.AdbSession
 import com.android.adblib.SOCKET_CONNECT_TIMEOUT_MS
 import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.testingutils.TestingAdbSessionHost
 import com.android.fakeadbserver.DeviceState
-import org.hamcrest.CoreMatchers
-import org.junit.Assert
 import org.junit.Rule
 import org.junit.rules.ExpectedException
 import java.time.Duration
-import java.util.concurrent.TimeUnit
 
 open class AdbLibToolsTestBase {
 
@@ -46,36 +43,16 @@ open class AdbLibToolsTestBase {
         return closeables.register(item)
     }
 
-    protected fun createSession(fakeAdb: FakeAdbServerProvider): AdbSession {
+    protected fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
         val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
-        return registerCloseable(AdbSession.create(
-            host,
-            channelProvider,
-            Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
-        ))
-    }
-
-    protected fun createDisconnectedSession(): AdbSession {
-        val host = registerCloseable(TestingAdbSessionHost())
-        val channelProvider = object: AdbChannelProvider {
-            override suspend fun createChannel(timeout: Long, unit: TimeUnit): AdbChannel {
-                throw NotImplementedError("A disconnected session does not support channels")
-            }
-        }
-        return registerCloseable(AdbSession.create(
-            host,
-            channelProvider,
-            Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
-        ))
-    }
-
-    protected fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
-        return createSession(fakeAdb).deviceServices
-    }
-
-    protected fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
-        return createSession(fakeAdb).hostServices
+        val session =
+            AdbSession.create(
+                host,
+                channelProvider,
+                Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
+            )
+        return session.deviceServices
     }
 
     protected fun addFakeDevice(fakeAdb: FakeAdbServerProvider, api: Int): DeviceState {
@@ -92,13 +69,22 @@ open class AdbLibToolsTestBase {
         return fakeDevice
     }
 
-    protected inline fun <reified T> assertThrows(block: () -> Unit) {
-        try {
-            block()
-        } catch(t: Throwable) {
-            Assert.assertThat(t, CoreMatchers.instanceOf(T::class.java))
-            return
-        }
-        Assert.fail("Expected: An exception instance of ${T::class}, but got no exception instead")
+    protected fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
+        val host = registerCloseable(TestingAdbSessionHost())
+        val channelProvider = fakeAdb.createChannelProvider(host)
+        val session = registerCloseable(createSession(host, channelProvider))
+        return session.hostServices
+    }
+
+    private fun createSession(
+      host: AdbSessionHost,
+      channelProvider: AdbChannelProvider
+    ): AdbSession {
+        return AdbSession.create(
+            host,
+            channelProvider,
+            Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
+        )
+
     }
 }

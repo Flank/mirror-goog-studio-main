@@ -258,11 +258,8 @@ public class DeviceState {
 
     public void stopClient(int pid) {
         synchronized (mClients) {
-            ClientState client = mClients.remove(pid);
-            if (client != null) {
-                mClientStateChangeHub.clientListChanged();
-                client.stopJdwpSession();
-            }
+            mClients.remove(pid);
+            mClientStateChangeHub.clientListChanged();
         }
     }
 

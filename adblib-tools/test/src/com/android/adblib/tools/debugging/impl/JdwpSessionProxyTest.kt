@@ -19,7 +19,7 @@ import com.android.adblib.ByteBufferAdbOutputChannel
 import com.android.adblib.DeviceSelector
 import com.android.adblib.createDeviceScope
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.tools.debugging.JdwpSession
+import com.android.adblib.tools.debugging.JdwpSessionHandler
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.MutableJdwpPacket
 import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkTypes
@@ -100,7 +100,7 @@ class JdwpSessionProxyTest : AdbLibToolsTestBase() {
             process.properties.jdwpSessionProxyStatus.socketAddress != null
         }
         val clientSocket = registerCloseable(session.channelFactory.connectSocket(process.properties.jdwpSessionProxyStatus.socketAddress!!))
-        val jdwpSession = registerCloseable(JdwpSession.wrapSocketChannel(session, clientSocket, 10))
+        val jdwpSession = registerCloseable(JdwpSessionHandler.wrapSocketChannel(session, clientSocket, 10))
 
         val heloChunk = MutableDdmsChunk()
         heloChunk.type = DdmsChunkTypes.HELO

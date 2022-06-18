@@ -19,7 +19,7 @@ import com.android.adblib.AdbChannel
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
-import com.android.adblib.tools.debugging.impl.JdwpSessionImpl
+import com.android.adblib.tools.debugging.impl.JdwpSessionHandlerImpl
 import com.android.adblib.tools.debugging.packets.JdwpPacketView
 import com.android.adblib.utils.closeOnException
 import java.io.EOFException
@@ -34,7 +34,7 @@ import java.io.IOException
  *
  * @see [AdbDeviceServices.jdwp]
  */
-internal interface JdwpSession : AutoCloseable {
+internal interface JdwpSessionHandler : AutoCloseable {
 
     /**
      * Sends a [JdwpPacketView] to the process VM.
@@ -59,14 +59,14 @@ internal interface JdwpSession : AutoCloseable {
      * a [JdwpPacketView], typically a [command packet][JdwpPacketView.isCommand],
      * in this session. Each call returns a new unique value.
      *
-     * Note: This method is thread-safe.
+     * Note: This method is multi-thread safe.
      */
     fun nextPacketId(): Int
 
     companion object {
 
         /**
-         * Returns a [JdwpSession] that opens a `JDWP` session for the given process [pid]
+         * Returns a [JdwpSessionHandler] that opens a `JDWP` session for the given process [pid]
          * on the given [device].
          *
          * @see [AdbDeviceServices.jdwp]
@@ -75,19 +75,19 @@ internal interface JdwpSession : AutoCloseable {
             session: AdbSession,
             device: DeviceSelector,
             pid: Int
-        ): JdwpSession {
+        ): JdwpSessionHandler {
             val channel = session.deviceServices.jdwp(device, pid)
             channel.closeOnException {
-                return JdwpSessionImpl(session, channel, pid)
+                return JdwpSessionHandlerImpl(session, channel, pid)
             }
         }
 
         /**
-         * Returns a [JdwpSession] that wraps an existing socket [channel] and allows
+         * Returns a [JdwpSessionHandler] that wraps an existing socket [channel] and allows
          * exchanging `JDWP` packets.
          */
-        fun wrapSocketChannel(session: AdbSession, channel: AdbChannel, pid: Int): JdwpSession {
-            return JdwpSessionImpl(session, channel, pid)
+        fun wrapSocketChannel(session: AdbSession, channel: AdbChannel, pid: Int): JdwpSessionHandler {
+            return JdwpSessionHandlerImpl(session, channel, pid)
         }
     }
 }

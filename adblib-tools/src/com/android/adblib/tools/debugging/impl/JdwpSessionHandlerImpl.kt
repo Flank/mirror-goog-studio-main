@@ -22,7 +22,7 @@ import com.android.adblib.AdbSession
 import com.android.adblib.AdbOutputChannel
 import com.android.adblib.skipRemaining
 import com.android.adblib.thisLogger
-import com.android.adblib.tools.debugging.JdwpSession
+import com.android.adblib.tools.debugging.JdwpSessionHandler
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_BYTE_ORDER
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_HEADER_LENGTH
@@ -36,11 +36,11 @@ import kotlinx.coroutines.sync.withLock
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class JdwpSessionImpl(
+internal class JdwpSessionHandlerImpl(
   session: AdbSession,
   private val channel: AdbChannel,
   private val pid: Int
-) : JdwpSession {
+) : JdwpSessionHandler {
 
     private val logger = thisLogger(session)
 
@@ -73,7 +73,7 @@ internal class JdwpSessionImpl(
         // We serialize sending packets to the channel so that we always send fully formed packets
         sendMutex.withLock {
             sendHandshake()
-            logger.verbose { "pid=$pid: Sending JDWP packet: $packet" }
+            logger.debug { "pid=$pid: Sending JDWP packet: $packet" }
             sender.sendPacket(packet)
         }
     }
@@ -82,9 +82,8 @@ internal class JdwpSessionImpl(
         // We serialize reading packets from the channel so that we always read fully formed packets
         receiveMutex.withLock {
             waitForHandshake()
-            logger.verbose { "pid=$pid: Waiting for next JDWP packet from channel" }
             val packet = receiver.receivePacket()
-            logger.verbose { "pid=$pid: Received JDWP packet: $packet" }
+            logger.debug { "pid=$pid: Receiving JDWP packet: $packet" }
             return packet
         }
     }
@@ -227,13 +226,11 @@ internal class JdwpSessionImpl(
         private val workBuffer = ResizableBuffer().order(PACKET_BYTE_ORDER)
 
         private val jdwpPacket = MutableJdwpPacket()
-        private var previousPayload = AdbBufferedInputChannel.empty()
 
         suspend fun receivePacket(): JdwpPacketView {
-            // Ensure we consume all bytes from the previous payload
-            previousPayload.finalRewind()
-            previousPayload.skipRemaining(workBuffer)
-            previousPayload = AdbBufferedInputChannel.empty()
+            // Ensure we consume all bytes from the previous packet
+            jdwpPacket.payload.finalRewind()
+            jdwpPacket.payload.skipRemaining(workBuffer)
 
             // Read next packet
             readOnePacket(workBuffer, jdwpPacket)
@@ -251,7 +248,6 @@ internal class JdwpSessionImpl(
                         packet.length - PACKET_HEADER_LENGTH
                     )
                 )
-            previousPayload = packet.payload
         }
     }
 
