@@ -432,13 +432,13 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
                 }
 
                 override fun visitCallExpression(node: UCallExpression) =
-                    visitClass(node.resolve()?.containingClass, { bindingClasses[it.name] })
+                    visitClass(node.resolve()?.containingClass) { bindingClasses[it.name] }
 
-                override fun visitSimpleNameReferenceExpression(expression: USimpleNameReferenceExpression) =
-                    visitClass(expression.resolve() as? PsiClass, { bindingClasses[expression.identifier] })
+                override fun visitSimpleNameReferenceExpression(node : USimpleNameReferenceExpression) =
+                    visitClass(node.resolve() as? PsiClass) { bindingClasses[node.identifier] }
 
                 override fun visitCallableReferenceExpression(node: UCallableReferenceExpression) =
-                    visitClass((node.resolve() as? PsiMember)?.containingClass, { bindingClasses[it.name] })
+                    visitClass((node.resolve() as? PsiMember)?.containingClass) { bindingClasses[it.name] }
 
                 override fun visitQualifiedReferenceExpression(node: UQualifiedReferenceExpression) {
                     // referencing a binding class's field marks the corresponding id as reachable
@@ -453,30 +453,11 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
 
                 override fun visitField(node: UField) {
                     val classType = (node.type as? PsiClassType)
-                    val psiClass = classType?.resolve()
-                    if (psiClass != null) {
-                        val className = classType.className
-                        val resourceName = bindingClasses!![className]
-                        when {
-                            resourceName != null && isBindingClass(context.evaluator, psiClass) ->
-                                markReachableLayout(resourceName)
-                            resourceName == null -> {
-                                // When using property delegation, the field type will not
-                                // be the binding class. However, try to infer the intended
-                                // delegation target from the declaration. (See issue 191196334.)
-                                val typeName = (node.typeReference?.sourcePsi as? KtTypeReference)?.text
-                                if (typeName != null &&
-                                    typeName != className &&
-                                    (node.sourcePsi as? KtProperty)?.delegateExpression != null
-                                ) {
-                                    // Here we can't check to see if the class is a binding
-                                    // class, but given that it's a Kotlin delegate expression
-                                    // which specifies a type that matches a known binding
-                                    // class name, it's very likely.
-                                    markReachableLayout(bindingClasses!![typeName])
-                                }
-                            }
-                        }
+                    visitClass(classType?.resolve()) { bindingClasses[it.name] }
+                    // When using property delegation, the field type will not be the binding class.
+                    // It will be a delegate type with a type argument, so check that type argument too.
+                    classType?.parameters?.forEach { typeArgument ->
+                        visitClass((typeArgument as? PsiClassType)?.resolve()) { bindingClasses[it.name] }
                     }
                 }
 
