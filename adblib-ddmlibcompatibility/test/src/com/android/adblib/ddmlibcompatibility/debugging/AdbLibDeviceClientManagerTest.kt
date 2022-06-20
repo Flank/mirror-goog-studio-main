@@ -25,6 +25,7 @@ import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.testing.FakeAdbRule
 import junit.framework.Assert
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import org.junit.Rule
@@ -163,7 +164,6 @@ class AdbLibDeviceClientManagerTest {
 
         // Assert
         Assert.assertEquals(12, deviceClientManager.clients.last().clientData.pid)
-
     }
 
     @Test
@@ -248,17 +248,23 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         yieldUntil {
             // Temporary implementation updates process properties every 100 millis
-            listener.events.size >= 5
+            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED }
+                    && deviceClientManager.clients.any { it.clientData.clientDescription == "foo.bar" }
         }
 
         // Assert
-        Assert.assertTrue(listener.events.size >= 5)
+        Assert.assertTrue(
+            "Should have received a process list changed event",
+            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED })
 
-        val event = listener.events.last()
-        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED, event.kind)
+        Assert.assertTrue(
+            "Should have received at least one process name changed event",
+            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED })
+
+        val event = listener.events.last { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED }
         Assert.assertSame(event.deviceClientManager, deviceClientManager)
         Assert.assertNotNull(event.client)
-        Assert.assertEquals("MyFakeVM", event.client!!.clientData.vmIdentifier)
+        Assert.assertEquals("FakeVM", event.client!!.clientData.vmIdentifier)
     }
 
     private fun assertThrows(block: () -> Unit) {

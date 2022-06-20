@@ -163,7 +163,7 @@ internal fun MutableJdwpPacket.parseHeader(buffer: ByteBuffer) {
     // Byte [10, 10] : cmd     || (if reply) error code low byte
     packetLength = buffer.getInt()
     packetId = buffer.getInt()
-    packetFlags = buffer.get().toInt()
+    packetFlags = buffer.get().toUByte().toInt()
     if (isReply) {
         errorCode = buffer.getShort().toUShort().toInt()
     } else {

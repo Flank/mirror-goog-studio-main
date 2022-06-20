@@ -15,6 +15,7 @@
  */
 package com.android.adblib.tools.debugging
 
+import com.android.adblib.AdbLogger
 import com.android.adblib.DeviceSelector
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
@@ -24,6 +25,8 @@ import com.android.fakeadbserver.DeviceState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -52,7 +55,6 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val hostServices = createHostServices(fakeAdb)
-        //hostServices.session.host.setTestLoggerMinLevel(AdbLogger.Level.VERBOSE)
         val pid10 = 10
         val pid11 = 11
 
@@ -72,7 +74,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
                 fakeDevice.stopClient(pid11)
             }
 
-            val jdwpTracker = JdwpTracker(hostServices.session, deviceSelector)
+            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
             jdwpTracker.createFlow().takeWhile { processList ->
                 listOfProcessList.add(processList)
                 listOfProcessList.size < 2 || processList.isNotEmpty()
@@ -108,6 +110,57 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
     }
 
     @Test
+    fun testJdwpProcessTrackerCollectsProcessProperties() = runBlockingWithTimeout {
+        val deviceID = "1234"
+        val theOneFeatureSupported = "push_sync"
+        val features = setOf(theOneFeatureSupported)
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildWithFeatures(features).start())
+        val fakeDevice =
+            fakeAdb.connectDevice(
+                deviceID,
+                "test1",
+                "test2",
+                "model",
+                "30", // SDK >= 30 is required for abb_exec feature.
+                DeviceState.HostConnectionType.USB
+            )
+        fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+        val hostServices = createHostServices(fakeAdb)
+        val pid10 = 10
+        val pid11 = 11
+        fakeDevice.startClient(pid10, 100, "a.b.c", false)
+        fakeDevice.startClient(pid11, 101, "a.b.c.e", true)
+        val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
+
+        // Act
+        val processListFlow = jdwpTracker.createFlow()
+        val (process10, process11) = processListFlow
+            .mapNotNull { list ->
+                if (list.size == 2) {
+                    val process10 = list.first { it.pid == pid10 }
+                    val process11 = list.first { it.pid == pid11 }
+                    yieldUntil {
+                        (process10.processPropertiesFlow.value.processName != null) &&
+                                (process11.processPropertiesFlow.value.processName != null)
+                    }
+                    Pair(process10, process11)
+                } else {
+                    null
+                }
+            }.first()
+
+        // Assert
+        Assert.assertEquals(pid10, process10.pid)
+        Assert.assertEquals("a.b.c", process10.processPropertiesFlow.value.processName)
+        Assert.assertEquals(100, process10.processPropertiesFlow.value.userId)
+
+        Assert.assertEquals(pid11, process11.pid)
+        Assert.assertEquals("a.b.c.e", process11.processPropertiesFlow.value.processName)
+        Assert.assertEquals(101, process11.processPropertiesFlow.value.userId)
+    }
+
+    @Test
     fun testJdwpProcessTrackerFlowStopsWhenDeviceDisconnects() {
         val deviceID = "1234"
         val theOneFeatureSupported = "push_sync"
@@ -125,14 +178,13 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val hostServices = createHostServices(fakeAdb)
-        //hostServices.session.host.setTestLoggerMinLevel(AdbLogger.Level.VERBOSE)
         val pid10 = 10
         val pid11 = 11
 
         // Act
         runBlocking {
             val listOfProcessList = synchronizedList<List<JdwpProcess>>()
-            val jdwpTracker = JdwpTracker(hostServices.session, deviceSelector)
+            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
             launch {
                 fakeDevice.startClient(pid10, 0, "a.b.c", false)
                 fakeDevice.startClient(pid11, 0, "a.b.c.e", false)
@@ -169,7 +221,6 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val hostServices = createHostServices(fakeAdb)
-        //hostServices.session.host.setTestLoggerMinLevel(AdbLogger.Level.VERBOSE)
         val pid10 = 10
 
         // Act
@@ -178,7 +229,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         runBlocking {
             fakeDevice.startClient(pid10, 0, "a.b.c", false)
 
-            val jdwpTracker = JdwpTracker(hostServices.session, deviceSelector)
+            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
             jdwpTracker.createFlow().collect {
                 throw Exception("My Test Exception")
             }
@@ -215,7 +266,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         runBlocking {
             fakeDevice.startClient(pid10, 0, "a.b.c", false)
 
-            val jdwpTracker = JdwpTracker(hostServices.session, deviceSelector)
+            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
             jdwpTracker.createFlow().collect {
                 cancel("My Test Exception")
             }
