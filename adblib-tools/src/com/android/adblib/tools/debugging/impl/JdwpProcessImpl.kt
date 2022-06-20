@@ -28,8 +28,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -69,8 +72,38 @@ internal class JdwpProcessImpl(
 
     private val collector = JdwpProcessPropertiesCollector(session, device, pid)
 
+    private val jdwpSessionProxy = JdwpSessionProxy(session, device, pid)
+
     fun startMonitoring() {
+        val flowProxyActivity = jdwpSessionProxy.proxyActivityFlow(stateFlow)
+        startCollectProperties(scope, flowProxyActivity)
+    }
+
+    private fun startCollectProperties(
+        scope: CoroutineScope,
+        flowProxyActivity: Flow<ProxyActivity>
+    ) {
         scope.launch {
+            var previousJob: Job? = null
+            flowProxyActivity.collect {
+                previousJob = when (it) {
+                    ProxyActivity.Inactive -> {
+                        logger.debug { "pid=$pid: debugger proxy is inactive, launching properties collector" }
+                        previousJob?.cancelAndJoin()
+                        launchPropertyCollector(scope)
+                    }
+                    ProxyActivity.BeforeActivation -> {
+                        logger.debug { "pid=$pid: debugger proxy is about to activate, stopping properties collector" }
+                        previousJob?.cancelAndJoin()
+                        null
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun launchPropertyCollector(scope: CoroutineScope): Job {
+        return scope.launch {
             while (true) {
                 // Opens a JDWP session to the process, and collect as many properties as we
                 // can for a short period of time, then close the session and try again

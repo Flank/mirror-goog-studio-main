@@ -138,8 +138,8 @@ internal class AdbLibDeviceClientManager(
 
         assert(currentProcessEntryMap.keys.size == newJdwpProcessList.size)
         clientList.set(currentProcessEntryMap.values.toList())
-        invokeListener {
-            listener.processListUpdated(bridge, this@AdbLibDeviceClientManager)
+        invokeListener(deviceScope) {
+            listener.processListUpdated(bridge, this)
         }
     }
 
@@ -171,23 +171,9 @@ internal class AdbLibDeviceClientManager(
         }
 
         // Always update "Client" wrapper data
-        val names =
-            ClientData.Names(
-                newProcessInfo.processName ?: "",
-                newProcessInfo.userId,
-                newProcessInfo.packageName
-            )
-        clientWrapper.clientData.setNames(names)
-        clientWrapper.clientData.vmIdentifier = newProcessInfo.vmIdentifier
-        clientWrapper.clientData.abi = newProcessInfo.abi
-        clientWrapper.clientData.jvmFlags = newProcessInfo.jvmFlags
         val previousDebuggerStatus = clientWrapper.clientData.debuggerConnectionStatus
-        val newDebuggerStatus = when {
-            newProcessInfo.exception != null -> DebuggerStatus.ERROR
-            newProcessInfo.isWaitingForDebugger -> DebuggerStatus.WAITING
-            else -> DebuggerStatus.DEFAULT
-        }
-        clientWrapper.clientData.isNativeDebuggable = newProcessInfo.isNativeDebuggable
+        updateClientWrapper(clientWrapper, newProcessInfo)
+        val newDebuggerStatus = clientWrapper.clientData.debuggerConnectionStatus
 
         // Check if anything related to process info has changed
         with(previousProcessInfo) {
@@ -200,7 +186,7 @@ internal class AdbLibDeviceClientManager(
                 hasChanged(isWaitingForDebugger, newProcessInfo.isWaitingForDebugger) ||
                 hasChanged(isNativeDebuggable, newProcessInfo.isNativeDebuggable)
             ) {
-                invokeListener {
+                invokeListener(clientWrapper.jdwpProcess.scope) {
                     // Note that "name" is really "any property"
                     listener.processNameUpdated(
                         bridge,
@@ -214,7 +200,7 @@ internal class AdbLibDeviceClientManager(
         // Debugger status change is handled through its own callback
         if (hasChanged(previousDebuggerStatus, newDebuggerStatus)) {
             clientWrapper.clientData.debuggerConnectionStatus = newDebuggerStatus
-            invokeListener {
+            invokeListener(clientWrapper.jdwpProcess.scope) {
                 listener.processDebuggerStatusUpdated(
                     bridge,
                     this@AdbLibDeviceClientManager,
@@ -224,8 +210,40 @@ internal class AdbLibDeviceClientManager(
         }
     }
 
-    private fun invokeListener(block: () -> Unit) {
-        deviceScope.launch(session.host.ioDispatcher) {
+    private fun updateClientWrapper(
+        clientWrapper: AdblibClientWrapper,
+        newProperties: JdwpProcessProperties
+    ) {
+        val names = ClientData.Names(
+            newProperties.processName ?: "",
+            newProperties.userId,
+            newProperties.packageName
+        )
+        clientWrapper.clientData.setNames(names)
+        clientWrapper.clientData.vmIdentifier = newProperties.vmIdentifier
+        clientWrapper.clientData.abi = newProperties.abi
+        clientWrapper.clientData.jvmFlags = newProperties.jvmFlags
+        clientWrapper.clientData.isNativeDebuggable = newProperties.isNativeDebuggable
+
+        // "DebuggerStatus" is trickier: order is important
+        clientWrapper.clientData.debuggerConnectionStatus = when {
+            // This comes from the JDWP connection proxy, when a JDWP connection is started
+            newProperties.jdwpSessionProxyStatus.isExternalDebuggerAttached -> DebuggerStatus.ATTACHED
+
+            // This comes from seeing a DDMS_WAIT packet on the JDWP connection
+            newProperties.isWaitingForDebugger -> DebuggerStatus.WAITING
+
+            // This comes from any error during process properties polling
+            newProperties.exception != null -> DebuggerStatus.ERROR
+
+            // This happens when process properties have been collected and also
+            // when there is no active jdwp debugger connection
+            else -> DebuggerStatus.DEFAULT
+        }
+    }
+
+    private fun invokeListener(scope: CoroutineScope, block: () -> Unit) {
+        scope.launch(session.host.ioDispatcher) {
             kotlin.runCatching {
                 block()
             }.onFailure { throwable ->

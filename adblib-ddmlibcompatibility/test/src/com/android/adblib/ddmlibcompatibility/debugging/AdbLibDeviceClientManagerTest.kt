@@ -111,8 +111,8 @@ class AdbLibDeviceClientManagerTest {
         assertThrows { client.isDdmAware }
         assertThrows { client.kill() }
         Assert.assertTrue(client.isValid)
-        assertThrows { client.debuggerListenPort }
-        assertThrows { client.isDebuggerAttached }
+        Assert.assertTrue(client.debuggerListenPort > 0)
+        Assert.assertFalse(client.isDebuggerAttached)
         assertThrows { client.executeGarbageCollector() }
         assertThrows { client.startMethodTracer() }
         assertThrows { client.stopMethodTracer() }

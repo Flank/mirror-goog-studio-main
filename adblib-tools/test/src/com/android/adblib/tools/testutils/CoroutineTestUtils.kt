@@ -59,4 +59,30 @@ object CoroutineTestUtils {
             )
         }
     }
+
+    suspend fun <T> waitNonNull(
+        timeout: Duration = Duration.ofSeconds(5),
+        provider: suspend () -> T?
+    ): T {
+        suspend fun <T> loop(provider: suspend () -> T?): T {
+            while (true) {
+                val value = provider()
+                if (value != null) {
+                    return value
+                }
+                yield()
+            }
+        }
+
+        return try {
+            withTimeout(timeout.toMillis()) {
+                loop(provider)
+            }
+        } catch (e: TimeoutCancellationException) {
+            throw AssertionError(
+                "A yieldUntil condition was not satisfied within " +
+                        "5 seconds, there is a bug somewhere (in the test or in the tested code)", e
+            )
+        }
+    }
 }
