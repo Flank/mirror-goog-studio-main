@@ -22,9 +22,28 @@
 
 namespace layout_inspector {
 
-bool ForegroundProcessTracker::IsTrackingForegroundProcessSupported() {
-  ProcessInfo processInfo = runDumpsysCommand();
-  return !processInfo.isEmpty;
+TrackingForegroundProcessSupported::SupportType
+ForegroundProcessTracker::IsTrackingForegroundProcessSupported() {
+  ProcessInfo processInfo = runDumpsysTopActivityCommand();
+
+  if (!processInfo.isEmpty) {
+    // a top-activity was found
+    return TrackingForegroundProcessSupported::SUPPORTED;
+  }
+
+  // If there are sleeping activities and no awake activity,
+  // the reason why top-activity is absent might be because the device is
+  // locked. Therefore we don't know if the device supports foreground
+  // process detection or not.
+  if (hasSleepingActivities() && !hasAwakeActivities()) {
+    return TrackingForegroundProcessSupported::UNKNOWN;
+  }
+
+  // We can infer dumpsys is not working as expected if any of these situations
+  // happen:
+  // 1. there is no top-activity and no sleeping activities
+  // 2. there is no top-activity, but there are awake activities.
+  return TrackingForegroundProcessSupported::NOT_SUPPORTED;
 }
 
 void ForegroundProcessTracker::StartTracking() {
@@ -65,7 +84,7 @@ void ForegroundProcessTracker::sendForegroundProcessEvent(
 }
 
 void ForegroundProcessTracker::doPolling() {
-  ProcessInfo processInfo = runDumpsysCommand();
+  ProcessInfo processInfo = runDumpsysTopActivityCommand();
 
   if (!processInfo.isEmpty &&
       latestForegroundProcess_.pid.compare(processInfo.pid) != 0) {

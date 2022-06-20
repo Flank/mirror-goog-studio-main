@@ -87,9 +87,16 @@ class ForegroundProcessTracker {
 
   // Main constructor takes BashCommandRunner to facilitate mocking it in unit
   // tests
-  ForegroundProcessTracker(profiler::EventBuffer* buffer,
-                           profiler::BashCommandRunner* commandRunner)
-      : dumpsysCommandRunner_(commandRunner),
+  ForegroundProcessTracker(
+      profiler::EventBuffer* buffer,
+      profiler::BashCommandRunner* dumpsysTopActivityCommandRunner,
+      profiler::BashCommandRunner* dumpsysSleepingActivitiesCommandRunner,
+      profiler::BashCommandRunner* dumpsysAwakeActivitiesCommandRunner)
+      : dumpsysTopActivityCommandRunner_(dumpsysTopActivityCommandRunner),
+        dumpsysSleepingActivitiesCommandRunner_(
+            dumpsysSleepingActivitiesCommandRunner),
+        dumpsysAwakeActivitiesCommandRunner_(
+            dumpsysAwakeActivitiesCommandRunner),
         shouldDoPolling_(false),
         isThreadRunning_(false) {
     eventBuffer_ = buffer;
@@ -103,12 +110,15 @@ class ForegroundProcessTracker {
         isThreadRunning_.store(false);
       }
     }
-    delete dumpsysCommandRunner_;
+    delete dumpsysTopActivityCommandRunner_;
+    delete dumpsysSleepingActivitiesCommandRunner_;
+    delete dumpsysAwakeActivitiesCommandRunner_;
   }
 
   // Runs dumpsys and tries to extract the foreground process for its output.
   // Returns false if foreground process info can't be extracted.
-  bool IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported::SupportType
+  IsTrackingForegroundProcessSupported();
   void StartTracking();
   void StopTracking();
 
@@ -119,9 +129,16 @@ class ForegroundProcessTracker {
       : ForegroundProcessTracker(
             buffer,
             new profiler::BashCommandRunner{
-                "dumpsys activity processes | grep top-activity", false}) {}
+                "dumpsys activity processes | grep top-activity", false},
+            new profiler::BashCommandRunner{
+                "dumpsys activity activities | grep isSleeping=true", false},
+            new profiler::BashCommandRunner{
+                "dumpsys activity activities | grep isSleeping=false", false}) {
+  }
 
-  ProcessInfo runDumpsysCommand();
+  ProcessInfo runDumpsysTopActivityCommand();
+  bool hasSleepingActivities();
+  bool hasAwakeActivities();
 
   // Sends foregrond process data to Studio
   void sendForegroundProcessEvent(const ProcessInfo& processInfo);
@@ -134,7 +151,9 @@ class ForegroundProcessTracker {
   // EventBuffer from transport
   profiler::EventBuffer* eventBuffer_;
 
-  profiler::BashCommandRunner* dumpsysCommandRunner_;
+  profiler::BashCommandRunner* dumpsysTopActivityCommandRunner_;
+  profiler::BashCommandRunner* dumpsysSleepingActivitiesCommandRunner_;
+  profiler::BashCommandRunner* dumpsysAwakeActivitiesCommandRunner_;
 
   // Used to keep track of the last seen foreground process
   ProcessInfo latestForegroundProcess_;

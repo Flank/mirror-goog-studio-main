@@ -23,10 +23,24 @@ namespace layout_inspector {
 // Real implementation of |runDumpsysCommand|, as oppsed to
 // |mock_run_dumpsys.cc|. The separation is needed to be able to mock the method
 // when running on fakeandroid, which doesn't have dumpsys.
-ProcessInfo ForegroundProcessTracker::runDumpsysCommand() {
-  std::string dumpsysOutput;
-  dumpsysCommandRunner_->Run("", &dumpsysOutput);
-  return parseProcessInfo(dumpsysOutput);
+ProcessInfo ForegroundProcessTracker::runDumpsysTopActivityCommand() {
+  std::string dumpsysTopActivityOutput;
+  dumpsysTopActivityCommandRunner_->Run("", &dumpsysTopActivityOutput);
+  return parseProcessInfo(dumpsysTopActivityOutput);
+}
+
+// Runs dumpsys to check if we can detect sleeping Activities
+bool ForegroundProcessTracker::hasSleepingActivities() {
+  std::string sleepingActivitiesOutput;
+  dumpsysSleepingActivitiesCommandRunner_->Run("", &sleepingActivitiesOutput);
+  return !sleepingActivitiesOutput.empty();
+}
+
+// Runs dumpsys to check if we can detect awake Activities
+bool ForegroundProcessTracker::hasAwakeActivities() {
+  std::string awakeActivitiesOutput;
+  dumpsysAwakeActivitiesCommandRunner_->Run("", &awakeActivitiesOutput);
+  return !awakeActivitiesOutput.empty();
 }
 
 }  // namespace layout_inspector

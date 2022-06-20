@@ -23,5 +23,11 @@ message ForegroundProcess {
 }
 
 message TrackingForegroundProcessSupported {
-  bool supported = 1;
+  enum SupportType {
+    UNKNOWN = 0;
+    SUPPORTED = 1;
+    NOT_SUPPORTED = 2;
+  }
+
+  SupportType support_type = 1;
 }

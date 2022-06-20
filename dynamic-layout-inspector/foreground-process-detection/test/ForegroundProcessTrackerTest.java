@@ -30,6 +30,7 @@ import com.android.tools.transport.device.SdkLevel;
 import com.android.tools.transport.grpc.TransportAsyncStubWrapper;
 import com.google.common.collect.Lists;
 import java.util.Collection;
+import layout_inspector.LayoutInspector;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -150,15 +151,33 @@ public class ForegroundProcessTrackerTest {
                     if (event.getKind()
                             == Common.Event.Kind
                                     .LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED) {
-                        Boolean supported =
+                        LayoutInspector.TrackingForegroundProcessSupported.SupportType supportType =
                                 event.getLayoutInspectorTrackingForegroundProcessSupported()
-                                        .getSupported();
-                        assertThat(supported).isTrue();
+                                        .getSupportType();
+
+                        if (count[0] == 0 || count[0] == 1) {
+                            assertThat(supportType)
+                                    .isEqualTo(
+                                            LayoutInspector.TrackingForegroundProcessSupported
+                                                    .SupportType.SUPPORTED);
+                            sendStartHandShakeCommand(transportStub);
+                        } else if (count[0] == 2) {
+                            assertThat(supportType)
+                                    .isEqualTo(
+                                            LayoutInspector.TrackingForegroundProcessSupported
+                                                    .SupportType.NOT_SUPPORTED);
+                            sendStartHandShakeCommand(transportStub);
+                        } else if (count[0] == 3) {
+                            assertThat(supportType)
+                                    .isEqualTo(
+                                            LayoutInspector.TrackingForegroundProcessSupported
+                                                    .SupportType.UNKNOWN);
+                        }
 
                         count[0] += 1;
                     }
 
-                    return count[0] == 1;
+                    return count[0] == 3;
                 },
                 event ->
                         (event.getKind()
@@ -166,7 +185,7 @@ public class ForegroundProcessTrackerTest {
                                         .LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED),
                 () -> {});
 
-        assertThat(count[0]).isEqualTo(1);
+        assertThat(count[0]).isEqualTo(3);
     }
 
     private void sendStartHandShakeCommand(

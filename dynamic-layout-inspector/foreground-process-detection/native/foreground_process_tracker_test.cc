@@ -82,9 +82,11 @@ int mock_bash_command_runner_invocation_counter = 0;
 std::atomic_bool waiting = false;
 std::atomic_bool released = false;
 
-class MockBashCommandRunner final : public profiler::BashCommandRunner {
+class TopActivityMockBashCommandRunner final
+    : public profiler::BashCommandRunner {
  public:
-  explicit MockBashCommandRunner() : profiler::BashCommandRunner("") {}
+  explicit TopActivityMockBashCommandRunner()
+      : profiler::BashCommandRunner("") {}
 
   bool Run(const std::string& parameters, std::string* output) const override {
     bool withinBounds =
@@ -115,6 +117,26 @@ class MockBashCommandRunner final : public profiler::BashCommandRunner {
       "6:dup.process6/u0a152 (top-activity)",
       "6:dup.process6/u0a152 (top-activity)",
   };
+};
+
+class EmptyMockBashCommandRunner final : public profiler::BashCommandRunner {
+ public:
+  explicit EmptyMockBashCommandRunner() : profiler::BashCommandRunner("") {}
+
+  bool Run(const std::string& parameters, std::string* output) const override {
+    output->append("");
+    return true;
+  }
+};
+
+class NotEmptyMockBashCommandRunner final : public profiler::BashCommandRunner {
+ public:
+  explicit NotEmptyMockBashCommandRunner() : profiler::BashCommandRunner("") {}
+
+  bool Run(const std::string& parameters, std::string* output) const override {
+    output->append("foo");
+    return true;
+  }
 };
 
 }  // anonymous namespace
@@ -202,11 +224,17 @@ class ForegroundProcessTrackerTest : public ::testing::Test {
   std::unique_ptr<std::thread> read_thread_;
 };
 
-TEST_F(ForegroundProcessTrackerTest, BaseTest) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+std::unique_ptr<ForegroundProcessTracker> createDefaultForegroundProcessTracker(
+    profiler::EventBuffer* event_buffer) {
+  return std::unique_ptr<ForegroundProcessTracker>(new ForegroundProcessTracker(
+      event_buffer, new TopActivityMockBashCommandRunner(),
+      new EmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner()));
+}
 
-  WaitForEvents(process_tracker, 2);
+TEST_F(ForegroundProcessTrackerTest, BaseTest) {
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
+
+  WaitForEvents(process_tracker.get(), 2);
 
   EXPECT_THAT(events_.size(), 2);
 
@@ -226,10 +254,9 @@ TEST_F(ForegroundProcessTrackerTest, BaseTest) {
 }
 
 TEST_F(ForegroundProcessTrackerTest, StartAndStop) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
-  WaitForEvents(process_tracker, 1);
+  WaitForEvents(process_tracker.get(), 1);
 
   EXPECT_THAT(events_.size(), 1);
   EXPECT_THAT(events_.get(0).kind(),
@@ -240,7 +267,7 @@ TEST_F(ForegroundProcessTrackerTest, StartAndStop) {
       "fake.process1");
   events_.clear();
 
-  WaitForEvents(process_tracker, 1);
+  WaitForEvents(process_tracker.get(), 1);
 
   EXPECT_THAT(events_.size(), 1);
   EXPECT_THAT(events_.get(0).kind(),
@@ -251,7 +278,7 @@ TEST_F(ForegroundProcessTrackerTest, StartAndStop) {
       "fake.process2");
   events_.clear();
 
-  WaitForEvents(process_tracker, 1);
+  WaitForEvents(process_tracker.get(), 1);
 
   EXPECT_THAT(events_.size(), 1);
   EXPECT_THAT(events_.get(0).kind(),
@@ -264,12 +291,11 @@ TEST_F(ForegroundProcessTrackerTest, StartAndStop) {
 }
 
 TEST_F(ForegroundProcessTrackerTest, ProcessesWithWrongFormatAreNotSent) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
   // get first 3 well formed processes and try to get last 2 not well formed
   // processes
-  WaitForEvents(process_tracker, 5);
+  WaitForEvents(process_tracker.get(), 5);
 
   EXPECT_THAT(events_.size(), 3);
 
@@ -296,13 +322,12 @@ TEST_F(ForegroundProcessTrackerTest, ProcessesWithWrongFormatAreNotSent) {
 }
 
 TEST_F(ForegroundProcessTrackerTest, EventIsSentOnlyOnProcessChange) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
   // get first 3 well formed processes, try to get next 2 not well formed
   // processes and try to get last two processes. There should be only one
   // because they are the same
-  WaitForEvents(process_tracker, 7);
+  WaitForEvents(process_tracker.get(), 7);
 
   EXPECT_THAT(events_.size(), 4);
 
@@ -336,10 +361,9 @@ TEST_F(ForegroundProcessTrackerTest, EventIsSentOnlyOnProcessChange) {
 }
 
 TEST_F(ForegroundProcessTrackerTest, StartStopForegroundProcessNotChanged) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
-  WaitForEvents(process_tracker, 6);
+  WaitForEvents(process_tracker.get(), 6);
 
   EXPECT_THAT(events_.size(), 4);
 
@@ -350,7 +374,7 @@ TEST_F(ForegroundProcessTrackerTest, StartStopForegroundProcessNotChanged) {
       events_.get(3).layout_inspector_foreground_process().process_name(),
       "dup.process6");
 
-  WaitForEvents(process_tracker, 1);
+  WaitForEvents(process_tracker.get(), 1);
 
   EXPECT_THAT(events_.size(), 5);
 
@@ -363,19 +387,46 @@ TEST_F(ForegroundProcessTrackerTest, StartStopForegroundProcessNotChanged) {
 }
 
 TEST_F(ForegroundProcessTrackerTest, Handshake) {
-  ForegroundProcessTracker* process_tracker =
-      new ForegroundProcessTracker(&event_buffer_, new MockBashCommandRunner());
+  auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
   released.store(true);
-  bool is_supported1 = process_tracker->IsTrackingForegroundProcessSupported();
-  bool is_supported2 = process_tracker->IsTrackingForegroundProcessSupported();
-  bool is_supported3 = process_tracker->IsTrackingForegroundProcessSupported();
-  bool is_supported4 = process_tracker->IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported::SupportType support_type1 =
+      process_tracker.get()->IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported::SupportType support_type2 =
+      process_tracker.get()->IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported::SupportType support_type3 =
+      process_tracker.get()->IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported::SupportType support_type4 =
+      process_tracker.get()->IsTrackingForegroundProcessSupported();
 
-  EXPECT_THAT(is_supported1, true);
-  EXPECT_THAT(is_supported2, true);
-  EXPECT_THAT(is_supported3, true);
-  EXPECT_THAT(is_supported4, false);
+  EXPECT_THAT(support_type1, TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_type2, TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_type3, TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_type4, TrackingForegroundProcessSupported::NOT_SUPPORTED);
+}
+
+TEST_F(ForegroundProcessTrackerTest,
+       Handshake_no_top_activity_no_awake_activities) {
+  ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
+      &event_buffer_, new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner());
+
+  TrackingForegroundProcessSupported::SupportType support_type =
+      process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(support_type, TrackingForegroundProcessSupported::UNKNOWN);
+}
+
+TEST_F(ForegroundProcessTrackerTest,
+       Handshake_no_top_activity_no_sleeping_activities) {
+  ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
+      &event_buffer_, new EmptyMockBashCommandRunner(),
+      new EmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner());
+
+  TrackingForegroundProcessSupported::SupportType support_type =
+      process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(support_type, TrackingForegroundProcessSupported::NOT_SUPPORTED);
 }
 
 }  // namespace layout_inspector
