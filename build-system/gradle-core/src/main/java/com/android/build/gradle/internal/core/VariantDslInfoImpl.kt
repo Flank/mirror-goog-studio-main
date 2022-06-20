@@ -56,6 +56,7 @@ import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.testFixtures.testFixturesFeatureName
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.Version
@@ -713,7 +714,8 @@ open class VariantDslInfoImpl internal constructor(
                 it.enableV4Signing = dslSigningConfig?.enableV4Signing
                 return it
             }
-            if (dslSigningConfig == null && (isProfileable || isDebuggable)) {
+            if (services.projectOptions[BooleanOption.ENABLE_DEFAULT_DEBUG_SIGNING_CONFIG] &&
+                    dslSigningConfig == null && (isProfileable || isDebuggable)) {
                 return extension.signingConfigs.findByName(BuilderConstants.DEBUG) as SigningConfig?
             }
             return dslSigningConfig as SigningConfig?

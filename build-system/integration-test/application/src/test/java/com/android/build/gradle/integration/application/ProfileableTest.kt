@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.apksig.ApkVerifier
 import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
@@ -25,6 +26,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.SigningHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import org.junit.Rule
 import org.junit.Test
@@ -50,14 +52,16 @@ class ProfileableTest {
     fun `test dsl setting the release build type to be profileable`() {
         val app = project.getSubproject(":app")
         app.buildFile.appendText("android.buildTypes.release.profileable true")
-        project.executor().run("assembleRelease")
-        val apkType = GradleTestProject.ApkType.RELEASE_SIGNED
-        val apk = project.getSubproject("app").getApk(apkType)
-        val verificationResult = SigningHelper.assertApkSignaturesVerify(apk, 30)
+        project.executor()
+                .with(BooleanOption.ENABLE_DEFAULT_DEBUG_SIGNING_CONFIG, true)
+                .run("assembleRelease")
+        val apkSigned =
+                project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED)
+        val verificationResult = SigningHelper.assertApkSignaturesVerify(apkSigned, 30)
         assertThat(
             verificationResult.signerCertificates.first().subjectX500Principal.name
         ).isEqualTo("C=US,O=Android,CN=Android Debug")
-        val manifest = ApkSubject.getManifestContent(apk.file.toAbsolutePath())
+        val manifest = ApkSubject.getManifestContent(apkSigned.file.toAbsolutePath())
         assertThat(manifest).containsAtLeastElementsIn(
             arrayListOf(
                 "        E: application (line=11)",
@@ -66,6 +70,13 @@ class ProfileableTest {
                 "              A: http://schemas.android.com/apk/res/android:shell(0x01010594)=true"
             )
         )
+
+        // Test no signing config configured, if the automatic signing config assignment is disabled.
+        project.executor().with(BooleanOption.ENABLE_DEFAULT_DEBUG_SIGNING_CONFIG, false)
+                .run("clean", "assembleRelease")
+        val apkUnsigned =
+                project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE)
+        ApkSubject.assertThat(apkUnsigned).doesNotContainApkSigningBlock()
     }
 
     @Test
@@ -108,6 +119,7 @@ class ProfileableTest {
         val app = project.getSubproject(":app")
         project.executor()
             .with(StringOption.PROFILING_MODE, "profileable")
+            .with(BooleanOption.ENABLE_DEFAULT_DEBUG_SIGNING_CONFIG, true)
             .run("assembleRelease")
         checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.RELEASE_SIGNED)
     }
