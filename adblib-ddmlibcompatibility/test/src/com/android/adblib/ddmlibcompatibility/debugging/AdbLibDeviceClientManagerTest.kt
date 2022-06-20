@@ -16,6 +16,8 @@
 package com.android.adblib.ddmlibcompatibility.debugging
 
 import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener
+import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED
+import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED
 import com.android.adblib.ddmlibcompatibility.testutils.connectTestDevice
 import com.android.adblib.ddmlibcompatibility.testutils.createAdbLibSession
 import com.android.adblib.ddmlibcompatibility.testutils.disconnectTestDevice
@@ -25,7 +27,6 @@ import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.testing.FakeAdbRule
 import junit.framework.Assert
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.job
 import org.junit.Rule
@@ -191,7 +192,7 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertTrue(listener.events.size >= 1)
         Assert.assertSame(deviceClientManager, listener.events[0].deviceClientManager)
         Assert.assertSame(fakeAdb.bridge, listener.events[0].bridge)
-        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED, listener.events[0].kind)
+        Assert.assertEquals(PROCESS_LIST_UPDATED, listener.events[0].kind)
         Assert.assertNull(listener.events[0].client)
     }
 
@@ -215,19 +216,20 @@ class AdbLibDeviceClientManagerTest {
         yieldUntil {
             listener.events.isNotEmpty()
         }
-        val eventCount = listener.events.size
+        listener.events.clear()
 
         deviceState.stopClient(10)
         deviceState.stopClient(12)
         yieldUntil {
-            listener.events.size > eventCount
+            listener.events.any { it.kind == PROCESS_LIST_UPDATED } &&
+                deviceClientManager.clients.isEmpty()
         }
 
         // Assert
-        Assert.assertSame(deviceClientManager, listener.events.last().deviceClientManager)
-        Assert.assertSame(fakeAdb.bridge, listener.events.last().bridge)
-        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED, listener.events.last().kind)
-        Assert.assertNull(listener.events.last().client)
+        val processListUpdatedEvent = listener.events.last { it.kind == PROCESS_LIST_UPDATED }
+        Assert.assertSame(deviceClientManager, processListUpdatedEvent.deviceClientManager)
+        Assert.assertSame(fakeAdb.bridge, processListUpdatedEvent.bridge)
+        Assert.assertNull(processListUpdatedEvent.client)
     }
 
     @Test
@@ -247,8 +249,7 @@ class AdbLibDeviceClientManagerTest {
         // Act
         deviceState.startClient(10, 0, "foo.bar", false)
         yieldUntil {
-            // Temporary implementation updates process properties every 100 millis
-            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED }
+            listener.events.any { it.kind == PROCESS_NAME_UPDATED }
                     && deviceClientManager.clients.any { it.clientData.clientDescription == "foo.bar" }
         }
 

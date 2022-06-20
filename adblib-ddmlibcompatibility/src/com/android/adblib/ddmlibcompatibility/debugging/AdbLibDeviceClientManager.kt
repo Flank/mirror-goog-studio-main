@@ -27,6 +27,7 @@ import com.android.adblib.trackDeviceInfo
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
+import com.android.ddmlib.ClientData.DebuggerStatus
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.DeviceClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
@@ -180,35 +181,47 @@ internal class AdbLibDeviceClientManager(
         clientWrapper.clientData.vmIdentifier = newProcessInfo.vmIdentifier
         clientWrapper.clientData.abi = newProcessInfo.abi
         clientWrapper.clientData.jvmFlags = newProcessInfo.jvmFlags
+        val previousDebuggerStatus = clientWrapper.clientData.debuggerConnectionStatus
+        val newDebuggerStatus = when {
+            newProcessInfo.exception != null -> DebuggerStatus.ERROR
+            newProcessInfo.isWaitingForDebugger -> DebuggerStatus.WAITING
+            else -> DebuggerStatus.DEFAULT
+        }
         clientWrapper.clientData.isNativeDebuggable = newProcessInfo.isNativeDebuggable
 
         // Check if anything related to process info has changed
-        if (hasChanged(previousProcessInfo.processName, newProcessInfo.processName) ||
-            hasChanged(previousProcessInfo.userId, newProcessInfo.userId) ||
-            hasChanged(previousProcessInfo.packageName, newProcessInfo.packageName) ||
-            hasChanged(previousProcessInfo.vmIdentifier, newProcessInfo.vmIdentifier) ||
-            hasChanged(previousProcessInfo.abi, newProcessInfo.abi) ||
-            hasChanged(previousProcessInfo.jvmFlags, newProcessInfo.jvmFlags) ||
-            hasChanged(previousProcessInfo.isNativeDebuggable, newProcessInfo.isNativeDebuggable)
-        ) {
+        with(previousProcessInfo) {
+            if (hasChanged(processName, newProcessInfo.processName) ||
+                hasChanged(userId, newProcessInfo.userId) ||
+                hasChanged(packageName, newProcessInfo.packageName) ||
+                hasChanged(vmIdentifier, newProcessInfo.vmIdentifier) ||
+                hasChanged(abi, newProcessInfo.abi) ||
+                hasChanged(jvmFlags, newProcessInfo.jvmFlags) ||
+                hasChanged(isWaitingForDebugger, newProcessInfo.isWaitingForDebugger) ||
+                hasChanged(isNativeDebuggable, newProcessInfo.isNativeDebuggable)
+            ) {
+                invokeListener {
+                    // Note that "name" is really "any property"
+                    listener.processNameUpdated(
+                        bridge,
+                        this@AdbLibDeviceClientManager,
+                        clientWrapper
+                    )
+                }
+            }
+        }
+
+        // Debugger status change is handled through its own callback
+        if (hasChanged(previousDebuggerStatus, newDebuggerStatus)) {
+            clientWrapper.clientData.debuggerConnectionStatus = newDebuggerStatus
             invokeListener {
-                // Note that "name" is really "any property"
-                listener.processNameUpdated(
+                listener.processDebuggerStatusUpdated(
                     bridge,
                     this@AdbLibDeviceClientManager,
                     clientWrapper
                 )
             }
         }
-
-        // TODO: Invoke debugger status updated once implemented
-        //invokeListener {
-        //    listener.processDebuggerStatusUpdated(
-        //        bridge,
-        //        this@AdbLibDeviceClientManager,
-        //        clientWrapper
-        //    )
-        //}
     }
 
     private fun invokeListener(block: () -> Unit) {
