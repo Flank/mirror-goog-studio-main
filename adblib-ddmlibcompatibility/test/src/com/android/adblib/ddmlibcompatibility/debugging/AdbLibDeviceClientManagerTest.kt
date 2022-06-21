@@ -15,6 +15,7 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
+import com.android.adblib.ddmlibcompatibility.testutils.FakeIDevice
 import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener
 import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED
 import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED
@@ -27,8 +28,7 @@ import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.testing.FakeAdbRule
 import junit.framework.Assert
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.job
+import kotlinx.coroutines.delay
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -54,26 +54,65 @@ class AdbLibDeviceClientManagerTest {
     }
 
     @Test
+    fun testTrackingWaitsUntilDeviceIsTracked() = runBlockingWithTimeout {
+        // Prepare
+        val session = registerCloseable(fakeAdb.createAdbSession())
+        val clientManager = AdbLibClientManager(session)
+        val listener = TestDeviceClientManagerListener()
+
+        // Act
+        val fakeIDevice = FakeIDevice("1234")
+        val deviceClientManager =
+            clientManager.createDeviceClientManager(
+                fakeAdb.bridge,
+                fakeIDevice,
+                listener
+            )
+
+        // Delay a little, to make sure deviceClientManager has to wait a little
+        // before it starts tracking the device. Note the delay here should be less than
+        // the DEVICE_TRACKER_WAIT_TIMEOUT timeout used by AdbLibDeviceClientManager.
+        delay(500)
+        val clientSizeBeforeTracking = deviceClientManager.clients.size
+        val (_, deviceState) = fakeAdb.connectTestDevice()
+        deviceState.startClient(10, 0, "foo.bar", false)
+
+        // If things work as expected, the client list should be updated
+        yieldUntil {
+            deviceClientManager.clients.size == 1
+        }
+
+        // Assert
+        Assert.assertEquals(0, clientSizeBeforeTracking)
+    }
+
+    @Test
     fun testScopeIsCancelledWhenDeviceDisconnects() = runBlockingWithTimeout {
         // Prepare
         val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
-        val (device, _) = fakeAdb.connectTestDevice()
+        val (device, deviceState) = fakeAdb.connectTestDevice()
         val deviceClientManager =
             clientManager.createDeviceClientManager(
                 fakeAdb.bridge,
                 device,
                 listener
             )
+        deviceState.startClient(10, 0, "foo.bar", false)
+        deviceState.startClient(12, 0, "foo.bar.baz", false)
+        yieldUntil {
+            deviceClientManager.clients.size == 2
+        }
 
         // Act
         fakeAdb.disconnectTestDevice(device.serialNumber)
-        deviceClientManager.deviceScope.coroutineContext.job.join()
+        yieldUntil {
+            deviceClientManager.clients.size == 0
+        }
 
         // Assert
-        Assert.assertFalse(deviceClientManager.deviceScope.isActive)
-        Assert.assertEquals(0, listener.events().size)
+        Assert.assertEquals(1, listener.events().size)
     }
 
     @Test
