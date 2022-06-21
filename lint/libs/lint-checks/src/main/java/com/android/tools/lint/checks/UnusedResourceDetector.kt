@@ -68,8 +68,6 @@ import com.google.common.io.Files
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMember
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UElement
@@ -419,26 +417,23 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
         when (val bindingClasses = bindingClasses) {
             null -> null
             else -> object : UElementHandler() {
-                private fun markReachableLayout(resourceName: String?) {
-                    if (resourceName != null) {
-                        ResourceUsageModel.markReachable(model.getResource(ResourceType.LAYOUT, resourceName))
-                    }
-                }
 
-                private fun <C : PsiClass> visitClass(psiClass: C?, getResourceName: (C) -> String?) {
+                private fun <C : PsiClass> visitClass(psiClass: C?, getBindingClassName: (C) -> String? = PsiClass::getName) {
                     if (psiClass != null && isBindingClass(context.evaluator, psiClass)) {
-                        markReachableLayout(getResourceName(psiClass))
+                        bindingClasses[getBindingClassName(psiClass)]?.let { resourceName ->
+                            ResourceUsageModel.markReachable(model.getResource(ResourceType.LAYOUT, resourceName))
+                        }
                     }
                 }
 
                 override fun visitCallExpression(node: UCallExpression) =
-                    visitClass(node.resolve()?.containingClass) { bindingClasses[it.name] }
+                    visitClass(node.resolve()?.containingClass)
 
                 override fun visitSimpleNameReferenceExpression(node : USimpleNameReferenceExpression) =
-                    visitClass(node.resolve() as? PsiClass) { bindingClasses[node.identifier] }
+                    visitClass(node.resolve() as? PsiClass) { node.identifier }
 
                 override fun visitCallableReferenceExpression(node: UCallableReferenceExpression) =
-                    visitClass((node.resolve() as? PsiMember)?.containingClass) { bindingClasses[it.name] }
+                    visitClass((node.resolve() as? PsiMember)?.containingClass)
 
                 override fun visitQualifiedReferenceExpression(node: UQualifiedReferenceExpression) {
                     // referencing a binding class's field marks the corresponding id as reachable
@@ -452,12 +447,12 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
                 }
 
                 override fun visitField(node: UField) {
-                    val classType = (node.type as? PsiClassType)
-                    visitClass(classType?.resolve()) { bindingClasses[it.name] }
+                    val classType = node.type as? PsiClassType
+                    visitClass(classType?.resolve())
                     // When using property delegation, the field type will not be the binding class.
                     // It will be a delegate type with a type argument, so check that type argument too.
                     classType?.parameters?.forEach { typeArgument ->
-                        visitClass((typeArgument as? PsiClassType)?.resolve()) { bindingClasses[it.name] }
+                        visitClass((typeArgument as? PsiClassType)?.resolve())
                     }
                 }
 
