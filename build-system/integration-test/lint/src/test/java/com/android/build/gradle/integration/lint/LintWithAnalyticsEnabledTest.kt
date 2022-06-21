@@ -36,6 +36,8 @@ class LintWithAnalyticsEnabledTest {
     fun disableAbortOnError() {
         project.getSubproject(":app").buildFile
             .appendText("\nandroid.lintOptions.abortOnError=false\n")
+        project.getSubproject(":library").buildFile
+            .appendText("\nandroid.lintOptions.abortOnError=false\n")
     }
 
     @Test
