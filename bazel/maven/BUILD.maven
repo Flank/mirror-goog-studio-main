@@ -29544,10 +29544,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.jetbrains.kotlin.jvm-abi-gen_1.6.10",
-    pom = "repository/org/jetbrains/kotlin/jvm-abi-gen/1.6.10/jvm-abi-gen-1.6.10.pom",
+    name = "org.jetbrains.kotlin.jvm-abi-gen_1.7.0",
+    pom = "repository/org/jetbrains/kotlin/jvm-abi-gen/1.7.0/jvm-abi-gen-1.7.0.pom",
     repo_root_path = "repository",
-    repo_path = "org/jetbrains/kotlin/jvm-abi-gen/1.6.10",
+    repo_path = "org/jetbrains/kotlin/jvm-abi-gen/1.7.0",
     visibility = ["//visibility:public"],
 )
 
@@ -30160,15 +30160,15 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.jetbrains.kotlin.kotlin-compiler_1.6.10",
-    pom = "repository/org/jetbrains/kotlin/kotlin-compiler/1.6.10/kotlin-compiler-1.6.10.pom",
+    name = "org.jetbrains.kotlin.kotlin-compiler_1.7.0",
+    pom = "repository/org/jetbrains/kotlin/kotlin-compiler/1.7.0/kotlin-compiler-1.7.0.pom",
     repo_root_path = "repository",
-    repo_path = "org/jetbrains/kotlin/kotlin-compiler/1.6.10",
+    repo_path = "org/jetbrains/kotlin/kotlin-compiler/1.7.0",
     deps = [
-        "org.jetbrains.kotlin.kotlin-stdlib_1.6.10",
-        "org.jetbrains.kotlin.kotlin-script-runtime_1.6.10",
-        "org.jetbrains.kotlin.kotlin-reflect_1.6.10",
-        "org.jetbrains.intellij.deps.trove4j_1.0.20181211",
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.0",
+        "org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
+        "org.jetbrains.kotlin.kotlin-reflect_1.7.0",
+        "org.jetbrains.intellij.deps.trove4j_1.0.20200330",
     ],
     visibility = ["//visibility:public"],
 )
