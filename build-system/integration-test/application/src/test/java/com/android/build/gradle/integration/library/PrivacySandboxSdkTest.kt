@@ -16,21 +16,21 @@
 
 package com.android.build.gradle.integration.library
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
+import com.android.build.gradle.integration.common.truth.ApkSubject
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
-import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
+import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
-import java.io.File
 import java.util.Objects
 import kotlin.io.path.readText
 
@@ -129,6 +129,15 @@ class PrivacySandboxSdkTest {
             dependencies {
                 implementation(project(":privacy-sandbox-sdk"))
             }
+            appendToBuildFile { //language=groovy
+                """
+                    android {
+                        defaultConfig {
+                            versionCode = 1
+                        }
+                    }
+                """.trimIndent()
+            }
         }
     }
             .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
@@ -208,22 +217,69 @@ class PrivacySandboxSdkTest {
     fun testConsumption() {
         // TODO(b/235469089) expand this to verify installation also
 
-        executor().run(
-                ":example-app:buildPrivacySandboxSdkApksForDebug",
-                ":example-app:assembleDebug",
-        )
+        // Check building the SDK itself
+        executor().run(":example-app:buildPrivacySandboxSdkApksForDebug")
 
         val privacySandboxSdkApk = project.getSubproject(":example-app")
                 .getIntermediateFile("extracted_apks_from_privacy_sandbox_sdks", "debug", "privacy-sandbox-sdk-standalone.apk")
 
         Apk(privacySandboxSdkApk).use {
-            assertThat(it).containsClass("Lcom/example/androidlib1/Example;")
+            assertThat(it).containsClass(ANDROID_LIB1_CLASS)
             assertThat(it).containsClass("Lcom/example/androidlib2/Example;")
         }
 
-        project.getSubproject(":example-app").getApk(GradleTestProject.ApkType.DEBUG).use {
-            assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
-            assertThat(it).doesNotContainClass("Lcom/example/androidlib1/Example;")
+        // Check building the bundle to deploy to TiramisuPrivacySandbox
+        val apkSelectConfig = project.file("apkSelectConfig.json")
+        apkSelectConfig.writeText(
+                """{"sdk_version":32,"codename":"TiramisuPrivacySandbox","screen_density":420,"supported_abis":["x86_64","arm64-v8a"],"supported_locales":["en"]}""")
+
+        executor()
+                .with(StringOption.IDE_APK_SELECT_CONFIG, apkSelectConfig.absolutePath)
+                .run(":example-app:extractApksFromBundleForDebug")
+
+        val extractedApks = project.getSubproject(":example-app")
+                .getIntermediateFile("extracted_apks", "debug")
+                .toPath()
+        val baseMasterApk = extractedApks.resolve("base-master.apk")
+        val baseMaster2Apk = extractedApks.resolve("base-master_2.apk")
+
+        Apk(baseMasterApk).use {
+            assertThat(it).doesNotExist()
         }
+        Apk(baseMaster2Apk).use {
+            assertThat(it).exists()
+            assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
+            assertThat(it).doesNotContainClass(ANDROID_LIB1_CLASS)
+            val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
+            assertThat(manifestContent).contains(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
+            assertThat(manifestContent).contains(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
+        }
+
+        // Check building the bundle to deploy to a non-privacy sandbox device:
+        apkSelectConfig.writeText(
+                """{"sdk_version":32,"codename":"Tiramisu","screen_density":420,"supported_abis":["x86_64","arm64-v8a"],"supported_locales":["en"]}""")
+
+        executor()
+                .with(StringOption.IDE_APK_SELECT_CONFIG, apkSelectConfig.absolutePath)
+                .run(":example-app:extractApksFromBundleForDebug")
+
+        Apk(baseMasterApk).use {
+            assertThat(it).exists()
+            assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
+            assertThat(it).doesNotContainClass(ANDROID_LIB1_CLASS)
+            val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
+            assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
+            assertThat(manifestContent).doesNotContain(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
+        }
+        Apk(baseMaster2Apk).use {
+            assertThat(it).doesNotExist()
+        }
+
+    }
+
+    companion object {
+        private const val ANDROID_LIB1_CLASS = "Lcom/example/androidlib1/Example;"
+        private const val USES_SDK_LIBRARY_MANIFEST_ELEMENT = "uses-sdk-library"
+        private const val MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE = "=\"com.example.privacysandboxsdk\""
     }
 }
