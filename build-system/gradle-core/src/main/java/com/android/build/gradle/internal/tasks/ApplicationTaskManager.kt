@@ -269,6 +269,11 @@ class ApplicationTaskManager(
                 }
             }
             taskFactory.register(FinalizeBundleTask.CreationAction(variant))
+            if (variant.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+                taskFactory.register(
+                        GeneratePrivacySandboxSdkRuntimeConfigFile.CreationAction(variant))
+            }
+
             taskFactory.register(BundleIdeModelProducerTask.CreationAction(variant))
             taskFactory.register(
                 ListingFileRedirectTask.CreationAction(
