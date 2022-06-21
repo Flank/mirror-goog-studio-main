@@ -28,7 +28,7 @@ LATEST_ANDROID_X_CONSTRAINTLAYOUT = "1.1.3"
 # framework/src/main/java/com/android/build/gradle/integration/common/fixture/TestVersions.kt
 filegroup(
     name = "android_platform_for_tests",
-    srcs = ["//prebuilts/studio/sdk:platforms/android-32_build_only"],
+    srcs = ["//prebuilts/studio/sdk:platforms/android-33_build_only"],
     visibility = [":__subpackages__"],
 )
 
