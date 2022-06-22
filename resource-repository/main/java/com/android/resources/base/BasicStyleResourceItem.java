@@ -99,7 +99,9 @@ public final class BasicStyleResourceItem extends BasicValueResourceItemBase imp
   @Override
   @Nullable
   public StyleItemResourceValue getItem(@NotNull ResourceReference attr) {
-    assert attr.getResourceType() == ResourceType.ATTR;
+    if (attr.getResourceType() != ResourceType.ATTR) {
+      return null;
+    }
     return myStyleItemTable.get(attr.getNamespace(), attr.getName());
   }
 
