@@ -80,6 +80,8 @@
          - androidTestArtifact  = (null)
          - unitTestArtifact     = (null)
          - testFixturesArtifact = (null)
+         - applicationId        = "pkg.name.test"
+         - testApplicationId    = (null)
       < debug
    < variants
 < BasicAndroidProject

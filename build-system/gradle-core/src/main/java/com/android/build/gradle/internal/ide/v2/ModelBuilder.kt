@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
 import com.android.Version
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
@@ -566,6 +565,10 @@ class ModelBuilder<
             },
             buildType = variant.buildType,
             productFlavors = variant.productFlavorList.map { it.name },
+            applicationId = getApplicationId(variant),
+            testApplicationId = variant.testComponents[ComponentTypeImpl.ANDROID_TEST]?.let {
+                getApplicationId(it)
+            }
         )
     }
 

@@ -426,6 +426,8 @@ private fun ModelSnapshotter<BasicVariant>.snapshotBasicVariant() {
     dataObject("testFixturesArtifact", BasicVariant::testFixturesArtifact) {
         snapshotBasicArtifact()
     }
+    item("applicationId", BasicVariant::applicationId)
+    item("testApplicationId", BasicVariant::testApplicationId)
 }
 
 private fun ModelSnapshotter<Variant>.snapshotVariant() {

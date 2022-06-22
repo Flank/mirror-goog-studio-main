@@ -1,4 +1,4 @@
-- BasicAndroidProject:
+> BasicAndroidProject:
    - defaultConfig:
       - androidTestSourceProvider{REMOVED} = (null)
    - buildTypes:
@@ -7,3 +7,5 @@
    - variants:
       - debug:
          - androidTestArtifact{REMOVED} = (null)
+         - testApplicationId            = (null)
+< BasicAndroidProject
