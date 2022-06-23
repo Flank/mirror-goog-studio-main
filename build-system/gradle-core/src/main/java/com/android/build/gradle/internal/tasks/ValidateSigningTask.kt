@@ -21,8 +21,10 @@ import com.android.build.api.dsl.SigningConfig
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreSigningConfig
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
@@ -211,8 +213,12 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
 
 
     class PrivacySandboxSdkCreationAction(
-            private val globalCreationConfig: GlobalTaskCreationConfig
+            private val artifacts: ArtifactsImpl,
+            private val services: BaseServices
     ) : TaskCreationAction<ValidateSigningTask>() {
+
+        constructor(config: GlobalTaskCreationConfig) : this(config.globalArtifacts, config.services)
+        constructor(scope: PrivacySandboxSdkVariantScope): this(scope.artifacts, scope.services)
 
         override val name: String
             get() = "validatePrivacySandboxSdkSigning"
@@ -224,7 +230,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         ) {
             super.handleProvider(taskProvider)
 
-            globalCreationConfig.globalArtifacts.setInitialProvider(
+            artifacts.setInitialProvider(
                     taskProvider,
                     ValidateSigningTask::dummyOutputDirectory
             ).on(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
@@ -235,7 +241,7 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         ) {
 
             val signingConfigDataProvider: Provider<SigningConfigData> = getBuildService(
-                    globalCreationConfig.services.buildServiceRegistry,
+                    services.buildServiceRegistry,
                     AndroidLocationsBuildService::class.java
             ).map { it.getDefaultDebugKeystoreSigningConfig() }
             task.signingConfigData.set(signingConfigDataProvider)
