@@ -351,12 +351,13 @@ public class DeviceState {
 
     private static Set<String> initFeatures(String sdk) {
         Set<String> features =
-                new HashSet<>(
-                        Arrays.asList("push_sync", "fixed_push_mkdir", "shell_v2", "apex,stat_v2"));
+                new HashSet<>(Arrays.asList("push_sync", "fixed_push_mkdir", "apex"));
         try {
             int api = Integer.parseInt(sdk);
             if (api >= 24) {
                 features.add("cmd");
+                features.add("shell_v2");
+                features.add("stat_v2");
             }
             if (api >= 30) {
                 features.add("abb");

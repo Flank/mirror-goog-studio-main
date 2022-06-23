@@ -173,6 +173,17 @@ class InterceptionRuleTest {
         assertThat(transformedResponse.interception.statusCode).isTrue()
         assertThat(transformedResponse.responseHeaders[null]!![0]).isEqualTo("HTTP/1.0 404")
         assertThat(transformedResponse.responseHeaders["response-status-code"]!![0]).isEqualTo("404")
+
+        val responseWithoutStatusLine = NetworkResponse(
+            mapOf("response-status-code" to listOf("200")),
+            "Body".byteInputStream()
+        )
+        transformedResponse =
+            StatusCodeReplacedTransformation(proto).transform(responseWithoutStatusLine)
+        assertThat(transformedResponse.interception.statusCode).isTrue()
+        assertThat(transformedResponse.responseHeaders[null]).isNull()
+        assertThat(transformedResponse.responseHeaders["response-status-code"]!![0])
+            .isEqualTo("404")
     }
 
     @Test

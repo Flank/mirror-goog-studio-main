@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
+import com.android.build.gradle.internal.VirtualManagedDeviceLockManager
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -134,7 +135,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         `when`(creationConfig.computeTaskName(any(), any())).then {
             val prefix = it.getArgument<String>(0)
             val suffix = it.getArgument<String>(0)
-            "${prefix}AndroidDebutTest$suffix"
+            "${prefix}AndroidDebugTest$suffix"
         }
         `when`(creationConfig.name).thenReturn("AndroidDebugTest")
 
@@ -155,6 +156,12 @@ class ManagedDeviceInstrumentationTestTaskTest {
         avdFolder = temporaryFolderRule.newFolder("gradle/avd")
         `when`(avdDirectory.asFile).thenReturn(avdFolder)
         `when`(avdService.avdFolder).thenReturn(FakeGradleProvider(avdDirectory))
+
+        val lockManager = mock(VirtualManagedDeviceLockManager::class.java)
+        val lock = mock(VirtualManagedDeviceLockManager.DeviceLock::class.java)
+        `when`(lock.lockCount).thenReturn(1)
+        `when`(lockManager.lock(any())).thenReturn(lock)
+        `when`(avdService.lockManager).thenReturn(lockManager)
 
         reportsFolder = temporaryFolderRule.newFolder("reports")
         `when`(reportsDirectory.asFile).thenReturn(reportsFolder)
@@ -250,14 +257,14 @@ class ManagedDeviceInstrumentationTestTaskTest {
         `when`(factory.emulatorGpuFlag).thenReturn(FakeGradleProperty("auto-no-window"))
         `when`(factory.showEmulatorKernelLoggingFlag).thenReturn(FakeGradleProperty(false))
 
-        val testRunner = factory.createTestRunner(workerExecutor)
+        val testRunner = factory.createTestRunner(workerExecutor, null)
         assertThat(testRunner).isInstanceOf(ManagedDeviceTestRunner::class.java)
 
         // If Utp is not enabled, then the factory should fail
         `when`(factory.unifiedTestPlatform).thenReturn(FakeGradleProperty(false))
 
         try {
-            factory.createTestRunner(workerExecutor)
+            factory.createTestRunner(workerExecutor, null)
 
             assert(false)
         } catch (e: IllegalArgumentException) {
@@ -397,7 +404,8 @@ class ManagedDeviceInstrumentationTestTaskTest {
         )
         println("TestRunner: $testRunner")
 
-        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any())
+        doReturn(FakeGradleProperty<Int>()).`when`(runnerFactory).testShardsSize
+        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any(), eq(null))
         `when`(runnerFactory.executionEnum)
             .thenReturn(FakeGradleProperty(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR))
 
@@ -442,9 +450,10 @@ class ManagedDeviceInstrumentationTestTaskTest {
             helperApks = any(),
             logger = any()
         )
-        println("TestRunner: $testRunner")
 
-        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any())
+        doReturn(FakeGradleProperty<Int>()).`when`(runnerFactory).testShardsSize
+
+        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any(), eq(null))
         `when`(runnerFactory.executionEnum)
             .thenReturn(FakeGradleProperty(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR))
 
@@ -497,9 +506,10 @@ class ManagedDeviceInstrumentationTestTaskTest {
             helperApks = any(),
             logger = any()
         )
-        println("TestRunner: $testRunner")
 
-        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any())
+        doReturn(FakeGradleProperty<Int>()).`when`(runnerFactory).testShardsSize
+
+        doReturn(testRunner).`when`(runnerFactory).createTestRunner(any(), eq(null))
         `when`(runnerFactory.executionEnum)
             .thenReturn(FakeGradleProperty(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR))
 

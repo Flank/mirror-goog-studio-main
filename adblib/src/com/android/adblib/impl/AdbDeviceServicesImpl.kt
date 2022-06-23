@@ -68,7 +68,7 @@ internal class AdbDeviceServicesImpl(
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
         bufferSize: Int,
-        shutdownOutput : Boolean
+        shutdownOutput: Boolean
     ): Flow<T> {
         return runServiceWithOutput(
             device,
@@ -89,7 +89,7 @@ internal class AdbDeviceServicesImpl(
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
         bufferSize: Int,
-        shutdownOutput : Boolean
+        shutdownOutput: Boolean
     ): Flow<T> {
         return runServiceWithOutput(
             device,
@@ -236,7 +236,7 @@ internal class AdbDeviceServicesImpl(
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
         bufferSize: Int,
-        shutdownOutput : Boolean
+        shutdownOutput: Boolean
     ): Flow<T> {
         return runServiceWithOutput(
             device,
@@ -360,9 +360,10 @@ internal class AdbDeviceServicesImpl(
         shellCommandChannel: AdbChannel,
         stdInput: AdbInputChannel,
         bufferSize: Int,
-        shutdownOutput : Boolean
+        shutdownOutput: Boolean
     ) {
-        stdInput.forwardTo(session, shellCommandChannel, bufferSize)
+        val workBuffer = serviceRunner.newResizableBuffer(bufferSize)
+        stdInput.forwardTo(shellCommandChannel, workBuffer, bufferSize)
         if (shutdownOutput) {
             logger.debug { "forwardStdInput - input channel has reached EOF, sending EOF to shell host" }
             shellCommandChannel.shutdownOutput()
@@ -374,7 +375,7 @@ internal class AdbDeviceServicesImpl(
         stdInput: AdbInputChannel,
         bufferSize: Int
     ) {
-        val workBuffer = serviceRunner.newResizableBuffer()
+        val workBuffer = serviceRunner.newResizableBuffer(bufferSize)
         val shellProtocol = ShellV2ProtocolHandler(deviceChannel, workBuffer)
 
         while (true) {
@@ -403,7 +404,7 @@ internal class AdbDeviceServicesImpl(
         stdinChannel: AdbInputChannel?,
         commandTimeout: Duration,
         bufferSize: Int,
-        shutdownOutput : Boolean
+        shutdownOutput: Boolean
     ): Flow<T> = flow {
         val service = getExecServiceString(execService, commandProvider())
         logger.debug { "Device \"${device}\" - Start execution of service \"$service\" (bufferSize=$bufferSize bytes)" }

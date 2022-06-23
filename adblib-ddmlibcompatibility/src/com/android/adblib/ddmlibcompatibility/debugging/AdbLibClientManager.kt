@@ -20,7 +20,6 @@ import com.android.adblib.thisLogger
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.ClientManager
-import com.android.ddmlib.clientmanager.DeviceClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
 
 /**
@@ -41,3 +40,4 @@ internal class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
         }
     }
 }
+

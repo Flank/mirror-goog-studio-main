@@ -34,7 +34,10 @@ final class AnnotationMappings {
                 "Lcom/android/annotations/concurrency/UiThread;",
                 "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
                 "verifyOnUiThread"),
-        WORKER_THREAD("Lcom/android/annotations/concurrency/WorkerThread;"),
+        WORKER_THREAD(
+                "Lcom/android/annotations/concurrency/WorkerThread;",
+                "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampoline",
+                "verifyOnWorkerThread"),
         SLOW_THREAD("Lcom/android/annotations/concurrency/Slow;"),
         ANY_THREAD("Lcom/android/annotations/concurrency/AnyThread;");
 

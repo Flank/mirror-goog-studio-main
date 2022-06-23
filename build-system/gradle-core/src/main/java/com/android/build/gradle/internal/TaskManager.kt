@@ -357,6 +357,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             project.providers,
             project.layout
         )
+
+        // Global tasks required for privacy sandbox sdk consumption
+        if (globalConfig.services.projectOptions.get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
+            taskFactory.register(ValidateSigningTask.PrivacySandboxSdkCreationAction(globalConfig))
+        }
     }
 
     fun createPostApiTasks() {
@@ -1948,6 +1953,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 reportTask.configure {
                     it.mustRunAfter(managedDeviceTestTask)
                 }
+            }
+            taskFactory.configure(ALL_DEVICES_CHECK) { allDevices: Task ->
+                allDevices.dependsOn(reportTask)
             }
         }
 

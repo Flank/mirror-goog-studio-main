@@ -19,7 +19,7 @@ build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms.
-platforms;android-Tiramisu
+platforms;android-33
 platforms;android-32
 platforms;android-31
 platforms;android-30

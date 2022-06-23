@@ -85,6 +85,7 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
                 taskProvider,
                 PrivacySandboxSdkMergeDexTask::outputDir
             ).on(PrivacySandboxSdkInternalArtifactType.DEX)
+
         }
 
         override fun configure(task: PrivacySandboxSdkMergeDexTask) {

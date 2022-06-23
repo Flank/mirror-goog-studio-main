@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
@@ -100,7 +101,7 @@ class FusedLibraryPlugin @Inject constructor(
     ) {
         val bundleTaskProvider = variantScope
                 .artifacts
-                .getArtifactContainer(artifactTypeForPublication)
+                .getArtifactContainer(artifactForPublication)
                 .getTaskProviders()
                 .last()
 
@@ -207,6 +208,7 @@ class FusedLibraryPlugin @Inject constructor(
                         FusedLibraryMergeClasses.CreationAction(variantScope),
                         FusedLibraryBundleClasses.CreationAction(variantScope),
                         FusedLibraryBundleAar.CreationAction(variantScope),
+                        MergeJavaResourceTask.CreationActionFusedLibrary(variantScope)
                 ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
     }
@@ -214,6 +216,12 @@ class FusedLibraryPlugin @Inject constructor(
     override fun getAnalyticsPluginType(): GradleBuildProject.PluginType  =
         GradleBuildProject.PluginType.FUSED_LIBRARIES
 
-    override val artifactTypeForPublication: Artifact.Single<RegularFile>
+    override val artifactForPublication: Artifact.Single<RegularFile>
         get() = FusedLibraryInternalArtifactType.BUNDLED_LIBRARY
+
+    override val artifactTypeForPublication: AndroidArtifacts.ArtifactType
+        get() = AndroidArtifacts.ArtifactType.AAR
+
+    override val allowUnmergedArtifacts: Boolean
+        get() = true
 }

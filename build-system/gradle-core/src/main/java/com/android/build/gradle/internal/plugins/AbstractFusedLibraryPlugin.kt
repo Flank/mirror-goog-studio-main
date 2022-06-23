@@ -79,7 +79,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
 
         // create anchor tasks
         project.tasks.register("assemble") { assembleTask ->
-            artifactTypeForPublication?.let { artifactTypeForPublication ->
+            artifactForPublication?.let { artifactTypeForPublication ->
                 assembleTask.dependsOn(variantScope.artifacts.get(artifactTypeForPublication))
             } ?: taskProviders.forEach {  assembleTask.dependsOn(it) }
         }
@@ -89,7 +89,11 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
      * Returns the artifact type that will be used for maven publication or null if nothing is to
      * be published to maven.
      */
-    abstract val artifactTypeForPublication: Artifact.Single<RegularFile>?
+    abstract val artifactForPublication: Artifact.Single<RegularFile>?
+
+    abstract val artifactTypeForPublication: AndroidArtifacts.ArtifactType
+
+    abstract val allowUnmergedArtifacts: Boolean
 
     override fun apply(project: Project) {
         super.basePluginApply(project)
@@ -111,7 +115,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         // to the resolved 'include' dependency. It is for JAVA_API usage which mean all transitive
         // dependencies that are implementation() scoped will not be included.
         val includeApiClasspath = project.configurations.create("includeApiClasspath").also {
-            it.isCanBeConsumed = true
+            it.isCanBeConsumed = false
             initConfiguration(it)
             it.attributes.attribute(
                 Usage.USAGE_ATTRIBUTE,
@@ -146,7 +150,8 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         // to the resolved 'include' dependency. It is for JAVA_RUNTIME usage which mean all transitive
         // dependencies that are implementation() scoped will  be included.
         val includeRuntimeClasspath = project.configurations.create("includeRuntimeClasspath").also {
-            it.isCanBeConsumed = true
+            it.isCanBeConsumed = false
+            it.isCanBeResolved = true
 
             initConfiguration(it)
             it.attributes.attribute(
@@ -166,7 +171,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         // This is the configuration that will contain all the JAVA_RUNTIME dependencies that are
         // not fused in the resulting aar library.
         val includeRuntimeUnmerged = project.configurations.create("includeRuntimeUnmerged").also {
-            it.isCanBeConsumed = true
+            it.isCanBeConsumed = false
             it.isCanBeResolved = true
             initConfiguration(it)
             it.incoming.beforeResolve(
@@ -182,7 +187,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         // we are only interested in the last provider in the chain of transformers for this bundle.
         // Obviously, this is theoretical at this point since there is no variant API to replace
         // artifacts, there is always only one.
-        val bundleTaskProvider = artifactTypeForPublication?.let {
+        val bundleTaskProvider = artifactForPublication?.let {
             variantScope
                 .artifacts
                 .getArtifactContainer(it)
@@ -192,35 +197,47 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
 
         // this is the outgoing configuration for JAVA_API scoped declarations, it will contain
         // this module and all transitive non merged dependencies
-        val includeApiElements = project.configurations.create("apiElements") {
-            it.isCanBeConsumed = true
-            it.isCanBeResolved = false
-            it.isTransitive = true
-            initConfiguration(it)
-            it.attributes.attribute(
+
+        fun configureApiRuntimeElements(elements: Configuration) {
+            elements.isCanBeResolved = false
+            elements.isCanBeConsumed = true
+            elements.isTransitive = true
+            if (artifactTypeForPublication == AndroidArtifacts.ArtifactType.AAR) {
+                initConfiguration(elements)
+            }
+
+            if (bundleTaskProvider != null) {
+                elements.outgoing.variants { variants ->
+                    variants.create(artifactTypeForPublication.type)  {variant ->
+                        variant.artifact(bundleTaskProvider) { artifact ->
+                            artifact.type = artifactTypeForPublication.type
+                        }
+                    }
+                }
+            }
+        }
+
+        val includeApiElements = project.configurations.create("apiElements") { apiElements ->
+            configureApiRuntimeElements(apiElements)
+            apiElements.attributes.attribute(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_API)
             )
-            it.extendsFrom(includedApiUnmerged)
-            if (bundleTaskProvider != null) {
-                it.outgoing.artifact(bundleTaskProvider)
+            if (allowUnmergedArtifacts) {
+                apiElements.extendsFrom(includedApiUnmerged)
             }
         }
 
         // this is the outgoing configuration for JAVA_RUNTIME scoped declarations, it will contain
         // this module and all transitive non merged dependencies
-        val includeRuntimeElements = project.configurations.create("runtimeElements") {
-            it.isCanBeConsumed = true
-            it.isCanBeResolved = false
-            it.isTransitive = true
-            initConfiguration( it)
-            it.attributes.attribute(
+        val includeRuntimeElements = project.configurations.create("runtimeElements") { runtimeElements ->
+            configureApiRuntimeElements(runtimeElements)
+            runtimeElements.attributes.attribute(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME)
             )
-            it.extendsFrom(includeRuntimeUnmerged)
-            if (bundleTaskProvider != null) {
-                it.outgoing.artifact(bundleTaskProvider)
+            if (allowUnmergedArtifacts) {
+                runtimeElements.extendsFrom(includeRuntimeUnmerged)
             }
         }
 

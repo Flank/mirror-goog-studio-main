@@ -161,6 +161,27 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
         }
     }
 
+    /** Regression test for Issue 233102273 */
+    @Test
+    fun noCompressWithMinifyEnabled() {
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                android {
+                    buildTypes {
+                        debug {
+                            minifyEnabled true
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        project.execute(":assembleDebug")
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(apk).exists()
+        verifyCompression(apk.file.toFile())
+    }
+
     @Test
     fun bundleNoCompressTest() {
         project.executor().run(":makeApkFromBundleForDebug")

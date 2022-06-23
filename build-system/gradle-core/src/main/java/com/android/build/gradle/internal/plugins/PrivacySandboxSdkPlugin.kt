@@ -20,13 +20,17 @@ import com.android.build.api.artifact.Artifact
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.InternalPrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.PublishingSpecs
 import com.android.build.gradle.internal.res.PrivacySandboxSdkLinkAndroidResourcesTask
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.internal.services.TaskCreationServicesImpl
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
@@ -39,6 +43,7 @@ import com.android.build.gradle.tasks.PrivacySandboxSdkManifestGeneratorTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkManifestMergerTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkMergeDexTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkMergeResourcesTask
+import com.android.builder.core.ComponentTypeImpl
 import com.android.repository.Revision
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Project
@@ -140,9 +145,11 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                 project,
                 variantScope,
                 listOf(
+                        AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
                         FusedLibraryBundleClasses.CreationAction(variantScope),
                         FusedLibraryClassesRewriteTask.CreationAction(variantScope),
                         FusedLibraryMergeClasses.CreationAction(variantScope),
+                        MergeJavaResourceTask.CreationActionFusedLibrary(variantScope),
                         PrivacySandboxSdkMergeResourcesTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),
@@ -150,7 +157,6 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                         PrivacySandboxSdkDexTask.CreationAction(variantScope),
                         PrivacySandboxSdkMergeDexTask.CreationAction(variantScope),
                         PerModuleBundleTask.PrivacySandboxSdkCreationAction(variantScope),
-                        AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
                         PackagePrivacySandboxSdkBundle.CreationAction(variantScope),
                 ) + FusedLibraryMergeArtifactTask.getCreationActions(variantScope),
         )
@@ -162,5 +168,11 @@ class PrivacySandboxSdkPlugin @Inject constructor(
     /**
      * ASB only get published to Play Store, not maven
      */
-    override val artifactTypeForPublication: Artifact.Single<RegularFile>? = null
+    override val artifactForPublication: Artifact.Single<RegularFile>? = PrivacySandboxSdkInternalArtifactType.ASB
+
+    override val artifactTypeForPublication: AndroidArtifacts.ArtifactType
+        get() = AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE
+
+    override val allowUnmergedArtifacts: Boolean
+        get() = false
 }

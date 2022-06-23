@@ -53,6 +53,21 @@ public class ThreadingCheckerTrampoline {
         hook.verifyOnUiThread();
     }
 
+    // This method is called from instrumented bytecode.
+    public static void verifyOnWorkerThread() {
+        if (hook == null) {
+            LOGGER.warning(
+                    "Threading annotation check skipped for method '"
+                            + getInstrumentedMethodSignature()
+                            + "'. No ThreadingCheckerHook installed.");
+            return;
+        }
+        if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
+            return;
+        }
+        hook.verifyOnWorkerThread();
+    }
+
     private static String getInstrumentedMethodSignature() {
         // Stack trace here will look like
         // Thread#getStackTrace

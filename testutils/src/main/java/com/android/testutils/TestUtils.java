@@ -215,6 +215,19 @@ public class TestUtils {
     }
 
     /**
+     * Returns the absolute {@link Path} to the {@param bin} from the current workspace, or from
+     * bazel-bin if not present.
+     */
+    public static Path getBinPath(String bin) {
+        Path path = TestUtils.resolveWorkspacePathUnchecked(bin);
+        if (!Files.exists(path)) {
+            // running from IJ
+            path = TestUtils.resolveWorkspacePathUnchecked("bazel-bin/" + bin);
+        }
+        return path;
+    }
+
+    /**
      * Returns a directory which tests can output data to. If running through Bazel's test runner,
      * this returns the directory as specified by the TEST_UNDECLARED_OUTPUTS_DIR environment
      * variable. Data written to this directory will be zipped and made available under the

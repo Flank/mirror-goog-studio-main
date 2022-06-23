@@ -131,7 +131,7 @@ abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
             task.classes.fromDisallowChanges(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.FINAL_CLASSES)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS)
             )
             val minSdk = creationConfig.extension.minSdk ?: 1
             task.dexParams.apply {

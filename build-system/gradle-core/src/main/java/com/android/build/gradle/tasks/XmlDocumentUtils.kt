@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.ATTR_PACKAGE
 import com.android.manifmerger.ManifestMerger2
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -61,6 +62,15 @@ internal fun stripMinSdkFromFeatureManifest(document: Document) {
             SdkConstants.ATTR_MIN_SDK_VERSION
         )
     }
+}
+/**
+ * This will replace the package name from the feature manifest with the feature's own package name.
+ * This is used in dynamic-features, as dynamic-features should have different package names to
+ * avoid clashes when merging.
+ */
+internal fun replacePackageNameInFeatureManifest(document: Document, newPackageName: String) {
+    val manifest = document.documentElement
+    manifest.setAttribute(ATTR_PACKAGE, newPackageName)
 }
 
 /**

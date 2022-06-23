@@ -64,7 +64,7 @@ public class LintKotlinTest {
         assertThat(exception.getMessage())
                 .contains("Lint found errors in the project; aborting build");
 
-        assertThat(result.getStdout()).contains("Lint found 9 errors, 4 warnings. First failure:");
+        assertThat(result.getStdout()).contains("Lint found 10 errors, 4 warnings. First failure:");
         assertThat(result.getStdout())
                 .contains(
                         "AndroidManifest.xml:5: Error: Class referenced "
@@ -79,7 +79,7 @@ public class LintKotlinTest {
         assertThat(lintReport).doesNotContain("id=\"CallSuper\"");
 
         File lintResults = project.file("app/build/reports/lint-results.txt");
-        assertThat(lintResults).contains("9 errors, 4 warnings");
+        assertThat(lintResults).contains("10 errors, 4 warnings");
     }
 
     private GradleTaskExecutor getExecutor() {

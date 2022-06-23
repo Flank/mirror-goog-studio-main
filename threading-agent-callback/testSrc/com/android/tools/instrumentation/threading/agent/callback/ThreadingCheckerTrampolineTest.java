@@ -22,15 +22,21 @@ import java.io.ByteArrayInputStream;
 import org.junit.Test;
 
 public class ThreadingCheckerTrampolineTest {
+    int verifyOnUiThreadCallCount = 0;
+    int verifyOnWorkerThreadCallCount = 0;
 
     @Test
     public void threadingViolationChecks_notEnforcedOnMethodInBaselineFile() {
-        final int[] verifyOnUiThreadCallCount = {0};
         ThreadingCheckerTrampoline.installHook(
                 new ThreadingCheckerHook() {
                     @Override
                     public void verifyOnUiThread() {
-                        ++verifyOnUiThreadCallCount[0];
+                        ++verifyOnUiThreadCallCount;
+                    }
+
+                    @Override
+                    public void verifyOnWorkerThread() {
+                        ++verifyOnWorkerThreadCallCount;
                     }
                 });
 
@@ -41,11 +47,13 @@ public class ThreadingCheckerTrampolineTest {
 
         // method1 is in the baseline
         InnerTestClass.method1();
-        assertThat(verifyOnUiThreadCallCount[0]).isEqualTo(0);
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(0);
+        assertThat(verifyOnWorkerThreadCallCount).isEqualTo(0);
 
         // method2 is not in the baseline
         InnerTestClass.method2();
-        assertThat(verifyOnUiThreadCallCount[0]).isEqualTo(1);
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(1);
+        assertThat(verifyOnWorkerThreadCallCount).isEqualTo(1);
     }
 
     @Test
@@ -59,10 +67,12 @@ public class ThreadingCheckerTrampolineTest {
 
         public static void method1() {
             ThreadingCheckerTrampoline.verifyOnUiThread();
+            ThreadingCheckerTrampoline.verifyOnWorkerThread();
         }
 
         public static void method2() {
             ThreadingCheckerTrampoline.verifyOnUiThread();
+            ThreadingCheckerTrampoline.verifyOnWorkerThread();
         }
     }
 }

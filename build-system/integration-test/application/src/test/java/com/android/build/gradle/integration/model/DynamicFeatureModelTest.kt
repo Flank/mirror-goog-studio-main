@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.model
 
+import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.ModelContainerV2
 import com.android.build.gradle.integration.common.fixture.model.ModelComparator
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
@@ -87,7 +88,7 @@ class CompileSdkViaSettingsInDynamicFeatureModelTest {
         settings {
             plugins.add(PluginType.ANDROID_SETTINGS)
             android {
-                compileSdk = 32
+                compileSdk = DEFAULT_COMPILE_SDK_VERSION
             }
         }
         rootProject {
@@ -109,7 +110,7 @@ class CompileSdkViaSettingsInDynamicFeatureModelTest {
         Truth
             .assertWithMessage("compile target hash")
             .that(androidDsl.compileTarget)
-            .isEqualTo("android-32")
+            .isEqualTo("android-$DEFAULT_COMPILE_SDK_VERSION")
     }
 }
 

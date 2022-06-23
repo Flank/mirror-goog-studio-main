@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions
 import com.google.common.base.Predicate
 import java.io.File
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.util.concurrent.Callable
 import java.util.concurrent.ForkJoinPool
@@ -167,12 +166,18 @@ class ApkFlinger(
             if (name.contains("../")) {
                 throw InvalidPathException(name, "Entry name contains invalid characters")
             }
+            val entryCompressionLevel =
+                if (entry.isCompressed && noCompressPredicate.apply(name)) {
+                    Deflater.NO_COMPRESSION
+                } else {
+                    ZipSource.COMPRESSION_NO_CHANGE
+                }
             val alignment = when {
                 !entry.isCompressed && pageAlignPredicate.apply(name) -> PAGE_ALIGNMENT
                 !entry.isCompressed -> DEFAULT_ALIGNMENT
                 else -> Source.NO_ALIGNMENT
             }
-            zipSource.select(entry.name, name, ZipSource.COMPRESSION_NO_CHANGE, alignment)
+            zipSource.select(entry.name, name, entryCompressionLevel, alignment)
         }
         archive.add(zipSource)
     }

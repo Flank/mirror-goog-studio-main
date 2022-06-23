@@ -123,7 +123,8 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         @get:Input
         abstract val showEmulatorKernelLoggingFlag: Property<Boolean>
 
-        fun createTestRunner(workerExecutor: WorkerExecutor): ManagedDeviceTestRunner {
+        fun createTestRunner(
+            workerExecutor: WorkerExecutor, numShards: Int?): ManagedDeviceTestRunner {
 
             Preconditions.checkArgument(
                     unifiedTestPlatform.get(),
@@ -141,7 +142,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 sdkBuildService.get().sdkLoader(compileSdkVersion, buildToolsRevision),
                 retentionConfig.get(),
                 useOrchestrator,
-                testShardsSize.getOrNull(),
+                numShards,
                 emulatorGpuFlag.get(),
                 showEmulatorKernelLoggingFlag.get(),
                 utpLoggingLevel.get()
@@ -276,8 +277,18 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
             true
         } else {
             try {
-                val runner = testRunnerFactory.createTestRunner(workerExecutor)
-                runner.runTests(
+                val numShardsRequested = testRunnerFactory.testShardsSize.getOrNull()
+                avdComponents.get().lockManager.lock(numShardsRequested ?: 1).use { lock ->
+                    val devicesAcquired = lock.lockCount
+                    if (devicesAcquired != (numShardsRequested ?: 1) ) {
+                        logger.warn("Unable to retrieve $numShardsRequested devices, only " +
+                                "$devicesAcquired available. Proceeding to run tests on " +
+                                "$devicesAcquired shards.")
+                    }
+                    val runner = testRunnerFactory.createTestRunner(
+                        workerExecutor,
+                        if (numShardsRequested == null) null else devicesAcquired)
+                    runner.runTests(
                         managedDevice,
                         resultsOutDir,
                         codeCoverageOutDir,
@@ -288,7 +299,8 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                         installOptions.getOrElse(listOf()),
                         buddyApks.files,
                         LoggerWrapper(logger)
-                )
+                    )
+                }
             } catch (e: Exception) {
                 recordCrashedInstrumentedTestRun(
                         dependencies,

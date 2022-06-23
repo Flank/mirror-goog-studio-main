@@ -18,8 +18,11 @@ package com.android.adblib
 import com.android.adblib.impl.channels.AdbInputStreamChannel
 import com.android.adblib.impl.channels.AdbOutputStreamChannel
 import com.android.adblib.testingutils.CloseablesRule
+import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.adblib.testingutils.asAdbInputChannel
 import com.android.adblib.testingutils.setTestLoggerMinLevel
 import com.android.adblib.utils.AdbProtocolUtils
 import com.android.adblib.utils.LineShellCollector
@@ -95,7 +98,7 @@ class AdbDeviceServicesTest {
             [ro.product.manufacturer]: [test1]
             [ro.product.model]: [test2]
             [ro.build.version.release]: [model]
-            [ro.build.version.sdk]: [sdk]
+            [ro.build.version.sdk]: [30]
 
         """.trimIndent()
         Assert.assertEquals(expectedOutput, AdbProtocolUtils.byteBufferToString(bytes))
@@ -123,7 +126,7 @@ class AdbDeviceServicesTest {
             [ro.product.manufacturer]: [test1]
             [ro.product.model]: [test2]
             [ro.build.version.release]: [model]
-            [ro.build.version.sdk]: [sdk]
+            [ro.build.version.sdk]: [30]
 
         """.trimIndent()
         Assert.assertEquals(expectedOutput, commandOutput)
@@ -151,7 +154,7 @@ class AdbDeviceServicesTest {
             [ro.product.manufacturer]: [test1]
             [ro.product.model]: [test2]
             [ro.build.version.release]: [model]
-            [ro.build.version.sdk]: [sdk]
+            [ro.build.version.sdk]: [30]
 
         """.trimIndent()
         Assert.assertEquals(expectedOutput.lines(), lines)
@@ -242,10 +245,18 @@ class AdbDeviceServicesTest {
         // Act
         runBlocking {
             val collector = TextShellCollector()
-            val stdinChannel =  input.asAdbInputChannel(deviceServices.session)
+            val stdinChannel = input.asAdbInputChannel(deviceServices.session)
             stdinChannel.use {
                 val timeout = Duration.ofSeconds(2)
-                val flow = deviceServices.shell(deviceSelector, "cat", collector, stdinChannel = it, timeout, shutdownOutput = false )
+                val flow =
+                    deviceServices.shell(
+                        deviceSelector,
+                        "cat",
+                        collector,
+                        stdinChannel = it,
+                        timeout,
+                        shutdownOutput = false
+                    )
                 exceptionRule.expect(TimeoutException::class.java)
                 flow.first()
                 Assert.fail("Call to 'cat' should have timed out")
@@ -261,7 +272,8 @@ class AdbDeviceServicesTest {
         val deviceServices = createDeviceServices(fakeAdb)
         // To ensure we don't spam the log during this test
         deviceServices.session.host.setTestLoggerMinLevel(
-            deviceServices.session.host.logger.minLevel.coerceAtLeast(AdbLogger.Level.INFO))
+            deviceServices.session.host.logger.minLevel.coerceAtLeast(AdbLogger.Level.INFO)
+        )
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
         val input = """
             This is some text with
@@ -557,7 +569,7 @@ class AdbDeviceServicesTest {
             [ro.product.manufacturer]: [test1]
             [ro.product.model]: [test2]
             [ro.build.version.release]: [model]
-            [ro.build.version.sdk]: [sdk]
+            [ro.build.version.sdk]: [30]
 
         """.trimIndent()
         Assert.assertEquals(expectedOutput, AdbProtocolUtils.byteBufferToString(bytes))
@@ -586,7 +598,7 @@ class AdbDeviceServicesTest {
             [ro.product.manufacturer]: [test1]
             [ro.product.model]: [test2]
             [ro.build.version.release]: [model]
-            [ro.build.version.sdk]: [sdk]
+            [ro.build.version.sdk]: [30]
 
         """.trimIndent()
         Assert.assertEquals(
@@ -824,6 +836,149 @@ class AdbDeviceServicesTest {
         Assert.assertEquals(10, collectedExitCode)
     }
 
+    @Test
+    fun testShellCommandUsesLegacyExecIfSupported() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // "exec" is supported starting API 21
+        val fakeDevice = addFakeDevice(fakeAdb, 21)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        var effectiveProtocol = ShellCommand.Protocol.SHELL_V2
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .withTextCollector()
+                .withCommandOverride { command, protocol ->
+                    effectiveProtocol = protocol
+                    command
+                }.execute().collect()
+        }
+
+        // Assert
+        Assert.assertEquals(ShellCommand.Protocol.EXEC, effectiveProtocol)
+    }
+
+    @Test
+    fun testShellCommandUsesLegacyShellIfSupported() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // Below API 21, only "shell" is supported
+        val fakeDevice = addFakeDevice(fakeAdb, 19)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        var effectiveProtocol = ShellCommand.Protocol.SHELL_V2
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .withTextCollector()
+                .withCommandOverride { command, protocol ->
+                    effectiveProtocol = protocol
+                    command
+                }.execute()
+                .collect()
+        }
+
+        // Assert
+        Assert.assertEquals(ShellCommand.Protocol.SHELL, effectiveProtocol)
+    }
+
+    @Test
+    fun testShellCommandWithCommandOutputTimeoutUsesLegacyExecIfSupported() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // "exec" is supported starting API 21
+        val fakeDevice = addFakeDevice(fakeAdb, 21)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        var effectiveProtocol = ShellCommand.Protocol.SHELL_V2
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .withTextCollector()
+                .withCommandOutputTimeout(Duration.ofSeconds(2))
+                .withCommandOverride { command, protocol ->
+                    effectiveProtocol = protocol
+                    command
+                }.execute().collect()
+        }
+
+        // Assert
+        Assert.assertEquals(ShellCommand.Protocol.EXEC, effectiveProtocol)
+    }
+
+    @Test
+    fun testShellCommandWithCommandOutputTimeoutUsesLegacyShellIfSupported() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // Below API 21, only "shell" is supported
+        val fakeDevice = addFakeDevice(fakeAdb, 19)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        var effectiveProtocol = ShellCommand.Protocol.SHELL_V2
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .withTextCollector()
+                .withCommandOutputTimeout(Duration.ofSeconds(2))
+                .withCommandOverride { command, protocol ->
+                    effectiveProtocol = protocol
+                    command
+                }.execute()
+                .collect()
+        }
+
+        // Assert
+        Assert.assertEquals(ShellCommand.Protocol.SHELL, effectiveProtocol)
+    }
+
+    @Test
+    fun testShellCommandThrowsIfNoCollectorSet() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // Below API 21, only "shell" is supported
+        val fakeDevice = addFakeDevice(fakeAdb, 19)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        exceptionRule.expect(IllegalArgumentException::class.java)
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .execute()
+                .collect()
+        }
+
+        // Assert
+        Assert.fail("Should not be reached")
+    }
+
+    @Test
+    fun testShellCommandThrowsIfLegacyShellProtocolNotAllowedOnOldDevice() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        // Below API 21, only "shell" is supported
+        val fakeDevice = addFakeDevice(fakeAdb, 19)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+
+        // Act
+        exceptionRule.expect(IllegalArgumentException::class.java)
+        runBlocking {
+            deviceServices.shellCommand(deviceSelector, "getprop")
+                .allowLegacyShell(false)
+                .execute()
+                .collect()
+        }
+
+        // Assert
+        Assert.fail("Should not be reached")
+    }
+
     // Checks public contract of the ShellCommandOutputElement.*.toString methods.
     @Test
     fun testShellCommandOutputElement() {
@@ -839,6 +994,75 @@ class AdbDeviceServicesTest {
             "42",
             ShellCommandOutputElement.ExitCode(42).toString()
         )
+    }
+
+    @Test
+    fun testDevicePropertiesAllWorks() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val device = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(device.deviceId)
+
+        // Act
+        val props = runBlocking {
+            deviceServices.deviceProperties(deviceSelector).all().associate { it.name to it.value }
+        }
+
+        // Assert
+        Assert.assertEquals("30", props["ro.build.version.sdk"])
+        Assert.assertEquals("model", props["ro.build.version.release"])
+        Assert.assertEquals("test2", props["ro.product.model"])
+    }
+
+    @Test
+    fun testDevicePropertiesAllReadonlyWorks() = runBlockingWithTimeout {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val device = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(device.deviceId)
+        // Wait until device shows up as a connected device
+        yieldUntil {
+            deviceServices.session.connectedDevicesTracker.connectedDevices.value.isNotEmpty()
+        }
+
+        // Act
+        // Call 3 times so that we can assert later there was only one connection
+        val props = deviceServices.deviceProperties(deviceSelector).allReadonly()
+
+        val connectionCountBefore = fakeAdb.channelProvider.createdChannels.size
+        val props2 = deviceServices.deviceProperties(deviceSelector).allReadonly()
+        val props3 = deviceServices.deviceProperties(deviceSelector).allReadonly()
+        val connectionCountAfter = fakeAdb.channelProvider.createdChannels.size
+
+        // Assert
+        Assert.assertEquals("30", props["ro.build.version.sdk"])
+        Assert.assertEquals("model", props["ro.build.version.release"])
+        Assert.assertEquals("test2", props["ro.product.model"])
+
+        // Assert we made only one connection per cache-hit call (to resolve the device
+        // selector into a serial number), meaning we did not execute "getprop" again
+        Assert.assertEquals(connectionCountBefore + 2, connectionCountAfter)
+        Assert.assertSame(props, props2)
+        Assert.assertSame(props, props3)
+    }
+
+    @Test
+    fun testDevicePropertiesApiWorks() {
+        // Prepare
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val device = addFakeDevice(fakeAdb)
+        val deviceServices = createDeviceServices(fakeAdb)
+        val deviceSelector = DeviceSelector.fromSerialNumber(device.deviceId)
+
+        // Act
+        val api = runBlocking {
+            deviceServices.deviceProperties(deviceSelector).api()
+        }
+
+        // Assert
+        Assert.assertEquals(30, api)
     }
 
     @Test
@@ -1646,7 +1870,10 @@ class AdbDeviceServicesTest {
 
         // Assert
         Assert.assertEquals("", shellOutput.stdout)
-        Assert.assertEquals("Error: Service 'invalid_service_name' is not supported", shellOutput.stderr)
+        Assert.assertEquals(
+            "Error: Service 'invalid_service_name' is not supported",
+            shellOutput.stderr
+        )
         Assert.assertEquals(5, shellOutput.exitCode)
     }
 
@@ -1779,14 +2006,14 @@ class AdbDeviceServicesTest {
         return session.deviceServices
     }
 
-    private fun addFakeDevice(fakeAdb: FakeAdbServerProvider): DeviceState {
+    private fun addFakeDevice(fakeAdb: FakeAdbServerProvider, sdk: Int = 30): DeviceState {
         val fakeDevice =
             fakeAdb.connectDevice(
                 "1234",
                 "test1",
                 "test2",
                 "model",
-                "sdk",
+                "$sdk",
                 DeviceState.HostConnectionType.USB
             )
         fakeDevice.deviceStatus = DeviceState.DeviceStatus.ONLINE

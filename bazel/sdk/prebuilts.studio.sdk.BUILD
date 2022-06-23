@@ -238,6 +238,11 @@ platform_filegroup(
     ],
 )
 
+platform_filegroup(
+    name = "platforms/android-33",
+    visibility = ["//visibility:public"],
+)
+
 # Version-specific rule public while tests transition to platform 32
 platform_filegroup(
     name = "platforms/android-32",

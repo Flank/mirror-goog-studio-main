@@ -65,7 +65,7 @@ public class AgentTest {
     }
 
     @Test
-    public void testWorkerThreadMethodAnnotation_currentlyDoesNotGetInstrumented()
+    public void testWorkerThreadMethodAnnotation()
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
@@ -73,7 +73,7 @@ public class AgentTest {
         Object instance = transformedClass.getDeclaredConstructor().newInstance();
         callMethod(transformedClass, instance, "workerMethod1", false);
 
-        verifyNoInteractions(mockThreadingCheckerHook);
+        verify(mockThreadingCheckerHook).verifyOnWorkerThread();
     }
 
     @Test

@@ -172,6 +172,7 @@ interface AndroidProjectBuilder {
     fun buildTypes(action: ContainerBuilder<BuildTypeBuilder>.() -> Unit)
     fun productFlavors(action: ContainerBuilder<ProductFlavorBuilder>.() -> Unit)
     fun prefab(action: ContainerBuilder<PrefabBuilder>.() -> Unit)
+    fun sourceSets(action: ContainerBuilder<SourceSetsBuilder>.() -> Unit)
 
     fun addFile(relativePath: String, content: String)
 
@@ -368,4 +369,12 @@ interface SettingsBuilder {
      * This will fails if no android plugins were added.
      */
     fun android(action: AndroidSettingsBuilder.() -> Unit)
+}
+
+interface SourceSetsBuilder {
+    val name: String
+    var manifestSrcFile: String?
+    var javaSrcDirs: List<String>
+    var resSrcDirs: List<String>
+    var resourcesSrcDirs: List<String>
 }
