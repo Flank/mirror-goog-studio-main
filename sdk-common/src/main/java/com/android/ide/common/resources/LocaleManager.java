@@ -1927,7 +1927,7 @@ public class LocaleManager {
             "Maldives",                             // Code MDV/MV
             "Mexico",                               // Code MEX/MX
             "Marshall Islands",                     // Code MHL/MH
-            "Macedonia",                            // Code MKD/MK
+            "North Macedonia",                      // Code MKD/MK
             "Mali",                                 // Code MLI/ML
             "Malta",                                // Code MLT/MT
             "Myanmar (Burma)",                      // Code MMR/MM
