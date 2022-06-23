@@ -22,7 +22,7 @@ private val sdkPatcherZip = File(System.getProperty("sdk.repo.sdkpatcher.zip"))
 
 private val buildToolsZip = File(System.getProperty("sdk.repo.buildtools.zip"))
 
-private val platform32Zip = File(System.getProperty("sdk.repo.platform.zip"))
+private val platform33Zip = File(System.getProperty("sdk.repo.platform.zip"))
 
 private val platformToolsZip = File(System.getProperty("sdk.repo.platformtools.zip"))
 
@@ -142,16 +142,16 @@ private fun setupTopLevelRepository(repositoryDir: File) {
             <sdk:sdk-repository xmlns:common="http://schemas.android.com/repository/android/common/02" xmlns:generic="http://schemas.android.com/repository/android/generic/02" xmlns:sdk="http://schemas.android.com/sdk/android/repo/repository2/02" xmlns:sdk-common="http://schemas.android.com/sdk/android/repo/common/02" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <license id="android-sdk-license" type="text">$placeholderLicense</license>
                 <channel id="channel-0">stable</channel>
-                <remotePackage path="platforms;android-32">
+                <remotePackage path="platforms;android-33">
                     <type-details xsi:type="sdk:platformDetailsType">
-                        <api-level>32</api-level>
+                        <api-level>33</api-level>
                         <codename></codename>
                         <layoutlib api="15"/>
                     </type-details>
                     <revision>
                         <major>1</major>
                     </revision>
-                    <display-name>Android SDK Platform 32</display-name>
+                    <display-name>Android SDK Platform 33</display-name>
                     <uses-license ref="android-sdk-license"/>
                     <channelRef ref="channel-0"/>
                     <archives>
@@ -160,7 +160,7 @@ private fun setupTopLevelRepository(repositoryDir: File) {
                             <complete>
                                 <size>66108299</size>
                                 <checksum type="sha1">afae86ed55d29733d50996ffed832f2d1bd75b9a</checksum>
-                                <url>platform-32_r01.zip</url>
+                                <url>platform-33_r01.zip</url>
                             </complete>
                         </archive>
                     </archives>
@@ -304,7 +304,7 @@ private fun setupTopLevelRepository(repositoryDir: File) {
     FileUtils.copyFileToDirectory(emulatorZip, repositoryDir)
     FileUtils.copyFileToDirectory(sdkPatcherZip, repositoryDir)
     FileUtils.copyFileToDirectory(buildToolsZip, repositoryDir)
-    FileUtils.copyFileToDirectory(platform32Zip, repositoryDir)
+    FileUtils.copyFileToDirectory(platform33Zip, repositoryDir)
     FileUtils.copyFileToDirectory(platformToolsZip, repositoryDir)
     FileUtils.copyFileToDirectory(sdkToolsZip, repositoryDir)
 }

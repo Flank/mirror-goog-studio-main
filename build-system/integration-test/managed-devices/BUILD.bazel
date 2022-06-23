@@ -19,7 +19,7 @@ kotlin_library(
 downloaded_sdk = [
     "@build_tools_zip//file",
     "@emulator_zip//file",
-    "@platform_32_zip//file",
+    "@platform_33_zip//file",
     "@platform_tools_zip//file",
     "@sdk_patcher_zip//file",
     "@sdk_tools_zip//file",
@@ -29,7 +29,7 @@ downloaded_sdk = [
 sdk_jvm_flags = [
     "-Dsdk.repo.buildtools.zip=$(location @build_tools_zip//file)",
     "-Dsdk.repo.emulator.zip=$(location @emulator_zip//file)",
-    "-Dsdk.repo.platform.zip=$(location @platform_32_zip//file)",
+    "-Dsdk.repo.platform.zip=$(location @platform_33_zip//file)",
     "-Dsdk.repo.platformtools.zip=$(location @platform_tools_zip//file)",
     "-Dsdk.repo.sdkpatcher.zip=$(location @sdk_patcher_zip//file)",
     "-Dsdk.repo.sdktools.zip=$(location @sdk_tools_zip//file)",

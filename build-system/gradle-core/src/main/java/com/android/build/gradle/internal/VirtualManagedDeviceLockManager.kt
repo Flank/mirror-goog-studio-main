@@ -57,6 +57,9 @@ class VirtualManagedDeviceLockManager(
     init {
         val lockFile =
             androidLocationsProvider.gradleAvdLocation.toFile().resolve(TRACKING_FILE_NAME)
+        if (!lockFile.parentFile.exists()) {
+            lockFile.parentFile.mkdirs()
+        }
         trackingFile = SynchronizedFile.getInstanceWithMultiProcessLocking(lockFile)
     }
 

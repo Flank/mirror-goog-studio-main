@@ -154,10 +154,10 @@ http_file(
 )
 # Not for use in Presubmit
 http_file(
-    name = "platform_32_zip",
-    urls = ["https://dl.google.com/android/repository/platform-32_r01.zip"],
-    sha256 = "01d8da1c900e70fcf5da39767d5444e39928935b1a5927055ce749fc348ca7ae",
-    downloaded_file_path = "platform-32_r01.zip",
+    name = "platform_33_zip",
+    urls = ["https://dl.google.com/android/repository/platform-33_r01.zip"],
+    sha256 = "4a1deecb5d9521bca90b8a50d7c9d83e9cf117a581a9418dc941d30c552c04b7",
+    downloaded_file_path = "platform-33_r01.zip",
 )
 # Not for use in Presubmit
 http_file(
