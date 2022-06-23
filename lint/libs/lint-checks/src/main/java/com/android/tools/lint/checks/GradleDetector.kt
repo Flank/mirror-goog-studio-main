@@ -391,15 +391,6 @@ open class GradleDetector : Detector(), GradleScanner {
                 val version = GradleVersion.tryParse(versionString)
                 if (version != null) {
                     var recommended = getLatestBuildTools(context.client, version.major)
-                    if (recommended != null && version < recommended) {
-                        val message = "Old buildToolsVersion " +
-                            version +
-                            "; recommended version is " +
-                            recommended +
-                            " or later"
-                        val fix = getUpdateDependencyFix(version.toString(), recommended.toString())
-                        report(context, statementCookie, DEPENDENCY, message, fix)
-                    }
 
                     // 23.0.0 shipped with a serious bugs which affects program correctness
                     // (such as https://code.google.com/p/android/issues/detail?id=183180)

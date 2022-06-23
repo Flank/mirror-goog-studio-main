@@ -147,9 +147,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:1: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n" +
             "apply plugin: 'android'\n" +
             "~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n" +
-            "    buildToolsVersion \"19.0.0\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n" +
             "    freeCompile 'com.google.guava:guava:11.0.2'\n" +
             "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
@@ -168,7 +165,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:23: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n" +
             "    compile 'com.android.support:appcompat-v7:+'\n" +
             "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "1 errors, 8 warnings\n"
+            "1 errors, 7 warnings\n"
 
         lint().files(mDependencies)
             .issues(COMPATIBILITY, DEPRECATED, DEPENDENCY, PLUS)
@@ -185,10 +182,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "@@ -1 +1\n" +
                     "- apply plugin: 'android'\n" +
                     "+ apply plugin: 'com.android.application'\n" +
-                    "Fix for build.gradle line 5: Change to 19.1:\n" +
-                    "@@ -5 +5\n" +
-                    "-     buildToolsVersion \"19.0.0\"\n" +
-                    "+     buildToolsVersion \"19.1\"\n" +
                     "Fix for build.gradle line 24: Change to 21.0:\n" +
                     "@@ -24 +24\n" +
                     "-     freeCompile 'com.google.guava:guava:11.0.2'\n" +
@@ -1046,9 +1039,6 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testDependencies() {
         val expected = "" +
-            "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n" +
-            "    buildToolsVersion \"19.0.0\"\n" +
-            "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
             "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n" +
             "    freeCompile 'com.google.guava:guava:11.0.2'\n" +
             "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
@@ -1064,7 +1054,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             "build.gradle:29: Warning: A newer version of com.android.support.test:runner than 0.3 is available: 0.5 [GradleDependency]\n" +
             "    androidTestCompile 'com.android.support.test:runner:0.3'\n" +
             "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "0 errors, 6 warnings\n"
+            "0 errors, 5 warnings\n"
 
         lint().files(mDependencies).issues(DEPENDENCY).run().expect(expected)
     }
@@ -2866,16 +2856,13 @@ class GradleDetectorTest : AbstractCheckTest() {
                 build.gradle.kts:3: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]
                     id("android") version "2.3.3"
                         ~~~~~~~
-                build.gradle.kts:8: Warning: Old buildToolsVersion 25.0.0; recommended version is 25.0.3 or later [GradleDependency]
-                    buildToolsVersion("25.0.0")
-                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle.kts:30: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.0-alpha8 is available: 1.0.3-alpha8 [GradleDependency]
                     compile("com.android.support.constraint:constraint-layout:1.0.0-alpha8")
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 build.gradle.kts:12: Warning: The value of minSdkVersion is too low. It can be incremented without noticeably reducing the number of supported devices. [MinSdkTooLow]
                         minSdkVersion(7)
                         ~~~~~~~~~~~~~~~~
-                0 errors, 4 warnings
+                0 errors, 3 warnings
                 """
             )
             .expectFixDiffs(
@@ -2884,10 +2871,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                 @@ -3 +3
                 -     id("android") version "2.3.3"
                 +     id("com.android.application") version "2.3.3"
-                Fix for build.gradle.kts line 8: Change to 25.0.3:
-                @@ -8 +8
-                -     buildToolsVersion("25.0.0")
-                +     buildToolsVersion("25.0.3")
                 Fix for build.gradle.kts line 30: Change to 1.0.3-alpha8:
                 @@ -30 +30
                 -     compile("com.android.support.constraint:constraint-layout:1.0.0-alpha8")
