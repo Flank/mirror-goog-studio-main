@@ -55,20 +55,23 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
             return
         }
         val outputDirectory = sdkApks.get().asFile.toPath()
+        FileUtils.cleanOutputDir(outputDirectory.toFile())
+
+        // TODO(b/235469089) use bundle tool here
         for (archiveFile in sdkApksArchives) {
             val archive = archiveFile.toPath()
             ZipArchive(archive).use {
                 it.getInputStream("standalones/standalone.apk").use { inputStream ->
                     // TODO(b/235469089) handle collisions
-                    Files.copy(inputStream, outputDirectory.resolve(MoreFiles.getNameWithoutExtension(archive) + "-standalone.apk"))
+                    val outputFile =
+                            outputDirectory.resolve(archive.fileName.toString().substringBeforeLast(".") + "-standalone.apk")
+                    Files.copy(inputStream, outputFile)
+                    logger.lifecycle("Extracted sandbox SDK APK for ${projectPath.get()} $variantName: $outputFile")
                 }
             }
         }
-        // TODO(b/235469089) use bundle tool here
-        val locations = sdkApksArchives.joinToString("\n - ", prefix = "\n - ") { it.absolutePath }
-        logger.lifecycle("Privacy sandbox SDK APKs for ${projectPath.get()} $variantName have been built at:$locations")
-
     }
+
 
     class CreationAction(creationConfig: ApkCreationConfig) : VariantTaskCreationAction<BuildPrivacySandboxSdkApks, ApkCreationConfig>(
             creationConfig,
