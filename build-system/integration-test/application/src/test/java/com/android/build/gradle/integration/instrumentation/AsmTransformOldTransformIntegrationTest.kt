@@ -156,9 +156,7 @@ class AsmTransformOldTransformIntegrationTest(private val withCoverage: Boolean)
         AsmApiApiTestUtils.configureExtensionForAnnotationAddingVisitor(project)
         AsmApiApiTestUtils.configureExtensionForInterfaceAddingVisitor(project)
 
-        val result = project.executor()
-            .withConfigurationCaching(BaseGradleExecutor.ConfigurationCaching.OFF)
-            .run(":app:assembleDebug")
+        val result = project.executor().run(":app:assembleDebug")
 
         assertThat(result.didWorkTasks).containsAtLeastElementsIn(
             listOf(
