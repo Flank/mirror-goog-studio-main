@@ -18,19 +18,24 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.options.BooleanOption
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -58,6 +63,9 @@ abstract class BundleToApkTask : NonIncrementalTask() {
     lateinit var signingConfigData: SigningConfigDataProvider
         private set
 
+    @get:Classpath
+    abstract val androidPrivacySandboxSdkArchives: ConfigurableFileCollection
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -69,6 +77,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
             it.initializeFromAndroidVariantTask(this)
             it.bundleFile.set(bundle)
             it.aapt2File.set(aapt2.getAapt2Executable().toFile())
+            it.androidPrivacySandboxSdkArchives.from(androidPrivacySandboxSdkArchives)
             it.outputFile.set(outputFile)
             signingConfigData.resolve()?.let { config ->
                 it.keystoreFile.set(config.storeFile)
@@ -84,6 +93,7 @@ abstract class BundleToApkTask : NonIncrementalTask() {
     abstract class Params : ProfileAwareWorkAction.Parameters() {
         abstract val bundleFile: RegularFileProperty
         abstract val aapt2File: Property<File>
+        abstract val androidPrivacySandboxSdkArchives: ConfigurableFileCollection
         abstract val outputFile: RegularFileProperty
         abstract val keystoreFile: Property<File>
         abstract val keystorePassword: Property<String>
@@ -114,6 +124,11 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                 )
                 .setLocalTestingMode(parameters.enableLocalTesting.get())
 		.setEnableApkSerializerWithoutBundleRecompression(true)
+
+            if (!parameters.androidPrivacySandboxSdkArchives.isEmpty) {
+                val asars = parameters.androidPrivacySandboxSdkArchives.files.map { it.toPath() }
+                command.setRuntimeEnabledSdkArchivePaths(asars.toImmutableSet())
+            }
 
             command.build().execute()
         }
@@ -148,6 +163,17 @@ abstract class BundleToApkTask : NonIncrementalTask() {
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle
             )
             creationConfig.services.initializeAapt2Input(task.aapt2)
+            if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+                task.androidPrivacySandboxSdkArchives.fromDisallowChanges(
+                        creationConfig.variantDependencies.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.ALL,
+                                AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE
+                        )
+                )
+            } else {
+                task.androidPrivacySandboxSdkArchives.disallowChanges()
+            }
             task.signingConfigData = SigningConfigDataProvider.create(creationConfig)
             task.enableLocalTesting.set(creationConfig.services.projectOptions[BooleanOption.ENABLE_LOCAL_TESTING])
         }

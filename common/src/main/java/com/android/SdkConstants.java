@@ -2101,6 +2101,10 @@ public final class SdkConstants {
     public static final String EXT_INSTANTAPP_PACKAGE = "iapk";
     /** Extension for Android archive files */
     public static final String EXT_AAR = "aar";
+    /** Extension for Android Privacy Sandbox Sdk archives */
+    public static final String EXT_ASAR = "asar";
+    /** Extension for Android Privacy Sandbox Sdk bundles */
+    public static final String EXT_ASB = "asb";
     /** Extension for Android atom files. */
     public static final String EXT_ATOM = "atom";
     /** Extension of java files, i.e. "java" */
@@ -2158,6 +2162,10 @@ public final class SdkConstants {
     public static final String DOT_ANDROID_PACKAGE = DOT + EXT_ANDROID_PACKAGE;
     /** Dot-Extension for Android archive files */
     public static final String DOT_AAR = DOT + EXT_AAR;
+    /** Extension for Android Privacy Sandbox Sdk archives */
+    public static final String DOT_ASAR = DOT + EXT_ASAR;
+    /** Extension for Android Privacy Sandbox Sdk bundles */
+    public static final String DOT_ASB = DOT + EXT_ASB;
     /** Dot-Extension of zip files, i.e. ".zip" */
     public static final String DOT_ZIP = DOT + EXT_ZIP;
     /** Dot-Extension of aidl files, i.e. ".aidl" */

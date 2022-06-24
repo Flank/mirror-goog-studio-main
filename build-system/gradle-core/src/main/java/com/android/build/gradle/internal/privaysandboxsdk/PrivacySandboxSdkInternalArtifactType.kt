@@ -35,6 +35,9 @@ PrivacySandboxSdkInternalArtifactType<T : FileSystemLocation>(
 
     // final .asb file ready to be uploaded to Play Store
     object ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE, category = Category.OUTPUTS), Replaceable
+    // Locally derived Android Sdk Archive file for local testing
+    object ASAR: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE, category = Category.OUTPUTS), Replaceable
+
     object LINKED_MERGE_RES_FOR_ASB: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
     object MODULE_BUNDLE: PrivacySandboxSdkInternalArtifactType<RegularFile>(ArtifactKind.FILE), Replaceable
     object APP_METADATA: PrivacySandboxSdkInternalArtifactType<RegularFile>(FILE), Replaceable
