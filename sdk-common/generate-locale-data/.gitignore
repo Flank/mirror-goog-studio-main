@@ -1,0 +1,11 @@
+/.idea
+*.iml
+.gradle
+/build
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
+gradlew
+gradlew.bat
+src/main/resources/ISO-639-2_utf-8.txt
+src/main/resources/obp.html
+src/main/resources/iso-639-3.zip

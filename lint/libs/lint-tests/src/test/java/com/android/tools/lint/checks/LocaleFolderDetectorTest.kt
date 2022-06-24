@@ -53,7 +53,7 @@ res/values-yi: Warning: The locale folder "yi" should be called "ji" instead; se
             xml("res/values-ff-rNO/strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-ff-rNO: Warning: Suspicious language and region combination ff (Fulah) with NO (Norway): language ff is usually paired with: SN (Senegal), CM (Cameroon), GN (Guinea), MR (Mauritania) [WrongRegion]
+res/values-ff-rNO: Warning: Suspicious language and region combination ff (Fulah) with NO (Norway): language ff is usually paired with: SN (Senegal), BF (Burkina Faso), CM (Cameroon), GH (Ghana), GM (Gambia), GN (Guinea), GW (Guinea-Bissau), LR (Liberia), MR (Mauritania), NE (Niger), NG (Nigeria), SL (Sierra Leone) [WrongRegion]
 res/values-nb-rSE: Warning: Suspicious language and region combination nb (Norwegian Bokmål) with SE (Sweden): language nb is usually paired with: NO (Norway), SJ (Svalbard & Jan Mayen) [WrongRegion]
 res/values-sv-rSV: Warning: Suspicious language and region combination sv (Swedish) with SV (El Salvador): language sv is usually paired with: SE (Sweden), AX (Åland Islands), FI (Finland) [WrongRegion]
 0 errors, 3 warnings
