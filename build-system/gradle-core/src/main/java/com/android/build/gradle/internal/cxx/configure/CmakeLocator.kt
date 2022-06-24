@@ -232,7 +232,7 @@ private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
         return null
     }
     val cmakeExecutable = File(cmakeFolder, "cmake$exe")
-    if (!cmakeExecutable.exists()) {
+    if (!cmakeExecutable.isFile()) {
         return null
     }
     return CmakeUtils.getVersion(cmakeFolder)
