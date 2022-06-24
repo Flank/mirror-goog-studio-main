@@ -54,11 +54,6 @@ class LocalesConfigTest {
                 </locale-config>
             """.trimIndent()
         )
-        TestFileUtils.searchRegexAndReplace(
-            project.buildFile,
-            "compileSdkVersion \\d+",
-            "compileSdkPreview \"Tiramisu\""
-        )
     }
 
     @Test
