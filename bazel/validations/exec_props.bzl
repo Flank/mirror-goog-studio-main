@@ -1,6 +1,10 @@
 """Aspect to validate exec_properties."""
 
-LARGE_MACHINE_ALLOWLIST = []
+LARGE_MACHINE_ALLOWLIST = [
+    # Issue b/228456598
+    # This target requires a large (min 16 GB) amount of memory to run.
+    "//tools/adt/idea/sync-perf-tests:intellij.android.sync-perf-tests_tests__ExtraLargeV2",
+]
 
 LARGE_MACHINE_FAILURE_MESSAGE = """'{}' is trying to use large machines.
 Only approved targets can depend on large machine types.
