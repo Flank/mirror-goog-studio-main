@@ -15,19 +15,13 @@
  */
 package com.android.ide.common.resources;
 
-import static java.util.Locale.US;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.SdkUtils;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Provides access to locale information such as language names and
@@ -224,8 +218,12 @@ public class LocaleManager {
     }
 
     /**
-     * Like {@link #getLanguageRegion(String)}, but does not take user preferences
-     * and locations into consideration.
+     * Returns the region code for the given language. <b>Note that there can be
+     * many regions that speak a given language; this just picks one</b> based
+     * on a set of heuristics.
+     *
+     * @param languageCode the language to look up
+     * @return the corresponding region code, if any
      */
     @Nullable
     public static String getDefaultLanguageRegion(@NonNull String languageCode) {
@@ -259,173 +257,6 @@ public class LocaleManager {
 
         assert false : languageCode;
         return null;
-    }
-
-    /**
-     * Returns the region code for the given language. <b>Note that there can be
-     * many regions that speak a given language; this just picks one</b> based
-     * on a set of heuristics.
-     *
-     * @param languageCode the language to look up
-     * @return the corresponding region code, if any
-     */
-    @Nullable
-    public static String getLanguageRegion(@NonNull String languageCode) {
-        // Try to pick one language based on various heuristics:
-
-        // (1) Check to see if the user has deliberately picked a preferred
-        //     region for this language with an option. That should always
-        //     win. Example: STUDIO_LOCALES="en_GB,pt_PT" says that for English
-        //     we should always use the region GB and for Portuguese we should always
-        //     use the region PT. Also allow en-GB and en-rGB.
-        String option = System.getenv("STUDIO_LOCALES");
-        if (option == null) {
-            option = System.getProperty("studio.locales");
-        }
-        if (option != null) {
-            for (String regionLocale : Splitter.on(',').trimResults().split(option)) {
-                if (SdkUtils.startsWithIgnoreCase(regionLocale, languageCode)) {
-                    if (regionLocale.length() == 5 && ((regionLocale.charAt(2) == '_')
-                            || regionLocale.charAt(2) == '-')) {
-                        return regionLocale.substring(3).toUpperCase(US);
-                    } else if (regionLocale.length() == 6 && regionLocale.charAt(2) == '-'
-                            && regionLocale.charAt(3) == 'r') {
-                        return regionLocale.substring(4).toUpperCase(US);
-                    }
-                }
-            }
-        }
-
-        // (2) Check the user's locale; if it happens to be in the same language
-        //     as the target language, and it specifies a region, use that region
-        Locale locale = Locale.getDefault();
-        if (languageCode.equalsIgnoreCase(locale.getLanguage())) {
-            String country = locale.getCountry();
-            if (!country.isEmpty()) {
-                country = country.toUpperCase(US);
-                if (country.length() == 2) {
-                    return country;
-                }
-            }
-        }
-
-        // Do we have multiple known regions for this locale? If so, try to pick
-        // among them based on heuristics.
-        List<String> regions = getRelevantRegions(languageCode);
-        if (regions.size() > 1) {
-            // Some languages are used in a huge number of regions (English is
-            // in 90+ regions for example), and similarly, some regions have multiple
-            // major languages (Switzerland for example). In these cases we don't want
-            // to show a region flag for the local region (e.g. for Switzerland you
-            // would see the same flag for German, French, Italian, ...).
-            // Therefore, only use region lookup for a subset of languages where
-            // we're not sure.
-            List<String> relevant = getDisambiguateRegions(languageCode);
-
-            // (3) Check the user's country. The user may not be using the target
-            //     language, but if the current country matches one of the relevant
-            //     regions, use it.
-            String country = locale.getCountry();
-            if (!country.isEmpty() && relevant != null) {
-                country = country.toUpperCase(US);
-                if (country.length() == 2 && regions.contains(country) &&
-                        (relevant.isEmpty() || relevant.contains(country))) {
-                    return country;
-                }
-            }
-
-            // (4) Look at the user's network location; if we can resolve
-            //     the domain name, the TLD might be an ISO 3166 country code:
-            //     http://en.wikipedia.org/wiki/Country_code_top-level_domain
-            //     If so, and that country code is in one of the candidate regions,
-            //     use it. (Note the exceptions listed in there; we should treat
-            //     "uk" as "gb" for ISO code lookup.)
-            //
-            //   NOTE DONE: It turns out this is tricky. Looking up the current domain
-            //     typically requires a network connection, sometimes it can
-            //     take seconds, and even the domain name may not be helpful;
-            //     it may be for example a .com address.
-
-
-            // (5) Use the timezone! The timezone can give us a very good clue
-            //     about the region. In many cases we can get an exact match,
-            //     e.g. if we're looking at the timezone Europe/Lisbon we know
-            //     the region is PT. (In the future we could extend this to
-            //     not only map from timezone to region code, but to look at
-            //     the continent and raw offsets for further clues to guide the
-            //     region choice.)
-            if (relevant != null) {
-                String region = getTimeZoneRegionAlpha2(TimeZone.getDefault());
-                if (region == null) {
-                    // Unknown timezone: ambiguous and don't attempt to guess
-                    return null;
-                }
-                if (regions.contains(region) && (relevant.isEmpty() || relevant.contains(region))) {
-                    return region;
-                }
-            }
-
-            //
-            // (6) Look at installed locales, and limit our options to the regions
-            //     found in locales for the given language.
-            //     For example, on my system, the LocaleManager provides 90
-            //     relevant regions for English, but my system only has 11,
-            //     so we can eliminate the remaining 79 from consideration.
-            //     (Sadly, it doesn't look like the local locales are sorted
-            //     in any way significant for the user, so we can't just assume
-            //     that the first locale of the target language is somehow special.)
-            Locale candidate = null;
-            for (Locale available : Locale.getAvailableLocales()) {
-                if (languageCode.equals(available.getLanguage()) &&
-                        regions.contains(available.getCountry())) {
-                    if (candidate != null) {
-                        candidate = null; // more than one match; doesn't help us
-                        break;
-                    } else {
-                        candidate = available;
-                    }
-                }
-            }
-            if (candidate != null && relevant != null &&
-                    (relevant.isEmpty() || relevant.contains(candidate.getCountry()))) {
-                return candidate.getCountry();
-            }
-
-            //
-            // (7) Give preference to a region that has the same region code
-            //     as the language code; this is usually where the language is named
-            //     after a region
-            char first = Character.toUpperCase(languageCode.charAt(0));
-            char second = Character.toUpperCase(languageCode.charAt(1));
-            for (String r : regions) {
-                if (r.charAt(0) == first && r.charAt(1) == second) {
-                    return r;
-                }
-            }
-        } else if (regions.size() == 1) {
-            return regions.get(0);
-        }
-
-        // Finally just pick the default one
-        return getDefaultLanguageRegion(languageCode);
-    }
-
-    @Nullable
-    private static List<String> getDisambiguateRegions(@NonNull String languageCode) {
-        if ("ar".equals(languageCode) || "zh".equals(languageCode)) {
-            return Collections.emptyList();
-        } else if ("en".equals(languageCode)) {
-            return Arrays.asList("US", "GB");
-        } else if ("es".equals(languageCode)) {
-            return Arrays.asList("MX", "AR", "CL", "CO", "CR", "CU", "DO", "GT", "HN", "NI",
-                    "PA", "PY", "SV", "UY", "VE", "ME");
-        } else if ("pt".equals(languageCode)) {
-            return Arrays.asList("PT", "BR");
-        } else if ("ru".equals(languageCode)) {
-            return Collections.singletonList("ru");
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -578,864 +409,8 @@ public class LocaleManager {
         return null;
     }
 
-    /**
-     * Guess the 3-letter region code containing the given time zone
-     *
-     * @param zone The timezone to look up
-     * @return the corresponding 3 letter region code
-     */
-    @SuppressWarnings("SpellCheckingInspection")
-    @Nullable
-    @VisibleForTesting
-    public static String getTimeZoneRegionAlpha3(@NonNull TimeZone zone) {
-        int index = getTimeZoneRegionIndex(zone);
-        if (index != -1) {
-            return ISO_3166_2_CODES[index];
-        }
-
-        return null;
-    }
-
-    /**
-     * Guess the 2-letter region code containing the given time zone
-     *
-     * @param zone The timezone to look up
-     * @return the corresponding 2 letter region code
-     */
-    @SuppressWarnings("SpellCheckingInspection")
-    @Nullable
-    @VisibleForTesting
-    public static String getTimeZoneRegionAlpha2(@NonNull TimeZone zone) {
-        int index = getTimeZoneRegionIndex(zone);
-        if (index != -1) {
-            index = ISO_3166_2_TO_1[index];
-            if (index != -1) {
-                return ISO_3166_1_CODES[index];
-            }
-        }
-
-        return null;
-    }
-
     // The remainder of this class is generated by generate-locale-data
     // DO NOT EDIT MANUALLY
-
-    private static int getTimeZoneRegionIndex(@NonNull TimeZone zone) {
-        // Instead of String#hashCode, use this to ensure stable across platforms
-        String id = zone.getID();
-        int hashedId = 0;
-        for (int i = 0, n = id.length(); i < n; i++) {
-            hashedId = 31 * hashedId + id.charAt(i);
-        }
-        switch (zone.getRawOffset()) {
-            case -39600000:
-                switch (hashedId) {
-                    case -596311663:
-                        return 166;
-                    case -1853972947:
-                        return 233;
-                    default:
-                        return 10;
-                }
-            case -36000000:
-                switch (hashedId) {
-                    case -605081605:
-                        return 48;
-                    case -1660850775:
-                        return 186;
-                    case 946756753:
-                        return 233;
-                    default:
-                        return 235;
-                }
-            case -34200000:
-                return 186;
-            case -32400000:
-                switch (hashedId) {
-                    case 1404986049:
-                        return 186;
-                    default:
-                        return 235;
-                }
-            case -28800000:
-                switch (hashedId) {
-                    case 2116473746:
-                        return 175;
-                    case 900028252:
-                    case 364935240:
-                        return 39;
-                    case -1536188513:
-                    case 79537:
-                    case 1946599416:
-                        return 235;
-                    default:
-                        return 143;
-                }
-            case -25200000:
-                switch (hashedId) {
-                    case 202222115:
-                    case 611591843:
-                    case 2142546433:
-                    case 1532263802:
-                    case -641163936:
-                        return 143;
-                    case -1203556979:
-                    case 1392614359:
-                    case -1927172530:
-                    case 1159165634:
-                    case -1968700029:
-                    case 79382:
-                    case 2011698031:
-                    case -657922306:
-                        return 235;
-                    default:
-                        return 39;
-                }
-            case -21600000:
-                switch (hashedId) {
-                    case 1335284620:
-                        return 29;
-                    case -355081471:
-                        return 52;
-                    case 662067781:
-                        return 66;
-                    case 268098540:
-                        return 93;
-                    case -1192934179:
-                        return 99;
-                    case -496169397:
-                        return 165;
-                    case -610612331:
-                        return 201;
-                    case 35870737:
-                    case -2089950224:
-                        return 42;
-                    case 1033313139:
-                    case 958016402:
-                    case 1650383341:
-                    case -1436528620:
-                    case -905842704:
-                    case -380253810:
-                        return 143;
-                    case -1997850159:
-                    case 1290869225:
-                    case 1793201705:
-                    case 1334007082:
-                    case 99854508:
-                    case 569007676:
-                    case 1837303604:
-                    case -1958461186:
-                        return 39;
-                    default:
-                        return 235;
-                }
-            case -18000000:
-                switch (hashedId) {
-                    case 1675357736:
-                        return 25;
-                    case 1344376451:
-                        return 49;
-                    case 407688513:
-                        return 66;
-                    case -1611524809:
-                        return 101;
-                    case 1360610048:
-                        return 56;
-                    case 1360273357:
-                        return 143;
-                    case 1732450137:
-                        return 174;
-                    case 2039677810:
-                        return 176;
-                    case -223474994:
-                        return 216;
-                    case 1503655288:
-                    case 2111569:
-                        return 53;
-                    case 1135364699:
-                    case -163519108:
-                        return 113;
-                    case -615687308:
-                    case 42696295:
-                    case -1756511823:
-                    case 1213658776:
-                        return 32;
-                    case 1908749375:
-                    case -1694184172:
-                    case 695184620:
-                    case 1356626855:
-                    case 622452689:
-                    case 977509670:
-                    case 151241566:
-                    case 1826315056:
-                    case -792567293:
-                        return 39;
-                    default:
-                        return 235;
-                }
-            case -14400000:
-                switch (hashedId) {
-                    case 2116646736:
-                        return 13;
-                    case 830494036:
-                        return 3;
-                    case 1501639611:
-                        return 8;
-                    case -1204380126:
-                        return 0;
-                    case -77181033:
-                        return 33;
-                    case -2123999328:
-                        return 27;
-                    case 1572742253:
-                        return 30;
-                    case 1617469984:
-                        return 31;
-                    case 1553377762:
-                        return 20;
-                    case -204998961:
-                        return 54;
-                    case -1482667423:
-                        return 62;
-                    case -432820086:
-                        return 64;
-                    case -1047459319:
-                        return 91;
-                    case -1187130823:
-                        return 92;
-                    case -1594534092:
-                        return 86;
-                    case 1493585930:
-                        return 96;
-                    case -1396416648:
-                        return 122;
-                    case -1395152331:
-                        return 129;
-                    case -492237152:
-                        return 137;
-                    case 10078612:
-                        return 155;
-                    case -1922505842:
-                        return 154;
-                    case 1367207089:
-                        return 184;
-                    case -191720853:
-                        return 213;
-                    case -40156994:
-                        return 225;
-                    case -760053978:
-                        return 238;
-                    case -777581977:
-                        return 239;
-                    case 1826464710:
-                        return 240;
-                    case -611834443:
-                    case -2036395347:
-                        return 42;
-                    case -691236908:
-                    case 79506:
-                        return 181;
-                    case -82660415:
-                    case 1911738030:
-                        return 241;
-                    case -1680637607:
-                    case 1275531960:
-                    case -2087755565:
-                    case -640330778:
-                    case -95289381:
-                    case -2011036567:
-                        return 39;
-                    default:
-                        return 32;
-                }
-            case -12600000:
-                return 39;
-            case -10800000:
-                switch (hashedId) {
-                    case -1940316618:
-                        return 42;
-                    case -105805749:
-                        return 75;
-                    case -770987206:
-                        return 94;
-                    case 413002919:
-                        return 204;
-                    case -159391975:
-                        return 208;
-                    case 1987071743:
-                        return 234;
-                    case -1134084912:
-                    case 2039749182:
-                        return 92;
-                    case 1231674648:
-                    case -1203975328:
-                    case -1203852432:
-                    case -615687308:
-                    case -1887400619:
-                    case 1646238717:
-                    case 42696295:
-                    case 1793082297:
-                    case -1756511823:
-                    case -612056498:
-                    case -1523781592:
-                    case 65649:
-                    case 1213658776:
-                    case 1213776064:
-                        return 32;
-                    default:
-                        return 8;
-                }
-            case -7200000:
-                return 32;
-            case -3600000:
-                switch (hashedId) {
-                    case -133690113:
-                        return 51;
-                    case -246124943:
-                        return 92;
-                    default:
-                        return 183;
-                }
-            case 0:
-                switch (hashedId) {
-                    case -896333693:
-                        return 21;
-                    case -2133882145:
-                        return 69;
-                    case -2002672065:
-                        return 70;
-                    case 1811467169:
-                        return 82;
-                    case 1799826075:
-                        return 83;
-                    case -1256614937:
-                        return 92;
-                    case -12863673:
-                        return 87;
-                    case 889260510:
-                        return 85;
-                    case -5318512:
-                        return 88;
-                    case -1242472063:
-                        return 104;
-                    case 457741181:
-                        return 114;
-                    case 2061328666:
-                        return 127;
-                    case -3562122:
-                        return 138;
-                    case -12902420:
-                        return 146;
-                    case 2035412001:
-                        return 153;
-                    case -1469296608:
-                        return 197;
-                    case 844576499:
-                        return 200;
-                    case 1802544234:
-                        return 194;
-                    case 103410438:
-                        return 207;
-                    case -495790896:
-                        return 218;
-                    case -1262455546:
-                    case 302807382:
-                        return 44;
-                    case -1917036507:
-                    case -1585848154:
-                        return 77;
-                    case 2160119:
-                    case 300259341:
-                        return 107;
-                    case -1722575083:
-                    case -1000832298:
-                        return 110;
-                    case -1677314468:
-                    case 518707320:
-                    case 794006110:
-                        return 183;
-                    default:
-                        return 80;
-                }
-            case 3600000:
-                switch (hashedId) {
-                    case -2142864836:
-                        return 6;
-                    case 747709736:
-                        return 5;
-                    case 291514280:
-                        return 2;
-                    case 804593244:
-                        return 15;
-                    case 1036497278:
-                        return 26;
-                    case -516035308:
-                        return 18;
-                    case 455493998:
-                        return 19;
-                    case 1841315615:
-                        return 46;
-                    case -12866559:
-                        return 38;
-                    case 965375949:
-                        return 47;
-                    case 930574244:
-                        return 41;
-                    case 57523521:
-                        return 45;
-                    case 641004357:
-                        return 58;
-                    case -862787273:
-                        return 63;
-                    case -977866396:
-                        return 65;
-                    case -611902065:
-                        return 79;
-                    case -1792691717:
-                        return 84;
-                    case 301988171:
-                        return 89;
-                    case 911784828:
-                        return 100;
-                    case 1643067635:
-                        return 102;
-                    case -1407095582:
-                        return 112;
-                    case -667021103:
-                        return 130;
-                    case 432607731:
-                        return 134;
-                    case 552727310:
-                        return 139;
-                    case -1834768363:
-                        return 149;
-                    case 720852545:
-                        return 145;
-                    case -675325160:
-                        return 147;
-                    case 1266363370:
-                        return 160;
-                    case 337689424:
-                        return 162;
-                    case 1809928993:
-                        return 164;
-                    case 1107183657:
-                        return 167;
-                    case 562540219:
-                        return 205;
-                    case -1783944015:
-                        return 211;
-                    case -1262503490:
-                        return 210;
-                    case 1108411820:
-                        return 198;
-                    case -1871032358:
-                        return 209;
-                    case -1348903496:
-                        return 202;
-                    case -1793726419:
-                        return 217;
-                    case 1817919522:
-                        return 226;
-                    case -1042753021:
-                        return 237;
-                    case 228701359:
-                    case 2079834968:
-                        return 59;
-                    case 1801750059:
-                    case 539516618:
-                        return 70;
-                    case 68470:
-                    case -672549154:
-                        return 76;
-                    case -1121325742:
-                    case 73413677:
-                        return 128;
-                    case -72083073:
-                    case -1407181132:
-                        return 168;
-                    default:
-                        return 180;
-                }
-            case 7200000:
-                switch (hashedId) {
-                    case 250954279:
-                        return 4;
-                    case -669373067:
-                        return 23;
-                    case 579178556:
-                        return 17;
-                    case 308014032:
-                        return 37;
-                    case 2046322969:
-                        return 46;
-                    case 1469914287:
-                        return 71;
-                    case -1854672812:
-                        return 73;
-                    case 213620546:
-                        return 90;
-                    case -1678352343:
-                        return 115;
-                    case -468176592:
-                        return 126;
-                    case 302201054:
-                        return 132;
-                    case -820952635:
-                        return 133;
-                    case -1407101538:
-                        return 135;
-                    case 1327019492:
-                        return 157;
-                    case -1305089392:
-                        return 189;
-                    case 1640682817:
-                        return 190;
-                    case 251969386:
-                        return 191;
-                    case 581080470:
-                        return 193;
-                    case -495845057:
-                        return 206;
-                    case 1088211684:
-                        return 215;
-                    case 790198029:
-                        return 212;
-                    case 1587535273:
-                        return 250;
-                    case 292038242:
-                        return 251;
-                    case 159021648:
-                        return 252;
-                    case -2046172313:
-                        return -1;
-                    case -1121325742:
-                    case 73413677:
-                        return 128;
-                    case 597833397:
-                    case 1289680939:
-                        return 140;
-                    case 302127113:
-                    case 66486:
-                        return 152;
-                    case -1439446106:
-                    case -296610415:
-                        return 185;
-                    case 44334398:
-                    case 540421055:
-                    case 660679831:
-                        return 57;
-                    case 65091:
-                    case 1801619315:
-                    case 66911291:
-                        return 67;
-                    case 511371267:
-                    case -1868494453:
-                    case -2095341728:
-                        return 111;
-                    default:
-                        return 232;
-                }
-            case 10800000:
-                switch (hashedId) {
-                    case -1744032040:
-                        return 24;
-                    case -675084931:
-                        return 28;
-                    case -1039536273:
-                        return 61;
-                    case -1495834442:
-                        return 72;
-                    case -1745250846:
-                        return 109;
-                    case -1396737853:
-                        return 50;
-                    case -195337532:
-                        return 124;
-                    case 1137056040:
-                        return 141;
-                    case -1663926768:
-                        return 187;
-                    case -5956312:
-                        return 192;
-                    case 1356856394:
-                        return 203;
-                    case -1210461823:
-                        return 230;
-                    case -1001939224:
-                        return 231;
-                    case -1439622607:
-                        return 249;
-                    case -453821949:
-                        return 159;
-                    case -2046172313:
-                        return -1;
-                    case -24907990:
-                    case -24904146:
-                        return 68;
-                    case 1656950469:
-                    case 68408:
-                        return 118;
-                    case 207779975:
-                    case -359165265:
-                    case -1778564402:
-                        return 227;
-                    default:
-                        return 190;
-                }
-            case 12600000:
-                return 108;
-            case 14400000:
-                switch (hashedId) {
-                    case -1675354028:
-                        return 7;
-                    case -1439595506:
-                        return 16;
-                    case 1375514249:
-                        return 81;
-                    case -1510507213:
-                        return 156;
-                    case -138196720:
-                        return 172;
-                    case -200488828:
-                        return 188;
-                    case -1131894135:
-                        return 214;
-                    case -2046172313:
-                        return -1;
-                    case 1612067903:
-                    case 77181:
-                        return 9;
-                    default:
-                        return 190;
-                }
-            case 16200000:
-                return 1;
-            case 18000000:
-                switch (hashedId) {
-                    case 1625237543:
-                        return 190;
-                    case 1836129403:
-                        return 220;
-                    case 1957264442:
-                    case 79320:
-                        return 173;
-                    case -1188197398:
-                    case 1941538258:
-                        return 222;
-                    case -1967893801:
-                    case -913591097:
-                        return 236;
-                    default:
-                        return 117;
-                }
-            case 19800000:
-                switch (hashedId) {
-                    case -452104218:
-                        return 131;
-                    default:
-                        return 105;
-                }
-            case 20700000:
-                return 169;
-            case 21600000:
-                switch (hashedId) {
-                    case -1403567769:
-                        return 106;
-                    case -1505128528:
-                        return 119;
-                    case 49913296:
-                    case 1547325344:
-                        return 35;
-                    case 1958400136:
-                    case 88135602:
-                        return 43;
-                    case -490238295:
-                    case 1998854729:
-                        return 117;
-                    case -1675948833:
-                    case -1675741970:
-                    case 66083:
-                        return 22;
-                    default:
-                        return 190;
-                }
-            case 23400000:
-                switch (hashedId) {
-                    case -737802333:
-                        return 40;
-                    default:
-                        return 148;
-                }
-            case 25200000:
-                switch (hashedId) {
-                    case 82971018:
-                        return 55;
-                    case 1075312767:
-                        return 120;
-                    case -173837534:
-                        return 125;
-                    case -1439402982:
-                        return 150;
-                    case -1738808822:
-                        return 219;
-                    case 1063310893:
-                    case -788096746:
-                        return 103;
-                    case 1214715332:
-                    case 14814128:
-                    case 85303:
-                        return 242;
-                    default:
-                        return 190;
-                }
-            case 28800000:
-                switch (hashedId) {
-                    case -455817678:
-                        return 34;
-                    case -156810007:
-                        return 177;
-                    case 43451613:
-                        return 229;
-                    case 307946178:
-                    case 1811257630:
-                        return 14;
-                    case 404568855:
-                    case -390386883:
-                        return 97;
-                    case -463608032:
-                    case -84259736:
-                        return 103;
-                    case -1667637192:
-                    case -1667637186:
-                        return 136;
-                    case -99068543:
-                    case -1778758162:
-                        return 158;
-                    case 663100500:
-                    case -808657565:
-                        return 190;
-                    case 133428255:
-                    case 499614468:
-                        return 195;
-                    case -264449833:
-                    case -2119377995:
-                    case -1043408894:
-                        return 150;
-                    default:
-                        return 43;
-                }
-            case 31500000:
-                return 14;
-            case 32400000:
-                switch (hashedId) {
-                    case -996350568:
-                        return 103;
-                    case 174722043:
-                        return 182;
-                    case -1304192311:
-                        return 178;
-                    case -1439528217:
-                        return 223;
-                    case -1661964753:
-                    case 81326:
-                        return 123;
-                    case -1660747039:
-                    case 73771:
-                    case 71341030:
-                        return 116;
-                    default:
-                        return 190;
-                }
-            case 34200000:
-                return 14;
-            case 36000000:
-                switch (hashedId) {
-                    case -596509280:
-                        return 95;
-                    case -1689443992:
-                        return 151;
-                    case 1882983613:
-                        return 179;
-                    case -1315980288:
-                    case -596124262:
-                    case -711962206:
-                        return 78;
-                    case 1988570398:
-                    case -572853474:
-                    case 1409241312:
-                    case -402306110:
-                    case 1755599521:
-                    case 1491561941:
-                        return 190;
-                    default:
-                        return 14;
-                }
-            case 37800000:
-                return 14;
-            case 39600000:
-                switch (hashedId) {
-                    case -1819305733:
-                        return 161;
-                    case -566871917:
-                        return 163;
-                    case -245513103:
-                        return 179;
-                    case -1314212085:
-                        return 243;
-                    case 180455737:
-                    case 82420:
-                        return 199;
-                    case -1905248083:
-                    case 1199139305:
-                    case -1762267155:
-                        return 78;
-                    default:
-                        return 190;
-                }
-            case 43200000:
-                switch (hashedId) {
-                    case -596550328:
-                        return 74;
-                    case -1660560468:
-                        return 121;
-                    case -1306030177:
-                        return 170;
-                    case -540079540:
-                        return 228;
-                    case -596051542:
-                        return 233;
-                    case -1574841606:
-                        return 244;
-                    case 2137001642:
-                    case 780835460:
-                    case -1861183774:
-                        return 144;
-                    case -488745714:
-                    case -345416640:
-                    case -572853474:
-                        return 190;
-                    default:
-                        return 171;
-                }
-            case 45900000:
-                return 171;
-            case 46800000:
-                switch (hashedId) {
-                    case -1524947876:
-                        return 121;
-                    case 515611329:
-                        return 221;
-                    case -796973095:
-                        return 224;
-                    default:
-                        return 245;
-                }
-            case 50400000:
-                return 121;
-        }
-        return -1;
-    }
 
     private static final String[] ISO_639_2_CODES = new String[] {
             "aar", "abk", "ace", "ach", "ada", "ady", "afa", "afh", "afr",
@@ -2454,8 +1429,8 @@ public class LocaleManager {
             243, 244, 245, 246,  63, 102, 247, 248, 250, 251, 252
 
     };
-    // Language afr: ZAF,NAM
-    private static final int[] REGIONS_AFR = new int[] { 250,160 };
+    // Language afr: NAM,ZAF
+    private static final int[] REGIONS_AFR = new int[] { 160,250 };
     // Language ara: ARE,BHR,COM,DJI,DZA,EGY,ERI,ESH,IRQ,ISR,JOR,KWT,LBN,LBY,MAR,MRT,OMN,PSE,QAT,SAU,SDN,SOM,SSD,SYR,TCD,TUN,YEM
     private static final int[] REGIONS_ARA = new int[] { 7,24,50,61,65,67,68,69,109,111,115,124,126,128,138,153,172,185,187,192,193,203,206,215,217,226,249 };
     // Language ben: BGD,IND
@@ -2468,72 +1443,72 @@ public class LocaleManager {
     private static final int[] REGIONS_DAN = new int[] { 63,92 };
     // Language deu: DEU,AUT,BEL,CHE,ITA,LIE,LUX
     private static final int[] REGIONS_DEU = new int[] { 59,15,18,41,112,130,134 };
-    // Language ell: GRC,CYP
-    private static final int[] REGIONS_ELL = new int[] { 90,57 };
-    // Language eng: USA,AIA,ARE,ASM,ATG,AUS,AUT,BDI,BEL,BHS,BLZ,BMU,BRB,BWA,CAN,CCK,CHE,CMR,COK,CXR,CYM,CYP,DEU,DGA,DMA,DNK,ERI,FIN,FJI,FLK,FSM,GBR,GGY,GHA,GIB,GMB,GRD,GUM,GUY,HKG,IMN,IND,IOT,IRL,ISR,JAM,JEY,KEN,KIR,KNA,LBR,LCA,LSO,MAC,MDG,MDV,MHL,MLT,MNP,MSR,MUS,MWI,MYS,NAM,NFK,NGA,NIU,NLD,NRU,NZL,PAK,PCN,PHL,PLW,PNG,PRI,RWA,SDN,SGP,SHN,SLB,SLE,SSD,SVN,SWE,SWZ,SXM,SYC,TCA,TKL,TON,TTO,TUV,TZA,UGA,UMI,VCT,VGB,VIR,VUT,WSM,ZAF,ZMB,ZWE
-    private static final int[] REGIONS_ENG = new int[] { 235,3,7,10,13,14,15,17,18,25,29,30,33,37,39,40,41,45,48,55,56,57,59,60,62,63,68,73,74,75,78,80,82,83,84,87,91,95,96,97,104,105,106,107,111,113,114,118,121,122,127,129,132,136,141,142,144,147,151,154,156,157,158,160,163,164,166,167,170,171,173,175,177,178,179,181,191,193,195,197,199,200,206,210,211,212,213,214,216,221,224,225,228,230,231,233,238,240,241,243,245,250,251,252 };
+    // Language ell: CYP,GRC
+    private static final int[] REGIONS_ELL = new int[] { 57,90 };
+    // Language eng: AIA,ARE,ASM,ATG,AUS,AUT,BDI,BEL,BHS,BLZ,BMU,BRB,BWA,CAN,CCK,CHE,CMR,COK,CXR,CYM,CYP,DEU,DGA,DMA,DNK,ERI,FIN,FJI,FLK,FSM,GBR,GGY,GHA,GIB,GMB,GRD,GUM,GUY,HKG,IMN,IND,IOT,IRL,ISR,JAM,JEY,KEN,KIR,KNA,LBR,LCA,LSO,MAC,MDG,MDV,MHL,MLT,MNP,MSR,MUS,MWI,MYS,NAM,NFK,NGA,NIU,NLD,NRU,NZL,PAK,PCN,PHL,PLW,PNG,PRI,RWA,SDN,SGP,SHN,SLB,SLE,SSD,SVN,SWE,SWZ,SXM,SYC,TCA,TKL,TON,TTO,TUV,TZA,UGA,UMI,USA,VCT,VGB,VIR,VUT,WSM,ZAF,ZMB,ZWE
+    private static final int[] REGIONS_ENG = new int[] { 3,7,10,13,14,15,17,18,25,29,30,33,37,39,40,41,45,48,55,56,57,59,60,62,63,68,73,74,75,78,80,82,83,84,87,91,95,96,97,104,105,106,107,111,113,114,118,121,122,127,129,132,136,141,142,144,147,151,154,156,157,158,160,163,164,166,167,170,171,173,175,177,178,179,181,191,193,195,197,199,200,206,210,211,212,213,214,216,221,224,225,228,230,231,233,235,238,240,241,243,245,250,251,252 };
     // Language ewe: GHA,TGO
     private static final int[] REGIONS_EWE = new int[] { 83,218 };
-    // Language fao: FRO,DNK
-    private static final int[] REGIONS_FAO = new int[] { 77,63 };
-    // Language fas: IRN,AFG
-    private static final int[] REGIONS_FAS = new int[] { 108,1 };
+    // Language fao: DNK,FRO
+    private static final int[] REGIONS_FAO = new int[] { 63,77 };
+    // Language fas: AFG,IRN
+    private static final int[] REGIONS_FAS = new int[] { 1,108 };
     // Language fra: FRA,BDI,BEL,BEN,BFA,BLM,CAF,CAN,CHE,CIV,CMR,COD,COG,COM,DJI,DZA,GAB,GIN,GLP,GNQ,GUF,HTI,LUX,MAF,MAR,MCO,MDG,MLI,MRT,MTQ,MUS,MYT,NCL,NER,PYF,REU,RWA,SEN,SPM,SYC,SYR,TCD,TGO,TUN,VUT,WLF
     private static final int[] REGIONS_FRA = new int[] { 76,17,18,19,21,27,38,39,41,44,45,46,47,50,61,65,79,85,86,89,94,101,134,137,138,139,141,146,153,155,156,159,161,162,186,188,191,194,204,214,215,217,218,226,243,244 };
-    // Language ful: SEN,BFA,CMR,GHA,GIN,GMB,GNB,LBR,MRT,NER,NGA,SLE
-    private static final int[] REGIONS_FUL = new int[] { 194,21,45,83,85,87,88,127,153,162,164,200 };
-    // Language gle: IRL,GBR
-    private static final int[] REGIONS_GLE = new int[] { 107,80 };
-    // Language hau: NGA,GHA,NER
-    private static final int[] REGIONS_HAU = new int[] { 164,83,162 };
+    // Language ful: BFA,CMR,GHA,GIN,GMB,GNB,LBR,MRT,NER,NGA,SEN,SLE
+    private static final int[] REGIONS_FUL = new int[] { 21,45,83,85,87,88,127,153,162,164,194,200 };
+    // Language gle: GBR,IRL
+    private static final int[] REGIONS_GLE = new int[] { 80,107 };
+    // Language hau: GHA,NER,NGA
+    private static final int[] REGIONS_HAU = new int[] { 83,162,164 };
     // Language hrv: HRV,BIH
     private static final int[] REGIONS_HRV = new int[] { 100,26 };
     // Language ita: ITA,CHE,SMR,VAT
     private static final int[] REGIONS_ITA = new int[] { 112,41,202,237 };
     // Language kor: KOR,PRK
     private static final int[] REGIONS_KOR = new int[] { 123,182 };
-    // Language lin: COD,AGO,CAF,COG
-    private static final int[] REGIONS_LIN = new int[] { 46,2,38,47 };
+    // Language lin: AGO,CAF,COD,COG
+    private static final int[] REGIONS_LIN = new int[] { 2,38,46,47 };
     // Language lrc: IRN,IRQ
     private static final int[] REGIONS_LRC = new int[] { 108,109 };
-    // Language msa: MYS,BRN,IDN,SGP
-    private static final int[] REGIONS_MSA = new int[] { 158,34,103,195 };
-    // Language nep: NPL,IND
-    private static final int[] REGIONS_NEP = new int[] { 169,105 };
+    // Language msa: BRN,IDN,MYS,SGP
+    private static final int[] REGIONS_MSA = new int[] { 34,103,158,195 };
+    // Language nep: IND,NPL
+    private static final int[] REGIONS_NEP = new int[] { 105,169 };
     // Language nld: NLD,ABW,BEL,BES,CUW,SUR,SXM
     private static final int[] REGIONS_NLD = new int[] { 167,0,18,20,54,208,213 };
     // Language nob: NOR,SJM
     private static final int[] REGIONS_NOB = new int[] { 168,198 };
     // Language orm: ETH,KEN
     private static final int[] REGIONS_ORM = new int[] { 72,118 };
-    // Language oss: RUS,GEO
-    private static final int[] REGIONS_OSS = new int[] { 190,81 };
-    // Language pan: PAK,IND
-    private static final int[] REGIONS_PAN = new int[] { 173,105 };
-    // Language por: PRT,AGO,BRA,CHE,CPV,GNB,GNQ,LUX,MAC,MOZ,STP,TLS
-    private static final int[] REGIONS_POR = new int[] { 183,2,32,41,51,88,89,134,136,152,207,223 };
+    // Language oss: GEO,RUS
+    private static final int[] REGIONS_OSS = new int[] { 81,190 };
+    // Language pan: IND,PAK
+    private static final int[] REGIONS_PAN = new int[] { 105,173 };
+    // Language por: AGO,BRA,CHE,CPV,GNB,GNQ,LUX,MAC,MOZ,PRT,STP,TLS
+    private static final int[] REGIONS_POR = new int[] { 2,32,41,51,88,89,134,136,152,183,207,223 };
     // Language pus: AFG,PAK
     private static final int[] REGIONS_PUS = new int[] { 1,173 };
-    // Language que: PER,BOL,ECU
-    private static final int[] REGIONS_QUE = new int[] { 176,31,66 };
-    // Language ron: ROU,MDA
-    private static final int[] REGIONS_RON = new int[] { 189,140 };
+    // Language que: BOL,ECU,PER
+    private static final int[] REGIONS_QUE = new int[] { 31,66,176 };
+    // Language ron: MDA,ROU
+    private static final int[] REGIONS_RON = new int[] { 140,189 };
     // Language rus: RUS,BLR,KAZ,KGZ,MDA,UKR
     private static final int[] REGIONS_RUS = new int[] { 190,28,117,119,140,232 };
-    // Language sme: NOR,FIN,SWE
-    private static final int[] REGIONS_SME = new int[] { 168,73,211 };
-    // Language snd: PAK,IND
-    private static final int[] REGIONS_SND = new int[] { 173,105 };
+    // Language sme: FIN,NOR,SWE
+    private static final int[] REGIONS_SME = new int[] { 73,168,211 };
+    // Language snd: IND,PAK
+    private static final int[] REGIONS_SND = new int[] { 105,173 };
     // Language som: SOM,DJI,ETH,KEN
     private static final int[] REGIONS_SOM = new int[] { 203,61,72,118 };
-    // Language spa: ESP,ARG,BLZ,BOL,BRA,CHL,COL,CRI,CUB,DOM,ECU,GNQ,GTM,HND,MEX,NIC,PAN,PER,PHL,PRI,PRY,SLV,URY,USA,VEN,XEA,XIC
-    private static final int[] REGIONS_SPA = new int[] { 70,8,29,31,32,42,49,52,53,64,66,89,93,99,143,165,174,176,177,181,184,201,234,235,239,246,247 };
+    // Language spa: ARG,BLZ,BOL,BRA,CHL,COL,CRI,CUB,DOM,ECU,ESP,GNQ,GTM,HND,MEX,NIC,PAN,PER,PHL,PRI,PRY,SLV,URY,USA,VEN,XEA,XIC
+    private static final int[] REGIONS_SPA = new int[] { 8,29,31,32,42,49,52,53,64,66,70,89,93,99,143,165,174,176,177,181,184,201,234,235,239,246,247 };
     // Language sqi: ALB,MKD,XKK
     private static final int[] REGIONS_SQI = new int[] { 5,145,248 };
-    // Language srp: SRB,BIH,MNE,XKK
-    private static final int[] REGIONS_SRP = new int[] { 205,26,149,248 };
-    // Language swa: TZA,COD,KEN,UGA
-    private static final int[] REGIONS_SWA = new int[] { 230,46,118,231 };
+    // Language srp: BIH,MNE,SRB,XKK
+    private static final int[] REGIONS_SRP = new int[] { 26,149,205,248 };
+    // Language swa: COD,KEN,TZA,UGA
+    private static final int[] REGIONS_SWA = new int[] { 46,118,230,231 };
     // Language swe: SWE,ALA,FIN
     private static final int[] REGIONS_SWE = new int[] { 211,4,73 };
     // Language tam: IND,LKA,MYS,SGP
@@ -2546,8 +1521,8 @@ public class LocaleManager {
     private static final int[] REGIONS_URD = new int[] { 105,173 };
     // Language uzb: UZB,AFG
     private static final int[] REGIONS_UZB = new int[] { 236,1 };
-    // Language yor: NGA,BEN
-    private static final int[] REGIONS_YOR = new int[] { 164,19 };
+    // Language yor: BEN,NGA
+    private static final int[] REGIONS_YOR = new int[] { 19,164 };
     // Language yrl: BRA,COL,VEN
     private static final int[] REGIONS_YRL = new int[] { 32,49,239 };
     // Language zho: CHN,HKG,MAC,SGP,TWN
@@ -2621,67 +1596,67 @@ public class LocaleManager {
     };
 
     private static final int[] LANGUAGE_REGION = new int[] {
-             72,  81,  -1,  -1,  -1,  -1,  -1,  -1,
-            250,  -1,  83,  -1,  -1,  -1,  -1,  72,
-             -1,  -1,  -1,   7,  -1,  70,  -1,  -1,
-             -1,  -1, 105,  -1,  -1,  -1,  16,  -1,
-             -1,  31,  16,  -1,  -1, 190,  -1, 146,
-             -1,  -1,  -1,  -1,  28,  -1,  22,  -1,
-             -1, 105,  -1,  -1, 243,  -1,  -1,  43,
-             26,  -1,  76,  -1,  -1,  -1,  23,  -1,
-             -1,  -1,  -1,   6,  -1,  -1,  -1,  58,
-             95,  -1, 190,  -1,  -1,  -1,  -1,  -1,
-             -1,  -1,  -1, 190,  -1,  -1,  -1,  -1,
-             80,  76,  -1,  -1,  -1,  39,  -1,  -1,
-             -1,  -1,  80,  -1,  63,  -1,  -1,  -1,
-             -1,  59,  -1,  -1, 142,  -1,  -1,  -1,
-             -1,  -1,  -1,  35,  -1,  -1,  -1,  90,
-             -1, 235,  -1,  -1,  71,  70,  83,  -1,
-             -1,  77, 108,  -1,  74,  -1,  73,  -1,
-             -1,  76,  -1,  -1,  -1,  -1, 167, 194,
-             -1,  -1,  -1,  -1,  -1,  -1,  -1,  80,
-            107,  70, 104,  -1,  -1,  -1,  -1,  -1,
-             -1,  -1, 184,  -1, 105,  -1,  -1, 101,
-            164,  -1, 111, 160,  -1,  -1, 105,  -1,
-             -1, 179, 100,  -1, 102,  -1,   9,  -1,
-            164,  -1,  43,  -1,  39,  -1,  -1,  -1,
-             -1, 103,  -1,  -1, 235,  -1,  -1, 110,
-            112, 103,  -1, 116,  -1,  -1,  -1,  -1,
-             -1,  92,  -1, 105,  -1, 105,  81, 164,
-             -1, 117,  -1,  32,  -1,  -1, 120,  -1,
-            118, 191, 119,  -1,  -1, 190,   2, 123,
-             -1,  -1,  -1,  -1,  -1,  -1,   2,  -1,
-            227,  -1,  -1,  -1,  -1, 125,  -1, 135,
-             -1, 167,  46, 133,  -1,  -1, 108, 134,
-             -1,  46, 231,  -1,  -1,  -1,  -1,  -1,
-             -1, 144,  -1,  -1, 105,  -1,  -1, 105,
              -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-            145,  -1, 141, 147,  -1,  -1,  -1,  -1,
-            150,  -1, 171, 158,  -1,  -1,  -1,  -1,
-             -1, 148,  -1,  -1, 108,  -1,  -1,  -1,
-            170, 235, 250, 252, 160,  -1, 169,  -1,
-             -1,  -1,  -1, 167, 168, 168,  -1,  -1,
-            168,  -1,  -1,  -1,  -1, 157,  -1,  -1,
-             -1,  -1,  76,  39, 105,  72,  -1, 190,
-             -1,  -1,  -1,  -1,  -1,  -1, 173,  -1,
-             -1, 164,  -1,  -1,  -1,  -1, 180,  -1,
-            183,  -1,  -1,   1, 176,  -1,  -1,  -1,
-             -1,  41,  -1, 189,  17,  -1, 190,  -1,
-             38,  -1,  -1,  -1,  -1, 105,  -1,  -1,
+            160,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,   7,  -1,  -1,  -1,  -1,
              -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
-            131,  -1,  -1,  -1, 209, 210,  -1, 168,
-             -1,  -1,  -1, 245,  -1, 252, 173,  -1,
-             -1, 203,  -1, 132,  70,   5, 112,  -1,
-            205,  -1,  -1, 212,  -1, 103,  -1,  -1,
-            230, 211,  -1,  -1, 186,  -1, 105, 190,
-            105,  -1,  -1,  -1, 220, 177, 219,  -1,
-             68,  -1,  -1,  -1,  -1,  -1,  -1, 224,
-             -1,  -1,  37, 152, 222,  -1,  -1, 227,
-             -1,  -1,  83,  -1,  -1,  -1,  43, 232,
-             -1,  -1, 105, 236,  -1, 250, 242,  -1,
-             -1,  -1,  -1,  -1,  -1,  -1,  18, 194,
-             -1, 250,  -1,  -1, 235, 164,  -1,  32,
-             -1,  -1,  -1, 138,  43,  43,  -1, 250,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  22,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  43,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,   6,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  63,  -1,  -1,  -1,
+             -1,  59,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  57,
+             -1,   3,  -1,  -1,  -1,  -1,  83,  -1,
+             -1,  63,   1,  -1,  -1,  -1,  -1,  -1,
+             -1,  76,  -1,  -1,  -1,  -1,  -1,  21,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             80,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             83,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1, 100,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+            112,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1, 123,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,   2,  -1,  -1,  -1, 108,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  34,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1, 105,  -1,
+             -1,  -1,  -1, 167,  -1, 168,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  72,  -1,  81,
+             -1,  -1,  -1,  -1,  -1,  -1, 105,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+              2,  -1,  -1,   1,  31,  -1,  -1,  -1,
+             -1,  -1,  -1, 140,  -1,  -1, 190,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  73,
+             -1,  -1,  -1,  -1,  -1,  -1, 105,  -1,
+             -1, 203,  -1,  -1,   8,   5,  -1,  -1,
+             26,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             46, 211,  -1,  -1,  -1,  -1, 105,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             68,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1, 227,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1, 105, 236,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,
+             -1,  -1,  -1,  -1,  -1,  19,  -1,  32,
+             -1,  -1,  -1,  -1,  -1,  43,  -1,  -1,
              -1,  -1
     };
 

@@ -33,11 +33,11 @@ class LocaleFolderDetectorTest : AbstractCheckTest() {
             xml("res/values-yi/strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-he: Warning: The locale folder "he" should be called "iw" instead; see the java.util.Locale documentation [LocaleFolder]
-res/values-id: Warning: The locale folder "id" should be called "in" instead; see the java.util.Locale documentation [LocaleFolder]
-res/values-yi: Warning: The locale folder "yi" should be called "ji" instead; see the java.util.Locale documentation [LocaleFolder]
-0 errors, 3 warnings
-"""
+            res/values-he: Warning: The locale folder "he" should be called "iw" instead; see the java.util.Locale documentation [LocaleFolder]
+            res/values-id: Warning: The locale folder "id" should be called "in" instead; see the java.util.Locale documentation [LocaleFolder]
+            res/values-yi: Warning: The locale folder "yi" should be called "ji" instead; see the java.util.Locale documentation [LocaleFolder]
+            0 errors, 3 warnings
+            """
         )
     }
 
@@ -53,21 +53,21 @@ res/values-yi: Warning: The locale folder "yi" should be called "ji" instead; se
             xml("res/values-ff-rNO/strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-ff-rNO: Warning: Suspicious language and region combination ff (Fulah) with NO (Norway): language ff is usually paired with: SN (Senegal), BF (Burkina Faso), CM (Cameroon), GH (Ghana), GM (Gambia), GN (Guinea), GW (Guinea-Bissau), LR (Liberia), MR (Mauritania), NE (Niger), NG (Nigeria), SL (Sierra Leone) [WrongRegion]
-res/values-nb-rSE: Warning: Suspicious language and region combination nb (Norwegian Bokmål) with SE (Sweden): language nb is usually paired with: NO (Norway), SJ (Svalbard & Jan Mayen) [WrongRegion]
-res/values-sv-rSV: Warning: Suspicious language and region combination sv (Swedish) with SV (El Salvador): language sv is usually paired with: SE (Sweden), AX (Åland Islands), FI (Finland) [WrongRegion]
-0 errors, 3 warnings
-"""
+            res/values-ff-rNO: Warning: Suspicious language and region combination ff (Fulah) with NO (Norway): language ff is usually paired with: BF (Burkina Faso), CM (Cameroon), GH (Ghana), GM (Gambia), GN (Guinea), GW (Guinea-Bissau), LR (Liberia), MR (Mauritania), NE (Niger), NG (Nigeria), SL (Sierra Leone), SN (Senegal) [WrongRegion]
+            res/values-nb-rSE: Warning: Suspicious language and region combination nb (Norwegian Bokmål) with SE (Sweden): language nb is usually paired with: NO (Norway), SJ (Svalbard & Jan Mayen) [WrongRegion]
+            res/values-sv-rSV: Warning: Suspicious language and region combination sv (Swedish) with SV (El Salvador): language sv is usually paired with: SE (Sweden), AX (Åland Islands), FI (Finland) [WrongRegion]
+            0 errors, 3 warnings
+            """
         )
     }
 
     fun testAlpha3() {
         val expected =
             """
-res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter language codes when available; use no instead of nor [UseAlpha2]
-res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter region codes when available; use NO instead of nor [UseAlpha2]
-0 errors, 2 warnings
-"""
+            res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter language codes when available; use no instead of nor [UseAlpha2]
+            res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter region codes when available; use NO instead of nor [UseAlpha2]
+            0 errors, 2 warnings
+            """
         lint().files(
             xml("res/values/strings.xml", stringsXml),
             xml("res/values-no/strings.xml", stringsXml),
@@ -85,10 +85,10 @@ res/values-b+nor+NOR: Warning: For compatibility, should use 2-letter region cod
             xml("res/values-no-rNOR/strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-ldtrl-mnc123: Error: Invalid resource folder: make sure qualifiers appear in the correct order, are spelled correctly, etc. [InvalidResourceFolder]
-res/values-no-rNOR: Error: Invalid resource folder; did you mean b+no+NO ? [InvalidResourceFolder]
-2 errors, 0 warnings
-"""
+            res/values-ldtrl-mnc123: Error: Invalid resource folder: make sure qualifiers appear in the correct order, are spelled correctly, etc. [InvalidResourceFolder]
+            res/values-no-rNOR: Error: Invalid resource folder; did you mean b+no+NO ? [InvalidResourceFolder]
+            2 errors, 0 warnings
+            """
         )
     }
 
@@ -107,10 +107,10 @@ res/values-no-rNOR: Error: Invalid resource folder; did you mean b+no+NO ? [Inva
             xml("res/values-b+de+Scr2+AT/strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a single folder in versions < API 21: values-b+en+Scr2, values-b+en+Scr1 [InvalidResourceFolder]
-    res/values-b+en+Scr2: <No location-specific message>
-1 errors, 0 warnings
-"""
+            res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a single folder in versions < API 21: values-b+en+Scr2, values-b+en+Scr1 [InvalidResourceFolder]
+                res/values-b+en+Scr2: <No location-specific message>
+            1 errors, 0 warnings
+            """
         )
     }
 
@@ -150,11 +150,11 @@ res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a si
             xml("res/values-b+kok+IN//strings.xml", stringsXml)
         ).run().expect(
             """
-src/test/pkg/myapplication/MyLibrary.java:9: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales is called and it contains one or more v21-style (3-letter or BCP47 locale) folders: values-b+kok+IN, values-fil [GetLocales]
-        String[] locales = assets.getLocales();
-                           ~~~~~~~~~~~~~~~~~~~
-1 errors, 0 warnings
-"""
+            src/test/pkg/myapplication/MyLibrary.java:9: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales is called and it contains one or more v21-style (3-letter or BCP47 locale) folders: values-b+kok+IN, values-fil [GetLocales]
+                    String[] locales = assets.getLocales();
+                                       ~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
         )
     }
 
@@ -183,10 +183,10 @@ src/test/pkg/myapplication/MyLibrary.java:9: Error: The app will crash on platfo
             xml("res/values-b+kok+IN//strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
-res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
-2 errors, 0 warnings
-"""
+            res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+            res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+            2 errors, 0 warnings
+            """
         )
     }
 
@@ -230,10 +230,10 @@ res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVer
             xml("res/values-b+kok+IN//strings.xml", stringsXml)
         ).run().expect(
             """
-res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
-res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
-2 errors, 0 warnings
-"""
+            res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+            res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+            2 errors, 0 warnings
+            """
         )
     }
 

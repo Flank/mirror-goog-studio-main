@@ -16,7 +16,6 @@
 
 package com.android.ide.common.generate.locale;
 
-import com.android.ide.common.resources.LocaleManager;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -24,7 +23,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.ibm.icu.util.ULocale;
@@ -36,21 +34,16 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.SimpleTimeZone;
-import java.util.TimeZone;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Code which generates the lookup tables in {@link LocaleManager}.
+ * Code which generates the lookup tables in sdk-common's LocaleManager.
  * <p>
  * This basically uses ICU data to look up language codes, language names,
  * region codes and region names, and augments these with data from
@@ -64,10 +57,9 @@ import java.util.regex.Pattern;
 public class LocaleTableGenerator {
     private static final boolean DEBUG = true;
     private static final boolean ESCAPE_UNICODE = false;
-    private static final boolean INCLUDE_TIMEZONE_COMMENTS = false;
-    private static final int PADDING = 16;
-    // point to your own source repo here
-    private static final File UPDATE_REPO = new File("");
+
+    // Point to your own source repo here
+    private static final File UPDATE_REPO = new File("/Users/tnorbye/dev/studio/dev");
 
     private final Map<String, String> mLanguage3to2;
     private final Map<String, String> mRegion3to2;
@@ -85,12 +77,23 @@ public class LocaleTableGenerator {
     private final Map<String, Integer> mRegion2Index;
     private final Map<String, Integer> mRegion3Index;
     private final Map<String, List<String>> mRegionLists;
-    @SuppressWarnings("StringBufferField") private StringBuilder mOutput;
-    private Map<TimeZone, String> mZoneToRegion;
-    private List<TimeZone> mZoneCandidates;
 
+    @SuppressWarnings("")
     public static void main(String[] args) {
+        ensureAssertionsEnabled();
         new LocaleTableGenerator().generate();
+    }
+
+    @SuppressWarnings({"AssertWithSideEffects", "AssertionSideEffect", "ConstantConditions"})
+    private static void ensureAssertionsEnabled() {
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true; // Intentional side-effect
+        if (!assertionsEnabled) {
+            System.err.println("Run this generator with assertions enabled (-ea) -- edit the ");
+            System.err.println("Run Configuration; click on Modify options, then add VM Option,");
+            System.err.println("then add -ea.");
+            System.exit(-1);
+        }
     }
 
     private void importLanguageSpec() {
@@ -280,6 +283,7 @@ public class LocaleTableGenerator {
     private void importLanguageSpec639_3() {
         // This method reads in additional language data for iso-639-3; however, this is apparently
         // a MUCH larger spec -- it adds in over 7000 new languages, so leaving this out for now.
+        //noinspection ConstantConditions
         if (true) {
             // If you put this back in sometime in the future, be sure to add attribution to
             //     ISO 639-3: http://www.iso639-3.sil.org/
@@ -460,30 +464,26 @@ public class LocaleTableGenerator {
         for (String code : mLanguage3Codes) {
             Collection<String> regions = mAssociatedRegions.get(code);
             final String defaultRegion = getDefaultRegionFor(code);
-            if (regions == null || regions.size() < 2) {
-                if (regions != null && regions.size() == 1 && defaultRegion != null) {
+            if (regions.size() < 2) {
+                if (regions.size() == 1 && defaultRegion != null) {
                     assert regions.iterator().next().equals(defaultRegion);
-                }
-                if (regions != null && regions.size() == 1) {
+                } else if (regions.size() == 1) {
                     mRegionLists.put(code, Collections.singletonList(regions.iterator().next()));
                 } else if (defaultRegion != null) {
                     mRegionLists.put(code, Collections.singletonList(defaultRegion));
                 }
             } else {
                 final List<String> sorted = Lists.newArrayList(regions);
-                Collections.sort(sorted, new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        int rank1 = o1.equals(defaultRegion) ? 0 : 1;
-                        int rank2 = o2.equals(defaultRegion) ? 0 : 1;
-                        int delta = rank1 - rank2;
-                        if (delta == 0) {
-                            delta = o1.compareTo(o2);
-                            assert delta != 0 :
-                                    "Found more than one occurrence of " + o1 + " in " + sorted;
-                        }
-                        return delta;
+                sorted.sort((o1, o2) -> {
+                    int rank1 = o1.equals(defaultRegion) ? 0 : 1;
+                    int rank2 = o2.equals(defaultRegion) ? 0 : 1;
+                    int delta = rank1 - rank2;
+                    if (delta == 0) {
+                        delta = o1.compareTo(o2);
+                        assert delta != 0 :
+                                "Found more than one occurrence of " + o1 + " in " + sorted;
                     }
+                    return delta;
                 });
                 mRegionLists.put(code, sorted);
             }
@@ -557,13 +557,10 @@ public class LocaleTableGenerator {
     }
 
     private void generate() {
-        String code1 = generateTimeZoneLookup();
-        String code2 = generateLocaleTables();
-
         String header =
                 "    // The remainder of this class is generated by generate-locale-data\n" +
                         "    // DO NOT EDIT MANUALLY\n\n";
-        String code = header + stripTrailing(code1) + "\n" + stripTrailing(code2);
+        String code = header + stripTrailing(generateLocaleTables());
         if (DEBUG) {
             int lines = 0;
             for (int i = 0, n = code.length(); i < n; i++) {
@@ -721,36 +718,22 @@ public class LocaleTableGenerator {
     private String getDefaultRegionFor(String languageCode) {
         assert languageCode.length() == 3 : languageCode;
 
-        String iso2Language = getIso2Language(languageCode);
-        String hardcoded = iso2Language != null ? LocaleManager.getDefaultLanguageRegion(
-                iso2Language) : null;
-        if (hardcoded != null) {
-            if (getIso3Region(hardcoded) == null) {
-                assert false : "Couldn't find an ISO 3 region for " + hardcoded + " with language code " + languageCode + " (region-2 is " + hardcoded;
-            }
-            hardcoded = getIso3Region(hardcoded);
-            assert hardcoded != null : languageCode;
-        }
-
         Collection<String> regions = mAssociatedRegions.get(languageCode);
-        if (regions != null && !regions.isEmpty()) {
-            // Violated for example for gsw (Swiss German, with regions CHE, FRA, LIE)
-            //assert iso2Language != null : languageCode + " didn't have an iso 2 code but does have regions " + regions; // We only have
-            if (regions.size() == 1) {
-                // Make
-                String region = regions.iterator().next();
-                assert hardcoded == null || region.equals(hardcoded) : region + " vs " + hardcoded;
-                return region;
-            }
+        String preferred = languageCode.toUpperCase(Locale.US);
+        if (regions.contains(preferred)) {
+            // Often the region and language code match when there's a close association
+            // between the two
+            return preferred;
+        }
 
-            if (hardcoded == null || regions.contains(hardcoded)) {
-                return hardcoded;
-            } else {
-                assert false : "Didn't find region " + hardcoded + " in expected regions " + regions + " for " + languageCode;
+        if (!regions.isEmpty()) {
+            // Violated for example for gsw (Swiss German, with regions CHE, FRA, LIE)
+            if (regions.size() == 1) {
+                return regions.iterator().next();
             }
         }
 
-        return hardcoded;
+        return null;
     }
 
     private void generateAssertions(StringBuilder sb, int level) {
@@ -827,11 +810,6 @@ public class LocaleTableGenerator {
     private String getIso2Language(String iso3Code) {
         assert iso3Code.length() == 3 : iso3Code + " was " + iso3Code.length() + " chars";
         return mLanguage3to2.get(iso3Code);
-    }
-
-    private String getIso3Region(String iso2Code) {
-        assert iso2Code.length() == 2 : iso2Code;
-        return mRegion2to3.get(iso2Code);
     }
 
     private String getIso2Region(String iso3Code) {
@@ -1133,18 +1111,14 @@ public class LocaleTableGenerator {
         if (!rhs) {
             sb.append(string);
         }
-        for (int i = width - string.length(); i > 0; i--) {
-            sb.append(' ');
-        }
+        sb.append(" ".repeat(Math.max(0, width - string.length())));
         if (rhs) {
             sb.append(string);
         }
     }
 
     private static void indent(StringBuilder sb, int level) {
-        for (int i = 0; i < level; i++) {
-            sb.append("    ");
-        }
+        sb.append("    ".repeat(Math.max(0, level)));
     }
 
     private static String escape(String s) {
@@ -1170,485 +1144,9 @@ public class LocaleTableGenerator {
     }
 
 
-    private static <T extends Comparable> List<T> sorted(Collection<T> list) {
+    private static <T extends Comparable<? super T>> List<T> sorted(Collection<T> list) {
         List<T> sorted = Lists.newArrayList(list);
         Collections.sort(sorted);
         return sorted;
-    }
-
-    /** Produce a map from a region code to relevant timezones */
-    private static Map<String, Set<TimeZone>> getRegionToZones() {
-        Map<String, Set<TimeZone>> zones = new HashMap<String, Set<TimeZone>>();
-        for (Locale locale : Locale.getAvailableLocales()) {
-            String countryCode = locale.getCountry();
-            if (countryCode.length() != 2) {
-                continue;
-            }
-            Set<TimeZone> timezones = zones.get(countryCode);
-            if (timezones == null) {
-                timezones = Sets.newHashSet();
-                zones.put(countryCode, timezones);
-            }
-            String[] ids = com.ibm.icu.util.TimeZone.getAvailableIDs(countryCode);
-            for (String id : ids) {
-                timezones.add(TimeZone.getTimeZone(id));
-            }
-        }
-        return zones;
-    }
-
-    /** Produces an inverse mapping for the result from {@link #getRegionToZones()} */
-    private static Map<TimeZone, String> getZoneToRegion(
-            Map<String, Set<TimeZone>> regionToZones) {
-        final Map<TimeZone, String> zoneToRegion = Maps.newHashMap();
-        for (Map.Entry<String, Set<TimeZone>> entry : regionToZones.entrySet()) {
-            String region = entry.getKey();
-            for (TimeZone zone : entry.getValue()) {
-                if (zone.getID().equals("GMT")) {
-                    continue;
-                }
-                if (zoneToRegion.containsKey(zone) && !zoneToRegion.get(zone).equals(region)) {
-                    System.err.println(
-                            "Didn't expect multiple regions to have the same time zone: " +
-                                    zone.getID() + " in both " + zoneToRegion.get(zone) +
-                                    " and now " + region);
-                    System.exit(-1);
-                }
-                zoneToRegion.put(zone, region);
-            }
-        }
-
-        return zoneToRegion;
-    }
-
-    private static int hashedId(TimeZone zone) {
-        // Instead of String#hashCode, use this to ensure stable across platforms
-        int h = 0;
-        String id = zone.getID();
-        for (int i = 0, n = id.length(); i < n; i++) {
-            h = 31 * h + id.charAt(i);
-        }
-        return h;
-    }
-
-    private List<TimeZone> sortByRegion(Collection<TimeZone> zones) {
-        List<TimeZone> sorted = Lists.newArrayList(zones);
-
-        final Map<String,Integer> regionFrequency = Maps.newHashMap();
-        for (TimeZone zone : zones) {
-            String region = mZoneToRegion.get(zone);
-            Integer frequency = regionFrequency.get(region);
-            if (frequency == null) {
-                regionFrequency.put(region, 1);
-            } else {
-                regionFrequency.put(region, frequency + 1);
-            }
-        }
-
-        Collections.sort(sorted, new Comparator<TimeZone>() {
-            // Sort such that the timezones are all sorted (alphabetically) grouped
-            // by the same target region, and the regions in turn are sorted
-            // by frequency
-            @Override
-            public int compare(TimeZone o1, TimeZone o2) {
-                String r1 = mZoneToRegion.get(o1);
-                String r2 = mZoneToRegion.get(o2);
-                assert r1 != null : o1.getID();
-                assert r2 != null : o2.getID();
-                int delta = r1.compareTo(r2);
-                if (delta == 0) { // Same region: compare alphabetically by id
-                    return o1.getID().compareTo(o2.getID());
-                } else {
-                    // Different regions: compare by frequency
-                    int f1 = regionFrequency.get(r1);
-                    int f2 = regionFrequency.get(r2);
-                    delta = f1 - f2;
-                    if (delta == 0) {
-                        delta = r1.compareTo(r2); // If same region frequency, alphabetical
-                        if (delta != 0) {
-                            // But sort empty strings last
-                            if (r1.isEmpty()) {
-                                return 1;
-                            } else if (r2.isEmpty()) {
-                                return -1;
-                            }
-                        }
-                    }
-                }
-
-                return delta;
-            }
-        });
-        return sorted;
-    }
-
-    public String generateTimeZoneLookup() {
-        Map<String, Set<TimeZone>> regionToZones = getRegionToZones(); // ICU data
-        Map<TimeZone, String> zoneToRegion = getZoneToRegion(regionToZones);
-
-        // Make sure this is generated on a recent JDK which has a lot of
-        // the new time zones
-        String property = System.getProperty("java.version");
-        assert property.startsWith("1.") : property;
-        assert property.charAt(2) >= '8' : "Use a more recent JRE when generating data";
-
-        List<TimeZone> candidates = Lists.newArrayList(zoneToRegion.keySet());
-
-        mZoneToRegion = zoneToRegion;
-        mZoneCandidates = candidates;
-        mOutput = new StringBuilder(1000);
-
-        // Generate lookup tree for regions
-        final Multimap<String, TimeZone> mContinentMap = ArrayListMultimap.create();
-        for (TimeZone zone : mZoneCandidates) {
-            String id = zone.getID();
-            int index = id.indexOf('/');
-            String continent = "";
-            if (index != -1) {
-                continent = id.substring(0, index);
-            }
-            mContinentMap.put(continent, zone);
-        }
-        List<String> sortedContinents = Lists.newArrayList(mContinentMap.keySet());
-        Collections.sort(sortedContinents, new Comparator<String>() {
-            // Sort by decreasing timezone-per continent count, but put the
-            // no-continent codes at the end
-            @Override
-            public int compare(String o1, String o2) {
-                boolean e1 = o1.isEmpty();
-                boolean e2 = o2.isEmpty();
-                if (e1 && e2) {
-                    return 0;
-                } else if (e1) {
-                    return 1;
-                } else if (e2) {
-                    return -1;
-                } else {
-                    int delta = mContinentMap.get(o2).size() - mContinentMap.get(o1).size();
-                    if (delta != 0) {
-                        return delta;
-                    }
-                    return o1.compareTo(o2);
-                }
-            }
-        });
-
-        int level = 1;
-
-        if (INCLUDE_TIMEZONE_COMMENTS) {
-            indent(mOutput, level);
-            mOutput.append("@SuppressWarnings(\"SpellCheckingInspection\")\n");
-        }
-        indent(mOutput, level);
-        mOutput.append("private static int getTimeZoneRegionIndex(@NonNull TimeZone zone) {\n");
-        level++;
-
-        indent(mOutput, level);
-        mOutput.append("// Instead of String#hashCode, use this to ensure stable across platforms\n");
-        indent(mOutput, level);
-        mOutput.append("String id = zone.getID();\n");
-        indent(mOutput, level);
-        mOutput.append("int hashedId = 0;\n");
-        indent(mOutput, level);
-        mOutput.append("for (int i = 0, n = id.length(); i < n; i++) {\n");
-        indent(mOutput, level + 1);
-        mOutput.append("hashedId = 31 * hashedId + id.charAt(i);\n");
-        indent(mOutput, level);
-        mOutput.append("}\n");
-
-        indent(mOutput, level);
-        mOutput.append("switch (zone.getRawOffset()) {\n");
-
-        Multimap<Integer,TimeZone> offsetMap = ArrayListMultimap.create();
-        for (TimeZone zone : mZoneCandidates) {
-            int rawOffset = zone.getRawOffset();
-            offsetMap.put(rawOffset, zone);
-        }
-        makeJdkTimezoneCorrections(offsetMap);
-
-        level++;
-        for (Integer offset : sorted(offsetMap.keySet())) {
-            indent(mOutput, level);
-            mOutput.append("case ").append(offset).append(":");
-
-            if (INCLUDE_TIMEZONE_COMMENTS) {
-                mOutput.append(" // ");
-                mOutput.append(String.valueOf(offset / 3600000.0));
-                mOutput.append(" hours");
-            }
-            mOutput.append("\n");
-
-            generateZones(level + 1, offsetMap.get(offset));
-        }
-        level--;
-
-        indent(mOutput, level);
-        mOutput.append("}\n");
-
-        indent(mOutput, level);
-        mOutput.append("return -1;\n");
-        level--;
-        indent(mOutput, level);
-        mOutput.append("}\n");
-
-        return mOutput.toString();
-    }
-
-    private void makeJdkTimezoneCorrections(Multimap<Integer,TimeZone> offsetMap) {
-        // There have been some timezone corrections; since our switch-based lookup is
-        // based on offsets, we should list these corrected timezones in both switch
-        // blocks.
-        //
-        // For example, in JDK 6, the timezone "America/Rio_Branco" had rawOffset -14400000,
-        // and in JDK 8 it's -18000000. Therefore, we should have switch statements for
-        // both.
-
-        // JDK 1.6 to JDK 1.7:
-        correctOffset(offsetMap, "Africa/Tripoli", 3600000, 7200000);
-        correctOffset(offsetMap, "Libya", 3600000, 7200000);
-        correctOffset(offsetMap, "America/Argentina/San_Luis", -14400000, -10800000);
-        correctOffset(offsetMap, "America/Eirunepe", -14400000, -10800000);
-        correctOffset(offsetMap, "America/Porto_Acre", -14400000, -10800000);
-        correctOffset(offsetMap, "America/Rio_Branco", -14400000, -10800000);
-        correctOffset(offsetMap, "Brazil/Acre", -14400000, -10800000);
-        //correctOffset(offsetMap, "Pacific/Fakaofo", 50400000, 46800000);
-
-        // JDK 1.7 to JDK 1.8:
-        correctOffset(offsetMap, "Europe/Simferopol", 7200000, 14400000);
-        //correctId(offsetMap, "Asia/Riyadh87", "Mideast/Riyadh87", 11224000);
-        //correctId(offsetMap, "Asia/Riyadh88", "Mideast/Riyadh88", 11224000);
-        //correctId(offsetMap, "Asia/Riyadh89", "Mideast/Riyadh89", 11224000);
-
-        // JDK 1.8 to JDK 1. EA:
-        //correctId(offsetMap, null, "Asia/Chita", 28800000);
-        //correctId(offsetMap, null, "Asia/Srednekolymsk", 39600000);
-        //correctId(offsetMap, null, "Pacific/Bougainville", 39600000);
-        correctOffset(offsetMap, "Asia/Irkutsk", 32400000, 28800000);
-        correctOffset(offsetMap, "Asia/Kashgar", 28800000, 21600000);
-        correctOffset(offsetMap, "Asia/Khandyga", 36000000, 32400000);
-        correctOffset(offsetMap, "Asia/Krasnoyarsk", 28800000, 25200000);
-        correctOffset(offsetMap, "Asia/Magadan", 43200000, 36000000);
-        correctOffset(offsetMap, "Asia/Novosibirsk", 25200000, 21600000);
-        correctOffset(offsetMap, "Asia/Omsk", 25200000, 21600000);
-        correctOffset(offsetMap, "Asia/Sakhalin", 39600000, 36000000);
-        correctOffset(offsetMap, "Asia/Urumqi", 28800000, 21600000);
-        correctOffset(offsetMap, "Asia/Ust-Nera", 39600000, 36000000);
-        correctOffset(offsetMap, "Asia/Vladivostok", 39600000, 36000000);
-        correctOffset(offsetMap, "Asia/Yakutsk", 36000000, 32400000);
-        correctOffset(offsetMap, "Asia/Yekaterinburg", 21600000, 18000000);
-        correctOffset(offsetMap, "Europe/Kaliningrad", 10800000, 7200000);
-        correctOffset(offsetMap, "Europe/Moscow", 14400000, 10800000);
-        correctOffset(offsetMap, "Europe/Simferopol", 14400000, 10800000);
-        correctOffset(offsetMap, "Europe/Volgograd", 14400000, 10800000);
-        correctOffset(offsetMap, "W-SU", 14400000, 10800000);
-
-        correctRegion(offsetMap, "Europe/Simferopol", 7200000, 14400000, 10800000, "");
-    }
-
-    private void correctOffset(
-            Multimap<Integer, TimeZone> offsetMap,
-            String id,
-            int rawOffset1,
-            int rawOffset2) {
-        TimeZone old = findZone(id);
-        if (old == null) {
-            // Not relevant for our usage
-            return;
-        }
-        TimeZone zone1 = findZone(offsetMap, id, rawOffset1);
-        if (zone1 == null) {
-            addZone(offsetMap, id, rawOffset1, old);
-        }
-        TimeZone zone2 = findZone(offsetMap, id, rawOffset2);
-        if (zone2 == null) {
-            addZone(offsetMap, id, rawOffset2, old);
-        }
-    }
-
-    private void correctRegion(
-            Multimap<Integer, TimeZone> offsetMap,
-            String id,
-            int rawOffset1,
-            int rawOffset2,
-            int rawOffset3,
-            String region) {
-        TimeZone zone1 = findZone(offsetMap, id, rawOffset1);
-        if (zone1 != null) {
-            mZoneToRegion.put(zone1, region);
-        }
-        TimeZone zone2 = findZone(offsetMap, id, rawOffset2);
-        if (zone2 != null) {
-            mZoneToRegion.put(zone2, region);
-        }
-        TimeZone zone3 = findZone(offsetMap, id, rawOffset3);
-        if (zone3 != null) {
-            mZoneToRegion.put(zone3, region);
-        }
-    }
-
-    private void addZone(Multimap<Integer, TimeZone> offsetMap, String id, int rawOffset,
-            TimeZone old) {
-        TimeZone zone = new SimpleTimeZone(rawOffset, id);
-        offsetMap.put(rawOffset, zone);
-        mZoneCandidates.add(zone);
-        mZoneToRegion.put(zone, mZoneToRegion.get(old));
-    }
-
-    private void correctId(
-            Multimap<Integer, TimeZone> offsetMap,
-            String id1,
-            String id2,
-            int rawOffset) {
-        if (id1 != null) {
-            TimeZone zone1 = findZone(offsetMap, id1, rawOffset);
-            if (zone1 == null && id2 != null) {
-                TimeZone old = findZone(id2);
-                addZone(offsetMap, id1, rawOffset, old);
-            }
-        }
-        if (id2 != null) {
-            TimeZone zone2 = findZone(offsetMap, id2, rawOffset);
-            if (zone2 == null && id1 != null) {
-                TimeZone old = findZone(id1);
-                addZone(offsetMap, id2, rawOffset, old);
-            }
-        }
-    }
-
-    private TimeZone findZone(String id) {
-        for (TimeZone zone : mZoneCandidates) {
-            if (zone.getID().equals(id)) {
-                return zone;
-            }
-        }
-
-        return null;
-    }
-
-    private static TimeZone findZone(Multimap<Integer, TimeZone> offsetMap,
-            String id, int rawOffset) {
-        Collection<TimeZone> zones = offsetMap.get(rawOffset);
-        if (zones == null) {
-            return null;
-        }
-
-        for (TimeZone zone : zones) {
-            if (id.equals(zone.getID())) {
-                return zone;
-            }
-        }
-
-        return null;
-    }
-
-    private void generateZones(int level, Collection<TimeZone> zones) {
-        assert !zones.isEmpty();
-
-        // See if they all map to the same region
-        boolean regionsDiffer = false;
-        String sameRegion = mZoneToRegion.get(zones.iterator().next());
-        for (TimeZone zone : zones) {
-            String region = mZoneToRegion.get(zone);
-            if (!sameRegion.equals(region)) {
-                regionsDiffer = true;
-                break;
-            }
-        }
-        if (!regionsDiffer) {
-            returnRegion(zones, level);
-            return;
-        }
-
-        indent(mOutput, level);
-        mOutput.append("switch (hashedId) {\n");
-        level++;
-
-        Map<Integer,TimeZone> hashCodes = Maps.newHashMap();
-        List<TimeZone> sorted = sortByRegion(zones);
-        String lastRegion = mZoneToRegion.get(sorted.get(zones.size() - 1));
-        for (int i = 0, n = sorted.size(); i < n; i++) {
-            TimeZone zone = sorted.get(i);
-            int hash = hashedId(zone);
-            if (hashCodes.containsKey(hash)) {
-                System.err.println("Timezones clash: same hash " + hash + " for "
-                        + zone.getID() + " and "
-                        + hashCodes.get(hash));
-                System.exit(-1);
-            }
-
-            String region = mZoneToRegion.get(zone);
-
-            if (i < n - 1 && region.equals(lastRegion)) {
-                // TODO: Combine into a list instead
-                if (INCLUDE_TIMEZONE_COMMENTS) {
-                    indent(mOutput, level);
-                    pad(7);
-                    mOutput.append("// ").append(escape(zone.getID()));
-                    mOutput.append("\n");
-                }
-                continue;
-            } else if (i == n - 1) {
-                indent(mOutput, level);
-                mOutput.append("default:\n");
-            } else {
-                indent(mOutput, level);
-                mOutput.append("case ").append(hash).append(":");
-                String text = String.valueOf(hash);
-                pad(text);
-
-                if (INCLUDE_TIMEZONE_COMMENTS) {
-                    mOutput.append(" // ").append(escape(zone.getID()));
-                }
-                mOutput.append("\n");
-            }
-            if (i < n - 1 && region.equals(mZoneToRegion.get(sorted.get(i + 1)))) {
-                // Don't return each one; share a single body when the regions are the same
-                continue;
-            }
-            returnRegion(zone, level + 1);
-        }
-
-        level--;
-        indent(mOutput, level);
-        mOutput.append("}\n");
-    }
-
-    private void pad(int space) {
-        int padding = PADDING + space;
-        for (int j = 0; j < padding; j++) {
-            mOutput.append(' ');
-        }
-    }
-
-    private void pad(String text) {
-        int padding = PADDING - text.length();
-        for (int j = 0; j < padding; j++) {
-            mOutput.append(' ');
-        }
-    }
-
-    private void returnRegion(Collection<TimeZone> zones, int level) {
-        String region = mZoneToRegion.get(zones.iterator().next());
-        List<String> ids = Lists.newArrayList();
-        for (TimeZone zone : zones) {
-            ids.add(zone.getID());
-            assert region.equals(mZoneToRegion.get(zone)) : zone + " vs " + region;
-        }
-        indent(mOutput, level);
-        if (region.isEmpty()) {
-            mOutput.append("return -1;\n");
-            return;
-        }
-        int index = mRegion3Index.get(getIso3Region(region));
-        mOutput.append("return ").append(index).append(";");
-        if (INCLUDE_TIMEZONE_COMMENTS) {
-            pad(-9);
-            mOutput.append("// ").append(escape(mRegionName.get(getIso3Region(region))));
-        }
-        mOutput.append("\n");
-    }
-
-    private void returnRegion(TimeZone zone, int level) {
-        returnRegion(Collections.singletonList(zone), level);
     }
 }
