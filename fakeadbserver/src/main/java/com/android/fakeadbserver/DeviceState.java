@@ -157,6 +157,14 @@ public class DeviceState {
         return mBuildVersionSdk;
     }
 
+    public int getApiLevel() {
+        try {
+            return Integer.parseInt(mBuildVersionSdk);
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
     @NonNull
     public DeviceStatus getDeviceStatus() {
         return mDeviceStatus;

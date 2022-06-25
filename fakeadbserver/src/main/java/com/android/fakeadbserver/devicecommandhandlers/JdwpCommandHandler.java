@@ -114,7 +114,7 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
         }
 
         // default - ignore the packet and keep listening
-        DDMPacketHandler defaultHandler = (unused, unused2, unused3) -> true;
+        DDMPacketHandler defaultHandler = (unused, unused3, unused2, unused4) -> true;
 
         boolean running = true;
 
@@ -126,7 +126,7 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
                     running =
                             packetHandlers
                                     .getOrDefault(ddmPacket.getChunkType(), defaultHandler)
-                                    .handlePacket(ddmPacket, client, oStream);
+                                    .handlePacket(device, client, ddmPacket, oStream);
                 }
             } catch (IOException e) {
                 writeFailResponse(oStream, "Could not read packet.");

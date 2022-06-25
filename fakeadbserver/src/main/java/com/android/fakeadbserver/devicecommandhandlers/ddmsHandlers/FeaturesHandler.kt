@@ -17,6 +17,7 @@ package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers
 
 import com.android.fakeadbserver.ClientState
 import com.android.fakeadbserver.CommandHandler
+import com.android.fakeadbserver.DeviceState
 import java.io.IOException
 import java.io.OutputStream
 import java.nio.ByteBuffer
@@ -36,8 +37,9 @@ class FeaturesHandler(
     DDMPacketHandler {
 
     override fun handlePacket(
-        packet: DdmPacket,
+        device: DeviceState,
         client: ClientState,
+        packet: DdmPacket,
         oStream: OutputStream
     ): Boolean {
         val features = featureMap[client.pid] ?: defaultFeatures

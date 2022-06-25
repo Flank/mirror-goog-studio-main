@@ -17,6 +17,7 @@ package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.ClientState;
+import com.android.fakeadbserver.DeviceState;
 import java.io.OutputStream;
 
 public class ExitHandler implements DDMPacketHandler {
@@ -25,7 +26,10 @@ public class ExitHandler implements DDMPacketHandler {
 
     @Override
     public boolean handlePacket(
-            @NonNull DdmPacket packet, @NonNull ClientState client, @NonNull OutputStream oStream) {
+            @NonNull DeviceState device,
+            @NonNull ClientState client,
+            @NonNull DdmPacket packet,
+            @NonNull OutputStream oStream) {
         // Kill the connection
         return false;
     }
