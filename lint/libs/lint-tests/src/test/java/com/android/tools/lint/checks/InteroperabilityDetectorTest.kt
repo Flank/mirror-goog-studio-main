@@ -1198,4 +1198,62 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testCoroutines() {
+        // Regression test for https://issuetracker.google.com/236498269
+        lint().files(
+            java(
+                """
+                package com.google.common.util.concurrent;
+                import java.util.concurrent.Executor;
+                import java.util.concurrent.Future;
+
+                @SuppressWarnings("UnknownNullness")
+                public interface ListenableFuture<V> extends Future<V> {
+                    void addListener(Runnable var1, Executor var2);
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                public final class Data {
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+                import com.google.common.util.concurrent.ListenableFuture;
+                @SuppressWarnings("UnknownNullness")
+                public abstract class ListenableWorker {
+                    public ListenableFuture<Void> setProgressAsync(Data data) {
+                        return null;
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package androidx.work
+                import com.google.common.util.concurrent.ListenableFuture
+                public suspend inline fun <R> ListenableFuture<R>.await(): R {
+                    TODO()
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                package test.pkg
+                import androidx.work.await
+                public abstract class RemoteCoroutineWorker() : ListenableWorker() {
+                        public suspend fun setProgress(data: Data) {
+                            setProgressAsync(data).await()
+                        }
+                 }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }

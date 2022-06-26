@@ -257,6 +257,11 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     return
                 }
 
+                // Don't flag suspend function; the return value is implicit
+                if (context.evaluator.isSuspend(node.javaPsi)) {
+                    return
+                }
+
                 // Based on SpecifyTypeExplicitlyIntention, the IntelliJ inspection for
                 // adding explicit types. However, that code runs in the IDE which has
                 // access to more resolve machinery; here, instead of looking up
