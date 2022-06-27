@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -133,6 +134,7 @@ abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
         }
 
         override fun configure(task: PrivacySandboxSdkMergeResourcesTask) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.aapt2.let { aapt2Input ->
                 aapt2Input.buildService.setDisallowChanges(
                         getBuildService(task.project.gradle.sharedServices)
@@ -150,9 +152,6 @@ abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
                 aapt2Input.maxAapt2Daemons.setDisallowChanges(8)
             }
             task.projectFilepath.set(creationConfig.layout.projectDirectory.asFile.absolutePath)
-            task.analyticsService.setDisallowChanges(
-                    getBuildService(task.project.gradle.sharedServices)
-            )
             task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
             task.resourceSets.setFrom(
                     creationConfig.dependencies.getArtifactFileCollection(

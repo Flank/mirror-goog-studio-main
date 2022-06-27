@@ -239,6 +239,8 @@ abstract class ValidateSigningTask : NonIncrementalTask() {
         override fun configure(
                 task: ValidateSigningTask
         ) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+
 
             val signingConfigDataProvider: Provider<SigningConfigData> = getBuildService(
                     services.buildServiceRegistry,

@@ -109,6 +109,7 @@ abstract class AppMetadataTask : NonIncrementalTask() {
         }
 
         override fun configure(task: AppMetadataTask) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.configureTaskInputs(creationConfig.services.projectOptions)
         }
     }

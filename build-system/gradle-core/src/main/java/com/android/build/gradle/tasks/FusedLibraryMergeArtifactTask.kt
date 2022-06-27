@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import org.gradle.api.attributes.Usage
@@ -167,7 +168,7 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                     )
             )
             task.artifactType.setDisallowChanges(androidArtifactType)
-            task.analyticsService.set(getBuildService(task.project.gradle.sharedServices))
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
         }
 
     }

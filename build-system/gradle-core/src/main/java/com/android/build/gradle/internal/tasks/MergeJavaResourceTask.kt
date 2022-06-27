@@ -335,9 +335,7 @@ abstract class MergeJavaResourceTask
         }
 
         override fun configure(task: MergeJavaResourceTask) {
-            task.analyticsService.set(
-                    getBuildService(task.project.gradle.sharedServices)
-            )
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.subProjectJavaRes.from(
                     creationConfig.dependencies.getArtifactFileCollection(
                             Usage.JAVA_RUNTIME,

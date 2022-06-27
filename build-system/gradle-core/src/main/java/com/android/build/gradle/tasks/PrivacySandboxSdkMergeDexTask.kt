@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.DexMergingTaskDelegate
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -89,9 +90,7 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
         }
 
         override fun configure(task: PrivacySandboxSdkMergeDexTask) {
-            task.analyticsService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             val minSdk = creationConfig.extension.minSdk ?: 1
             task.sharedParams.apply {
                 dexingType.setDisallowChanges(

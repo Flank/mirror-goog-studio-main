@@ -143,7 +143,9 @@ class PrivacySandboxSdkTest {
             .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
             .create()
 
-    private fun executor() = project.executor().withPerTestPrefsRoot(true)
+    private fun executor() = project.executor()
+            .withPerTestPrefsRoot(true)
+            .with(BooleanOption.ENABLE_PROFILE_JSON, true) // Regression test for b/237278679
 
     @Test
     fun testDexing() {

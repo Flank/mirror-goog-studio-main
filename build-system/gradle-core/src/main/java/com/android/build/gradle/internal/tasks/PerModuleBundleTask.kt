@@ -256,6 +256,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
         }
 
         override fun configure(task: PerModuleBundleTask) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.dexFiles.fromDisallowChanges(
                 creationConfig.artifacts.get(
                     PrivacySandboxSdkInternalArtifactType.DEX

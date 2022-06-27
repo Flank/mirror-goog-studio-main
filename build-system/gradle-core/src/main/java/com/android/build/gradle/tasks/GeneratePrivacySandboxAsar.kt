@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.signing.SigningConfigData
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.internal.packaging.IncrementalPackager
@@ -142,9 +143,8 @@ abstract class GeneratePrivacySandboxAsar : NonIncrementalTask() {
         }
 
         override fun configure(task: GeneratePrivacySandboxAsar) {
-            task.analyticsService.setDisallowChanges(
-                    getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+
             creationConfig.artifacts.setTaskInputToFinalProduct(
                     PrivacySandboxSdkInternalArtifactType.ASB, task.asb
             )
