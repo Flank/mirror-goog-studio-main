@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal
+package com.android.build.gradle.integration.common.utils
 
-class FusedLibraryDependencyConfigurator {
+/**
+ * Tracks @ignored annotated tests single place.
+ * Annotations do not allow compile time arguments, so a companion object of const strings
+ * is used to keep track of related disabled tests.
+*/
+class IgnoredTests {
+
+    companion object {
+        // b/236828934: Fused Libraries do not yet support external dependencies."
+        const val BUG_23682893 = "236828934"
+    }
 }
+
