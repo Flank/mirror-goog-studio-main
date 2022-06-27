@@ -80,17 +80,19 @@ import org.w3c.dom.Node
 import java.io.File
 import java.util.EnumSet
 
-/** Finds unused resources.  */
+/** Finds unused resources. */
 class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryResourceScanner, XmlScanner {
     private val model = UnusedResourceDetectorUsageModel()
     private var projectUsesViewBinding = false
 
     /**
-     * Map of data binding / view binding Binding classes (simple names, not fully qualified names)
-     * to corresponding layout resource names (e.g. ActivityMainBinding -> "activity_main.xml")
+     * Map of data binding / view binding Binding classes (simple names,
+     * not fully qualified names) to corresponding layout resource names
+     * (e.g. ActivityMainBinding -> "activity_main.xml")
      *
-     * This map is created lazily only once it encounters a relevant layout file, since a
-     * significant enough number of modules don't use data binding or view binding.
+     * This map is created lazily only once it encounters a relevant
+     * layout file, since a significant enough number of modules don't
+     * use data binding or view binding.
      */
     private var bindingClasses: MutableMap<String, String>? = null
 
@@ -429,7 +431,7 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
                 override fun visitCallExpression(node: UCallExpression) =
                     visitClass(node.resolve()?.containingClass)
 
-                override fun visitSimpleNameReferenceExpression(node : USimpleNameReferenceExpression) =
+                override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression) =
                     visitClass(node.resolve() as? PsiClass) { node.identifier }
 
                 override fun visitCallableReferenceExpression(node: UCallableReferenceExpression) =
@@ -584,7 +586,7 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
                 =true.
                 """
 
-        /** Unused resources (other than ids).  */
+        /** Unused resources (other than ids). */
         @JvmField
         val ISSUE = Issue.create(
             id = "UnusedResources",
@@ -600,7 +602,7 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
             implementation = IMPLEMENTATION
         )
 
-        /** Unused id's  */
+        /** Unused id's */
         @JvmField
         val ISSUE_IDS = Issue.create(
             id = "UnusedIds",
@@ -621,8 +623,9 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
         )
 
         /**
-         * Whether the resource detector will look for inactive resources (e.g. resource and code
-         * references in source sets that are not the primary/active variant)
+         * Whether the resource detector will look for inactive
+         * resources (e.g. resource and code references in source sets
+         * that are not the primary/active variant)
          */
         @JvmField var sIncludeInactiveReferences = true
         private fun findUnused(context: Context, model: ResourceUsageModel): Sequence<ResourceUsageModel.Resource> {
