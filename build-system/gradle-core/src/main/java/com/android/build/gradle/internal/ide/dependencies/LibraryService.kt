@@ -270,6 +270,12 @@ class LibraryServiceImpl(
                         libraryInfo,
                     )
                 }
+                ResolvedArtifact.DependencyType.NO_ARTIFACT_FILE -> {
+                    LibraryImpl.createNoArtifactFileLibrary(
+                        stringCache.cacheString(libraryInfo.computeKey()),
+                        libraryInfo,
+                    )
+                }
             }
         } else {
             val projectInfo = getProjectInfo(artifact.variant)

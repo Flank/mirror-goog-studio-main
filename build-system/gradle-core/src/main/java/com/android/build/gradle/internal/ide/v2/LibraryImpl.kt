@@ -117,6 +117,17 @@ data class LibraryImpl private constructor(
             artifact = null,
             lintJar = null
         )
+
+        fun createNoArtifactFileLibrary(
+            key: String,
+            libraryInfo: LibraryInfo,
+        ) = LibraryImpl(
+            key = key,
+            type = LibraryType.NO_ARTIFACT_FILE,
+            libraryInfo = libraryInfo,
+            artifact = null,
+            lintJar = null
+        )
     }
 }
 

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.dependency.ResolutionResultProvider
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.ide.DependencyFailureHandler
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType.ANDROID
+import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType.NO_ARTIFACT_FILE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.builder.model.v2.ide.ArtifactDependencies
 import com.android.builder.model.v2.ide.Library
@@ -185,6 +186,30 @@ internal class FullDependencyGraphBuilderTest {
         Truth
             .assertThat(graphs.compileDependencies.map { it.key })
             .containsExactly("foo|bar-parent|1.0||", "foo|bar|1.0||")
+    }
+
+    /** Regression test for http://b/230648123. */
+    @Test
+    fun testDependencyWithoutFileWithDependencies() {
+        val (graphs, _) = buildModelGraph {
+            module("foo", "bar", "1.0") {
+                file = null
+                dependencyType = NO_ARTIFACT_FILE
+                // intentionally no file present, just a dependency on parent
+                dependency(
+                    module("foo", "bar-parent", "1.0") {
+                        file = File("path/to/bar-parent-1.0.jar")
+                    }
+                )
+            }
+        }
+
+        Truth
+            .assertThat(graphs.compileDependencies.map { it.key })
+            .containsExactly("foo|bar|1.0||")
+        Truth
+            .assertThat(graphs.compileDependencies.single().dependencies.map { it.key })
+            .containsExactly("foo|bar-parent|1.0||")
     }
 }
 

@@ -80,7 +80,9 @@ data class ResolvedArtifact internal constructor(
     enum class DependencyType constructor(val extension: String) {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR),
-        RELOCATED_ARTIFACT("")
+        RELOCATED_ARTIFACT(""),
+        // An artifact without file, but it may contain dependencies.
+        NO_ARTIFACT_FILE(""),
     }
 
     /**
