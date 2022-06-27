@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -345,7 +346,7 @@ abstract class MergeJavaResourceTask
             )
 
             // For configuring the merging rules (we may want to add DSL for this in the future.
-            task.excludes.setDisallowChanges(emptySet())
+            task.excludes.setDisallowChanges(defaultExcludes)
             task.pickFirsts.setDisallowChanges(emptySet())
             task.merges.setDisallowChanges(emptySet())
 
