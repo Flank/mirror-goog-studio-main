@@ -42,6 +42,7 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -1420,6 +1421,28 @@ class UastTest : TestCase() {
             } catch (failure: AssertionFailedError) {
                 assertEquals("Couldn't resolve `it`", failure.message)
             }
+        }
+    }
+
+    fun testSamConstructorCallKind() {
+        val source = kotlin(
+            """
+            val r = java.lang.Runnable {  }
+            """
+        ).indented()
+
+        check(
+            source
+        ) { file ->
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    assertEquals("Runnable", node.methodName)
+                    // TODO(b/237078186): should be CONSTRUCTOR_CALL; will fail when an upstream fix is bundled
+                    assertEquals(UastCallKind.METHOD_CALL, node.kind)
+
+                    return super.visitCallExpression(node)
+                }
+            })
         }
     }
 }
