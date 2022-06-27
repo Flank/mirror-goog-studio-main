@@ -782,6 +782,7 @@ class R8ToolTest {
         Files.list(dir).filter { it.toString().endsWith(".dex") }.count()
 
     companion object {
-        val bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar"))
+        val bootClasspath =
+            listOf(TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP))
     }
 }

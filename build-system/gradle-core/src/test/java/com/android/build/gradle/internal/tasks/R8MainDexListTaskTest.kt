@@ -155,7 +155,9 @@ fun runR8(
     val output: File = outputDir.resolve("main").toFile()
 
     R8Task.shrink(
-        bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
+        bootClasspath = listOf(
+            TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP).toFile()
+        ),
         minSdkVersion = minSdkVersion,
         isDebuggable = true,
         enableDesugaring = false,

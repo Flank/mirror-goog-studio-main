@@ -31,7 +31,7 @@ import java.net.URLClassLoader
 
 class FixFramesClassWriterTest {
 
-    private val androidJar = TestUtils.resolvePlatformPath("android.jar")
+    private val androidJar = TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP)
 
     private lateinit var fixFramesClassWriter: FixFramesClassWriterWrapper
     private lateinit var classWriter: ClassWriterWrapper

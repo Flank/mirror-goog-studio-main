@@ -84,7 +84,7 @@ kotlin_test(
     ]),
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:platforms/latest",
+        "//tools/base/build-system:android_platform_for_tests",
         "//tools/base/build-system/aapt2:aapt2_for_tests",
     ],
     friends = [":builder"],

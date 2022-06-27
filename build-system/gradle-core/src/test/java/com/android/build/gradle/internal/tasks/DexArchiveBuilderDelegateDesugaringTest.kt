@@ -458,7 +458,7 @@ class DexArchiveBuilderDelegateDesugaringTest {
     ): DexArchiveBuilderTaskDelegate {
 
         val bootClasspath = if (includeAndroidJar) {
-            setOf(TestUtils.resolvePlatformPath("android.jar").toFile())
+            setOf(TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP).toFile())
         } else {
             emptySet()
         }

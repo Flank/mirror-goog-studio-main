@@ -87,7 +87,9 @@ class DexMergingTaskTest {
             dexingType = DexingType.LEGACY_MULTIDEX,
             minSdkVersion = 19,
             multidexProguardRulesFile = multidexProguardRulesFile,
-            libraryClasses = listOf(TestUtils.resolvePlatformPath("android.jar").toFile()),
+            libraryClasses = listOf(
+                TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP).toFile()
+            ),
             userMultidexKeepFile = userMultidexKeepFile
         )
         assertThatDex(outputDir.resolve("classes.dex")).containsExactlyClassesIn(

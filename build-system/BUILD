@@ -537,3 +537,19 @@ gradle_test(
     test_output_dir = "build/base/gradle-api/build/test-results/metalavaTest",
     visibility = ["//visibility:public"],
 )
+
+# This should be kept in sync with
+# tools/base/testutils/src/main/java/com/android/testutils/TestUtils.ANDROID_PLATFORM_FOR_AGP_UNIT_TESTS
+filegroup(
+    name = "android_platform_for_tests",
+    srcs = ["//prebuilts/studio/sdk:platforms/android-33"],
+    visibility = [":__subpackages__"],
+)
+
+filegroup(
+    name = "android_platform_for_performance_tests",
+    srcs = ["//prebuilts/studio/sdk:platforms/android-33_build_only"],
+    visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+    ],
+)
