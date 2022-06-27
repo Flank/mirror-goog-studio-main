@@ -17,6 +17,7 @@
 
 package com.android.testutils
 
+import com.android.SdkConstants
 import com.android.testutils.TestInputsGenerator.jarWithEmptyEntries
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
@@ -40,12 +41,13 @@ fun generateAarWithContent(
     secondaryJars: Map<String, ByteArray> = mapOf(),
     resources: Map<String, ByteArray> = mapOf(),
     apiJar: ByteArray? = null,
-    lintJar: ByteArray? = null
+    lintJar: ByteArray? = null,
+    manifest: String = """<manifest package="$packageName"></manifest>"""
 ): ByteArray {
     ByteArrayOutputStream().use { baos ->
         ZipOutputStream(baos).use { zos ->
-            zos.putNextEntry(ZipEntry("AndroidManifest.xml"))
-            zos.write("""<manifest package="$packageName"></manifest>""".toByteArray(Charsets.UTF_8))
+            zos.putNextEntry(ZipEntry(SdkConstants.FN_ANDROID_MANIFEST_XML))
+            zos.write(manifest.toByteArray(Charsets.UTF_8))
             zos.putNextEntry(ZipEntry("classes.jar"))
             zos.write(mainJar)
             secondaryJars.forEach { (name, content) ->

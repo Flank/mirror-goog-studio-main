@@ -18,13 +18,17 @@ package com.android.build.gradle.internal.plugins
 
 import com.android.build.api.artifact.Artifact
 import com.android.build.api.attributes.BuildTypeAttr
+import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.fusedlibrary.SegregatingConstraintHandler
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
+import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
 import com.android.build.gradle.internal.services.DslServicesImpl
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import groovy.namespace.QName
 import groovy.util.Node
 import org.gradle.api.DefaultTask
@@ -71,6 +75,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         variantScope: TASK_SCOPE,
         tasksCreationActions: List<TaskCreationAction<out DefaultTask>>,
     ) {
+        configureTransforms(project)
         val taskProviders = TaskFactoryImpl(project.tasks).let { taskFactory ->
             tasksCreationActions.map { creationAction ->
                 taskFactory.register(creationAction)
@@ -81,7 +86,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         project.tasks.register("assemble") { assembleTask ->
             artifactForPublication?.let { artifactTypeForPublication ->
                 assembleTask.dependsOn(variantScope.artifacts.get(artifactTypeForPublication))
-            } ?: taskProviders.forEach {  assembleTask.dependsOn(it) }
+            } ?: taskProviders.forEach { assembleTask.dependsOn(it) }
         }
     }
 
@@ -116,7 +121,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         // dependencies that are implementation() scoped will not be included.
         val includeApiClasspath = project.configurations.create("includeApiClasspath").also {
             it.isCanBeConsumed = false
-            initConfiguration(it)
             it.attributes.attribute(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_API)
@@ -135,7 +139,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         val includedApiUnmerged = project.configurations.create("includeApiUnmerged").also {
             it.isCanBeConsumed = true
             it.isCanBeResolved = true
-            initConfiguration(it)
             it.incoming.beforeResolve(
                 SegregatingConstraintHandler(
                     includeApiClasspath,
@@ -153,7 +156,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
             it.isCanBeConsumed = false
             it.isCanBeResolved = true
 
-            initConfiguration(it)
             it.attributes.attribute(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME)
@@ -173,7 +175,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         val includeRuntimeUnmerged = project.configurations.create("includeRuntimeUnmerged").also {
             it.isCanBeConsumed = false
             it.isCanBeResolved = true
-            initConfiguration(it)
             it.incoming.beforeResolve(
                 SegregatingConstraintHandler(
                     includeConfigurations,
@@ -202,9 +203,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
             elements.isCanBeResolved = false
             elements.isCanBeConsumed = true
             elements.isTransitive = true
-            if (artifactTypeForPublication == AndroidArtifacts.ArtifactType.AAR) {
-                initConfiguration(elements)
-            }
 
             if (bundleTaskProvider != null) {
                 elements.outgoing.variants { variants ->
@@ -249,23 +247,18 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         )
     }
 
+    override fun configureProject(project: Project) {
+        val projectOptions = projectServices.projectOptions
+        Aapt2ThreadPoolBuildService.RegistrationAction(project, projectOptions).execute()
+        Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute()
+    }
+
     protected abstract fun maybePublishToMaven(
         project: Project,
         includeApiElements: Configuration,
         includeRuntimeElements: Configuration,
         includeRuntimeUnmerged: Configuration
     )
-
-    private fun initConfiguration(configuration: Configuration) {
-        configuration.attributes.attribute(
-            AndroidArtifacts.ARTIFACT_TYPE,
-            AndroidArtifacts.ArtifactType.CLASSES_JAR.type
-        )
-        configuration.attributes.attribute(
-            AndroidArtifacts.ARTIFACT_TYPE,
-            AndroidArtifacts.ArtifactType.JAR.type
-        )
-    }
 
     fun component(
         publication: MavenPublication,
@@ -302,4 +295,14 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         }
     }
 
+    fun configureTransforms(project: Project) {
+        configuratorService.recordBlock(
+                GradleBuildProfileSpan.ExecutionType.ARTIFACT_TRANSFORM,
+                project.path,
+                null
+        ) {
+            DependencyConfigurator(project, projectServices)
+                    .configureGeneralTransforms(namespacedAndroidResources = false)
+        }
+    }
 }

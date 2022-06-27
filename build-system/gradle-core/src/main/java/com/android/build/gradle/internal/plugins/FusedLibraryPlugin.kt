@@ -23,7 +23,9 @@ import com.android.build.gradle.internal.dsl.FusedLibraryExtensionImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
+import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
 import com.android.build.gradle.tasks.FusedLibraryBundleAar
 import com.android.build.gradle.tasks.FusedLibraryBundleClasses
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
@@ -31,6 +33,7 @@ import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryManifestMergerTask
 import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeResourcesTask
+import com.android.repository.Revision
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -55,7 +58,7 @@ class FusedLibraryPlugin @Inject constructor(
     override val variantScope by lazy {
         withProject("variantScope") { project ->
             FusedLibraryVariantScopeImpl(
-                project
+                    project
             ) { extension }
         }
     }
@@ -64,9 +67,6 @@ class FusedLibraryPlugin @Inject constructor(
         withProject("extension") { project ->
             instantiateExtension(project)
         }
-    }
-
-    override fun configureProject(project: Project) {
     }
 
     override fun configureExtension(project: Project) {

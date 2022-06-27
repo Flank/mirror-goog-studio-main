@@ -23,11 +23,14 @@ import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject
+import com.google.common.collect.ImmutableList
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -36,6 +39,14 @@ import kotlin.io.path.readText
 
 /** Smoke integration tests for the privacy sandbox SDK production and consumption */
 class PrivacySandboxSdkTest {
+
+    private val mavenRepo = MavenRepoGenerator(
+            listOf(
+                    MavenRepoGenerator.Library("com.externaldep:externaljar:1", "jar", TestInputsGenerator.jarWithEmptyClasses(
+                            ImmutableList.of("com/externaldep/externaljar/ExternalClass")
+                    ))
+            )
+    )
 
     @get:Rule
     val project = createGradleProjectBuilder {
@@ -116,6 +127,7 @@ class PrivacySandboxSdkTest {
             dependencies {
                 include(project(":android-lib1"))
                 include(project(":android-lib2"))
+                include("com.externaldep:externaljar:1")
             }
 
         }
@@ -140,6 +152,7 @@ class PrivacySandboxSdkTest {
             }
         }
     }
+            .withAdditionalMavenRepo(mavenRepo)
             .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
             .create()
 
@@ -158,6 +171,7 @@ class PrivacySandboxSdkTest {
             assertThat(dex.classes.keys).containsAtLeast(
                 "Lcom/example/androidlib1/Example;",
                 "Lcom/example/androidlib2/Example;",
+                    "Lcom/externaldep/externaljar/ExternalClass;"
             )
             assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map { it.name }).contains("f1")
             assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map { it.name }).contains("f2")
@@ -228,6 +242,7 @@ class PrivacySandboxSdkTest {
         Apk(privacySandboxSdkApk).use {
             assertThat(it).containsClass(ANDROID_LIB1_CLASS)
             assertThat(it).containsClass("Lcom/example/androidlib2/Example;")
+            assertThat(it).containsClass("Lcom/externaldep/externaljar/ExternalClass;")
         }
 
         // Check building the bundle to deploy to TiramisuPrivacySandbox

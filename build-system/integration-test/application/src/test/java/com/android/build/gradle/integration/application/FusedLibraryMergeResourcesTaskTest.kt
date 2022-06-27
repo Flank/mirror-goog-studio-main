@@ -19,17 +19,31 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
+import com.android.build.gradle.integration.common.utils.IgnoredTests
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.generateAarWithContent
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
+import java.nio.charset.Charset
 import java.nio.file.Path
 import java.util.zip.ZipFile
 
 class FusedLibraryMergeResourcesTaskTest {
+
+    private val testAar = generateAarWithContent("com.remotedep.remoteaar",
+            resources = mapOf("values/strings.xml" to
+                    // language=XML
+                    """<?xml version="1.0" encoding="utf-8"?>
+                    <resources>
+                    <string name="string_from_remote_lib">Remote String</string>
+                    </resources>""".trimIndent().toByteArray(Charset.defaultCharset())
+            ),
+    )
 
     @JvmField
     @Rule
@@ -103,6 +117,7 @@ class FusedLibraryMergeResourcesTaskTest {
             dependencies {
                 include(project(":androidLib2"))
                 include(project(":androidLib3"))
+                include(MavenRepoGenerator.Library("com.remotedep:remoteaar:1", "aar", testAar))
             }
         }
         subProject(":app") {
@@ -123,6 +138,7 @@ class FusedLibraryMergeResourcesTaskTest {
     }
 
     @Test
+    @Ignore(IgnoredTests.BUG_23682893)
     fun testMerge() {
         val fusedLibraryAar = getFusedLibraryAar()
         ZipFile(fusedLibraryAar).use { aar ->
@@ -136,6 +152,7 @@ class FusedLibraryMergeResourcesTaskTest {
                             "    <string name=\"string_from_androidLib1\">androidLib1</string>\n" +
                             "    <string name=\"string_from_android_lib_2\">androidLib2</string>\n" +
                             "    <string name=\"string_from_android_lib_3\">androidLib3</string>\n" +
+                            "    <string name=\"string_from_remote_lib\">Remote String</string>\n" +
                             "    <string name=\"string_overridden\">androidLib2</string>\n" +
                             "</resources>"
             )
@@ -157,6 +174,7 @@ class FusedLibraryMergeResourcesTaskTest {
     }
 
     @Test
+    @Ignore(IgnoredTests.BUG_23682893)
     fun testAppResourceMergingWithFusedLib() {
         val publishedFusedLibrary = getFusedLibraryAar()
         val appSubproject = project.getSubproject("app")
@@ -183,6 +201,7 @@ class FusedLibraryMergeResourcesTaskTest {
                         "<string name=\"string_from_android_lib_2\">androidLib2</string>",
                         "<string name=\"string_from_android_lib_3\">androidLib3</string>",
                         "<string name=\"string_from_app\">app</string>",
+                        "<string name=\"string_from_remote_lib\">Remote String</string>",
                         "<string name=\"string_overridden\">app</string>",
                         "</resources>"
                 )
