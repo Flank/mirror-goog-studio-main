@@ -59,12 +59,9 @@ class AndroidLintAnalysisTaskTest {
 
     @Test
     fun testAndroidLibrary() {
-        // Run clean task and lint task separately, see https://github.com/gradle/gradle/issues/20897
-        lintKotlinProject.execute(":library:clean")
-        lintKotlinProject.execute(":library:lintAnalyzeDebug")
         // Run twice to catch issues with configuration caching
-        lintKotlinProject.execute(":library:clean")
-        lintKotlinProject.execute(":library:lintAnalyzeDebug")
+        lintKotlinProject.execute(":library:clean", ":library:lintAnalyzeDebug")
+        lintKotlinProject.execute(":library:clean", ":library:lintAnalyzeDebug")
         val partialResultsDir =
             FileUtils.join(
                 lintKotlinProject.getSubproject(":library")

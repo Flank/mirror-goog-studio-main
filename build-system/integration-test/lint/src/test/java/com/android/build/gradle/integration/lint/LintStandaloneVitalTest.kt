@@ -41,11 +41,8 @@ class LintStandaloneVitalTest {
     @Test
     fun checkStandaloneLintVital() {
         // Run twice to catch issues with configuration caching
-        // Run clean task and lint task separately, see https://github.com/gradle/gradle/issues/20897
-        project.executor().run("clean")
-        project.executor().expectFailure().run("lintVital")
-        project.executor().run("clean")
-        val result = project.executor().expectFailure().run("lintVital")
+        project.executor().expectFailure().run("clean", "lintVital")
+        val result = project.executor().expectFailure().run("clean", "lintVital")
         Truth.assertThat(result.failedTasks).contains(":lintVital")
         Truth.assertThat(result.didWorkTasks).contains(":lintVitalReport")
         Truth.assertThat(result.failedTasks).doesNotContain(":lintVitalReport")
