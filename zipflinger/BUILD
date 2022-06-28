@@ -81,6 +81,7 @@ java_test(
     name = "testsZipFlinger",
     size = "medium",
     srcs = [
+        "test/src/java/com/android/zipflinger/CommentTest.java",
         "test/src/java/com/android/zipflinger/ZipFlingerTest.java",
     ],
     data = [

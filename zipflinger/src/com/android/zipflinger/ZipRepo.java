@@ -100,7 +100,7 @@ public class ZipRepo implements Closeable {
     }
 
     @NonNull
-    public byte[] getContent() {
+    public byte[] getComment() {
         return zipMap.getComment();
     }
 }

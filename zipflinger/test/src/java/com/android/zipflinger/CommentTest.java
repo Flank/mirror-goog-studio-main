@@ -54,7 +54,7 @@ public class CommentTest extends AbstractZipflingerTest {
 
         // Make sure the comment of the initial archive was preserved.
         try (ZipRepo repo = new ZipRepo(dst)) {
-            Assert.assertArrayEquals(repo.getContent(), comment);
+            Assert.assertArrayEquals(repo.getComment(), comment);
         }
     }
 
@@ -77,5 +77,28 @@ public class CommentTest extends AbstractZipflingerTest {
         } catch (IllegalStateException e) {
             // Expected
         }
+    }
+
+    @Test
+    public void testCommentTransfer() throws Exception {
+        Path path = getTestPath("testCommentTransfer.zip");
+        byte[] comment = "hello".getBytes();
+
+        try (ZipWriter writer = new ZipWriter(path)) {
+            Location location = new Location(0, 0);
+            EndOfCentralDirectory.write(writer, location, 0, comment);
+        }
+
+        try(ZipArchive archive = new ZipArchive(path)) {
+            ZipSource zipSrc = new ZipSource(path);
+            archive.setComment(zipSrc.getComment());
+        }
+
+        try (ZipRepo repo = new ZipRepo(path)) {
+            byte[] expected = comment;
+            byte[] actual = repo.getComment();
+            Assert.assertArrayEquals("Different comment", expected, actual);
+        }
+
     }
 }

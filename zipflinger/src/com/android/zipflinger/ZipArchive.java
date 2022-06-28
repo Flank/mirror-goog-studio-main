@@ -345,4 +345,11 @@ public class ZipArchive implements Archive {
             throw new IllegalStateException(msg);
         }
     }
+
+    public void setComment(@NonNull byte[] comment) {
+        if (comment == null) {
+            throw new IllegalStateException("Null comment not permitted");
+        }
+        this.comment = comment;
+    }
 }
