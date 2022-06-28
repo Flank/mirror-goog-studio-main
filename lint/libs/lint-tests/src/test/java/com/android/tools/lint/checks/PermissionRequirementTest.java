@@ -69,17 +69,17 @@ public class PermissionRequirementTest extends TestCase {
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         req = serialize(req);
-        assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
+        assertTrue(req.isRevocable(PermissionHolder.NONE));
 
-        assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
+        assertFalse(req.isSatisfied(PermissionHolder.NONE));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
         assertTrue(req.isSatisfied(new SetPermissionLookup(fineSet)));
         assertEquals(
                 "android.permission.ACCESS_FINE_LOCATION",
-                req.describeMissingPermissions(new SetPermissionLookup(emptySet)));
-        assertEquals(fineSet, req.getMissingPermissions(new SetPermissionLookup(emptySet)));
+                req.describeMissingPermissions(PermissionHolder.NONE));
+        assertEquals(fineSet, req.getMissingPermissions(PermissionHolder.NONE));
         assertEquals(emptySet, req.getMissingPermissions(new SetPermissionLookup(fineSet)));
-        assertEquals(fineSet, req.getRevocablePermissions(new SetPermissionLookup(emptySet)));
+        assertEquals(fineSet, req.getRevocablePermissions(PermissionHolder.NONE));
         assertNull(req.getOperator());
         assertFalse(req.getChildren().iterator().hasNext());
     }
@@ -103,16 +103,16 @@ public class PermissionRequirementTest extends TestCase {
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         req = serialize(req);
-        assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
-        assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
+        assertTrue(req.isRevocable(PermissionHolder.NONE));
+        assertFalse(req.isSatisfied(PermissionHolder.NONE));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
         assertTrue(req.isSatisfied(new SetPermissionLookup(fineSet)));
         assertTrue(req.isSatisfied(new SetPermissionLookup(coarseSet)));
         assertEquals(
                 "android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION",
-                req.describeMissingPermissions(new SetPermissionLookup(emptySet)));
-        assertEquals(bothSet, req.getMissingPermissions(new SetPermissionLookup(emptySet)));
-        assertEquals(bothSet, req.getRevocablePermissions(new SetPermissionLookup(emptySet)));
+                req.describeMissingPermissions(PermissionHolder.NONE));
+        assertEquals(bothSet, req.getMissingPermissions(PermissionHolder.NONE));
+        assertEquals(bothSet, req.getRevocablePermissions(PermissionHolder.NONE));
         assertSame(JavaTokenType.OROR, req.getOperator());
     }
 
@@ -135,16 +135,16 @@ public class PermissionRequirementTest extends TestCase {
         UAnnotation annotation = createUAnnotation(PERMISSION_ANNOTATION.defaultName(), values);
         PermissionRequirement req = PermissionRequirement.create(annotation);
         req = serialize(req);
-        assertTrue(req.isRevocable(new SetPermissionLookup(emptySet)));
-        assertFalse(req.isSatisfied(new SetPermissionLookup(emptySet)));
+        assertTrue(req.isRevocable(PermissionHolder.NONE));
+        assertFalse(req.isSatisfied(PermissionHolder.NONE));
         assertFalse(req.isSatisfied(new SetPermissionLookup(Collections.singleton(""))));
         assertFalse(req.isSatisfied(new SetPermissionLookup(fineSet)));
         assertFalse(req.isSatisfied(new SetPermissionLookup(coarseSet)));
         assertTrue(req.isSatisfied(new SetPermissionLookup(bothSet)));
         assertEquals(
                 "android.permission.ACCESS_FINE_LOCATION and android.permission.ACCESS_COARSE_LOCATION",
-                req.describeMissingPermissions(new SetPermissionLookup(emptySet)));
-        assertEquals(bothSet, req.getMissingPermissions(new SetPermissionLookup(emptySet)));
+                req.describeMissingPermissions(PermissionHolder.NONE));
+        assertEquals(bothSet, req.getMissingPermissions(PermissionHolder.NONE));
         assertEquals(
                 "android.permission.ACCESS_COARSE_LOCATION",
                 req.describeMissingPermissions(new SetPermissionLookup(fineSet)));
@@ -153,7 +153,7 @@ public class PermissionRequirementTest extends TestCase {
                 "android.permission.ACCESS_FINE_LOCATION",
                 req.describeMissingPermissions(new SetPermissionLookup(coarseSet)));
         assertEquals(fineSet, req.getMissingPermissions(new SetPermissionLookup(coarseSet)));
-        assertEquals(bothSet, req.getRevocablePermissions(new SetPermissionLookup(emptySet)));
+        assertEquals(bothSet, req.getRevocablePermissions(PermissionHolder.NONE));
         assertSame(JavaTokenType.ANDAND, req.getOperator());
     }
 

@@ -36,7 +36,11 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UFile
+import org.objectweb.asm.tree.AnnotationNode
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
@@ -83,6 +87,11 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
          */
         private const val KEY_CLASS = "class"
 
+        /**
+         * The name of the class referencing the notification manager
+         */
+        private const val KEY_CLASS_NAME = "className"
+
         private const val POST_NOTIFICATIONS_PERMISSION = "android.permission.POST_NOTIFICATIONS"
 
         private const val MIN_TARGET = 33
@@ -105,10 +114,16 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
         // In the IDE we can immediately check manifest and target sdk version and bail out if permission
         // is held or not yet targeting T
         if (context.isGlobalAnalysis()) {
-            if (context.mainProject.targetSdk < MIN_TARGET || isHoldingPostNotifications(context.mainProject) != false) {
+            if (context.mainProject.targetSdk < MIN_TARGET ||
+                isHoldingPostNotificationsViaAnnotations(node) ||
+                isHoldingPostNotifications(context.mainProject) != false
+            ) {
                 return
             }
         } else {
+            if (isHoldingPostNotificationsViaAnnotations(node)) {
+                return
+            }
             val map = context.getPartialResults(ISSUE).map()
             if (!map.containsKey(KEY_SOURCE)) {
                 map.put(KEY_SOURCE, true)
@@ -132,10 +147,23 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
     override fun getApplicableCallNames(): List<String> = listOf("notify")
 
     override fun checkCall(context: ClassContext, classNode: ClassNode, method: MethodNode, call: MethodInsnNode) {
+        val owner = classNode.name
+        if (owner.startsWith("android/") ||
+            owner.startsWith("androidx/") ||
+            owner.startsWith("com/google/android/gms/") // such as play-services-base
+        ) {
+            // Call from within AndroidX libraries; just depending on AndroidX doesn't mean you're using its
+            // notification utility methods.
+            return
+        }
         if (call.owner == "android/app/NotificationManager" || call.owner == "androidx/core/app/NotificationCompat") {
             val map = context.getPartialResults(ISSUE).map()
             if (!map.containsKey(KEY_CLASS)) {
+                if (isHoldingPostNotificationsViaAnnotations(classNode, method)) {
+                    return
+                }
                 map.put(KEY_CLASS, context.getLocation(call))
+                map.put(KEY_CLASS_NAME, owner)
             }
         }
     }
@@ -166,8 +194,64 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
         if (isHoldingPostNotifications(context.mainProject) != false) {
             return
         }
+
         val location = map.getLocation(KEY_CLASS) ?: return
-        context.report(ISSUE, location, getWarningMessage(), createFix())
+        val owner = map.get(KEY_CLASS_NAME) ?: return
+        val message = getWarningMessage() + " (usage from ${ClassContext.getFqcn(owner)})"
+        context.report(ISSUE, location, message, createFix())
+    }
+
+    /**
+     * Is the given [scope] surrounded by a `@RequiresPermission`
+     * annotation which lists the POST_NOTIFICATIONS permission as a
+     * prerequisite?
+     */
+    private fun isHoldingPostNotificationsViaAnnotations(scope: UElement): Boolean {
+        var currentScope: UElement? = scope
+        while (currentScope != null) {
+            if (currentScope is UAnnotated) {
+                //noinspection ExternalAnnotations
+                val annotations = currentScope.uAnnotations
+                for (annotation in annotations) {
+                    val fqcn = annotation.qualifiedName
+                    if (PERMISSION_ANNOTATION.isEquals(fqcn)) {
+                        val requirement = PermissionRequirement.create(annotation)
+                        if (isHoldingPostNotificationsViaAnnotations(requirement)) {
+                            return true
+                        }
+                    }
+                }
+            }
+
+            if (currentScope is UFile) {
+                return false
+            }
+            currentScope = currentScope.uastParent
+        }
+
+        return false
+    }
+
+    private fun List<AnnotationNode>.getPermissionRequirement(): PermissionRequirement? {
+        for (annotation in this) {
+            if (annotation.desc == "Landroidx/annotation/RequiresPermission;") {
+                return PermissionRequirement.create(annotation)
+            }
+        }
+
+        return null
+    }
+
+    private fun isHoldingPostNotificationsViaAnnotations(classNode: ClassNode, method: MethodNode): Boolean {
+        val requirement = method.invisibleAnnotations?.getPermissionRequirement()
+            ?: classNode.invisibleAnnotations?.getPermissionRequirement()
+            ?: return false
+
+        return isHoldingPostNotificationsViaAnnotations(requirement)
+    }
+
+    private fun isHoldingPostNotificationsViaAnnotations(requirement: PermissionRequirement): Boolean {
+        return requirement.getMissingPermissions(PermissionHolder.NONE).contains(POST_NOTIFICATIONS_PERMISSION)
     }
 
     private fun isHoldingPostNotifications(project: Project): Boolean? {

@@ -148,4 +148,7 @@ public interface PermissionHolder {
             return lookup;
         }
     }
+
+    /** No permissions held */
+    PermissionHolder NONE = new SetPermissionLookup(Collections.emptySet());
 }
