@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROID_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PACKAGE
@@ -170,6 +171,15 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                     "`${attr.value}` is a reserved permission"
                 )
             )
+        } else if (attr.value.startsWith(ANDROID_PKG_PREFIX)) {
+            context.report(
+                Incident(
+                    RESERVED_SYSTEM_PERMISSION,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "`${attr.value}` is using the reserved system prefix `$ANDROID_PKG_PREFIX`"
+                )
+            )
         }
 
         if (!followsCustomPermissionNamingConvention(packageName, attr.value)) {
@@ -278,10 +288,11 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             briefDescription = "Permission name is a reserved Android permission",
             explanation = """
                 This check looks for custom permission declarations whose names are reserved values \
-                for system or Android SDK permissions.
+                for system or Android SDK permissions, or begin with the reserved string `android.`
 
                 Please double check the permission name you have supplied. Attempting to redeclare a system \
-                or Android SDK permission will be ignored.
+                or Android SDK permission will be ignored.  Using the prefix `android.` is a violation of the \
+                Android Compatibility Definition Document.
                 """,
             category = Category.SECURITY,
             priority = 5,

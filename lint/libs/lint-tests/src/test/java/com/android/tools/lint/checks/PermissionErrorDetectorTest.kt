@@ -179,6 +179,7 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                   xmlns:tools="http://schemas.android.com/tools"
                   package="com.example.helloworld">
                   <permission android:name="android.permission.BIND_APPWIDGET" />
+                  <permission android:name="android.permission.FOOBAR" />
                   <application>
                     <service android:permission="android.permission.BIND_APPWIDGET" />
                   </application>
@@ -193,7 +194,10 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 AndroidManifest.xml:4: Error: android.permission.BIND_APPWIDGET is a reserved permission [ReservedSystemPermission]
                   <permission android:name="android.permission.BIND_APPWIDGET" />
                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                1 errors, 0 warnings
+                AndroidManifest.xml:5: Error: android.permission.FOOBAR is using the reserved system prefix android. [ReservedSystemPermission]
+                  <permission android:name="android.permission.FOOBAR" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~
+                2 errors, 0 warnings
                 """
             )
     }
