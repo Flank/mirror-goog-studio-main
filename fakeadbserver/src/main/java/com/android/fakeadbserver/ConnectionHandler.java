@@ -29,6 +29,7 @@ import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -64,12 +65,15 @@ final class ConnectionHandler implements Runnable {
     @NonNull
     private final FakeAdbServer mServer;
 
+    @NonNull private final SocketChannel mSocketChannel;
+
     @NonNull
     private final Socket mSocket;
 
-    ConnectionHandler(@NonNull FakeAdbServer server, @NonNull Socket socket) {
+    ConnectionHandler(@NonNull FakeAdbServer server, @NonNull SocketChannel socketChannel) {
         mServer = server;
-        mSocket = socket;
+        mSocketChannel = socketChannel;
+        mSocket = socketChannel.socket();
     }
 
     @Override

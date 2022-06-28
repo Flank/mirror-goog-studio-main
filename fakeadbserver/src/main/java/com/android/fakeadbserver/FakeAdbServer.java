@@ -66,8 +66,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.StandardSocketOptions;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,7 +90,9 @@ import java.util.function.Supplier;
  */
 public final class FakeAdbServer implements AutoCloseable {
 
-    private final ServerSocket mServerSocket;
+    private final ServerSocketChannel mServerSocket;
+
+    private InetSocketAddress mServerSocketLocalAddress;
 
     /**
      * The {@link CommandHandler}s have internal state. To allow for reentrancy, instead of using a
@@ -139,12 +142,13 @@ public final class FakeAdbServer implements AutoCloseable {
                                     "abb",
                                     "abb_exec")));
 
+
     private FakeAdbServer() throws IOException {
         this(DEFAULT_FEATURES);
     }
 
     private FakeAdbServer(Set<String> features) throws IOException {
-        mServerSocket = new ServerSocket();
+        mServerSocket = ServerSocketChannel.open();
         mFeatures = features;
     }
 
@@ -152,7 +156,8 @@ public final class FakeAdbServer implements AutoCloseable {
         assert mConnectionHandlerTask == null; // Do not reuse the server.
 
         mServerSocket.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0));
-        mServerSocket.setReuseAddress(true);
+        mServerSocket.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+        mServerSocketLocalAddress = (InetSocketAddress) mServerSocket.getLocalAddress();
         mServerKeepAccepting = true;
 
         mConnectionHandlerTask =
@@ -160,14 +165,17 @@ public final class FakeAdbServer implements AutoCloseable {
                         () -> {
                             while (mServerKeepAccepting) {
                                 try {
-                                    // Socket can not be closed in finally block, because a separate thread will
-                                    // read from the socket. Closing the socket leads to a race condition.
+                                    // Socket can not be closed in finally block, because a separate
+                                    // thread will
+                                    // read from the socket. Closing the socket leads to a race
+                                    // condition.
                                     //noinspection SocketOpenedButNotSafelyClosed
-                                    Socket socket = mServerSocket.accept();
+                                    SocketChannel socket = mServerSocket.accept();
                                     ConnectionHandler handler = new ConnectionHandler(this, socket);
                                     mThreadPoolExecutor.execute(handler);
                                 } catch (IOException ignored) {
-                                    // close() is called in a separate thread, and will cause accept() to throw an
+                                    // close() is called in a separate thread, and will cause
+                                    // accept() to throw an
                                     // exception if closed here.
                                 }
                             }
@@ -176,11 +184,11 @@ public final class FakeAdbServer implements AutoCloseable {
 
     @NonNull
     public InetAddress getInetAddress() {
-        return mServerSocket.getInetAddress();
+        return mServerSocketLocalAddress.getAddress();
     }
 
     public int getPort() {
-        return mServerSocket.getLocalPort();
+        return mServerSocketLocalAddress.getPort();
     }
 
     /** This method allows for the caller thread to wait until the server shuts down. */
