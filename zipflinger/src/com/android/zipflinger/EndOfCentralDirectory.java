@@ -31,6 +31,8 @@ class EndOfCentralDirectory {
     private Location location;
     private Location cdLocation;
 
+    private byte[] comment = new byte[0];
+
     private EndOfCentralDirectory() {
         this.numEntries = 0;
         this.location = Location.INVALID;
@@ -44,7 +46,21 @@ class EndOfCentralDirectory {
         long cdSize = Ints.uintToLong(buffer.getInt());
         long cdOffset = Ints.uintToLong(buffer.getInt());
         cdLocation = new Location(cdOffset, cdSize);
-        buffer.position(buffer.position() + 2); // Skip comment length
+
+        // Get comment section
+        int commentLength = Ints.ushortToInt(buffer.getShort());
+        if (buffer.remaining() < commentLength) {
+            long remaining = buffer.remaining();
+            String msg =
+                    "Declared comment size ("
+                            + commentLength
+                            + ") bigger than remaining bytes ("
+                            + remaining
+                            + ")";
+            throw new IllegalStateException(msg);
+        }
+        comment = new byte[commentLength];
+        buffer.get(comment);
     }
 
     @NonNull
@@ -55,6 +71,11 @@ class EndOfCentralDirectory {
     @NonNull
     public Location getCdLocation() {
         return cdLocation;
+    }
+
+    @NonNull
+    byte[] getComment() {
+        return comment;
     }
 
     public int numEntries() {
@@ -98,7 +119,10 @@ class EndOfCentralDirectory {
 
     @NonNull
     public static Location write(
-            @NonNull ZipWriter writer, @NonNull Location cdLocation, long entriesCount)
+            @NonNull ZipWriter writer,
+            @NonNull Location cdLocation,
+            long entriesCount,
+            @NonNull byte[] comment)
             throws IOException {
         boolean isZip64 = Zip64.needZip64Footer(entriesCount, cdLocation);
 
@@ -106,7 +130,13 @@ class EndOfCentralDirectory {
         int eocdSize = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(cdLocation.size());
         int eocdOffset = isZip64 ? Zip64.INT_MAGIC : Ints.longToUint(cdLocation.first);
 
-        ByteBuffer eocd = ByteBuffer.allocate(SIZE).order(ByteOrder.LITTLE_ENDIAN);
+        if (comment.length > Ints.USHRT_MAX) {
+            String msg = "Comment too big (" + comment.length + ") max= " + Ints.USHRT_MAX;
+            throw new IllegalStateException(msg);
+        }
+
+        int totalSize = SIZE + comment.length;
+        ByteBuffer eocd = ByteBuffer.allocate(totalSize).order(ByteOrder.LITTLE_ENDIAN);
         eocd.putInt(SIGNATURE);
         eocd.putShort(DISK_NUMBER);
         eocd.putShort((short) 0); // cd disk number
@@ -114,7 +144,8 @@ class EndOfCentralDirectory {
         eocd.putShort(numEntries);
         eocd.putInt(eocdSize);
         eocd.putInt(eocdOffset);
-        eocd.putShort((short) 0); // comment size
+        eocd.putShort(Ints.longToUshort(comment.length)); // comment size
+        eocd.put(comment);
 
         eocd.rewind();
         long position = writer.position();

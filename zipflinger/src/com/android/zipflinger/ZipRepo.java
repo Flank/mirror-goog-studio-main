@@ -98,4 +98,9 @@ public class ZipRepo implements Closeable {
             return payloadByteBuffer;
         }
     }
+
+    @NonNull
+    public byte[] getContent() {
+        return zipMap.getComment();
+    }
 }
