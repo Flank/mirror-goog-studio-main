@@ -93,7 +93,7 @@ import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
-import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.CommonClassNames
@@ -119,7 +119,6 @@ import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
 import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtConstructor
@@ -127,8 +126,6 @@ import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
-import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
-import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
@@ -141,7 +138,7 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
-import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
+import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isAssignment
@@ -594,7 +591,7 @@ fun assertionsEnabled(): Boolean = LintJavaUtils.assertionsEnabled()
  * array access expression.
  *
  * Temporary workaround for
- * https://youtrack.jetbrains.com/issue/KTIJ-18765:
+ * https://youtrack.jetbrains.com/issue/KTIJ-18765
  */
 fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     val receiver = this.receiver
@@ -606,7 +603,7 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     // https://youtrack.jetbrains.com/issue/KTIJ-18765
     // Instead we'll search ourselves.
 
-    // First try Kotlin resolving service
+    // First try Kotlin resolving service (base version, not FE1.0 variant)
     val source = resolveKotlinCall(sourcePsi)
     if (source is PsiMethod) {
         return source
@@ -711,29 +708,13 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     return typeMatch
 }
 
+// TODO(kotlin-uast-cleanup): remove this when a fix for https://youtrack.jetbrains.com/issue/KTIJ-18765 arrives.
 private fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
-    // First try Kotlin resolving service
+    // First try Kotlin resolving service (base version, not FE1.0 variant)
     val ktElement = sourcePsi as? KtElement ?: return null
-    val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
+    val baseService = ApplicationManager.getApplication().getService(BaseKotlinUastResolveProviderService::class.java)
         ?: return null
-    val bindingContext = service.getBindingContext(ktElement)
-    val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
-    return resolvedCall.resultingDescriptor.toSource()
-        ?: LintJavaUtils.resolveToPsiMethod(ktElement, resolvedCall.resultingDescriptor, null)
-}
-
-// See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
-private fun DeclarationDescriptor.toSource(): PsiElement? {
-    return try {
-        DescriptorToSourceUtils.getEffectiveReferencedDescriptors(this)
-            .asSequence()
-            .mapNotNull { DescriptorToSourceUtils.getSourceFromDescriptor(it) }
-            .firstOrNull()
-    } catch (e: ProcessCanceledException) {
-        throw e
-    } catch (e: Exception) {
-        null
-    }
+    return baseService.resolveCall(ktElement)
 }
 
 private fun sameType(type1: PsiType?, type2: PsiType?, equalsOnly: Boolean): Boolean {
