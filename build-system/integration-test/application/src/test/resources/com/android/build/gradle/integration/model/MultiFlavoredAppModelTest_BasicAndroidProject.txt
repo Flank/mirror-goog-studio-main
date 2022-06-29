@@ -484,8 +484,6 @@
             < multiFlavorSourceProvider
          < unitTestArtifact
          - testFixturesArtifact = (null)
-         - applicationId        = "pkg.name"
-         - testApplicationId    = "pkg.name.test"
       < proPlayDebug
    < variants
 < BasicAndroidProject

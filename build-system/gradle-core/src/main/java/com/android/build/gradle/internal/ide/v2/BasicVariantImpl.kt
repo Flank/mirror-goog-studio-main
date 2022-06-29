@@ -32,8 +32,6 @@ data class BasicVariantImpl(
     override val testFixturesArtifact: BasicArtifact?,
     override val buildType: String?,
     override val productFlavors: List<String>,
-    override val applicationId: String?,
-    override val testApplicationId: String?
 ) : BasicVariant, Serializable {
     companion object {
         @JvmStatic

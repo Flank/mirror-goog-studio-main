@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-243fbaa2de1fc48a6812c5ba1bfe399eafb7f4d920be0a3f0eeeae9e8514c080
+6031c024eeb073925b8a6c03d0e8d4478835bf096a694f3cbdaa239529352a6d
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -627,12 +627,10 @@ com.android.builder.model.v2.ide.BasicArtifact.getMultiFlavorSourceProvider: com
 com.android.builder.model.v2.ide.BasicArtifact.getVariantSourceProvider: com.android.builder.model.v2.ide.SourceProvider ()
 com.android.builder.model.v2.ide.BasicVariant implements com.android.builder.model.v2.AndroidModel
 com.android.builder.model.v2.ide.BasicVariant.getAndroidTestArtifact: com.android.builder.model.v2.ide.BasicArtifact ()
-com.android.builder.model.v2.ide.BasicVariant.getApplicationId: java.lang.String ()
 com.android.builder.model.v2.ide.BasicVariant.getBuildType: java.lang.String ()
 com.android.builder.model.v2.ide.BasicVariant.getMainArtifact: com.android.builder.model.v2.ide.BasicArtifact ()
 com.android.builder.model.v2.ide.BasicVariant.getName: java.lang.String ()
 com.android.builder.model.v2.ide.BasicVariant.getProductFlavors: java.util.List<java.lang.String> ()
-com.android.builder.model.v2.ide.BasicVariant.getTestApplicationId: java.lang.String ()
 com.android.builder.model.v2.ide.BasicVariant.getTestFixturesArtifact: com.android.builder.model.v2.ide.BasicArtifact ()
 com.android.builder.model.v2.ide.BasicVariant.getUnitTestArtifact: com.android.builder.model.v2.ide.BasicArtifact ()
 com.android.builder.model.v2.ide.BundleInfo implements com.android.builder.model.v2.AndroidModel

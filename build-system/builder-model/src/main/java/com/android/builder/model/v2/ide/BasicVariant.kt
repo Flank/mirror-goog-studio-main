@@ -61,28 +61,5 @@ interface BasicVariant: AndroidModel {
      * The flavors for this variants. This can be empty if no flavors are configured.
      */
     val productFlavors: List<String>
-
-    /**
-     * Returns the application ID of the main artifact of this build variant.
-     *
-     * Known for:
-     *  - Application plugin main artifacts
-     *  - Test-only plugin main artifacts
-     *
-     *  Not included (null) for:
-     *   - Library plugin main artifacts, as no APK is produced
-     *   - Dynamic feature plugin main artifacts, as the application ID comes from the base
-     *     application, and is therefore not available in dynamic feature projects during
-     *     configuration. In this case Android Studio must look at the dependency graph to find the
-     *     base application to find this value.
-     */
-    val applicationId: String?
-
-    /**  Returns the application ID of the AndroidTest artifact of this build variant.
-     *
-     *   Known for:
-     *    - AndroidTest components of all project types
-     */
-    val testApplicationId: String?
 }
 

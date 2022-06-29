@@ -234,8 +234,6 @@
             - variantSourceProvider     = (null)
             - multiFlavorSourceProvider = (null)
          - testFixturesArtifact = (null)
-         - applicationId        = "com.android.tests.basic.debug"
-         - testApplicationId    = "com.android.tests.basic.debug.test"
       < debug
       > release:
          - name                 = "release"
@@ -250,8 +248,6 @@
             - variantSourceProvider     = (null)
             - multiFlavorSourceProvider = (null)
          - testFixturesArtifact = (null)
-         - applicationId        = "com.android.tests.basic"
-         - testApplicationId    = (null)
       < release
    < variants
 < BasicAndroidProject
