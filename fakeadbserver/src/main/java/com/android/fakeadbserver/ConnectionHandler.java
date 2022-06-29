@@ -26,8 +26,11 @@ import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ListForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.Socket;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
@@ -138,14 +141,26 @@ final class ConnectionHandler implements Runnable {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logErrorVerbose(
+                    e,
+                    "An IOException was thrown during processing of an ADB request. "
+                            + "This may be expected if the peer socket was closed. "
+                            + "The request will terminate.");
             sendFailWithReason("IOException occurred when processing request.");
         } catch (Throwable t) {
-            t.printStackTrace();
+            logErrorVerbose(
+                    t,
+                    "An unexpected exception was thrown during processing of an ADB "
+                            + "request. This may be expected if the peer socket was closed. "
+                            + "The request will terminate.");
         } finally {
             try {
                 mSocket.close();
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                logErrorVerbose(
+                        e,
+                        "An IOException was thrown during when the socket used for "
+                                + "an ADB request. The request will terminate.");
             }
         }
     }
@@ -326,8 +341,14 @@ final class ConnectionHandler implements Runnable {
     private void readFully(@NonNull byte[] buffer) throws IOException {
         int bytesRead = 0;
         while (bytesRead < buffer.length) {
-            bytesRead += mSocket.getInputStream()
-                    .read(buffer, bytesRead, buffer.length - bytesRead);
+            int count = mSocket.getInputStream().read(buffer, bytesRead, buffer.length - bytesRead);
+            if (count < 0) {
+                throw new EOFException(
+                        String.format(
+                                "EOF reached when %d more bytes were expected",
+                                buffer.length - bytesRead));
+            }
+            bytesRead += count;
         }
     }
 
@@ -345,8 +366,19 @@ final class ConnectionHandler implements Runnable {
             stream.write(String.format("%04x", reason.length()).getBytes(US_ASCII));
             stream.write(reasonBytes);
             stream.flush();
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            logErrorVerbose(
+                    e,
+                    "An IOException was thrown trying to send a FAIL reply to an ADB "
+                            + "request.  This may be expected if the peer socket was closed. "
+                            + "The peer will likely not receive the failure message.");
         }
+    }
+
+    private static void logErrorVerbose(Throwable t, String message) {
+        StringWriter stackTrace = new StringWriter();
+        t.printStackTrace(new PrintWriter(stackTrace));
+        System.err.println(message + '\n' + stackTrace);
     }
 
     private static class Request {
