@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.AAPT_URI
+import com.android.SdkConstants.TAG_ITEM
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.RAW
 import com.android.resources.ResourceFolderType.VALUES
@@ -110,6 +112,16 @@ class ExtraTextDetector : ResourceXmlDetector() {
                     break
                 }
                 i++
+            }
+        } else if (nodeType == Node.ELEMENT_NODE) {
+            if (node.prefix != null && node.namespaceURI == AAPT_URI) {
+                // <aapt:x> directives in the resource file can introduce value definitions where text content
+                // is both allowed and expected.
+                return
+            }
+            if (node.nodeName == TAG_ITEM) {
+                // <item> seems to be allowed for some drawables, animators etc (see issue b/237555614)
+                return
             }
         }
 

@@ -152,4 +152,52 @@ class ExtraTextDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testAaptOkay() {
+        lint().files(
+            xml(
+                "res/layout/layout.xml",
+                """
+                <merge xmlns:android="http://schemas.android.com/apk/res/android"
+                       xmlns:aapt="http://schemas.android.com/aapt">
+                    <include layout="@layout/message">
+                        <aapt:attr name="android:theme">
+                            <style>
+                                <item name="android:layout_gravity">end</item>
+                                <item name="bubbleBackground">@color/bubble_self</item>
+                            </style>
+                        </aapt:attr>
+                    </include>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+                        <aapt:attr name="android:text">
+                            <string>Text</string>
+                        </aapt:attr>
+                    </TextView>
+                </merge>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testItemOkay() {
+        lint().files(
+            xml(
+                "res/drawable/drawable.xml",
+                """
+                <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+                    <solid android:color="@color/tv_volume_dialog_accent" />
+                    <size android:width="@dimen/tv_volume_seek_bar_thumb_diameter"
+                          android:height="@dimen/tv_volume_seek_bar_thumb_diameter" />
+                    <stroke android:width="@dimen/tv_volume_seek_bar_thumb_focus_ring_width"
+                            android:color="@color/tv_volume_dialog_seek_thumb_focus_ring"/>
+                    <item name="android:shadowColor">@color/tv_volume_dialog_seek_thumb_shadow</item>
+                    <item name="android:shadowRadius">@dimen/tv_volume_seek_bar_thumb_shadow_radius</item>
+                    <item name="android:shadowDy">@dimen/tv_volume_seek_bar_thumb_shadow_dy</item>
+                </shape>
+                """
+            ).indented()
+        ).run().expectClean()
+    }
 }
