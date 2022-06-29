@@ -107,9 +107,10 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                         writeMergedMetadata(inputFiles, output.get().asFile)
                     }
                     ArtifactType.ASSETS -> {
-                        val aarOutputAssetsOutputDir =
-                                File(output.get().asFile, SdkConstants.FD_ASSETS)
-                        copyFilesToDirRecursivelyWithOverriding(inputFiles, aarOutputAssetsOutputDir)
+                        val aarOutputAssetsOutputDir = output.get().asFile
+                        for (dir in inputFiles.reversed()) {
+                            dir.copyRecursively(aarOutputAssetsOutputDir, overwrite = true)
+                        }
                     }
                     ArtifactType.JNI -> {
                         val aarOutputJniOutputDir =
