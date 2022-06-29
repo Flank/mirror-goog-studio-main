@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.lint.AndroidLintWorkAction.Companion.ma
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStderr
 import com.android.build.gradle.internal.lint.LintTaskManager.Companion.isLintStdout
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
@@ -33,7 +32,6 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
@@ -96,8 +94,9 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
             }
             val returnValue = returnValueFile.readText().toInt()
             if (returnValue in HANDLED_ERRORS) {
+                val abbreviatedLintOutput = abbreviateLintTextFile(textReportInputFile.get().asFile)
                 if (outputStream.get() == OutputStream.ABBREVIATED) {
-                    logger.lifecycle(abbreviateLintTextFile(textReportInputFile.get().asFile))
+                    logger.lifecycle(abbreviatedLintOutput)
                 }
                 if (returnValue == ERRNO_ERRORS && !abortOnError.get()) {
                     return
@@ -106,7 +105,8 @@ abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
                     returnValue,
                     android.get(),
                     fatalOnly.get(),
-                    lintMode = LintMode.REPORTING
+                    lintMode = LintMode.REPORTING,
+                    abbreviatedLintOutput
                 )
             }
         }

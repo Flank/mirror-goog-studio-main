@@ -18,13 +18,9 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask.Companion.HANDLED_ERRORS
 import com.android.utils.JvmWideVariable
-import com.google.common.hash.HashCode
-import com.google.common.hash.Hashing
-import com.google.common.io.Files
 import com.google.common.reflect.TypeToken
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
@@ -76,7 +72,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             execResult,
             parameters.android.get(),
             parameters.fatalOnly.get(),
-            parameters.lintMode.get()
+            parameters.lintMode.get(),
+            abbreviatedLintOutput = null
         )
     }
 
@@ -219,11 +216,16 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             execResult: Int,
             android: Boolean,
             fatalOnly: Boolean,
-            lintMode: LintMode
+            lintMode: LintMode,
+            abbreviatedLintOutput: String?
         ) {
             when (execResult) {
                 ERRNO_SUCCESS -> {}
-                ERRNO_ERRORS -> throw RuntimeException(getErrorMessage(android, fatalOnly))
+                ERRNO_ERRORS -> {
+                    throw RuntimeException(
+                        getErrorMessage(android, fatalOnly, abbreviatedLintOutput)
+                    )
+                }
                 ERRNO_USAGE -> throw IllegalStateException("Internal Error: Unexpected lint usage")
                 ERRNO_EXISTS -> throw RuntimeException("Unable to write lint output")
                 ERRNO_HELP -> throw IllegalStateException("Internal error: Unexpected lint help call")
@@ -238,7 +240,11 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
             }
         }
 
-        private fun getErrorMessage(android: Boolean, fatalOnly: Boolean) : String = when {
+        private fun getErrorMessage(
+            android: Boolean,
+            fatalOnly: Boolean,
+            abbreviatedLintOutput: String?
+        ) : String = when {
             !android -> """
                 Lint found errors in the project; aborting build.
 
@@ -250,6 +256,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 ```
 
                 For more details, see https://developer.android.com/studio/write/lint#snapshot
+
+                ${abbreviatedLintOutput ?: ""}
             """.trimIndent()
             fatalOnly -> """
                 Lint found fatal errors while assembling a release target.
@@ -264,6 +272,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 ```
 
                 For more details, see https://developer.android.com/studio/write/lint#snapshot
+
+                ${abbreviatedLintOutput ?: ""}
             """.trimIndent()
             else -> """
                 Lint found errors in the project; aborting build.
@@ -278,6 +288,8 @@ abstract class AndroidLintWorkAction : WorkAction<AndroidLintWorkAction.LintWork
                 ```
 
                 For more details, see https://developer.android.com/studio/write/lint#snapshot
+
+                ${abbreviatedLintOutput ?: ""}
             """.trimIndent()
         }
     }
