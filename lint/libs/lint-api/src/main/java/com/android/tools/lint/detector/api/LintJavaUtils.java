@@ -19,12 +19,8 @@ package com.android.tools.lint.detector.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiType;
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
 import org.jetbrains.kotlin.psi.KtElement;
-import org.jetbrains.kotlin.types.KotlinType;
-import org.jetbrains.uast.UElement;
-import org.jetbrains.uast.kotlin.BaseKotlinInternalUastUtilsKt;
 import org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt;
 
 // Class which contains some code which cannot be expressed in Kotlin;
@@ -38,27 +34,12 @@ class LintJavaUtils {
         return assertionsEnabled;
     }
 
-    @SuppressWarnings("KotlinInternalInJava")
-    @NonNull
-    static PsiType getType(
-            @NonNull KotlinType type,
-            @Nullable UElement source,
-            @NonNull KtElement ktElement,
-            boolean boxed) {
-        // TODO(kotlin-uast-cleanup): avoid using "internal" utils
-        return KotlinInternalUastUtilsKt.toPsiType(
-                type,
-                source,
-                ktElement,
-                BaseKotlinInternalUastUtilsKt.getTypeOwnerKind(ktElement),
-                boxed);
-    }
-
     @Nullable
     static PsiElement resolveToPsiMethod(
             @NonNull KtElement context,
             @NonNull DeclarationDescriptor descriptor,
             @Nullable PsiElement source) {
+        // TODO(kotlin-uast-cleanup): avoid using "internal" utils
         //noinspection KotlinInternalInJava
         return KotlinInternalUastUtilsKt.resolveToPsiMethod(context, descriptor, source);
     }
