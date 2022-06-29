@@ -711,7 +711,7 @@ fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     return typeMatch
 }
 
-internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
+private fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
     // First try Kotlin resolving service
     val ktElement = sourcePsi as? KtElement ?: return null
     val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
