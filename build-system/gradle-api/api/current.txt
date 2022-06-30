@@ -2491,6 +2491,7 @@ package com.android.build.api.variant {
     method public com.android.build.api.variant.SourceDirectories.Layered? getMlModels();
     method @Deprecated public com.android.build.api.variant.SourceDirectories.Flat? getRenderscript();
     method public com.android.build.api.variant.SourceDirectories.Layered? getRes();
+    method public com.android.build.api.variant.SourceDirectories.Flat? getResources();
     method public com.android.build.api.variant.SourceDirectories.Layered? getShaders();
     property public abstract com.android.build.api.variant.SourceDirectories.Flat? aidl;
     property public abstract com.android.build.api.variant.SourceDirectories.Layered? assets;
@@ -2500,6 +2501,7 @@ package com.android.build.api.variant {
     property public abstract com.android.build.api.variant.SourceDirectories.Layered? mlModels;
     property @Deprecated public abstract com.android.build.api.variant.SourceDirectories.Flat? renderscript;
     property public abstract com.android.build.api.variant.SourceDirectories.Layered? res;
+    property public abstract com.android.build.api.variant.SourceDirectories.Flat? resources;
     property public abstract com.android.build.api.variant.SourceDirectories.Layered? shaders;
   }
 

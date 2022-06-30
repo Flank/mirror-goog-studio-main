@@ -26,4 +26,5 @@ enum class SourceType(val folder: String) {
     RENDERSCRIPT("renderscript"),
     RES("res"),
     SHADERS("shaders"),
+    JAVA_RESOURCES("resources"),
 }
