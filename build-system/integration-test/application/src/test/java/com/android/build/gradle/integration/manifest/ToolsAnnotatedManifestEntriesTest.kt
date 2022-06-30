@@ -17,20 +17,57 @@
 package com.android.build.gradle.integration.manifest
 
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
-import com.android.build.api.artifact.Artifact
 import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
-import com.android.utils.FileUtils
-import com.google.common.truth.Truth
+import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
+import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_MANIFEST
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Integration test to ensure the
+ * tools:requiredByPrivacySandboxSdk="true" attribute is preserved
+ * by the manifest merger.
+ *
+ * TODO(b/235469089): Currently tests a manual case, once support is implemented
+ *     this should be updated to assert about the contents of the generated APKs
+ */
 class ToolsAnnotatedManifestEntriesTest {
 
     @get:Rule
-    var project = GradleTestProject.builder().fromTestApp(HelloWorldApp.forPlugin("com.android.privacy-sandbox-sdk")).create()
+    var project = createGradleProject {
+        subProject(":privacy-sandbox-sdk") {
+            plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
+            android {
+                defaultCompileSdk()
+                namespace = "com.example.sdk"
+                minSdk = 13
+            }
+            dependencies {
+                include(project(":sdk-impl"))
+            }
+        }
+        subProject(":sdk-impl") {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                defaultCompileSdk()
+                namespace = "com.example.sdk.impl"
+                minSdk = 13
+            }
+            addFile("src/main/AndroidManifest.xml", """
+                <manifest
+                        xmlns:android="http://schemas.android.com/apk/res/android"
+                        xmlns:tools="http://schemas.android.com/tools">
+
+                    <uses-permission
+                            android:name="android.permission.WAKE_LOCK"
+                            tools:requiredByPrivacySandboxSdk="true" />
+                </manifest>
+            """.trimIndent())
+        }
+    }
+
 
     @Test
     fun testToolsAnnotatedManifest() {
@@ -49,19 +86,18 @@ android {
             """
         )
 
-        project.execute("mainManifestGenerator")
+        project.execute(":privacy-sandbox-sdk:mergeManifest")
         // check that merged manifest still has the tools: entries.
         // eventually, once the bundletool is ready, we should check there as well.
-        val manifestFile = FileUtils.join(project.buildDir,
-            Artifact.Category.INTERMEDIATES.name.lowercase(),
-            PrivacySandboxSdkInternalArtifactType.SANDBOX_MANIFEST.getFolderName(),
-            "single", // single variant for now
-            FN_ANDROID_MANIFEST_XML
-        )
-        Truth.assertThat(manifestFile.exists()).isTrue()
+        val manifestFile = project.getSubproject(":privacy-sandbox-sdk")
+                .intermediatesDir.resolve(MERGED_MANIFEST.getFolderName())
+                .resolve("single") // single variant for now
+                .resolve(FN_ANDROID_MANIFEST_XML)
+
+        assertThat(manifestFile.exists()).isTrue()
         manifestFile.readText().also {
-            Truth.assertThat(it).contains("xmlns:tools")
-            Truth.assertThat(it).contains("tools:requiredByPrivacySandboxSdk")
+            assertThat(it).contains("xmlns:tools")
+            assertThat(it).contains("tools:requiredByPrivacySandboxSdk")
         }
 
     }

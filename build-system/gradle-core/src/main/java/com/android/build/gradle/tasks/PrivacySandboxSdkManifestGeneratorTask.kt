@@ -35,16 +35,12 @@ abstract class PrivacySandboxSdkManifestGeneratorTask: NonIncrementalTask() {
     abstract val outputFile: RegularFileProperty
 
     override fun doTaskAction() {
+        // Include empty application tag to ensure that test projects can build with an empty manifest
+        // TODO(b/237279793): should the manifest merger handle this?
         outputFile.get().asFile.writeText("""
             <manifest
-                xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools" >
-
-                // TODO: Replace with final list of permissions
-                <uses-permission android:name="android.permission.WAKE_LOCK"
-                     tools:requiredByPrivacySandboxSdk="true"/>
-                <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"
-                     tools:requiredByPrivacySandboxSdk="true"/>
+                xmlns:android="http://schemas.android.com/apk/res/android">
+                <application />
             </manifest>
         """.trimIndent()
         )

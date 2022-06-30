@@ -83,6 +83,13 @@ class PrivacySandboxSdkTest {
             )
             addFile("src/main/resources/my_java_resource.txt", "some java resource")
             addFile("src/main/assets/asset_from_androidlib1.txt", "some asset")
+            // Have an empty manifest as a regression test of b/237279793
+            addFile("src/main/AndroidManifest.xml", """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                </manifest>
+                """.trimIndent()
+            )
         }
         subProject(":android-lib2") {
             plugins.add(PluginType.ANDROID_LIB)
@@ -104,6 +111,13 @@ class PrivacySandboxSdkTest {
                     public void f2() {}
                 }
             """.trimIndent()
+            )
+            // Have an empty manifest as a regression test of b/237279793
+            addFile("src/main/AndroidManifest.xml", """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                </manifest>
+                """.trimIndent()
             )
         }
         subProject(":privacy-sandbox-sdk") {
