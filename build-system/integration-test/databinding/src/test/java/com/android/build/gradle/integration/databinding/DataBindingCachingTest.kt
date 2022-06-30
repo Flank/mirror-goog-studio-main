@@ -79,7 +79,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
     ).plus(
         if (withKotlin) {
             mapOf(
-                ":compileDebugKotlin" to FROM_CACHE,
+                ":compileDebugKotlin" to SKIPPED,
                 ":kaptDebugKotlin" to FROM_CACHE,
                 ":kaptGenerateStubsDebugKotlin" to FROM_CACHE
             )

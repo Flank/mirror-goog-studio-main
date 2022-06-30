@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.integration.api;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -26,11 +29,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
-import org.apache.commons.io.IOUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,9 +40,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipFile;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.google.common.truth.Truth.assertThat;
+import org.apache.commons.io.IOUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class TransformInModuleWithKotlinTest {
 
@@ -106,7 +105,11 @@ public class TransformInModuleWithKotlinTest {
 
         project.execute("clean", "assembleDebug");
         Map<String, AndroidProject> multi =
-                project.model().fetchAndroidProjects().getOnlyModelMap();
+                project.model()
+                        // Experimental options to disable legacy AGP transforms is reported.
+                        .ignoreSyncIssues()
+                        .fetchAndroidProjects()
+                        .getOnlyModelMap();
 
         Collection<VariantBuildInformation> variantsBuildInformation =
                 multi.get(":app").getVariantsBuildInformation();

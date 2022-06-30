@@ -275,7 +275,6 @@ single_gradle_integration_test_per_source(
         "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
         "//tools/base/build-system/integration-test:androidx_test_latest",
-        "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test:utp_plugins",
         "//tools/base/build-system/integration-test:dagger_prebuilts",

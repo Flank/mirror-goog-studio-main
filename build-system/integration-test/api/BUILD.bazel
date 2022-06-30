@@ -23,7 +23,6 @@ gradle_integration_test(
     maven_repos = [
         "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:androidx_latest",
-        "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
         "//tools/base/build-system/previous-versions:3.5.0",
     ],

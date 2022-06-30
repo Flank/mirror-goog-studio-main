@@ -101,7 +101,10 @@ fun getKotlinPluginVersion(project: Project): String? {
     val plugin = project.plugins.findPlugin("kotlin-android") ?: return null
     return try {
         // No null checks below because we're catching all exceptions.
-        val method = plugin.javaClass.getMethod("getKotlinPluginVersion")
+        // KGP 1.7.0+ has getPluginVersion and older version have getKotlinPluginVersion
+        val method = plugin.javaClass.methods.first {
+            it.name == "getKotlinPluginVersion" || it.name == "getPluginVersion"
+        }
         method.isAccessible = true
         method.invoke(plugin).toString()
     } catch (e: Throwable) {

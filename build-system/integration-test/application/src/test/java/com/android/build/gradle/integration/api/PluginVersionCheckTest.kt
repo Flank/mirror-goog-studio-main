@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.v2.ide.SyncIssue
+import com.android.testutils.TestUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -155,7 +156,7 @@ class PluginVersionCheckTest {
             """
                 buildscript {
                     dependencies {
-                        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.20"
+                        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
                     }
                 }
                 """.trimIndent()
