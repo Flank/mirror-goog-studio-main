@@ -93,7 +93,7 @@ internal class AbstractSourceDirectoriesImplTest {
             abstract val output: DirectoryProperty
         }
 
-        val addedSource = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val addedSource = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val taskProvider = project.tasks.register("srcAddingTask", AddingTask::class.java)
 
         val testTarget = createTestTarget()

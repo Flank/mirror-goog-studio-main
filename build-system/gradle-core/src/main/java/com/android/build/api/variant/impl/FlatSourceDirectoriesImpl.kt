@@ -33,7 +33,7 @@ import java.io.File
  * the is no variant specific source directory.
  */
 class FlatSourceDirectoriesImpl(
-    private val _name: String,
+    _name: String,
     private val variantServices: VariantServices,
     variantDslFilters: PatternFilterable?
 ): SourceDirectoriesImpl(_name, variantServices, variantDslFilters),
