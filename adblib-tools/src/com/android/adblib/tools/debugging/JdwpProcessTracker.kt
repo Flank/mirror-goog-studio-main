@@ -22,8 +22,10 @@ import com.android.adblib.ProcessIdList
 import com.android.adblib.createDeviceScope
 import com.android.adblib.emptyProcessIdList
 import com.android.adblib.thisLogger
-import com.android.adblib.tools.debugging.JdwpTracker.ProcessMap
+import com.android.adblib.tools.debugging.JdwpProcessTracker.ProcessMap
+import com.android.adblib.tools.debugging.impl.JdwpProcessImpl
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
@@ -46,7 +48,7 @@ private val TRACK_JDWP_RETRY_DELAY = Duration.ofSeconds(2)
  *
  * Start a [ProcessMap] tracker [Flow] by calling the [createFlow] method.
  */
-class JdwpTracker(
+class JdwpProcessTracker(
     private val session: AdbLibSession,
     private val device: DeviceSelector
 ) {
@@ -77,6 +79,7 @@ class JdwpTracker(
                         }
                         // When disconnected, assume we have no processes
                         emit(emptyProcessIdList())
+                        delay(TRACK_JDWP_RETRY_DELAY.toMillis())
                         true // Retry
                     }
                 }.collect { processIdList ->
@@ -109,7 +112,10 @@ class JdwpTracker(
         }
         added.forEach { pid ->
             logger.debug { "Adding process $pid to process map" }
-            map.add(JdwpProcessImpl(session, device, deviceScope, pid))
+            JdwpProcessImpl(session, device, deviceScope, pid).also {
+                map.add(it)
+                it.startMonitoring()
+            }
         }
     }
 

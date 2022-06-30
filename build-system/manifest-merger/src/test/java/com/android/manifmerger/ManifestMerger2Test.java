@@ -16,15 +16,18 @@
 
 package com.android.manifmerger;
 
+import static com.android.manifmerger.ManifestMergerTestUtil.loadTestData;
+import static com.android.manifmerger.ManifestMergerTestUtil.transformParameters;
+import static com.android.manifmerger.MergingReport.Record;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import com.android.annotations.Nullable;
 import com.android.utils.StdLogger;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -39,13 +42,9 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.android.manifmerger.ManifestMergerTestUtil.loadTestData;
-import static com.android.manifmerger.ManifestMergerTestUtil.transformParameters;
-import static com.android.manifmerger.MergingReport.Record;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Tests for the {@link ManifestMerger2} class */
 @RunWith(Parameterized.class)
@@ -195,7 +194,8 @@ public class ManifestMerger2Test {
                         .addNavigationFiles(testFiles.getNavigationFiles())
                         .addDependencyFeatureNames(testFiles.getDependencyFeatureNames())
                         .withFeatures(
-                                optionalFeatures.toArray(new ManifestMerger2.Invoker.Feature[0]));
+                                optionalFeatures.toArray(new ManifestMerger2.Invoker.Feature[0]))
+                        .withFeatures(ManifestMerger2.Invoker.Feature.KEEP_GOING_AFTER_ERRORS);
 
         if (!Strings.isNullOrEmpty(testFiles.getPackageOverride())) {
             invoker.setOverride(
@@ -319,8 +319,8 @@ public class ManifestMerger2Test {
         // check that we do not have any unexpected error messages.
         if (!records.isEmpty()) {
             StringBuilder message = new StringBuilder();
+            message.append("Unexpected error message(s), see below:");
             dumpRecords(records, message);
-            message.append("Unexpected error message(s)");
             fail(message.toString());
         }
     }

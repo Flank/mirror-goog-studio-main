@@ -20,6 +20,7 @@ import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
@@ -68,6 +69,7 @@ abstract class PrivacySandboxSdkManifestGeneratorTask: NonIncrementalTask() {
         }
 
         override fun configure(task: PrivacySandboxSdkManifestGeneratorTask) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
         }
     }
 }

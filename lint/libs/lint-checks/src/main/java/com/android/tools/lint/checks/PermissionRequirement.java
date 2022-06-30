@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ATTR_VALUE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ALL_OF;
 import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ANY_OF;
 import static com.android.tools.lint.checks.AnnotationDetector.ATTR_CONDITIONAL;
@@ -37,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.jetbrains.uast.UAnnotation;
+import org.objectweb.asm.tree.AnnotationNode;
 
 /**
  * A permission requirement is a boolean expression of permission names that a caller must satisfy
@@ -140,6 +142,67 @@ public abstract class PermissionRequirement {
 
         String[] allOf = getAnnotationStringValues(annotation, ATTR_ALL_OF);
         if (allOf != null) {
+            if (allOf.length > 1) {
+                return new Many(JavaTokenType.ANDAND, allOf, conditional, firstApi, lastApi);
+            } else if (allOf.length == 1) {
+                return new Single(allOf[0], conditional, firstApi, lastApi);
+            }
+        }
+
+        return NONE;
+    }
+
+    /** Converts from an ASM List<Object> to a String[] */
+    @Nullable
+    private static String[] getAsmArray(@Nullable Object value) {
+        if (value instanceof List) {
+            List<String> permissions = new ArrayList<>();
+            //noinspection rawtypes
+            for (Object v : ((List) value)) {
+                permissions.add(v.toString());
+            }
+            return permissions.toArray(new String[0]);
+        }
+
+        return null;
+    }
+
+    @NonNull
+    public static PermissionRequirement create(@NonNull AnnotationNode annotation) {
+        String value = null;
+        String[] anyOf = null;
+        String[] allOf = null;
+        boolean conditional = false;
+        int firstApi = 1;
+        int lastApi = Integer.MAX_VALUE;
+        List<Object> values = annotation.values;
+        if (values == null || values.size() % 2 == 1) {
+            return NONE;
+        }
+        for (int i = 0; i < values.size(); i += 2) {
+            Object k = values.get(i);
+            Object v = values.get(i + 1);
+            if (ATTR_VALUE.equals(k)) {
+                value = v.toString();
+            } else if (ATTR_ANY_OF.equals(k)) {
+                anyOf = getAsmArray(v);
+            } else if (ATTR_ALL_OF.equals(k)) {
+                allOf = getAsmArray(v);
+            } else if (ATTR_CONDITIONAL.equals(k)) {
+                if (v == Boolean.TRUE || VALUE_TRUE.equals(v)) {
+                    conditional = true;
+                }
+            }
+        }
+        if (value != null && !value.isEmpty()) {
+            return new Single(value, conditional, firstApi, lastApi);
+        } else if (anyOf != null) {
+            if (anyOf.length > 1) {
+                return new Many(JavaTokenType.OROR, anyOf, conditional, firstApi, lastApi);
+            } else if (anyOf.length == 1) {
+                return new Single(anyOf[0], conditional, firstApi, lastApi);
+            }
+        } else if (allOf != null) {
             if (allOf.length > 1) {
                 return new Many(JavaTokenType.ANDAND, allOf, conditional, firstApi, lastApi);
             } else if (allOf.length == 1) {

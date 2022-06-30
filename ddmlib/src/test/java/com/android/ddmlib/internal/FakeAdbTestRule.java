@@ -126,6 +126,12 @@ public class FakeAdbTestRule extends ExternalResource {
 
     public static ClientImpl launchAndWaitForProcess(DeviceState device, boolean waitingForDebugger)
             throws Exception {
+        return launchAndWaitForProcess(device, PID, CLIENT_PACKAGE_NAME, waitingForDebugger);
+    }
+
+    public static ClientImpl launchAndWaitForProcess(
+            DeviceState device, int pid, String packageName, boolean waitingForDebugger)
+            throws Exception {
         CountDownLatch latch = new CountDownLatch(2);
         ClientImpl[] launchedClient = new ClientImpl[1];
         AndroidDebugBridge.IDeviceChangeListener deviceListener =
@@ -159,7 +165,7 @@ public class FakeAdbTestRule extends ExternalResource {
                 };
         AndroidDebugBridge.addClientChangeListener(clientListener);
         AndroidDebugBridge.addDeviceChangeListener(deviceListener);
-        device.startClient(PID, 4321, CLIENT_PACKAGE_NAME, waitingForDebugger);
+        device.startClient(pid, 4321, packageName, waitingForDebugger);
         assertThat(latch.await(TEST_TIMEOUT_MS, TimeUnit.HOURS)).isTrue();
         AndroidDebugBridge.removeClientChangeListener(clientListener);
         AndroidDebugBridge.removeDeviceChangeListener(deviceListener);

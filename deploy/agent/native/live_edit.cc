@@ -37,17 +37,21 @@ namespace deploy {
 
 namespace {
 // The format expected for class_name is com/example/ClassName$InnerClass.
-void PrimeClass(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& class_name) {
-  if (primed_classes.find(class_name) == primed_classes.end()) {
-    auto cache = std::make_unique<DisabledTransformCache>();
-    Instrumenter instrumenter(jvmti, jni, std::move(cache), false);
-
-    const StubTransform stub(class_name);
-    instrumenter.Instrument(stub);
-    primed_classes.insert(class_name);
-
-    Log::V("Live Edit primed %s", class_name.c_str());
+// Returns true if the class was just primed, false otherwise
+bool PrimeClass(jvmtiEnv* jvmti, JNIEnv* jni, const std::string& class_name) {
+  if (primed_classes.find(class_name) != primed_classes.end()) {
+    return false;
   }
+
+  auto cache = std::make_unique<DisabledTransformCache>();
+  Instrumenter instrumenter(jvmti, jni, std::move(cache), false);
+
+  const StubTransform stub(class_name);
+  instrumenter.Instrument(stub);
+  primed_classes.insert(class_name);
+
+  Log::V("Live Edit primed %s", class_name.c_str());
+  return true;
 }
 
 jobjectArray UpdateClassBytecode(JNIEnv* jni, JniClass* live_edit_stubs,
@@ -166,7 +170,8 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 
   const auto& target_class = req.target_class();
-  PrimeClass(jvmti, jni, target_class.class_name());
+  const bool needFullRecompose =
+      PrimeClass(jvmti, jni, target_class.class_name());
   for (auto support_class : req.support_classes()) {
     PrimeClass(jvmti, jni, support_class.class_name());
   }
@@ -186,7 +191,7 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
     // When the recompose API is stable, we will only call the new API
     // and never call whole program recompose.
-    if (req.composable()) {
+    if (req.composable() && !needFullRecompose) {
       std::string error = "";
       bool result = recompose.InvalidateGroupsWithKey(
           reloader, jni->NewStringUTF(target_class.class_name().c_str()),

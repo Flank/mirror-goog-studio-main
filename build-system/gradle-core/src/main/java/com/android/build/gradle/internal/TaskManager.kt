@@ -820,8 +820,23 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
         handleJacocoDependencies(creationConfig)
-        creationConfig.configureAndLockAsmClassesVisitors(project.objects)
+        creationConfig.instrumentationCreationConfig?.configureAndLockAsmClassesVisitors(
+            project.objects
+        )
         val transformManager = creationConfig.transformManager
+
+        fun getFinalRuntimeClassesJarsFromComponent(
+            component: ComponentCreationConfig,
+            scope: ArtifactScope
+        ): FileCollection {
+            return component.instrumentationCreationConfig?.getDependenciesClassesJarsPostInstrumentation(
+                scope
+            ) ?: component.variantDependencies.getArtifactFileCollection(
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                scope,
+                AndroidArtifacts.ArtifactType.CLASSES_JAR
+            )
+        }
 
         // This might be consumed by RecalculateFixedStackFrames if that's created
         transformManager.addStream(
@@ -829,13 +844,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)
                         .setFileCollection(
-                                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
-                                        ArtifactScope.EXTERNAL))
-                        .build())
+                            getFinalRuntimeClassesJarsFromComponent(
+                                creationConfig,
+                                ArtifactScope.EXTERNAL
+                            )
+                        ).build()
+        )
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
         // merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+        if (!getJavaResMergingScopes(creationConfig)
                         .contains(com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
                     OriginalStream.builder("ext-libs-java-res")
@@ -856,12 +874,15 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)
                         .setFileCollection(
-                                creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(
-                                        ArtifactScope.PROJECT))
-                        .build())
+                                getFinalRuntimeClassesJarsFromComponent(
+                                    creationConfig,
+                                    ArtifactScope.PROJECT
+                                )
+                        ).build()
+        )
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
-        if (!getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES).contains(
+        if (!getJavaResMergingScopes(creationConfig).contains(
                 com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS)) {
             transformManager.addStream(
                     OriginalStream.builder("sub-projects-java-res")
@@ -903,8 +924,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         .setFileCollection(creationConfig.providedOnlyClasspath)
                         .build())
         (creationConfig as? TestComponentCreationConfig)?.onTestedVariant { testedVariant ->
-            val testedCodeDeps =
-                testedVariant.getDependenciesClassesJarsPostAsmInstrumentation(ArtifactScope.ALL)
+            val testedCodeDeps = getFinalRuntimeClassesJarsFromComponent(
+                testedVariant,
+                ArtifactScope.ALL
+            )
             transformManager.addStream(
                     OriginalStream.builder("tested-code-deps")
                             .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
@@ -1273,8 +1296,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      */
     @Suppress("DEPRECATION") // Legacy support
     protected abstract fun getJavaResMergingScopes(
-            creationConfig: ComponentCreationConfig,
-            contentType: com.android.build.api.transform.QualifiedContent.ContentType): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
+            creationConfig: ComponentCreationConfig): Set<com.android.build.api.transform.QualifiedContent.ScopeType>
 
     /**
      * Creates the java resources processing tasks.
@@ -1328,7 +1350,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Compute the scopes that need to be merged.
         @Suppress("DEPRECATION") // Legacy support
-        val mergeScopes = getJavaResMergingScopes(creationConfig, com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
+        val mergeScopes = getJavaResMergingScopes(creationConfig)
         taskFactory.register(MergeJavaResourceTask.CreationAction(mergeScopes, creationConfig))
 
         // also add a new merged java res stream if needed.
@@ -2455,7 +2477,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
             )
         // Instrumented refers to ASM and not Jacoco in this case.
-        if (creationConfig.projectClassesAreInstrumented) {
+        if (creationConfig.instrumentationCreationConfig?.projectClassesAreInstrumented == true) {
             taskFactory.register(JacocoTask.CreationActionWithTransformAsmClasses(creationConfig))
         } else {
             taskFactory.register(JacocoTask.CreationActionWithNoTransformAsmClasses(creationConfig))
@@ -2554,7 +2576,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        val manifestType: InternalArtifactType<Directory> = creationConfig.manifestArtifactType
+        val manifestType: InternalArtifactType<Directory> =
+            creationConfig.global.manifestArtifactType
         val manifests = creationConfig.artifacts.get(manifestType)
 
         // Common code for both packaging tasks.
@@ -3376,7 +3399,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     protected fun maybeCreateTransformClassesWithAsmTask(
         creationConfig: ComponentCreationConfig
     ) {
-        if (creationConfig.projectClassesAreInstrumented) {
+        val instrumentationCreationConfig = creationConfig.instrumentationCreationConfig ?: return
+        if (instrumentationCreationConfig.projectClassesAreInstrumented) {
             creationConfig
                     .transformManager
                     .consumeStreams(
@@ -3387,7 +3411,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         creationConfig
                     )
             )
-            if (creationConfig.asmFramesComputationMode
+            if (instrumentationCreationConfig.asmFramesComputationMode
                     == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
                 taskFactory.register(RecalculateStackFramesTask.CreationAction(creationConfig))
             }
@@ -3398,9 +3422,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                                     .addContentTypes(com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES)
                                     .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(
-                                            creationConfig
-                                                    .allProjectClassesPostAsmInstrumentation)
-                                    .build())
+                                        instrumentationCreationConfig.projectClassesPostInstrumentation
+                                    ).build()
+                    )
         }
     }
 

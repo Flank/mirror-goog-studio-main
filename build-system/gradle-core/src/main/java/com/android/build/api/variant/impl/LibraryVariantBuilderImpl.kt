@@ -21,6 +21,7 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.LibraryVariantBuilder
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.VariantBuilderServices
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -49,8 +50,8 @@ open class LibraryVariantBuilderImpl @Inject constructor(
     override var enableTestFixtures: Boolean = dslInfo.testFixtures.enable
 
     override fun <T : VariantBuilder> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            stats: GradleBuildVariant.Builder?
+        projectServices: ProjectServices,
+        stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
             this as T
@@ -61,4 +62,28 @@ open class LibraryVariantBuilderImpl @Inject constructor(
                 stats
             ) as T
         }
+
+    override var targetSdk: Int?
+        get() = super.targetSdk
+        set(value) {
+            variantBuilderServices.deprecationReporter.reportObsoleteUsage(
+                "libraryVariant.targetSdk",
+                DeprecationReporter.DeprecationTarget.VERSION_9_0
+            )
+            super.targetSdk = value
+        }
+
+    override var targetSdkPreview: String?
+        get() = super.targetSdkPreview
+        set(value) {
+            variantBuilderServices.deprecationReporter.reportObsoleteUsage(
+                "libraryVariant.targetSdkPreview",
+                DeprecationReporter.DeprecationTarget.VERSION_9_0
+            )
+            super.targetSdkPreview = value
+        }
+
+    override var codeMinification: Boolean =
+        dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        set(value) = setMinificationIfPossible("enableMinification", value) { field = it }
 }

@@ -148,7 +148,7 @@ abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
                 artifacts.get(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
 
             task.manifestFileDirectory =
-                artifacts.get(creationConfig.manifestArtifactType)
+                artifacts.get(creationConfig.global.manifestArtifactType)
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.RES_STATIC_LIBRARY,

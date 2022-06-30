@@ -20,12 +20,15 @@ import com.android.build.gradle.integration.common.fixture.DEFAULT_MIN_SDK_VERSI
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.testutils.MavenRepoGenerator
+import com.android.testutils.generateAarWithContent
 import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
+import java.nio.charset.Charset
 import java.util.zip.ZipFile
 
 @RunWith(Parameterized::class)
@@ -56,6 +59,23 @@ class FusedLibraryTest(
         )
     }
     private val androidLib2 = MinimalSubProject.lib("com.example.androidLib2")
+
+    private val testAar = generateAarWithContent("com.remotedep.remoteaar",
+            resources = mapOf("values/strings.xml" to
+                    // language=XML
+                    """<?xml version="1.0" encoding="utf-8"?>
+                    <resources>
+                    <string name="remote_string">Remote String</string>
+                    </resources>""".trimIndent().toByteArray(Charset.defaultCharset())
+            ),
+            )
+
+    private val mavenRepo = MavenRepoGenerator(
+            listOf(
+                    MavenRepoGenerator.Library("com.remotedep:remoteaar:1", "aar", testAar)
+            )
+    )
+
     private val fusedLibrary = MinimalSubProject.fusedLibrary("com.example.fusedLib1").also {
         if (includePublishing) {
             it.appendToBuild("""
@@ -64,6 +84,7 @@ class FusedLibraryTest(
                 dependencies {
                     include project(":androidLib1")
                     include project(":androidLib2")
+                    include 'com.remotedep:remoteaar:1'
                 }
                 """.trimIndent())
         }
@@ -81,15 +102,16 @@ class FusedLibraryTest(
     val project = GradleTestProject.builder()
             .fromTestApp(
                     MultiModuleTestProject.builder()
-                        .subproject("androidLib1", androidLib1)
-                        .subproject("androidLib2", androidLib2)
-                        .subproject("fusedLib1", fusedLibrary)
-                        .build()
-            ).create()
+                            .subproject("androidLib1", androidLib1)
+                            .subproject("androidLib2", androidLib2)
+                            .subproject("fusedLib1", fusedLibrary)
+                            .build()
+            )
+            .withAdditionalMavenRepo(mavenRepo)
+            .create()
 
     @Test
     fun test() {
-
         if (includePublishing) {
             project
                     .execute("generatePomFileForMavenPublication", "generateMetadataFileForMavenPublication")

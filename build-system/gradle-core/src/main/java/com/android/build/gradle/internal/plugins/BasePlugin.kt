@@ -25,7 +25,6 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidComponentsExtension
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.api.variant.impl.ArtifactMetadataProcessor.Companion.wireAllFinalizedBy
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidBasePlugin
 import com.android.build.gradle.internal.ApiObjectFactory
@@ -59,7 +58,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl
 import com.android.build.gradle.internal.errors.IncompatibleProjectOptionsReporter
-import com.android.build.gradle.internal.errors.SyncIssueReporterImpl
 import com.android.build.gradle.internal.getManagedDeviceAvdFolder
 import com.android.build.gradle.internal.getSdkDir
 import com.android.build.gradle.internal.ide.ModelBuilder
@@ -97,6 +95,7 @@ import com.android.build.gradle.internal.variant.VariantFactory
 import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.internal.variant.VariantModelImpl
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.IssueReporter.Type
 import com.android.builder.model.v2.ide.ProjectType
@@ -684,16 +683,15 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         taskManager.createTasks(variantFactory.componentType, createVariantModel(globalConfig))
         DependencyConfigurator(
             project,
-            project.name,
-            globalConfig,
-            variantInputModel,
             projectServices
         )
             .configureDependencySubstitutions()
             .configureDependencyChecks()
-            .configureGeneralTransforms()
-            .configureVariantTransforms(variants, variantManager.nestedComponents)
-            .configureAttributeMatchingStrategies()
+            .configureGeneralTransforms(globalConfig.namespacedAndroidResources)
+            .configureVariantTransforms(variants, variantManager.nestedComponents, globalConfig)
+            .configureAttributeMatchingStrategies(variantInputModel)
+            .configureJacocoTransforms()
+            .configureCalculateStackFramesTransforms(globalConfig)
 
         // Run the old Variant API, after the variants and tasks have been created.
         @Suppress("DEPRECATION")

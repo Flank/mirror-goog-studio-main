@@ -1090,8 +1090,7 @@ coverage_report(
         "//tools/data-binding:studio.compilerCommon_tests",
         "//tools/data-binding:studio.compiler_tests",
         "//tools/data-binding:tools.compilerCommon_tests.test",
-        # TODO(b/234053228) too flaky on Linux
-        # "//tools/vendor/google/android-apk:android-apk.tests_tests",
+        "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
         "//tools/vendor/google/firebase:firebase_tests",
     ],

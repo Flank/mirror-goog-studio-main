@@ -62,6 +62,7 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
     val dexingType: DexingType
 
     val minifiedEnabled: Boolean
+    val resourcesShrink: Boolean
 
     /** Returns whether we need to create a stream from the merged java resources */
     val needsMergedJavaResStream: Boolean

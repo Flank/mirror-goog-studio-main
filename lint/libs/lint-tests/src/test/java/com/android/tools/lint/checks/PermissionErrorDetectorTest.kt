@@ -26,7 +26,12 @@ import com.android.tools.lint.checks.PermissionErrorDetector.Companion.findAlmos
 import com.android.tools.lint.checks.PermissionErrorDetector.Companion.permissionToPrefixAndSuffix
 import com.android.tools.lint.checks.SystemPermissionsDetector.SYSTEM_PERMISSIONS
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
+import com.android.tools.lint.checks.infrastructure.TestLintTask
+import com.android.tools.lint.client.api.LintDriver
+import com.android.tools.lint.client.api.LintListener
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Project
 import com.google.common.io.Files
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
@@ -35,6 +40,23 @@ import org.junit.rules.TemporaryFolder
 
 class PermissionErrorDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = PermissionErrorDetector()
+
+    override fun lint(): TestLintTask {
+        return super.lint()
+            // When switching to merging, clear out the platform cache (to simulate running lint where the analysis
+            // tasks have been cached so have not run in the current process. It would be better if the lint testing
+            // infrastructure did this automatically (e.g. loading everything into separate class loaders to enforce
+            // true separation) but that's hard to set up now.
+            .listener(object : LintListener {
+                private var mode: LintDriver.DriverMode? = null
+                override fun update(driver: LintDriver, type: LintListener.EventType, project: Project?, context: Context?) {
+                    if (driver.mode != mode) {
+                        PermissionErrorDetector.clearPlatformPermissions()
+                    }
+                    mode = driver.mode
+                }
+            })
+    }
 
     @Test
     fun testDocumentationExamplePermissionNamingConvention() {
@@ -574,6 +596,42 @@ class PermissionErrorDetectorTest : AbstractCheckTest() {
                 @@ -6 +6
                 -     <uses-permission android:name="my.custom.permission.FOOBOB" />
                 +     <uses-permission android:name="my.custom.permission.FOOBAR" />
+                """
+            )
+    }
+
+    fun testDemonstrateMultipleIssuesAtSameLocation() {
+        val main = project(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  package="com.example.helloworld">
+                  <permission android:name="android.permission.BIND_APPWIDGET" />
+                  <application>
+                    <service android:permission="android.permission.BINDAPPWIDGET" />
+                  </application>
+                </manifest>
+                """
+            ).indented()
+        )
+        lint().projects(main)
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_APPWIDGET? [CustomPermissionTypo]
+                    <service android:permission="android.permission.BINDAPPWIDGET" />
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:4: Warning: android.permission.BIND_APPWIDGET does not follow recommended naming convention [PermissionNamingConvention]
+                  <permission android:name="android.permission.BIND_APPWIDGET" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:4: Error: android.permission.BIND_APPWIDGET is a reserved permission [ReservedSystemPermission]
+                  <permission android:name="android.permission.BIND_APPWIDGET" />
+                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:6: Warning: Did you mean android.permission.BIND_APPWIDGET? [SystemPermissionTypo]
+                    <service android:permission="android.permission.BINDAPPWIDGET" />
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 3 warnings
                 """
             )
     }

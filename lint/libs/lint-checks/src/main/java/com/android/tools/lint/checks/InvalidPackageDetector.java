@@ -239,22 +239,28 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
             File jarFile = candidate.mJarFile;
             String referencedIn = candidate.mReferencedIn;
 
-            Location location = Location.create(jarFile);
             String pkg = getPackageName(type);
             if (seen.contains(pkg)) {
                 continue;
             }
             seen.add(pkg);
-            if (pkg.equals("javax.inject")) {
-                String name = jarFile.getName();
-                //noinspection SpellCheckingInspection
-                if (name.startsWith("dagger-") || name.startsWith("guice-")) {
-                    // Allowed
-                    continue;
-                }
-            }
 
-            if (jarFile.getName().startsWith("junit-")) {
+            String jarFileName = jarFile.getName();
+            if (pkg.equals("javax.inject")
+                    && (jarFileName.startsWith("dagger-") || jarFileName.startsWith("guice-"))) {
+                // Allowed
+                continue;
+            } else if (pkg.equals("java.lang.instrument")
+                    && jarFileName.startsWith("kotlinx-coroutines-core-")) {
+                // Deliberately allowed; it's just using java.lang.instrument.* for agent code
+                // we're not using:
+                //    checkcast     #33       // class java/lang/instrument/ClassFileTransformer
+                //    invokeinterface #39,  2 // InterfaceMethod
+                // java/lang/instrument/Instrumentation.addTransformer:(Ljava/lang/instrument/ClassFileTransformer;)V
+                //
+                // See https://github.com/Kotlin/kotlinx.coroutines/issues/3277 for more.
+                continue;
+            } else if (jarFileName.startsWith("junit-")) {
                 // Deliberately allowed; see b/73555280
                 continue;
             }
@@ -274,6 +280,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
                             "Invalid package reference in %1$s; not included in Android: `%2$s`. "
                                     + "Referenced from `%3$s`.",
                             libraryString, pkg, ClassContext.getFqcn(referencedIn));
+            Location location = Location.create(jarFile);
             context.report(ISSUE, location, message);
         }
     }
@@ -291,6 +298,7 @@ public class InvalidPackageDetector extends Detector implements ClassScanner {
     private static boolean shouldSkip(File file) {
         // No need to do work on this library, which is included in pretty much all new ADT
         // projects
+        // TODO: Broaden to all of androidx- ?
         return file.getPath().endsWith("android-support-v4.jar");
     }
 

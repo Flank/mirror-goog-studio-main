@@ -718,7 +718,6 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/LICENSE
   META-INF/LICENSE.txt
   META-INF/MANIFEST.MF
-  META-INF/NOTICE
   META-INF/NOTICE.txt
   META-INF/ProjectModel.xml
   META-INF/intellij.platform.concurrency.kotlin_module
@@ -726,6 +725,8 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/intellij.platform.core.kotlin_module
   META-INF/intellij.platform.extensions.kotlin_module
   META-INF/intellij.platform.projectModel.kotlin_module
+  META-INF/intellij.platform.util.base.kotlin_module
+  META-INF/intellij.platform.util.diff.kotlin_module
   META-INF/intellij.platform.util.kotlin_module
   META-INF/intellij.platform.util.xmlDom.kotlin_module
   META-INF/kotlinx-coroutines-core.kotlin_module
@@ -735,10 +736,6 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/maven/com.fasterxml/aalto-xml/
   META-INF/maven/com.fasterxml/aalto-xml/pom.properties
   META-INF/maven/com.fasterxml/aalto-xml/pom.xml
-  META-INF/maven/log4j/
-  META-INF/maven/log4j/log4j/
-  META-INF/maven/log4j/log4j/pom.properties
-  META-INF/maven/log4j/log4j/pom.xml
   META-INF/maven/one.util/
   META-INF/maven/one.util/streamex/
   META-INF/maven/one.util/streamex/pom.properties
@@ -755,6 +752,10 @@ com/android/tools/external/com-intellij/intellij-core
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.properties
   META-INF/maven/org.jetbrains.intellij.deps.fastutil/intellij-deps-fastutil/pom.xml
+  META-INF/maven/org.slf4j/
+  META-INF/maven/org.slf4j/log4j-over-slf4j/
+  META-INF/maven/org.slf4j/log4j-over-slf4j/pom.properties
+  META-INF/maven/org.slf4j/log4j-over-slf4j/pom.xml
   META-INF/proguard/
   META-INF/proguard/coroutines.pro
   META-INF/services/
@@ -815,6 +816,14 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/core/
   com/intellij/diagnostic/
   com/intellij/diagnostic/tracing/
+  com/intellij/diff/
+  com/intellij/diff/comparison/
+  com/intellij/diff/comparison/iterables/
+  com/intellij/diff/fragments/
+  com/intellij/diff/tools/
+  com/intellij/diff/tools/util/
+  com/intellij/diff/tools/util/text/
+  com/intellij/diff/util/
   com/intellij/execution/
   com/intellij/execution/configurations/
   com/intellij/execution/filters/
@@ -823,6 +832,7 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/execution/rmi/ssl/
   com/intellij/extapi/
   com/intellij/extapi/psi/
+  com/intellij/filename/
   com/intellij/formatting/
   com/intellij/icons/
   com/intellij/ide/
@@ -875,14 +885,8 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/openapi/components/
   com/intellij/openapi/diagnostic/
   com/intellij/openapi/diff/
-  com/intellij/openapi/diff/ex/
   com/intellij/openapi/diff/impl/
-  com/intellij/openapi/diff/impl/fragments/
-  com/intellij/openapi/diff/impl/highlighting/
   com/intellij/openapi/diff/impl/patch/
-  com/intellij/openapi/diff/impl/processing/
-  com/intellij/openapi/diff/impl/string/
-  com/intellij/openapi/diff/impl/util/
   com/intellij/openapi/editor/
   com/intellij/openapi/editor/actionSystem/
   com/intellij/openapi/editor/colors/
@@ -939,7 +943,6 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/patterns/compiler/
   com/intellij/platform/
   com/intellij/platform/util/
-  com/intellij/platform/util/plugins/
   com/intellij/pom/
   com/intellij/pom/core/
   com/intellij/pom/core/impl/
@@ -1017,6 +1020,7 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/security/
   com/intellij/serialization/
   com/intellij/serviceContainer/
+  com/intellij/smRunner/
   com/intellij/testFramework/
   com/intellij/testIntegration/
   com/intellij/ui/
@@ -1052,19 +1056,19 @@ com/android/tools/external/com-intellij/intellij-core
   com/intellij/util/io/zip/
   com/intellij/util/keyFMap/
   com/intellij/util/lang/
-  com/intellij/util/lang/fastutil/
-  com/intellij/util/lang/fastutil/LICENSE.txt
   com/intellij/util/loader/
   com/intellij/util/messages/
   com/intellij/util/messages/impl/
   com/intellij/util/pico/
   com/intellij/util/profiling/
-  com/intellij/util/properties/
   com/intellij/util/ref/
   com/intellij/util/system/
   com/intellij/util/text/
+  com/intellij/util/text/matching/
   com/intellij/util/text/package.html
   com/intellij/util/ui/
+  com/intellij/util/xml/
+  com/intellij/util/xml/dom/
   com/intellij/util/xmlb/
   com/intellij/util/xmlb/annotations/
   com/intellij/util/xmlb/annotations/package.html
@@ -1207,6 +1211,25 @@ com/android/tools/external/com-intellij/intellij-core
   net/jpountz/
   net/jpountz/lz4/
   net/jpountz/util/
+  net/jpountz/util/darwin/
+  net/jpountz/util/darwin/aarch64/
+  net/jpountz/util/darwin/aarch64/liblz4-java.dylib
+  net/jpountz/util/darwin/x86_64/
+  net/jpountz/util/darwin/x86_64/liblz4-java.dylib
+  net/jpountz/util/linux/
+  net/jpountz/util/linux/aarch64/
+  net/jpountz/util/linux/aarch64/liblz4-java.so
+  net/jpountz/util/linux/amd64/
+  net/jpountz/util/linux/amd64/liblz4-java.so
+  net/jpountz/util/linux/i386/
+  net/jpountz/util/linux/i386/liblz4-java.so
+  net/jpountz/util/linux/ppc64le/
+  net/jpountz/util/linux/ppc64le/liblz4-java.so
+  net/jpountz/util/linux/s390x/
+  net/jpountz/util/linux/s390x/liblz4-java.so
+  net/jpountz/util/win32/
+  net/jpountz/util/win32/amd64/
+  net/jpountz/util/win32/amd64/liblz4-java.so
   net/jpountz/xxhash/
   net/n3/
   net/n3/nanoxml/
@@ -1257,32 +1280,9 @@ com/android/tools/external/com-intellij/intellij-core
   org/apache/commons/compress/parallel/
   org/apache/commons/compress/utils/
   org/apache/log4j/
-  org/apache/log4j/chainsaw/
-  org/apache/log4j/config/
   org/apache/log4j/helpers/
-  org/apache/log4j/jdbc/
-  org/apache/log4j/jmx/
-  org/apache/log4j/lf5/
-  org/apache/log4j/lf5/config/
-  org/apache/log4j/lf5/config/defaultconfig.properties
-  org/apache/log4j/lf5/util/
-  org/apache/log4j/lf5/viewer/
-  org/apache/log4j/lf5/viewer/categoryexplorer/
-  org/apache/log4j/lf5/viewer/configure/
-  org/apache/log4j/lf5/viewer/images/
-  org/apache/log4j/lf5/viewer/images/channelexplorer_new.gif
-  org/apache/log4j/lf5/viewer/images/channelexplorer_satellite.gif
-  org/apache/log4j/lf5/viewer/images/lf5_small_icon.gif
-  org/apache/log4j/nt/
-  org/apache/log4j/or/
-  org/apache/log4j/or/jms/
-  org/apache/log4j/or/sax/
-  org/apache/log4j/pattern/
-  org/apache/log4j/rewrite/
   org/apache/log4j/spi/
-  org/apache/log4j/varia/
   org/apache/log4j/xml/
-  org/apache/log4j/xml/log4j.dtd
   org/apache/oro/
   org/apache/oro/io/
   org/apache/oro/text/
@@ -1365,6 +1365,7 @@ com/android/tools/external/com-intellij/intellij-core
   org/jetbrains/org/objectweb/asm/tree/
   org/jetbrains/org/objectweb/asm/tree/analysis/
   org/jetbrains/org/objectweb/asm/util/
+  org/jetbrains/xxh3/
   org/picocontainer/
   org/picocontainer/defaults/
 

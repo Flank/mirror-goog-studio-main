@@ -270,13 +270,36 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 2. the test creationConfig classes and java_res
-            collection.from(creationConfig.getAllProjectClassesPostAsmInstrumentation());
+            if (creationConfig.getInstrumentationCreationConfig() != null) {
+                collection.from(
+                        creationConfig
+                                .getInstrumentationCreationConfig()
+                                .getProjectClassesPostInstrumentation());
+            } else {
+                collection.from(
+                        artifacts
+                                .forScope(ScopedArtifacts.Scope.PROJECT)
+                                .getFinalArtifacts$gradle_core(ScopedArtifact.CLASSES.INSTANCE));
+            }
             // TODO is this the right thing? this doesn't include the res merging via transform
             // AFAIK
             collection.from(artifacts.get(InternalArtifactType.JAVA_RES.INSTANCE));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
-            collection.from(creationConfig.getDependenciesClassesJarsPostAsmInstrumentation(ALL));
+            if (creationConfig.getInstrumentationCreationConfig() != null) {
+                collection.from(
+                        creationConfig
+                                .getInstrumentationCreationConfig()
+                                .getDependenciesClassesJarsPostInstrumentation(ALL));
+            } else {
+                collection.from(
+                        creationConfig
+                                .getVariantDependencies()
+                                .getArtifactFileCollection(
+                                        RUNTIME_CLASSPATH,
+                                        ALL,
+                                        AndroidArtifacts.ArtifactType.CLASSES_JAR));
+            }
             collection.from(
                     creationConfig
                             .getVariantDependencies()

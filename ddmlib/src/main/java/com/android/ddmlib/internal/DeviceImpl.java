@@ -874,6 +874,15 @@ public final class DeviceImpl implements IDevice {
 
     @Override
     public Client getClient(String applicationName) {
+        if (mDeviceClientManagerProvider != null) {
+            Client[] clients = getClients();
+            for (Client c : clients) {
+                if (applicationName.equals(c.getClientData().getClientDescription())) {
+                    return c;
+                }
+            }
+            return null;
+        }
         synchronized (mClients) {
             for (Client c : mClients) {
                 if (applicationName.equals(c.getClientData().getClientDescription())) {

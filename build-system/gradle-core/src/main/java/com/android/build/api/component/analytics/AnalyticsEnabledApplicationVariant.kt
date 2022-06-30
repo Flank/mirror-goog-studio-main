@@ -141,4 +141,18 @@ open class AnalyticsEnabledApplicationVariant @Inject constructor(
                 VariantPropertiesMethodType.GET_BUNDLE_CONFIG_VALUE
             return userVisibleBundleConfig
         }
+
+    override val codeMinification: Boolean
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.CODE_MINIFICATION_VALUE
+            return delegate.codeMinification
+        }
+
+    override val shrinkResources: Boolean
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SHRINK_RESOURCES_VALUE
+            return delegate.shrinkResources
+        }
 }

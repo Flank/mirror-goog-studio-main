@@ -82,6 +82,64 @@ class HelloWorldDynamicFeatureModelTest : ModelComparator() {
     }
 }
 
+/**
+ * Similar to [HelloWorldDynamicFeatureModelTest], but with an app -> lib dependency
+ */
+class HelloWorldWithLibDynamicFeatureModelTest : ModelComparator() {
+
+    @get:Rule
+    val project = createGradleProject {
+        subProject(":app") {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+                dynamicFeatures += listOf(":feature")
+            }
+            dependencies {
+                implementation(project(":lib"))
+            }
+        }
+        subProject(":feature") {
+            plugins.add(PluginType.ANDROID_DYNAMIC_FEATURE)
+            android {
+                setUpHelloWorld()
+            }
+            dependencies {
+                implementation(project(":app"))
+            }
+        }
+        subProject(":lib") {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    }
+
+    @Test
+    fun `test models`() {
+        val result = project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+            .fetchModels(variantName = "debug")
+
+        val appModelAction: ModelContainerV2.() -> ModelContainerV2.ModelInfo =
+            { getProject(":app") }
+
+        with(result).compareVariantDependencies(
+            projectAction = appModelAction,
+            goldenFile = "_app_VariantDependencies"
+        )
+
+        val featureModelAction:  ModelContainerV2.() -> ModelContainerV2.ModelInfo =
+            { getProject(":feature") }
+
+        with(result).compareVariantDependencies(
+            projectAction = featureModelAction,
+            goldenFile = "_feature_VariantDependencies"
+        )
+    }
+}
+
 class CompileSdkViaSettingsInDynamicFeatureModelTest {
     @get:Rule
     val project = createGradleProject {

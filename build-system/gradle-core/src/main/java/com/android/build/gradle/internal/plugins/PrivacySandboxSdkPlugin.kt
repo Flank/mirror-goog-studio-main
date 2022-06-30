@@ -99,9 +99,6 @@ class PrivacySandboxSdkPlugin @Inject constructor(
         }
     }
 
-    override fun configureProject(project: Project) {
-    }
-
     override fun configureExtension(project: Project) {
         extension
     }

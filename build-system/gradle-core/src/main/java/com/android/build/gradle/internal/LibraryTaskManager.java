@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTasksKt.createCxxVariantBuildTask;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.JAVA_DOC_PUBLICATION;
@@ -26,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
@@ -82,7 +80,6 @@ import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.build.gradle.tasks.sync.LibraryVariantModelTask;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -532,9 +529,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
     @NonNull
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull ComponentCreationConfig creationConfig,
-            @NonNull QualifiedContent.ContentType contentType) {
-        Preconditions.checkArgument(contentType == RESOURCES, "contentType must be RESOURCES");
+            @NonNull ComponentCreationConfig creationConfig) {
         if (creationConfig.getComponentType().isTestComponent()) {
             return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
         }

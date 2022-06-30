@@ -22,7 +22,12 @@ import org.gradle.api.provider.Property
 /**
  * Properties for the main Variant of an application.
  */
-interface ApplicationVariant : GeneratesApk, Variant, HasAndroidTest, HasTestFixtures {
+interface ApplicationVariant : GeneratesApk,
+    Variant,
+    HasAndroidTest,
+    HasTestFixtures,
+    MinifyableVariant,
+    ResourcesShrinkableVariant {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

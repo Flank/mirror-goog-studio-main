@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.AndroidResources
+import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.GeneratesApk
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Renderscript
@@ -77,5 +78,12 @@ open class AnalyticsEnabledGeneratesApk(
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                     VariantPropertiesMethodType.PACKAGING_OPTIONS_VALUE
             return userVisibleApkPackaging
+        }
+
+    override val targetSdkVersion: AndroidVersion
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.TARGET_SDK_VERSION_VALUE
+            return delegate.targetSdkVersion
         }
 }

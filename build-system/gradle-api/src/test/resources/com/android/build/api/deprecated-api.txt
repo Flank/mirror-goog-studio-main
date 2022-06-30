@@ -6,6 +6,15 @@ are announced on go/as-release-notes.
 Deprecated from AGP 7.4.0
   * com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_DIRS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
   * com.android.build.api.artifact.MultipleArtifact$ALL_CLASSES_JARS extends com.android.build.api.artifact.MultipleArtifact implements com.android.build.api.artifact.Artifact$Appendable, com.android.build.api.artifact.Artifact$Replaceable, com.android.build.api.artifact.Artifact$Transformable
+  * com.android.build.api.dsl.LibraryBaseFlavor.getTargetSdk: java.lang.Integer ()
+  * com.android.build.api.dsl.LibraryBaseFlavor.getTargetSdkPreview: java.lang.String ()
+  * com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdk: void (java.lang.Integer)
+  * com.android.build.api.dsl.LibraryBaseFlavor.setTargetSdkPreview: void (java.lang.String)
+  * com.android.build.api.variant.Variant.getTargetSdkVersion: com.android.build.api.variant.AndroidVersion ()
+  * com.android.build.api.variant.VariantBuilder.getTargetSdk: java.lang.Integer ()
+  * com.android.build.api.variant.VariantBuilder.getTargetSdkPreview: java.lang.String ()
+  * com.android.build.api.variant.VariantBuilder.setTargetSdk: void (java.lang.Integer)
+  * com.android.build.api.variant.VariantBuilder.setTargetSdkPreview: void (java.lang.String)
 Deprecated from AGP UNKNOWN_VERSION
   * com.android.build.api.dsl.AaptOptions implements com.android.build.api.dsl.AndroidResources
   * com.android.build.api.dsl.AdbOptions implements com.android.build.api.dsl.Installation

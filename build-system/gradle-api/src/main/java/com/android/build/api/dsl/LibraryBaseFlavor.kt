@@ -33,6 +33,7 @@ interface LibraryBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @Deprecated("Will be removed from library DSL in v9.0")
     @get:Incubating
     @set:Incubating
     var targetSdk: Int?
@@ -52,6 +53,7 @@ interface LibraryBaseFlavor :
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
+    @Deprecated("Will be removed from library DSL in v9.0")
     @get:Incubating
     @set:Incubating
     var targetSdkPreview: String?

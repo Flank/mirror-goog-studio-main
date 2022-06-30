@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
 import com.android.build.gradle.internal.tasks.DexParameterInputs
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -127,9 +128,7 @@ abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
         }
 
         override fun configure(task: PrivacySandboxSdkDexTask) {
-            task.analyticsService.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.classes.fromDisallowChanges(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS)
             )

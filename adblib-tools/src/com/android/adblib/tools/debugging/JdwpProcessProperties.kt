@@ -15,6 +15,10 @@
  */
 package com.android.adblib.tools.debugging
 
+import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkTypes
+import com.android.adblib.tools.debugging.packets.ddms.chunks.DdmsFeatChunk
+import com.android.adblib.tools.debugging.packets.ddms.chunks.DdmsReaqChunk
+
 /**
  * List of known properties corresponding to a [JdwpProcess] instance.
  */
@@ -66,10 +70,29 @@ data class JdwpProcessProperties(
     val jvmFlags: String? = null,
 
     /**
-     *
+     * Whether legacy native debugging is supported.
      */
     @Deprecated("This property was never fully supported and is now completely deprecated")
     val isNativeDebuggable: Boolean = false,
+
+    /**
+     * `true` if the process is waiting for a debugger to attach.
+     * `false` if we don't know or if a debugger is already attached.
+     */
+    val isWaitingForDebugger: Boolean = false,
+
+    /**
+     * List of features reported by the [DdmsFeatChunk] packet
+     */
+    val features: List<String> = emptyList(),
+
+    /**
+     * Whether "REcent Allocation Query" is enabled for this process.
+     *
+     * @see DdmsChunkTypes.REAQ
+     * @see DdmsReaqChunk
+     */
+    val reaqEnabled: Boolean = false,
 
     /**
      * Captures an error related to retrieving properties other than [pid].

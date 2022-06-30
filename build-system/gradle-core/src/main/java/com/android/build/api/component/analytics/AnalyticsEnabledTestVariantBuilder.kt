@@ -17,6 +17,7 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.TestVariantBuilder
+import com.android.tools.build.gradle.internal.profile.VariantMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import javax.inject.Inject
 
@@ -24,7 +25,14 @@ import javax.inject.Inject
  * Shim object for [AnalyticsEnabledVariantBuilder] that records all mutating accesses to the analytics.
  */
 open class AnalyticsEnabledTestVariantBuilder @Inject constructor(
-        delegate: TestVariantBuilder,
+        override val delegate: TestVariantBuilder,
         stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledVariantBuilder(delegate, stats),
-    TestVariantBuilder
+    TestVariantBuilder{
+    override var codeMinification: Boolean
+        get() = delegate.codeMinification
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.CODE_MINIFICATION_VALUE_VALUE
+            delegate.codeMinification = value
+        }
+    }

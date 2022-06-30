@@ -19,26 +19,44 @@ package com.android.tools.instrumentation.threading.agent.callback;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ThreadingCheckerTrampolineTest {
     int verifyOnUiThreadCallCount = 0;
     int verifyOnWorkerThreadCallCount = 0;
 
+    @Before
+    public void setUp() {
+        ThreadingCheckerTrampoline.clearHooks();
+    }
+
+    @Test
+    public void installSingleHook() {
+        ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
+
+        ThreadingCheckerTrampoline.verifyOnUiThread();
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(1);
+
+        ThreadingCheckerTrampoline.verifyOnWorkerThread();
+        assertThat(verifyOnWorkerThreadCallCount).isEqualTo(1);
+    }
+
+    @Test
+    public void installMultipleHooks() {
+        ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
+        ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
+
+        ThreadingCheckerTrampoline.verifyOnUiThread();
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(2);
+
+        ThreadingCheckerTrampoline.verifyOnWorkerThread();
+        assertThat(verifyOnWorkerThreadCallCount).isEqualTo(2);
+    }
+
     @Test
     public void threadingViolationChecks_notEnforcedOnMethodInBaselineFile() {
-        ThreadingCheckerTrampoline.installHook(
-                new ThreadingCheckerHook() {
-                    @Override
-                    public void verifyOnUiThread() {
-                        ++verifyOnUiThreadCallCount;
-                    }
-
-                    @Override
-                    public void verifyOnWorkerThread() {
-                        ++verifyOnWorkerThreadCallCount;
-                    }
-                });
+        ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
 
         String baselineMethod =
                 "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampolineTest$InnerTestClass#method1";
@@ -61,6 +79,20 @@ public class ThreadingCheckerTrampolineTest {
         // Verifies that no exceptions are thrown by the ThreadingCheckerTrampoline#verifyOnUiThread
         // method if the ThreadingCheckerTrampoline#installHook has never been called.
         ThreadingCheckerTrampoline.verifyOnUiThread();
+    }
+
+    private ThreadingCheckerHook createThreadingCheckerHook() {
+        return new ThreadingCheckerHook() {
+            @Override
+            public void verifyOnUiThread() {
+                ++verifyOnUiThreadCallCount;
+            }
+
+            @Override
+            public void verifyOnWorkerThread() {
+                ++verifyOnWorkerThreadCallCount;
+            }
+        };
     }
 
     public static class InnerTestClass {

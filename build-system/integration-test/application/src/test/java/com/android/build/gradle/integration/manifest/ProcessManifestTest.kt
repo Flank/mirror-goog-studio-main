@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.google.common.truth.Truth
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
@@ -44,14 +45,11 @@ class ProcessManifestTest {
         """.trimIndent())
 
         project.executor().run("processDebugManifest")
-        val manifestContent = File(project.buildDir, "intermediates/merged_manifest/debug/AndroidManifest.xml").readLines()
-        assertManifestContent(manifestContent, "android:minSdkVersion=\"21\"")
-        assertManifestContent(manifestContent, "android:targetSdkVersion=\"22\"")
-        assertManifestContent(manifestContent, "android:maxSdkVersion=\"29\"")
-    }
-
-    fun assertManifestContent(manifestContent: Iterable<String>, stringToAssert: String) {
-        manifestContent.forEach { if (it.trim().contains(stringToAssert)) return }
-        Assert.fail("Cannot find $stringToAssert in ${manifestContent.joinToString(separator = "\n")}")
+        val manifestContent =
+            File(project.buildDir, "intermediates/merged_manifest/debug/AndroidManifest.xml")
+                .readLines().joinToString("\n")
+        Truth.assertThat(manifestContent).contains("android:minSdkVersion=\"21\"")
+        Truth.assertThat(manifestContent).doesNotContain("android:targetSdkVersion")
+        Truth.assertThat(manifestContent).contains("android:maxSdkVersion=\"29\"")
     }
 }

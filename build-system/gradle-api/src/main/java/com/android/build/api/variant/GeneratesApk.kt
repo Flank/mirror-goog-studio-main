@@ -44,4 +44,9 @@ interface GeneratesApk {
      * [com.android.build.api.dsl.BuildFeatures.renderScript] is false.
      */
     val renderscript: Renderscript?
+
+    /**
+     * Target SDK version for this variant.
+     */
+    val targetSdkVersion: AndroidVersion
 }

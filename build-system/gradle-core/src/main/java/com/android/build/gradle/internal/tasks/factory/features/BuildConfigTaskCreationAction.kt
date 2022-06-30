@@ -19,6 +19,24 @@ package com.android.build.gradle.internal.tasks.factory.features
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 
+/**
+ * Creation action for tasks that requires build config support.
+ *
+ * Example:
+ * ```
+ * abstract class Task {
+ *   class CreationAction(
+ *     creationConfig: ComponentCreationConfig
+ *   ) : VariantTaskCreationAction<Task, ComponentCreationConfig>(
+ *     creationConfig
+ *   ), BuildConfigTaskCreationAction by BuildConfigTaskCreationActionImpl(
+ *     creationConfig
+ *   ) {
+ *     ...
+ *   }
+ * }
+ * ```
+ */
 interface BuildConfigTaskCreationAction {
     val buildConfigCreationConfig: BuildConfigCreationConfig
 }

@@ -100,6 +100,17 @@ class HumanReadableProfileTests {
     }
 
     @Test
+    fun testInlineCachesAreSkipped() {
+        val hrp = HumanReadableProfile(
+                "HLTestInline;->inlineMultiMonomorphic(LSuper;LSecret;)I+]LSuper;LSubA;]LSecret;LSubB;",
+                "HLTestInline;->inlineMultiPolymorphic(LSuper;LSecret;)I+]LSuper;LSubA;,LSubB;,LSubC;]LSecret;LSubB;,LSubC;",
+                "Lcom/anything/can/go/here;",
+        )
+        assertThat(hrp.match("Lcom/anything/can/go/here;")).isEqualTo(MethodFlags.STARTUP)
+        assertThat(hrp.match("LFoo;")).isEqualTo(0)
+    }
+
+    @Test
     fun testWhiteSpaceAndBlankLines() {
         with(HumanReadableProfile(
                 "",

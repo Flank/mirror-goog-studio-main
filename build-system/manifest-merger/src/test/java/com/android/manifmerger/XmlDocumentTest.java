@@ -759,7 +759,8 @@ public class XmlDocumentTest extends TestCase {
                         libraryDocument,
                         mergingReportBuilder,
                         false /* addImplicitPermissions */,
-                        false /* disableMinSdkVersionCheck */);
+                        false /* disableMinSdkVersionCheck */,
+                        false /* keepGoingOnErrors */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -915,7 +916,8 @@ public class XmlDocumentTest extends TestCase {
                         libraryDocument,
                         mergingReportBuilder,
                         false /* addImplicitPermissions */,
-                        false /* disableMinSdkVersionCheck */);
+                        false /* disableMinSdkVersionCheck */,
+                        false /* keepGoingOnErrors */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -1009,7 +1011,8 @@ public class XmlDocumentTest extends TestCase {
                         libraryDocument,
                         mergingReportBuilder,
                         false /* addImplicitPermissions */,
-                        false /* disableMinSdkVersionCheck */);
+                        false /* disableMinSdkVersionCheck */,
+                        false /* keepGoingOnErrors */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -1103,7 +1106,8 @@ public class XmlDocumentTest extends TestCase {
                         libraryDocument,
                         mergingReportBuilder,
                         false /* addImplicitPermissions */,
-                        false /* disableMinSdkVersionCheck */);
+                        false /* disableMinSdkVersionCheck */,
+                        false /* keepGoingOnErrors */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();
@@ -1550,7 +1554,8 @@ public class XmlDocumentTest extends TestCase {
                         libraryDocument,
                         mergingReportBuilder,
                         false /* addImplicitPermissions */,
-                        false /* disableMinSdkVersionCheck */);
+                        false /* disableMinSdkVersionCheck */,
+                        false /* keepGoingOnErrors */);
 
         assertTrue(mergedDocument.isPresent());
         XmlDocument xmlDocument = mergedDocument.get();

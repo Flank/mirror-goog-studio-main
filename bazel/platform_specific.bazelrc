@@ -2,6 +2,7 @@
 # Linux
 #
 common:linux --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/linux/ndk/20.1.5948944
+common:linux --repo_env=ANDROID_HOME=prebuilts/studio/sdk/linux
 
 build:linux --host_platform=//tools/base/bazel/platforms:linux
 build:linux --platforms=//tools/base/bazel/platforms:linux
@@ -13,6 +14,7 @@ build:linux --dynamic_local_strategy=worker,sandboxed,local
 # Windows
 #
 common:windows --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/windows/ndk/20.1.5948944
+common:windows --repo_env=ANDROID_HOME=prebuilts/studio/sdk/windows
 
 build:windows --host_platform=//tools/base/bazel/platforms:windows
 build:windows --platforms=//tools/base/bazel/platforms:windows
@@ -27,6 +29,7 @@ build:windows --dynamic_local_strategy=worker,local
 # Mac
 #
 common:macos --repo_env=ANDROID_NDK_HOME=prebuilts/studio/sdk/darwin/ndk/20.1.5948944
+common:macos --repo_env=ANDROID_HOME=prebuilts/studio/sdk/darwin
 
 build:macos --host_platform=//tools/base/bazel/platforms:macos
 build:macos --platforms=//tools/base/bazel/platforms:macos

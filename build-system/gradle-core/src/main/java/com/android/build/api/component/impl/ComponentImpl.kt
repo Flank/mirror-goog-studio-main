@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.AssetsCreationConfigImpl
+import com.android.build.api.component.impl.features.InstrumentationCreationConfigImpl
 import com.android.build.api.component.impl.features.ResValuesCreationConfigImpl
 import com.android.build.api.instrumentation.AsmClassVisitorFactory
 import com.android.build.api.instrumentation.FramesComputationMode
@@ -27,23 +28,20 @@ import com.android.build.api.instrumentation.InstrumentationParameters
 import com.android.build.api.instrumentation.InstrumentationScope
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.Instrumentation
 import com.android.build.api.variant.JavaCompilation
-import com.android.build.api.artifact.ScopedArtifact
-import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FileBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.SourcesImpl
-import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.api.variant.impl.baseName
 import com.android.build.api.variant.impl.fullName
-import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
+import com.android.build.gradle.internal.component.features.InstrumentationCreationConfig
 import com.android.build.gradle.internal.component.features.ResValuesCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
@@ -52,12 +50,8 @@ import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.PublishableVariantDslInfo
 import com.android.build.gradle.internal.dependency.AndroidAttributes
-import com.android.build.gradle.internal.dependency.AsmClassesTransform
-import com.android.build.gradle.internal.dependency.RecalculateStackFramesTransform
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.dependency.getProvidedClasspath
-import com.android.build.gradle.internal.dsl.InstrumentationImpl
-import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -69,7 +63,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.get
 import com.android.build.gradle.internal.scope.BuildArtifactSpec.Companion.has
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.*
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.publishArtifactToConfiguration
 import com.android.build.gradle.internal.scope.publishArtifactToDefaultVariant
@@ -89,10 +82,8 @@ import org.gradle.api.artifacts.SelfResolvingDependency
 import com.google.common.base.Preconditions
 import org.gradle.api.attributes.DocsType
 import org.gradle.api.attributes.LibraryElements
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -172,11 +163,8 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    override val instrumentation = InstrumentationImpl(
-        services,
-        internalServices,
-        isLibraryVariant = false
-    )
+    override val instrumentation: Instrumentation
+        get() = instrumentationCreationConfig.instrumentation
 
     override val compileClasspath: FileCollection by lazy {
         getJavaClasspath(
@@ -197,8 +185,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val asmApiVersion = ASM_API_VERSION_FOR_INSTRUMENTATION
-
     // this is technically a public API for the Application Variant (only)
     override val outputs: VariantOutputList
         get() = VariantOutputList(variantOutputs.toList())
@@ -215,51 +201,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
     override val productFlavorList: List<ProductFlavor> = dslInfo.productFlavorList.map {
         ProductFlavor(it)
     }
-
-    override val registeredProjectClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() = instrumentation.registeredProjectClassesVisitors
-
-    override val registeredDependenciesClassesVisitors: List<AsmClassVisitorFactory<*>>
-        get() = instrumentation.registeredDependenciesClassesVisitors
-
-    override val asmFramesComputationMode: FramesComputationMode
-        get() = instrumentation.finalAsmFramesComputationMode
-
-    override val allProjectClassesPostAsmInstrumentation: FileCollection
-        get() =
-            if (projectClassesAreInstrumented) {
-                if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
-                    services.fileCollection(
-                            artifacts.get(
-                                    FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_CLASSES
-                            ),
-                            services.fileCollection(
-                                    artifacts.get(
-                                            FIXED_STACK_FRAMES_ASM_INSTRUMENTED_PROJECT_JARS
-                                    )
-                            ).asFileTree
-                    )
-                } else {
-                    services.fileCollection(
-                            artifacts.get(ASM_INSTRUMENTED_PROJECT_CLASSES),
-                            services.fileCollection(
-                                    artifacts.get(ASM_INSTRUMENTED_PROJECT_JARS)
-                            ).asFileTree
-                    )
-                }
-            } else {
-                artifacts
-                    .forScope(ScopedArtifacts.Scope.PROJECT)
-                    .getFinalArtifacts(ScopedArtifact.CLASSES)
-            }
-
-    override val projectClassesAreInstrumented: Boolean
-        get() = registeredProjectClassesVisitors.isNotEmpty() ||
-                (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
-
-    override val dependenciesClassesAreInstrumented: Boolean
-        get() = registeredDependenciesClassesVisitors.isNotEmpty() ||
-                (this is ApkCreationConfig && advancedProfilingTransforms.isNotEmpty())
 
     override val manifestPlaceholders: MapProperty<String, String> by lazy {
         internalServices.mapPropertyOf(
@@ -372,14 +313,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         )
     }
 
-    // TODO Move these outside of Variant specific class (maybe GlobalTaskScope?)
-
-    override val manifestArtifactType: InternalArtifactType<Directory>
-        get() = if (internalServices.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
-            INSTANT_APP_MANIFEST
-        else
-            PACKAGED_MANIFESTS
-
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     override fun publishBuildArtifacts() {
         for (outputSpec in getVariantPublishingSpec(componentType).outputs) {
@@ -425,59 +358,15 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    /**
-     * adds databinding sources to the list of sources.
-     */
-    override fun addDataBindingSources(
-        sourceSets: MutableList<DirectoryEntry>
-    ) {
-        sourceSets.add(
-            TaskProviderBasedDirectoryEntryImpl(
-                "databinding_generated",
-                artifacts.get(DATA_BINDING_BASE_CLASS_SOURCE_OUT),
-            )
-        )
-    }
-
     private fun getCompiledManifest(): FileCollection {
         val manifestClassRequired = dslInfo.componentType.requiresManifest &&
                 services.projectOptions[BooleanOption.GENERATE_MANIFEST_CLASS]
         val isTest = dslInfo.componentType.isForTesting
         val isAar = dslInfo.componentType.isAar
         return if (manifestClassRequired && !isAar && !isTest) {
-            internalServices.fileCollection(artifacts.get(COMPILE_MANIFEST_JAR))
+            internalServices.fileCollection(artifacts.get(InternalArtifactType.COMPILE_MANIFEST_JAR))
         } else {
             internalServices.fileCollection()
-        }
-    }
-
-    override fun configureAndLockAsmClassesVisitors(objectFactory: ObjectFactory) {
-        instrumentation.configureAndLockAsmClassesVisitors(objectFactory, asmApiVersion)
-    }
-
-    override fun getDependenciesClassesJarsPostAsmInstrumentation(scope: ArtifactScope): FileCollection {
-        return if (dependenciesClassesAreInstrumented) {
-            if (asmFramesComputationMode == FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES) {
-                variantDependencies.getArtifactFileCollection(
-                        ConsumedConfigType.RUNTIME_CLASSPATH,
-                        scope,
-                        AndroidArtifacts.ArtifactType.CLASSES_FIXED_FRAMES_JAR,
-                        RecalculateStackFramesTransform.getAttributesForConfig(this)
-                )
-            } else {
-                variantDependencies.getArtifactFileCollection(
-                        ConsumedConfigType.RUNTIME_CLASSPATH,
-                        scope,
-                        AndroidArtifacts.ArtifactType.ASM_INSTRUMENTED_JARS,
-                        AsmClassesTransform.getAttributesForConfig(this)
-                )
-            }
-        } else {
-            variantDependencies.getArtifactFileCollection(
-                ConsumedConfigType.RUNTIME_CLASSPATH,
-                scope,
-                AndroidArtifacts.ArtifactType.CLASSES_JAR
-            )
         }
     }
 
@@ -526,6 +415,13 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         } else {
             null
         }
+    }
+
+    override val instrumentationCreationConfig: InstrumentationCreationConfig by lazy {
+        InstrumentationCreationConfigImpl(
+            this,
+            internalServices
+        )
     }
 
     /**

@@ -22,7 +22,7 @@ import com.android.adblib.createDeviceScope
 import com.android.adblib.thisLogger
 import com.android.adblib.tools.debugging.JdwpProcess
 import com.android.adblib.tools.debugging.JdwpProcessProperties
-import com.android.adblib.tools.debugging.JdwpTracker
+import com.android.adblib.tools.debugging.JdwpProcessTracker
 import com.android.adblib.trackDeviceInfo
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.Client
@@ -99,7 +99,7 @@ internal class AdbLibDeviceClientManager(
     private suspend fun trackProcesses() {
         val processEntryMap = mutableMapOf<Int, AdblibClientWrapper>()
         try {
-            JdwpTracker(clientManager.session, deviceSelector).createFlow()
+            JdwpProcessTracker(clientManager.session, deviceSelector).createFlow()
                 .collect { processList ->
                     updateProcessList(processEntryMap, processList)
                 }

@@ -16,10 +16,11 @@
 
 package com.android.builder.merge;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.FileStatus;
-import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
@@ -107,17 +108,13 @@ public class RenameIncrementalFileMergerInput extends DelegateIncrementalFileMer
     @NonNull
     @Override
     public ImmutableSet<String> getUpdatedPaths() {
-        return super.getUpdatedPaths().stream()
-                .map(this::directRename)
-                .collect(ImmutableCollectors.toImmutableSet());
+        return super.getUpdatedPaths().stream().map(this::directRename).collect(toImmutableSet());
     }
 
     @NonNull
     @Override
     public ImmutableSet<String> getAllPaths() {
-        return super.getAllPaths().stream()
-                .map(this::directRename)
-                .collect(ImmutableCollectors.toImmutableSet());
+        return super.getAllPaths().stream().map(this::directRename).collect(toImmutableSet());
     }
 
     @Nullable

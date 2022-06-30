@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SPLIT;
+import static com.android.manifmerger.ManifestModel.NodeTypes.USES_SDK;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
@@ -156,7 +157,7 @@ public class ManifestMerger2 {
 
     /**
      * Perform high level ordering of files merging and delegates actual merging to {@link
-     * XmlDocument#merge(XmlDocument, MergingReport.Builder)}
+     * XmlDocument#merge}
      *
      * @return the merging activity report.
      * @throws MergeFailureException if the merging cannot be completed (for instance, if xml files
@@ -179,9 +180,10 @@ public class ManifestMerger2 {
 
         // perform all top-level verifications.
         if (!loadedMainManifestInfo
-                .getXmlDocument()
-                .checkTopLevelDeclarations(
-                        mPlaceHolderValues, mergingReportBuilder, mDocumentType)) {
+                        .getXmlDocument()
+                        .checkTopLevelDeclarations(
+                                mPlaceHolderValues, mergingReportBuilder, mDocumentType)
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             return mergingReportBuilder.build();
         }
 
@@ -292,7 +294,9 @@ public class ManifestMerger2 {
                         overlayDocument.getXmlDocument().getSourceFile(),
                         MergingReport.Record.Severity.ERROR,
                         message);
-                return mergingReportBuilder.build();
+                if (!mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
+                    return mergingReportBuilder.build();
+                }
             }
 
             if (mainPackageAttribute.isPresent()) {
@@ -307,7 +311,8 @@ public class ManifestMerger2 {
 
             xmlDocumentOptional = newMergedDocument.orElse(null);
 
-            if (!newMergedDocument.isPresent()) {
+            if (!newMergedDocument.isPresent()
+                    && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
                 return mergingReportBuilder.build();
             }
         }
@@ -316,7 +321,8 @@ public class ManifestMerger2 {
         Optional<XmlDocument> newMergedDocument =
                 merge(xmlDocumentOptional, loadedMainManifestInfo, mergingReportBuilder);
 
-        if (!newMergedDocument.isPresent()) {
+        if (!newMergedDocument.isPresent()
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             return mergingReportBuilder.build();
         }
         xmlDocumentOptional = newMergedDocument.get();
@@ -337,7 +343,8 @@ public class ManifestMerger2 {
         for (LoadedManifestInfo libraryDocument : loadedLibraryDocuments) {
             mLogger.verbose("Merging library manifest " + libraryDocument.getLocation());
             newMergedDocument = merge(xmlDocumentOptional, libraryDocument, mergingReportBuilder);
-            if (!newMergedDocument.isPresent()) {
+            if (!newMergedDocument.isPresent()
+                    && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
                 return mergingReportBuilder.build();
             }
             xmlDocumentOptional = newMergedDocument.get();
@@ -353,12 +360,14 @@ public class ManifestMerger2 {
                             xmlDocumentOptional, loadedNavigationMap, mergingReportBuilder);
         }
 
-        if (mergingReportBuilder.hasErrors()) {
+        if (mergingReportBuilder.hasErrors()
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             return mergingReportBuilder.build();
         }
 
         ElementsTrimmer.trim(xmlDocumentOptional, mergingReportBuilder);
-        if (mergingReportBuilder.hasErrors()) {
+        if (mergingReportBuilder.hasErrors()
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             return mergingReportBuilder.build();
         }
 
@@ -376,13 +385,20 @@ public class ManifestMerger2 {
                     originalMainManifestPackageName,
                     mergingReportBuilder,
                     severity);
-            if (mergingReportBuilder.hasErrors()) {
+            if (mergingReportBuilder.hasErrors()
+                    && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
                 return mergingReportBuilder.build();
             }
         }
 
         // perform system property injection again.
         performSystemPropertiesInjection(mergingReportBuilder, xmlDocumentOptional);
+
+        // if it's a library of any kind - need to remove targetSdk
+        if (!mOptionalFeatures.contains(Invoker.Feature.DISABLE_STRIP_LIBRARY_TARGET_SDK)
+                && mMergeType != MergeType.APPLICATION) {
+            stripTargetSdk(xmlDocumentOptional);
+        }
 
         XmlDocument finalMergedDocument = xmlDocumentOptional;
 
@@ -404,7 +420,9 @@ public class ManifestMerger2 {
                                 "Package name '%1$s' at position %2$s should contain at "
                                         + "least one '.' (dot) character",
                                 packageName, packageNameAttribute.printPosition()));
-                return mergingReportBuilder.build();
+                if (!mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
+                    return mergingReportBuilder.build();
+                }
             }
         }
 
@@ -419,7 +437,8 @@ public class ManifestMerger2 {
                 });
 
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
-        if (mergingReportBuilder.hasErrors()) {
+        if (mergingReportBuilder.hasErrors()
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             mergingReportBuilder.addMessage(
                     finalMergedDocument.getRootNode(),
                     MergingReport.Record.Severity.WARNING,
@@ -448,7 +467,8 @@ public class ManifestMerger2 {
         // output an error message to the user if android:exported is not explicitly specified
         checkExportedDeclaration(finalMergedDocument, mergingReportBuilder);
 
-        if (mergingReportBuilder.hasErrors()) {
+        if (mergingReportBuilder.hasErrors()
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             return mergingReportBuilder.build();
         }
 
@@ -1108,9 +1128,11 @@ public class ManifestMerger2 {
             @NonNull LoadedManifestInfo lowerPriorityDocument,
             @NonNull MergingReport.Builder mergingReportBuilder) {
 
-        MergingReport.Result validationResult = PreValidator
-                .validate(mergingReportBuilder, lowerPriorityDocument.getXmlDocument());
-        if (validationResult == MergingReport.Result.ERROR) {
+        MergingReport.Result validationResult =
+                PreValidator.validate(mergingReportBuilder, lowerPriorityDocument.getXmlDocument());
+
+        if (validationResult == MergingReport.Result.ERROR
+                && !mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS)) {
             mergingReportBuilder.addMessage(
                     lowerPriorityDocument.getXmlDocument().getSourceFile(),
                     MergingReport.Record.Severity.ERROR,
@@ -1126,8 +1148,8 @@ public class ManifestMerger2 {
                             mergingReportBuilder,
                             !mOptionalFeatures.contains(
                                     Invoker.Feature.NO_IMPLICIT_PERMISSION_ADDITION),
-                            mOptionalFeatures.contains(
-                                    Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK));
+                            mOptionalFeatures.contains(Invoker.Feature.DISABLE_MINSDKLIBRARY_CHECK),
+                            mOptionalFeatures.contains(Invoker.Feature.KEEP_GOING_AFTER_ERRORS));
         } else {
             // exhaustiveSearch is true in recordAddedNodeAction() below because some of this
             // manifest's nodes might have already been recorded from the loading of
@@ -1409,7 +1431,7 @@ public class ManifestMerger2 {
 
     private void checkExportedDeclaration(
             XmlDocument finalMergedDocument, MergingReport.Builder mergingReportBuilder) {
-        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion();
+        String targetSdkVersion = finalMergedDocument.getTargetSdkVersion(mergingReportBuilder);
         int targetSdkApi =
                 Character.isDigit(targetSdkVersion.charAt(0))
                         ? Integer.parseInt(targetSdkVersion)
@@ -1454,6 +1476,17 @@ public class ManifestMerger2 {
                                 element.getId()));
             }
         }
+    }
+
+    private void stripTargetSdk(@NonNull XmlDocument xmlDocument) {
+        Optional<XmlElement> usesSdk = xmlDocument.getByTypeAndKey(USES_SDK, null);
+        usesSdk.ifPresent(
+                xmlElement ->
+                        xmlElement
+                                .getXml()
+                                .removeAttributeNS(
+                                        SdkConstants.ANDROID_URI,
+                                        SdkConstants.ATTR_TARGET_SDK_VERSION));
     }
 
     /**
@@ -1679,7 +1712,16 @@ public class ManifestMerger2 {
              *
              * <p>This is used in AGP because users should migrate to the new namespace DSL.
              */
-            WARN_IF_PACKAGE_IN_SOURCE_MANIFEST
+            WARN_IF_PACKAGE_IN_SOURCE_MANIFEST,
+
+            /** Removes target SDK for library manifest */
+            DISABLE_STRIP_LIBRARY_TARGET_SDK,
+
+            /**
+             * If set, merger will continue merging after any errors, allowing to surface errors in
+             * the "merged manifest" editor view.
+             */
+            KEEP_GOING_AFTER_ERRORS
         }
 
         /**

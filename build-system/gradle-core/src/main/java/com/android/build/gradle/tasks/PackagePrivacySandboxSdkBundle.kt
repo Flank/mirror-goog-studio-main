@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.internal.packaging.IncrementalPackager
@@ -143,6 +144,8 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
         }
 
         override fun configure(task: PackagePrivacySandboxSdkBundle) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 PrivacySandboxSdkInternalArtifactType.MODULE_BUNDLE, task.baseModuleZip
             )

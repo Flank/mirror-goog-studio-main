@@ -20,7 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * A JDWP process tracked by [JdwpTracker]. Each instance has a [pid] and a [StateFlow]
+ * A JDWP process tracked by [JdwpProcessTracker]. Each instance has a [pid] and a [StateFlow]
  * of [JdwpProcessProperties], corresponding to the changes made to the process during a
  * JDWP session (e.g. [JdwpProcessProperties.packageName]).
  *

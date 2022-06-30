@@ -961,6 +961,8 @@ open class VariantDslInfoImpl internal constructor(
                 override fun codeShrinkerEnabled() = buildTypeObj.isMinifyEnabled
 
                 override fun resourcesShrinkingEnabled(): Boolean = buildTypeObj.isShrinkResources
+
+                override fun hasPostProcessingConfiguration() = false
             }
 
     override fun getPostProcessingOptions(): PostProcessingOptions = _postProcessingOptions

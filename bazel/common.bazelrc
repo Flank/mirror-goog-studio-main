@@ -177,6 +177,9 @@ build:ci --worker_verbose
 # Prevents b/156952249. Android Build (buildbot) kills bazel between builds,
 # so there is no need to keep workers alive after the build.
 build:ci --worker_quit_after_build
+# The CI runs a lot of targets and when they are all cached the BES upload
+# may take a long time.
+build:ci --bes_timeout=600s
 
 ## Enables dynamic scheduling. This will run some actions locally
 ## as well as remotely, choosing whichever finishes first.

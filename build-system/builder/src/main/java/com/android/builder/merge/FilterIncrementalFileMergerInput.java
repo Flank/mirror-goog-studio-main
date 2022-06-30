@@ -16,10 +16,11 @@
 
 package com.android.builder.merge;
 
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.FileStatus;
-import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.InputStream;
@@ -55,17 +56,13 @@ public class FilterIncrementalFileMergerInput extends DelegateIncrementalFileMer
     @NonNull
     @Override
     public ImmutableSet<String> getUpdatedPaths() {
-        return super.getUpdatedPaths().stream()
-                .filter(pathsAccepted)
-                .collect(ImmutableCollectors.toImmutableSet());
+        return super.getUpdatedPaths().stream().filter(pathsAccepted).collect(toImmutableSet());
     }
 
     @NonNull
     @Override
     public ImmutableSet<String> getAllPaths() {
-        return super.getAllPaths().stream()
-                .filter(pathsAccepted)
-                .collect(ImmutableCollectors.toImmutableSet());
+        return super.getAllPaths().stream().filter(pathsAccepted).collect(toImmutableSet());
     }
 
     @Nullable

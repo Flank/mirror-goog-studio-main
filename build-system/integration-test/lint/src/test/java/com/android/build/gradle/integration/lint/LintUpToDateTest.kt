@@ -49,7 +49,7 @@ class LintUpToDateTest {
         assertThat(firstRun.getTask(":app:lintReportDebug")).didWork()
         assertThat(firstRun.getTask(":app:lintAnalyzeDebug")).didWork()
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("10 errors, 4 warnings")
+        assertThat(lintResults).contains("9 errors, 4 warnings")
 
         val secondRun = getExecutor().run(":app:lintDebug")
         assertThat(secondRun.getTask(":app:lintReportDebug")).wasUpToDate()

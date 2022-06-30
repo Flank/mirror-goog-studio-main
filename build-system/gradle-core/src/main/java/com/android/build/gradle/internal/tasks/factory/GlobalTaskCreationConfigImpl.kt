@@ -36,9 +36,11 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
+import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.services.getBuildService
@@ -53,6 +55,7 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 
@@ -191,12 +194,19 @@ class GlobalTaskCreationConfigImpl(
 
     override val legacyLanguageSplitOptions: LanguageSplitOptions
         get() = oldExtension.splits.language
+    override val manifestArtifactType: InternalArtifactType<Directory>
+        get() = if (services.projectOptions[BooleanOption.IDE_DEPLOY_AS_INSTANT_APP])
+            InternalArtifactType.INSTANT_APP_MANIFEST
+        else
+            InternalArtifactType.PACKAGED_MANIFESTS
 
     // Internal Objects
 
     override val globalArtifacts: ArtifactsImpl = ArtifactsImpl(project, "global")
 
     override val createdBy: String = "Android Gradle ${Version.ANDROID_GRADLE_PLUGIN_VERSION}"
+
+    override val asmApiVersion = ASM_API_VERSION_FOR_INSTRUMENTATION
 
     // Utility methods
 

@@ -40,7 +40,7 @@ class LintModelIntegrationTest {
         project.executor().expectFailure().run("clean", ":app:lintDebug")
         project.executor().expectFailure().run(":app:clean", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("10 errors, 4 warnings")
+        assertThat(lintResults).contains("9 errors, 4 warnings")
 
         checkLintModels(
             project = project,
@@ -75,7 +75,7 @@ class LintModelIntegrationTest {
         // Check lint runs correctly before asserting about the model.
         project.executor().expectFailure().run(":app:clean", ":app:lintDebug")
         val lintResults = project.file("app/build/reports/lint-results.txt")
-        assertThat(lintResults).contains("10 errors, 4 warnings")
+        assertThat(lintResults).contains("9 errors, 4 warnings")
 
         val lintModelDir =
             project.getSubproject("app")

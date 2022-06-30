@@ -136,14 +136,19 @@ class FullDependencyGraphBuilder(
         val library = if (artifact == null) {
             val owner = variant.owner
 
-            // There are 3 (currently known) reasons this can happen:
+            // There are 4 (currently known) reasons this can happen:
             // 1. when an artifact is relocated via Gradle's module "available-at" feature.
             // 2. when resolving a test graph, as one of the roots will be the same module and this
-            //   is not included in the other artifact-based API.
-            // 3. when dependency is without artifact file, but with transitive dependencies
+            //    is not included in the other artifact-based API.
+            // 3. when an external dependency is without artifact file, but with transitive
+            //    dependencies
+            // 4. when resolving a dynamic-feature dependency graph; e.g., the app module does not
+            //    publish an ArtifactType.JAR artifact to runtimeElements
             //
-            // In all cases, there are still dependencies, so we need to create a library object,
-            // and traverse the dependencies.
+            // In cases 1, 2, and 3, there are still dependencies, so we need to create a library
+            // object, and traverse the dependencies.
+            //
+            // In case 4, we want to ignore the app dependency and any transitive dependencies.
             if (variant.externalVariant.isPresent) {
                 // Scenario 1
                 libraryService.getLibrary(
@@ -183,7 +188,7 @@ class FullDependencyGraphBuilder(
                         buildMapping = inputs.buildMapping
                     )
                 )
-            } else if (variantDependencies.isNotEmpty()) {
+            } else if (owner !is ProjectComponentIdentifier && variantDependencies.isNotEmpty()) {
                 // Scenario 3
                 libraryService.getLibrary(
                     ResolvedArtifact(
@@ -200,6 +205,7 @@ class FullDependencyGraphBuilder(
                     )
                 )
             } else {
+                // Scenario 4 or other unknown scenario
                 null
             }
         } else {

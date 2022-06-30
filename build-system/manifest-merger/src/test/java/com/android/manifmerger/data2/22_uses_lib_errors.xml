@@ -63,7 +63,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.lib1">
 
-    <application android:label="@string/lib_name1" >
+    <application>
 
         <!-- Error: android:name attribute is missing. -->
         <uses-library />
@@ -105,4 +105,3 @@ ERROR:Missing 'name' key attribute on element uses-library at ManifestMerger2Tes
 ERROR:Missing 'name' key attribute on element uses-library at ManifestMerger2Test1_lib1.xml:8:9-25
 WARNING:Element uses-library#com.example.SomeLibrary3_RequiredFalse at ManifestMerger2Test0_main.xml:35:9-37:40 duplicated with element declared at ManifestMerger2Test0_main.xml:30:9-32:40
 ERROR:Attribute uses-library#com.example.SomeLibrary4_RequiredFalse@required at ManifestMerger2Test1_lib1.xml:25:13-35 has an illegal value=\(foo\), expected 'true' or 'false'
-ERROR:Validation failed, exiting

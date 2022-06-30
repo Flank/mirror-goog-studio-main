@@ -43,55 +43,76 @@ import com.android.tools.lint.detector.api.XmlScanner
 import com.android.tools.lint.detector.api.editDistance
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
+import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.util.Arrays
 
 /**
- * looks for obvious errors in the guarding of components with a
- * permission via the android:permission attribute
+ * looks for errors related to:
+ * Declaring permissions in a `<permission ... />` element
+ * Declaring permission usage in a `<uses-permission ... />` element
+ * Declaring components restricted by permissions in an `android:permission="..."` attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
+    override fun getApplicableElements(): Collection<String>? {
+        return listOf(
+            TAG_PERMISSION,
+            TAG_USES_PERMISSION,
+            TAG_APPLICATION,
+            TAG_ACTIVITY,
+            TAG_ACTIVITY_ALIAS,
+            TAG_RECEIVER,
+            TAG_SERVICE,
+            TAG_PROVIDER
+        )
+    }
+
+    override fun visitElement(context: XmlContext, element: Element) {
+        when (element.tagName) {
+            TAG_PERMISSION -> element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let { reportPermissionDefinitionIncidents(context, it) }
+            TAG_USES_PERMISSION -> element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let { reportPermissionUsageIncidents(context, it) }
+            else -> element.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let { reportPermissionUsageIncidents(context, it) }
+        }
+    }
+
     override fun checkMergedProject(context: Context) {
         val root = context.mainProject.mergedManifest?.documentElement ?: return
-        checkDocument(context, root, true)
+        walkDocument(context, root)
     }
 
-    override fun visitDocument(context: XmlContext, document: Document) {
-        val root = document.documentElement ?: return
-        checkDocument(context, root, false)
-    }
-
-    private fun checkDocument(context: Context, root: Element, isMergedManifest: Boolean) {
+    /**
+     * Collect *all* custom permissions (and their usages)
+     * across manifests.  Then report on any typos.
+     * Many custom permissions may be included
+     * from libraries, etc., and we want to catch those typos as well
+     * as typos on custom permissions defined in the same manifest.
+     */
+    private fun walkDocument(context: Context, root: Element) {
         var customPermissions: MutableList<String>? = null
-        var customPermissionUsages: MutableList<Attr>? = null
-
-        fun reportOrAddCustomPermissions(attr: Attr) {
-            val evaluateCustomPermission = reportPermissionDefinitionIncidents(context, attr, isMergedManifest)
-            if (evaluateCustomPermission)
-                (customPermissions ?: mutableListOf<String>().also { customPermissions = it })
-                    .add(attr.value)
+        fun addCustomPermission(attr: Attr) {
+            (customPermissions ?: mutableListOf<String>().also { customPermissions = it })
+                .add(attr.value)
         }
 
-        fun reportOrAddPermissionUsages(attr: Attr) {
-            val evaluateCustomPermissionUsage = reportPermissionUsageIncidents(context, attr, isMergedManifest)
-            if (evaluateCustomPermissionUsage)
-                (customPermissionUsages ?: mutableListOf<Attr>().also { customPermissionUsages = it })
-                    .add(attr)
+        var customPermissionUsages: MutableList<Attr>? = null
+        fun addCustomPermissionUsage(attr: Attr) {
+            (customPermissionUsages ?: mutableListOf<Attr>().also { customPermissionUsages = it })
+                .add(attr)
         }
 
         var topLevel = getFirstSubTag(root)
         while (topLevel != null) {
             when (topLevel.tagName) {
                 TAG_PERMISSION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::reportOrAddCustomPermissions)
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::addCustomPermission)
                 }
                 TAG_USES_PERMISSION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::reportOrAddPermissionUsages)
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_NAME)?.let(::addCustomPermissionUsage)
                 }
                 TAG_APPLICATION -> {
-                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::reportOrAddPermissionUsages)
+                    topLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::addCustomPermissionUsage)
 
                     var componentLevel = getFirstSubTag(topLevel)
                     while (componentLevel != null) {
@@ -102,7 +123,7 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                             TAG_RECEIVER,
                             TAG_SERVICE,
                             TAG_PROVIDER -> {
-                                componentLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::reportOrAddPermissionUsages)
+                                componentLevel.getAttributeNodeNS(ANDROID_URI, ATTR_PERMISSION)?.let(::addCustomPermissionUsage)
                             }
                         }
                         componentLevel = getNextTag(componentLevel)
@@ -132,18 +153,17 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
     /**
      * Report incidents related to permission definitions that are
-     * NOT related to custom permission typos. Returns a boolean
-     * representing whether this attribute should be evaluated for a
-     * custom permission typo.
+     * NOT related to custom permission typos.
      */
-    private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
+    private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr) {
         val packageName =
             (context.project.buildVariant?.`package` ?: attr.ownerDocument.documentElement?.getAttribute(ATTR_PACKAGE))
                 .orEmpty()
 
         val platformPermissions = getPlatformPermissions(context.project)
+
         if (isStandardPermission(attr.value, platformPermissions)) {
-            if (!isMergedManifest) context.report(
+            context.report(
                 Incident(
                     RESERVED_SYSTEM_PERMISSION,
                     attr.ownerElement,
@@ -151,11 +171,10 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                     "`${attr.value}` is a reserved permission"
                 )
             )
-            if (context.isEnabled(RESERVED_SYSTEM_PERMISSION)) return false
         }
 
         if (!followsCustomPermissionNamingConvention(packageName, attr.value)) {
-            if (!isMergedManifest) context.report(
+            context.report(
                 Incident(
                     PERMISSION_NAMING_CONVENTION,
                     attr.ownerElement,
@@ -163,21 +182,16 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                     "`${attr.value} does not follow recommended naming convention`"
                 )
             )
-            if (context.isEnabled(PERMISSION_NAMING_CONVENTION)) return false
         }
-
-        return isMergedManifest
     }
 
     /**
      * Report incidents related to permission usages that are
-     * NOT related to custom permission typos. Returns a boolean
-     * representing whether this attribute should be evaluated for a
-     * custom permission typo.
+     * NOT related to custom permission typos.
      */
-    private fun reportPermissionUsageIncidents(context: Context, attr: Attr, isMergedManifest: Boolean): Boolean {
+    private fun reportPermissionUsageIncidents(context: Context, attr: Attr) {
         if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
-            if (!isMergedManifest) context.report(
+            context.report(
                 Incident(
                     KNOWN_PERMISSION_ERROR,
                     attr.ownerElement,
@@ -185,25 +199,19 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                     "`${attr.value}` is not a valid permission value"
                 )
             )
-            // signal that the attribute would have already been reported
-            if (context.isEnabled(KNOWN_PERMISSION_ERROR)) return false
         }
 
-        findAlmostPlatformPermission(context.project, attr.value)?.let {
-            if (!isMergedManifest) context.report(
+        findAlmostPlatformPermission(context.project, attr.value)?.let { almost ->
+            context.report(
                 Incident(
                     SYSTEM_PERMISSION_TYPO,
                     attr.ownerElement,
                     context.getLocation(attr, LocationType.VALUE),
-                    "Did you mean `$it`?",
-                    fix().replace().text(attr.value).with(it).build()
+                    "Did you mean `$almost`?",
+                    fix().replace().text(attr.value).with(almost).build()
                 )
             )
-            // signal that the attribute would have already been reported
-            if (context.isEnabled(SYSTEM_PERMISSION_TYPO)) return false
         }
-
-        return isMergedManifest
     }
 
     companion object {
@@ -450,6 +458,11 @@ class PermissionErrorDetector : Detector(), XmlScanner {
 
         private var platformTarget: String? = null
         private var platformPermissions: Array<String>? = null
+
+        @VisibleForTesting
+        fun clearPlatformPermissions() {
+            platformPermissions = null
+        }
 
         /**
          * Returns the platform permissions: those permissions users are

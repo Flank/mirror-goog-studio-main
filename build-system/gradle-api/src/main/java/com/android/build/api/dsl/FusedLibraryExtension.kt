@@ -32,12 +32,4 @@ interface FusedLibraryExtension {
     @get: Incubating
     @set: Incubating
     var minSdk: Int?
-
-    /**
-     * Sets the targetSdk, which is declared in the fused library manifest.
-     * Eventually (b/229956178) this value should be able to be automatically determined by the plugin.
-     */
-    @get: Incubating
-    @set: Incubating
-    var targetSdk: Int?
 }

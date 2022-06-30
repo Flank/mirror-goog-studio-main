@@ -48,4 +48,6 @@ class PostProcessingBlockOptions(
     }
 
     override fun resourcesShrinkingEnabled(): Boolean = postProcessingBlock.isRemoveUnusedResources
+
+    override fun hasPostProcessingConfiguration() = true
 }

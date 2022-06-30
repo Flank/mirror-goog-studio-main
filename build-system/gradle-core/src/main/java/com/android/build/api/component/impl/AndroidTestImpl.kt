@@ -160,7 +160,19 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
+                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                    mainVariant.minifiedEnabled
                 else -> dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+            }
+        }
+
+    override val resourcesShrink: Boolean
+        get() {
+            return when {
+                mainVariant.componentType.isAar -> false
+                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                    mainVariant.resourcesShrink
+                else -> dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()
             }
         }
 
@@ -222,7 +234,7 @@ open class AndroidTestImpl @Inject constructor(
     }
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key =
-            ResValueKeyImpl(type, name)
+        ResValueKeyImpl(type, name)
 
     override val resValues: MapProperty<ResValue.Key, ResValue> by lazy {
         resValuesCreationConfig?.resValues
@@ -334,17 +346,17 @@ open class AndroidTestImpl @Inject constructor(
         get() = false
 
     override fun <T : Component> createUserVisibleVariantObject(
-            projectServices: ProjectServices,
-            operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>,out VariantBuilder, out Variant>,
-            stats: GradleBuildVariant.Builder?
+        projectServices: ProjectServices,
+        operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
+        stats: GradleBuildVariant.Builder?
     ): T =
         if (stats == null) {
             this as T
         } else {
             projectServices.objectFactory.newInstance(
-                    AnalyticsEnabledAndroidTest::class.java,
-                    this,
-                    stats
+                AnalyticsEnabledAndroidTest::class.java,
+                this,
+                stats
             ) as T
         }
 
@@ -373,7 +385,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val ignoreAllLibraryKeepRules: Boolean
         get() = dslInfo.ignoreAllLibraryKeepRules
-
 
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
     override val useJacocoTransformInstrumentation: Boolean

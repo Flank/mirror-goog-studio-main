@@ -22,12 +22,13 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
 import com.android.build.gradle.internal.services.VariantBuilderServices
+import com.android.builder.errors.IssueReporter
 
 abstract class VariantBuilderImpl(
     globalVariantBuilderConfig: GlobalVariantBuilderConfig,
     variantDslInfo: VariantDslInfo,
     componentIdentity: ComponentIdentity,
-    variantBuilderServices: VariantBuilderServices
+    variantBuilderServices: VariantBuilderServices,
 ) :
     ComponentBuilderImpl(
         globalVariantBuilderConfig,
@@ -146,4 +147,18 @@ abstract class VariantBuilderImpl(
             registeredExtensionDelegate.value
         else null
 
+    internal fun setMinificationIfPossible(
+        varName: String,
+        newValue: Boolean,
+        setter: (Boolean) -> Unit
+    ) {
+        if (dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration())
+            variantBuilderServices.issueReporter.reportWarning(
+                IssueReporter.Type.GENERIC,
+                "You cannot set $varName via Variant API as build uses postprocessing{...} " +
+                        "instead of buildTypes{...}"
+            )
+        else
+            setter(newValue)
+    }
 }

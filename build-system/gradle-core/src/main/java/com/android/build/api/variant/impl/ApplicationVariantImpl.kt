@@ -53,11 +53,8 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
-import com.android.sdklib.AndroidTargetHash
-import com.google.common.base.Strings
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -149,7 +146,9 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = dslInfo.publishInfo
 
     override val minifiedEnabled: Boolean
-        get() = dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        get() = variantBuilder.codeMinification
+    override val resourcesShrink: Boolean
+        get() = variantBuilder.shrinkResources
 
     override var androidTest: AndroidTestImpl? = null
 
@@ -158,6 +157,12 @@ open class ApplicationVariantImpl @Inject constructor(
     override val renderscript: Renderscript? by lazy {
         renderscriptCreationConfig?.renderscript
     }
+
+    override val codeMinification: Boolean
+        get() = variantBuilder.codeMinification
+
+    override val shrinkResources: Boolean
+        get() = variantBuilder.shrinkResources
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -214,7 +219,7 @@ open class ApplicationVariantImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val consumesFeatureJars: Boolean =
-        dslInfo.getPostProcessingOptions().codeShrinkerEnabled() && global.hasDynamicFeatures
+        minifiedEnabled && global.hasDynamicFeatures
 
     override fun createVersionNameProperty(): Property<String?> =
         internalServices.newNullablePropertyBackingDeprecatedApi(

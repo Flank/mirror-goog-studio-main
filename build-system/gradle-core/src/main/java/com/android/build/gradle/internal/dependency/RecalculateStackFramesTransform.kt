@@ -49,8 +49,10 @@ abstract class RecalculateStackFramesTransform :
     companion object {
         fun getAttributesForConfig(creationConfig: ComponentCreationConfig)
                 : AndroidAttributes {
-            return if (creationConfig.dependenciesClassesAreInstrumented &&
-                creationConfig.asmFramesComputationMode ==
+            val instrumentationCreationConfig = creationConfig.instrumentationCreationConfig
+            return if (instrumentationCreationConfig != null &&
+                instrumentationCreationConfig.dependenciesClassesAreInstrumented &&
+                instrumentationCreationConfig.asmFramesComputationMode ==
                 FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES
             ) {
                 AndroidAttributes(
@@ -86,8 +88,10 @@ abstract class RecalculateStackFramesTransform :
             dependencyHandler: DependencyHandler,
             creationConfig: ComponentCreationConfig
         ) {
-            if (creationConfig.dependenciesClassesAreInstrumented &&
-                creationConfig.asmFramesComputationMode ==
+            val instrumentationCreationConfig = creationConfig.instrumentationCreationConfig
+                ?: return
+            if (instrumentationCreationConfig.dependenciesClassesAreInstrumented &&
+                instrumentationCreationConfig.asmFramesComputationMode ==
                 FramesComputationMode.COMPUTE_FRAMES_FOR_ALL_CLASSES
             ) {
                 registerRecalculateStackFramesTransform(

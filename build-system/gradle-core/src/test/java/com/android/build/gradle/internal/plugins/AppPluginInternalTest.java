@@ -611,7 +611,7 @@ public class AppPluginInternalTest {
         }
 
         for (ComponentCreationConfig component : components) {
-            assertThat(component.getAsmApiVersion()).isEqualTo(latestAsmVersionEnum);
+            assertThat(component.getGlobal().getAsmApiVersion()).isEqualTo(latestAsmVersionEnum);
         }
     }
 

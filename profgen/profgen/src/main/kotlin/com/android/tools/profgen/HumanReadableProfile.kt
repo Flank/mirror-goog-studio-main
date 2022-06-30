@@ -32,6 +32,7 @@ internal const val OPEN_PAREN = '('
 internal const val CLOSE_PAREN = ')'
 internal const val METHOD_SEPARATOR_START = '-'
 internal const val METHOD_SEPARATOR_END = '>'
+internal const val INLINE_CACHE_SEPARATOR = '+'
 
 /**
  * The in-memory representation of a human-readable set of profile rules.
@@ -330,6 +331,10 @@ internal fun parseRule(
         i = fragmentParser.parseReturnType(line, i)
         val returnType = fragmentParser.build()
         if (i != line.length) {
+            if (line[i] == INLINE_CACHE_SEPARATOR) {
+                // Profgen doesn't support inline cache encoding from Android S+.
+                return null
+            }
             if (line.substring(i).isNotBlank()) {
                 throw ParsingException(i, unexpectedTextAfterRule(line.substring(i)))
             }
@@ -482,6 +487,7 @@ private fun RuleFragmentParser.parseReturnType(line: String, start: Int): Int {
                 i++
                 break
             }
+            INLINE_CACHE_SEPARATOR -> break
             OPEN_PAREN,
             CLOSE_PAREN,
             COMMENT_START -> illegalToken(line, i)

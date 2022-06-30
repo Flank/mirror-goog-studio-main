@@ -84,4 +84,11 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
                 VariantPropertiesMethodType.VARIANT_AAR_METADATA_VALUE
             return userVisibleAarMetadata
         }
+
+    override val codeMinification: Boolean
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.CODE_MINIFICATION_VALUE
+            return delegate.codeMinification
+        }
 }

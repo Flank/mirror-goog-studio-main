@@ -19,6 +19,7 @@ package com.android.build.api.component.impl.features
 import com.android.build.api.variant.AndroidResources
 import com.android.build.api.variant.impl.initializeAaptOptionsFromDsl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
@@ -82,8 +83,8 @@ class AndroidResourcesCreationConfigImpl(
 
     override val useResourceShrinker: Boolean
         get() {
-            if (dslInfo.componentType.isForTesting ||
-                !dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()) {
+            if (component !is ConsumableCreationConfig || !component.resourcesShrink
+                || dslInfo.componentType.isForTesting) {
                 return false
             }
             val newResourceShrinker =
@@ -112,7 +113,7 @@ class AndroidResourcesCreationConfigImpl(
                     .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
                 return false
             }
-            if (!dslInfo.getPostProcessingOptions().codeShrinkerEnabled()) {
+            if (component is ConsumableCreationConfig && !component.minifiedEnabled) {
                 internalServices
                     .issueReporter
                     .reportError(

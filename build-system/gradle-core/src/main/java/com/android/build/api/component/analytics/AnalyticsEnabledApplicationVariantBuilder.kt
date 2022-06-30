@@ -60,4 +60,18 @@ open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.TEST_FIXTURES_ENABLED_VALUE
             delegate.enableTestFixtures = value
         }
+
+    override var codeMinification: Boolean
+        get() = delegate.codeMinification
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.CODE_MINIFICATION_VALUE_VALUE
+            delegate.codeMinification = value
+        }
+
+    override var shrinkResources: Boolean
+        get() = delegate.shrinkResources
+        set(value) {
+            stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.SHRINK_RESOURCES_VALUE_VALUE
+            delegate.shrinkResources = value
+        }
 }

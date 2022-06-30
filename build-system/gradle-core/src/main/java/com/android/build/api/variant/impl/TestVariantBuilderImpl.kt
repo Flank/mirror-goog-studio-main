@@ -51,4 +51,8 @@ open class TestVariantBuilderImpl @Inject constructor(
                 stats
             ) as T
         }
+
+    override var codeMinification: Boolean =
+        dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        set(value) = setMinificationIfPossible("enableMinification", value){ field = it }
 }

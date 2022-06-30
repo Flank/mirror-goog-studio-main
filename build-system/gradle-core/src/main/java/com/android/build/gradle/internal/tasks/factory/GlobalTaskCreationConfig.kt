@@ -32,6 +32,7 @@ import com.android.build.api.transform.Transform
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.packaging.JarCreatorType
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.builder.core.LibraryRequest
 import com.android.builder.internal.packaging.ApkCreatorType
@@ -39,6 +40,7 @@ import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.repository.Revision
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 
@@ -101,12 +103,16 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
 
     val hasNoBuildTypeMinified: Boolean
 
+    val manifestArtifactType: InternalArtifactType<Directory>
+
     // Internal Objects
-    //val sdkComponents: SdkComponents
+
     val globalArtifacts: ArtifactsImpl
     val services: BaseServices
 
     val createdBy: String
+
+    val asmApiVersion: Int
 
     /**
      * Queries the given configuration for platform attributes from the jar(s) in it.
