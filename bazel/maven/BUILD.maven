@@ -29162,10 +29162,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.jetbrains.compose.compiler.compiler-hosted_1.1.1",
-    pom = "repository/org/jetbrains/compose/compiler/compiler-hosted/1.1.1/compiler-hosted-1.1.1.pom",
+    name = "org.jetbrains.compose.compiler.compiler-hosted_1.2.0",
+    pom = "repository/org/jetbrains/compose/compiler/compiler-hosted/1.2.0/compiler-hosted-1.2.0.pom",
     repo_root_path = "repository",
-    repo_path = "org/jetbrains/compose/compiler/compiler-hosted/1.1.1",
+    repo_path = "org/jetbrains/compose/compiler/compiler-hosted/1.2.0",
     visibility = ["//visibility:public"],
 )
 
