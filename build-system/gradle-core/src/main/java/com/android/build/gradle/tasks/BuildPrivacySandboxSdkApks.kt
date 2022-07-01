@@ -22,18 +22,25 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.options.StringOption
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
-import com.google.common.io.MoreFiles
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Task to extract the privacy sandbox SDK APKs for this app
@@ -41,33 +48,60 @@ import java.nio.file.Files
 @DisableCachingByDefault(because="Task only extracts zips")
 abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    @get:Classpath // Classpath as the output is brittle to the order
     abstract val sdkApksArchives: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val deviceConfig: RegularFileProperty
 
     @get:OutputDirectory
     abstract val sdkApks: DirectoryProperty
 
     override fun doTaskAction() {
+        val logLevel = if( deviceConfig.isPresent) LogLevel.INFO else LogLevel.LIFECYCLE
         FileUtils.cleanOutputDir(sdkApks.get().asFile)
         if (sdkApksArchives.isEmpty) {
-            logger.lifecycle("There are no privacy sandbox SDK dependencies for ${projectPath.get()} $variantName ")
+            logger.log(logLevel, "There are no privacy sandbox SDK dependencies for ${projectPath.get()} $variantName ")
             return
         }
         val outputDirectory = sdkApks.get().asFile.toPath()
         FileUtils.cleanOutputDir(outputDirectory.toFile())
 
-        // TODO(b/235469089) use bundle tool here
-        for (archiveFile in sdkApksArchives) {
-            val archive = archiveFile.toPath()
+        // TODO(b/235469089) use bundle tool here, using the device config supplied
+        forEachInputFile(
+                inputFiles = sdkApksArchives.files.map { it.toPath() },
+                outputDirectory = outputDirectory,
+        ) { archive, subDirectory ->
+            Files.createDirectory(subDirectory)
+            val outputFile = subDirectory.resolve("standalone.apk")
             ZipArchive(archive).use {
                 it.getInputStream("standalones/standalone.apk").use { inputStream ->
-                    // TODO(b/235469089) handle collisions
-                    val outputFile =
-                            outputDirectory.resolve(archive.fileName.toString().substringBeforeLast(".") + "-standalone.apk")
                     Files.copy(inputStream, outputFile)
-                    logger.lifecycle("Extracted sandbox SDK APK for ${projectPath.get()} $variantName: $outputFile")
+                    logger.log(logLevel, "Extracted sandbox SDK APK for ${projectPath.get()} $variantName: $outputFile")
                 }
+            }
+        }
+    }
+    companion object {
+
+        @VisibleForTesting
+        fun forEachInputFile(
+                inputFiles: Iterable<Path>,
+                outputDirectory: Path,
+                action: (input: Path, outputSubDirectory: Path) -> Unit,
+        ) {
+            val usedOutputNames = mutableSetOf<String>()
+            for (inputFile in inputFiles) {
+                val key = inputFile.fileName.toString().substringBeforeLast('.')
+                var index = 0
+                var candidateSubDirectoryName = key
+                while (!usedOutputNames.add(candidateSubDirectoryName)) {
+                    index++
+                    candidateSubDirectoryName = key + "_" + index
+                }
+                action(inputFile, outputDirectory.resolve(candidateSubDirectoryName))
             }
         }
     }
@@ -100,6 +134,11 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
                             AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_APKS
                     )
             )
+            val deviceConfigPath = creationConfig.services.projectOptions.get(StringOption.IDE_APK_SELECT_CONFIG)
+            if (deviceConfigPath != null) {
+                task.deviceConfig.set(File(deviceConfigPath))
+            }
+            task.deviceConfig.disallowChanges()
         }
     }
 }

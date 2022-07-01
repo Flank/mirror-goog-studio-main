@@ -98,7 +98,7 @@ class MinimalPrivacySandboxSdkTest {
         val extractedPssApk = minimalApp.getIntermediateFile(
                 InternalArtifactType.EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs.getFolderName(),
                 "debug",
-                "empty-privacy-sandbox-sdk-standalone.apk"
+                "empty-privacy-sandbox-sdk/standalone.apk"
         )
         Apk(extractedPssApk).use { apk ->
             ApkSubject.assertThat(apk).exists()
