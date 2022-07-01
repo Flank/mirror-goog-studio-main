@@ -17,7 +17,7 @@ package com.android.adblib.ddmlibcompatibility.testutils
 
 import com.android.adblib.AdbChannelProviderFactory
 import com.android.adblib.AdbSession
-import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.adblib.testingutils.TestingAdbSessionHost
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.testing.FakeAdbRule
 import com.android.fakeadbserver.DeviceState
@@ -26,7 +26,7 @@ import kotlinx.coroutines.withTimeout
 import java.time.Duration
 
 fun FakeAdbRule.createAdbSession(): AdbSession {
-    val host = TestingAdbLibHost()
+    val host = TestingAdbSessionHost()
     val channelProvider =
         AdbChannelProviderFactory.createOpenLocalHost(host) { this.fakeAdbServerPort }
     return AdbSession.create(host, channelProvider)

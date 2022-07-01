@@ -15,10 +15,10 @@
  */
 package com.android.adblib.tools
 
-import com.android.adblib.AdbLibHost
+import com.android.adblib.AdbSessionHost
 import com.android.adblib.AdbLoggerFactory
 
-internal class Host(val factory : AdbLoggerFactory) : AdbLibHost() {
+internal class LoggerFactoryAdbSessionHost(val factory : AdbLoggerFactory) : AdbSessionHost() {
 
     override val loggerFactory: AdbLoggerFactory
         get() = factory
