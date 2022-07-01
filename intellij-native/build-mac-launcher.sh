@@ -16,7 +16,7 @@ source $(dirname $0)/build-mac-common.sh
 # Make
 (
   cd "$out_dir"
-  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$script_dir/MacLauncher"
+  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$top/tools/idea/native/MacLauncher"
   "$cmake_bin" --build .
 )
 

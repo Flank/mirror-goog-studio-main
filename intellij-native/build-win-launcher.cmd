@@ -17,6 +17,6 @@ cd %OUTDIR%
 mkdir WinLauncher
 cd WinLauncher
 set PATH=%JDK_11_x64%include;%PATH%
-%CMAKE% %TOP%tools\base\intellij-native\WinLauncher
+%CMAKE% %TOP%tools\idea\native\WinLauncher
 %CMAKE% --build . --config Release -A x64
 xcopy /i /e Release\WinLauncher.exe %DISTDIR%

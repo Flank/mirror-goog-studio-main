@@ -17,7 +17,7 @@ source $(dirname $0)/build-mac-common.sh
 # Make
 (
   cd "$out_dir"
-  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$script_dir/fsNotifier/mac"
+  "$cmake_bin" -DCMAKE_BUILD_TYPE=Release "$top/tools/idea/native/fsNotifier/mac"
   "$cmake_bin" --build .
 )
 
