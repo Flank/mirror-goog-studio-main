@@ -15,12 +15,10 @@
  */
 package com.android.adblib.tools.cli
 
-import com.android.adblib.AdbSessionHost
 import com.android.adblib.AdbSession
+import com.android.adblib.AdbSessionHost
 import com.android.adblib.DeviceSelector
-import com.android.adblib.tools.LoggerFactoryAdbSessionHost
 import kotlinx.coroutines.runBlocking
-import java.lang.IllegalStateException
 import kotlin.system.exitProcess
 
 object Main {
@@ -44,16 +42,18 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         runBlocking {
-
             // TODO Move to an AdbChannelProvider that knows how to spawn and ADB server.
             // This one assume it is already up and running which is fine for our current needs.
-            val adbSessionHost: AdbSessionHost = LoggerFactoryAdbSessionHost(StdLoggerFactory())
+            val adbSessionHost = object : AdbSessionHost() {
+                override val loggerFactory = StdLoggerFactory()
+            }
             val session = AdbSession.create(adbSessionHost)
 
             var success : Boolean
             adbSessionHost.use {
-                session.use {  }
-                success = run(session, args)
+                session.use {
+                    success = run(session, args)
+                }
             }
 
             exitProcess(java.lang.Boolean.compare(success, true))
