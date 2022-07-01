@@ -38,7 +38,6 @@ import com.android.adblib.tools.debugging.packets.ddms.clone
 import com.android.adblib.tools.debugging.packets.ddms.ddmsChunks
 import com.android.adblib.tools.debugging.packets.ddms.writeToChannel
 import com.android.adblib.utils.ResizableBuffer
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import java.io.EOFException
@@ -64,22 +63,21 @@ internal class JdwpProcessPropertiesCollector(
 
     /**
      * Collects [JdwpProcessProperties] from a new JDWP session to the process [pid]
-     * and emits them to [flowCollector].
+     * and emits them to [stateFlow].
      *
      * Throws EOFException if not enough information about the process could be collected, e.g.
      * if there is already another JDWP session open for the process.
      */
-    suspend fun collect(flowCollector: FlowCollector<JdwpProcessProperties>) {
+    suspend fun collect(stateFlow: AtomicStateFlow<JdwpProcessProperties>) {
         val jdwpSession = JdwpSessionHandler.create(session, device, pid)
         jdwpSession.use {
-            val collector = Collector(session, pid, flowCollector)
-            collectProcessPropertiesImpl(jdwpSession, collector)
+            collectProcessPropertiesImpl(jdwpSession, stateFlow)
         }
     }
 
     private suspend fun collectProcessPropertiesImpl(
         jdwpSession: JdwpSessionHandler,
-        collector: Collector
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>
     ) {
         // Send a few ddms commands to collect process information
         val commands = IntroCommands(
@@ -87,7 +85,7 @@ internal class JdwpProcessPropertiesCollector(
             reaqCommand = sendReaqPacket(jdwpSession),
             featCommand = sendFeatPacket(jdwpSession)
         )
-        collectDdmsReplyChunks(jdwpSession, collector, commands)
+        collectDdmsReplyChunks(jdwpSession, stateFlow, commands)
     }
 
     /**
@@ -98,7 +96,7 @@ internal class JdwpProcessPropertiesCollector(
      */
     private suspend fun collectDdmsReplyChunks(
         jdwpSession: JdwpSessionHandler,
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         commands: IntroCommands
     ) {
 
@@ -142,17 +140,17 @@ internal class JdwpProcessPropertiesCollector(
 
             // `HELO` packet is a reply to the `HELO` command we sent to the VM
             if (jdwpPacket.isReply && jdwpPacket.packetId == commands.heloCommand.packetId) {
-                processHeloReply(collector, jdwpPacket, workBuffer)
+                processHeloReply(stateFlow, jdwpPacket, workBuffer)
             }
 
             // `FEAT` packet is a reply to the `FEAT` command we sent to the VM
             if (jdwpPacket.isReply && jdwpPacket.packetId == commands.featCommand.packetId) {
-                processFeatReply(collector, jdwpPacket, workBuffer)
+                processFeatReply(stateFlow, jdwpPacket, workBuffer)
             }
 
             // `REAQ` packet is a reply to the `REAQ` command we sent to the VM
             if (jdwpPacket.isReply && jdwpPacket.packetId == commands.reaqCommand.packetId) {
-                processReaqReply(collector, jdwpPacket, workBuffer)
+                processReaqReply(stateFlow, jdwpPacket, workBuffer)
             }
 
             // `WAIT` and `APNM` are DDMS chunks embedded in a JDWP command packet sent from
@@ -165,10 +163,10 @@ internal class JdwpProcessPropertiesCollector(
                     val chunkCopy = chunk.clone()
                     when (chunkCopy.type) {
                         DdmsChunkTypes.WAIT -> {
-                            processWaitCommand(collector, chunkCopy, workBuffer)
+                            processWaitCommand(stateFlow, chunkCopy, workBuffer)
                         }
                         DdmsChunkTypes.APNM -> {
-                            processApnmCommand(collector, chunkCopy, workBuffer)
+                            processApnmCommand(stateFlow, chunkCopy, workBuffer)
                         }
                         else -> {
                             logger.debug { "pid=$pid: Skipping unexpected chunk: $chunkCopy" }
@@ -180,7 +178,7 @@ internal class JdwpProcessPropertiesCollector(
     }
 
     private suspend fun processHeloReply(
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         packet: JdwpPacketView,
         workBuffer: ResizableBuffer
     ) {
@@ -191,7 +189,7 @@ internal class JdwpProcessPropertiesCollector(
             val heloChunkView = packet.ddmsChunks().first().clone()
             val heloChunk = DdmsHeloChunk.parse(heloChunkView, workBuffer)
             logger.debug { "pid=$pid: `HELO` chunk: $heloChunk" }
-            collector.collect {
+            stateFlow.update {
                 it.copy(
                     processName = filterFakeName(heloChunk.processName),
                     userId = heloChunk.userId,
@@ -208,7 +206,7 @@ internal class JdwpProcessPropertiesCollector(
     }
 
     private suspend fun processFeatReply(
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         packet: JdwpPacketView,
         workBuffer: ResizableBuffer
     ) {
@@ -218,16 +216,14 @@ internal class JdwpProcessPropertiesCollector(
             val featChunkView = packet.ddmsChunks().first().clone()
             val featChunk = DdmsFeatChunk.parse(featChunkView, workBuffer)
             logger.debug { "pid=$pid: `FEAT` chunk: $featChunk" }
-            collector.collect {
-                it.copy(features = featChunk.features)
-            }
+            stateFlow.update { it.copy(features = featChunk.features) }
         } else {
             logger.debug { "pid=$pid: `FEAT` chunk: Skipping empty (invalid) reply packet" }
         }
     }
 
     private suspend fun processReaqReply(
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         packet: JdwpPacketView,
         workBuffer: ResizableBuffer
     ) {
@@ -237,32 +233,30 @@ internal class JdwpProcessPropertiesCollector(
             val reaqChunkView = packet.ddmsChunks().first().clone()
             val reaqChunk = DdmsReaqChunk.parse(reaqChunkView, workBuffer)
             logger.debug { "pid=$pid: `REAQ` chunk: $reaqChunk" }
-            collector.collect {
-                it.copy(/*TODO*/)
-            }
+            stateFlow.update { it.copy(reaqEnabled = reaqChunk.enabled) }
         } else {
             logger.debug { "pid=$pid: `REAQ` chunk: Skipping empty (invalid) reply packet" }
         }
     }
 
     private suspend fun processWaitCommand(
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         chunkCopy: DdmsChunkView,
         workBuffer: ResizableBuffer
     ) {
         val waitChunk = DdmsWaitChunk.parse(chunkCopy, workBuffer)
         logger.debug { "pid=$pid: `WAIT` chunk: $waitChunk" }
-        collector.collect { it.copy(isWaitingForDebugger = true) }
+        stateFlow.update { it.copy(isWaitingForDebugger = true) }
     }
 
     private suspend fun processApnmCommand(
-        collector: Collector,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         chunkCopy: DdmsChunkView,
         workBuffer: ResizableBuffer
     ) {
         val apnmChunk = DdmsApnmChunk.parse(chunkCopy, workBuffer)
         logger.debug { "pid=$pid: `APNM` chunk: $apnmChunk" }
-        collector.collect {
+        stateFlow.update {
             it.copy(
                 processName = filterFakeName(apnmChunk.processName),
                 userId = apnmChunk.userId,
@@ -356,24 +350,5 @@ internal class JdwpProcessPropertiesCollector(
         val reaqCommand: JdwpPacketView,
         val featCommand: JdwpPacketView
     )
-
-    class Collector(
-      session: AdbSession,
-      pid: Int,
-      private val flowCollector: FlowCollector<JdwpProcessProperties>
-    ) {
-
-        private val logger = thisLogger(session)
-
-        private var currentProperties = JdwpProcessProperties(pid)
-
-        suspend fun collect(updater: (JdwpProcessProperties) -> JdwpProcessProperties) {
-            val newProperties = updater(currentProperties)
-            if (newProperties != currentProperties) {
-                logger.debug { "Collecting new process properties: old=$currentProperties, new=$newProperties" }
-                currentProperties = newProperties
-                flowCollector.emit(currentProperties)
-            }
-        }
-    }
 }
+

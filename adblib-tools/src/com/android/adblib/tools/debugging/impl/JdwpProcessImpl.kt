@@ -18,6 +18,7 @@ package com.android.adblib.tools.debugging.impl
 import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.thisLogger
+import com.android.adblib.tools.debugging.AtomicStateFlow
 import com.android.adblib.tools.debugging.JdwpProcess
 import com.android.adblib.tools.debugging.JdwpProcessProperties
 import com.android.adblib.tools.debugging.JdwpProcessPropertiesCollector
@@ -29,12 +30,24 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import java.io.EOFException
 import java.time.Duration
+
+/**
+ * Maximum amount of time to keep a JDWP connection open while waiting for "handshake"/"process info" packets.
+ *
+ * This cannot be too long since a process will only eventually only show up when all intro packets have been
+ * received and analyzed.
+ */
+private val PROCESS_PROPERTIES_READ_TIMEOUT = Duration.ofSeconds(2)
+
+/**
+ * Amount of time to wait before retrying a JDWP session to retrieve process properties
+ */
+private val PROCESS_PROPERTIES_RETRY_DURATION = Duration.ofSeconds(2)
 
 /**
  * Implementation of [JdwpProcess]
@@ -48,7 +61,7 @@ internal class JdwpProcessImpl(
 
     private val logger = thisLogger(session)
 
-    private val stateFlow = MutableStateFlow(JdwpProcessProperties(pid))
+    private val stateFlow = AtomicStateFlow(MutableStateFlow(JdwpProcessProperties(pid)))
 
     override val scope = deviceScope.createChildScope()
 
@@ -73,15 +86,15 @@ internal class JdwpProcessImpl(
                     // We set the exception only if the collector did not receive the DDMS HELO
                     // packet, so that we don't retry indefinitely.
                     if (!stateFlow.value.heloResponseReceived()) {
-                        stateFlow.emit(stateFlow.value.copy(exception = e))
+                        stateFlow.update { it.copy(exception = e) }
                     }
                 } catch (e: EOFException) {
                     // On API 27 and earlier, we may immediately get an "EOFException" if there
                     // already was an active JDWP connection to the process
-                    stateFlow.emit(stateFlow.value.copy(exception = e))
+                    stateFlow.update { it.copy(exception = e) }
                 } catch (t: Throwable) {
                     t.rethrowCancellation()
-                    stateFlow.emit(stateFlow.value.copy(exception = t))
+                    stateFlow.update { it.copy(exception = t) }
                 }
 
                 // Delay and retry if we did not collect all properties we want
@@ -108,16 +121,6 @@ internal class JdwpProcessImpl(
                 this.vmIdentifier != null
     }
 }
-
-/**
- * Maximum amount of time to keep a JDWP connection open while waiting for "handshake"/"process info" packets.
- *
- * This cannot be too long since a process will only eventually only show up when all intro packets have been
- * received and analyzed.
- */
-private val PROCESS_PROPERTIES_READ_TIMEOUT = Duration.ofSeconds(2)
-
-private val PROCESS_PROPERTIES_RETRY_DURATION = Duration.ofSeconds(2)
 
 private fun CoroutineScope.createChildScope(job: Job = SupervisorJob(coroutineContext.job)): CoroutineScope {
     return CoroutineScope(this.coroutineContext + job)
