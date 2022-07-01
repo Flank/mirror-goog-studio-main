@@ -15,6 +15,7 @@
  */
 package com.android.tools.instrumentation.threading.agent;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -50,6 +51,30 @@ public class AgentTest {
     @Before
     public void setUp() {
         ThreadingCheckerTrampoline.installHook(mockThreadingCheckerHook);
+    }
+
+    @Test
+    public void testAgentIsEnabledByDefault() {
+        assertThat(Agent.shouldDisableThreadingAgent()).isFalse();
+    }
+
+    @Test
+    public void testAgentCanBeDisabledUsingSystemProperty() {
+        String propertyName = "android.studio.instrumentation.threading.agent.disable";
+        String origPropValue = System.getProperty(propertyName);
+        try {
+            System.setProperty(propertyName, "faLSE");
+            assertThat(Agent.shouldDisableThreadingAgent()).isFalse();
+
+            System.setProperty(propertyName, "tRuE");
+            assertThat(Agent.shouldDisableThreadingAgent()).isTrue();
+        } finally {
+            if (origPropValue != null) {
+                System.setProperty(propertyName, origPropValue);
+            } else {
+                System.clearProperty(propertyName);
+            }
+        }
     }
 
     @Test

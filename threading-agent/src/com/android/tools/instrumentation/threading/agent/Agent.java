@@ -32,8 +32,19 @@ public class Agent {
     static Instrumentation instrumentation;
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
+        if (shouldDisableThreadingAgent()) {
+            LOGGER.info("Threading agent is disabled. Not instrumenting the code.");
+            return;
+        }
         Agent.instrumentation = instrumentation;
         instrumentation.addTransformer(new Transformer(AnnotationMappings.create()));
         LOGGER.info("Threading agent has been loaded.");
+    }
+
+    static boolean shouldDisableThreadingAgent() {
+        String disableThreadingAgent =
+                System.getProperty(
+                        "android.studio.instrumentation.threading.agent.disable", "false");
+        return disableThreadingAgent.equalsIgnoreCase("true");
     }
 }
