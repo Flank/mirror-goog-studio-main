@@ -15,7 +15,7 @@
  */
 package com.android.adblib.tools.debugging
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.ByteBufferAdbOutputChannel
 import com.android.adblib.DeviceSelector
 import com.android.adblib.thisLogger
@@ -55,9 +55,9 @@ private val EARLY_PROCESS_NAMES = arrayOf("<pre-initialized>", "")
  * Reads [JdwpProcessProperties] from a JDWP connection.
  */
 internal class JdwpProcessPropertiesCollector(
-    val session: AdbLibSession,
-    val device: DeviceSelector,
-    val pid: Int
+  val session: AdbSession,
+  val device: DeviceSelector,
+  val pid: Int
 ) {
 
     private val logger = thisLogger(session)
@@ -358,9 +358,9 @@ internal class JdwpProcessPropertiesCollector(
     )
 
     class Collector(
-        session: AdbLibSession,
-        pid: Int,
-        private val flowCollector: FlowCollector<JdwpProcessProperties>
+      session: AdbSession,
+      pid: Int,
+      private val flowCollector: FlowCollector<JdwpProcessProperties>
     ) {
 
         private val logger = thisLogger(session)

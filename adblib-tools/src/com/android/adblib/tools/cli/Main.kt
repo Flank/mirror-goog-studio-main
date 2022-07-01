@@ -16,7 +16,7 @@
 package com.android.adblib.tools.cli
 
 import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.tools.Host
 import kotlinx.coroutines.runBlocking
@@ -48,7 +48,7 @@ object Main {
             // TODO Move to an AdbChannelProvider that knows how to spawn and ADB server.
             // This one assume it is already up and running which is fine for our current needs.
             val host: AdbLibHost = Host(StdLoggerFactory())
-            val session = AdbLibSession.create(host)
+            val session = AdbSession.create(host)
 
             var success : Boolean
             host.use {
@@ -60,7 +60,7 @@ object Main {
         }
     }
 
-    private suspend fun run(session : AdbLibSession, args: Array<String>) : Boolean {
+    private suspend fun run(session : AdbSession, args: Array<String>) : Boolean {
         val arguments = Arguments(args)
 
         // Consume all FLAGS arguments (stop at CMD_FLAGS)

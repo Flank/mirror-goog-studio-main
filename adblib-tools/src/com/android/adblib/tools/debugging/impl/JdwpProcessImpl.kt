@@ -15,7 +15,7 @@
  */
 package com.android.adblib.tools.debugging.impl
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.thisLogger
 import com.android.adblib.tools.debugging.JdwpProcess
@@ -40,10 +40,10 @@ import java.time.Duration
  * Implementation of [JdwpProcess]
  */
 internal class JdwpProcessImpl(
-    session: AdbLibSession,
-    override val device: DeviceSelector,
-    deviceScope: CoroutineScope,
-    override val pid: Int
+  session: AdbSession,
+  override val device: DeviceSelector,
+  deviceScope: CoroutineScope,
+  override val pid: Int
 ) : JdwpProcess, AutoCloseable {
 
     private val logger = thisLogger(session)

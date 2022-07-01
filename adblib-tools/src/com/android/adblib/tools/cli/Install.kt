@@ -15,7 +15,7 @@
  */
 package com.android.adblib.tools.cli
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.tools.InstallException
 import com.android.adblib.tools.install
@@ -31,7 +31,7 @@ internal class Install : DeviceCommand("install")  {
         println("Usage: install [PM_FLAGS] APK,[APKs]")
     }
 
-    override fun run(session: AdbLibSession, device : DeviceSelector, args: Arguments) : Boolean {
+    override fun run(session: AdbSession, device : DeviceSelector, args: Arguments) : Boolean {
         val logger = thisLogger(session.host)
         val options = mutableListOf<String>()
         val apks = mutableListOf<Path>()

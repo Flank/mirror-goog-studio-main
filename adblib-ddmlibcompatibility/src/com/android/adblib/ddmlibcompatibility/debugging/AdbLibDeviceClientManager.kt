@@ -15,7 +15,7 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.DeviceState
 import com.android.adblib.createDeviceScope
@@ -53,7 +53,7 @@ internal class AdbLibDeviceClientManager(
 
     private val deviceSelector = DeviceSelector.fromSerialNumber(iDevice.serialNumber)
 
-    private val session: AdbLibSession
+    private val session: AdbSession
         get() = clientManager.session
 
     private val retryDelay = Duration.ofSeconds(2)

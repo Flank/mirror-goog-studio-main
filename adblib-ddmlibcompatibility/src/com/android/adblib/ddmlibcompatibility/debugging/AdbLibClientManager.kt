@@ -15,7 +15,7 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.thisLogger
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
@@ -23,9 +23,9 @@ import com.android.ddmlib.clientmanager.ClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
 
 /**
- * Implementation of ddmlib's [ClientManager] using [AdbLibSession] services.
+ * Implementation of ddmlib's [ClientManager] using [AdbSession] services.
  */
-internal class AdbLibClientManager(val session: AdbLibSession) : ClientManager {
+internal class AdbLibClientManager(val session: AdbSession) : ClientManager {
 
     private val logger = thisLogger(session)
 

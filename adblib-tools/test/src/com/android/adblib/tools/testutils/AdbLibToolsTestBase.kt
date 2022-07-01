@@ -19,7 +19,7 @@ import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.AdbHostServices
 import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.SOCKET_CONNECT_TIMEOUT_MS
 import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
@@ -47,7 +47,7 @@ open class AdbLibToolsTestBase {
         val host = registerCloseable(TestingAdbLibHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
         val session =
-            AdbLibSession.create(
+            AdbSession.create(
                 host,
                 channelProvider,
                 Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
@@ -79,8 +79,8 @@ open class AdbLibToolsTestBase {
     private fun createSession(
         host: AdbLibHost,
         channelProvider: AdbChannelProvider
-    ): AdbLibSession {
-        return AdbLibSession.create(
+    ): AdbSession {
+        return AdbSession.create(
             host,
             channelProvider,
             Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)

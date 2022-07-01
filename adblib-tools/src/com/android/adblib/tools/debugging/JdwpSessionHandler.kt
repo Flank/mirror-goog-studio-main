@@ -16,7 +16,7 @@
 package com.android.adblib.tools.debugging
 
 import com.android.adblib.AdbDeviceServices
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.tools.debugging.impl.JdwpSessionHandlerImpl
 import com.android.adblib.tools.debugging.packets.JdwpPacketView
@@ -65,9 +65,9 @@ internal interface JdwpSessionHandler : AutoCloseable {
     companion object {
 
         suspend fun create(
-            session: AdbLibSession,
-            device: DeviceSelector,
-            pid: Int
+          session: AdbSession,
+          device: DeviceSelector,
+          pid: Int
         ): JdwpSessionHandler {
             val channel = session.deviceServices.jdwp(device, pid)
             channel.closeOnException {

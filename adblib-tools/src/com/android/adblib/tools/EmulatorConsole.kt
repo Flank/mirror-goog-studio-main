@@ -17,8 +17,8 @@ package com.android.adblib.tools
 
 import com.android.adblib.AdbChannel
 import com.android.adblib.AdbChannelProviderFactory
-import com.android.adblib.AdbLibSession
-import com.android.adblib.testing.FakeAdbLibSession
+import com.android.adblib.AdbSession
+import com.android.adblib.testing.FakeAdbSession
 import com.android.adblib.toChannelReader
 import com.android.adblib.utils.ResizableBuffer
 import kotlinx.coroutines.runBlocking
@@ -149,7 +149,7 @@ private const val EMULATOR_CONSOLE_NEWLINE = "\r\n"
  *
  * @throws EmulatorCommandException if authentication fails
  */
-suspend fun AdbLibSession.openEmulatorConsole(
+suspend fun AdbSession.openEmulatorConsole(
     address: InetSocketAddress,
     authTokenPath: Path = defaultAuthTokenPath()
 ): EmulatorConsole =
@@ -166,7 +166,7 @@ suspend fun AdbLibSession.openEmulatorConsole(
  *
  * @throws EmulatorCommandException if authentication fails
  */
-suspend fun AdbLibSession.openEmulatorConsole(
+suspend fun AdbSession.openEmulatorConsole(
     address: InetSocketAddress,
     authTokenProvider: suspend () -> String
 ): EmulatorConsole {
@@ -195,7 +195,7 @@ fun defaultAuthTokenPath(): Path =
 /** Simple wrapper around EmulatorConsole for manual integration testing. */
 fun main(args: Array<String>) {
     runBlocking {
-        FakeAdbLibSession().openEmulatorConsole(localConsoleAddress(args[0].toInt())).use {
+        FakeAdbSession().openEmulatorConsole(localConsoleAddress(args[0].toInt())).use {
             println("Connected to emulator")
             println("AVD name: ${it.avdName()}")
             println("AVD path: ${it.avdPath()}")

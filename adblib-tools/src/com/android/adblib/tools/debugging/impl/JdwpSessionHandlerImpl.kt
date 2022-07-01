@@ -18,7 +18,7 @@ package com.android.adblib.tools.debugging.impl
 import com.android.adblib.AdbChannel
 import com.android.adblib.AdbInputChannel
 import com.android.adblib.AdbInputChannelSlice
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.AdbOutputChannel
 import com.android.adblib.skipRemaining
 import com.android.adblib.thisLogger
@@ -37,9 +37,9 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 
 internal class JdwpSessionHandlerImpl(
-    session: AdbLibSession,
-    private val channel: AdbChannel,
-    private val pid: Int
+  session: AdbSession,
+  private val channel: AdbChannel,
+  private val pid: Int
 ) : JdwpSessionHandler {
 
     private val logger = thisLogger(session)
@@ -99,10 +99,10 @@ internal class JdwpSessionHandlerImpl(
     }
 
     class HandshakeHandler(
-        session: AdbLibSession,
-        private val pid: Int,
-        private val inputChannel: AdbInputChannel,
-        private val outputChannel: AdbOutputChannel
+      session: AdbSession,
+      private val pid: Int,
+      private val inputChannel: AdbInputChannel,
+      private val outputChannel: AdbOutputChannel
     ) {
 
         private val logger = thisLogger(session)
