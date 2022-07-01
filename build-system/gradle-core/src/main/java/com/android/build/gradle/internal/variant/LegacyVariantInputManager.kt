@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocati
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.ComponentType
 import org.gradle.api.NamedDomainObjectContainer
@@ -52,7 +51,7 @@ class LegacyVariantInputManager(
 
     override val buildTypeContainer: NamedDomainObjectContainer<BuildType> =
         dslServices.domainObjectContainer(
-            BuildType::class.java, BuildTypeFactory(dslServices)
+            BuildType::class.java, BuildTypeFactory(dslServices, componentType)
         )
     override val productFlavorContainer: NamedDomainObjectContainer<ProductFlavor> =
         dslServices.domainObjectContainer(

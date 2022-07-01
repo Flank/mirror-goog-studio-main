@@ -235,7 +235,7 @@ class ModelBuilderTest {
         Mockito.`when`(globalConfig.services).thenReturn(dslServices)
 
         return VariantModelImpl(
-            VariantInputModelBuilder(dslServices).toModel(),
+            VariantInputModelBuilder(ComponentTypeImpl.BASE_APK, dslServices).toModel(),
             { "debug" },
             { variantList },
             { testComponentList },

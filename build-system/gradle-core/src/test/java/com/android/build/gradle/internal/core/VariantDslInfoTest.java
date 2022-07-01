@@ -355,7 +355,9 @@ public class VariantDslInfoTest {
         defaultConfig.applicationId("com.foo");
         flavorConfig = dslServices.newDecoratedInstance(ProductFlavor.class, "flavor", dslServices);
         flavorConfig.dimension("dimension1");
-        buildType = dslServices.newDecoratedInstance(BuildType.class, "debug", dslServices);
+        buildType =
+                dslServices.newDecoratedInstance(
+                        BuildType.class, "debug", dslServices, ComponentTypeImpl.BASE_APK);
     }
 
     private SigningConfig signingConfig(String name) {

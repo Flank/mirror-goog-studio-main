@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.plugins.AppPlugin
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
+import com.android.builder.core.ComponentTypeImpl
 import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.internal.CopyOfTester
 import com.android.testutils.truth.PathSubject
@@ -68,7 +69,10 @@ class BuildTypeTest {
 
     @Test
     fun testBuildConfigOverride() {
-        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java,
+            "someBuildType",
+            dslServices,
+            ComponentTypeImpl.BASE_APK)
 
         Truth.assertThat(debugBuildType).isNotNull()
         debugBuildType.buildConfigField("String", "name", "sensitiveValue")
@@ -80,7 +84,10 @@ class BuildTypeTest {
 
     @Test
     fun testResValueOverride() {
-        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java,
+            "someBuildType",
+            dslServices,
+            ComponentTypeImpl.BASE_APK)
 
         Truth.assertThat(debugBuildType).isNotNull()
         debugBuildType.resValue("String", "name", "sensitiveValue")
@@ -94,14 +101,20 @@ class BuildTypeTest {
     fun testInitWith() {
         CopyOfTester.assertAllGettersCalled(
             BuildType::class.java,
-            dslServices.newDecoratedInstance(BuildType::class.java, "original", dslServices),
+            dslServices.newDecoratedInstance(BuildType::class.java,
+                "original",
+                dslServices,
+                ComponentTypeImpl.BASE_APK),
             listOf(
                 // Extensions are not copied as AGP doesn't manage them
                 "getExtensions",
                 "isZipAlignEnabled\$annotations"
             )
         ) { original: BuildType ->
-            val copy = dslServices.newDecoratedInstance(BuildType::class.java, original.name, dslServices)
+            val copy = dslServices.newDecoratedInstance(BuildType::class.java,
+                original.name,
+                dslServices,
+                ComponentTypeImpl.BASE_APK)
             copy.initWith(original)
             // Ndk and ndkConfig refer to the same object
             original.ndk
@@ -121,7 +134,10 @@ class BuildTypeTest {
     @Test
     fun setProguardFilesTest() {
         val buildType : com.android.build.api.dsl.BuildType =
-            dslServices.newDecoratedInstance(BuildType::class.java, "someBuildType", dslServices)
+            dslServices.newDecoratedInstance(BuildType::class.java,
+                "someBuildType",
+                dslServices,
+                ComponentTypeImpl.BASE_APK)
         buildType.apply {
             // Check set replaces
             proguardFiles += dslServices.file("replaced")

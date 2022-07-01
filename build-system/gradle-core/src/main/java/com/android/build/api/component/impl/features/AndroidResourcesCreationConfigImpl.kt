@@ -89,14 +89,6 @@ class AndroidResourcesCreationConfigImpl(
             }
             val newResourceShrinker =
                 component.services.projectOptions[BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER]
-            if (dslInfo.componentType.isDynamicFeature) {
-                internalServices
-                    .issueReporter
-                    .reportError(
-                        IssueReporter.Type.GENERIC,
-                        "Resource shrinking must be configured for base module.")
-                return false
-            }
             if (!newResourceShrinker && component.global.hasDynamicFeatures) {
                 val message = String.format(
                     "Resource shrinker for multi-apk applications can be enabled via " +
@@ -105,12 +97,6 @@ class AndroidResourcesCreationConfigImpl(
                 internalServices
                     .issueReporter
                     .reportError(IssueReporter.Type.GENERIC, message)
-                return false
-            }
-            if (dslInfo.componentType.isAar) {
-                internalServices
-                    .issueReporter
-                    .reportError(IssueReporter.Type.GENERIC, "Resource shrinker cannot be used for libraries.")
                 return false
             }
             if (component is ConsumableCreationConfig && !component.minifiedEnabled) {

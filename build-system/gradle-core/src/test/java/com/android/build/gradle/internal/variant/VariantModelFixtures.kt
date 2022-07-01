@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.builder.core.BuilderConstants
+import com.android.builder.core.ComponentType
 import com.google.common.collect.ImmutableList
 import org.gradle.api.Named
 import org.mockito.Mockito
@@ -61,11 +62,12 @@ interface Container<T: Named> {
  * After running the DSL, use [toModel]
  */
 class VariantInputModelBuilder(
+    private val componentType: ComponentType,
     private val dslServices: DslServices = createDslServices()
 ): VariantInputModelDsl {
     val defaultConfig: DefaultConfig = dslServices.newDecoratedInstance(DefaultConfig::class.java, BuilderConstants.MAIN, dslServices)
     val buildTypes: ContainerImpl<BuildType> = ContainerImpl { name ->
-        dslServices.newDecoratedInstance(BuildType::class.java, name, dslServices)
+        dslServices.newDecoratedInstance(BuildType::class.java, name, dslServices, componentType)
     }
     val productFlavors: ContainerImpl<ProductFlavor> = ContainerImpl { name ->
         dslServices.newDecoratedInstance(ProductFlavor::class.java, name, dslServices)

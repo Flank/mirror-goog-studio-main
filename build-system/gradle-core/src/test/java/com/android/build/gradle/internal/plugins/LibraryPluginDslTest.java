@@ -121,11 +121,10 @@ public class LibraryPluginDslTest {
     }
 
     @Test
-    public void testResourceShrinker() throws Exception {
+    public void testResourceShrinkerWithPostProcessing() throws Exception {
         BuildType debug = android.getBuildTypes().getByName("debug");
-        debug.getPostprocessing().setRemoveUnusedResources(true);
         try {
-            plugin.createAndroidTasks(project);
+            debug.getPostprocessing().setRemoveUnusedResources(true);
             fail("Expected resource shrinker error");
         } catch (EvalIssueException e) {
             assertThat(e)
@@ -134,6 +133,21 @@ public class LibraryPluginDslTest {
         }
 
         debug.getPostprocessing().setRemoveUnusedResources(false);
+        plugin.createAndroidTasks(project);
+    }
+
+    @Test
+    public void testResourceShrinker() throws Exception {
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        try {
+            debug.setShrinkResources(true);
+            fail("Expected resource shrinker error");
+        } catch (EvalIssueException e) {
+            assertThat(e)
+                    .hasMessageThat()
+                    .isEqualTo("Resource shrinker cannot be used for libraries.");
+        }
+        debug.setShrinkResources(false);
         plugin.createAndroidTasks(project);
     }
 }

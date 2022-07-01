@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.model.SyncIssue
 import com.android.testutils.AbstractReturnGivenReturnExpectTest
 import com.google.common.truth.Truth
@@ -36,7 +37,7 @@ abstract class AbstractVariantInputModelTest<ResultT>:
      * and product flavors, instantiated and configured via Kotlin DSL
      */
     fun android(action: VariantInputModelDsl.() -> Unit): TestVariantInputModel {
-        val modelBuilder = VariantInputModelBuilder()
+        val modelBuilder = VariantInputModelBuilder(ComponentTypeImpl.BASE_APK)
         if (defaultBuildTypes) {
             modelBuilder.createDefaults()
         }

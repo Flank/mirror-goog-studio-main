@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.variant.VariantInputModelBuilder;
 import com.android.build.gradle.internal.variant.VariantModel;
 import com.android.build.gradle.internal.variant.VariantModelImpl;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.model.v2.ide.ProjectType;
 import com.google.common.collect.Lists;
@@ -100,7 +101,10 @@ public class ModelBuilderTest {
         // Register a builder for the custom tooling model
         VariantModel variantModel =
                 new VariantModelImpl(
-                        new VariantInputModelBuilder(FakeServices.createDslServices()).toModel(),
+                        new VariantInputModelBuilder(
+                                        ComponentTypeImpl.BASE_APK,
+                                        FakeServices.createDslServices())
+                                .toModel(),
                         extension::getTestBuildType,
                         () -> variantList,
                         () -> testComponentList,
