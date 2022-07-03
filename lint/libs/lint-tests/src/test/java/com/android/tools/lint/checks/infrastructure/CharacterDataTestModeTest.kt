@@ -67,4 +67,29 @@ class CharacterDataTestModeTest {
         val modified = transform(before)
         assertEquals(after.contents, modified)
     }
+
+    @Suppress("CheckTagEmptyBody")
+    @Test
+    fun testEmpty() {
+        val before = xml(
+            "res/values/strings.xml",
+            """
+              <resources>
+                <string name="test"></string>
+              </resources>
+            """
+        ).indented()
+
+        val after = xml(
+            "res/values/strings.xml",
+            """
+            <resources>
+              <string name="test"><![CDATA[]]></string>
+            </resources>
+            """
+        ).indented()
+
+        val modified = transform(before)
+        assertEquals(after.contents, modified)
+    }
 }

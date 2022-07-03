@@ -99,8 +99,8 @@ class CharacterDataTestMode : SourceTransformationTestMode(
 
             // Skip strings that already use character data, or are resource URLs, or contain nested markup
             if (!span.contains(CDATA_PREFIX) && !span.trim().startsWith("@") && !span.contains("<")) {
-                edits.add(Edit(next, next, CDATA_PREFIX, true))
-                edits.add(Edit(end, end, CDATA_SUFFIX, false))
+                edits.add(Edit(next, next, CDATA_PREFIX, false))
+                edits.add(Edit(end, end, CDATA_SUFFIX, true))
             }
 
             offset = end
