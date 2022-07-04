@@ -599,15 +599,6 @@ abstract class ComponentImpl(
     }
 
     /**
-     * adds renderscript sources if present.
-     */
-    open fun addRenderscriptSources(
-        sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        // not active by default, only sub types will have renderscript enabled.
-    }
-
-    /**
      * adds databinding sources to the list of sources.
      */
     open fun addDataBindingSources(
