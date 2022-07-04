@@ -30,6 +30,11 @@
 </manifest>
 
 @result
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example.app1" >
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application/>
+</manifest>
 
 @errors
 ERROR:Unsupported tools:selector="com.example.lib1" found on node uses-permission#android.permission.INTERNET at ManifestMerger2Test0_main.xml:22:5-23:69
