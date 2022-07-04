@@ -12,11 +12,12 @@
     <uses-sdk
             android:minSdkVersion="21"
             android:targetSdkVersion="24" />
-
-    <activity
-            android:name="com.example.ActivityOne" />
-
+    <application android:name="com.example.test.TheApp" >
+        <activity android:name="com.example.test.ActivityOne" />
+    </application>
 </manifest>
+
+@result-same-as-main
 
 @errors
 ERROR:Package name 'example' at position ManifestMerger2Test0_main.xml:3:9-26 should contain at least one '.' \(dot\) character
