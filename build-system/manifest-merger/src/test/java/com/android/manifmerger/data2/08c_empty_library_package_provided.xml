@@ -128,8 +128,6 @@
 
 <manifest package="" />
 
-@result-same-as-main
-
 @errors
 
 ERROR:Missing 'package' declaration in manifest at ManifestMerger2Test1_lib1.xml:1:1-24

@@ -126,7 +126,10 @@
     </application>
 </manifest>
 
+
+
 @result
+
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.app1"
@@ -135,8 +138,7 @@
 
     <!-- A feature that is implicitly marked as required=true -->
     <uses-feature
-        android:name="com.example.SomeFeature0_DefaultTrue"
-        android:required="true"/>
+        android:name="com.example.SomeFeature0_DefaultTrue" />
 
     <!-- A feature that is implicitly marked as required=true -->
     <uses-feature
@@ -145,30 +147,24 @@
     <!-- A feature that is explicitly marked as required=true -->
     <uses-feature
         android:name="com.example.SomeFeature2_RequiredTrue"
-        android:required="true" />
+        android:required="booh!" />
 
     <!-- A feature that is explicitly marked as required=false -->
+# lib1 keeps it required=false but lib2 makes it switch to required=true
     <uses-feature
         android:name="com.example.SomeFeature3_RequiredFalse"
         android:required="true" />
 
     <!-- A feature that is explicitly marked as required=false. Duplicated. -->
+# in case of duplicated name, they are all modified.
     <uses-feature
         android:name="com.example.SomeFeature3_RequiredFalse"
-        android:required="false" />
+        android:required="true" />
 
     <!-- A feature that is explicitly marked as required=false -->
     <uses-feature
         android:name="com.example.SomeFeature4_RequiredFalse"
         android:required="false" />
-
-    <!-- Add a new feature that is implicitly marked as required=true -->
-    <uses-feature
-            android:name="com.example.SomeFeature5_RequiredTrue"
-            android:required="true" /> <!-- Add a new feature that is implicitly marked as required=false -->
-    <uses-feature
-            android:name="com.example.SomeFeature6_RequiredFalse"
-            android:required="true" />
 
     <application
         android:label="@string/app_name"
@@ -181,7 +177,17 @@
 
     </application>
 
+# new from lib1
+    <!-- Add a new feature that is implicitly marked as required=true -->
+    <uses-feature
+        android:name="com.example.SomeFeature5_RequiredTrue"
+        android:required="true" />
 
+# new from lib1, but lib2 makes it switch to required=true
+    <!-- Add a new feature that is implicitly marked as required=false -->
+    <uses-feature
+        android:name="com.example.SomeFeature6_RequiredFalse"
+        android:required="true" />
 
 </manifest>
 

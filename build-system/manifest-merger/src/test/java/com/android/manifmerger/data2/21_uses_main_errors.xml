@@ -56,8 +56,6 @@
 
 </manifest>
 
-@result-same-as-main
-
 @errors
 
 ERROR:Attribute uses-library#com.example.SomeLibrary2_RequiredTrue@required at ManifestMerger2Test0_main.xml:27:13-37 has an illegal value=\(booh!\), expected 'true' or 'false'

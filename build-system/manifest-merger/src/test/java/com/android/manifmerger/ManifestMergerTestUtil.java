@@ -16,8 +16,6 @@
 
 package com.android.manifmerger;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -41,7 +39,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,8 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ManifestMergerTestUtil {
 
@@ -127,37 +122,36 @@ public class ManifestMergerTestUtil {
      */
     private static final String DELIM_RESULT_KIND = "resultKind";
 
-    private static final Pattern DELIM_RESULT_SAME_AS = Pattern.compile("result-same-as-(.*)$");
-
     /**
-     * Loads test data for a given test case. The input (main + libs) are stored in temp files. A
-     * new destination temp file is created to store the actual result output. The expected result
-     * is actually kept in a string.
-     *
-     * <p>Data File Syntax:
-     *
+     * Loads test data for a given test case.
+     * The input (main + libs) are stored in temp files.
+     * A new destination temp file is created to store the actual result output.
+     * The expected result is actually kept in a string.
+     * <p>
+     * Data File Syntax:
      * <ul>
-     *   <li>Lines starting with # are ignored (anywhere, as long as # is the first char).
-     *   <li>Lines before the first {@code @delimiter} are ignored.
-     *   <li>Empty lines just after the {@code @delimiter} and before the first &lt; XML line are
-     *       ignored.
-     *   <li>Valid delimiters are {@code @main} for the XML of the main app manifest.
-     *   <li>Following delimiters are {@code @libXYZ}, read in the order of definition. The name can
-     *       be anything as long as it starts with "{@code @lib}".
+     * <li> Lines starting with # are ignored (anywhere, as long as # is the first char).
+     * <li> Lines before the first {@code @delimiter} are ignored.
+     * <li> Empty lines just after the {@code @delimiter}
+     *      and before the first &lt; XML line are ignored.
+     * <li> Valid delimiters are {@code @main} for the XML of the main app manifest.
+     * <li> Following delimiters are {@code @libXYZ}, read in the order of definition.
+     *      The name can be anything as long as it starts with "{@code @lib}".
      * </ul>
      *
      * @param testDataDirectory The resource directory name the data file is located in.
-     * @param filename The test data filename. If no extension is provided, this will try with .xml
-     *     or .txt. Must not be null.
-     * @param className The simple name of the test class, the manifest files include it in their
-     *     output.
+     * @param filename The test data filename. If no extension is provided, this will
+     *   try with .xml or .txt. Must not be null.
+     * @param className The simple name of the test class,
+     *                  the manifest files include it in their output.
      * @return A new {@link ManifestMergerTestUtil.TestFiles} instance. Must not be null.
      * @throws Exception when things fail to load properly.
      */
     @NonNull
     static TestFiles loadTestData(
-            @NonNull String testDataDirectory, @NonNull String filename, @NonNull String className)
-            throws Exception {
+            @NonNull String testDataDirectory,
+            @NonNull String filename,
+            @NonNull String className) throws Exception {
 
         String resName = testDataDirectory + "/" + filename;
         InputStream is = null;
@@ -215,8 +209,6 @@ public class ManifestMergerTestUtil {
                 }
                 if (!line.isEmpty() && line.charAt(0) == '@') {
                     delimiter = line.substring(1);
-                    Matcher matcher = DELIM_RESULT_SAME_AS.matcher(delimiter);
-
                     assertTrue(
                             "Unknown delimiter @" + delimiter + " in " + filename,
                             delimiter.startsWith(DELIM_OVERLAY)
@@ -230,8 +222,7 @@ public class ManifestMergerTestUtil {
                                     || delimiter.equals(DELIM_INJECT_ATTR)
                                     || delimiter.equals(DELIM_PACKAGE)
                                     || delimiter.equals(DELIM_DEPENDENCY_FEATURE_NAMES)
-                                    || delimiter.equals(DELIM_RESULT_KIND)
-                                    || matcher.matches());
+                                    || delimiter.equals(DELIM_RESULT_KIND));
 
                     skipEmpty = true;
 
@@ -242,14 +233,7 @@ public class ManifestMergerTestUtil {
 
                     if (delimiter.equals(DELIM_FAILS)) {
                         shouldFail = true;
-                    } else if (matcher.matches()) {
-                        // delimiter = matcher.group(1);
-                        assertWithMessage("@main should come before @result-same-as-main")
-                                .that(mainFile)
-                                .isNotNull();
-                        expectedResult.append(
-                                Files.asCharSource(mainFile, StandardCharsets.UTF_8).read());
-                        // delimiter = null;
+
                     } else if (!delimiter.equals(DELIM_ERRORS)
                             && !delimiter.equals(DELIM_FEATURES)
                             && !delimiter.equals(DELIM_INJECT_ATTR)
@@ -350,12 +334,9 @@ public class ManifestMergerTestUtil {
                 }
             }
 
-            assertThat(mainFile).isNotNull();
             assertNotNull("Missing @" + DELIM_MAIN + " in " + filename, mainFile);
-            assertWithMessage(
-                            "There should always be an expected result included in the test case.")
-                    .that(expectedResult.toString())
-                    .isNotEmpty();
+
+            assert mainFile != null;
 
             Collections.sort(libFiles);
 

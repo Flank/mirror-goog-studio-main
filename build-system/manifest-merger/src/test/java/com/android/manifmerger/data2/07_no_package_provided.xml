@@ -112,8 +112,6 @@
 # An empty library is not supported. It must be a valid XML file.
 <manifest/>
 
-@result-same-as-main
-
 
 @errors
 ERROR:Main AndroidManifest.xml at ManifestMerger2Test0_main.xml manifest:package attribute is not declared
