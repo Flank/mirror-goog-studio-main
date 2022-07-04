@@ -17,16 +17,11 @@
 package com.android.build.api.component.impl.features
 
 import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.impl.DirectoryEntry
-import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
-import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.VariantServices
 
 class RenderscriptCreationConfigImpl(
-    private val component: ConsumableCreationConfig,
     private val dslInfo: ConsumableComponentDslInfo,
     private val internalServices: VariantServices,
     override val renderscriptTargetApi: Int
@@ -42,21 +37,4 @@ class RenderscriptCreationConfigImpl(
     }
     override val dslRenderscriptNdkModeEnabled: Boolean
         get() = dslInfo.renderscriptNdkModeEnabled
-
-    override fun addRenderscriptSources(
-        sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        if (!renderscript.ndkModeEnabled.get()
-            && component.artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
-        ) {
-            sourceSets.add(
-                TaskProviderBasedDirectoryEntryImpl(
-                    name = "generated_renderscript",
-                    directoryProvider = component.artifacts.get(
-                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
-                    ),
-                )
-            )
-        }
-    }
 }
