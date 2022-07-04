@@ -5683,6 +5683,73 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs("Data for src/test/pkg/MapApiTest.java line 8:   requiresApi : 24");
     }
 
+    public void testExtensionFunction() {
+        // https://issuetracker.google.com/234358370
+        lint().files(
+                        manifest().minSdk(14),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import java.util.HashMap\n"
+                                        + "\n"
+                                        + "class TestClass {\n"
+                                        + "    private lateinit var map: HashMap<String, Float>\n"
+                                        + "    private var key1: String? = null\n"
+                                        + "    private var key2: String = \"\"\n"
+                                        + "\n"
+                                        + "    fun someFunction() {\n"
+                                        + "        key1 = \"key2\"\n"
+                                        + "        map.getOrDefault(key1, 0F)\n"
+                                        + "        map.getOrDefault(key2, 0F)\n"
+                                        + "    }\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/TestClass.kt:12: Error: Call requires API level 24 (current min is 14): java.util.Map#getOrDefault [NewApi]\n"
+                                + "        map.getOrDefault(key1, 0F)\n"
+                                + "            ~~~~~~~~~~~~\n"
+                                + "src/test/pkg/TestClass.kt:13: Error: Call requires API level 24 (current min is 14): java.util.HashMap#getOrDefault [NewApi]\n"
+                                + "        map.getOrDefault(key2, 0F)\n"
+                                + "            ~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
+    }
+
+    public void testGetOrDefault221280939() {
+        // https://issuetracker.google.com/221280939
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "fun test1(vararg args: String) {\n"
+                                        + "    val map: MutableMap<String, String> = mutableMapOf()\n"
+                                        + "    map.getOrDefault(\"foo\", \"bar\")\n"
+                                        + "    map.remove(\"foo\", \"bar\")\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "fun test2(vararg args: String) {\n"
+                                        + "    val map: MutableMap<String, String> = mutableMapOf()\n"
+                                        + "    map.getOrDefault(\"foo\", null)\n"
+                                        + "    map.remove(\"foo\", \"bar\")\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test.kt:3: Error: Call requires API level 24 (current min is 1): java.util.Map#getOrDefault [NewApi]\n"
+                                + "    map.getOrDefault(\"foo\", \"bar\")\n"
+                                + "        ~~~~~~~~~~~~\n"
+                                + "src/test.kt:4: Error: Call requires API level 24 (current min is 1): java.util.Map#remove [NewApi]\n"
+                                + "    map.remove(\"foo\", \"bar\")\n"
+                                + "        ~~~~~~\n"
+                                + "src/test.kt:9: Error: Call requires API level 24 (current min is 1): java.util.Map#getOrDefault [NewApi]\n"
+                                + "    map.getOrDefault(\"foo\", null)\n"
+                                + "        ~~~~~~~~~~~~\n"
+                                + "src/test.kt:10: Error: Call requires API level 24 (current min is 1): java.util.Map#remove [NewApi]\n"
+                                + "    map.remove(\"foo\", \"bar\")\n"
+                                + "        ~~~~~~\n"
+                                + "4 errors, 0 warnings");
+    }
+
     public void testObsoleteFolder() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=236018
         @Language("XML")
