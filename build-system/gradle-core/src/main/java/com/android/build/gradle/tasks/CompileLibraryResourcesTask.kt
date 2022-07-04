@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
@@ -31,6 +32,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
@@ -54,6 +56,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
 abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     @get:InputFiles

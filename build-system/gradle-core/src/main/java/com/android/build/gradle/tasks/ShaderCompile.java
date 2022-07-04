@@ -29,10 +29,12 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.services.BuildServicesKt;
+import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.ShaderProcessor;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
@@ -65,10 +67,9 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
 import org.gradle.process.ExecOperations;
 
-/**
- * Task to compile Shaders.
- */
+/** Task to compile Shaders. */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION})
 public abstract class ShaderCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()

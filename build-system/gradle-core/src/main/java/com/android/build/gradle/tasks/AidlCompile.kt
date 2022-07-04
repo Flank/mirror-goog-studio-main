@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -35,6 +36,7 @@ import com.android.builder.internal.compiler.AidlProcessor
 import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.DirectoryWalker.FileAction
 import com.android.builder.internal.incremental.DependencyData
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -73,6 +75,7 @@ import javax.inject.Inject
  * Task to compile aidl files. Supports incremental update.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
 abstract class AidlCompile : NonIncrementalTask() {
     @get:Input
     @get:Optional

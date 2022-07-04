@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import android.databinding.tool.DataBindingBuilder
 import com.android.build.api.component.impl.AnnotationProcessorImpl
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
@@ -25,10 +24,12 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.findKaptOrKspConfigurationsForVariant
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ArtifactView
@@ -45,6 +46,7 @@ import org.gradle.api.tasks.TaskProvider
 
 /** Task that runs before JavaCompile to collect information about annotation processors. */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
 abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     private lateinit var annotationProcessorArtifacts: ArtifactCollection
