@@ -113,21 +113,15 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
-import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
-import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
-import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
 import org.jetbrains.uast.UArrayAccessExpression
-import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -140,8 +134,6 @@ import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.skipParenthesizedExprUp
-import org.jetbrains.uast.toUElement
-import org.jetbrains.uast.util.isAssignment
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -593,140 +585,22 @@ fun assertionsEnabled(): Boolean = LintJavaUtils.assertionsEnabled()
  * Temporary workaround for
  * https://youtrack.jetbrains.com/issue/KTIJ-18765
  */
+// TODO(kotlin-uast-cleanup): remove this when a fix for https://youtrack.jetbrains.com/issue/KTIJ-18765 arrives.
 fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     val receiver = this.receiver
     // for normal arrays this is typically PsiArrayType; a PsiClassType
     // is a sign that it's an operator overload
-    val type = receiver.getExpressionType() as? PsiClassType ?: return null
+    if (receiver.getExpressionType() !is PsiClassType) return null
 
     // No UAST accessor method to find the corresponding get/set methods; see
     // https://youtrack.jetbrains.com/issue/KTIJ-18765
     // Instead we'll search ourselves.
 
     // First try Kotlin resolving service (base version, not FE1.0 variant)
-    val source = resolveKotlinCall(sourcePsi)
-    if (source is PsiMethod) {
-        return source
-    } // else can be KtFunction which is referenced by methods; see light member check below
-
-    val clz = type.resolve() ?: return null
-    val parent = this.uastParent as? UBinaryExpression
-    val isSetter = parent != null && parent.isAssignment()
-    val indices = this.indices
-    val parameterCount = indices.size
-    val methods = clz.findMethodsByName(if (isSetter) "set" else "get", true)
-
-    if (source != null) {
-        for (method in methods) {
-            if (method is KtLightMemberImpl<*> && method.lightMemberOrigin?.originalElement === source) {
-                return method
-            }
-        }
-
-        // Extension functions can be in a different compilation unit and therefore class.
-        // Try to find it more directly.
-        if (source is KtNamedFunction && source.isExtensionDeclaration()) {
-            val method = source.toUElement()
-            if (method is UMethod) {
-                return method
-            }
-        }
-    }
-
-    val expectedCount = if (isSetter) parameterCount + 1 else parameterCount
-    if (methods.isEmpty()) {
-        // Should not happen (if the code compiles)
-        return null
-    } else if (methods.size == 1) {
-        // There's only one set method; this must be it
-        val only = methods[0]
-        return if (expectedCount == only.parameterList.parametersCount) only else null
-    }
-
-    val arityCountMatch = methods.singleOrNull { method ->
-        val parameters = method.parameterList
-        parameters.parametersCount == expectedCount
-    }
-    if (arityCountMatch != null) {
-        // Only one method has the right number of parameters
-        return arityCountMatch
-    }
-
-    // Need to match by types
-    val typeEqualsMatch = methods.singleOrNull { method ->
-        val parameters = method.parameterList.parameters
-        if (parameters.size == expectedCount) {
-            var matches = true
-            for (i in 0 until parameterCount) {
-                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = true)) {
-                    matches = false
-                    break
-                }
-            }
-            if (isSetter && matches) {
-                // Check type of last parameter
-                val assignmentType = parent?.rightOperand?.getExpressionType()
-                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = true)) {
-                    matches = false
-                }
-            }
-            matches
-        } else {
-            false
-        }
-    }
-
-    if (typeEqualsMatch != null) {
-        // Only one type matched by type equality
-        return typeEqualsMatch
-    }
-
-    // Need to match by wildcard/erasure and hierarchy checks
-    val typeMatch = methods.firstOrNull { method ->
-        val parameters = method.parameterList.parameters
-        if (parameters.size == expectedCount) {
-            var matches = true
-            for (i in 0 until parameterCount) {
-                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = false)) {
-                    matches = false
-                    break
-                }
-            }
-            if (isSetter && matches) {
-                // Check type of last parameter
-                val assignmentType = parent?.rightOperand?.getExpressionType()
-                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = false)) {
-                    matches = false
-                }
-            }
-            matches
-        } else {
-            false
-        }
-    }
-
-    return typeMatch
-}
-
-// TODO(kotlin-uast-cleanup): remove this when a fix for https://youtrack.jetbrains.com/issue/KTIJ-18765 arrives.
-private fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
-    // First try Kotlin resolving service (base version, not FE1.0 variant)
     val ktElement = sourcePsi as? KtElement ?: return null
     val baseService = ApplicationManager.getApplication().getService(BaseKotlinUastResolveProviderService::class.java)
         ?: return null
     return baseService.resolveCall(ktElement)
-}
-
-private fun sameType(type1: PsiType?, type2: PsiType?, equalsOnly: Boolean): Boolean {
-    val equals = PsiTypesUtil.compareTypes(type1, type2, true)
-    if (equals || equalsOnly) {
-        return equals
-    }
-
-    type1 ?: return false
-    type2 ?: return false
-
-    return TypeConversionUtil.areTypesConvertible(type2, type1)
 }
 
 /**
