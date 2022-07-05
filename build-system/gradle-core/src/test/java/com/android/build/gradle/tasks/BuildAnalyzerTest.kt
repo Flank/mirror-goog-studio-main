@@ -17,19 +17,22 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.coverage.JacocoReportTask
+import com.android.build.gradle.internal.res.namespaced.CreateNonNamespacedLibraryManifestTask
+import com.android.build.gradle.internal.res.namespaced.StaticLibraryManifestTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
+import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
-import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
+import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
 import com.android.build.gradle.internal.tasks.JacocoTask
+import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
-import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
-import com.android.build.gradle.internal.tasks.ProcessJavaResTask
+import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import org.gradle.api.Task
@@ -77,6 +80,24 @@ class BuildAnalyzerTest {
             ManagedDeviceInstrumentationTestTask::class.java,
             DeviceSerialTestTask::class.java,
             ManagedDeviceInstrumentationTestResultAggregationTask::class.java,
+            CheckManifest::class.java,
+            CompatibleScreensManifest::class.java,
+            InvokeManifestMerger::class.java,
+            ProcessApplicationManifest::class.java,
+            ProcessLibraryManifest::class.java,
+            ProcessTestManifest::class.java,
+            StaticLibraryManifestTask::class.java,
+            CreateNonNamespacedLibraryManifestTask::class.java,
+            ManifestProcessorTask::class.java,
+            AssetPackManifestGenerationTask::class.java,
+            ProcessAssetPackManifestTask::class.java,
+            LinkManifestForAssetPackTask::class.java,
+            ProcessManifestForBundleTask::class.java,
+            ProcessManifestForMetadataFeatureTask::class.java,
+            ProcessManifestForInstantAppTask::class.java,
+            ProcessPackagedManifestTask::class.java,
+            ProcessMultiApkApplicationManifest::class.java,
+            GenerateManifestJarTask::class.java
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {

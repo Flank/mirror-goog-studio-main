@@ -26,4 +26,6 @@ enum class TaskCategoryLabel {
     COMPILATION,
     // Tasks that perform test invocation or execution
     TEST,
+    // Tasks that are related to manifest files 
+    MANIFEST
 }

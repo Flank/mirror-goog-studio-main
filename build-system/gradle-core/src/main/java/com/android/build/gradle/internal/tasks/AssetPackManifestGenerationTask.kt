@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -31,6 +32,7 @@ import java.io.File
  * build.gradle file, as well as the base package name of the project.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
 abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
     /**
      * The generated manifest file for the asset pack module.
