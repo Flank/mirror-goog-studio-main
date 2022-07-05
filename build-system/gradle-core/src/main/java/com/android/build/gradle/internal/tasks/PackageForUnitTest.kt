@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AndroidResources
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.internal.packaging.ApkFlinger
 import com.android.builder.packaging.PackagingUtils
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode
 import com.android.utils.FileUtils
@@ -56,6 +57,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.Deflater.BEST_SPEED
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
 abstract class PackageForUnitTest : NonIncrementalTask() {
 
     @get:InputFiles

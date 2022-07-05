@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.component.AndroidTestCreationConfig;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.testing.api.TestServer;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -40,6 +41,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 /** Task sending APKs out to a {@link TestServer} */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
 public abstract class TestServerTask extends NonIncrementalTask {
 
     TestServer testServer;

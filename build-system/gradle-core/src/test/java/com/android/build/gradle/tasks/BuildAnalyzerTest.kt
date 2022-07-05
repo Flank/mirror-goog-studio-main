@@ -16,9 +16,22 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.coverage.JacocoReportTask
+import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
+import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
+import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
+import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.LintCompile
+import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
+import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
+import com.android.build.gradle.internal.tasks.PackageForUnitTest
+import com.android.build.gradle.internal.tasks.ProcessJavaResTask
+import com.android.build.gradle.internal.tasks.TestServerTask
+import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import org.gradle.api.Task
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
@@ -33,9 +46,6 @@ class BuildAnalyzerTest {
         val allTasks = getAllTasks()
         // When annotations for all tasks are added,
         // can just assert missingTasks is empty
-        for (task in allTasks) {
-            println(task)
-        }
         val missingTasks = allTasks.filter {
             !it.isAnnotationPresent(BuildAnalyzer::class.java)
         }
@@ -55,7 +65,18 @@ class BuildAnalyzerTest {
             LintCompile::class.java,
             CompileLibraryResourcesTask::class.java,
             RenderscriptCompile::class.java,
-            ShaderCompile::class.java
+            ShaderCompile::class.java,
+            AndroidReportTask::class.java,
+            AndroidUnitTest::class.java,
+            DeviceProviderInstrumentTestTask::class.java,
+            JacocoReportTask::class.java,
+            TestServerTask::class.java,
+            GenerateTestConfig::class.java,
+            PackageForUnitTest::class.java,
+            JacocoTask::class.java,
+            ManagedDeviceInstrumentationTestTask::class.java,
+            DeviceSerialTestTask::class.java,
+            ManagedDeviceInstrumentationTestResultAggregationTask::class.java,
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {

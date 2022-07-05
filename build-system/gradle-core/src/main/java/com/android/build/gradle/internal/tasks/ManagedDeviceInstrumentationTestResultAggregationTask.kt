@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.test.report.ReportType
 import com.android.build.gradle.internal.test.report.TestReport
 import com.android.build.gradle.internal.testing.utp.UtpTestSuiteResultMerger
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
 import java.io.File
 import org.gradle.api.file.ConfigurableFileCollection
@@ -40,6 +41,7 @@ import org.gradle.work.DisableCachingByDefault
  * Aggregates UTP test result protos into one.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
 abstract class ManagedDeviceInstrumentationTestResultAggregationTask: NonIncrementalTask() {
 
     @get:InputFiles

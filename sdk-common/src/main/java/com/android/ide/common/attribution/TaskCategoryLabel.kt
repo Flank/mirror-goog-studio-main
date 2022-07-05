@@ -22,5 +22,8 @@ package com.android.ide.common.attribution
 * Each task has at least 1 field.
  **/
 enum class TaskCategoryLabel {
-    COMPILATION
+    // Tasks that perform compilation-related actions
+    COMPILATION,
+    // Tasks that perform test invocation or execution
+    TEST,
 }
