@@ -56,22 +56,6 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/AbstractFusedLibraryPlugin.kt"
-            line="56"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/AbstractPrivacySandboxPlugin.kt"
-            line="56"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
             file="src/main/java/com/android/build/gradle/internal/test/AbstractTestDataImpl.kt"
             line="66"/>
     </issue>
@@ -161,7 +145,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/analytics/AnalyticsEnabledTestVariant.kt"
-            line="89"/>
+            line="82"/>
     </issue>
 
     <issue
@@ -177,7 +161,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/AndroidPluginBaseServices.kt"
-            line="56"/>
+            line="54"/>
     </issue>
 
     <issue
@@ -185,7 +169,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/AndroidPluginBaseServices.kt"
-            line="62"/>
+            line="60"/>
     </issue>
 
     <issue
@@ -193,7 +177,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/AndroidPluginBaseServices.kt"
-            line="75"/>
+            line="73"/>
     </issue>
 
     <issue
@@ -201,7 +185,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/AndroidPluginBaseServices.kt"
-            line="98"/>
+            line="96"/>
     </issue>
 
     <issue
@@ -608,22 +592,6 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/FusedLibraryPlugin.kt"
-            line="55"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/FusedLibraryPlugin.kt"
-            line="63"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
             file="src/main/java/com/android/build/gradle/internal/fusedlibrary/FusedLibraryVariantScopeImpl.kt"
             line="37"/>
     </issue>
@@ -689,7 +657,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/LibraryVariantImpl.kt"
-            line="121"/>
+            line="120"/>
     </issue>
 
     <issue
@@ -713,7 +681,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/v2/NativeModelBuilder.kt"
-            line="64"/>
+            line="71"/>
     </issue>
 
     <issue
@@ -721,7 +689,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/v2/NativeModelBuilder.kt"
-            line="68"/>
+            line="75"/>
     </issue>
 
     <issue
@@ -745,23 +713,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/plugins/PrivacySandboxSdkPlugin.kt"
-            line="59"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/PrivacySandboxSdkPlugin.kt"
-            line="75"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/plugins/PrivacySandboxSdkPlugin.kt"
-            line="94"/>
+            line="92"/>
     </issue>
 
     <issue
@@ -961,7 +913,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="142"/>
+            line="151"/>
     </issue>
 
     <issue
@@ -1073,7 +1025,7 @@
         message="Do not use `java.nio.file.Files.copy(Path, Path)`. Instead, use `FileUtils.copyFile(Path, Path)` or Kotlin&apos;s `File#copyTo(File)`">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/AsarToApksTransform.kt"
-            line="72"/>
+            line="73"/>
     </issue>
 
     <issue
@@ -1081,7 +1033,7 @@
         message="This reference is unused: name">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DependencyReportTask.kt"
-            line="49"/>
+            line="51"/>
     </issue>
 
     <issue
@@ -1089,7 +1041,7 @@
         message="This reference is unused: name">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DependencyReportTask.kt"
-            line="56"/>
+            line="58"/>
     </issue>
 
     <issue
@@ -1137,7 +1089,7 @@
         message="This reference is unused: testApplicationId">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="216"/>
+            line="225"/>
     </issue>
 
     <issue
@@ -1145,7 +1097,7 @@
         message="This reference is unused: testApplicationId">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="312"/>
+            line="321"/>
     </issue>
 
     <issue
@@ -1153,7 +1105,7 @@
         message="This reference is unused: testInstrumentationRunner">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="484"/>
+            line="493"/>
     </issue>
 
     <issue
@@ -1161,7 +1113,7 @@
         message="This reference is unused: testHandleProfiling">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="527"/>
+            line="536"/>
     </issue>
 
     <issue
@@ -1169,7 +1121,7 @@
         message="This reference is unused: testFunctionalTest">
         <location
             file="src/main/java/com/android/build/gradle/internal/core/VariantDslInfoImpl.kt"
-            line="548"/>
+            line="557"/>
     </issue>
 
     <issue
@@ -1177,7 +1129,7 @@
         message="Avoid using `org.gradle.api.Project.exec` as it is incompatible with Gradle instant execution.">
         <location
             file="src/main/java/com/android/build/gradle/internal/ide/v2/NativeModelBuilder.kt"
-            line="56"/>
+            line="63"/>
     </issue>
 
     <issue
@@ -1201,7 +1153,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/featuresplit/FeatureSetMetadataWriterTask.kt"
-            line="127"/>
+            line="130"/>
     </issue>
 
     <issue
@@ -1217,7 +1169,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="58"/>
+            line="61"/>
     </issue>
 
     <issue
@@ -1225,7 +1177,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="60"/>
+            line="63"/>
     </issue>
 
     <issue
@@ -1249,7 +1201,7 @@
         message="Use `Integer.valueOf(index)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="79"/>
+            line="81"/>
     </issue>
 
     <issue
@@ -1257,7 +1209,7 @@
         message="Use `Integer.valueOf(libraryList.size)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="102"/>
+            line="104"/>
     </issue>
 
     <issue
@@ -1265,7 +1217,7 @@
         message="Use `Integer.valueOf(origIndex)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="112"/>
+            line="114"/>
     </issue>
 
     <issue
@@ -1273,7 +1225,7 @@
         message="Use `Integer.valueOf(libraryDep.libraryIndex)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="117"/>
+            line="119"/>
     </issue>
 
     <issue
@@ -1281,7 +1233,7 @@
         message="Use `Integer.valueOf(depIndex)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="120"/>
+            line="122"/>
     </issue>
 
     <issue
@@ -1289,7 +1241,7 @@
         message="Use `Integer.valueOf(depIndex)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="133"/>
+            line="135"/>
     </issue>
 
     <issue
@@ -1409,7 +1361,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/AsarToApksTransform.kt"
-            line="77"/>
+            line="78"/>
     </issue>
 
     <issue
@@ -1417,7 +1369,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleToApkTask.kt"
-            line="111"/>
+            line="113"/>
     </issue>
 
     <issue
@@ -1425,7 +1377,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleToStandaloneApkTask.kt"
-            line="124"/>
+            line="126"/>
     </issue>
 
     <issue
@@ -1449,7 +1401,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
-            line="797"/>
+            line="799"/>
     </issue>
 
 </issues>
