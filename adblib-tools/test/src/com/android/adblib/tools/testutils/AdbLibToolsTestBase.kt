@@ -69,7 +69,7 @@ open class AdbLibToolsTestBase {
         return fakeDevice
     }
 
-    internal fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
+    protected fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
         val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
         val session = registerCloseable(createSession(host, channelProvider))
