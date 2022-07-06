@@ -16,394 +16,275 @@
 
 package com.android.fakeadbserver;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
-import com.android.fakeadbserver.hostcommandhandlers.ListForwardCommandHandler;
-import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
-import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.Socket;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Handle a connection according to adb SERVICE.TXT and protocol.txt. In a nutshell, a smart
+ * connection is able to request HOST (adb server) services or LOCAL (adbd running on a device)
+ * services. The smart part is the "transport" part which allows to "route" service request to a
+ * device after the connection has been established with the HOST.
+ */
+
+// TODO: Rename this class SmartConnection (not doing it now to help review process but should
+// be in next CL).
 final class ConnectionHandler implements Runnable {
 
-    // The ADB protocol allows certain commands to address a single existing device on a/any
-    // transport. The following are commands that don't rely on wildcards on a transport level.
-    private static final Set<String> NON_WILDCARD_TRANSPORT_DEVICE_COMMANDS =
-            Collections.unmodifiableSet(
-                    new HashSet<>(
-                            Arrays.asList(
-                                    "version",
-                                    "kill",
-                                    "devices",
-                                    "devices-l",
-                                    "track-devices",
-                                    "track-devices-l",
-                                    "emulator",
-                                    "transport",
-                                    "transport-usb",
-                                    "transport-local",
-                                    "transport-any",
-                                    "host-features",
-                                    ListForwardCommandHandler.COMMAND,
-                                    MdnsCommandHandler.COMMAND,
-                                    PairCommandHandler.COMMAND)));
+    @NonNull private final FakeAdbServer mServer;
+    @NonNull private final SmartSocket mSmartSocket;
+    private DeviceState mTargetDevice = null;
+    private boolean mKeepRunning;
 
-    @NonNull
-    private final FakeAdbServer mServer;
-
-    @NonNull private final SocketChannel mSocketChannel;
-
-    @NonNull
-    private final Socket mSocket;
-
-    ConnectionHandler(@NonNull FakeAdbServer server, @NonNull SocketChannel socketChannel) {
+    ConnectionHandler(@NonNull FakeAdbServer server, @NonNull SocketChannel socket) {
         mServer = server;
-        mSocketChannel = socketChannel;
-        mSocket = socketChannel.socket();
+        mSmartSocket = new SmartSocket(socket);
+        mKeepRunning = true;
     }
 
+    /**
+     * Repeatedly read host service requests and serve them until a local request is received. After
+     * service the local request, the connection is closed. Note that a host request can also
+     * request the connection to end.
+     */
     @Override
     public void run() {
-        boolean keepRunning = true;
-        DeviceState targetDevice = null;
-        try {
-            while (keepRunning) {
-                if (targetDevice == null) {
-                    HostRequest request = parseHostRequest();
-                    if (request == null) {
-                        // Something went wrong with the request, and parseHostRequest already
-                        // sent a failure message with the context.
-                        return;
-                    }
-
-                    if (request.mCommand.startsWith("transport")) {
-                        targetDevice = request.mTargetDevice;
-                        sendOkay();
-                    } else {
-                        HostCommandHandler handler =
-                                mServer.getHostCommandHandler(request.mCommand);
-                        if (handler != null) {
-                            keepRunning =
-                                    handler.invoke(
-                                            mServer,
-                                            mSocket,
-                                            request.mTargetDevice,
-                                            request.mArguments);
-                        } else {
-                            String err =
-                                    String.format(
-                                            "Unimplemented host command received: '%s'",
-                                            request.mCommand);
-                            sendFailWithReason(err);
-                        }
-                    }
+        ServiceRequest request = new ServiceRequest("No request processed");
+        try (mSmartSocket) {
+            while (mKeepRunning) {
+                request = mSmartSocket.readServiceRequest();
+                if (request.peekToken().startsWith("host")) {
+                    handleHostService(request);
                 } else {
-                    Request request = parseDeviceRequest();
-                    if (request == null) {
-                        // Something went wrong with the request, and parseDeviceRequest already
-                        // sent a failure message with the context.
-                        return;
-                    }
-                    for (DeviceCommandHandler handler : mServer.getHandlers()) {
-                        if (handler.accept(
-                                mServer,
-                                mSocket,
-                                targetDevice,
-                                request.mCommand,
-                                request.mArguments)) {
-                            return;
-                        }
-                    }
-                    String err =
-                            String.format(
-                                    "Command not handled '%s' '%s'",
-                                    request.mCommand, request.mArguments);
-                    sendFailWithReason(err);
-                    // If we receive an unknown command, exit the loop
+                    handleDeviceService(request);
+                }
+            }
+        } catch (Exception e) {
+            PrintWriter pw = new PrintWriter(new StringWriter());
+            pw.print("Unable to process '" + request.original() + "'\n");
+            e.printStackTrace(pw);
+            mSmartSocket.sendFailWithReason("Exception occurred when processing request. " + pw);
+        }
+    }
+
+    private void handleHostService(@NonNull ServiceRequest request) throws IOException {
+        switch (request.nextToken()) {
+            case "host": // host:command
+                //  'host:command' can also be used to run a HOST command target a device. In that
+                // case it should be interpreted as 'any single device or emulator connected
+                // to/running
+                // on the HOST'.
+                //  e.g.: Port forwarding is a HOST command which targets a device.
+                List<DeviceState> devices = findAnyDevice();
+                if (devices.size() == 1) {
+                    mTargetDevice = devices.get(0);
+                }
+                break;
+            case "host-usb": // host-usb:command
+                List<DeviceState> devicesUSB =
+                        findDevicesWithProtocol(DeviceState.HostConnectionType.USB);
+                if (devicesUSB.size() != 1) {
+                    reportDevicesErrorAndStop(devicesUSB.size());
                     return;
                 }
-            }
-        } catch (IOException e) {
-            logErrorVerbose(
-                    e,
-                    "An IOException was thrown during processing of an ADB request. "
-                            + "This may be expected if the peer socket was closed. "
-                            + "The request will terminate.");
-            sendFailWithReason("IOException occurred when processing request.");
-        } catch (Throwable t) {
-            logErrorVerbose(
-                    t,
-                    "An unexpected exception was thrown during processing of an ADB "
-                            + "request. This may be expected if the peer socket was closed. "
-                            + "The request will terminate.");
-        } finally {
-            try {
-                mSocket.close();
-            } catch (IOException e) {
-                logErrorVerbose(
-                        e,
-                        "An IOException was thrown during when the socket used for "
-                                + "an ADB request. The request will terminate.");
-            }
-        }
-    }
-
-    @Nullable
-    private HostRequest parseHostRequest() throws IOException {
-        byte[] lengthString = new byte[4];
-        readFully(lengthString);
-        int requestLength = Integer.parseInt(new String(lengthString), 16);
-        assert requestLength > "host:".length();
-
-        byte[] payloadBytes = new byte[requestLength];
-        readFully(payloadBytes);
-        String payload = new String(payloadBytes, US_ASCII);
-
-        String[] splitPayload = payload.split(":", 2);
-        if (splitPayload.length < 2) {
-            String err = String.format("Invalid host command: '%s'", payload);
-            sendFailWithReason(err);
-            return null;
-        }
-
-        DeviceState device = null;
-        switch (splitPayload[0]) {
-            case "host":
-                String[] transportSplit = splitPayload[1].split(":");
-                String command = transportSplit[0];
-                if (!NON_WILDCARD_TRANSPORT_DEVICE_COMMANDS.contains(command)) {
-                    device =
-                            findAnyDeviceWithProtocol(
-                                    Arrays.asList(
-                                            DeviceState.HostConnectionType.LOCAL,
-                                            DeviceState.HostConnectionType.USB));
-                    if (device == null) {
-                        return null;
-                    }
-                } else if (command.startsWith("transport")) {
-                    switch (command) {
-                        case "transport":
-                            device = findDeviceWithSerial(transportSplit[1]);
-                            break;
-                        case "transport-usb":
-                            device =
-                                    findAnyDeviceWithProtocol(
-                                            Collections.singletonList(
-                                                    DeviceState.HostConnectionType.USB));
-                            break;
-                        case "transport-local":
-                            device =
-                                    findAnyDeviceWithProtocol(
-                                            Collections.singletonList(
-                                                    DeviceState.HostConnectionType.LOCAL));
-                            break;
-                        case "transport-any":
-                            device =
-                                    findAnyDeviceWithProtocol(
-                                            Arrays.asList(
-                                                    DeviceState.HostConnectionType.LOCAL,
-                                                    DeviceState.HostConnectionType.USB));
-                            break;
-                        default:
-                            String err =
-                                    String.format(
-                                            "Invalid command specified in payload: '%s'", payload);
-                            sendFailWithReason(err);
-                            return null;
-                    }
-
-                    if (device == null) {
-                        return null;
-                    }
-                }
+                mTargetDevice = devicesUSB.get(0);
                 break;
-            case "host-usb":
-                device =
-                        findAnyDeviceWithProtocol(
-                                Collections.singletonList(DeviceState.HostConnectionType.USB));
-                if (device == null) {
-                    return null;
+            case "host-local": // host-local:command
+                List<DeviceState> emulators =
+                        findDevicesWithProtocol(DeviceState.HostConnectionType.LOCAL);
+                if (emulators.size() != 1) {
+                    reportDevicesErrorAndStop(emulators.size());
+                    return;
                 }
+                mTargetDevice = emulators.get(0);
                 break;
-            case "host-local":
-                device =
-                        findAnyDeviceWithProtocol(
-                                Collections.singletonList(DeviceState.HostConnectionType.LOCAL));
-                if (device == null) {
-                    return null;
+            case "host-serial": // host-serial:serial:command
+                String serial = request.nextToken();
+                Optional<DeviceState> device = findDeviceWithSerial(serial);
+                if (device.isEmpty()) {
+                    reportErrorAndStop("No device with serial: '" + serial + "' is connected.");
+                    return;
                 }
-                break;
-            case "host-serial":
-                splitPayload = splitPayload[1].split(":", 2);
-                String serial = splitPayload[0];
-                device = findDeviceWithSerial(serial);
+                mTargetDevice = device.get();
                 break;
             default:
-                String err = String.format("Invalid transport specified in payload: '%s'", payload);
-                sendFailWithReason(err);
-                return null;
+                String err =
+                        String.format(
+                                Locale.US,
+                                "Command not handled '%s' '%s'",
+                                request.currToken(),
+                                request.original());
+                mSmartSocket.sendFailWithReason(err);
+                return;
         }
-
-        splitPayload = splitPayload[1].split(":", 2);
-        return new HostRequest(device, splitPayload[0],
-                splitPayload.length > 1 ? splitPayload[1] : "");
+        dispatchToHostHandlers(request);
     }
 
-    @Nullable
-    private DeviceState findAnyDeviceWithProtocol(
-            @NonNull List<DeviceState.HostConnectionType> acceptibleConnectionTypes) {
-        List<DeviceState> deviceList;
+    private void reportDevicesErrorAndStop(int numDevices) {
+        String msg;
+        if (numDevices == 0) {
+            msg = "No devices available.";
+        } else {
+            msg =
+                    String.format(
+                            Locale.US,
+                            "More than one device found (%d). Please specify which.",
+                            numDevices);
+        }
+        reportErrorAndStop(msg);
+    }
+
+    private void reportErrorAndStop(@NonNull String msg) {
+        mKeepRunning = false;
+        mSmartSocket.sendFailWithReason(msg);
+    }
+
+    // IN SERVICE.TXT these are called "LOCAL".
+    private void handleDeviceService(@NonNull ServiceRequest request) {
+        // Regardless of the outcome, this will be the last request this connection handles.
+        mKeepRunning = false;
+
+        if (mTargetDevice == null) {
+            mSmartSocket.sendFailWithReason("No device available to honor LOCAL service request");
+            return;
+        }
+
+        String serviceName = request.nextToken();
+        String command = request.remaining();
+        for (DeviceCommandHandler handler : mServer.getHandlers()) {
+            boolean accepted =
+                    handler.accept(
+                            mServer, mSmartSocket.getSocket(), mTargetDevice, serviceName, command);
+            if (accepted) {
+                return;
+            }
+        }
+        mSmartSocket.sendFailWithReason("Unknown request " + serviceName + "-" + command);
+    }
+
+    private void dispatchToHostHandlers(@NonNull ServiceRequest request) throws IOException {
+        // Intercepting the host:transport* service request because it has the special side-effect
+        // of changing the target device.
+        // TODO: This should be in a host TransportCommandHandler! Following in next CL.
+        if (request.peekToken().startsWith("transport")) {
+            switch (request.nextToken()) {
+                case "transport": // host:transport:serialnumber
+                    String serial = request.nextToken();
+                    Optional<DeviceState> device = findDeviceWithSerial(serial);
+                    if (device.isEmpty()) {
+                        reportErrorAndStop("No device with serial: '" + serial + "' is connected.");
+                        return;
+                    }
+                    mTargetDevice = device.get();
+                    break;
+                case "transport-usb": // host:transport-usb
+                    List<DeviceState> devicesUSB =
+                            findDevicesWithProtocol(DeviceState.HostConnectionType.USB);
+                    if (devicesUSB.size() != 1) {
+                        reportDevicesErrorAndStop(devicesUSB.size());
+                        return;
+                    }
+                    mTargetDevice = devicesUSB.get(0);
+                    break;
+                case "transport-local": // host:transport-local
+                    List<DeviceState> emulators =
+                            findDevicesWithProtocol(DeviceState.HostConnectionType.LOCAL);
+                    if (emulators.size() != 1) {
+                        reportDevicesErrorAndStop(emulators.size());
+                        return;
+                    }
+                    mTargetDevice = emulators.get(0);
+                    break;
+                case "transport-any": // host:transport-any
+                    List<DeviceState> allDevices = findAnyDevice();
+                    if (allDevices.size() < 1) {
+                        reportDevicesErrorAndStop(allDevices.size());
+                        return;
+                    }
+                    mTargetDevice = allDevices.get(0);
+                    break;
+                default:
+                    String err =
+                            String.format(
+                                    Locale.US, "Unsupported request '%s'", request.original());
+                    mSmartSocket.sendFailWithReason(err);
+            }
+            mSmartSocket.sendOkay();
+            return;
+        }
+
+        HostCommandHandler handler = mServer.getHostCommandHandler(request.nextToken());
+        if (handler == null) {
+            String err =
+                    String.format(
+                            Locale.US,
+                            "Unimplemented host command received: '%s'",
+                            request.currToken());
+            mSmartSocket.sendFailWithReason(err);
+            return;
+        }
+
+        mKeepRunning =
+                handler.invoke(
+                        mServer, mSmartSocket.getSocket(), mTargetDevice, request.remaining());
+    }
+
+    @NonNull
+    private List<DeviceState> findAnyDevice() {
+        return findDevicesWithProtocols(
+                Arrays.asList(
+                        DeviceState.HostConnectionType.LOCAL, DeviceState.HostConnectionType.USB));
+    }
+
+    @NonNull
+    private List<DeviceState> findDevicesWithProtocol(
+            @NonNull DeviceState.HostConnectionType type) {
+        return findDevicesWithProtocols(Collections.singletonList(type));
+    }
+
+    @NonNull
+    private List<DeviceState> findDevicesWithProtocols(
+            @NonNull List<DeviceState.HostConnectionType> types) {
+        List<DeviceState> candidates;
+        List<DeviceState> devices = new ArrayList<>();
         try {
-            deviceList = mServer.getDeviceListCopy().get();
+            candidates = mServer.getDeviceListCopy().get();
         } catch (ExecutionException | InterruptedException ignored) {
-            sendFailWithReason("Internal server failure while processing command.");
-            return null;
+            mSmartSocket.sendFailWithReason(
+                    "Internal server failure while retrieving device list.");
+            mKeepRunning = false;
+            return new ArrayList<>();
         }
-
-        DeviceState foundDevice = null;
-        for (DeviceState device : deviceList) {
-            if (!acceptibleConnectionTypes.contains(device.getHostConnectionType())) {
-                continue;
-            }
-
-            if (foundDevice == null) {
-                foundDevice = device;
-            } else {
-                sendFailWithReason("More than one device on the USB bus. Please specify which.");
-                return null;
+        for (DeviceState device : candidates) {
+            if (types.contains(device.getHostConnectionType())) {
+                devices.add(device);
             }
         }
-
-        if (foundDevice == null) {
-            sendFailWithReason("No devices available on the USB bus.");
-            return null;
-        }
-        return foundDevice;
+        return devices;
     }
 
-    @Nullable
-    private DeviceState findDeviceWithSerial(@NonNull String serial) {
+    @NonNull
+    private Optional<DeviceState> findDeviceWithSerial(@NonNull String serial) {
         try {
             List<DeviceState> devices = mServer.getDeviceListCopy().get();
-            Optional<DeviceState> streamResult = devices.stream()
-                    .filter(streamDevice -> serial.equals(streamDevice.getDeviceId()))
-                    .findAny();
-            if (!streamResult.isPresent()) {
-                sendFailWithReason("No device with serial: '" + serial + "' is connected.");
-                return null;
-            }
-            return streamResult.get();
+            Optional<DeviceState> streamResult =
+                    devices.stream()
+                            .filter(streamDevice -> serial.equals(streamDevice.getDeviceId()))
+                            .findAny();
+            return streamResult;
         } catch (InterruptedException | ExecutionException e) {
-            sendFailWithReason("Internal server error while retrieving device list.");
-            return null;
-        }
-    }
-
-    @Nullable
-    private Request parseDeviceRequest() throws IOException {
-        byte[] lengthString = new byte[4];
-        readFully(lengthString);
-        int requestLength = Integer.parseInt(new String(lengthString), 16);
-
-        byte[] payloadBytes = new byte[requestLength];
-        readFully(payloadBytes);
-        String payload = new String(payloadBytes, US_ASCII);
-
-        // The track-jdwp packet comes without a trailing colon, so we need to special-case it
-        String[] splitPayload =
-                payload.equals("track-jdwp") ? new String[] {payload, ""} : payload.split(":", 2);
-        if (splitPayload.length < 2) {
-            String err = String.format("Invalid host command: '%s'", payload);
-            sendFailWithReason(err);
-            return null;
-        }
-
-        return new Request(splitPayload[0], splitPayload[1]);
-    }
-
-    private void readFully(@NonNull byte[] buffer) throws IOException {
-        int bytesRead = 0;
-        while (bytesRead < buffer.length) {
-            int count = mSocket.getInputStream().read(buffer, bytesRead, buffer.length - bytesRead);
-            if (count < 0) {
-                throw new EOFException(
-                        String.format(
-                                "EOF reached when %d more bytes were expected",
-                                buffer.length - bytesRead));
-            }
-            bytesRead += count;
-        }
-    }
-
-    private void sendOkay() throws IOException {
-        OutputStream stream = mSocket.getOutputStream();
-        stream.write("OKAY".getBytes(US_ASCII));
-    }
-
-    private void sendFailWithReason(@NonNull String reason) {
-        try {
-            OutputStream stream = mSocket.getOutputStream();
-            stream.write("FAIL".getBytes(US_ASCII));
-            byte[] reasonBytes = reason.getBytes(UTF_8);
-            assert reasonBytes.length < 65536;
-            stream.write(String.format("%04x", reason.length()).getBytes(US_ASCII));
-            stream.write(reasonBytes);
-            stream.flush();
-        } catch (IOException e) {
-            logErrorVerbose(
-                    e,
-                    "An IOException was thrown trying to send a FAIL reply to an ADB "
-                            + "request.  This may be expected if the peer socket was closed. "
-                            + "The peer will likely not receive the failure message.");
-        }
-    }
-
-    private static void logErrorVerbose(Throwable t, String message) {
-        StringWriter stackTrace = new StringWriter();
-        t.printStackTrace(new PrintWriter(stackTrace));
-        System.err.println(message + '\n' + stackTrace);
-    }
-
-    private static class Request {
-
-        @NonNull
-        protected String mCommand;
-
-        @NonNull
-        protected String mArguments;
-
-        private Request(@NonNull String command, @NonNull String arguments) {
-            mCommand = command;
-            mArguments = arguments;
-        }
-    }
-
-    private static class HostRequest extends Request {
-
-        @Nullable
-        protected DeviceState mTargetDevice;
-
-        private HostRequest(@Nullable DeviceState targetDevice, @NonNull String command,
-                @NonNull String arguments) {
-            super(command, arguments);
-            mTargetDevice = targetDevice;
+            throw new IllegalStateException(e);
         }
     }
 }
