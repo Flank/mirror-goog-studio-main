@@ -75,7 +75,7 @@ data class BuiltArtifactImpl private constructor(
     }
 }
 
-internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArtifactImpl>() {
+internal object BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArtifactImpl>() {
 
     override fun writeSpecificAttributes(out: JsonWriter, value: BuiltArtifactImpl) {
         out.name("type").value(value.outputType.toString())
@@ -172,7 +172,7 @@ internal class BuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<BuiltArt
     }
 }
 
-internal class ArtifactTypeTypeAdapter : TypeAdapter<Artifact<*>>() {
+internal object ArtifactTypeTypeAdapter : TypeAdapter<Artifact<*>>() {
 
     @Throws(IOException::class)
     override fun write(out: JsonWriter, value: Artifact<*>) {

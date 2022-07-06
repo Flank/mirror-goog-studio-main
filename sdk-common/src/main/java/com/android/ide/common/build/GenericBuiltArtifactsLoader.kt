@@ -18,6 +18,7 @@ package com.android.ide.common.build
 
 import com.android.utils.ILogger
 import com.google.gson.GsonBuilder
+import com.google.gson.stream.JsonReader
 import java.io.File
 import java.io.FileReader
 import java.io.StringReader
@@ -51,14 +52,7 @@ object GenericBuiltArtifactsLoader {
         if (inputFile == null || !inputFile.exists()) {
             return null
         }
-        val gsonBuilder = GsonBuilder()
 
-        gsonBuilder.registerTypeAdapter(
-            GenericBuiltArtifact::class.java,
-            GenericBuiltArtifactTypeAdapter()
-        )
-
-        val gson = gsonBuilder.create()
         val redirectFileContent = inputFile.readText()
         val redirectedFile =
             ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
@@ -69,11 +63,11 @@ object GenericBuiltArtifactsLoader {
         }
 
         val reader = redirectedFile?.let { FileReader(it) } ?: StringReader(redirectFileContent)
-        val buildOutputs = reader.use {
+        val buildOutputs = JsonReader(reader).use {
             try {
-                gson.fromJson(it, GenericBuiltArtifacts::class.java)
+                GenericBuiltArtifactsTypeAdapter.read(it)
             } catch (e: Exception) {
-                logger.quiet("Cannot parse build output metadata file, please run a clean build")
+                logger.quiet("Cannot parse build output metadata file (${if (redirectedFile!=null) "$redirectedFile redirected from $inputFile" else inputFile}) please run a clean build")
                 return null
             }
         }
