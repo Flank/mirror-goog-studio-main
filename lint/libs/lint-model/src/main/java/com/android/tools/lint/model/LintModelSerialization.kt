@@ -35,7 +35,6 @@ import com.android.utils.XmlUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Closer
 import org.kxml2.io.KXmlParser
-import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParser.END_DOCUMENT
 import org.xmlpull.v1.XmlPullParser.END_TAG
 import org.xmlpull.v1.XmlPullParser.START_TAG
@@ -1113,8 +1112,9 @@ private abstract class LintModelReader(
     protected val parser = KXmlParser()
 
     init {
-        parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true)
         parser.setInput(reader)
+        // Note that we don't turn on XmlPullParser.FEATURE_PROCESS_NAMESPACES; the lint model
+        // files do not use namespaces so we can save the pull parser some work.
     }
 
     private fun String.isNumber(): Boolean {
