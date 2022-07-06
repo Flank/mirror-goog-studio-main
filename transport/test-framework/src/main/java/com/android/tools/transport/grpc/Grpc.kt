@@ -15,8 +15,8 @@
  */
 package com.android.tools.transport.grpc
 
-import io.grpc.ManagedChannel
-import io.grpc.ManagedChannelBuilder
+import com.android.tools.idea.io.grpc.ManagedChannel
+import com.android.tools.idea.io.grpc.ManagedChannelBuilder
 
 /**
  * Class which wraps gRPC initialization.
