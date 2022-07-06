@@ -15,15 +15,43 @@
  */
 package com.android.adblib.ddmlibcompatibility.testutils
 
+import com.android.annotations.concurrency.GuardedBy
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.Client
 import com.android.ddmlib.clientmanager.DeviceClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
-import java.util.Collections.synchronizedList
 
 class TestDeviceClientManagerListener : DeviceClientManagerListener {
 
-    val events: MutableList<Event> = synchronizedList(mutableListOf<Event>())
+    /**
+     * Events are added any time [DeviceClientManager] invokes this listener.
+     */
+    @GuardedBy("eventList")
+    private val eventList = mutableListOf<Event>()
+
+    /**
+     * Returns a snapshot copy of the current list of [Event].
+     */
+    fun events(): List<Event> {
+        return synchronized(eventList) {
+            eventList.toList()
+        }
+    }
+
+    /**
+     * Process the current list of [Event] in a synchronized block.
+     */
+    fun <R> filterEvents(processor: (List<Event>) -> R): R {
+        return synchronized(eventList) {
+            processor(eventList)
+        }
+    }
+
+    fun clearEvents() {
+        synchronized(eventList) {
+            eventList.clear()
+        }
+    }
 
     override fun processListUpdated(
         bridge: AndroidDebugBridge,
@@ -54,7 +82,9 @@ class TestDeviceClientManagerListener : DeviceClientManagerListener {
         deviceClientManager: DeviceClientManager,
         client: Client? = null
     ) {
-        events.add(Event(kind, bridge, deviceClientManager, client))
+        synchronized(eventList) {
+            eventList.add(Event(kind, bridge, deviceClientManager, client))
+        }
     }
 
     data class Event(

@@ -18,6 +18,9 @@ iml_module(
     ],
 )
 
+# Build adblib.ddmlibcompatibility as a standalone library, with side effect of ensuring that
+# the library does not use unwanted dependencies from "studio-sdk" in the iml_module rule above
+# Build with: bazel build //tools/base/adblib-ddmlibcompatibility:adblib.ddmlibcompatibility
 kotlin_library(
     name = "adblib.ddmlibcompatibility",
     srcs = glob([
@@ -39,6 +42,10 @@ kotlin_library(
     ],
 )
 
+# Test adblib.ddmlibcompatibility as a standalone library, with side effect of ensuring that
+# the library does not use unwanted dependencies from "studio-sdk" in the iml_module rule above
+# Run tests with:
+# bazel test //tools/base/adblib-ddmlibcompatibility:adblib.ddmlibcompatibility.tests.test
 kotlin_test(
     name = "adblib.ddmlibcompatibility.tests",
     srcs = glob([
