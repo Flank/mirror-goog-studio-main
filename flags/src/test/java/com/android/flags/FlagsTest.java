@@ -30,7 +30,9 @@ public class FlagsTest {
     private enum TestingEnum {
         FOO,
         BAR,
-        BAZ
+        BAZ,
+        @SuppressWarnings("NonAsciiCharacters")
+        DOTLESS_ı
     }
 
     @Test
@@ -155,5 +157,52 @@ public class FlagsTest {
 
         assertThat(flagInt.get()).isEqualTo(10);
         assertThat(flagEnum.get()).isEqualTo(TestingEnum.FOO);
+    }
+
+    @Test
+    public void validation() {
+        Properties properties = new Properties();
+        PropertyOverrides propertyOverrides = new PropertyOverrides(properties);
+        Flags flags = new Flags(propertyOverrides);
+        FlagGroup group = new FlagGroup(flags, "test", "Test Group");
+
+        try {
+            Flag<Integer> flag = Flag.create(group, "Invalid Id", "", "", 10);
+            flag.validate();
+            Assert.fail("Expected validation Assert.failure");
+        } catch (IllegalArgumentException error) {
+            assertThat(error.getLocalizedMessage()).isEqualTo("Invalid id: test.Invalid Id");
+        }
+
+        try {
+            Flag<Integer> flag = Flag.create(group, "id", " wrong", "", 10);
+            flag.validate();
+            Assert.fail("Expected validation Assert.failure");
+        } catch (IllegalArgumentException error) {
+            assertThat(error.getLocalizedMessage()).isEqualTo("Invalid name:  wrong");
+        }
+
+        try {
+            // Fail serialization: serialization is pretty locked down by typed serializers,
+            // but for enums it's using capitalization which we can break
+            @SuppressWarnings("NonAsciiCharacters")
+            Flag<TestingEnum> flag = Flag.create(group, "id2", "", "", TestingEnum.DOTLESS_ı);
+            flag.validate();
+            Assert.fail("Expected validation Assert.failure");
+        } catch (IllegalArgumentException error) {
+            assertThat(error.getLocalizedMessage())
+                    .isEqualTo("Default value cannot be deserialized.");
+        }
+
+        try {
+            // We've already registered id above
+            Flag<Integer> flag = Flag.create(group, "id", "Id 2", "", 10);
+            flag.validate();
+            Assert.fail("Expected validation Assert.failure");
+        } catch (IllegalArgumentException error) {
+            assertThat(error.getLocalizedMessage())
+                    .isEqualTo(
+                            "Flag \"Id 2\" shares duplicate ID \"test.id\" with flag \" wrong\"");
+        }
     }
 }
