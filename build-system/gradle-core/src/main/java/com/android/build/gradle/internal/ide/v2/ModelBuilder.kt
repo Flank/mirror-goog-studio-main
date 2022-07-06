@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide.v2
 
 import com.android.SdkConstants
 import com.android.Version
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.BuildFeatures
 import com.android.build.api.dsl.BuildType
@@ -67,6 +66,7 @@ import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.internal.variant.VariantModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptionService
+import com.android.build.gradle.tasks.BuildPrivacySandboxSdkApks
 import com.android.build.gradle.tasks.sync.AbstractVariantModelTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
 import com.android.builder.core.ComponentTypeImpl
@@ -79,6 +79,7 @@ import com.android.builder.model.v2.ide.BasicArtifact
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
 import com.android.builder.model.v2.ide.JavaArtifact
+import com.android.builder.model.v2.ide.PrivacySandboxSdkInfo
 import com.android.builder.model.v2.ide.ProjectType
 import com.android.builder.model.v2.ide.SourceSetContainer
 import com.android.builder.model.v2.ide.TestInfo
@@ -608,8 +609,20 @@ class ModelBuilder<
                 variant.minSdkVersionForDexing,
                 variant.global.compileSdkHashString,
                 variant.global.bootClasspath
-            ).files.toList()
+            ).files.toList(),
         )
+    }
+
+    private fun createPrivacySandboxSdkInfo(component: ComponentCreationConfig): PrivacySandboxSdkInfo? {
+        if (!component.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+            return null
+        }
+        return component.artifacts.get(InternalArtifactType.EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs_IDE_MODEL).orNull?.let {
+            PrivacySandboxSdkInfoImpl(
+                task = BuildPrivacySandboxSdkApks.CreationAction.getTaskName(component),
+                outputListingFile = it.asFile,
+            )
+        }
     }
 
     private fun createAndroidArtifact(component: ComponentCreationConfig): AndroidArtifactImpl {
@@ -712,6 +725,7 @@ class ModelBuilder<
             else
                 null,
             modelSyncFiles = modelSyncFiles,
+            privacySandboxSdkInfo = createPrivacySandboxSdkInfo(component)
         )
     }
 

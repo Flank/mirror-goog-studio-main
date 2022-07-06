@@ -45,6 +45,7 @@ import com.android.builder.model.v2.ide.JavaCompileOptions
 import com.android.builder.model.v2.ide.Library
 import com.android.builder.model.v2.ide.LibraryInfo
 import com.android.builder.model.v2.ide.LintOptions
+import com.android.builder.model.v2.ide.PrivacySandboxSdkInfo
 import com.android.builder.model.v2.ide.ProjectInfo
 import com.android.builder.model.v2.ide.SourceProvider
 import com.android.builder.model.v2.ide.SourceSetContainer
@@ -492,6 +493,10 @@ private fun ModelSnapshotter<AndroidArtifact>.snapshotAndroidArtifact() {
         item("apkFromBundleTaskOutputListingFile", BundleInfo::apkFromBundleTaskOutputListingFile)
     }
     item("codeShrinker", AndroidArtifact::codeShrinker)
+    dataObject("privacySandboxSdkInfo", AndroidArtifact::privacySandboxSdkInfo) {
+        item("task", PrivacySandboxSdkInfo::task)
+        item("outputListingFile", PrivacySandboxSdkInfo::outputListingFile)
+    }
 }
 
 private fun ModelSnapshotter<JavaArtifact>.snapshotJavaArtifact() {

@@ -23,12 +23,15 @@ import com.android.build.api.variant.VariantOutputConfiguration
 import com.android.ide.common.build.CommonBuiltArtifacts
 import com.android.ide.common.build.CommonBuiltArtifactsTypeAdapter
 import com.google.gson.stream.JsonWriter
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import org.gradle.api.file.Directory
 import java.io.File
 import java.io.Serializable
 import java.io.StringWriter
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.bufferedWriter
 
 class BuiltArtifactsImpl @JvmOverloads constructor(
     override val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
@@ -70,6 +73,16 @@ class BuiltArtifactsImpl @JvmOverloads constructor(
             return if (files.size > 1)
                 "${files.joinToString(",") { it.name }} are $plural"
             else "${files.first().name} is a $singular"
+        }
+
+        fun List<BuiltArtifactsImpl>.saveAll(outputFile: Path) {
+            JsonWriter(outputFile.bufferedWriter()).use { writer ->
+                writer.beginArray()
+                for (artifactImpl in this) {
+                    BuiltArtifactsTypeAdapter.write(writer, artifactImpl)
+                }
+                writer.endArray()
+            }
         }
     }
 

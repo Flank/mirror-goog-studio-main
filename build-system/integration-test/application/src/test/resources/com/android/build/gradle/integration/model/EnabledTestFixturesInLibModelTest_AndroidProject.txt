@@ -26,6 +26,7 @@
             - testInfo                      = (null)
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < testFixturesArtifact{ADDED}
       < debug
       > release:
@@ -53,6 +54,7 @@
             - testInfo                      = (null)
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < testFixturesArtifact{ADDED}
       < release
    < variants

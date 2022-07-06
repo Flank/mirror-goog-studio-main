@@ -3,7 +3,7 @@
    - androidTestNamespace  = "pkg.name.app.test"
    - testFixturesNamespace = (null)
    - resourcePrefix        = (null)
-   - dynamicFeatures       = [":feature"]
+   - dynamicFeatures       = []
    > variants:
       > debug:
          - name                   = "debug"
@@ -22,7 +22,7 @@
                * {PROJECT}/app/build/generated/renderscript_source_output_dir/debug/out{!}
                * {PROJECT}/app/build/generated/source/buildConfig/debug{!}
             - minSdkVersion:
-               - apiLevel = 1
+               - apiLevel = 33
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -43,7 +43,9 @@
                - apkFromBundleTaskName              = "extractApksForDebug"
                - apkFromBundleTaskOutputListingFile = {PROJECT}/app/build/intermediates/apk_from_bundle_ide_redirect_file/debug/redirect.txt{!}
             - codeShrinker                  = (null)
-            - privacySandboxSdkInfo         = (null)
+            - privacySandboxSdkInfo:
+               - task              = "buildPrivacySandboxSdkApksForDebug"
+               - outputListingFile = {PROJECT}/app/build/intermediates/extracted_apks_from_privacy_sandbox_sdks_ide_model/debug/ide_model.json{!}
          < mainArtifact
          > androidTestArtifact:
             - compileTaskName               = "compileDebugAndroidTestSources"
@@ -58,7 +60,7 @@
                * {PROJECT}/app/build/generated/renderscript_source_output_dir/debugAndroidTest/out{!}
                * {PROJECT}/app/build/generated/source/buildConfig/androidTest/debug{!}
             - minSdkVersion:
-               - apiLevel = 1
+               - apiLevel = 33
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)
@@ -114,7 +116,7 @@
                * {PROJECT}/app/build/generated/renderscript_source_output_dir/release/out{!}
                * {PROJECT}/app/build/generated/source/buildConfig/release{!}
             - minSdkVersion:
-               - apiLevel = 1
+               - apiLevel = 33
                - codename = (null)
             - targetSdkVersionOverride      = (null)
             - maxSdkVersion                 = (null)

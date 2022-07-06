@@ -442,6 +442,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object BUNDLE_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     object EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs: InternalArtifactType<Directory>(DIRECTORY), ContainsMany
+    object EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs_IDE_MODEL: InternalArtifactType<RegularFile>(FILE)
+
     // The proto passed to bundle tool to instruct which privacy sandbox SDKs are used
     object PRIVACY_SANDBOX_SDK_RUNTIME_CONFIG_FILE: InternalArtifactType<RegularFile>(FILE)
 

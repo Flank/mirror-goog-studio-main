@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-6031c024eeb073925b8a6c03d0e8d4478835bf096a694f3cbdaa239529352a6d
+4e77e2f7c7c33319937a604a40e3ebb9b271f3880845965d0e55c65daf95b8a1
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -589,6 +589,7 @@ com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.bu
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMaxSdkVersion: java.lang.Integer ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMinSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()
+com.android.builder.model.v2.ide.AndroidArtifact.getPrivacySandboxSdkInfo: com.android.builder.model.v2.ide.PrivacySandboxSdkInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.getResGenTaskName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSigningConfigName: java.lang.String ()
 com.android.builder.model.v2.ide.AndroidArtifact.getSourceGenTaskName: java.lang.String ()
@@ -707,6 +708,9 @@ com.android.builder.model.v2.ide.LintOptions.getWarning: java.util.Set<java.lang
 com.android.builder.model.v2.ide.LintOptions.getWarningsAsErrors: boolean ()
 com.android.builder.model.v2.ide.LintOptions.getXmlOutput: java.io.File ()
 com.android.builder.model.v2.ide.LintOptions.getXmlReport: boolean ()
+com.android.builder.model.v2.ide.PrivacySandboxSdkInfo implements com.android.builder.model.v2.AndroidModel
+com.android.builder.model.v2.ide.PrivacySandboxSdkInfo.getOutputListingFile: java.io.File ()
+com.android.builder.model.v2.ide.PrivacySandboxSdkInfo.getTask: java.lang.String ()
 com.android.builder.model.v2.ide.ProjectInfo implements com.android.builder.model.v2.ide.ComponentInfo
 com.android.builder.model.v2.ide.ProjectInfo.getBuildId: java.lang.String ()
 com.android.builder.model.v2.ide.ProjectInfo.getProjectPath: java.lang.String ()

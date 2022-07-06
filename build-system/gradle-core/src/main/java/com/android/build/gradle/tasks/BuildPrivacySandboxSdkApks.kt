@@ -16,7 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.apksig.apk.ApkUtils
+import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl.Companion.saveAll
 import com.android.build.gradle.internal.component.ApkCreationConfig
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -34,6 +39,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -41,6 +47,7 @@ import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.bufferedWriter
 
 /**
  * Task to extract the privacy sandbox SDK APKs for this app
@@ -59,15 +66,21 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
     @get:OutputDirectory
     abstract val sdkApks: DirectoryProperty
 
+    @get:OutputFile
+    abstract val ideModelFile: RegularFileProperty
+
     override fun doTaskAction() {
         val logLevel = if( deviceConfig.isPresent) LogLevel.INFO else LogLevel.LIFECYCLE
-        FileUtils.cleanOutputDir(sdkApks.get().asFile)
         if (sdkApksArchives.isEmpty) {
             logger.log(logLevel, "There are no privacy sandbox SDK dependencies for ${projectPath.get()} $variantName ")
             return
         }
         val outputDirectory = sdkApks.get().asFile.toPath()
+        val ideModel = ideModelFile.get().asFile.toPath()
         FileUtils.cleanOutputDir(outputDirectory.toFile())
+        Files.deleteIfExists(ideModel)
+
+        val artifacts = mutableListOf<BuiltArtifactsImpl>()
 
         // TODO(b/235469089) use bundle tool here, using the device config supplied
         forEachInputFile(
@@ -79,10 +92,33 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
             ZipArchive(archive).use {
                 it.getInputStream("standalones/standalone.apk").use { inputStream ->
                     Files.copy(inputStream, outputFile)
-                    logger.log(logLevel, "Extracted sandbox SDK APK for ${projectPath.get()} $variantName: $outputFile")
+                    ZipArchive(outputFile).use { apk ->
+                        // TODO(b/241077141): We can potentially fetch the applicationId from
+                        // "toc.pb" file but they have different values.
+                        // Binary manifest returns  <pkg_name>_<encoded_version>
+                        // whereas toc.pb returns   <pkg_name> only.
+                        artifacts.add(
+                            BuiltArtifactsImpl(
+                                artifactType = InternalArtifactType.EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs,
+                                applicationId = ApkUtils.getPackageNameFromBinaryAndroidManifest(apk.getContent("AndroidManifest.xml")),
+                                variantName = "",
+                                elements = listOf(
+                                    BuiltArtifactImpl.make(
+                                        outputFile = outputFile.toString()
+                                    )
+                                )
+                            )
+                        )
+                        logger.log(
+                            logLevel,
+                            "Extracted sandbox SDK APK for ${projectPath.get()} $variantName: $outputFile"
+                        )
+                    }
                 }
             }
         }
+
+        artifacts.saveAll(ideModel)
     }
     companion object {
 
@@ -113,7 +149,8 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
     ) {
 
         override val name: String
-            get() = computeTaskName("buildPrivacySandboxSdkApksFor")
+            get() = getTaskName(creationConfig)
+
         override val type: Class<BuildPrivacySandboxSdkApks>
             get() = BuildPrivacySandboxSdkApks::class.java
 
@@ -123,6 +160,10 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
                     taskProvider,
                     BuildPrivacySandboxSdkApks::sdkApks
             ).on(InternalArtifactType.EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs)
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    BuildPrivacySandboxSdkApks::ideModelFile
+            ).withName("ide_model.json").on(InternalArtifactType.EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs_IDE_MODEL)
         }
 
         override fun configure(task: BuildPrivacySandboxSdkApks) {
@@ -139,6 +180,10 @@ abstract class BuildPrivacySandboxSdkApks : NonIncrementalTask() {
                 task.deviceConfig.set(File(deviceConfigPath))
             }
             task.deviceConfig.disallowChanges()
+        }
+
+        companion object {
+            fun getTaskName(creationConfig: ComponentCreationConfig) = creationConfig.computeTaskName("buildPrivacySandboxSdkApksFor")
         }
     }
 }

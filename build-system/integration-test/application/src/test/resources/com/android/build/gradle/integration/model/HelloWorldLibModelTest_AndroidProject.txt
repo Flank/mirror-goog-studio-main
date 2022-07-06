@@ -39,6 +39,7 @@
             - testInfo                      = (null)
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          > androidTestArtifact:
             - compileTaskName               = "compileDebugAndroidTestSources"
@@ -74,6 +75,7 @@
                - instrumentedTestTaskName = "connectedDebugAndroidTest"
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < androidTestArtifact
          > unitTestArtifact:
             - compileTaskName       = "compileDebugUnitTestSources"
@@ -125,6 +127,7 @@
             - testInfo                      = (null)
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          - androidTestArtifact    = (null)
          > unitTestArtifact:

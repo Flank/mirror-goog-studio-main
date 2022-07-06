@@ -43,6 +43,7 @@
                - apkFromBundleTaskName              = "extractApksForProDebug"
                - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/proDebug/redirect.txt{!}
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          > androidTestArtifact:
             - compileTaskName               = "compileProDebugAndroidTestSources"
@@ -78,6 +79,7 @@
                - instrumentedTestTaskName = "connectedProDebugAndroidTest"
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < androidTestArtifact
          > unitTestArtifact:
             - compileTaskName       = "compileProDebugUnitTestSources"

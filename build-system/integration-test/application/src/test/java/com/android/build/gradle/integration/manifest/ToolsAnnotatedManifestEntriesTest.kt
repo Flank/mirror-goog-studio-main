@@ -18,11 +18,8 @@ package com.android.build.gradle.integration.manifest
 
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
-import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
-import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
-import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
+import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.createGradleProjectWithPrivacySandboxLibrary
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_MANIFEST
-import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -38,40 +35,22 @@ import org.junit.Test
 class ToolsAnnotatedManifestEntriesTest {
 
     @get:Rule
-    var project = createGradleProjectBuilder {
-        subProject(":privacy-sandbox-sdk") {
-            plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
-            android {
-                defaultCompileSdk()
-                namespace = "com.example.sdk"
-                minSdk = 13
-            }
-            dependencies {
-                include(project(":sdk-impl"))
-            }
-        }
-        subProject(":sdk-impl") {
-            plugins.add(PluginType.ANDROID_LIB)
-            android {
-                defaultCompileSdk()
-                namespace = "com.example.sdk.impl"
-                minSdk = 13
-            }
-            addFile("src/main/AndroidManifest.xml", """
-                <manifest
-                        xmlns:android="http://schemas.android.com/apk/res/android"
-                        xmlns:tools="http://schemas.android.com/tools">
+    var project = createGradleProjectWithPrivacySandboxLibrary {
+            subProject(":privacy-sandbox-sdk-impl") {
+                addFile("src/main/AndroidManifest.xml",
+                    """
+                        <manifest
+                                xmlns:android="http://schemas.android.com/apk/res/android"
+                                xmlns:tools="http://schemas.android.com/tools">
 
-                    <uses-permission
-                            android:name="android.permission.WAKE_LOCK"
-                            tools:requiredByPrivacySandboxSdk="true" />
-                </manifest>
-            """.trimIndent())
+                            <uses-permission
+                                    android:name="android.permission.WAKE_LOCK"
+                                    tools:requiredByPrivacySandboxSdk="true" />
+                        </manifest>
+                    """.trimIndent()
+                )
         }
     }
-            .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
-            .create()
-
 
     @Test
     fun testToolsAnnotatedManifest() {
