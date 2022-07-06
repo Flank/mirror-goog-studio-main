@@ -56,7 +56,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
     @get:InputFiles

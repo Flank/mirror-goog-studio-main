@@ -37,12 +37,14 @@ import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAaptDaemon
 import com.android.build.gradle.internal.services.registerAaptService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.aapt.AaptConvertConfig
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.gradle.api.file.Directory
@@ -74,6 +76,7 @@ import javax.inject.Inject
  * proto first and passed as input to the shrinker.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
 
     @get:OutputDirectory

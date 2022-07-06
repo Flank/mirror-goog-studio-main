@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.getLeasingAapt2
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
@@ -61,6 +62,7 @@ import com.android.builder.core.ComponentType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.ide.common.symbols.SymbolIo
@@ -103,6 +105,7 @@ import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: ObjectFactory) :
     ProcessAndroidResources() {
 

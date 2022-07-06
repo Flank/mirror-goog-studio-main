@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getLeasingAapt2
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -36,6 +37,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -59,6 +61,7 @@ import java.io.File
  * Invokes AAPT2 link on the merged resources of all library dependencies into the .ap_ format.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() {
 
     @get:Input

@@ -17,7 +17,16 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.coverage.JacocoReportTask
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
+import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
+import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
+import com.android.build.gradle.internal.res.ParseLibraryResourcesTask
+import com.android.build.gradle.internal.res.PrivacySandboxSdkLinkAndroidResourcesTask
 import com.android.build.gradle.internal.res.namespaced.CreateNonNamespacedLibraryManifestTask
+import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibraryRFilesTask
+import com.android.build.gradle.internal.res.namespaced.LinkLibraryAndroidResourcesTask
+import com.android.build.gradle.internal.res.namespaced.ProcessAndroidAppResourcesTask
 import com.android.build.gradle.internal.res.namespaced.StaticLibraryManifestTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
@@ -31,9 +40,14 @@ import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
+import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
 import com.android.build.gradle.internal.tasks.TestServerTask
+import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
+import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
+import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
 import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import org.gradle.api.Task
 import com.google.common.reflect.ClassPath
@@ -55,6 +69,9 @@ class BuildAnalyzerTest {
         val tasksWithAnnotations = allTasks.filter {
             it.isAnnotationPresent(BuildAnalyzer::class.java)
         }
+        // Make sure a task was not added twice in list
+        assertEquals(TASKS_WITH_ANNOTATIONS.toSet().size, TASKS_WITH_ANNOTATIONS.size)
+        // Make sure tasks without annotation weren't accidentally added in
         assertThat(missingTasks).containsNoneIn(TASKS_WITH_ANNOTATIONS)
         assertThat(tasksWithAnnotations).containsExactlyElementsIn(TASKS_WITH_ANNOTATIONS)
         assertEquals(allTasks.size,missingTasks.size + TASKS_WITH_ANNOTATIONS.size)
@@ -97,7 +114,25 @@ class BuildAnalyzerTest {
             ProcessManifestForInstantAppTask::class.java,
             ProcessPackagedManifestTask::class.java,
             ProcessMultiApkApplicationManifest::class.java,
-            GenerateManifestJarTask::class.java
+            GenerateManifestJarTask::class.java,
+            LinkLibraryAndroidResourcesTask::class.java,
+            LinkApplicationAndroidResourcesTask::class.java,
+            LinkAndroidResForBundleTask::class.java,
+            GenerateResValues::class.java,
+            MergeResources::class.java,
+            VerifyLibraryResourcesTask::class.java,
+            ProcessAndroidAppResourcesTask::class.java,
+            GenerateLibraryRFileTask::class.java,
+            GenerateNamespacedLibraryRFilesTask::class.java,
+            LegacyShrinkBundleModuleResourcesTask::class.java,
+            ParseLibraryResourcesTask::class.java,
+            ExtractDeepLinksTask::class.java,
+            ShrinkResourcesOldShrinkerTask::class.java,
+            GenerateEmptyResourceFilesTask::class.java,
+            OptimizeResourcesTask::class.java,
+            ShrinkAppBundleResourcesTask::class.java,
+            ShrinkResourcesNewShrinkerTask::class.java,
+            PrivacySandboxSdkLinkAndroidResourcesTask::class.java,
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {

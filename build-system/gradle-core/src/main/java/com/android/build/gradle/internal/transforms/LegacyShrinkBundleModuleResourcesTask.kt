@@ -24,10 +24,12 @@ import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -54,6 +56,7 @@ import javax.xml.parsers.ParserConfigurationException
  * Enabled when android.experimental.enableNewResourceShrinker=false.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile

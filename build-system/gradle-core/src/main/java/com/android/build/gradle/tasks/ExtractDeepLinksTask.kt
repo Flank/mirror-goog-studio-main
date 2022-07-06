@@ -20,8 +20,10 @@ import com.android.SdkConstants.FD_RES_NAVIGATION
 import com.android.SdkConstants.FN_NAVIGATION_JSON
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
@@ -49,6 +51,7 @@ private val DOT_XML_EXT = Regex("\\.xml$")
  * deep link data needed for any downstream app manifest merging.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class ExtractDeepLinksTask: NonIncrementalTask() {
 
     @get:InputFiles

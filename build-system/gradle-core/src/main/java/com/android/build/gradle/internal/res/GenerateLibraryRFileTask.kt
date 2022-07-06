@@ -30,12 +30,14 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.SymbolTableBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -57,6 +59,7 @@ import java.io.File
 import javax.inject.Inject
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
     @get:OutputFile

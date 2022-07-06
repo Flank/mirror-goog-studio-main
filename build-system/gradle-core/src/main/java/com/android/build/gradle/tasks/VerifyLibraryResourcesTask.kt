@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getLeasingAapt2
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
@@ -40,6 +41,7 @@ import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.ResourceCompilationService
@@ -71,6 +73,7 @@ import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
