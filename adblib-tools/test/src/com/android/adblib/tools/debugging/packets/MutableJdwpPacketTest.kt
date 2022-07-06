@@ -15,6 +15,8 @@
  */
 package com.android.adblib.tools.debugging.packets
 
+import com.android.adblib.tools.debugging.packets.JdwpCommands.CmdSet.SET_THREADREF
+import com.android.adblib.tools.debugging.packets.JdwpCommands.ThreadRefCmd.CMD_THREADREF_NAME
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -220,4 +222,37 @@ class MutableJdwpPacketTest {
         // Assert
         Assert.fail("Should not reach")
     }
+
+    @Test
+    fun testMutableJdwpPacketToStringForCommandPacket() {
+        // Prepare
+        val packet = MutableJdwpPacket()
+
+        // Act
+        packet.packetLength = 11
+        packet.packetId = 10
+        packet.packetCmdSet = SET_THREADREF.value
+        packet.packetCmd = CMD_THREADREF_NAME.value
+        val text = packet.toString()
+
+        // Assert
+        assertEquals("JdwpPacket(length=11, id=10, flags=0x00, isCommand=true, cmdSet=SET_THREADREF[11], cmd=CMD_THREADREF_NAME[1])", text)
+    }
+
+    @Test
+    fun testMutableJdwpPacketToStringForReplyPacket() {
+        // Prepare
+        val packet = MutableJdwpPacket()
+
+        // Act
+        packet.packetLength = 11
+        packet.packetId = 10
+        packet.isReply = true
+        packet.errorCode = 67
+        val text = packet.toString()
+
+        // Assert
+        assertEquals("JdwpPacket(length=11, id=10, flags=0x80, isReply=true, errorCode=DELETE_METHOD_NOT_IMPLEMENTED[67])", text)
+    }
+
 }

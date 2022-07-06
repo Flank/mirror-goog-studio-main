@@ -106,7 +106,23 @@ class MutableJdwpPacket : JdwpPacketView {
     override var data = AdbBufferedInputChannel.empty()
 
     override fun toString(): String {
-        return "JDWP packet(length=$packetLength, id=$packetId, flags=$packetFlags, " +
-                if (isReply) "errorCode=$errorCode" else "cmdSet=$packetCmdSet, cmd=$packetCmd)"
+        return "JdwpPacket(length=%d, id=%d, flags=0x%02X, %s)".format(
+            packetLength,
+            packetId,
+            packetFlags,
+            if (isReply) {
+                "isReply=true, errorCode=%s[%d]".format(
+                    JdwpErrorCode.errorName(errorCode),
+                    errorCode
+                )
+            } else {
+                "isCommand=true, cmdSet=%s[%d], cmd=%s[%d]".format(
+                    JdwpCommands.cmdSetToString(packetCmdSet),
+                    packetCmdSet,
+                    JdwpCommands.cmdToString(packetCmdSet, packetCmd),
+                    packetCmd
+                )
+            }
+        )
     }
 }
