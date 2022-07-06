@@ -24,6 +24,7 @@ import com.android.sdklib.OptionalLibrary
 import com.android.sdklib.SdkVersionInfo
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
@@ -182,6 +183,7 @@ class SimplePlatformLookupTest {
         }
     }
 
+    @Test
     fun testGetFile() {
         checkQueries { lookup ->
             val target = lookup.getTarget("android-R")!!
@@ -189,6 +191,21 @@ class SimplePlatformLookupTest {
             assertEquals("android.jar", file.name)
             assertTrue(file.path.contains("android-R"))
         }
+    }
+
+    @Test
+    fun testCaching() {
+        class MyClient(private val sdk: File) : TestLintClient(CLIENT_UNIT_TESTS) {
+            override fun getSdkHome(): File = sdk
+        }
+
+        val sdk1 = createSampleSdk()
+        val sdk2 = File(sdk1.path)
+        val client1 = MyClient(sdk1)
+        val client2 = MyClient(sdk2)
+        val lookup1 = client1.getPlatformLookup()
+        val lookup2 = client2.getPlatformLookup()
+        assertThat(lookup1).isSameAs(lookup2)
     }
 
     @Test

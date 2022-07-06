@@ -1076,7 +1076,7 @@ abstract class LintClient {
             ?: run {
                 val sdkHome = getSdkHome()
                 if (sdkHome != null) {
-                    SimplePlatformLookup(sdkHome).also { platformLookup = it }
+                    SimplePlatformLookup.get(sdkHome).also { platformLookup = it }
                 } else {
                     null
                 }
