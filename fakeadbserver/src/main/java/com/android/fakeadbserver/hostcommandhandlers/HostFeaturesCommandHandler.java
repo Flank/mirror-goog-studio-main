@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,11 @@ import com.android.fakeadbserver.FakeAdbServer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Set;
 
-/** host:features returns list of features supported by both the device and the HOST. */
-public class FeaturesCommandHandler extends HostCommandHandler {
+/** host:host-features returns list of features supported by the HOST. */
+public class HostFeaturesCommandHandler extends HostCommandHandler {
 
-    @NonNull public static final String COMMAND = "features";
+    @NonNull public static final String COMMAND = "host-features";
 
     @Override
     public boolean invoke(
@@ -39,19 +37,8 @@ public class FeaturesCommandHandler extends HostCommandHandler {
             @Nullable DeviceState device,
             @NonNull String args) {
         try {
-            if (device == null) {
-                CommandHandler.writeFailMissingDevice(responseSocket.getOutputStream(), COMMAND);
-                return false;
-            }
-
             OutputStream out = responseSocket.getOutputStream();
-            // This is a features request. It should contain only the features supported by
-            // both the server and the device.
-            Set deviceFeatures = device.getFeatures();
-            Set hostFeatures = fakeAdbServer.getFeatures();
-            Set commonFeatures = new HashSet(deviceFeatures);
-            commonFeatures.retainAll(hostFeatures);
-            CommandHandler.writeOkayResponse(out, String.join(",", commonFeatures));
+            CommandHandler.writeOkayResponse(out, String.join(",", fakeAdbServer.getFeatures()));
         } catch (IOException e) {
             // Ignored (this is from responseSocket.getOutputStream())
         }

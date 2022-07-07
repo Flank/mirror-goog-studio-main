@@ -57,4 +57,9 @@ public abstract class CommandHandler {
             throws IOException {
         stream.write(string.getBytes(UTF_8));
     }
+
+    protected static void writeFailMissingDevice(
+            @NonNull OutputStream stream, @NonNull String service) {
+        writeFailResponse(stream, "No device found to satisfy " + service);
+    }
 }
