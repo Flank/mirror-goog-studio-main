@@ -113,6 +113,7 @@ ARTIFACTS = [
     "org.glassfish.jaxb:jaxb-xjc:2.3.2",
     "org.gradle:gradle-tooling-api:7.5-rc-2",
     "org.hamcrest:hamcrest-core:1.3",
+    "org.hamcrest:hamcrest-library:1.3",
     "org.jacoco:org.jacoco.agent:0.8.8",
     "org.jacoco:org.jacoco.core:0.8.8",
     "org.jacoco:org.jacoco.report:0.8.8",

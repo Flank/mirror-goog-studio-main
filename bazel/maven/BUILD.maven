@@ -6467,6 +6467,38 @@ maven_import(
 )
 
 maven_artifact(
+    name = "org.hamcrest.hamcrest-library_1.3",
+    pom = "repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.pom",
+    repo_root_path = "repository",
+    repo_path = "org/hamcrest/hamcrest-library/1.3",
+    parent = "org.hamcrest.hamcrest-parent_1.3",
+    deps = [
+        "org.hamcrest.hamcrest-core_1.3",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "org.hamcrest.hamcrest-library",
+    classifiers = [],
+    parent = "org.hamcrest.hamcrest-parent_1.3",
+    jars = [
+        "repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.jar"
+    ],
+    exports = [
+        "org.hamcrest.hamcrest-core",
+    ],
+    original_deps = [
+        "org.hamcrest.hamcrest-core_1.3",
+    ],
+    pom = "repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.pom",
+    repo_root_path = "repository",
+    repo_path = "org/hamcrest/hamcrest-library/1.3",
+    srcjar = "repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3-sources.jar",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.jacoco.org.jacoco.agent_0.8.8",
     pom = "repository/org/jacoco/org.jacoco.agent/0.8.8/org.jacoco.agent-0.8.8.pom",
     repo_root_path = "repository",
@@ -28933,18 +28965,6 @@ maven_artifact(
     parent = "org.hamcrest.hamcrest-parent_1.3",
     deps = [
         "org.hamcrest.hamcrest-library_1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.hamcrest.hamcrest-library_1.3",
-    pom = "repository/org/hamcrest/hamcrest-library/1.3/hamcrest-library-1.3.pom",
-    repo_root_path = "repository",
-    repo_path = "org/hamcrest/hamcrest-library/1.3",
-    parent = "org.hamcrest.hamcrest-parent_1.3",
-    deps = [
-        "org.hamcrest.hamcrest-core_1.3",
     ],
     visibility = ["//visibility:public"],
 )
