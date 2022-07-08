@@ -31,7 +31,7 @@ public class FlagsTest {
         FOO,
         BAR,
         BAZ,
-        @SuppressWarnings("NonAsciiCharacters")
+        @SuppressWarnings({"NonAsciiCharacters", "UnicodeInCode"})
         DOTLESS_ı
     }
 
@@ -185,7 +185,7 @@ public class FlagsTest {
         try {
             // Fail serialization: serialization is pretty locked down by typed serializers,
             // but for enums it's using capitalization which we can break
-            @SuppressWarnings("NonAsciiCharacters")
+            @SuppressWarnings({"NonAsciiCharacters", "UnicodeInCode"})
             Flag<TestingEnum> flag = Flag.create(group, "id2", "", "", TestingEnum.DOTLESS_ı);
             flag.validate();
             Assert.fail("Expected validation Assert.failure");
