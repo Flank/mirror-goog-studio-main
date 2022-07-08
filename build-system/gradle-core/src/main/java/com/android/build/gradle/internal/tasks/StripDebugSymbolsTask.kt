@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableInputChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.resources.FileStatus.CHANGED
@@ -72,6 +73,7 @@ import javax.inject.Inject
  * Task to remove debug symbols from native libraries.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
 abstract class StripDebugSymbolsTask : NewIncrementalTask() {
 
     @get:InputDirectory

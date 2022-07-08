@@ -30,4 +30,6 @@ enum class TaskCategoryLabel {
     MANIFEST,
     // Tasks that are related to android resources
     ANDROID_RESOURCES,
+    // Tasks that involve native libraries
+    NATIVE,
 }

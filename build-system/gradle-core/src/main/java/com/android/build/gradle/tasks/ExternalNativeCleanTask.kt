@@ -28,10 +28,12 @@ import com.android.build.gradle.internal.cxx.process.ExecuteProcessType
 import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
 import com.android.build.gradle.internal.cxx.process.executeProcess
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.DefaultIssueReporter
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
@@ -45,6 +47,7 @@ import javax.inject.Inject
  * is left to the underlying build system.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
 abstract class ExternalNativeCleanTask @Inject constructor(private val ops: ExecOperations) : NonIncrementalTask() {
     @get:Internal
     abstract val sdkComponents: Property<SdkComponentsBuildService>

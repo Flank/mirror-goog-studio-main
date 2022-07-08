@@ -35,15 +35,20 @@ import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
+import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.JacocoTask
+import com.android.build.gradle.internal.tasks.LibraryJniLibsTask
 import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.MergeNativeDebugMetadataTask
+import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
 import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
@@ -133,6 +138,17 @@ class BuildAnalyzerTest {
             ShrinkAppBundleResourcesTask::class.java,
             ShrinkResourcesNewShrinkerTask::class.java,
             PrivacySandboxSdkLinkAndroidResourcesTask::class.java,
+            ExternalNativeBuildJsonTask::class.java,
+            ExternalNativeBuildTask::class.java,
+            ExternalNativeCleanTask::class.java,
+            MergeNativeLibsTask::class.java,
+            StripDebugSymbolsTask::class.java,
+            LibraryJniLibsTask::class.java,
+            ExtractNativeDebugMetadataTask::class.java,
+            MergeNativeDebugMetadataTask::class.java,
+            PrefabPackageTask::class.java,
+            PrefabPackageConfigurationTask::class.java,
+
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {
