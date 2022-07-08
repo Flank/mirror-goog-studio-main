@@ -29,5 +29,16 @@ message TrackingForegroundProcessSupported {
     NOT_SUPPORTED = 2;
   }
 
+  enum ReasonNotSupported {
+    UNKNOWN_REASON = 0;
+    DUMPSYS_NOT_FOUND = 1;
+    GREP_NOT_FOUND = 2;
+    DUMPSYS_NO_TOP_ACTIVITY_NO_SLEEPING_ACTIVITIES = 3;
+    DUMPSYS_NO_TOP_ACTIVITY_BUT_HAS_AWAKE_ACTIVITIES = 4;
+  }
+
   SupportType support_type = 1;
+  // set only if support_type is NOT_SUPPORTED
+  // additional information for why auto connect is not supported
+  ReasonNotSupported reason_not_supported = 2;
 }

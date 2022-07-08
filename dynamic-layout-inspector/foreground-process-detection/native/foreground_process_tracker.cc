@@ -22,28 +22,71 @@
 
 namespace layout_inspector {
 
-TrackingForegroundProcessSupported::SupportType
+TrackingForegroundProcessSupported
 ForegroundProcessTracker::IsTrackingForegroundProcessSupported() {
+  TrackingForegroundProcessSupported layoutInspectorForegroundProcessSupported;
+  TrackingForegroundProcessSupported::ReasonNotSupported reason;
+
+  // check dumpsys and grep, as they are required to run
+  // `dumpsys activity processes | grep top-activity`
+  // which is used to find the current foregorund activity
+  if (!hasDumpsys()) {
+    layoutInspectorForegroundProcessSupported.set_support_type(
+        TrackingForegroundProcessSupported::NOT_SUPPORTED);
+    layoutInspectorForegroundProcessSupported.set_reason_not_supported(
+        TrackingForegroundProcessSupported::DUMPSYS_NOT_FOUND);
+    return layoutInspectorForegroundProcessSupported;
+  }
+  if (!hasGrep()) {
+    layoutInspectorForegroundProcessSupported.set_support_type(
+        TrackingForegroundProcessSupported::NOT_SUPPORTED);
+    layoutInspectorForegroundProcessSupported.set_reason_not_supported(
+        TrackingForegroundProcessSupported::GREP_NOT_FOUND);
+    return layoutInspectorForegroundProcessSupported;
+  }
+
   ProcessInfo processInfo = runDumpsysTopActivityCommand();
 
   if (!processInfo.isEmpty) {
     // a top-activity was found
-    return TrackingForegroundProcessSupported::SUPPORTED;
+    layoutInspectorForegroundProcessSupported.set_support_type(
+        TrackingForegroundProcessSupported::SUPPORTED);
+    return layoutInspectorForegroundProcessSupported;
   }
 
   // If there are sleeping activities and no awake activity,
   // the reason why top-activity is absent might be because the device is
   // locked. Therefore we don't know if the device supports foreground
   // process detection or not.
-  if (hasSleepingActivities() && !hasAwakeActivities()) {
-    return TrackingForegroundProcessSupported::UNKNOWN;
+  bool has_sleeping_activities = hasSleepingActivities();
+  bool has_awake_activities = hasAwakeActivities();
+
+  if (has_sleeping_activities && !has_awake_activities) {
+    layoutInspectorForegroundProcessSupported.set_support_type(
+        TrackingForegroundProcessSupported::UNKNOWN);
+    return layoutInspectorForegroundProcessSupported;
   }
 
   // We can infer dumpsys is not working as expected if any of these situations
   // happen:
   // 1. there is no top-activity and no sleeping activities
   // 2. there is no top-activity, but there are awake activities.
-  return TrackingForegroundProcessSupported::NOT_SUPPORTED;
+  layoutInspectorForegroundProcessSupported.set_support_type(
+      TrackingForegroundProcessSupported::NOT_SUPPORTED);
+
+  if (!has_sleeping_activities) {
+    reason = TrackingForegroundProcessSupported::
+        DUMPSYS_NO_TOP_ACTIVITY_NO_SLEEPING_ACTIVITIES;
+  } else {
+    // it is not possible to have awake activities at this point,
+    // as this state would have been caught by the UNKWNOWN if above.
+    assert(has_awake_activities);
+    reason = TrackingForegroundProcessSupported::
+        DUMPSYS_NO_TOP_ACTIVITY_BUT_HAS_AWAKE_ACTIVITIES;
+  }
+
+  layoutInspectorForegroundProcessSupported.set_reason_not_supported(reason);
+  return layoutInspectorForegroundProcessSupported;
 }
 
 void ForegroundProcessTracker::StartTracking() {

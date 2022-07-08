@@ -34,6 +34,10 @@ int has_sleeping_activity_command_runner_count = 0;
 int has_awake_activity_command_runner_count = 0;
 }  // anonymous namespace
 
+bool ForegroundProcessTracker::hasDumpsys() { return true; }
+
+bool ForegroundProcessTracker::hasGrep() { return true; }
+
 ProcessInfo ForegroundProcessTracker::runDumpsysTopActivityCommand() {
   ProcessInfo processInfo{};
 

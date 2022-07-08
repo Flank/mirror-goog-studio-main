@@ -227,8 +227,10 @@ class ForegroundProcessTrackerTest : public ::testing::Test {
 std::unique_ptr<ForegroundProcessTracker> createDefaultForegroundProcessTracker(
     profiler::EventBuffer* event_buffer) {
   return std::unique_ptr<ForegroundProcessTracker>(new ForegroundProcessTracker(
-      event_buffer, new TopActivityMockBashCommandRunner(),
-      new EmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner()));
+      event_buffer, new NotEmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(),
+      new TopActivityMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner()));
 }
 
 TEST_F(ForegroundProcessTrackerTest, BaseTest) {
@@ -390,43 +392,108 @@ TEST_F(ForegroundProcessTrackerTest, Handshake) {
   auto process_tracker = createDefaultForegroundProcessTracker(&event_buffer_);
 
   released.store(true);
-  TrackingForegroundProcessSupported::SupportType support_type1 =
+  TrackingForegroundProcessSupported support_info1 =
       process_tracker.get()->IsTrackingForegroundProcessSupported();
-  TrackingForegroundProcessSupported::SupportType support_type2 =
+  TrackingForegroundProcessSupported support_info2 =
       process_tracker.get()->IsTrackingForegroundProcessSupported();
-  TrackingForegroundProcessSupported::SupportType support_type3 =
+  TrackingForegroundProcessSupported support_info3 =
       process_tracker.get()->IsTrackingForegroundProcessSupported();
-  TrackingForegroundProcessSupported::SupportType support_type4 =
+  TrackingForegroundProcessSupported support_info4 =
       process_tracker.get()->IsTrackingForegroundProcessSupported();
 
-  EXPECT_THAT(support_type1, TrackingForegroundProcessSupported::SUPPORTED);
-  EXPECT_THAT(support_type2, TrackingForegroundProcessSupported::SUPPORTED);
-  EXPECT_THAT(support_type3, TrackingForegroundProcessSupported::SUPPORTED);
-  EXPECT_THAT(support_type4, TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info1.support_type(),
+              TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_info1.reason_not_supported(), false);
+  EXPECT_THAT(support_info2.support_type(),
+              TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_info2.reason_not_supported(), false);
+  EXPECT_THAT(support_info3.support_type(),
+              TrackingForegroundProcessSupported::SUPPORTED);
+  EXPECT_THAT(support_info3.reason_not_supported(), false);
+  EXPECT_THAT(support_info4.support_type(),
+              TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info4.reason_not_supported(),
+              TrackingForegroundProcessSupported::
+                  DUMPSYS_NO_TOP_ACTIVITY_NO_SLEEPING_ACTIVITIES);
 }
 
 TEST_F(ForegroundProcessTrackerTest,
        Handshake_no_top_activity_no_awake_activities) {
   ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
-      &event_buffer_, new EmptyMockBashCommandRunner(),
+      &event_buffer_, new NotEmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
       new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner());
 
-  TrackingForegroundProcessSupported::SupportType support_type =
+  TrackingForegroundProcessSupported support_info =
       process_tracker->IsTrackingForegroundProcessSupported();
 
-  EXPECT_THAT(support_type, TrackingForegroundProcessSupported::UNKNOWN);
+  EXPECT_THAT(support_info.support_type(),
+              TrackingForegroundProcessSupported::UNKNOWN);
+  EXPECT_THAT(support_info.reason_not_supported(), false);
 }
 
 TEST_F(ForegroundProcessTrackerTest,
        Handshake_no_top_activity_no_sleeping_activities) {
   ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
-      &event_buffer_, new EmptyMockBashCommandRunner(),
+      &event_buffer_, new NotEmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
       new EmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner());
 
-  TrackingForegroundProcessSupported::SupportType support_type =
+  TrackingForegroundProcessSupported support_info =
       process_tracker->IsTrackingForegroundProcessSupported();
 
-  EXPECT_THAT(support_type, TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info.support_type(),
+              TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info.reason_not_supported(),
+              TrackingForegroundProcessSupported::
+                  DUMPSYS_NO_TOP_ACTIVITY_NO_SLEEPING_ACTIVITIES);
+}
+
+TEST_F(ForegroundProcessTrackerTest,
+       Handshake_no_top_activity_has_awake_activities) {
+  ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
+      &event_buffer_, new NotEmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner());
+
+  TrackingForegroundProcessSupported support_info =
+      process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(support_info.support_type(),
+              TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info.reason_not_supported(),
+              TrackingForegroundProcessSupported::
+                  DUMPSYS_NO_TOP_ACTIVITY_BUT_HAS_AWAKE_ACTIVITIES);
+}
+
+TEST_F(ForegroundProcessTrackerTest, Handshake_grep_not_found) {
+  ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
+      &event_buffer_, new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner());
+
+  TrackingForegroundProcessSupported support_info =
+      process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(support_info.support_type(),
+              TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info.reason_not_supported(),
+              TrackingForegroundProcessSupported::DUMPSYS_NOT_FOUND);
+}
+
+TEST_F(ForegroundProcessTrackerTest, Handshake_dumpsys_not_found) {
+  ForegroundProcessTracker* process_tracker = new ForegroundProcessTracker(
+      &event_buffer_, new NotEmptyMockBashCommandRunner(),
+      new EmptyMockBashCommandRunner(), new EmptyMockBashCommandRunner(),
+      new NotEmptyMockBashCommandRunner(), new NotEmptyMockBashCommandRunner());
+
+  TrackingForegroundProcessSupported support_info =
+      process_tracker->IsTrackingForegroundProcessSupported();
+
+  EXPECT_THAT(support_info.support_type(),
+              TrackingForegroundProcessSupported::NOT_SUPPORTED);
+  EXPECT_THAT(support_info.reason_not_supported(),
+              TrackingForegroundProcessSupported::GREP_NOT_FOUND);
 }
 
 }  // namespace layout_inspector

@@ -20,6 +20,18 @@
 
 namespace layout_inspector {
 
+bool ForegroundProcessTracker::hasDumpsys() {
+  std::string dumpsysPath;
+  dumpsysPathCommandRunner_->Run("", &dumpsysPath);
+  return !dumpsysPath.empty();
+}
+
+bool ForegroundProcessTracker::hasGrep() {
+  std::string grepPath;
+  grepPathCommandRunner_->Run("", &grepPath);
+  return !grepPath.empty();
+}
+
 // Real implementation of |runDumpsysCommand|, as oppsed to
 // |mock_run_dumpsys.cc|. The separation is needed to be able to mock the method
 // when running on fakeandroid, which doesn't have dumpsys.
