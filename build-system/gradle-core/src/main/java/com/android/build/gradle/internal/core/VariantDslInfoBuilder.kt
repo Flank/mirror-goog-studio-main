@@ -98,7 +98,15 @@ class VariantDslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>, DslIn
                 defaultSourceSet,
                 buildType,
                 buildTypeSourceSet,
-                signingConfigOverride,
+                signingConfigOverride?.let { signingOverride ->
+                    dslServices.newDecoratedInstance(
+                        SigningConfig::class.java,
+                        signingOverride.name,
+                        dslServices
+                    ).also {
+                        it.initWith(signingOverride)
+                    }
+                },
                 manifestDataProvider,
                 dslServices,
                 variantServices,
