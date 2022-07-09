@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_PARCELABLE;
+import static org.jetbrains.kotlin.lexer.KtTokens.SEALED_KEYWORD;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,19 +31,23 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiModifier;
-import com.intellij.psi.PsiModifierList;
+import com.intellij.psi.PsiModifierListOwner;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.kotlin.psi.KtClassOrObject;
 import org.jetbrains.uast.UAnonymousClass;
 import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UastContextKt;
 
 /** Looks for Parcelable classes that are missing a CREATOR field */
 public class ParcelDetector extends Detector implements SourceCodeScanner {
 
     private static final String OLD_PARCELIZE = "kotlinx.android.parcel.Parcelize";
     private static final String NEW_PARCELIZE = "kotlinx.parcelize.Parcelize";
+    private static final String JVM_FIELD = "kotlin.jvm.JvmField";
 
     /** The main issue discovered by this detector */
     public static final Issue ISSUE =
@@ -95,13 +100,23 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
 
         boolean isKotlin = Lint.isKotlin(declaration);
         if (isKotlin) {
-            PsiModifierList modifierList = declaration.getModifierList();
-            if (modifierList != null
-                    && (modifierList.findAnnotation(OLD_PARCELIZE) != null
-                            || modifierList.findAnnotation(NEW_PARCELIZE) != null)) {
+            if (hasParcelizeAnnotation(declaration)) {
                 // Already using @Parcelize: nothing to suggest (and don't warn about missing
                 // CREATOR field below)
                 return;
+            }
+            // After b/177856520, @Parcelize is propagated to direct subclasses of a sealed class
+            UClass parent =
+                    UastContextKt.toUElement(
+                            declaration.getJavaPsi().getSuperClass(), UClass.class);
+            if (parent != null && hasParcelizeAnnotation(parent)) {
+                PsiElement parentSourcePsi = parent.getSourcePsi();
+                if (parentSourcePsi instanceof KtClassOrObject) {
+                    KtClassOrObject ktClassOrObject = (KtClassOrObject) parentSourcePsi;
+                    if (ktClassOrObject.hasModifier(SEALED_KEYWORD)) {
+                        return;
+                    }
+                }
             }
         }
 
@@ -114,13 +129,11 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
             context.report(ISSUE, declaration, location, message, null);
         } else if (Lint.isKotlin(field) && !hasCreatorInnerClass(declaration)) {
             // Make sure fields in Kotlin are marked @JvmField
-            PsiModifierList modifierList = field.getModifierList();
-            if (modifierList != null
-                    && modifierList.findAnnotation("kotlin.jvm.JvmField") == null) {
+            if (!hasJvmFieldAnnotation(field)) {
                 Location location = context.getNameLocation(field);
                 LintFix fix =
                         fix().name("Annotate with @JvmField", true)
-                                .annotate("kotlin.jvm.JvmField")
+                                .annotate(JVM_FIELD)
                                 .range(context.getLocation(field))
                                 .autoFix()
                                 .build();
@@ -142,5 +155,13 @@ public class ParcelDetector extends Detector implements SourceCodeScanner {
             }
         }
         return false;
+    }
+
+    private static boolean hasParcelizeAnnotation(PsiModifierListOwner owner) {
+        return owner.hasAnnotation(OLD_PARCELIZE) || owner.hasAnnotation(NEW_PARCELIZE);
+    }
+
+    private static boolean hasJvmFieldAnnotation(PsiModifierListOwner owner) {
+        return owner.hasAnnotation(JVM_FIELD);
     }
 }

@@ -500,4 +500,31 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testParcelizeOnSealedSuperclass() {
+        // Regression test for
+        // 237421695: Wrong warning for `@Parcelize` on sealed class
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package kotlinx.parcelize\n"
+                                        + "@Target(AnnotationTarget.CLASS)\n"
+                                        + "@Retention(AnnotationRetention.BINARY)\n"
+                                        + "annotation class Parcelize"),
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import kotlinx.parcelize.Parcelize\n"
+                                        + "import android.os.Parcelable\n"
+                                        + "\n"
+                                        + "@Parcelize\n"
+                                        + "sealed class ImageConfig : Parcelable {\n"
+                                        + "    data class Square(val circleDimmed: Boolean) : ImageConfig()\n"
+                                        + "    object Rectangle : ImageConfig()\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
 }
