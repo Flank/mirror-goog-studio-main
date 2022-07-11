@@ -21,7 +21,7 @@ import org.gradle.api.provider.Provider
 /**
  * [Variant] for test-only modules.
  */
-interface TestVariant: GeneratesTestApk, Variant, MinifyableVariant {
+interface TestVariant: GeneratesTestApk, Variant {
     /**
      * Variant's application ID as present in the final manifest file of the APK.
      */

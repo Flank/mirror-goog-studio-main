@@ -18,10 +18,14 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 
+/**
+ * Interface for component builder that can shrink resources
+ */
 @Incubating
-interface MinifyableBuilder {
+interface CanMinifyAndroidResourcesBuilder {
+
     /**
-     * Variable for BuildType isMinifyEnabled
+     * Specifies whether resources will be shrinked
      */
-    var codeMinification: Boolean
+    var shrinkResources: Boolean
 }

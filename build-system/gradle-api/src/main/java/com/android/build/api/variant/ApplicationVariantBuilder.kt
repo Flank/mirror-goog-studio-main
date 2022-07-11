@@ -30,8 +30,8 @@ interface ApplicationVariantBuilder : VariantBuilder,
     HasAndroidTestBuilder,
     HasTestFixturesBuilder,
     GeneratesApkBuilder,
-    MinifyableBuilder,
-    ResourcesShrinkableBuilder{
+    CanMinifyCodeBuilder,
+    CanMinifyAndroidResourcesBuilder{
 
     val debuggable: Boolean
 

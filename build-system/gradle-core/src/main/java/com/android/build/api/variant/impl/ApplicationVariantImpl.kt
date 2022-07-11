@@ -146,7 +146,7 @@ open class ApplicationVariantImpl @Inject constructor(
         get() = dslInfo.publishInfo
 
     override val minifiedEnabled: Boolean
-        get() = variantBuilder.codeMinification
+        get() = variantBuilder.isMinifyEnabled
     override val resourcesShrink: Boolean
         get() = variantBuilder.shrinkResources
 
@@ -158,8 +158,8 @@ open class ApplicationVariantImpl @Inject constructor(
         renderscriptCreationConfig?.renderscript
     }
 
-    override val codeMinification: Boolean
-        get() = variantBuilder.codeMinification
+    override val isMinifyEnabled: Boolean
+        get() = variantBuilder.isMinifyEnabled
 
     override val shrinkResources: Boolean
         get() = variantBuilder.shrinkResources

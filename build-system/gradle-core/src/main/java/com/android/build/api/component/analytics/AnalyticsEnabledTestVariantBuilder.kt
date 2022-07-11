@@ -29,10 +29,10 @@ open class AnalyticsEnabledTestVariantBuilder @Inject constructor(
         stats: GradleBuildVariant.Builder
 ) : AnalyticsEnabledVariantBuilder(delegate, stats),
     TestVariantBuilder{
-    override var codeMinification: Boolean
-        get() = delegate.codeMinification
+    override var isMinifyEnabled: Boolean
+        get() = delegate.isMinifyEnabled
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.CODE_MINIFICATION_VALUE_VALUE
-            delegate.codeMinification = value
+            delegate.isMinifyEnabled = value
         }
     }

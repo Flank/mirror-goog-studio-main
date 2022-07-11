@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.LibraryVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
-import com.android.build.gradle.internal.dsl.InstrumentationImpl
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -111,8 +110,8 @@ open class LibraryVariantImpl @Inject constructor(
             )
         }
 
-    override val codeMinification: Boolean
-        get() = variantBuilder.codeMinification
+    override val isMinifyEnabled: Boolean
+        get() = variantBuilder.isMinifyEnabled
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
@@ -148,7 +147,7 @@ open class LibraryVariantImpl @Inject constructor(
         }
 
     override val minifiedEnabled: Boolean
-        get() = variantBuilder.codeMinification
+        get() = variantBuilder.isMinifyEnabled
     override val resourcesShrink: Boolean
         // need to return shrink flag for PostProcessing as this API has the flag for libraries
         // return false otherwise

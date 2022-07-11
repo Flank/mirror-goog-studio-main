@@ -16,7 +16,7 @@
 package com.android.build.api.variant
 
 /** [Variant] for Library projects */
-interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest, HasTestFixtures, MinifyableVariant {
+interface LibraryVariant : Variant, GeneratesAar, HasAndroidTest, HasTestFixtures, CanMinifyCode {
 
     /**
      * Variant specific settings for the renderscript compiler. This will return null when

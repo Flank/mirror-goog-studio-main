@@ -18,10 +18,14 @@ package com.android.build.api.variant
 
 import org.gradle.api.Incubating
 
+/**
+ * Interface for component builder that can minify code
+ */
 @Incubating
-interface MinifyableVariant {
+interface CanMinifyCodeBuilder {
+
     /**
-     * Variant value for BuildType isMinifyEnabled
+     * Specifies whether code will be minified
      */
-    val codeMinification: Boolean
+    var isMinifyEnabled: Boolean
 }

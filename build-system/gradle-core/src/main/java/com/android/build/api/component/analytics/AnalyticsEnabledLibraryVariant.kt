@@ -85,10 +85,10 @@ open class AnalyticsEnabledLibraryVariant @Inject constructor(
             return userVisibleAarMetadata
         }
 
-    override val codeMinification: Boolean
+    override val isMinifyEnabled: Boolean
         get() {
             stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
                 VariantPropertiesMethodType.CODE_MINIFICATION_VALUE
-            return delegate.codeMinification
+            return delegate.isMinifyEnabled
         }
 }

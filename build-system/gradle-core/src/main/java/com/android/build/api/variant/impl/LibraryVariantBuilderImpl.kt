@@ -83,7 +83,7 @@ open class LibraryVariantBuilderImpl @Inject constructor(
             super.targetSdkPreview = value
         }
 
-    override var codeMinification: Boolean =
+    override var isMinifyEnabled: Boolean =
         dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
-        set(value) = setMinificationIfPossible("enableMinification", value) { field = it }
+        set(value) = setMinificationIfPossible("minifyEnabled", value) { field = it }
 }

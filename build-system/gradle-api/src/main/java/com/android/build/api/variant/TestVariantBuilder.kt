@@ -18,4 +18,4 @@ package com.android.build.api.variant
 /**
  * [VariantBuilder] type for tests associated with a module.
  */
-interface TestVariantBuilder: VariantBuilder, GeneratesApkBuilder, MinifyableBuilder
+interface TestVariantBuilder: VariantBuilder, GeneratesApkBuilder, CanMinifyCodeBuilder

@@ -19,12 +19,16 @@ package com.android.build.api.variant
 import org.gradle.api.Incubating
 
 /**
- * Interface is for variant builders that as able to shrinkResources
+ * Interface for component that can shrink resources
  */
 @Incubating
-interface ResourcesShrinkableBuilder {
+interface CanMinifyAndroidResources {
+
     /**
-     * Variable value for BuildType isShrinkResources
+     * Specifies whether resources will be shrinked.
+     * At this point the value is final. You can change it via
+     * [AndroidComponentsExtension.beforeVariants] and
+     * [CanMinifyAndroidResourcesBuilder.shrinkResources]
      */
-    var shrinkResources: Boolean
+    val shrinkResources: Boolean
 }
