@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableInputChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -67,6 +68,7 @@ import javax.inject.Inject
  * Task to merge java resources from multiple modules
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES])
 abstract class MergeJavaResourceTask
 @Inject constructor(objects: ObjectFactory) : NewIncrementalTask() {
 

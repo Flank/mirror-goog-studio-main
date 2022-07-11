@@ -69,7 +69,7 @@ import org.gradle.process.ExecOperations;
 
 /** Task to compile Shaders. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION})
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION, TaskCategoryLabel.SHADER})
 public abstract class ShaderCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()

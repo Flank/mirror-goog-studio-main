@@ -46,7 +46,7 @@ import org.gradle.api.tasks.TaskProvider
 
 /** Task that runs before JavaCompile to collect information about annotation processors. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.JAVA])
 abstract class JavaPreCompileTask : NonIncrementalTask() {
 
     private lateinit var annotationProcessorArtifacts: ArtifactCollection

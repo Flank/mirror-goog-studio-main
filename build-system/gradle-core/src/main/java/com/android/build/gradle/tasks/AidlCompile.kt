@@ -75,7 +75,7 @@ import javax.inject.Inject
  * Task to compile aidl files. Supports incremental update.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.AIDL])
 abstract class AidlCompile : NonIncrementalTask() {
     @get:Input
     @get:Optional

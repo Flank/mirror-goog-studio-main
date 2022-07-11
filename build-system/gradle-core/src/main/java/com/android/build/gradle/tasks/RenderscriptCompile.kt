@@ -76,7 +76,7 @@ import kotlin.math.min
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.RENDERSCRIPT])
 abstract class RenderscriptCompile : NdkTask() {
 
     // ----- PUBLIC TASK API -----

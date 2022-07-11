@@ -31,22 +31,32 @@ import com.android.build.gradle.internal.res.namespaced.StaticLibraryManifestTas
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
+import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
 import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
+import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
+import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
+import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
+import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.JacocoTask
+import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask
 import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.LintCompile
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.MergeNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
 import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
+import com.android.build.gradle.internal.tasks.PackageRenderscriptTask
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
+import com.android.build.gradle.internal.tasks.ProcessJavaResTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
 import com.android.build.gradle.internal.tasks.TestServerTask
@@ -148,7 +158,20 @@ class BuildAnalyzerTest {
             MergeNativeDebugMetadataTask::class.java,
             PrefabPackageTask::class.java,
             PrefabPackageConfigurationTask::class.java,
-
+            ProcessJavaResTask::class.java,
+            BundleLibraryJavaRes::class.java,
+            MergeJavaResourceTask::class.java,
+            JavaDocGenerationTask::class.java,
+            JavaDocJarTask::class.java,
+            PackageRenderscriptTask::class.java,
+            DexMergingTask::class.java,
+            DexFileDependenciesTask::class.java,
+            DexArchiveBuilderTask::class.java,
+            L8DexDesugarLibTask::class.java,
+            D8BundleMainDexListTask::class.java,
+            FeatureDexMergeTask::class.java,
+            PrivacySandboxSdkDexTask::class.java,
+            PrivacySandboxSdkMergeDexTask::class.java
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {

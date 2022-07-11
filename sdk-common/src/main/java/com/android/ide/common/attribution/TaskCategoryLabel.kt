@@ -32,4 +32,18 @@ enum class TaskCategoryLabel {
     ANDROID_RESOURCES,
     // Tasks that involve native libraries
     NATIVE,
+    // Tasks that involve Java sources
+    JAVA,
+    // Tasks that involve Java resources
+    JAVA_RESOURCES,
+    // Tasks that involve Java docs
+    JAVA_DOC,
+    // Tasks that invovle AIDL
+    AIDL,
+    // Tasks involving Renderscript framework
+    RENDERSCRIPT,
+    // Tasks involving shaders
+    SHADER,
+    // Tasks involving dexing
+    DEXING,
 }
