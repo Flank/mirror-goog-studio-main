@@ -91,7 +91,7 @@ abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
 
         override fun configure(task: PrivacySandboxSdkMergeDexTask) {
             task.configureVariantProperties("", task.project.gradle.sharedServices)
-            val minSdk = creationConfig.extension.minSdk ?: 1
+            val minSdk = creationConfig.minSdkVersion.apiLevel
             task.sharedParams.apply {
                 dexingType.setDisallowChanges(
                     if (minSdk >= 21) DexingType.NATIVE_MULTIDEX

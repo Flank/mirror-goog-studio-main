@@ -88,7 +88,7 @@ abstract class PrivacySandboxSdkManifestMergerTask: FusedLibraryManifestMergerTa
                     AndroidArtifacts.ArtifactType.MANIFEST
             )
             task.libraryManifests.set(libraryManifests)
-            task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
+            task.minSdkVersion.setDisallowChanges(creationConfig.minSdkVersion.apiString)
             task.namespace.setDisallowChanges(creationConfig.extension.bundle.applicationId)
             task.tmpDir.setDisallowChanges(
                     creationConfig.layout.buildDirectory.dir("tmp/FusedLibraryManifestMerger")

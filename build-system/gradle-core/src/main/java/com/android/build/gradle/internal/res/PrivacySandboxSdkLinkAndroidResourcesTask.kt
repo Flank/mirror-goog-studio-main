@@ -182,7 +182,7 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
                     creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.MERGED_RES)
             task.mergedResourcesDirectory.setDisallowChanges(mergedRes)
 
-            task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
+            task.minSdk.setDisallowChanges(creationConfig.minSdkVersion.apiLevel)
             task.manifestFile.setDisallowChanges(
                     creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_MANIFEST))
         }

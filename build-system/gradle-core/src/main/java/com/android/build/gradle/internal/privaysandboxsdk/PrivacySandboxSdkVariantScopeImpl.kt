@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeIm
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.build.gradle.internal.utils.validatePreviewTargetValue
+import com.android.builder.core.DefaultApiVersion
+import com.android.builder.model.ApiVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -61,7 +63,11 @@ class PrivacySandboxSdkVariantScopeImpl(
             "compileSdk version is not set"
         )
     }
-
+    override val minSdkVersion: ApiVersion by lazy {
+        extension.minSdkPreview?.let { DefaultApiVersion(it) } ?:
+        extension.minSdk?.let { DefaultApiVersion(it) } ?:
+        DefaultApiVersion("TiramisuPrivacySandbox")
+    }
     override val bootClasspath: Provider<List<RegularFile>>
             get() = bootClasspathConfigProvider.invoke().bootClasspath
 

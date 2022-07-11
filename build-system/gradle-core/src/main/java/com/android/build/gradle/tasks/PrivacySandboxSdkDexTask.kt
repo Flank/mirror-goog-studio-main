@@ -132,7 +132,7 @@ abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
             task.classes.fromDisallowChanges(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES)
             )
-            val minSdk = creationConfig.extension.minSdk ?: 1
+            val minSdk = creationConfig.minSdkVersion.apiLevel
             task.dexParams.apply {
                 debuggable.setDisallowChanges(false)
                 // Enable desugaring by default as speed isn't a high priority for the privacy

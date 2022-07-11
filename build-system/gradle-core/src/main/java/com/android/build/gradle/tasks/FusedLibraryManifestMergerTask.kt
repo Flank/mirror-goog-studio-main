@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
@@ -65,7 +64,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
     abstract val namespace: Property<String>
 
     @get:Input
-    abstract val minSdk: Property<Int>
+    abstract val minSdkVersion: Property<String>
 
     @get:Internal
     abstract val tmpDir: DirectoryProperty
@@ -95,7 +94,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
         val identifierToManifestDependencyFile = libraryManifests.get().associate { getArtifactName(it) to it.file }
         parameters.dependencies.set(identifierToManifestDependencyFile)
         parameters.namespace.set(namespace)
-        parameters.minSdk.set(minSdk)
+        parameters.minSdkVersion.set(minSdkVersion)
         parameters.outMergedManifestLocation.set(mergedFusedLibraryManifest)
         parameters.reportFile.set(reportFile)
     }
@@ -104,7 +103,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
         abstract val mainAndroidManifest: RegularFileProperty
         abstract val dependencies: MapProperty<String, File>
         abstract val namespace: Property<String>
-        abstract val minSdk: Property<Int>
+        abstract val minSdkVersion: Property<String>
         abstract val outMergedManifestLocation: RegularFileProperty
         abstract val reportFile: RegularFileProperty
     }
@@ -126,7 +125,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
                         profileable = false,
                         versionCode = null,
                         versionName = null,
-                        minSdkVersion = minSdk.get().toString(),
+                        minSdkVersion = minSdkVersion.get(),
                         targetSdkVersion = null,
                         maxSdkVersion = null,
                         testOnly = false,
@@ -182,7 +181,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
                     AndroidArtifacts.ArtifactType.MANIFEST
             )
             task.libraryManifests.set(libraryManifests)
-            task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
+            task.minSdkVersion.setDisallowChanges(creationConfig.extension.minSdk.toString())
             task.namespace.set(creationConfig.extension.namespace)
             task.tmpDir.setDisallowChanges(
                     creationConfig.layout.buildDirectory.dir("tmp/FusedLibraryManifestMerger")

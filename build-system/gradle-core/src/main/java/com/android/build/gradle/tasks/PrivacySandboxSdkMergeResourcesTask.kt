@@ -153,7 +153,7 @@ abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
                 aapt2Input.maxAapt2Daemons.setDisallowChanges(8)
             }
             task.projectFilepath.set(creationConfig.layout.projectDirectory.asFile.absolutePath)
-            task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
+            task.minSdk.setDisallowChanges(creationConfig.minSdkVersion.apiLevel)
             task.resourceSets.setFrom(
                     creationConfig.dependencies.getArtifactFileCollection(
                             Usage.JAVA_RUNTIME,
