@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.fusedlibrary.SegregatingConstraintHandler
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
 import com.android.build.gradle.internal.services.Aapt2ThreadPoolBuildService
@@ -48,8 +49,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier
 
-abstract class AbstractFusedLibraryPlugin (
-    protected val softwareComponentFactory: SoftwareComponentFactory,
+abstract class AbstractPrivacySandboxPlugin(
     listenerRegistry: BuildEventsListenerRegistry,
 ): AndroidPluginBaseServices(listenerRegistry), Plugin<Project> {
 
@@ -68,11 +68,11 @@ abstract class AbstractFusedLibraryPlugin (
         }
     }
 
-    abstract val variantScope: FusedLibraryVariantScope
+    abstract val variantScope: PrivacySandboxSdkVariantScope
 
     internal fun createTasks(
         project: Project,
-        variantScope: FusedLibraryVariantScope,
+        variantScope: PrivacySandboxSdkVariantScope,
         tasksCreationActions: List<TaskCreationAction<out DefaultTask>>,
     ) {
         configureTransforms(project)
@@ -94,9 +94,9 @@ abstract class AbstractFusedLibraryPlugin (
      * Returns the artifact type that will be used for maven publication or null if nothing is to
      * be published to maven.
      */
-    abstract val artifactForPublication: Artifact.Single<RegularFile>?
+    internal abstract val artifactForPublication: Artifact.Single<RegularFile>?
 
-    abstract val artifactTypeForPublication: AndroidArtifacts.ArtifactType
+    internal abstract val artifactTypeForPublication: AndroidArtifacts.ArtifactType
 
     override fun apply(project: Project) {
         super.basePluginApply(project)
@@ -219,7 +219,6 @@ abstract class AbstractFusedLibraryPlugin (
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_API)
             )
-            apiElements.extendsFrom(includedApiUnmerged)
         }
 
         // this is the outgoing configuration for JAVA_RUNTIME scoped declarations, it will contain
@@ -230,15 +229,7 @@ abstract class AbstractFusedLibraryPlugin (
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME)
             )
-            runtimeElements.extendsFrom(includeRuntimeUnmerged)
         }
-
-        maybePublishToMaven(
-            project,
-            includeApiElements,
-            includeRuntimeElements,
-            includeRuntimeUnmerged
-        )
     }
 
     override fun configureProject(project: Project) {
@@ -247,49 +238,7 @@ abstract class AbstractFusedLibraryPlugin (
         Aapt2DaemonBuildService.RegistrationAction(project, projectOptions).execute()
     }
 
-    protected abstract fun maybePublishToMaven(
-        project: Project,
-        includeApiElements: Configuration,
-        includeRuntimeElements: Configuration,
-        includeRuntimeUnmerged: Configuration
-    )
-
-    fun component(
-        publication: MavenPublication,
-        unmergedArtifacts: ArtifactCollection,
-    ) {
-
-        publication.pom {  pom: MavenPom ->
-            pom.withXml { xml ->
-                val dependenciesNode = xml.asNode().let {
-                    it.children().firstOrNull { node ->
-                        ((node as Node).name() as QName).qualifiedName == "dependencies"
-                    } ?: it.appendNode("dependencies")
-                } as Node
-
-                unmergedArtifacts.forEach { artifact ->
-                    if (artifact.id is ModuleComponentArtifactIdentifier) {
-                        when (val moduleIdentifier = artifact.id.componentIdentifier) {
-                            is ModuleComponentIdentifier -> {
-                                val dependencyNode = dependenciesNode.appendNode("dependency")
-                                dependencyNode.appendNode("groupId", moduleIdentifier.group)
-                                dependencyNode.appendNode("artifactId", moduleIdentifier.module)
-                                dependencyNode.appendNode("version", moduleIdentifier.version)
-                                dependencyNode.appendNode("scope", "runtime")
-                            }
-                            is ProjectComponentIdentifier -> println("Project : ${moduleIdentifier.projectPath}")
-                            is LibraryBinaryIdentifier -> println("Library : ${moduleIdentifier.projectPath}")
-                            else -> println("Unknown dependency ${moduleIdentifier.javaClass} : $artifact")
-                        }
-                    } else {
-                        println("Unknown module ${artifact.id.javaClass} : ${artifact.id}")
-                    }
-                }
-            }
-        }
-    }
-
-    fun configureTransforms(project: Project) {
+    private fun configureTransforms(project: Project) {
         configuratorService.recordBlock(
                 GradleBuildProfileSpan.ExecutionType.ARTIFACT_TRANSFORM,
                 project.path,

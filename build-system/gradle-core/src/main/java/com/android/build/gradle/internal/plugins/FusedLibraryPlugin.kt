@@ -49,7 +49,7 @@ import javax.inject.Inject
 class FusedLibraryPlugin @Inject constructor(
     softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
-): AbstractFusedLibraryPlugin<FusedLibraryVariantScopeImpl>(softwareComponentFactory, listenerRegistry) {
+): AbstractFusedLibraryPlugin(softwareComponentFactory, listenerRegistry) {
 
     // so far, there is only one variant.
     override val variantScope by lazy {
@@ -218,7 +218,4 @@ class FusedLibraryPlugin @Inject constructor(
 
     override val artifactTypeForPublication: AndroidArtifacts.ArtifactType
         get() = AndroidArtifacts.ArtifactType.AAR
-
-    override val allowUnmergedArtifacts: Boolean
-        get() = true
 }

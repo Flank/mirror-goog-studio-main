@@ -52,9 +52,8 @@ import org.gradle.build.event.BuildEventsListenerRegistry
 import javax.inject.Inject
 
 class PrivacySandboxSdkPlugin @Inject constructor(
-    softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
-): AbstractFusedLibraryPlugin<PrivacySandboxSdkVariantScope>(softwareComponentFactory, listenerRegistry) {
+): AbstractPrivacySandboxPlugin(listenerRegistry) {
 
     private val versionedSdkLoaderService: VersionedSdkLoaderService by lazy {
         withProject("versionedSdkLoaderService") { project ->
@@ -99,15 +98,6 @@ class PrivacySandboxSdkPlugin @Inject constructor(
 
     override fun configureExtension(project: Project) {
         extension
-    }
-
-    override fun maybePublishToMaven(
-        project: Project,
-        includeApiElements: Configuration,
-        includeRuntimeElements: Configuration,
-        includeRuntimeUnmerged: Configuration
-    ) {
-        // ASB only get published to Play Store, not maven
     }
 
     override fun apply(project: Project) {
@@ -167,7 +157,4 @@ class PrivacySandboxSdkPlugin @Inject constructor(
 
     override val artifactTypeForPublication: AndroidArtifacts.ArtifactType
         get() = AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE
-
-    override val allowUnmergedArtifacts: Boolean
-        get() = false
 }
