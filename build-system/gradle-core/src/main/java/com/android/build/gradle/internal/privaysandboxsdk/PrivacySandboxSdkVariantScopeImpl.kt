@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.privaysandboxsdk
 
 import com.android.build.api.artifact.impl.ArtifactsImpl
-import com.android.build.api.dsl.FusedLibraryExtension
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkBundleImpl
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryConfigurations
@@ -34,16 +33,39 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 
-interface PrivacySandboxSdkVariantScope {
-    val layout: ProjectLayout
-    val artifacts: ArtifactsImpl
-    val incomingConfigurations: FusedLibraryConfigurations
-    val outgoingConfigurations: FusedLibraryConfigurations
-    val dependencies: FusedLibraryDependencies
-    val extension: PrivacySandboxSdkExtension
-    val mergeSpec: Spec<ComponentIdentifier>
-    val compileSdkVersion: String
-    val bootClasspath: Provider<List<RegularFile>>
-    val bundle: PrivacySandboxSdkBundleImpl
-    val services: TaskCreationServices
+class PrivacySandboxSdkVariantScopeImpl(
+        project: Project,
+        override val services: TaskCreationServices,
+        private val extensionProvider: () -> PrivacySandboxSdkExtension,
+        private val bootClasspathConfigProvider: () -> BootClasspathConfig
+): PrivacySandboxSdkVariantScope{
+
+    override val layout: ProjectLayout = project.layout
+    override val artifacts: ArtifactsImpl = ArtifactsImpl(project, "single")
+    override val incomingConfigurations: FusedLibraryConfigurations = FusedLibraryConfigurations()
+    override val outgoingConfigurations: FusedLibraryConfigurations = FusedLibraryConfigurations()
+    override val dependencies: FusedLibraryDependencies = FusedLibraryDependencies(incomingConfigurations)
+
+    override val extension: PrivacySandboxSdkExtension by lazy {
+        extensionProvider.invoke()
+    }
+
+    override val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
+        true // so far, all dependencies are consumed by the sdk library plugin.
+    }
+
+    override val compileSdkVersion: String by lazy {
+        extension.compileSdkPreview?.let { validatePreviewTargetValue(it) }?.let { "android-$it" } ?:
+        extension.compileSdkExtension?.let { "android-${extension.compileSdk}-ext$it" } ?:
+        extension.compileSdk?.let {"android-$it"} ?: throw RuntimeException(
+            "compileSdk version is not set"
+        )
+    }
+
+    override val bootClasspath: Provider<List<RegularFile>>
+            get() = bootClasspathConfigProvider.invoke().bootClasspath
+
+    override val bundle: PrivacySandboxSdkBundleImpl
+        get() = extension.bundle as PrivacySandboxSdkBundleImpl
+
 }

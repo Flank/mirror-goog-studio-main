@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.dsl.InternalPrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkExtensionImpl
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScopeImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.PrivacySandboxSdkLinkAndroidResourcesTask
 import com.android.build.gradle.internal.services.Aapt2DaemonBuildService
@@ -71,9 +72,9 @@ class PrivacySandboxSdkPlugin @Inject constructor(
     }
 
     // so far, there is only one variant.
-    override val variantScope by lazy {
+    override val variantScope: PrivacySandboxSdkVariantScope by lazy {
         withProject("variantScope") { project ->
-            PrivacySandboxSdkVariantScope(
+            PrivacySandboxSdkVariantScopeImpl(
                 project,
                 TaskCreationServicesImpl(projectServices),
                 { extension },
