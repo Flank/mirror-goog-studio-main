@@ -82,7 +82,6 @@ internal class PrivacySandboxSdkLinkAndroidResourcesTaskTest {
             android {
                 defaultCompileSdk()
                 buildToolsRevision = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString()
-                namespace = "com.example.privacySdkSandbox1"
                 minSdk = 19
             }
             dependencies {
@@ -92,7 +91,7 @@ internal class PrivacySandboxSdkLinkAndroidResourcesTaskTest {
                 """
                         android {
                             bundle {
-                                packageName = "com.example.privacysandboxsdk"
+                                applicationId = "com.example.privacysandboxsdk"
                                 sdkProviderClassName = "Test"
                                 setVersion(1, 2, 3)
                             }

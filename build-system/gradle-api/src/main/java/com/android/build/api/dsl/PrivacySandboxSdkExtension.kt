@@ -19,7 +19,7 @@ package com.android.build.api.dsl
 import org.gradle.api.Incubating
 
 @Incubating
-interface PrivacySandboxSdkExtension: FusedLibraryExtension {
+interface PrivacySandboxSdkExtension {
 
     /**
      * Specifies the API level to compile your project against. The Android plugin requires you to
@@ -78,6 +78,17 @@ interface PrivacySandboxSdkExtension: FusedLibraryExtension {
     @get:Incubating
     @set:Incubating
     var buildToolsVersion: String
+
+    @get:Incubating
+    @set:Incubating
+    var minSdk: Int?
+
+
+    @get:Deprecated(message = "namespace is replaced with applicationId in bundle block", replaceWith = ReplaceWith("bundle.applicationId"))
+    @get:Incubating
+    @set:Deprecated(message = "namespace is replaced with applicationId in bundle block", replaceWith = ReplaceWith("bundle.applicationId"))
+    @set:Incubating
+    var namespace: String?
 
     @get:Incubating
     val bundle: PrivacySandboxSdkBundle

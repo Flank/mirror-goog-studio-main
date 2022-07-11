@@ -1492,31 +1492,40 @@ package com.android.build.api.dsl {
   }
 
   @org.gradle.api.Incubating public interface PrivacySandboxSdkBundle {
-    method @org.gradle.api.Incubating public String? getPackageName();
+    method @org.gradle.api.Incubating public String? getApplicationId();
+    method @Deprecated @org.gradle.api.Incubating public String? getPackageName();
     method @org.gradle.api.Incubating public String? getSdkProviderClassName();
-    method @org.gradle.api.Incubating public void setPackageName(String? packageName);
+    method @org.gradle.api.Incubating public void setApplicationId(String? applicationId);
+    method @Deprecated @org.gradle.api.Incubating public void setPackageName(String? packageName);
     method @org.gradle.api.Incubating public void setSdkProviderClassName(String? sdkProviderClassName);
     method @org.gradle.api.Incubating public void setVersion(int major, int minor, int patch);
-    property @org.gradle.api.Incubating public abstract String? packageName;
+    property @org.gradle.api.Incubating public abstract String? applicationId;
+    property @Deprecated @org.gradle.api.Incubating public abstract String? packageName;
     property @org.gradle.api.Incubating public abstract String? sdkProviderClassName;
   }
 
-  @org.gradle.api.Incubating public interface PrivacySandboxSdkExtension extends com.android.build.api.dsl.FusedLibraryExtension {
+  @org.gradle.api.Incubating public interface PrivacySandboxSdkExtension {
     method @org.gradle.api.Incubating public void bundle(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.PrivacySandboxSdkBundle,kotlin.Unit> action);
     method @org.gradle.api.Incubating public String getBuildToolsVersion();
     method @org.gradle.api.Incubating public com.android.build.api.dsl.PrivacySandboxSdkBundle getBundle();
     method @org.gradle.api.Incubating public Integer? getCompileSdk();
     method @org.gradle.api.Incubating public Integer? getCompileSdkExtension();
     method @org.gradle.api.Incubating public String? getCompileSdkPreview();
+    method @org.gradle.api.Incubating public Integer? getMinSdk();
+    method @Deprecated @org.gradle.api.Incubating public String? getNamespace();
     method @org.gradle.api.Incubating public void setBuildToolsVersion(String buildToolsVersion);
     method @org.gradle.api.Incubating public void setCompileSdk(Integer? compileSdk);
     method @org.gradle.api.Incubating public void setCompileSdkExtension(Integer? compileSdkExtension);
     method @org.gradle.api.Incubating public void setCompileSdkPreview(String? compileSdkPreview);
+    method @org.gradle.api.Incubating public void setMinSdk(Integer? minSdk);
+    method @Deprecated @org.gradle.api.Incubating public void setNamespace(String? namespace);
     property @org.gradle.api.Incubating public abstract String buildToolsVersion;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.PrivacySandboxSdkBundle bundle;
     property @org.gradle.api.Incubating public abstract Integer? compileSdk;
     property @org.gradle.api.Incubating public abstract Integer? compileSdkExtension;
     property @org.gradle.api.Incubating public abstract String? compileSdkPreview;
+    property @org.gradle.api.Incubating public abstract Integer? minSdk;
+    property @Deprecated @org.gradle.api.Incubating public abstract String? namespace;
   }
 
   public interface ProductFlavor extends org.gradle.api.Named com.android.build.api.dsl.BaseFlavor org.gradle.api.plugins.ExtensionAware com.android.build.api.dsl.HasInitWith<com.android.build.api.dsl.BaseFlavor> {

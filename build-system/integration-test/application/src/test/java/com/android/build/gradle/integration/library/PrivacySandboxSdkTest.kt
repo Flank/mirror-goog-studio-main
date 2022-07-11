@@ -125,13 +125,12 @@ class PrivacySandboxSdkTest {
             android {
                 defaultCompileSdk()
                 minSdk = 12
-                namespace = "com.example.privacysandboxsdk"
             }
             appendToBuildFile {
                 """
                         android {
                             bundle {
-                                packageName = "com.example.privacysandboxsdk"
+                                applicationId = "com.example.privacysandboxsdk"
                                 sdkProviderClassName = "Test"
                                 setVersion(1, 2, 3)
                             }
