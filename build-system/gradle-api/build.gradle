@@ -3,6 +3,12 @@ apply plugin: 'com.android.tools.kotlin'
 apply plugin: 'com.android.tools.publish'
 apply plugin: 'com.android.tools.metalava'
 
+configurations {
+    compileOnlyForJavadoc {
+        extendsFrom(configurations.compileOnly)
+    }
+}
+
 dependencies {
     implementation project(':base:builder-test-api')
     implementation libs.guava
@@ -30,7 +36,7 @@ dependencies {
 }
 
 javadoc {
-  classpath += configurations.compileOnly
+  classpath += configurations.compileOnlyForJavadoc
 }
 
 task javadocZip(type: Zip) {

@@ -81,7 +81,7 @@ class GradleW {
             for (File repo : repos) {
                 gradle.addRepo(repo);
             }
-            gradle.addArgument("-Dkotlin.compiler.execution.strategy=in-process");
+            gradle.addArgument("-Pkotlin.compiler.execution.strategy=in-process");
             gradleArgs.forEach(gradle::addArgument);
             OutputStream out = new TeeOutputStream(System.out, log);
             OutputStream err = new TeeOutputStream(System.err, log);

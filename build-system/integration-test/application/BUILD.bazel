@@ -33,8 +33,7 @@ TEST_DEPS = [
     "@maven//:org.apache.commons.commons-compress",
     "@maven//:org.codehaus.groovy.groovy-all",  # required by //tools/base/build-system:gradle-api
     "@maven//:org.jetbrains.dokka.dokka-core",
-    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
-    "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     "@maven//:org.jetbrains.kotlin.kotlin-test",
     "@maven//:org.mockito.mockito-core",
     "@maven//:org.ow2.asm.asm",
