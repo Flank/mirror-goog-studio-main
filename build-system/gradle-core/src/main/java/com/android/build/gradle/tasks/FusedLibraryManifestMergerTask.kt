@@ -142,14 +142,16 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
         }
     }
 
-    abstract class AbstractCreationAction<T : FusedLibraryManifestMergerTask>(open val creationConfig: FusedLibraryVariantScope) :
-            TaskCreationAction<T>() {
+    class CreationAction(private val creationConfig: FusedLibraryVariantScope) :
+            TaskCreationAction<FusedLibraryManifestMergerTask>() {
 
         override val name: String
             get() = "mergeManifest"
 
+        override val type: Class<FusedLibraryManifestMergerTask>
+            get() = FusedLibraryManifestMergerTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<T>) {
+        override fun handleProvider(taskProvider: TaskProvider<FusedLibraryManifestMergerTask>) {
             super.handleProvider(taskProvider)
             creationConfig.artifacts.setInitialProvider(
                     taskProvider,
@@ -172,7 +174,7 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
             SdkConstants.FD_OUTPUT
         }
 
-        override fun configure(task: T) {
+        override fun configure(task: FusedLibraryManifestMergerTask) {
             task.configureVariantProperties("", task.project.gradle.sharedServices)
             val libraryManifests = creationConfig.dependencies.getArtifactCollection(
                     Usage.JAVA_RUNTIME,
@@ -186,12 +188,5 @@ abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
                     creationConfig.layout.buildDirectory.dir("tmp/FusedLibraryManifestMerger")
             )
         }
-    }
-
-    class CreationAction(creationConfig: FusedLibraryVariantScope):
-        AbstractCreationAction<FusedLibraryManifestMergerTask>(creationConfig) {
-
-        override val type: Class<FusedLibraryManifestMergerTask>
-            get() = FusedLibraryManifestMergerTask::class.java
     }
 }

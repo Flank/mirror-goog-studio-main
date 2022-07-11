@@ -16,13 +16,23 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
+import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.configureVariantProperties
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.FileUtils
+import org.gradle.api.attributes.Usage
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 
 @CacheableTask
 abstract class PrivacySandboxSdkManifestMergerTask: FusedLibraryManifestMergerTask() {
@@ -38,14 +48,51 @@ abstract class PrivacySandboxSdkManifestMergerTask: FusedLibraryManifestMergerTa
         }
     }
 
-    class CreationAction(creationConfig: PrivacySandboxSdkVariantScope):
-        AbstractCreationAction<PrivacySandboxSdkManifestMergerTask>(creationConfig) {
+    class CreationAction(private val creationConfig: PrivacySandboxSdkVariantScope):
+        TaskCreationAction<PrivacySandboxSdkManifestMergerTask>() {
+
+        override val name: String
+            get() = "mergeManifest"
 
         override val type: Class<PrivacySandboxSdkManifestMergerTask>
             get() = PrivacySandboxSdkManifestMergerTask::class.java
 
+        override fun handleProvider(taskProvider: TaskProvider<PrivacySandboxSdkManifestMergerTask>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    FusedLibraryManifestMergerTask::mergedFusedLibraryManifest
+            ).withName(FN_ANDROID_MANIFEST_XML)
+                    .on(FusedLibraryInternalArtifactType.MERGED_MANIFEST)
+
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    FusedLibraryManifestMergerTask::reportFile
+            ).atLocation(
+                    FileUtils.join(
+                            creationConfig.layout.projectDirectory.asFile,
+                            "build",
+                            SdkConstants.FD_OUTPUTS,
+                            SdkConstants.FD_LOGS
+                    ).absolutePath
+            ).withName("manifest-merger-$name-report.txt")
+                    .on(FusedLibraryInternalArtifactType.MANIFEST_MERGE_REPORT)
+            SdkConstants.FD_OUTPUT
+        }
+
         override fun configure(task: PrivacySandboxSdkManifestMergerTask) {
-            super.configure(task)
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+            val libraryManifests = creationConfig.dependencies.getArtifactCollection(
+                    Usage.JAVA_RUNTIME,
+                    creationConfig.mergeSpec,
+                    AndroidArtifacts.ArtifactType.MANIFEST
+            )
+            task.libraryManifests.set(libraryManifests)
+            task.minSdk.setDisallowChanges(creationConfig.extension.minSdk)
+            task.namespace.setDisallowChanges(creationConfig.extension.namespace)
+            task.tmpDir.setDisallowChanges(
+                    creationConfig.layout.buildDirectory.dir("tmp/FusedLibraryManifestMerger")
+            )
             task.mainManifestFile.set(
                 creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.SANDBOX_MANIFEST)
             )

@@ -33,8 +33,6 @@ import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
-import com.android.build.gradle.tasks.FusedLibraryBundleClasses
-import com.android.build.gradle.tasks.FusedLibraryClassesRewriteTask
 import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.GeneratePrivacySandboxAsar
@@ -143,11 +141,9 @@ class PrivacySandboxSdkPlugin @Inject constructor(
                 variantScope,
                 listOf(
                         AppMetadataTask.PrivacySandboxSdkCreationAction(variantScope),
-                        FusedLibraryBundleClasses.CreationAction(variantScope),
-                        FusedLibraryClassesRewriteTask.CreationAction(variantScope),
-                        FusedLibraryMergeClasses.CreationAction(variantScope),
+                        FusedLibraryMergeClasses.PrivacySandboxSdkCreationAction(variantScope),
                         GeneratePrivacySandboxAsar.CreationAction(variantScope),
-                        MergeJavaResourceTask.CreationActionFusedLibrary(variantScope),
+                        MergeJavaResourceTask.PrivacySandboxSdkCreationAction(variantScope),
                         PrivacySandboxSdkMergeResourcesTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestGeneratorTask.CreationAction(variantScope),
                         PrivacySandboxSdkManifestMergerTask.CreationAction(variantScope),

@@ -130,7 +130,7 @@ abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
         override fun configure(task: PrivacySandboxSdkDexTask) {
             task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.classes.fromDisallowChanges(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES)
             )
             val minSdk = creationConfig.extension.minSdk ?: 1
             task.dexParams.apply {

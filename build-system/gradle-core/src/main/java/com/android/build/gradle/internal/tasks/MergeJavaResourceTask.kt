@@ -26,12 +26,12 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.packaging.defaultExcludes
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -317,8 +317,64 @@ abstract class MergeJavaResourceTask
         }
     }
 
-    class CreationActionFusedLibrary(
+    class FusedLibraryCreationAction(
             val creationConfig: FusedLibraryVariantScope
+    ) : TaskCreationAction<MergeJavaResourceTask>() {
+
+        override val name: String
+            get() = "mergeLibraryJavaResources"
+        override val type: Class<MergeJavaResourceTask>
+            get() = MergeJavaResourceTask::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<MergeJavaResourceTask>) {
+            super.handleProvider(taskProvider)
+
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    MergeJavaResourceTask::outputFile
+            ).withName("base.jar").on(FusedLibraryInternalArtifactType.MERGED_JAVA_RES)
+        }
+
+        override fun configure(task: MergeJavaResourceTask) {
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+            task.subProjectJavaRes.from(
+                    creationConfig.dependencies.getArtifactFileCollection(
+                            Usage.JAVA_RUNTIME,
+                            creationConfig.mergeSpec,
+                            AndroidArtifacts.ArtifactType.JAVA_RES
+                    )
+            )
+
+            // For configuring the merging rules (we may want to add DSL for this in the future.
+            task.excludes.setDisallowChanges(defaultExcludes)
+            task.pickFirsts.setDisallowChanges(emptySet())
+            task.merges.setDisallowChanges(emptySet())
+
+            task.intermediateDir = creationConfig.layout.buildDirectory
+                    .dir(SdkConstants.FD_INTERMEDIATES)
+                    .map { it.dir("mergeJavaRes") }.get().asFile
+            task.cacheDir = File(task.intermediateDir, "zip-cache")
+            task.incrementalStateFile = File(task.intermediateDir, "merge-state")
+
+            // External libraries can just be consumed via the subProjectJavaRes (the inputs are
+            // only intended for finer grain incremental runs.
+            task.externalLibJavaRes.disallowChanges()
+
+            // No sources in fused library projects, so none of the below need set.
+            task.projectJavaRes.disallowChanges()
+            task.projectJavaResAsJars.disallowChanges()
+            task.unfilteredProjectJavaRes = task.project.files()
+            task.featureJavaRes.disallowChanges()
+
+            // mergeScopes is unused by the task.
+            task.mergeScopes = setOf()
+        }
+
+    }
+
+
+    class PrivacySandboxSdkCreationAction(
+            val creationConfig: PrivacySandboxSdkVariantScope
     ) : TaskCreationAction<MergeJavaResourceTask>() {
 
         override val name: String

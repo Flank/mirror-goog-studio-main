@@ -28,13 +28,14 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_PREFAB_PACKAGE_CONFIGURATION
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_RENDERSCRIPT_HEADERS
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.utils.usLocaleCapitalize
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
@@ -52,7 +53,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.configurationcache.extensions.capitalized
 import java.io.File
 
 /**
@@ -131,13 +131,56 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
         }
     }
 
-    class CreateAction(val creationConfig: FusedLibraryVariantScope,
+    class CreateActionFusedLibrary(val creationConfig: FusedLibraryVariantScope,
             private val androidArtifactType: ArtifactType,
             private val internalArtifactType: Artifact.Single<*>) :
         TaskCreationAction<FusedLibraryMergeArtifactTask>() {
 
         override val name: String
-            get() = "mergingArtifact${androidArtifactType.name.capitalized()}"
+            get() = "mergingArtifact${androidArtifactType.name.usLocaleCapitalize()}"
+        override val type: Class<FusedLibraryMergeArtifactTask>
+            get() = FusedLibraryMergeArtifactTask::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<FusedLibraryMergeArtifactTask>) {
+            super.handleProvider(taskProvider)
+
+            when (internalArtifactType.kind) {
+                ArtifactKind.DIRECTORY ->
+                    creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            FusedLibraryMergeArtifactTask::outputDir
+                    ).withName(androidArtifactType.name.toLowerCase())
+                            .on(internalArtifactType as Artifact.Single<Directory>)
+                ArtifactKind.FILE ->
+                    creationConfig.artifacts.setInitialProvider(
+                            taskProvider,
+                            FusedLibraryMergeArtifactTask::outputFile
+                    ).withName(androidArtifactType.name.toLowerCase())
+                            .on(internalArtifactType as Artifact.Single<RegularFile>)
+            }
+        }
+
+        override fun configure(task: FusedLibraryMergeArtifactTask) {
+            task.artifactFiles.setFrom(
+                    creationConfig.dependencies.getArtifactFileCollection(
+                            Usage.JAVA_RUNTIME,
+                            creationConfig.mergeSpec,
+                            androidArtifactType
+                    )
+            )
+            task.artifactType.setDisallowChanges(androidArtifactType)
+            task.configureVariantProperties("", task.project.gradle.sharedServices)
+        }
+
+    }
+
+    class CreateActionPrivacySandboxSdk(val creationConfig: PrivacySandboxSdkVariantScope,
+            private val androidArtifactType: ArtifactType,
+            private val internalArtifactType: Artifact.Single<*>) :
+            TaskCreationAction<FusedLibraryMergeArtifactTask>() {
+
+        override val name: String
+            get() = "mergingArtifact${androidArtifactType.name.usLocaleCapitalize()}"
         override val type: Class<FusedLibraryMergeArtifactTask>
             get() = FusedLibraryMergeArtifactTask::class.java
 
@@ -188,8 +231,12 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                         ArtifactType.AAR_METADATA to MERGED_AAR_METADATA,
                 )
         fun getCreationActions(creationConfig: FusedLibraryVariantScope) :
-                List<FusedLibraryMergeArtifactTask.CreateAction> {
-            return mergeArtifactMap.map { CreateAction(creationConfig, it.first, it.second) }
+                List<CreateActionFusedLibrary> {
+            return mergeArtifactMap.map { CreateActionFusedLibrary(creationConfig, it.first, it.second) }
+        }
+        fun getCreationActions(creationConfig: PrivacySandboxSdkVariantScope) :
+                List<CreateActionPrivacySandboxSdk> {
+            return mergeArtifactMap.map { CreateActionPrivacySandboxSdk(creationConfig, it.first, it.second) }
         }
     }
 }

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2FromMaven
@@ -109,7 +110,7 @@ abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
                 logger = logger)
     }
 
-    class CreationAction(val creationConfig: FusedLibraryVariantScope) :
+    class CreationAction(val creationConfig: PrivacySandboxSdkVariantScope) :
             TaskCreationAction<PrivacySandboxSdkMergeResourcesTask>() {
 
         override val name: String
