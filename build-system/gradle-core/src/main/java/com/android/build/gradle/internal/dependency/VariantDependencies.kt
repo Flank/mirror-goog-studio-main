@@ -117,28 +117,9 @@ class VariantDependencies internal constructor(
         scope: ArtifactScope,
         artifactType: AndroidArtifacts.ArtifactType,
         attributes: AndroidAttributes? = null
-    ): FileCollection {
-        if (configType.needsTestedComponents()) {
-            return getArtifactCollection(configType, scope, artifactType, attributes)
-                .artifactFiles
-        }
-
-        val artifacts = computeArtifactCollection(configType, scope, artifactType, attributes)
-
-        return if (configType == ConsumedConfigType.RUNTIME_CLASSPATH
-            && isArtifactTypeExcluded(artifactType)
-        ) {
-            val excludedDirectories = computeArtifactCollection(
-                ConsumedConfigType.PROVIDED_CLASSPATH, ArtifactScope.PROJECT,
-                PACKAGED_DEPENDENCIES,
-                attributes
-            ).artifactFiles
-            FilteringSpec(artifacts, excludedDirectories, project.objects)
-                .getFilteredFileCollection()
-        } else {
-            artifacts.artifactFiles
-        }
-    }
+    ): FileCollection = getArtifactCollection(
+        configType, scope, artifactType, attributes
+    ).artifactFiles
 
     @JvmOverloads
     fun getArtifactCollection(
