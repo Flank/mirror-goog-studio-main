@@ -20,7 +20,9 @@ import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.build.gradle.integration.common.fixture.DEFAULT_COMPILE_SDK_VERSION
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
+import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType.MERGED_MANIFEST
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +38,7 @@ import org.junit.Test
 class ToolsAnnotatedManifestEntriesTest {
 
     @get:Rule
-    var project = createGradleProject {
+    var project = createGradleProjectBuilder {
         subProject(":privacy-sandbox-sdk") {
             plugins.add(PluginType.PRIVACY_SANDBOX_SDK)
             android {
@@ -67,6 +69,8 @@ class ToolsAnnotatedManifestEntriesTest {
             """.trimIndent())
         }
     }
+            .addGradleProperties("${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true")
+            .create()
 
 
     @Test

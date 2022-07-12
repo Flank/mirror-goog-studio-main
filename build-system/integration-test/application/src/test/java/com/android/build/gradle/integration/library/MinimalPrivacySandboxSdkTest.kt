@@ -19,6 +19,8 @@ package com.android.build.gradle.integration.library
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
 import com.android.build.gradle.integration.common.truth.ApkSubject
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Apk
@@ -130,5 +132,25 @@ class MinimalPrivacySandboxSdkTest {
                     "/AndroidManifest.xml"
             )
         }
+    }
+
+    @Test
+    fun checkOptInRequired() {
+        TestFileUtils.searchAndReplace(
+                project.file("gradle.properties"),
+                BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName,
+                "# " + BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName)
+        val result = project.executor()
+                .expectFailure()
+                .run(":minimal-app:buildPrivacySandboxSdkApksForDebug")
+        assertThat(result.stderr).contains(
+                """
+                    Privacy Sandbox SDK support is experimental, and must be explicitly enabled.
+                    To enable support, add
+                        android.experimental.privacysandboxsdk.enable=true
+                    to your project's gradle.properties file.
+                """.trimIndent()
+        )
+
     }
 }

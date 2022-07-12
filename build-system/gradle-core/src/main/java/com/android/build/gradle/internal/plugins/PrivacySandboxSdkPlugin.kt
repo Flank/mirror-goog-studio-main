@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask
 import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfigImpl
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.build.gradle.tasks.FusedLibraryMergeClasses
 import com.android.build.gradle.tasks.GeneratePrivacySandboxAsar
@@ -45,6 +46,7 @@ import com.android.build.gradle.tasks.PrivacySandboxSdkMergeDexTask
 import com.android.build.gradle.tasks.PrivacySandboxSdkMergeResourcesTask
 import com.android.repository.Revision
 import com.google.wireless.android.sdk.stats.GradleBuildProject
+import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.component.SoftwareComponentFactory
@@ -103,6 +105,14 @@ class PrivacySandboxSdkPlugin @Inject constructor(
 
     override fun apply(project: Project) {
         super.apply(project)
+        if (!projectServices.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+            throw GradleException(
+                    "Privacy Sandbox SDK support is experimental, and must be explicitly enabled.\n" +
+                    "To enable support, add\n" +
+                    "    ${BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT.propertyName}=true\n" +
+                    "to your project's gradle.properties file."
+            )
+        }
         Aapt2ThreadPoolBuildService.RegistrationAction(project, projectServices.projectOptions).execute()
         Aapt2DaemonBuildService.RegistrationAction(project, projectServices.projectOptions).execute()
     }
