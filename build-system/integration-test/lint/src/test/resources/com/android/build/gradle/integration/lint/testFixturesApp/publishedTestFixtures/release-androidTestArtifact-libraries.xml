@@ -1,5 +1,24 @@
 <libraries>
   <library
+      name="com.example.javaLib:javaLib:1.0@jar"
+      jars="${projectDir}/testrepo/com/example/javaLib/javaLib/1.0/javaLib-1.0.jar"
+      resolved="com.example.javaLib:javaLib:1.0"
+      provided="true"/>
+  <library
+      name="com.example.lib:lib:1.0@aar"
+      jars="${gradleCacheDir}/<digest>/transformed/lib-1.0/jars/classes.jar"
+      resolved="com.example.lib:lib:1.0"
+      provided="true"
+      folder="${gradleCacheDir}/<digest>/transformed/lib-1.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
+  <library
       name="${projectDir}@@:app::release::testFixtures"
       jars="${projectDir}/app/build/.transforms/<digest>/transformed/out-test-fixtures/jars/classes.jar"
       resolved="artifacts:app:unspecified"
@@ -16,6 +35,23 @@
       name="${projectDir}@@:app::release"
       jars="${projectDir}/app/build/intermediates/compile_app_classes_jar/release/classes.jar"
       resolved="::"/>
+  <library
+      name="com.example.javaLib:javaLib:1.0:test-fixtures@jar::testFixtures"
+      jars="${projectDir}/testrepo/com/example/javaLib/javaLib/1.0/javaLib-1.0-test-fixtures.jar"
+      resolved="com.example.javaLib:javaLib:1.0"/>
+  <library
+      name="com.example.lib:lib:1.0:test-fixtures@aar::testFixtures"
+      jars="${gradleCacheDir}/<digest>/transformed/lib-1.0-test-fixtures/jars/classes.jar"
+      resolved="com.example.lib:lib:1.0"
+      folder="${gradleCacheDir}/<digest>/transformed/lib-1.0-test-fixtures"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
   <library
       name="com.google.truth:truth:0.44@jar"
       jars="${mavenRepo}/com/google/truth/truth/0.44/truth-0.44.jar"
@@ -68,4 +104,8 @@
       name="com.google.auto.value:auto-value-annotations:1.6.3@jar"
       jars="${mavenRepo}/com/google/auto/value/auto-value-annotations/1.6.3/auto-value-annotations-1.6.3.jar"
       resolved="com.google.auto.value:auto-value-annotations:1.6.3"/>
+  <library
+      name="androidx.annotation:annotation:1.1.0@jar"
+      jars="${mavenRepo}/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar"
+      resolved="androidx.annotation:annotation:1.1.0"/>
 </libraries>

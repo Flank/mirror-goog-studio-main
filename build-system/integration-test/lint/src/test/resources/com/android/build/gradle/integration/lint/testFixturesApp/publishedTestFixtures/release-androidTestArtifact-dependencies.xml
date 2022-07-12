@@ -1,12 +1,24 @@
 <dependencies>
   <compile
-      roots="${projectDir}@@:app::release::testFixtures,${projectDir}@@:app::release,com.google.truth:truth:0.44@jar,com.google.guava:guava:27.0.1-android@jar,com.google.guava:failureaccess:1.0.1@jar,com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava@jar,com.google.code.findbugs:jsr305:3.0.2@jar,org.checkerframework:checker-compat-qual:2.5.5@jar,com.google.errorprone:error_prone_annotations:2.3.1@jar,com.google.j2objc:j2objc-annotations:1.1@jar,org.codehaus.mojo:animal-sniffer-annotations:1.17@jar,junit:junit:4.12@jar,org.hamcrest:hamcrest-core:1.3@jar,com.googlecode.java-diff-utils:diffutils:1.3.0@jar,com.google.auto.value:auto-value-annotations:1.6.3@jar">
+      roots="${projectDir}@@:app::release::testFixtures,${projectDir}@@:app::release,com.example.javaLib:javaLib:1.0:test-fixtures@jar::testFixtures,com.example.javaLib:javaLib:1.0@jar,com.example.lib:lib:1.0:test-fixtures@aar::testFixtures,com.example.lib:lib:1.0@aar,com.google.truth:truth:0.44@jar,com.google.guava:guava:27.0.1-android@jar,com.google.guava:failureaccess:1.0.1@jar,com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava@jar,com.google.code.findbugs:jsr305:3.0.2@jar,org.checkerframework:checker-compat-qual:2.5.5@jar,com.google.errorprone:error_prone_annotations:2.3.1@jar,com.google.j2objc:j2objc-annotations:1.1@jar,org.codehaus.mojo:animal-sniffer-annotations:1.17@jar,junit:junit:4.12@jar,org.hamcrest:hamcrest-core:1.3@jar,com.googlecode.java-diff-utils:diffutils:1.3.0@jar,com.google.auto.value:auto-value-annotations:1.6.3@jar,androidx.annotation:annotation:1.1.0@jar">
     <dependency
         name="${projectDir}@@:app::release::testFixtures"
         simpleName="artifacts::app"/>
     <dependency
         name="${projectDir}@@:app::release"
         simpleName=":"/>
+    <dependency
+        name="com.example.javaLib:javaLib:1.0:test-fixtures@jar::testFixtures"
+        simpleName="com.example.javaLib:javaLib"/>
+    <dependency
+        name="com.example.javaLib:javaLib:1.0@jar"
+        simpleName="com.example.javaLib:javaLib"/>
+    <dependency
+        name="com.example.lib:lib:1.0:test-fixtures@aar::testFixtures"
+        simpleName="com.example.lib:lib"/>
+    <dependency
+        name="com.example.lib:lib:1.0@aar"
+        simpleName="com.example.lib:lib"/>
     <dependency
         name="com.google.truth:truth:0.44@jar"
         simpleName="com.google.truth:truth"/>
@@ -46,15 +58,33 @@
     <dependency
         name="com.google.auto.value:auto-value-annotations:1.6.3@jar"
         simpleName="com.google.auto.value:auto-value-annotations"/>
+    <dependency
+        name="androidx.annotation:annotation:1.1.0@jar"
+        simpleName="androidx.annotation:annotation"/>
   </compile>
   <package
-      roots="${projectDir}@@:app::release::testFixtures,com.google.truth:truth:0.44@jar,com.google.guava:guava:27.0.1-android@jar,org.checkerframework:checker-compat-qual:2.5.5@jar,junit:junit:4.12@jar,com.googlecode.java-diff-utils:diffutils:1.3.0@jar,com.google.auto.value:auto-value-annotations:1.6.3@jar,com.google.errorprone:error_prone_annotations:2.3.1@jar,com.google.guava:failureaccess:1.0.1@jar,com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava@jar,com.google.code.findbugs:jsr305:3.0.2@jar,com.google.j2objc:j2objc-annotations:1.1@jar,org.codehaus.mojo:animal-sniffer-annotations:1.17@jar,org.hamcrest:hamcrest-core:1.3@jar">
+      roots="${projectDir}@@:app::release::testFixtures,com.example.javaLib:javaLib:1.0:test-fixtures@jar::testFixtures,com.example.javaLib:javaLib:1.0@jar,com.example.lib:lib:1.0:test-fixtures@aar::testFixtures,com.example.lib:lib:1.0@aar,com.google.truth:truth:0.44@jar,androidx.annotation:annotation:1.1.0@jar,com.google.guava:guava:27.0.1-android@jar,org.checkerframework:checker-compat-qual:2.5.5@jar,junit:junit:4.12@jar,com.googlecode.java-diff-utils:diffutils:1.3.0@jar,com.google.auto.value:auto-value-annotations:1.6.3@jar,com.google.errorprone:error_prone_annotations:2.3.1@jar,com.google.guava:failureaccess:1.0.1@jar,com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava@jar,com.google.code.findbugs:jsr305:3.0.2@jar,com.google.j2objc:j2objc-annotations:1.1@jar,org.codehaus.mojo:animal-sniffer-annotations:1.17@jar,org.hamcrest:hamcrest-core:1.3@jar">
     <dependency
         name="${projectDir}@@:app::release::testFixtures"
         simpleName="artifacts::app"/>
     <dependency
+        name="com.example.javaLib:javaLib:1.0:test-fixtures@jar::testFixtures"
+        simpleName="com.example.javaLib:javaLib"/>
+    <dependency
+        name="com.example.javaLib:javaLib:1.0@jar"
+        simpleName="com.example.javaLib:javaLib"/>
+    <dependency
+        name="com.example.lib:lib:1.0:test-fixtures@aar::testFixtures"
+        simpleName="com.example.lib:lib"/>
+    <dependency
+        name="com.example.lib:lib:1.0@aar"
+        simpleName="com.example.lib:lib"/>
+    <dependency
         name="com.google.truth:truth:0.44@jar"
         simpleName="com.google.truth:truth"/>
+    <dependency
+        name="androidx.annotation:annotation:1.1.0@jar"
+        simpleName="androidx.annotation:annotation"/>
     <dependency
         name="com.google.guava:guava:27.0.1-android@jar"
         simpleName="com.google.guava:guava"/>

@@ -542,6 +542,7 @@ class VariantManager<
             .addSourceSets(testFixturesVariantSourceSets)
             .setFlavorSelection(getFlavorSelection(variantDslInfo))
             .overrideVariantNameAttribute(mainComponentInfo.variant.name)
+            .setMainVariant(mainComponentInfo.variant)
             .build()
         val pathHelper =
             VariantPathHelper(

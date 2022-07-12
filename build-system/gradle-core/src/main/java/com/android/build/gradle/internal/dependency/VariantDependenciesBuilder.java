@@ -118,6 +118,7 @@ public class VariantDependenciesBuilder {
     private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
     private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
     private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
+    private VariantCreationConfig mainVariant;
     private VariantCreationConfig testedVariant;
     private String overrideVariantNameAttribute = null;
     private boolean testFixturesEnabled;
@@ -164,6 +165,11 @@ public class VariantDependenciesBuilder {
     public VariantDependenciesBuilder setTestedVariant(
             @NonNull VariantCreationConfig testedVariant) {
         this.testedVariant = testedVariant;
+        return this;
+    }
+
+    public VariantDependenciesBuilder setMainVariant(@NonNull VariantCreationConfig mainVariant) {
+        this.mainVariant = mainVariant;
         return this;
     }
 
@@ -247,10 +253,18 @@ public class VariantDependenciesBuilder {
         }
 
         if (componentType.isTestFixturesComponent()) {
-            // equivalent to dependencies { testFixturesApi project("$currentProject") }
-            apiClasspaths.forEach(
-                    apiConfiguration ->
-                            apiConfiguration.getDependencies().add(dependencies.create(project)));
+            if (mainVariant.getComponentType().isAar()) {
+                // equivalent to dependencies { testFixturesApi project("$currentProject") }
+                apiClasspaths.forEach(
+                        apiConfiguration ->
+                                apiConfiguration
+                                        .getDependencies()
+                                        .add(dependencies.create(project)));
+            } else {
+                // In the case of an app project, testFixtures won't have a runtime dependency on
+                // the main app project.
+                compileClasspath.getDependencies().add(dependencies.create(project));
+            }
         }
         compileClasspath.setCanBeConsumed(false);
         compileClasspath
