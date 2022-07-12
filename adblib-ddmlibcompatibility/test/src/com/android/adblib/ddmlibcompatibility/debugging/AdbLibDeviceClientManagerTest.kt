@@ -94,7 +94,9 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         deviceState.startClient(12, 0, "foo.bar.baz", false)
         yieldUntil {
-            deviceClientManager.clients.size == 2
+            // Wait for both processes to show up and for their JDWP proxy to start
+            deviceClientManager.clients.size == 2 &&
+                    deviceClientManager.clients.all { it.debuggerListenPort > 0 }
         }
 
         // Assert
