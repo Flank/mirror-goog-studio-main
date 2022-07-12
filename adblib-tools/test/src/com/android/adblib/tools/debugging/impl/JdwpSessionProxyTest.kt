@@ -100,33 +100,33 @@ class JdwpSessionProxyTest : AdbLibToolsTestBase() {
             process.properties.jdwpSessionProxyStatus.socketAddress != null
         }
         val clientSocket = registerCloseable(session.channelFactory.connectSocket(process.properties.jdwpSessionProxyStatus.socketAddress!!))
-        val jdwpSession = registerCloseable(JdwpSessionHandler.create(session, clientSocket, 10))
+        val jdwpSession = registerCloseable(JdwpSessionHandler.wrapSocketChannel(session, clientSocket, 10))
 
         val heloChunk = MutableDdmsChunk()
         heloChunk.type = DdmsChunkTypes.HELO
         heloChunk.length = 0
-        heloChunk.data = AdbBufferedInputChannel.empty()
+        heloChunk.payload = AdbBufferedInputChannel.empty()
 
         val packet = MutableJdwpPacket()
-        packet.packetId = jdwpSession.nextPacketId()
-        packet.packetLength = 11 + 8
+        packet.id = jdwpSession.nextPacketId()
+        packet.length = 11 + 8
         packet.isCommand = true
-        packet.packetCmdSet = DdmsPacketConstants.DDMS_CMD_SET
-        packet.packetCmd = DdmsPacketConstants.DDMS_CMD
-        packet.data = heloChunk.toBufferedInputChannel()
+        packet.cmdSet = DdmsPacketConstants.DDMS_CMD_SET
+        packet.cmd = DdmsPacketConstants.DDMS_CMD
+        packet.payload = heloChunk.toBufferedInputChannel()
 
         jdwpSession.sendPacket(packet)
 
         val reply = waitNonNull {
             val r = jdwpSession.receivePacket()
-            if (r.packetId == packet.packetId) r else null
+            if (r.id == packet.id) r else null
         }
         val heloReply = reply.ddmsChunks().first()
         val heloReplyChunk = DdmsHeloChunk.parse(heloReply)
 
         // Assert
         assertTrue(reply.isReply)
-        assertEquals(packet.packetId, reply.packetId)
+        assertEquals(packet.id, reply.id)
         assertEquals(10, heloReplyChunk.pid)
     }
 

@@ -21,12 +21,12 @@ import com.android.adblib.tools.debugging.packets.JdwpPacketView
 object DdmsPacketConstants {
 
     /**
-     * Command set to use as the [JdwpPacketView.packetCmdSet]
+     * Command set to use as the [JdwpPacketView.cmdSet]
      */
     const val DDMS_CMD_SET = 0xc7 // 'G' + 128
 
     /**
-     * Command ID to use as the [JdwpPacketView.packetCmd]
+     * Command ID to use as the [JdwpPacketView.cmd]
      */
     const val DDMS_CMD = 0x01
 

@@ -43,7 +43,7 @@ import java.io.EOFException
  * [JdwpSessionProxyStatus.socketAddress]), then it accepts JDWP connections from external
  * Java debuggers (e.g. IntelliJ or Android Studio) on that server socket. Each time a new
  * socket connection is opened by an external debugger, the proxy opens a JDWP session to the
- * process on the device (see [JdwpSessionHandler.create]) and forwards (both ways) JDWP protocol
+ * process on the device (see [JdwpSessionHandler.openJdwpSession]) and forwards (both ways) JDWP protocol
  * packets between the external debugger and the process on the device.
  */
 internal class JdwpSessionProxy(
@@ -114,8 +114,8 @@ internal class JdwpSessionProxy(
 
     private suspend fun proxyJdwpSession(debuggerSocket: AdbChannel) {
         logger.debug { "pid=$pid: Start proxying socket between external debugger and process on device" }
-        JdwpSessionHandler.create(session, device, pid).use { deviceSession ->
-            JdwpSessionHandler.create(session, debuggerSocket, pid).use { debuggerSession ->
+        JdwpSessionHandler.openJdwpSession(session, device, pid).use { deviceSession ->
+            JdwpSessionHandler.wrapSocketChannel(session, debuggerSocket, pid).use { debuggerSession ->
                 coroutineScope {
                     // Forward packets from external debugger to jdwp process on device
                     val job1 = launch(session.host.ioDispatcher) {

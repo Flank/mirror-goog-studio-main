@@ -55,7 +55,7 @@ internal interface JdwpSessionHandler : AutoCloseable {
     suspend fun receivePacket(): JdwpPacketView
 
     /**
-     * Returns a unique [JDWP packet ID][JdwpPacketView.packetId] to use for sending
+     * Returns a unique [JDWP packet ID][JdwpPacketView.id] to use for sending
      * a [JdwpPacketView], typically a [command packet][JdwpPacketView.isCommand],
      * in this session. Each call returns a new unique value.
      *
@@ -65,7 +65,13 @@ internal interface JdwpSessionHandler : AutoCloseable {
 
     companion object {
 
-        suspend fun create(
+        /**
+         * Returns a [JdwpSessionHandler] that opens a `JDWP` session for the given process [pid]
+         * on the given [device].
+         *
+         * @see [AdbDeviceServices.jdwp]
+         */
+        suspend fun openJdwpSession(
             session: AdbSession,
             device: DeviceSelector,
             pid: Int
@@ -76,7 +82,11 @@ internal interface JdwpSessionHandler : AutoCloseable {
             }
         }
 
-        fun create(session: AdbSession, channel: AdbChannel, pid: Int): JdwpSessionHandler {
+        /**
+         * Returns a [JdwpSessionHandler] that wraps an existing socket [channel] and allows
+         * exchanging `JDWP` packets.
+         */
+        fun wrapSocketChannel(session: AdbSession, channel: AdbChannel, pid: Int): JdwpSessionHandler {
             return JdwpSessionHandlerImpl(session, channel, pid)
         }
     }

@@ -39,7 +39,7 @@ class DdmsReaqChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.REAQ
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act

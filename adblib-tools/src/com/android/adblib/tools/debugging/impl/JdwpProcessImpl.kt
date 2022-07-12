@@ -68,7 +68,7 @@ internal class JdwpProcessImpl(
 
     override val scope = deviceScope.createChildScope()
 
-    override val processPropertiesFlow = stateFlow.asStateFlow()
+    override val propertiesFlow = stateFlow.asStateFlow()
 
     private val collector = JdwpProcessPropertiesCollector(session, device, pid)
 

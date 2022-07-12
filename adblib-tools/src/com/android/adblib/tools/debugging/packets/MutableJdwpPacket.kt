@@ -21,7 +21,7 @@ package com.android.adblib.tools.debugging.packets
  */
 class MutableJdwpPacket : JdwpPacketView {
 
-    override var packetLength: Int = 0
+    override var length: Int = 0
         set(value) {
             if (value < JdwpPacketConstants.PACKET_HEADER_LENGTH) {
                 throw IllegalArgumentException(
@@ -32,9 +32,9 @@ class MutableJdwpPacket : JdwpPacketView {
             field = value
         }
 
-    override var packetId: Int = 0
+    override var id: Int = 0
 
-    override var packetFlags: Int = 0
+    override var flags: Int = 0
         set(value) {
             if (value < 0 || value > 255) {
                 throw IllegalArgumentException("Flags value should be with the [0..255] range")
@@ -43,12 +43,12 @@ class MutableJdwpPacket : JdwpPacketView {
         }
 
     override var isReply: Boolean
-        get() = (packetFlags and JdwpPacketConstants.REPLY_PACKET_FLAG) != 0
+        get() = (flags and JdwpPacketConstants.REPLY_PACKET_FLAG) != 0
         set(value) {
-            packetFlags = if (value) {
-                packetFlags or JdwpPacketConstants.REPLY_PACKET_FLAG
+            flags = if (value) {
+                flags or JdwpPacketConstants.REPLY_PACKET_FLAG
             } else {
-                packetFlags and JdwpPacketConstants.REPLY_PACKET_FLAG.inv()
+                flags and JdwpPacketConstants.REPLY_PACKET_FLAG.inv()
             }
         }
 
@@ -58,7 +58,7 @@ class MutableJdwpPacket : JdwpPacketView {
             isReply = !value
         }
 
-    override var packetCmdSet: Int = 0
+    override var cmdSet: Int = 0
         get() {
             return if (isReply) {
                 throw IllegalStateException("CmdSet is not available because JDWP packet is a reply packet")
@@ -73,7 +73,7 @@ class MutableJdwpPacket : JdwpPacketView {
             field = value and 0xff
         }
 
-    override var packetCmd: Int = 0
+    override var cmd: Int = 0
         get() {
             return if (isReply) {
                 throw IllegalStateException("Cmd is not available because JDWP packet is a reply packet")
@@ -103,13 +103,13 @@ class MutableJdwpPacket : JdwpPacketView {
             field = value and 0xffff
         }
 
-    override var data = AdbBufferedInputChannel.empty()
+    override var payload = AdbBufferedInputChannel.empty()
 
     override fun toString(): String {
         return "JdwpPacket(length=%d, id=%d, flags=0x%02X, %s)".format(
-            packetLength,
-            packetId,
-            packetFlags,
+            length,
+            id,
+            flags,
             if (isReply) {
                 "isReply=true, errorCode=%s[%d]".format(
                     JdwpErrorCode.errorName(errorCode),
@@ -117,10 +117,10 @@ class MutableJdwpPacket : JdwpPacketView {
                 )
             } else {
                 "isCommand=true, cmdSet=%s[%d], cmd=%s[%d]".format(
-                    JdwpCommands.cmdSetToString(packetCmdSet),
-                    packetCmdSet,
-                    JdwpCommands.cmdToString(packetCmdSet, packetCmd),
-                    packetCmd
+                    JdwpCommands.cmdSetToString(cmdSet),
+                    cmdSet,
+                    JdwpCommands.cmdToString(cmdSet, cmd),
+                    cmd
                 )
             }
         )

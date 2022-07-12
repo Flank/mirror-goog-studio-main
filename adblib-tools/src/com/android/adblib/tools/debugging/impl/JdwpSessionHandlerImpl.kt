@@ -182,8 +182,8 @@ internal class JdwpSessionHandlerImpl(
                 val buffer = ByteBuffer.wrap(bytesSoFar.toByteArray()).order(PACKET_BYTE_ORDER)
                 val packet = MutableJdwpPacket()
                 packet.parseHeader(buffer)
-                if (packet.packetLength - PACKET_HEADER_LENGTH <= buffer.remaining()) {
-                    packet.data = AdbBufferedInputChannel.forByteBuffer(buffer)
+                if (packet.length - PACKET_HEADER_LENGTH <= buffer.remaining()) {
+                    packet.payload = AdbBufferedInputChannel.forByteBuffer(buffer)
                     logger.debug { "pid=$pid:  Skipping JDWP packet received before JDWP handshake: $packet" }
                     bytesSoFar.clear()
                 }
@@ -229,8 +229,8 @@ internal class JdwpSessionHandlerImpl(
 
         suspend fun receivePacket(): JdwpPacketView {
             // Ensure we consume all bytes from the previous packet
-            jdwpPacket.data.finalRewind()
-            jdwpPacket.data.skipRemaining(workBuffer)
+            jdwpPacket.payload.finalRewind()
+            jdwpPacket.payload.skipRemaining(workBuffer)
 
             // Read next packet
             readOnePacket(workBuffer, jdwpPacket)
@@ -241,11 +241,11 @@ internal class JdwpSessionHandlerImpl(
             workBuffer.clear()
             channel.readExactly(workBuffer.forChannelRead(PACKET_HEADER_LENGTH))
             packet.parseHeader(workBuffer.afterChannelRead())
-            packet.data =
+            packet.payload =
                 AdbBufferedInputChannel.forInputChannel(
                     AdbInputChannelSlice(
                         channel,
-                        packet.packetLength - PACKET_HEADER_LENGTH
+                        packet.length - PACKET_HEADER_LENGTH
                     )
                 )
         }

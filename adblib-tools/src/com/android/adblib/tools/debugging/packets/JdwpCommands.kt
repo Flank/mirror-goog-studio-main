@@ -20,8 +20,8 @@ import com.android.adblib.tools.debugging.packets.ddms.DdmsPacketConstants
 /**
  * JDWP command constants as specified [here](http://docs.oracle.com/javase/7/docs/platform/jpda/jdwp/jdwp-protocol.html)
  *
- * @see JdwpPacketView.packetCmdSet
- * @see JdwpPacketView.packetCmd
+ * @see JdwpPacketView.cmdSet
+ * @see JdwpPacketView.cmd
  */
 @Suppress("SpellCheckingInspection")
 internal object JdwpCommands {

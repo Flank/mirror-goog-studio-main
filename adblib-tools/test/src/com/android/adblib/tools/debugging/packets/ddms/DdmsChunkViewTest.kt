@@ -75,10 +75,10 @@ class DdmsChunkViewTest : AdbLibToolsTestBase() {
         assertEquals(packet.type, clone.type)
         assertEquals(packet.length, clone.length)
 
-        // Assert: data
+        // Assert: payload
         val outputBuffer = ResizableBuffer()
         val output = ByteBufferAdbOutputChannel(outputBuffer)
-        packet.data.forwardTo(output)
+        packet.payload.forwardTo(output)
 
         var index = 0
         assertEquals(128.toByte(), outputBuffer[index++])
@@ -86,7 +86,7 @@ class DdmsChunkViewTest : AdbLibToolsTestBase() {
         assertEquals(255.toByte(), outputBuffer[index++])
         assertEquals(10.toByte(), outputBuffer[index])
 
-        //TODO: assertTrue(clone.data.rewind())
+        //TODO: assertTrue(clone.payload.rewind())
     }
 
     @Test
@@ -144,11 +144,11 @@ class DdmsChunkViewTest : AdbLibToolsTestBase() {
         val buffer = outputBuffer.forChannelWrite()
 
         val jdwpPacket = MutableJdwpPacket()
-        jdwpPacket.packetLength = JdwpPacketConstants.PACKET_HEADER_LENGTH + buffer.remaining()
-        jdwpPacket.packetId = 10
-        jdwpPacket.packetCmdSet = DdmsPacketConstants.DDMS_CMD_SET
-        jdwpPacket.packetCmd = DdmsPacketConstants.DDMS_CMD
-        jdwpPacket.data = AdbBufferedInputChannel.forByteBuffer(buffer)
+        jdwpPacket.length = JdwpPacketConstants.PACKET_HEADER_LENGTH + buffer.remaining()
+        jdwpPacket.id = 10
+        jdwpPacket.cmdSet = DdmsPacketConstants.DDMS_CMD_SET
+        jdwpPacket.cmd = DdmsPacketConstants.DDMS_CMD
+        jdwpPacket.payload = AdbBufferedInputChannel.forByteBuffer(buffer)
         return jdwpPacket
     }
 
@@ -159,7 +159,7 @@ class DdmsChunkViewTest : AdbLibToolsTestBase() {
         val ddmsChunk = MutableDdmsChunk()
         ddmsChunk.type = chunkType
         ddmsChunk.length = bytes.size
-        ddmsChunk.data = bytesToBufferedInputChannel(bytes)
+        ddmsChunk.payload = bytesToBufferedInputChannel(bytes)
         return ddmsChunk
     }
 

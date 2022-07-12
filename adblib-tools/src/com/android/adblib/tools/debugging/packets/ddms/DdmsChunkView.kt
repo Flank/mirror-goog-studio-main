@@ -28,12 +28,12 @@ internal interface DdmsChunkView {
     val type: Int
 
     /**
-     * The length (in bytes) of [data], a 4-byte integer.
+     * The length (in bytes) of [payload], a 4-byte integer.
      */
     val length: Int
 
     /**
-     * An [AdbBufferedInputChannel] that provides access to [length] bytes of data.
+     * An [AdbBufferedInputChannel] that provides access to [length] bytes of payload.
      */
-    val data: AdbBufferedInputChannel
+    val payload: AdbBufferedInputChannel
 }

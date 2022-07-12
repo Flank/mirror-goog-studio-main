@@ -39,7 +39,7 @@ class DdmsFeatChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.FEAT
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act

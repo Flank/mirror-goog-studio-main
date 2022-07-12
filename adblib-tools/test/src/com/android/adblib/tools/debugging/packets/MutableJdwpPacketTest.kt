@@ -37,18 +37,18 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
-        packet.packetCmdSet = 160
-        packet.packetCmd = 240
+        packet.length = 1_000_000
+        packet.id = -10
+        packet.cmdSet = 160
+        packet.cmd = 240
 
         // Assert
-        assertEquals(1_000_000, packet.packetLength)
-        assertEquals(-10, packet.packetId)
+        assertEquals(1_000_000, packet.length)
+        assertEquals(-10, packet.id)
         assertTrue(packet.isCommand)
         assertFalse(packet.isReply)
-        assertEquals(160, packet.packetCmdSet)
-        assertEquals(240, packet.packetCmd)
+        assertEquals(160, packet.cmdSet)
+        assertEquals(240, packet.cmd)
     }
 
     @Test
@@ -57,14 +57,14 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
+        packet.length = 1_000_000
+        packet.id = -10
         packet.isReply = true
         packet.errorCode = 1_000
 
         // Assert
-        assertEquals(1_000_000, packet.packetLength)
-        assertEquals(-10, packet.packetId)
+        assertEquals(1_000_000, packet.length)
+        assertEquals(-10, packet.id)
         assertFalse(packet.isCommand)
         assertTrue(packet.isReply)
         assertEquals(1_000, packet.errorCode)
@@ -77,7 +77,7 @@ class MutableJdwpPacketTest {
 
         // Act
         exceptionRule.expect(IllegalArgumentException::class.java)
-        packet.packetLength = 5
+        packet.length = 5
 
         // Assert
         Assert.fail("Should not reach")
@@ -89,11 +89,11 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
+        packet.length = 1_000_000
+        packet.id = -10
 
         exceptionRule.expect(IllegalArgumentException::class.java)
-        packet.packetCmdSet = -10
+        packet.cmdSet = -10
 
         // Assert
         Assert.fail("Should not reach")
@@ -105,11 +105,11 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
+        packet.length = 1_000_000
+        packet.id = -10
 
         exceptionRule.expect(IllegalArgumentException::class.java)
-        packet.packetCmd = -10
+        packet.cmd = -10
 
         // Assert
         Assert.fail("Should not reach")
@@ -121,8 +121,8 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
+        packet.length = 1_000_000
+        packet.id = -10
 
         exceptionRule.expect(IllegalArgumentException::class.java)
         packet.errorCode = -10
@@ -137,11 +137,11 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 1_000_000
-        packet.packetId = -10
+        packet.length = 1_000_000
+        packet.id = -10
 
         exceptionRule.expect(IllegalArgumentException::class.java)
-        packet.packetFlags = -127
+        packet.flags = -127
 
         // Assert
         Assert.fail("Should not reach")
@@ -158,7 +158,7 @@ class MutableJdwpPacketTest {
         // Assert
         assertEquals(true, packet.isReply)
         assertEquals(false, packet.isCommand)
-        assertEquals(JdwpPacketConstants.REPLY_PACKET_FLAG, packet.packetFlags)
+        assertEquals(JdwpPacketConstants.REPLY_PACKET_FLAG, packet.flags)
     }
 
     @Test
@@ -172,7 +172,7 @@ class MutableJdwpPacketTest {
         // Assert
         assertEquals(false, packet.isReply)
         assertEquals(true, packet.isCommand)
-        assertEquals(0, packet.packetFlags)
+        assertEquals(0, packet.flags)
     }
 
     @Test
@@ -201,7 +201,7 @@ class MutableJdwpPacketTest {
 
         exceptionRule.expect(IllegalStateException::class.java)
         @Suppress("UNUSED_VARIABLE")
-        val cmdSet = packet.packetCmdSet
+        val cmdSet = packet.cmdSet
 
         // Assert
         Assert.fail("Should not reach")
@@ -217,7 +217,7 @@ class MutableJdwpPacketTest {
 
         exceptionRule.expect(IllegalStateException::class.java)
         @Suppress("UNUSED_VARIABLE")
-        val cmd = packet.packetCmd
+        val cmd = packet.cmd
 
         // Assert
         Assert.fail("Should not reach")
@@ -229,10 +229,10 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 11
-        packet.packetId = 10
-        packet.packetCmdSet = SET_THREADREF.value
-        packet.packetCmd = CMD_THREADREF_NAME.value
+        packet.length = 11
+        packet.id = 10
+        packet.cmdSet = SET_THREADREF.value
+        packet.cmd = CMD_THREADREF_NAME.value
         val text = packet.toString()
 
         // Assert
@@ -245,8 +245,8 @@ class MutableJdwpPacketTest {
         val packet = MutableJdwpPacket()
 
         // Act
-        packet.packetLength = 11
-        packet.packetId = 10
+        packet.length = 11
+        packet.id = 10
         packet.isReply = true
         packet.errorCode = 67
         val text = packet.toString()

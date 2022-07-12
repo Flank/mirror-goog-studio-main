@@ -81,7 +81,7 @@ internal data class DdmsHeloChunk(
             workBuffer: ResizableBuffer = ResizableBuffer()
         ): DdmsHeloChunk {
             workBuffer.clear()
-            chunk.data.readRemaining(workBuffer)
+            chunk.payload.readRemaining(workBuffer)
             val buffer = workBuffer.afterChannelRead(0)
 
             // Version, pid, vm identifier and process name are always present

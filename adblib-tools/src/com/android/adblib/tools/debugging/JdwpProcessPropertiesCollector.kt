@@ -69,7 +69,7 @@ internal class JdwpProcessPropertiesCollector(
      * if there is already another JDWP session open for the process.
      */
     suspend fun collect(stateFlow: AtomicStateFlow<JdwpProcessProperties>) {
-        val jdwpSession = JdwpSessionHandler.create(session, device, pid)
+        val jdwpSession = JdwpSessionHandler.openJdwpSession(session, device, pid)
         jdwpSession.use {
             collectProcessPropertiesImpl(jdwpSession, stateFlow)
         }
@@ -139,17 +139,17 @@ internal class JdwpProcessPropertiesCollector(
             //   in the "waiting for a debugger" state, there is no packet sent.
 
             // `HELO` packet is a reply to the `HELO` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.packetId == commands.heloCommand.packetId) {
+            if (jdwpPacket.isReply && jdwpPacket.id == commands.heloCommand.id) {
                 processHeloReply(stateFlow, jdwpPacket, workBuffer)
             }
 
             // `FEAT` packet is a reply to the `FEAT` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.packetId == commands.featCommand.packetId) {
+            if (jdwpPacket.isReply && jdwpPacket.id == commands.featCommand.id) {
                 processFeatReply(stateFlow, jdwpPacket, workBuffer)
             }
 
             // `REAQ` packet is a reply to the `REAQ` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.packetId == commands.reaqCommand.packetId) {
+            if (jdwpPacket.isReply && jdwpPacket.id == commands.reaqCommand.id) {
                 processReaqReply(stateFlow, jdwpPacket, workBuffer)
             }
 
@@ -266,46 +266,46 @@ internal class JdwpProcessPropertiesCollector(
     }
 
     private suspend fun sendReaqPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
-        // Prepare chunk data buffer
-        val data = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
+        // Prepare chunk payload buffer
+        val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
 
         // Send it as a JDWP packet
         val packet =
             createDdmsChunkPacket(
                 jdwpSession.nextPacketId(),
                 DdmsChunkTypes.REAQ,
-                data.forChannelWrite()
+                payload.forChannelWrite()
             )
         jdwpSession.sendPacket(packet)
         return packet
     }
 
     private suspend fun sendHeloPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
-        // Prepare chunk data buffer
-        val data = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
-        data.appendInt(DdmsHeloChunk.SERVER_PROTOCOL_VERSION)
+        // Prepare chunk payload buffer
+        val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
+        payload.appendInt(DdmsHeloChunk.SERVER_PROTOCOL_VERSION)
 
         // Send it as a JDWP packet
         val packet =
             createDdmsChunkPacket(
                 jdwpSession.nextPacketId(),
                 DdmsChunkTypes.HELO,
-                data.forChannelWrite()
+                payload.forChannelWrite()
             )
         jdwpSession.sendPacket(packet)
         return packet
     }
 
     private suspend fun sendFeatPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
-        // Prepare chunk data buffer
-        val data = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
+        // Prepare chunk payload buffer
+        val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
 
         // Send it as a JDWP packet
         val packet =
             createDdmsChunkPacket(
                 jdwpSession.nextPacketId(),
                 DdmsChunkTypes.FEAT,
-                data.forChannelWrite()
+                payload.forChannelWrite()
             )
         jdwpSession.sendPacket(packet)
         return packet
@@ -319,18 +319,18 @@ internal class JdwpProcessPropertiesCollector(
         val chunk = MutableDdmsChunk()
         chunk.type = chunkType
         chunk.length = chunkData.remaining()
-        chunk.data = AdbBufferedInputChannel.forByteBuffer(chunkData)
+        chunk.payload = AdbBufferedInputChannel.forByteBuffer(chunkData)
         val workBuffer = ResizableBuffer()
         val outputChannel = ByteBufferAdbOutputChannel(workBuffer)
         chunk.writeToChannel(outputChannel)
         val serializedChunk = workBuffer.forChannelWrite()
 
         val packet = MutableJdwpPacket()
-        packet.packetId = packetId
-        packet.packetLength = PACKET_HEADER_LENGTH + serializedChunk.remaining()
-        packet.packetCmdSet = DDMS_CMD_SET
-        packet.packetCmd = DDMS_CMD
-        packet.data = AdbBufferedInputChannel.forByteBuffer(serializedChunk)
+        packet.id = packetId
+        packet.length = PACKET_HEADER_LENGTH + serializedChunk.remaining()
+        packet.cmdSet = DDMS_CMD_SET
+        packet.cmd = DDMS_CMD
+        packet.payload = AdbBufferedInputChannel.forByteBuffer(serializedChunk)
 
         logger.debug { "Preparing to send $chunk" }
         return packet

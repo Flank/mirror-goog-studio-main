@@ -42,7 +42,7 @@ class DdmsApnmChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.APNM
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -70,7 +70,7 @@ class DdmsApnmChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.APNM
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -98,7 +98,7 @@ class DdmsApnmChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.APNM
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act

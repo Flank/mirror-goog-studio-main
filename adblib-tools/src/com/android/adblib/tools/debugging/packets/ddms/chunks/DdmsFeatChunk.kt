@@ -32,7 +32,7 @@ internal data class DdmsFeatChunk(val features: List<String>) {
             workBuffer: ResizableBuffer = ResizableBuffer()
         ): DdmsFeatChunk {
             workBuffer.clear()
-            chunk.data.readRemaining(workBuffer)
+            chunk.payload.readRemaining(workBuffer)
             val buffer = workBuffer.afterChannelRead(0)
 
             buffer.order(DDMS_CHUNK_BYTE_ORDER)

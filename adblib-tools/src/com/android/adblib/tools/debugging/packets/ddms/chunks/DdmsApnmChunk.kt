@@ -50,8 +50,8 @@ internal data class DdmsApnmChunk(
             workBuffer: ResizableBuffer = ResizableBuffer()
         ): DdmsApnmChunk {
             workBuffer.clear()
-            chunk.data.rewind()
-            chunk.data.readRemaining(workBuffer)
+            chunk.payload.rewind()
+            chunk.payload.readRemaining(workBuffer)
             val buffer = workBuffer.afterChannelRead(0)
 
             buffer.order(DDMS_CHUNK_BYTE_ORDER)

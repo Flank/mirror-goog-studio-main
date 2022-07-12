@@ -162,10 +162,10 @@ class JdwpPacketViewTest : AdbLibToolsTestBase() {
 
     private fun createTestCmdPacket(size: Int): JdwpPacketView {
         val packet = MutableJdwpPacket()
-        packet.packetLength = size + JdwpPacketConstants.PACKET_HEADER_LENGTH
-        packet.packetId = 77
-        packet.packetCmdSet = 15
-        packet.packetCmd = 10
+        packet.length = size + JdwpPacketConstants.PACKET_HEADER_LENGTH
+        packet.id = 77
+        packet.cmdSet = 15
+        packet.cmd = 10
 
         val buffer = ByteBuffer.allocate(size)
         for (i in 0 until size) {
@@ -175,7 +175,7 @@ class JdwpPacketViewTest : AdbLibToolsTestBase() {
         assert(buffer.position() == 0)
         assert(buffer.limit() == size)
         assert(buffer.capacity() == size)
-        packet.data = AdbBufferedInputChannel.forByteBuffer(buffer)
+        packet.payload = AdbBufferedInputChannel.forByteBuffer(buffer)
         return packet
     }
 }

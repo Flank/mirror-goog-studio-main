@@ -43,7 +43,7 @@ interface JdwpProcess {
 
     /**
      * The [CoroutineScope] whose lifetime matches the lifetime of the process on the device.
-     * This [scope] can be used for example when collecting the [processPropertiesFlow]
+     * This [scope] can be used for example when collecting the [propertiesFlow]
      */
     val scope: CoroutineScope
 
@@ -51,18 +51,18 @@ interface JdwpProcess {
      * A [StateFlow] that describes the current process information as well
      * as changes over time.
      */
-    val processPropertiesFlow: StateFlow<JdwpProcessProperties>
+    val propertiesFlow: StateFlow<JdwpProcessProperties>
 }
 
 /**
  * Returns a snapshot of the current [JdwpProcessProperties] for this process.
  *
- * Note: This is a shortcut for [processPropertiesFlow.value][JdwpProcess.processPropertiesFlow].
+ * Note: This is a shortcut for [processPropertiesFlow.value][JdwpProcess.propertiesFlow].
  *
- * @see JdwpProcess.processPropertiesFlow
+ * @see JdwpProcess.propertiesFlow
  */
 val JdwpProcess.properties: JdwpProcessProperties
-    get() = this.processPropertiesFlow.value
+    get() = this.propertiesFlow.value
 
 
 data class JdwpSessionProxyStatus(

@@ -151,8 +151,8 @@ internal class AdbLibDeviceClientManager(
     }
 
     private suspend fun trackProcessInfo(clientWrapper: AdblibClientWrapper) {
-        var lastProcessInfo = clientWrapper.jdwpProcess.processPropertiesFlow.value
-        clientWrapper.jdwpProcess.processPropertiesFlow.collect { processInfo ->
+        var lastProcessInfo = clientWrapper.jdwpProcess.propertiesFlow.value
+        clientWrapper.jdwpProcess.propertiesFlow.collect { processInfo ->
             try {
                 updateProcessInfo(clientWrapper, lastProcessInfo, processInfo)
             } finally {

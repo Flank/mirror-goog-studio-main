@@ -42,7 +42,7 @@ internal data class DdmsReaqChunk(
             workBuffer: ResizableBuffer = ResizableBuffer()
         ): DdmsReaqChunk {
             workBuffer.clear()
-            chunk.data.readRemaining(workBuffer)
+            chunk.payload.readRemaining(workBuffer)
             val buffer = workBuffer.afterChannelRead(0)
 
             buffer.order(DDMS_CHUNK_BYTE_ORDER)
