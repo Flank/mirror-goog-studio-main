@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.testing.testFixtures
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.apk.Apk
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
@@ -282,33 +283,10 @@ class TestFixturesTest {
 
         project.executor().run(":appTests:packageDebug")
 
-        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
-
-        testApk.mainDexFile.get().classes.keys.let { classes ->
-            // test fixtures classes
-            Truth.assertThat(classes).containsAtLeastElementsIn(
-                listOf(
-                    "Lcom/example/app/testFixtures/AppInterfaceTester;",
-                    "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
-                    "Lcom/example/lib/testFixtures/LibInterfaceTester;",
-                    "Lcom/example/lib/testFixtures/LibResourcesTester;"
-                )
-            )
-
-            // lib and java lib classes
-            Truth.assertThat(classes).containsAtLeastElementsIn(
-                listOf(
-                    "Lcom/example/javalib/JavaLibInterface;",
-                    "Lcom/example/lib/LibInterface;",
-                    "Lcom/example/lib/BuildConfig;",
-                )
-            )
-
-            // app classes shouldn't be packaged in the test apk
-            Truth.assertThat(classes).doesNotContain(
-                "Lcom/example/app/AppInterface;"
-            )
-        }
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = true,
+        )
     }
 
     @Test
@@ -321,33 +299,10 @@ class TestFixturesTest {
 
         project.executor().run(":appTests:packageDebug")
 
-        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
-
-        testApk.mainDexFile.get().classes.keys.let { classes ->
-            // test fixtures classes
-            Truth.assertThat(classes).containsAtLeastElementsIn(
-                listOf(
-                    "Lcom/example/app/testFixtures/AppInterfaceTester;",
-                    "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
-                    "Lcom/example/lib/testFixtures/LibInterfaceTester;",
-                    "Lcom/example/lib/testFixtures/LibResourcesTester;"
-                )
-            )
-
-            // lib and java lib classes
-            Truth.assertThat(classes).containsAtLeastElementsIn(
-                listOf(
-                    "Lcom/example/javalib/JavaLibInterface;",
-                    "Lcom/example/lib/LibInterface;",
-                    "Lcom/example/lib/BuildConfig;",
-                )
-            )
-
-            // app classes shouldn't be packaged in the test apk
-            Truth.assertThat(classes).doesNotContain(
-                "Lcom/example/app/AppInterface;"
-            )
-        }
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = true,
+        )
     }
 
     @Test
@@ -366,28 +321,112 @@ class TestFixturesTest {
 
         project.executor().run(":appTests:packageDebug")
 
-        val testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG)
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":appTests").getApk(GradleTestProject.ApkType.DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = false,
+        )
+    }
 
-        testApk.mainDexFile.get().classes.keys.let { classes ->
-            // test fixtures classes
-            Truth.assertThat(classes).containsAtLeastElementsIn(
+    @Test
+    fun `instrumentation tests consume test fixtures`() {
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        useAndroidX()
+
+        project.executor().run(":app:packageDebugAndroidTest")
+
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = true,
+        )
+    }
+
+    @Test
+    fun `instrumentation tests consume published test fixtures`() {
+        setUpProject(
+            publishAndroidLib = true,
+            publishJavaLib = true
+        )
+        useAndroidX()
+
+        project.executor().run(":app:packageDebugAndroidTest")
+
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = true,
+        )
+    }
+
+    @Test
+    fun `instrumentation tests exclude main lib classes but include test fixtures`() {
+        setUpProject(
+            publishAndroidLib = false,
+            publishJavaLib = false
+        )
+        useAndroidX()
+
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":app").buildFile,
+            "compileOnly",
+            "implementation"
+        )
+
+        project.executor().run(":app:packageDebugAndroidTest")
+
+        testExclusionInTestApk(
+            testApk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG),
+            expectLibAndJavaLibClassesToBeIncluded = false,
+        )
+    }
+
+    private fun testExclusionInTestApk(
+        testApk: Apk,
+        expectTestFixturesClassesToBeIncluded: Boolean = true,
+        expectLibAndJavaLibClassesToBeIncluded: Boolean,
+        expectAppClassesToBeIncluded: Boolean = false
+    ) {
+        testApk.use {
+            it.mainDexFile.get().classes.keys.let { classes ->
+                // test fixtures classes
                 listOf(
                     "Lcom/example/app/testFixtures/AppInterfaceTester;",
                     "Lcom/example/javalib/testFixtures/JavaLibInterfaceTester;",
                     "Lcom/example/lib/testFixtures/LibInterfaceTester;",
                     "Lcom/example/lib/testFixtures/LibResourcesTester;"
-                )
-            )
+                ).forEach { clazz ->
+                    if (expectTestFixturesClassesToBeIncluded) {
+                        Truth.assertThat(classes).contains(clazz)
+                    } else {
+                        Truth.assertThat(classes).doesNotContain(clazz)
+                    }
+                }
 
-            // lib and java lib classes shouldn't be packaged in the test apk
-            Truth.assertThat(classes).doesNotContain("Lcom/example/javalib/JavaLibInterface;")
-            Truth.assertThat(classes).doesNotContain("Lcom/example/lib/LibInterface;")
-            Truth.assertThat(classes).doesNotContain("Lcom/example/lib/BuildConfig;")
+                // lib and java lib classes
+                listOf(
+                    "Lcom/example/javalib/JavaLibInterface;",
+                    "Lcom/example/lib/LibInterface;",
+                    "Lcom/example/lib/BuildConfig;",
+                ).forEach { clazz ->
+                    if (expectLibAndJavaLibClassesToBeIncluded) {
+                        Truth.assertThat(classes).contains(clazz)
+                    } else {
+                        Truth.assertThat(classes).doesNotContain(clazz)
+                    }
+                }
 
-            // app classes shouldn't be packaged in the test apk
-            Truth.assertThat(classes).doesNotContain(
-                "Lcom/example/app/AppInterface;"
-            )
+                // app classes
+                listOf(
+                    "Lcom/example/app/AppInterface;"
+                ).forEach { clazz ->
+                    if (expectAppClassesToBeIncluded) {
+                        Truth.assertThat(classes).contains(clazz)
+                    } else {
+                        Truth.assertThat(classes).doesNotContain(clazz)
+                    }
+                }
+            }
         }
     }
 
