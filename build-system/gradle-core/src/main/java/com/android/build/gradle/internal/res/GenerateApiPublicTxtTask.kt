@@ -20,10 +20,12 @@ import com.android.build.api.artifact.SingleArtifact
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.symbols.writePublicTxtFile
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.symbols.SymbolIo
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -51,6 +53,7 @@ import java.nio.file.Path
  *  simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
 abstract class GenerateApiPublicTxtTask : NonIncrementalTask() {
 
     @get:InputFiles // Use InputFiles rather than InputFile to allow the file not to exist

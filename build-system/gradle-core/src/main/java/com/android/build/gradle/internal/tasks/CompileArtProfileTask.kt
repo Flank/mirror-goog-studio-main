@@ -50,7 +50,7 @@ import java.lang.RuntimeException
  * inside an APK or a Bundle.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.ART_PROFILE])
 abstract class CompileArtProfileTask: NonIncrementalTask() {
 
     @get: [InputFiles Optional PathSensitive(PathSensitivity.RELATIVE)]

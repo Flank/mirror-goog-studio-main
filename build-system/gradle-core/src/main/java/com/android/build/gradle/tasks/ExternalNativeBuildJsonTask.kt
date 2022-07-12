@@ -42,7 +42,7 @@ import javax.inject.Inject
 
 /** Task wrapper around [CxxMetadataGenerator].  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.METADATA])
 abstract class ExternalNativeBuildJsonTask @Inject constructor(
         @get:Internal val ops: ExecOperations) :
         UnsafeOutputsTask("C/C++ Configuration is always run.") {

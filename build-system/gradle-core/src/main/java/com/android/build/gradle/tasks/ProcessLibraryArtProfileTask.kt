@@ -18,8 +18,10 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.profgen.HumanReadableProfile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
@@ -38,6 +40,7 @@ import java.lang.RuntimeException
  * enhancement.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ART_PROFILE])
 abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
 
     // Use InputFiles rather than InputFile to allow the file not to exist

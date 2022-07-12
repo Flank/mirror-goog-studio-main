@@ -22,9 +22,11 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -50,6 +52,7 @@ import java.io.FileNotFoundException
  * simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING])
 abstract class DataBindingExportFeatureNamespacesTask : NonIncrementalTask() {
     // where to keep the log of the task
     @get:OutputDirectory abstract val packageListOutFolder: DirectoryProperty

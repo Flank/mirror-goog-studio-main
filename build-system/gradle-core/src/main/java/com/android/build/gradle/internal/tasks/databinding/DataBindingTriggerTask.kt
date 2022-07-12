@@ -18,10 +18,12 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -44,6 +46,7 @@ import org.gradle.work.DisableCachingByDefault
  * simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING])
 abstract class DataBindingTriggerTask : NonIncrementalTask() {
 
     @get:Input

@@ -46,4 +46,13 @@ enum class TaskCategoryLabel {
     SHADER,
     // Tasks involving dexing
     DEXING,
+    // Tasks for ART profile
+    ART_PROFILE,
+    // Lint tasks
+    LINT,
+    // Tasks for data binding
+    DATA_BINDING,
+    // Tasks that involve metadata
+    METADATA,
+    VERIFICATION,
 }

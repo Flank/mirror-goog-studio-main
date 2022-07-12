@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -35,6 +36,7 @@ import org.gradle.work.DisableCachingByDefault
  * This task is currently used to publish the output as a text resource for others to consume.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
 abstract class ApplicationIdWriterTask : NonIncrementalTask() {
     @get:Input
     @get:Optional

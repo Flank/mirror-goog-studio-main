@@ -69,7 +69,7 @@ import javax.inject.Inject
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST, TaskCategoryLabel.METADATA])
 abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 

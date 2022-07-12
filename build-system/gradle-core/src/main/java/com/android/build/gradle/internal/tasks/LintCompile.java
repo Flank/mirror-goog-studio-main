@@ -31,7 +31,7 @@ import org.gradle.work.DisableCachingByDefault;
  * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION})
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION, TaskCategoryLabel.LINT})
 public abstract class LintCompile extends NonIncrementalGlobalTask {
 
     @OutputDirectory

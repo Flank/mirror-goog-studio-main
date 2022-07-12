@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginVersion
 import com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion
 import org.gradle.api.file.RegularFileProperty
@@ -49,6 +50,7 @@ import java.io.File
  *  simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
 abstract class AarMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile

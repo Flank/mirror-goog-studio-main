@@ -53,7 +53,7 @@ import java.io.File
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.METADATA])
 abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
 
     @get:SkipWhenEmpty

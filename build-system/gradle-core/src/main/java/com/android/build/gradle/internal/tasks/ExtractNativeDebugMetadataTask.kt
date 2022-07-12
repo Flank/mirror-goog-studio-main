@@ -67,7 +67,7 @@ import javax.inject.Inject
  * Task to produce native debug metadata files to be included in the app bundle.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.METADATA])
 abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
 
     @get:InputFiles

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ToolsRevisionUtils
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.repository.GradleVersion
 import com.android.repository.Revision
 import com.android.sdklib.SdkVersionInfo
@@ -68,6 +69,7 @@ import java.util.Properties
  * simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.VERIFICATION])
 abstract class CheckAarMetadataTask : NonIncrementalTask() {
 
     // Dummy output allows this task to be up-to-date, and it provides a means of making other tasks

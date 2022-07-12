@@ -17,6 +17,13 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.coverage.JacocoReportTask
+import com.android.build.gradle.internal.lint.AndroidLintAnalysisTask
+import com.android.build.gradle.internal.lint.AndroidLintCopyReportTask
+import com.android.build.gradle.internal.lint.AndroidLintGlobalTask
+import com.android.build.gradle.internal.lint.AndroidLintTask
+import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask
+import com.android.build.gradle.internal.lint.LintModelWriterTask
+import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask
@@ -28,10 +35,14 @@ import com.android.build.gradle.internal.res.namespaced.GenerateNamespacedLibrar
 import com.android.build.gradle.internal.res.namespaced.LinkLibraryAndroidResourcesTask
 import com.android.build.gradle.internal.res.namespaced.ProcessAndroidAppResourcesTask
 import com.android.build.gradle.internal.res.namespaced.StaticLibraryManifestTask
+import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
+import com.android.build.gradle.internal.tasks.AppMetadataTask
+import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask
 import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
+import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
 import com.android.build.gradle.internal.tasks.CheckManifest
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
@@ -42,24 +53,40 @@ import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
 import com.android.build.gradle.internal.tasks.DexMergingTask
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
+import com.android.build.gradle.internal.tasks.GenerateApkDataTask
 import com.android.build.gradle.internal.tasks.JacocoTask
 import com.android.build.gradle.internal.tasks.L8DexDesugarLibTask
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask
 import com.android.build.gradle.internal.tasks.LinkManifestForAssetPackTask
 import com.android.build.gradle.internal.tasks.LintCompile
+import com.android.build.gradle.internal.tasks.LintModelMetadataTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
+import com.android.build.gradle.internal.tasks.MergeArtProfileTask
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.MergeNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
+import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask
 import com.android.build.gradle.internal.tasks.OptimizeResourcesTask
 import com.android.build.gradle.internal.tasks.PackageForUnitTest
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask
+import com.android.build.gradle.internal.tasks.ParseIntegrityConfigTask
+import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask
+import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
+import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
 import com.android.build.gradle.internal.tasks.TestServerTask
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureNamespacesTask
+import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
+import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask
+import com.android.build.gradle.internal.tasks.databinding.DataBindingTriggerTask
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTask
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
@@ -171,7 +198,35 @@ class BuildAnalyzerTest {
             D8BundleMainDexListTask::class.java,
             FeatureDexMergeTask::class.java,
             PrivacySandboxSdkDexTask::class.java,
-            PrivacySandboxSdkMergeDexTask::class.java
+            PrivacySandboxSdkMergeDexTask::class.java,
+            MergeArtProfileTask::class.java,
+            ProcessLibraryArtProfileTask::class.java,
+            PrepareLintJarForPublish::class.java,
+            LintModelWriterTask::class.java,
+            AndroidLintTask::class.java,
+            AndroidLintGlobalTask::class.java,
+            AndroidLintCopyReportTask::class.java,
+            AndroidLintAnalysisTask::class.java,
+            LintModelMetadataTask::class.java,
+            AndroidLintTextOutputTask::class.java,
+            DataBindingTriggerTask::class.java,
+            DataBindingGenBaseClassesTask::class.java,
+            DataBindingExportFeatureNamespacesTask::class.java,
+            DataBindingExportFeatureInfoTask::class.java,
+            DataBindingMergeDependencyArtifactsTask::class.java,
+            GenerateApkDataTask::class.java,
+            FeatureSplitDeclarationWriterTask::class.java,
+            ModuleMetadataWriterTask::class.java,
+            FeatureSetMetadataWriterTask::class.java,
+            ApplicationIdWriterTask::class.java,
+            ParseIntegrityConfigTask::class.java,
+            FeatureNameWriterTask::class.java,
+            SdkDependencyDataGeneratorTask::class.java,
+            AarMetadataTask::class.java,
+            CheckAarMetadataTask::class.java,
+            GenerateApiPublicTxtTask::class.java,
+            AppMetadataTask::class.java,
+            SigningConfigVersionsWriterTask::class.java,
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {
