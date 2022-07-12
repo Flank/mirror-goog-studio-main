@@ -31,6 +31,8 @@ public class ManifestInfo {
 
     private final List<ManifestServiceInfo> services;
 
+    private final List<String> sdkLibraries;
+
     private final List<String> instrumentationTargetPackages;
 
     private String applicationId;
@@ -44,6 +46,7 @@ public class ManifestInfo {
     private ManifestInfo() {
         activities = new ArrayList<>();
         services = new ArrayList<>();
+        sdkLibraries = new ArrayList<>();
         applicationId = "";
         instrumentationTargetPackages = new ArrayList<>();
         split = null;
@@ -64,6 +67,11 @@ public class ManifestInfo {
     @NonNull
     public List<ManifestServiceInfo> services() {
         return services;
+    }
+
+    @NonNull
+    public List<String> getSdkLibraries() {
+        return sdkLibraries;
     }
 
     @NonNull
@@ -125,6 +133,8 @@ public class ManifestInfo {
                 activities.add(new ManifestActivityInfo(child, applicationId));
             } else if (AndroidManifest.NODE_SERVICE.equals(child.name())) {
                 services.add(new ManifestServiceInfo(child, applicationId));
+            } else if (AndroidManifest.NODE_SDK_LIBRARY.equals(child.name())) {
+                sdkLibraries.add(child.attributes().get("name"));
             }
         }
     }

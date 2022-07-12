@@ -83,6 +83,11 @@ class OptimisticApkInstaller {
             throw DeployerException.runTestsNotSupported();
         }
 
+        // We do not support the case where an app is intended to be sandboxed by the SDK Runtime.
+        if (hasSdkLibrary(apks)) {
+            throw DeployerException.sdksNotSupported();
+        }
+
         try {
             return tracedInstall(packageName, apks, userFlags);
         } catch (DeployerException ex) {
@@ -173,6 +178,10 @@ class OptimisticApkInstaller {
 
     private static boolean hasInstrumentedTests(List<Apk> apks) {
         return apks.stream().anyMatch(apk -> !apk.targetPackages.isEmpty());
+    }
+
+    private static boolean hasSdkLibrary(List<Apk> apks) {
+        return apks.stream().anyMatch(apk -> !apk.sdkLibraries.isEmpty());
     }
 
     private static List<ApkEntry> filterIncompatibleNativeLibraries(

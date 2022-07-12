@@ -332,6 +332,12 @@ public class DeployerException extends Exception {
                 "",
                 ResolutionAction.NONE),
 
+        IWI_SDK_RUNTIME_NOT_SUPPORTED(
+                "Deploying SDK runtime apps is not supported by the IWI pipeline. Deployment should fall back to regular installation",
+                "",
+                "",
+                ResolutionAction.NONE),
+
         IWI_RUN_PM_FLAGS_NOT_SUPPORTED(
                 "Specifying package manager flags is not supported by the IWI pipeline. Deployment should fall back to regular installation",
                 "",
@@ -637,6 +643,10 @@ public class DeployerException extends Exception {
 
     public static DeployerException runTestsNotSupported() {
         return new DeployerException(Error.IWI_RUN_TESTS_NOT_SUPPORTED, NO_ARGS, NO_ARGS);
+    }
+
+    public static DeployerException sdksNotSupported() {
+        return new DeployerException(Error.IWI_SDK_RUNTIME_NOT_SUPPORTED, NO_ARGS, NO_ARGS);
     }
 
     public static DeployerException pmFlagsNotSupported() {
