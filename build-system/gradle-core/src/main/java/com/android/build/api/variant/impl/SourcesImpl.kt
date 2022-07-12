@@ -26,7 +26,6 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import com.android.build.gradle.internal.services.VariantServices
 import org.gradle.api.file.Directory
-import java.io.File
 
 /**
  * Implementation of [Sources] for a particular source type like java, kotlin, etc...
@@ -56,7 +55,7 @@ class SourcesImpl(
             defaultSourceProvider.java.run {
                 sourceDirectoriesImpl.addSources(this)
             }
-            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.java)
+            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
     override val kotlin: FlatSourceDirectoriesImpl =
@@ -69,7 +68,7 @@ class SourcesImpl(
             defaultSourceProvider.kotlin.run {
                 sourceDirectoriesImpl.addSources(this)
             }
-            resetVariantSourceSet(
+            updateSourceDirectories(
                 sourceDirectoriesImpl,
                 variantSourceSet?.kotlin as DefaultAndroidSourceDirectorySet?)
         }
@@ -85,7 +84,7 @@ class SourcesImpl(
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
-            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.res)
+            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
     override val assets: AssetSourceDirectoriesImpl =
@@ -100,7 +99,7 @@ class SourcesImpl(
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
-            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.assets)
+            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.assets)
         }
 
     override val jniLibs: AssetSourceDirectoriesImpl =
@@ -115,7 +114,7 @@ class SourcesImpl(
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
-            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.jniLibs)
+            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.jniLibs)
         }
 
     override val shaders: AssetSourceDirectoriesImpl? =
@@ -131,7 +130,7 @@ class SourcesImpl(
                         sourceDirectoriesImpl.addSources(it)
                     }
                 }
-                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.shaders)
+                updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.shaders)
             }
         }
 
@@ -146,7 +145,7 @@ class SourcesImpl(
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
-            resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.mlModels)
+            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.mlModels)
         }
 
     override val aidl: SourceDirectories.Flat? by lazy {
@@ -157,7 +156,7 @@ class SourcesImpl(
                 variantSourceSet?.aidl?.filter
             ).also { sourceDirectoriesImpl ->
                 sourceDirectoriesImpl.addSources(defaultAidlDirectories)
-                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.aidl)
+                updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.aidl)
             }
         }
     }
@@ -170,7 +169,7 @@ class SourcesImpl(
                 variantSourceSet?.renderscript?.filter
             ).also { sourceDirectoriesImpl ->
                 sourceDirectoriesImpl.addSources(defaultRenderscriptDirectories)
-                resetVariantSourceSet(sourceDirectoriesImpl, variantSourceSet?.renderscript)
+                updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.renderscript)
             }
         }
     }
@@ -201,13 +200,13 @@ class SourcesImpl(
     }
 
     /**
-     * reset the original variant specific source set in
+     * Update SourceDirectories with the original variant specific source set from
      * [com.android.build.gradle.internal.core.VariantSources] since the variant
      * specific folders are owned by this abstraction (so users can add it if needed).
      * TODO, make the VariantSources unavailable to other components in
      * AGP as they should all use this [SourcesImpl] from now on.
      */
-    private fun resetVariantSourceSet(
+    private fun updateSourceDirectories(
         target: SourceDirectoriesImpl,
         sourceSet: AndroidSourceDirectorySet?,
     ) {
@@ -224,7 +223,6 @@ class SourcesImpl(
                     )
                 )
             }
-            sourceSet.setSrcDirs(emptyList<File>())
         }
     }
 }
