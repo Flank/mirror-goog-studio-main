@@ -57,7 +57,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.Deflater.BEST_SPEED
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST, TaskCategoryLabel.APK_PACKAGING])
 abstract class PackageForUnitTest : NonIncrementalTask() {
 
     @get:InputFiles

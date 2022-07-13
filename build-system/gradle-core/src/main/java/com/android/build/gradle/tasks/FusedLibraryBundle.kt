@@ -20,7 +20,9 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.tasks.AarMetadataTask
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
@@ -59,6 +61,7 @@ abstract class FusedLibraryBundle: Jar() {
 }
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.AAR_PACKAGING])
 abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
 
     class CreationAction(

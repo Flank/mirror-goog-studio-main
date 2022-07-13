@@ -55,4 +55,13 @@ enum class TaskCategoryLabel {
     // Tasks that involve metadata
     METADATA,
     VERIFICATION,
+    // Syncing tasks - these tasks will not show up in BA
+    SYNC,
+    // On-device related tasks
+    DEPLOYMENT,
+    // Tasks that helps/gives information to the user
+    HELP,
+    APK_PACKAGING,
+    AAR_PACKAGING,
+    BUNDLE_PACKAGING
 }

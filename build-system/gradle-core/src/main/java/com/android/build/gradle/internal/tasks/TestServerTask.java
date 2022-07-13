@@ -41,7 +41,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 /** Task sending APKs out to a {@link TestServer} */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST, TaskCategoryLabel.DEPLOYMENT})
 public abstract class TestServerTask extends NonIncrementalTask {
 
     TestServer testServer;

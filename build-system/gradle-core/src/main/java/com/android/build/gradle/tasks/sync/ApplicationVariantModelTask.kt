@@ -18,7 +18,9 @@ package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -32,6 +34,7 @@ import org.gradle.work.DisableCachingByDefault
  * the benefits in performance.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
 abstract class ApplicationVariantModelTask: ModuleVariantModelTask() {
     @get:Input
     abstract val applicationId: Property<String>

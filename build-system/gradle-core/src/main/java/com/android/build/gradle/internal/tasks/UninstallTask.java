@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.android.utils.ILogger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.work.DisableCachingByDefault;
 
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.DEPLOYMENT})
 public abstract class UninstallTask extends NonIncrementalTask {
 
     private String variantName;

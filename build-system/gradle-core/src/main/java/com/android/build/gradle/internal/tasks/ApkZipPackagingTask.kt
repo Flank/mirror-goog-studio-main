@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarMerger
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -39,6 +40,7 @@ import java.io.File
  * Package all the APKs and mapping file into a zip for publishing to a repo.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.APK_PACKAGING])
 abstract class ApkZipPackagingTask : NonIncrementalTask() {
 
     @get:InputDirectory

@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.tasks.sync
 
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.build.filebasedproperties.variant.ArtifactOutputProperties
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
 abstract class ModuleVariantModelTask: AbstractVariantModelTask() {
 
     @get:Input
