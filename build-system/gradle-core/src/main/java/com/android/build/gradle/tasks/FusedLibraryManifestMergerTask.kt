@@ -23,12 +23,14 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.ManifestMerger2
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
@@ -52,6 +54,7 @@ import java.io.File
  * Merges Manifests from libraries that will be included with in fused library.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.MANIFEST, TaskCategoryLabel.FUSING])
 abstract class FusedLibraryManifestMergerTask : ManifestProcessorTask() {
 
     @get:Internal

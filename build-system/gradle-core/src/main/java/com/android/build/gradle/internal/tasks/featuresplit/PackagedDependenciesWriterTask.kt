@@ -54,7 +54,7 @@ private val aarOrJarType = Action { container: AttributeContainer ->
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.HELP])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
 abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
     @get:OutputFile

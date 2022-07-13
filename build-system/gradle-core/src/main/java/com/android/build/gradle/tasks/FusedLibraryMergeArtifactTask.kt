@@ -31,10 +31,12 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.usLocaleCapitalize
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -62,6 +64,7 @@ import java.io.File
  * once this feature is supported in the fused library plugin.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.FUSING])
 abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
 
     @get:Input

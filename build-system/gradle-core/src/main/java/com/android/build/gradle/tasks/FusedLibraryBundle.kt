@@ -31,6 +31,7 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.AAR_PACKAGING])
 abstract class FusedLibraryBundle: Jar() {
 
     // We have to explicitly repeat the output file as the artifacts API expects a
@@ -105,6 +106,7 @@ abstract class FusedLibraryBundleAar: FusedLibraryBundle() {
 }
 
 @DisableCachingByDefault(because = "Task does not calculate anything, only creates a jar.")
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ZIPPING])
 abstract class FusedLibraryBundleClasses: FusedLibraryBundle() {
 
     class CreationAction(

@@ -41,7 +41,7 @@ import org.gradle.work.DisableCachingByDefault
  * or overlay manifests
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.MERGING])
 abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:InputFile

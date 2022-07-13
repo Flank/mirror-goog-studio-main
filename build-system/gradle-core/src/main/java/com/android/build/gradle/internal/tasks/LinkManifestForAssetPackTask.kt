@@ -50,7 +50,7 @@ import java.io.File
  * producing a linked manifest file suitable for packaging in the Android App Bundle.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.LINKING])
 abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
 
     /**

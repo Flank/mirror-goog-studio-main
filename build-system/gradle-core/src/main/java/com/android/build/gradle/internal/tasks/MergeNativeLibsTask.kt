@@ -69,7 +69,7 @@ import org.gradle.work.DisableCachingByDefault
  * Task to merge native libs from a project and possibly its dependencies
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.MERGING])
 abstract class MergeNativeLibsTask : NonIncrementalTask() {
 
     @get:InputFiles

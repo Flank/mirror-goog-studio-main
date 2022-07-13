@@ -43,7 +43,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING, TaskCategoryLabel.MERGING])
 abstract class PrivacySandboxSdkMergeDexTask: NewIncrementalTask() {
 
     @get:Incremental

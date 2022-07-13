@@ -108,7 +108,7 @@ import kotlin.math.min
  *      the impacted buckets (those containing changed input dex files).
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING, TaskCategoryLabel.MERGING])
 abstract class DexMergingTask : NewIncrementalTask() {
 
     /**

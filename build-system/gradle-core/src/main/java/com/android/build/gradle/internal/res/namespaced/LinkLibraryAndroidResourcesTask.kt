@@ -56,7 +56,7 @@ import java.io.File
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
 abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles

@@ -62,8 +62,11 @@ enum class TaskCategoryLabel {
     DEPLOYMENT,
     // Tasks that helps/gives information to the user
     HELP,
+    // Task related to packaging APKs
     APK_PACKAGING,
+    // Tasks related to packaging AARs
     AAR_PACKAGING,
+    // Tasks related to packaging bundles
     BUNDLE_PACKAGING,
     // Tasks that involve the optimization of the project
     OPTIMIZATION,
@@ -71,4 +74,9 @@ enum class TaskCategoryLabel {
     SOURCE_GENERATION,
     // Tasks that process sources
     SOURCE_PROCESSING,
+    // Tasks related to packaging artifacts
+    ZIPPING,
+    LINKING,
+    MERGING,
+    FUSING
 }

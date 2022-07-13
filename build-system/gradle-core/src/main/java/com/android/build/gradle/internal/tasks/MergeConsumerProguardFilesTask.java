@@ -46,7 +46,7 @@ import org.gradle.work.DisableCachingByDefault;
  * @see MergeFileTask
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.OPTIMIZATION})
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.OPTIMIZATION, TaskCategoryLabel.MERGING})
 public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     private boolean isDynamicFeature;

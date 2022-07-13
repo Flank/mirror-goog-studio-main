@@ -68,7 +68,7 @@ import javax.inject.Inject
  * Task to merge java resources from multiple modules
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES, TaskCategoryLabel.MERGING])
 abstract class MergeJavaResourceTask
 @Inject constructor(objects: ObjectFactory) : NewIncrementalTask() {
 

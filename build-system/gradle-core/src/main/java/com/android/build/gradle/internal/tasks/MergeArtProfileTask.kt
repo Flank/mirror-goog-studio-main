@@ -33,7 +33,7 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ART_PROFILE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ART_PROFILE, TaskCategoryLabel.MERGING])
 abstract class MergeArtProfileTask: MergeFileTask() {
 
     @get:[InputFiles PathSensitive(PathSensitivity.RELATIVE)]

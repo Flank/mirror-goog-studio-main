@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
@@ -37,6 +38,7 @@ import org.gradle.work.DisableCachingByDefault
  * Task for clearing the gradle avd folder of avd devices.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
 abstract class ManagedDeviceCleanTask: NonIncrementalGlobalTask() {
     @get: Internal
     abstract val avdService: Property<AvdComponentsBuildService>
