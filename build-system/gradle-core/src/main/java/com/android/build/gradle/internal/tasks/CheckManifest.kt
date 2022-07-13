@@ -35,7 +35,7 @@ import java.io.File
  * removed it yet for compatibility reasons.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.VERIFICATION])
 abstract class CheckManifest : NonIncrementalTask() {
 
     /** Whether the manifest file is required to exist. */

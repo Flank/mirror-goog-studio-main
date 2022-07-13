@@ -23,6 +23,10 @@ import com.android.build.gradle.internal.lint.AndroidLintGlobalTask
 import com.android.build.gradle.internal.lint.AndroidLintTask
 import com.android.build.gradle.internal.lint.AndroidLintTextOutputTask
 import com.android.build.gradle.internal.lint.LintModelWriterTask
+import com.android.build.gradle.internal.pipeline.IncrementalTransformTask
+import com.android.build.gradle.internal.pipeline.NonIncrementalTransformTask
+import com.android.build.gradle.internal.pipeline.StreamBasedTask
+import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask
 import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask
@@ -38,6 +42,7 @@ import com.android.build.gradle.internal.res.namespaced.StaticLibraryManifestTas
 import com.android.build.gradle.internal.tasks.AarMetadataTask
 import com.android.build.gradle.internal.tasks.AndroidReportTask
 import com.android.build.gradle.internal.tasks.ApkZipPackagingTask
+import com.android.build.gradle.internal.tasks.AppClasspathCheckTask
 import com.android.build.gradle.internal.tasks.AppMetadataTask
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask
 import com.android.build.gradle.internal.tasks.AssetPackManifestGenerationTask
@@ -48,21 +53,31 @@ import com.android.build.gradle.internal.tasks.BundleReportDependenciesTask
 import com.android.build.gradle.internal.tasks.BundleToApkTask
 import com.android.build.gradle.internal.tasks.BundleToStandaloneApkTask
 import com.android.build.gradle.internal.tasks.CheckAarMetadataTask
+import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask
+import com.android.build.gradle.internal.tasks.CheckJetifierTask
 import com.android.build.gradle.internal.tasks.CheckManifest
+import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask
+import com.android.build.gradle.internal.tasks.CheckProguardFiles
 import com.android.build.gradle.internal.tasks.ClasspathComparisonTask
 import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+import com.android.build.gradle.internal.tasks.CompressAssetsTask
 import com.android.build.gradle.internal.tasks.D8BundleMainDexListTask
 import com.android.build.gradle.internal.tasks.DependencyReportTask
+import com.android.build.gradle.internal.tasks.DesugarLibKeepRulesMergeTask
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask
 import com.android.build.gradle.internal.tasks.DeviceSerialTestTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask
 import com.android.build.gradle.internal.tasks.DexMergingTask
+import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask
 import com.android.build.gradle.internal.tasks.ExtractApksTask
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
+import com.android.build.gradle.internal.tasks.ExtractProfilerNativeDependenciesTask
+import com.android.build.gradle.internal.tasks.ExtractProguardFiles
 import com.android.build.gradle.internal.tasks.FeatureDexMergeTask
 import com.android.build.gradle.internal.tasks.FinalizeBundleTask
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask
+import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask
 import com.android.build.gradle.internal.tasks.InstallVariantTask
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask
 import com.android.build.gradle.internal.tasks.JacocoTask
@@ -75,6 +90,7 @@ import com.android.build.gradle.internal.tasks.ListingFileRedirectTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestResultAggregationTask
 import com.android.build.gradle.internal.tasks.ManagedDeviceInstrumentationTestTask
 import com.android.build.gradle.internal.tasks.MergeArtProfileTask
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.build.gradle.internal.tasks.MergeNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask
@@ -89,6 +105,9 @@ import com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish
 import com.android.build.gradle.internal.tasks.ProcessAssetPackManifestTask
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask
+import com.android.build.gradle.internal.tasks.ProguardConfigurableTask
+import com.android.build.gradle.internal.tasks.R8Task
+import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask
 import com.android.build.gradle.internal.tasks.SdkDependencyDataGeneratorTask
 import com.android.build.gradle.internal.tasks.ShrinkResourcesOldShrinkerTask
 import com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask
@@ -99,6 +118,7 @@ import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
 import com.android.build.gradle.internal.tasks.TestServerTask
 import com.android.build.gradle.internal.tasks.UninstallTask
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
+import com.android.build.gradle.internal.tasks.ValidateSigningTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureNamespacesTask
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask
@@ -108,6 +128,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureNameWriterTas
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask
 import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask
+import com.android.build.gradle.internal.tasks.mlkit.GenerateMlModelClass
 import com.android.build.gradle.internal.transforms.LegacyShrinkBundleModuleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
@@ -291,7 +312,35 @@ class BuildAnalyzerTest {
             BundleReportDependenciesTask::class.java,
             PerModuleReportDependenciesTask::class.java,
             AssetPackPreBundleTask::class.java,
-            PackagePrivacySandboxSdkBundle::class.java
+            PackagePrivacySandboxSdkBundle::class.java,
+            ValidateSigningTask::class.java,
+            CheckTestedAppObfuscation::class.java,
+            CheckMultiApkLibrariesTask::class.java,
+            AppClasspathCheckTask::class.java,
+            CheckDuplicateClassesTask::class.java,
+            CheckJetifierTask::class.java,
+            ExtractProguardFiles::class.java,
+            CheckProguardFiles::class.java,
+            MergeConsumerProguardFilesTask::class.java,
+            GenerateLibraryProguardRulesTask::class.java,
+            ProguardConfigurableTask::class.java,
+            ExportConsumerProguardFilesTask::class.java,
+            R8Task::class.java,
+            CompressAssetsTask::class.java,
+            GenerateBuildConfig::class.java,
+            GenerateMlModelClass::class.java,
+            PrivacySandboxSdkManifestGeneratorTask::class.java,
+            ExtractAnnotations::class.java,
+            MergeSourceSetFolders::class.java,
+            StreamBasedTask::class.java,
+            TransformTask::class.java,
+            RecalculateStackFramesTask::class.java,
+            ExtractProfilerNativeDependenciesTask::class.java,
+            TransformClassesWithAsmTask::class.java,
+            DesugarLibKeepRulesMergeTask::class.java,
+            FusedLibraryClassesRewriteTask::class.java,
+            IncrementalTransformTask::class.java,
+            NonIncrementalTransformTask::class.java,
     ) as List<Class<*>>
 
     private fun getAllTasks(): List<Class<*>> {

@@ -76,7 +76,7 @@ import javax.tools.Diagnostic
  * compiled.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // where xml info files are
     @get:InputFiles

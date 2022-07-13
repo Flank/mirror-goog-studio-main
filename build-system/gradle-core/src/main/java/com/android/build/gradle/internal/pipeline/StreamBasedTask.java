@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.pipeline;
 import android.databinding.tool.util.Preconditions;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.BuildAnalyzer;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import org.gradle.api.file.DirectoryProperty;
@@ -32,6 +34,7 @@ import org.gradle.work.DisableCachingByDefault;
  * stream's content as input/output.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.SOURCE_PROCESSING})
 public abstract class StreamBasedTask extends AndroidVariantTask {
 
     /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */

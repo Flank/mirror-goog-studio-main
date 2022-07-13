@@ -54,6 +54,7 @@ enum class TaskCategoryLabel {
     DATA_BINDING,
     // Tasks that involve metadata
     METADATA,
+    // Tasks that check/validate
     VERIFICATION,
     // Syncing tasks - these tasks will not show up in BA
     SYNC,
@@ -63,5 +64,11 @@ enum class TaskCategoryLabel {
     HELP,
     APK_PACKAGING,
     AAR_PACKAGING,
-    BUNDLE_PACKAGING
+    BUNDLE_PACKAGING,
+    // Tasks that involve the optimization of the project
+    OPTIMIZATION,
+    // Tasks that generate sources
+    SOURCE_GENERATION,
+    // Tasks that process sources
+    SOURCE_PROCESSING,
 }

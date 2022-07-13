@@ -62,7 +62,7 @@ import javax.xml.parsers.ParserConfigurationException
  * Implementation of Resource Shrinking as a task.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
 abstract class ShrinkResourcesOldShrinkerTask : NonIncrementalTask() {
 
     private var buildTypeName: String? = null

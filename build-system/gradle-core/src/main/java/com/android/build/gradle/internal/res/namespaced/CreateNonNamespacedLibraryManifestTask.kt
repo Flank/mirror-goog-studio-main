@@ -38,7 +38,7 @@ import org.gradle.api.tasks.TaskProvider
  * non-namespaced projects.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
 
     @get:OutputFile

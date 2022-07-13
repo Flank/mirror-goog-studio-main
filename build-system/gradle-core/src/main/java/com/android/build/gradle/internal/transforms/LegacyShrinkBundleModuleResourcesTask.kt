@@ -56,7 +56,7 @@ import javax.xml.parsers.ParserConfigurationException
  * Enabled when android.experimental.enableNewResourceShrinker=false.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
 abstract class LegacyShrinkBundleModuleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile

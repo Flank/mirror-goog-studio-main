@@ -58,7 +58,7 @@ import java.io.IOException
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class CompatibleScreensManifest : NonIncrementalTask() {
 
     @get:Input

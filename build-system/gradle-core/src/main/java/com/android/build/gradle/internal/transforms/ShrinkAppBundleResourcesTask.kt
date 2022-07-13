@@ -61,7 +61,7 @@ import javax.inject.Inject
  * Enabled when android.experimental.enableNewResourceShrinker=true.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
 abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile

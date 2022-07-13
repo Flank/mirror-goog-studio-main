@@ -28,6 +28,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.ide.common.attribution.CheckJetifierProjectResult
 import com.android.ide.common.attribution.DependencyPath
 import com.android.ide.common.attribution.FullDependencyPath
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.result.DependencyResult
@@ -49,6 +50,7 @@ import org.gradle.work.DisableCachingByDefault
  * (https://github.com/gradle/gradle/issues/12871).
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.VERIFICATION])
 abstract class CheckJetifierTask : NonIncrementalGlobalTask() {
 
     @get:Internal // This task always runs

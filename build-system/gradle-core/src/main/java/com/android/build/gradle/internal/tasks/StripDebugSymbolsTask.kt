@@ -73,7 +73,7 @@ import javax.inject.Inject
  * Task to remove debug symbols from native libraries.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.SOURCE_PROCESSING])
 abstract class StripDebugSymbolsTask : NewIncrementalTask() {
 
     @get:InputDirectory

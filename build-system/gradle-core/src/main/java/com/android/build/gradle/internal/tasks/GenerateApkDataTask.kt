@@ -60,7 +60,7 @@ import javax.inject.Inject
 
 /** Task to generate micro app data res file.  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateApkDataTask : NonIncrementalTask() {
 
     // Tells us if the apk file collection received from task manager exists

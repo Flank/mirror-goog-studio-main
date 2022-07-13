@@ -32,7 +32,7 @@ import java.io.File
  * build.gradle file, as well as the base package name of the project.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class AssetPackManifestGenerationTask : NonIncrementalTask() {
     /**
      * The generated manifest file for the asset pack module.

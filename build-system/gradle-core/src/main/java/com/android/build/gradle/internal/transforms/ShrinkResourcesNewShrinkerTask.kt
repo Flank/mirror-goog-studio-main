@@ -76,7 +76,7 @@ import javax.inject.Inject
  * proto first and passed as input to the shrinker.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
 abstract class ShrinkResourcesNewShrinkerTask : NonIncrementalTask() {
 
     @get:OutputDirectory

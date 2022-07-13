@@ -56,7 +56,7 @@ import javax.inject.Inject
  * Class generating the R.jar and resource text files for a resource namespace aware library.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 

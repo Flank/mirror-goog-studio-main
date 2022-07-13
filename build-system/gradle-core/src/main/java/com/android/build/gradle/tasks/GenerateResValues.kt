@@ -36,7 +36,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateResValues : NonIncrementalTask() {
 
     // ----- PUBLIC TASK API -----

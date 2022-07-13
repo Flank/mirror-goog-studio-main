@@ -63,7 +63,7 @@ import javax.inject.Inject
  * the optimized resources content is made identical to [InternalArtifactType.PROCESSED_RES].
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
 abstract class OptimizeResourcesTask : NonIncrementalTask() {
 
     @get:InputDirectory

@@ -50,7 +50,7 @@ import java.io.File
  *  simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class AarMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile

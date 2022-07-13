@@ -73,7 +73,7 @@ import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.VERIFICATION])
 abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory
