@@ -53,7 +53,8 @@ internal class MergeArtProfileTaskTest {
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.root).build()
         inputFiles = project.files()
-        artProfileSourceFile = project.objects.fileProperty()
+        artProfileSourceFile =
+            project.objects.fileProperty().also { it.set(File("/does/not/exist")) }
         task = project.tasks.register(
                 "appMetadataTask",
                 MergeArtProfileTaskForTest::class.java,

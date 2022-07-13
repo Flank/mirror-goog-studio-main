@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.tools.profgen.HumanReadableProfile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -42,8 +40,8 @@ import java.lang.RuntimeException
 @DisableCachingByDefault
 abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
 
-    @get:[InputFile PathSensitive(PathSensitivity.RELATIVE)]
-    @get:Optional
+    // Use InputFiles rather than InputFile to allow the file not to exist
+    @get:[InputFiles PathSensitive(PathSensitivity.RELATIVE)]
     abstract val profileSource: RegularFileProperty
 
     @get:OutputFile
@@ -51,14 +49,14 @@ abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
 
     @TaskAction
     override fun doTaskAction() {
-        if (profileSource.isPresent) {
-            val sourceFile = profileSource.get().asFile
+        val sourceFile = profileSource.get().asFile
+        if (sourceFile.isFile) {
             // verify the human readable profile is valid so we error early if necessary
             HumanReadableProfile(sourceFile) {
                 throw RuntimeException("Error while parsing ${sourceFile.absolutePath} : $it")
             }
             // all good, copy to target area.
-            profileSource.get().asFile.copyTo(outputFile.get().asFile, true)
+            sourceFile.copyTo(outputFile.get().asFile, true)
         }
     }
 
@@ -83,7 +81,8 @@ abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
         override fun configure(task: ProcessLibraryArtProfileTask) {
             super.configure(task)
             val variantSources = creationConfig.variantSources
-            task.profileSource.set(variantSources.artProfileIfExists)
+            task.profileSource
+                .fileProvider(creationConfig.services.provider(variantSources::artProfile))
             task.profileSource.disallowChanges()
         }
     }

@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.integration.manifest
 
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor.ConfigurationCaching.ON
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.testutils.truth.PathSubject
+import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -51,5 +53,16 @@ class ProcessManifestTest {
         Truth.assertThat(manifestContent).contains("android:minSdkVersion=\"21\"")
         Truth.assertThat(manifestContent).doesNotContain("android:targetSdkVersion")
         Truth.assertThat(manifestContent).contains("android:maxSdkVersion=\"29\"")
+    }
+
+    // Regression test for b/237450413
+    @Test
+    fun testSourceManifestDeletion() {
+        val manifestFile = project.file("src/main/AndroidManifest.xml")
+        PathSubject.assertThat(manifestFile).isFile()
+        project.executor().withConfigurationCaching(ON).run("processDebugManifest")
+        FileUtils.deleteIfExists(manifestFile)
+        PathSubject.assertThat(manifestFile).doesNotExist()
+        project.executor().withConfigurationCaching(ON).run("processDebugManifest")
     }
 }

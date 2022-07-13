@@ -46,7 +46,6 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -116,8 +115,8 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             it.aaptFriendlyManifestOutputFile.set(aaptFriendlyManifestOutputFile)
             it.namespaced.set(isNamespaced)
             it.mainManifest.set(
-                    if (mainManifest.isPresent()) {
-                        mainManifest.get()
+                    if (mainManifest.get().asFile.isFile) {
+                        mainManifest.get().asFile
                     } else {
                         createTempLibraryManifest(tmpDir.get().asFile, namespace.orNull)
                     }
@@ -250,10 +249,9 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     @get:Input
     abstract val maxSdkVersion: Property<Int?>
 
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    @get:Optional
-    abstract val mainManifest: Property<File>
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:InputFiles // Use InputFiles rather than InputFile to allow the file not to exist
+    abstract val mainManifest: RegularFileProperty
 
     @get:Optional
     @get:Input
@@ -338,7 +336,9 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
                 task.manifestPlaceholders.setDisallowChanges(it)
             }
             task.mainManifest
-                .set(creationConfig.services.provider(variantSources::mainManifestIfExists))
+                .fileProvider(
+                    creationConfig.services.provider(variantSources::mainManifestFilePath)
+                )
             task.mainManifest.disallowChanges()
             task.manifestOverlays.set(
                 task.project.provider(variantSources::manifestOverlays)

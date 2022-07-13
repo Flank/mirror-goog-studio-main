@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -25,9 +24,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -40,8 +37,8 @@ abstract class MergeArtProfileTask: MergeFileTask() {
     @get:[InputFiles PathSensitive(PathSensitivity.RELATIVE)]
     abstract override val inputFiles: ConfigurableFileCollection
 
-    @get:[InputFile PathSensitive(PathSensitivity.RELATIVE)]
-    @get:Optional
+    // Use InputFiles rather than InputFile to allow the file not to exist
+    @get:[InputFiles PathSensitive(PathSensitivity.RELATIVE)]
     abstract val profileSource: RegularFileProperty
 
     @TaskAction
@@ -49,7 +46,7 @@ abstract class MergeArtProfileTask: MergeFileTask() {
         workerExecutor.noIsolation().submit(MergeFilesWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.inputFiles.from(inputFiles)
-            if (profileSource.isPresent) {
+            if (profileSource.get().asFile.isFile) {
                 it.inputFiles.from(profileSource)
             }
             it.outputFile.set(outputFile)
@@ -95,7 +92,10 @@ abstract class MergeArtProfileTask: MergeFileTask() {
                     )
             task.inputFiles.fromDisallowChanges(aarProfilesArtifactCollection.artifactFiles)
 
-            task.profileSource.set(creationConfig.variantSources.artProfileIfExists)
+            task.profileSource
+                .fileProvider(
+                    creationConfig.services.provider(creationConfig.variantSources::artProfile)
+                )
             task.profileSource.disallowChanges()
         }
     }
