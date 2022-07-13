@@ -36,6 +36,7 @@ public class DeployRunnerParameters {
     private boolean forceFullInstall = false;
     private boolean optimisticInstall = false;
     private boolean skipPostInstallTasks = false;
+    private boolean useRootPushInstall = false;
     private String installersPath = null;
     private String adbExecutablePath = null;
     private String targetUserId = null;
@@ -63,6 +64,8 @@ public class DeployRunnerParameters {
             targetUserId = arg.substring("--user=".length());
         } else if (arg.startsWith("--skip-post-install")) {
             skipPostInstallTasks = true;
+        } else if (arg.startsWith("--use-root-push-install")) {
+            useRootPushInstall = true;
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -146,6 +149,10 @@ public class DeployRunnerParameters {
 
     public boolean getSkipPostInstallTasks() {
         return skipPostInstallTasks;
+    }
+
+    public boolean getUseRootPushInstall() {
+        return useRootPushInstall;
     }
 
     public String getTargetUserId() {

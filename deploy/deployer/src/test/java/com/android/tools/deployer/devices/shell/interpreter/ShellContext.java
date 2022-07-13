@@ -59,6 +59,7 @@ public class ShellContext implements AutoCloseable {
         pipeOut = new PipedOutputStream(pipeIn);
         pipeOutPrintStream = new PrintStream(pipeOut);
         cwd = Paths.get("/");
+        scope.put("USER_ID", String.format("%d", device.getCurrentUser().uid));
     }
 
     @Override

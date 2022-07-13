@@ -1981,6 +1981,50 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    @ApiLevel.InRange(min = 24)
+    public void testRootPushInstall() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        Path oldApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path newApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            oldApk.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", oldApk);
+
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    newApk.toString(),
+                    "--installers-path=" + installersPath,
+                    "--use-root-push-install",
+                    "--skip-post-install"
+                };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", newApk);
+        assertMetrics(
+                runner.getMetrics(),
+                ":Success",
+                "PARSE_PATHS:Success",
+                ":Success",
+                "ROOT_PUSH_INSTALL:Success");
+    }
+
+    @Test
     @ApiLevel.InRange(min = 30)
     public void testAgentTransformCache() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host

@@ -26,6 +26,7 @@ public class DeployerOption {
     public final boolean fastRestartOnSwapFail;
     public final boolean enableCoroutineDebugger;
     public final boolean skipPostInstallTasks;
+    public final boolean useRootPushInstall;
 
     private DeployerOption(
             boolean useOptimisticSwap,
@@ -35,7 +36,8 @@ public class DeployerOption {
             boolean useVariableReinitialization,
             boolean fastRestartOnSwapFail,
             boolean enableCoroutineDebugger,
-            boolean skipPostInstallTasks) {
+            boolean skipPostInstallTasks,
+            boolean useRootPushInstall) {
         this.useOptimisticSwap = useOptimisticSwap;
         this.useOptimisticResourceSwap = useOptimisticResourceSwap;
         this.optimisticInstallSupport = optimisticInstallSupport;
@@ -44,6 +46,7 @@ public class DeployerOption {
         this.fastRestartOnSwapFail = fastRestartOnSwapFail;
         this.enableCoroutineDebugger = enableCoroutineDebugger;
         this.skipPostInstallTasks = skipPostInstallTasks;
+        this.useRootPushInstall = useRootPushInstall;
     }
 
     public static class Builder {
@@ -55,6 +58,7 @@ public class DeployerOption {
         private boolean fastRestartOnSwapFail;
         private boolean enableCoroutineDebugger;
         private boolean skipPostInstallTasks;
+        private boolean useRootPushInstall;
 
         public Builder setUseOptimisticSwap(boolean useOptimisticSwap) {
             this.useOptimisticSwap = useOptimisticSwap;
@@ -96,6 +100,11 @@ public class DeployerOption {
             return this;
         }
 
+        public Builder useRootPushInstall(boolean useRootPushInstall) {
+            this.useRootPushInstall = useRootPushInstall;
+            return this;
+        }
+
         public DeployerOption build() {
             return new DeployerOption(
                     useOptimisticSwap,
@@ -105,7 +114,8 @@ public class DeployerOption {
                     useVariableReinitialization,
                     fastRestartOnSwapFail,
                     enableCoroutineDebugger,
-                    skipPostInstallTasks);
+                    skipPostInstallTasks,
+                    useRootPushInstall);
         }
     }
 }

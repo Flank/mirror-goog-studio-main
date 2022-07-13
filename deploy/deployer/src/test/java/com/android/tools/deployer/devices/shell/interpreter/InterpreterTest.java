@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.android.tools.deployer.devices.DeviceId;
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
+import com.android.tools.deployer.devices.shell.Echo;
 import com.android.tools.deployer.devices.shell.ShellCommand;
 import com.google.common.base.Charsets;
 import java.io.ByteArrayInputStream;
@@ -43,7 +44,7 @@ public class InterpreterTest {
         inputStream = new ByteArrayInputStream(new byte[] {});
         outputStream = new ByteArrayOutputStream(1024);
         FakeDevice device = new FakeDeviceLibrary().build(DeviceId.API_28);
-        device.getShell().addCommand(new EchoCommand());
+        device.getShell().addCommand(new Echo());
         device.getShell().addCommand(new CatCommand());
         device.getShell().addCommand(new TwoParamCommand());
         device.getShell().addCommand(new OnlyBarParams());
@@ -179,20 +180,6 @@ public class InterpreterTest {
     @Test(expected = RuntimeException.class)
     public void noDanglingOperatorPipe() {
         Parser.parse("echo foo |");
-    }
-
-    private static class EchoCommand extends ShellCommand {
-        @Override
-        public int execute(
-                ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
-            stdout.println(args[0]); // echo prints a newline after the param.
-            return 0;
-        }
-
-        @Override
-        public String getExecutable() {
-            return "echo";
-        }
     }
 
     private static class CatCommand extends ShellCommand {

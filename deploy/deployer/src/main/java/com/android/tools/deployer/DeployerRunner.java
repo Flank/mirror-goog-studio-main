@@ -175,6 +175,7 @@ public class DeployerRunner {
                         .setOptimisticInstallSupport(optimisticInstallSupport)
                         .enableCoroutineDebugger(true)
                         .skipPostInstallTasks(parameters.getSkipPostInstallTasks())
+                        .useRootPushInstall(parameters.getUseRootPushInstall())
                         .build();
 
         Deployer deployer =

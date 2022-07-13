@@ -68,7 +68,10 @@ public class FakeDevice {
     private final Map<String, String> env;
     private final Map<String, Application> apps;
     private final List<AndroidProcess> processes;
+    private final User rootUser;
     private final User shellUser;
+    private User currentUser;
+
     private final int zygotepid;
     private final File logcat;
     private final File fakeApp;
@@ -111,7 +114,9 @@ public class FakeDevice {
         this.users = new ArrayList<>();
         this.pid = 10000;
         // Set up
+        this.rootUser = addUser(0, "root");
         this.shellUser = addUser(2000, "shell");
+        this.currentUser = shellUser;
         this.storage = Files.createTempDirectory("storage").toFile();
         this.storage.deleteOnExit();
         this.zygotepid = runProcess(0, "zygote64");
@@ -518,6 +523,18 @@ public class FakeDevice {
 
     public User getShellUser() {
         return shellUser;
+    }
+
+    public User getRootUser() {
+        return rootUser;
+    }
+
+    public void setCurrentUser(User user) {
+        currentUser = user;
+    }
+
+    public User getCurrentUser() {
+        return currentUser;
     }
 
     public RunResult executeScript(String cmd, byte[] input) throws IOException {

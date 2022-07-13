@@ -20,6 +20,7 @@ import com.android.tools.deployer.devices.shell.BasicPm;
 import com.android.tools.deployer.devices.shell.Chmod;
 import com.android.tools.deployer.devices.shell.Cmd;
 import com.android.tools.deployer.devices.shell.Cp;
+import com.android.tools.deployer.devices.shell.Echo;
 import com.android.tools.deployer.devices.shell.GetProp;
 import com.android.tools.deployer.devices.shell.Id;
 import com.android.tools.deployer.devices.shell.Ls;
@@ -79,5 +80,6 @@ public class FakeDeviceLibrary {
         device.getShell().addCommand(new Ls());
         device.getShell().addCommand(new Stat());
         device.getShell().addCommand(new Xargs());
+        device.getShell().addCommand(new Echo());
     }
 }
