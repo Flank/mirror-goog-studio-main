@@ -154,6 +154,10 @@ int IO::unlink(const std::string& pathname) {
   return ::unlink(ResolvePath(pathname).c_str());
 }
 
+int IO::rename(const std::string& old_path, const std::string& new_path) {
+  return ::rename(ResolvePath(old_path).c_str(), ResolvePath(new_path).c_str());
+}
+
 int IO::rmdir(const std::string& pathname) {
   std::string path = ResolvePath(pathname);
   DIR* dir = ::opendir(path.c_str());
