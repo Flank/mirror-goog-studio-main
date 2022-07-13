@@ -22,12 +22,14 @@ import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeState.AFTER_FIRS
 import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeState.IN_DOLLAR_CURLY_VARIABLE
 import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeState.IN_DOLLAR_VARIABLE
 import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeState.START
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedColon
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Comment
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedDollar
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Literal
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedSpace
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Variable
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeState.START_AFTER_NON_WHITESPACE
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.LiteralType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableWithCurliesType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.CommentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedSpaceType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedDollarType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedColonType
 import java.io.Reader
 
 /**
@@ -48,7 +50,12 @@ import java.io.Reader
  * $$
  *  a literal $.
  */
-fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
+fun Reader.streamUnescapedNinja(
+    action : (
+        // The type of token
+        type : NinjaUnescapeTokenType,
+        // The string content of the token. Must be consumed or copied inside 'action'.
+        token : CharSequence) -> Unit) {
     var state = START
     val sb = StringBuilder()
     var peeked : Int? = null
@@ -63,7 +70,7 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
     }
     fun sendExisting() {
         if (sb.isNotEmpty()) {
-            action(Literal(sb.toString()))
+            action(LiteralType, sb)
             sb.clear()
         }
     }
@@ -72,14 +79,14 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
         if (next == -1) {
             if (sb.isNotEmpty()) {
                 when(state) {
-                    START ->
-                        action(Literal(sb.toString()))
+                    START, START_AFTER_NON_WHITESPACE ->
+                        action(LiteralType, sb)
                     IN_DOLLAR_VARIABLE ->
-                        action(Variable(sb.toString(), false))
+                        action(VariableType, sb)
                     IN_DOLLAR_CURLY_VARIABLE ->
-                        action(Variable(sb.toString(), true))
+                        action(VariableWithCurliesType, sb)
                     AFTER_COMMENT_HASH ->
-                        action(Comment(sb.toString()))
+                        action(CommentType, sb)
                     else -> error("$state")
                 }
             }
@@ -101,7 +108,21 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
                     }
                     else -> {
                         sb.append(ch)
+                        if (ch.isWhitespace()) START else START_AFTER_NON_WHITESPACE
+                    }
+                }
+                START_AFTER_NON_WHITESPACE -> when (ch) {
+                    '$' -> {
+                        sendExisting()
+                        AFTER_FIRST_DOLLAR
+                    }
+                    '\r', '\n' -> {
+                        sb.append(ch)
                         START
+                    }
+                    else -> {
+                        sb.append(ch)
+                        START_AFTER_NON_WHITESPACE
                     }
                 }
                 ABSORB_WHITESPACE_AFTER_LINE_CONTINUATION ->
@@ -114,16 +135,16 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
                     }
                 AFTER_FIRST_DOLLAR -> when (ch) {
                     '$' -> {
-                        action(EscapedDollar)
-                        START
+                        action(EscapedDollarType, "$$")
+                        START_AFTER_NON_WHITESPACE
                     }
                     ':' -> {
-                        action(EscapedColon)
-                        START
+                        action(EscapedColonType, "$:")
+                        START_AFTER_NON_WHITESPACE
                     }
                     ' ' -> {
-                        action(EscapedSpace)
-                        START
+                        action(EscapedSpaceType, "$ ")
+                        START_AFTER_NON_WHITESPACE
                     }
                     '{' ->
                         IN_DOLLAR_CURLY_VARIABLE
@@ -141,23 +162,23 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
                 }
                 IN_DOLLAR_VARIABLE -> when (ch) {
                     ':' -> {
-                        action(Variable(sb.toString(), false))
+                        action(VariableType, sb)
                         sb.clear()
                         sb.append(":")
-                        START
+                        START_AFTER_NON_WHITESPACE
                     }
                     '$' -> {
-                        action(Variable(sb.toString(), false))
+                        action(VariableType, sb)
                         sb.clear()
                         AFTER_FIRST_DOLLAR
                     }
                     '#' -> {
-                        action(Variable(sb.toString(), false))
+                        action(VariableType, sb)
                         sb.clear()
                         AFTER_COMMENT_HASH
                     }
-                    '\r', '\n',' '-> {
-                        action(Variable(sb.toString(), false))
+                    '\r', '\n', ' '-> {
+                        action(VariableType, sb)
                         sb.clear()
                         sb.append(ch)
                         START
@@ -169,9 +190,9 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
                 }
                 IN_DOLLAR_CURLY_VARIABLE -> when (ch) {
                     '}' -> {
-                        action(Variable(sb.toString(), true))
+                        action(VariableWithCurliesType, sb)
                         sb.clear()
-                        START
+                        START_AFTER_NON_WHITESPACE
                     }
                     else -> {
                         sb.append(ch)
@@ -181,7 +202,7 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
                 AFTER_COMMENT_HASH -> when (ch) {
                     '\r', '\n' -> {
                         if (sb.isNotEmpty()) {
-                            action(Comment(sb.toString()))
+                            action(CommentType, sb)
                             sb.clear()
                         }
                         sb.append(ch)
@@ -199,35 +220,43 @@ fun Reader.streamUnescapedNinja(action : (NinjaUnescapedToken) -> Unit) {
 }
 
 /**
- * A token resulting from streaming a build.ninja file.
- * The content of the class, for example [Variable] name, will be unescaped.
- * The toString() will return the original escaped value.
+ * The type of token resulting from streaming a build.ninja file.
  */
-sealed class NinjaUnescapedToken {
-    data class Variable(val name : String, val curlies : Boolean) : NinjaUnescapedToken() {
-        override fun toString(): String {
-            val sb = StringBuilder()
-            sb.append('$')
-            if (curlies) sb.append('{')
-            sb.append(name)
-            if (curlies) sb.append('}')
-            return sb.toString()
-        }
+enum class NinjaUnescapeTokenType {
+    VariableType,
+    VariableWithCurliesType,
+    LiteralType,
+    CommentType,
+    EscapedDollarType,
+    EscapedColonType,
+    EscapedSpaceType;
+    fun size(value : CharSequence) = when(this) {
+        VariableType -> value.length + 1
+        VariableWithCurliesType -> value.length + 3
+        LiteralType -> value.length
+        CommentType -> value.length + 1
+        EscapedDollarType -> 2
+        EscapedColonType -> 2
+        EscapedSpaceType -> 2
     }
-    open class Literal(val value : String) : NinjaUnescapedToken() {
-        override fun toString() = value
-    }
-    open class Comment(val text : String) : NinjaUnescapedToken() {
-        override fun toString() = "#$text"
-    }
-    object EscapedDollar :NinjaUnescapedToken() {
-        override fun toString() = "$$"
-    }
-    object EscapedColon : NinjaUnescapedToken() {
-        override fun toString() = "$:"
-    }
-    object EscapedSpace : NinjaUnescapedToken() {
-        override fun toString() = "$ "
+    fun charAt(value : CharSequence, index : Int) = when(this) {
+        VariableType ->
+            when (index) {
+                0 -> '$'
+                else -> value[index - 1]
+            }
+        VariableWithCurliesType ->
+            when (index) {
+                0 -> '$'
+                1 -> '{'
+                value.length + 2 -> '}'
+                else -> value[index - 2]
+            }
+        LiteralType -> value[index]
+        CommentType -> if(index == 0) '#' else value[index - 1]
+        EscapedDollarType -> '$'
+        EscapedColonType -> if (index == 0) '$' else ':'
+        EscapedSpaceType -> if (index == 0) '$' else ' '
     }
 }
 
@@ -236,10 +265,10 @@ sealed class NinjaUnescapedToken {
  */
 private enum class NinjaUnescapeState {
     START,
+    START_AFTER_NON_WHITESPACE,
     AFTER_FIRST_DOLLAR,
     IN_DOLLAR_CURLY_VARIABLE,
     IN_DOLLAR_VARIABLE,
     AFTER_COMMENT_HASH,
     ABSORB_WHITESPACE_AFTER_LINE_CONTINUATION
 }
-

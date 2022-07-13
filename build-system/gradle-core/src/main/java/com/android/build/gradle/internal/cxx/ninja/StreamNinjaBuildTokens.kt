@@ -16,23 +16,25 @@
 
 package com.android.build.gradle.internal.cxx.ninja
 
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.DoublePipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOF
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOL
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Indent
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Pipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Text
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedColon
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Comment
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedDollar
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Literal
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedSpace
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Variable
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.DoublePipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOFType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOLType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.IndentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.PipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.TextType
 import com.android.build.gradle.internal.cxx.ninja.TokenizerState.AFTER_EOL
 import com.android.build.gradle.internal.cxx.ninja.TokenizerState.IN_PIPE
 import com.android.build.gradle.internal.cxx.ninja.TokenizerState.IN_INDENT
 import com.android.build.gradle.internal.cxx.ninja.TokenizerState.IN_EXPRESSION
 import com.android.build.gradle.internal.cxx.ninja.TokenizerState.IN_ASSIGNMENT_EXPRESSION
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.LiteralType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.CommentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedSpaceType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedDollarType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedColonType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableWithCurliesType
+import com.google.common.annotations.VisibleForTesting
 import java.io.Reader
 
 /**
@@ -40,55 +42,58 @@ import java.io.Reader
  * create a stream of Ninja build tokens (called [NinjaBuildToken]) that are literals or special
  * characters recognized by ninja like '|', '||', and ':'.
  */
-fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
+@VisibleForTesting
+fun Reader.streamNinjaBuildTokens(action: (NinjaBuildTokenType, CharSequence) -> Unit) {
     val sb = StringBuilder()
     var state = AFTER_EOL
     fun sendExisting() {
-        if (sb.isNotBlank()) {
-            action(Text(sb.toString().trim()))
+        val trimmed = sb.trim()
+        if (trimmed.isNotEmpty()) {
+            action(TextType, trimmed)
         }
         sb.clear()
     }
-
-    streamUnescapedNinja { token ->
-        state = when(token) {
-            is Comment -> when(state) {
+    streamUnescapedNinja { type, value ->
+        state = when(type) {
+            CommentType -> when(state) {
                 IN_EXPRESSION -> {
                     sendExisting()
                     IN_EXPRESSION
                 }
                 IN_INDENT -> {
-                    action(Indent)
+                    action(IndentType, INDENT_TOKEN)
                     IN_EXPRESSION
                 }
                 IN_PIPE -> {
-                    action(Pipe)
+                    action(PipeType, "|")
                     IN_EXPRESSION
                 }
                 AFTER_EOL -> AFTER_EOL
                 IN_ASSIGNMENT_EXPRESSION -> {
                     sb.append("#")
-                    sb.append(token.text)
+                    sb.append(value)
                     IN_ASSIGNMENT_EXPRESSION
                 }
                 else -> error("$state")
             }
-            is EscapedDollar,
-            is EscapedSpace,
-            is EscapedColon,
-            is Variable,
-            is Literal -> {
-                for(ch in token.toString()) {
-                    state = when(ch) {
+            EscapedDollarType,
+            EscapedSpaceType,
+            EscapedColonType,
+            VariableType,
+            VariableWithCurliesType,
+            LiteralType -> {
+                val size = type.size(value)
+                for(i in 0 until size) {
+                    state = when(val ch = type.charAt(value, i)) {
                         ' ' -> when(state) {
                             IN_PIPE -> {
-                                action(Pipe)
+                                action(PipeType, "|")
                                 IN_EXPRESSION
                             }
                             IN_INDENT -> IN_INDENT
                             AFTER_EOL -> IN_INDENT
                             IN_EXPRESSION -> {
-                                if (token is EscapedSpace) {
+                                if (type == EscapedSpaceType) {
                                     sb.append(" ")
                                 } else {
                                     sendExisting()
@@ -103,11 +108,11 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                         }
                         '|' -> when(state) {
                             IN_PIPE -> {
-                                action(DoublePipe)
+                                action(DoublePipeType, "||")
                                 IN_EXPRESSION
                             }
                             IN_INDENT -> {
-                                action(Indent)
+                                action(IndentType, INDENT_TOKEN)
                                 IN_EXPRESSION
                             }
                             AFTER_EOL,
@@ -123,20 +128,20 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                         }
                         '\r', '\n' -> when(state) {
                             IN_PIPE -> {
-                                action(Pipe)
-                                action(EOL)
+                                action(PipeType, "|")
+                                action(EOLType, END_OF_LINE_TOKEN)
                                 AFTER_EOL
                             }
                             AFTER_EOL -> AFTER_EOL
                             IN_INDENT -> {
                                 sendExisting()
-                                action(EOL)
+                                action(EOLType, END_OF_LINE_TOKEN)
                                 IN_EXPRESSION
                             }
                             IN_ASSIGNMENT_EXPRESSION,
                             IN_EXPRESSION -> {
                                 sendExisting()
-                                action(EOL)
+                                action(EOLType, END_OF_LINE_TOKEN)
                                 AFTER_EOL
                             }
                             else -> error("$state")
@@ -145,7 +150,7 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                             AFTER_EOL,
                             IN_EXPRESSION -> {
                                 sendExisting()
-                                action(Text(ch.toString()))
+                                action(TextType, ch.toString())
                                 IN_ASSIGNMENT_EXPRESSION
                             }
                             IN_ASSIGNMENT_EXPRESSION -> {
@@ -153,11 +158,11 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                                 IN_ASSIGNMENT_EXPRESSION
                             }
                             IN_INDENT -> {
-                                action(Indent)
+                                action(IndentType, INDENT_TOKEN)
                                 IN_EXPRESSION
                             }
                             IN_PIPE -> {
-                                action(Pipe)
+                                action(PipeType, "|")
                                 IN_EXPRESSION
                             }
                             else -> error("$state")
@@ -165,21 +170,21 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                         ':' -> when(state) {
                             AFTER_EOL,
                             IN_EXPRESSION -> {
-                                if (token is EscapedColon) {
+                                if (type == EscapedColonType) {
                                     sb.append(":")
                                     IN_EXPRESSION
                                 } else {
                                     sendExisting()
-                                    action(Text(ch.toString()))
+                                    action(TextType, ch.toString())
                                     IN_EXPRESSION
                                 }
                             }
                             IN_INDENT -> {
-                                action(Indent)
+                                action(IndentType, INDENT_TOKEN)
                                 IN_EXPRESSION
                             }
                             IN_PIPE -> {
-                                action(Pipe)
+                                action(PipeType, "|")
                                 IN_EXPRESSION
                             }
                             IN_ASSIGNMENT_EXPRESSION -> {
@@ -199,12 +204,12 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
                                 IN_ASSIGNMENT_EXPRESSION
                             }
                             IN_INDENT -> {
-                                action(Indent)
+                                action(IndentType, INDENT_TOKEN)
                                 sb.append(ch)
                                 IN_EXPRESSION
                             }
                             IN_PIPE -> {
-                                action(Pipe)
+                                action(PipeType, "|")
                                 sb.append(ch)
                                 IN_EXPRESSION
                             }
@@ -218,22 +223,21 @@ fun Reader.streamNinjaBuildTokens(action: (NinjaBuildToken) -> Unit) {
     }
     sendExisting()
     if (state != AFTER_EOL) {
-        action(EOL)
+        action(EOLType, END_OF_LINE_TOKEN)
     }
-    action(EOF)
+    action(EOFType, END_OF_FILE_TOKEN)
 }
 
 /**
  * A Ninja build token like 'build', 'rule', or special characters that have syntactic meaning.
  */
-sealed class NinjaBuildToken(val text : String) {
-    override fun toString() = text
-    class Text(text : String) : NinjaBuildToken(text)
-    object Pipe : NinjaBuildToken("|")
-    object DoublePipe : NinjaBuildToken("||")
-    object Indent : NinjaBuildToken(INDENT_TOKEN)
-    object EOL : NinjaBuildToken(END_OF_LINE_TOKEN)
-    object EOF : NinjaBuildToken(END_OF_FILE_TOKEN)
+enum class NinjaBuildTokenType {
+    TextType,
+    PipeType,
+    DoublePipeType,
+    IndentType,
+    EOLType,
+    EOFType;
 }
 
 private const val END_OF_LINE_TOKEN = "::END_OF_LINE_TOKEN::"

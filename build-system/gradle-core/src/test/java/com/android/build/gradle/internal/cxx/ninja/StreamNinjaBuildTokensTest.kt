@@ -17,29 +17,29 @@
 package com.android.build.gradle.internal.cxx.ninja
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.DoublePipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOF
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOL
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Indent
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Pipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Text
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.DoublePipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOFType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOLType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.IndentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.PipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.TextType
 import java.io.StringReader
 
 class StreamNinjaBuildTokensTest {
 
     private fun check(input : String, expected : String? = null) {
         val sb = StringBuilder()
-        StringReader(input).streamNinjaBuildTokens {
-            when (it) {
-                is EOL -> sb.append("[EOL]")
-                is EOF -> sb.append("[EOF]")
-                is Indent -> sb.append("[Indent]")
-                is Text -> sb.append("[${it.text}]")
-                is Pipe -> sb.append("[Pipe]")
-                is DoublePipe -> sb.append("[DoublePipe]")
-                else -> error("$it")
+        StringReader(input).streamNinjaBuildTokens { type, value ->
+            when (type) {
+                EOLType -> sb.append("[EOL]")
+                EOFType -> sb.append("[EOF]")
+                IndentType -> sb.append("[Indent]")
+                TextType -> sb.append("[$value]")
+                PipeType -> sb.append("[Pipe]")
+                DoublePipeType -> sb.append("[DoublePipe]")
+                else -> error(value)
             }
         }
         if (expected != null) {
@@ -83,6 +83,18 @@ class StreamNinjaBuildTokensTest {
     }
 
     @Test
+    fun `hash inside command`() {
+        check("""
+                rule my_rule
+                    command = ${'$'}
+                            if grep -v '^#' file.txt | a${'$'}
+                               b c
+            """.trimIndent(),
+            "[rule][my_rule][EOL][Indent][command][=][if grep -v '^#' file.txt | ab c][EOL]"
+        )
+    }
+
+    @Test
     fun `no space before colon`() {
         check("""
             # Comment
@@ -107,12 +119,6 @@ class StreamNinjaBuildTokensTest {
             output.txt:CREATE | input1.txt input2.txt
         """.trimIndent(),
             "[output.txt][:][CREATE][Pipe][input1.txt][input2.txt][EOL]")
-    }
-
-    @Test
-    fun `empty rule with comment`() {
-        check("rule my_rule # comment",
-            "[rule][my_rule][EOL]")
     }
 
     @Test
@@ -296,7 +302,7 @@ class StreamNinjaBuildTokensTest {
     fun fuzz() {
         RandomInstanceGenerator().strings(10000).forEach { text ->
             try {
-                StringReader(text).streamNinjaBuildTokens { }
+                StringReader(text).streamNinjaBuildTokens { _, _ -> }
             } catch (e : Throwable) {
                 println("\'$text\'")
                 throw e

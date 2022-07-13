@@ -17,12 +17,13 @@
 package com.android.build.gradle.internal.cxx.ninja
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Comment
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedColon
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedDollar
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Literal
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedSpace
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Variable
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.LiteralType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedColonType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedDollarType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedSpaceType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableWithCurliesType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.CommentType
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.StringReader
@@ -31,17 +32,16 @@ class StreamUnescapedNinjaTest {
 
     private fun check(input : String, expected : String? = null) {
         val sb = StringBuilder()
-        StringReader(input).streamUnescapedNinja { token->
-            when (token) {
-                is Literal -> {
-                    sb.append(token.value)
-                }
-                is EscapedColon -> sb.append("[esc:colon]")
-                is EscapedDollar -> sb.append("[esc:dollar]")
-                is EscapedSpace -> sb.append("[esc:space]")
-                is Variable -> sb.append("[${token.name}]")
-                is Comment -> sb.append("/*${token.text}*/")
-                else -> error("$token")
+        StringReader(input).streamUnescapedNinja { type, value ->
+            when (type) {
+                LiteralType -> sb.append(value)
+                EscapedColonType -> sb.append("[esc:colon]")
+                EscapedDollarType -> sb.append("[esc:dollar]")
+                EscapedSpaceType -> sb.append("[esc:space]")
+                VariableType -> sb.append("[$value]")
+                VariableWithCurliesType -> sb.append("[$value]")
+                CommentType -> sb.append("/*$value*/")
+                else -> error("$type")
             }
         }
         if (expected != null) {
@@ -70,6 +70,31 @@ class StreamUnescapedNinjaTest {
     }
 
     @Test
+    fun `hash inside command`() {
+        check("""
+                rule my_rule
+                    command = ${'$'}
+                            if grep -v '^#' file.txt | a${'$'}
+                               b c
+            """.trimIndent(),
+            """
+                rule my_rule
+                    command = if grep -v '^#' file.txt | ab c
+            """.trimIndent(),
+        )
+    }
+
+    @Test
+    fun `indented comment after rule`() {
+        check("rule cat\n" +
+                "  #command = a",
+            """
+              rule cat
+                /*command = a*/
+            """.trimIndent())
+    }
+
+    @Test
     fun `variables may be enclosed in curlies`() {
         check("\${abc}", "[abc]")
     }
@@ -80,9 +105,9 @@ class StreamUnescapedNinjaTest {
     }
 
     @Test
-    fun `comment is recognized`() {
-        check("my line # comment", "my line /* comment*/")
-        check("my line # comment\nline2", "my line /* comment*/\nline2")
+    fun `hash after non-whitespace is not comment`() {
+        check("my line # non-comment", "my line # non-comment")
+        check("my line # non-comment\nline2", "my line # non-comment\nline2")
     }
 
     @Test
@@ -144,7 +169,7 @@ class StreamUnescapedNinjaTest {
     fun fuzz() {
         RandomInstanceGenerator().strings(10000).forEach { text ->
             try {
-                StringReader(text).streamUnescapedNinja { }
+                StringReader(text).streamUnescapedNinja { _, _  -> }
             } catch (e : Throwable) {
                 println("\'$text\'")
                 throw e

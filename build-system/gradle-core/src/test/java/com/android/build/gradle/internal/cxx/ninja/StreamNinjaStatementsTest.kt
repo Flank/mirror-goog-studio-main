@@ -91,6 +91,34 @@ class StreamNinjaStatementsTest {
     }
 
     @Test
+    fun `hash nested in command`() {
+        val ninja = parseNinja(
+            """
+                rule my_rule
+                    command = ${'$'}
+                            if grep -v '^#' file.txt | a${'$'}
+                               b c
+            """.trimIndent())
+        assertThat(writeNinjaToString(ninja))
+            .isEqualTo("""
+            rule my_rule
+              command = if grep -v '^#' file.txt | ab c""".trimIndent())
+    }
+
+    @Test
+    fun `variable after pipe`() {
+        val ninja = parseNinja("""
+            rule abc
+                command = my_command
+
+            build ${'$'}
+                    out: abc | ${'$'}
+                    ${'$'}{v}
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun `two rules`() {
         val ninja = parseNinja("""
                 rule cat
@@ -155,6 +183,20 @@ class StreamNinjaStatementsTest {
     fun indentedCommentsAfterRule() {
         parseNinja("rule cat\n" +
                     "  #command = a")
+    }
+
+    @Test
+    fun `assignment with blank value`() {
+        val def = parseNinja("value = \n")
+        assertThat((def.tops[0] as Assignment).value).isEqualTo("")
+
+    }
+
+    @Test
+    fun `rule assignment with blank value`() {
+        val def = parseNinja("rule cat\n" +
+                "  command = ")
+        assertThat((def.tops[0] as RuleDef).properties.getValue("command")).isEqualTo("")
     }
 
     @Test
@@ -252,11 +294,6 @@ class StreamNinjaStatementsTest {
                     "\n" +
                     "build a: link c $\n" +
                     " d e f\n")
-    }
-
-    @Test
-    fun ignoreTrailingComment() {
-        parseNinja("rule cat # My comment")
     }
 
     @Test
@@ -404,6 +441,8 @@ class StreamNinjaStatementsTest {
         RandomInstanceGenerator().strings(10000).forEach { text ->
             try {
                 parseNinja(StringReader(text))
+            } catch(e : NinjaStatementSyntaxException) {
+                // Syntax error is okay
             } catch (e : Throwable) {
                 println("\'$text\'")
                 throw e
@@ -681,10 +720,13 @@ class StreamNinjaStatementsTest {
         }
     }
 
-    private fun parseNinjaExpectError(text: String) : NinjaFileDef {
-        ExpectErrorLoggingEnvironment().use {
-            return parseNinja(StringReader(text))
+    private fun parseNinjaExpectError(text: String) {
+        try {
+            parseNinja(StringReader(text))
+        } catch (e : NinjaStatementSyntaxException) {
+            return
         }
+        error("Expected an error")
     }
 
     private fun parseNinja(reader: Reader) : NinjaFileDef {
@@ -698,17 +740,6 @@ class StreamNinjaStatementsTest {
     class ThrowOnErrorLoggingEnvironment() : ThreadLoggingEnvironment() {
         override fun log(message: LoggingMessage) {
             if (message.level == LoggingMessage.LoggingLevel.ERROR) error(message.message)
-        }
-    }
-
-    class ExpectErrorLoggingEnvironment : ThreadLoggingEnvironment() {
-        private var errors = 0
-        override fun log(message: LoggingMessage) {
-            if (message.level == LoggingMessage.LoggingLevel.ERROR) ++errors
-        }
-
-        override fun close() {
-            if (errors == 0) error("Expected at least one error")
         }
     }
 

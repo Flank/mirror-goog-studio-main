@@ -4,71 +4,18 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
-Source-File: [SOURCE ROOT]/StaticLib/pch.cpp (source0)
-Output-File: [SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/pch.h.pch (out0)
+# There are 3 entries.
+Source-File: [SOURCE ROOT]/AssemblyCode-Link-Objects/AssemblyCode-Link-Objects.cpp (source0)
+Output-File: [SOURCE ROOT]/AssemblyCode-Link-Objects/Debug/Android-armeabi-v7a/AssemblyCode-Link-Objects.o (out0)
 Working-Dir: path/to/cxx/build (workdir0)
 Compiler:    [NDK]/19.2.5345600/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe (toolchain0)
-              --rsp-quoting=windows
-              -g
-              -fno-limit-debug-info
-              -Wall
-              -std=c++11
-              --stdlib="libc++"
-              -D_DEBUG
-              -D_LIB
-              -xc++-header
-              -fno-addrsig
-              -fdata-sections
-              -ffunction-sections
-              -fpic
-              -fno-stack-protector
-              -mthumb
-              -funwind-tables
-              -O0
-              -Werror=format-security
-              -D_FORTIFY_SOURCE=2
-              -fdiagnostics-format=msvc
-              --target="armv7-linux-androideabi16" (flags0)
-
-Source-File: [SOURCE ROOT]/StaticLib/Source.cpp (source1)
-Output-File: [SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/Source.o (out1)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-              --rsp-quoting=windows
-              -g
-              -fno-limit-debug-info
-              -Wall
-              -std=c++11
-              --stdlib="libc++"
-              -D_DEBUG
-              -D_LIB
-              -include-pch
-              "[SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/pch.h.pch"
-              -fno-addrsig
-              -fdata-sections
-              -ffunction-sections
-              -fpic
-              -fno-stack-protector
-              -mthumb
-              -funwind-tables
-              -O0
-              -Werror=format-security
-              -D_FORTIFY_SOURCE=2
-              -fdiagnostics-format=msvc
-              -xc++
-              --target="armv7-linux-androideabi16" (flags1)
-
-Source-File: [SOURCE ROOT]/AssemblyCode-Link-Objects/AssemblyCode-Link-Objects.cpp (source2)
-Output-File: [SOURCE ROOT]/AssemblyCode-Link-Objects/Debug/Android-armeabi-v7a/AssemblyCode-Link-Objects.o (out2)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
               --rsp-quoting=windows
               -I[SOURCE ROOT]/StaticLib/include
               -g
               -fno-limit-debug-info
               -Wall
               -std=c++11
-              --stdlib="libc++"
+              --stdlib=libc++
               -D_DEBUG
               -D_CONSOLE
               -fno-addrsig
@@ -83,5 +30,59 @@ Compiler:    [toolchain0]
               -D_FORTIFY_SOURCE=2
               -fdiagnostics-format=msvc
               -xc++
-              --target="armv7-linux-androideabi16" (flags2)
+              --target=armv7-linux-androideabi16 (flags0)
+
+Source-File: [SOURCE ROOT]/StaticLib/pch.cpp (source1)
+Output-File: [SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/pch.h.pch (out1)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+              --rsp-quoting=windows
+              -g
+              -fno-limit-debug-info
+              -Wall
+              -std=c++11
+              --stdlib=libc++
+              -D_DEBUG
+              -D_LIB
+              -xc++-header
+              -fno-addrsig
+              -fdata-sections
+              -ffunction-sections
+              -fpic
+              -fno-stack-protector
+              -mthumb
+              -funwind-tables
+              -O0
+              -Werror=format-security
+              -D_FORTIFY_SOURCE=2
+              -fdiagnostics-format=msvc
+              --target=armv7-linux-androideabi16 (flags1)
+
+Source-File: [SOURCE ROOT]/StaticLib/Source.cpp (source2)
+Output-File: [SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/Source.o (out2)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+              --rsp-quoting=windows
+              -g
+              -fno-limit-debug-info
+              -Wall
+              -std=c++11
+              --stdlib=libc++
+              -D_DEBUG
+              -D_LIB
+              -include-pch
+              [SOURCE ROOT]/StaticLib/Debug/Android-armeabi-v7a/pch.h.pch
+              -fno-addrsig
+              -fdata-sections
+              -ffunction-sections
+              -fpic
+              -fno-stack-protector
+              -mthumb
+              -funwind-tables
+              -O0
+              -Werror=format-security
+              -D_FORTIFY_SOURCE=2
+              -fdiagnostics-format=msvc
+              -xc++
+              --target=armv7-linux-androideabi16 (flags2)
 

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.ninja
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.cxx.collections.DoubleStringBuilder
 import com.android.testutils.TestUtils
 import com.android.utils.TokenizedCommandLineMap
 import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
@@ -49,14 +50,15 @@ class StreamNinjaBuildCommandsTest {
         val buildNinja = locate("dolphin/3.18.1/build.ninja")
         val commands = parseCompileCommandsJson(buildNinja.resolveSibling("compile_commands.json"))
         val sawOutputs = mutableSetOf<String>()
+        val sb = DoubleStringBuilder()
         streamNinjaBuildCommands(buildNinja) {
-            val out = expand("\$out")
+            val out = expand("\$out", sb)
             if (out.contains(".o")) {
                 sawOutputs += out
                 val prior = commands.getValue(out)
                 val current = parseCommand(
-                    expand(command),
-                    expand("\$in"),
+                    expand(command, sb),
+                    expand("\$in", sb),
                     originalWorkingFolder.path)
                 assertThat(current.flags).isEqualTo(prior.flags)
                 assertThat(current.sourceFile).isEqualTo(prior.sourceFile)
@@ -76,14 +78,15 @@ class StreamNinjaBuildCommandsTest {
         val buildNinja = locate("dolphin/3.10.2/build.ninja")
         val commands = parseCompileCommandsJson(buildNinja.resolveSibling("compile_commands.json"))
         val sawOutputs = mutableSetOf<String>()
+        val sb = DoubleStringBuilder()
         streamNinjaBuildCommands(buildNinja) {
-            val out = expand("\$out")
+            val out = expand("\$out", sb)
             if (out.contains(".o")) {
                 sawOutputs += out
                 val prior = commands.getValue(out)
                 val current = parseCommand(
-                    expand(command),
-                    expand("\$in"),
+                    expand(command, sb),
+                    expand("\$in", sb),
                     originalWorkingFolder.path)
                 assertThat(current.flags).isEqualTo(prior.flags)
                 assertThat(current.sourceFile).isEqualTo(prior.sourceFile)

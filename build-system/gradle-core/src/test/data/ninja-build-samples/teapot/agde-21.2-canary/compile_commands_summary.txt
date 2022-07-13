@@ -4,142 +4,11 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
-Source-File: [SOURCE ROOT]/GameEngine/pch.cpp (source0)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/pch.h.pch (out0)
+# There are 14 entries.
+Source-File: [SOURCE ROOT]/GameApplication/android_native_app_glue.c (source0)
+Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/android_native_app_glue.o (out0)
 Working-Dir: path/to/cxx/build (workdir0)
 Compiler:    [NDK]/22.1.7171670/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe (toolchain0)
-              --rsp-quoting=windows
-              -g
-              -fno-limit-debug-info
-              -Werror
-              -Wformat
-              -std=c++11
-              -D__ANDROID__
-              -D_DEBUG
-              -D_LIB
-              -xc++-header
-              -fdata-sections
-              -ffunction-sections
-              -fpic
-              -fstack-protector-strong
-              -funwind-tables
-              -flto
-              -O0
-              -Werror=format-security
-              -D_FORTIFY_SOURCE=2
-              -fdiagnostics-format=msvc
-              --target="aarch64-linux-android21" (flags0)
-
-Source-File: [SOURCE ROOT]/GameEngine/gestureDetector.cpp (source1)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/gestureDetector.o (out1)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-              --rsp-quoting=windows
-              -g
-              -fno-limit-debug-info
-              -Werror
-              -Wformat
-              -std=c++11
-              -D__ANDROID__
-              -D_DEBUG
-              -D_LIB
-              -fdata-sections
-              -ffunction-sections
-              -fpic
-              -fstack-protector-strong
-              -funwind-tables
-              -flto
-              -O0
-              -Werror=format-security
-              -D_FORTIFY_SOURCE=2
-              -fdiagnostics-format=msvc
-              -xc++
-              --target="aarch64-linux-android21" (flags1)
-
-Source-File: [SOURCE ROOT]/GameEngine/GLContext.cpp (source2)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/GLContext.o (out2)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/Interpolator.cpp (source3)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/Interpolator.o (out3)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/JNIHelper.cpp (source4)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/JNIHelper.o (out4)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/PerfMonitor.cpp (source5)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/PerfMonitor.o (out5)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/sensorManager.cpp (source6)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/sensorManager.o (out6)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/Shader.cpp (source7)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/Shader.o (out7)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/TapCamera.cpp (source8)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/TapCamera.o (out8)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/TeapotRenderer.cpp (source9)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/TeapotRenderer.o (out9)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameEngine/VecMath.cpp (source10)
-Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/VecMath.o (out10)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-             [flags1]
-
-Source-File: [SOURCE ROOT]/GameApplication/pch.cpp (source11)
-Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/pch.h.pch (out11)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
-              --rsp-quoting=windows
-              -I[SOURCE ROOT]/GameEngine
-              -g
-              -fno-limit-debug-info
-              -Werror
-              -Wformat
-              -std=c++11
-              -D_DEBUG
-              -D_CONSOLE
-              -xc++-header
-              -fdata-sections
-              -ffunction-sections
-              -fpic
-              -fstack-protector-strong
-              -funwind-tables
-              -flto
-              -O0
-              -Werror=format-security
-              -D_FORTIFY_SOURCE=2
-              -fdiagnostics-format=msvc
-              --target="aarch64-linux-android21" (flags2)
-
-Source-File: [SOURCE ROOT]/GameApplication/android_native_app_glue.c (source12)
-Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/android_native_app_glue.o (out12)
-Working-Dir: [workdir0]
-Compiler:    [toolchain0]
               --rsp-quoting=windows
               -I[SOURCE ROOT]/GameEngine
               -g
@@ -160,10 +29,10 @@ Compiler:    [toolchain0]
               -D_FORTIFY_SOURCE=2
               -fdiagnostics-format=msvc
               -xc
-              --target="aarch64-linux-android21" (flags3)
+              --target=aarch64-linux-android21 (flags0)
 
-Source-File: [SOURCE ROOT]/GameApplication/GameApplication.cpp (source13)
-Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/GameApplication.o (out13)
+Source-File: [SOURCE ROOT]/GameApplication/GameApplication.cpp (source1)
+Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/GameApplication.o (out1)
 Working-Dir: [workdir0]
 Compiler:    [toolchain0]
               --rsp-quoting=windows
@@ -176,7 +45,7 @@ Compiler:    [toolchain0]
               -D_DEBUG
               -D_CONSOLE
               -include-pch
-              "[SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/pch.h.pch"
+              [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/pch.h.pch
               -fdata-sections
               -ffunction-sections
               -fpic
@@ -188,5 +57,137 @@ Compiler:    [toolchain0]
               -D_FORTIFY_SOURCE=2
               -fdiagnostics-format=msvc
               -xc++
-              --target="aarch64-linux-android21" (flags4)
+              --target=aarch64-linux-android21 (flags1)
+
+Source-File: [SOURCE ROOT]/GameApplication/pch.cpp (source2)
+Output-File: [SOURCE ROOT]/GameApplication/Debug/Android-arm64-v8a/pch.h.pch (out2)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+              --rsp-quoting=windows
+              -I[SOURCE ROOT]/GameEngine
+              -g
+              -fno-limit-debug-info
+              -Werror
+              -Wformat
+              -std=c++11
+              -D_DEBUG
+              -D_CONSOLE
+              -xc++-header
+              -fdata-sections
+              -ffunction-sections
+              -fpic
+              -fstack-protector-strong
+              -funwind-tables
+              -flto
+              -O0
+              -Werror=format-security
+              -D_FORTIFY_SOURCE=2
+              -fdiagnostics-format=msvc
+              --target=aarch64-linux-android21 (flags2)
+
+Source-File: [SOURCE ROOT]/GameEngine/gestureDetector.cpp (source3)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/gestureDetector.o (out3)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+              --rsp-quoting=windows
+              -g
+              -fno-limit-debug-info
+              -Werror
+              -Wformat
+              -std=c++11
+              -D__ANDROID__
+              -D_DEBUG
+              -D_LIB
+              -fdata-sections
+              -ffunction-sections
+              -fpic
+              -fstack-protector-strong
+              -funwind-tables
+              -flto
+              -O0
+              -Werror=format-security
+              -D_FORTIFY_SOURCE=2
+              -fdiagnostics-format=msvc
+              -xc++
+              --target=aarch64-linux-android21 (flags3)
+
+Source-File: [SOURCE ROOT]/GameEngine/GLContext.cpp (source4)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/GLContext.o (out4)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/Interpolator.cpp (source5)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/Interpolator.o (out5)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/JNIHelper.cpp (source6)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/JNIHelper.o (out6)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/pch.cpp (source7)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/pch.h.pch (out7)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+              --rsp-quoting=windows
+              -g
+              -fno-limit-debug-info
+              -Werror
+              -Wformat
+              -std=c++11
+              -D__ANDROID__
+              -D_DEBUG
+              -D_LIB
+              -xc++-header
+              -fdata-sections
+              -ffunction-sections
+              -fpic
+              -fstack-protector-strong
+              -funwind-tables
+              -flto
+              -O0
+              -Werror=format-security
+              -D_FORTIFY_SOURCE=2
+              -fdiagnostics-format=msvc
+              --target=aarch64-linux-android21 (flags4)
+
+Source-File: [SOURCE ROOT]/GameEngine/PerfMonitor.cpp (source8)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/PerfMonitor.o (out8)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/sensorManager.cpp (source9)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/sensorManager.o (out9)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/Shader.cpp (source10)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/Shader.o (out10)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/TapCamera.cpp (source11)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/TapCamera.o (out11)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/TeapotRenderer.cpp (source12)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/TeapotRenderer.o (out12)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
+
+Source-File: [SOURCE ROOT]/GameEngine/VecMath.cpp (source13)
+Output-File: [SOURCE ROOT]/GameEngine/Debug/Android-arm64-v8a/VecMath.o (out13)
+Working-Dir: [workdir0]
+Compiler:    [toolchain0]
+             [flags3]
 

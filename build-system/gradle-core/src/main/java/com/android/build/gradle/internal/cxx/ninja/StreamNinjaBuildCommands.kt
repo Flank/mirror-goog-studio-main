@@ -16,14 +16,18 @@
 
 package com.android.build.gradle.internal.cxx.ninja
 
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Comment
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedColon
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedDollar
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.EscapedSpace
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Literal
-import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapedToken.Variable
+import com.android.build.gradle.internal.cxx.io.ProgressCallback
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.LiteralType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.CommentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedSpaceType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedDollarType
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.EscapedColonType
+import com.android.build.gradle.internal.cxx.collections.DoubleStringBuilder
+import com.android.build.gradle.internal.cxx.ninja.NinjaUnescapeTokenType.VariableWithCurliesType
+import org.apache.commons.io.input.CharSequenceReader
 import java.io.File
-import java.io.StringReader
+import java.util.Locale
 
 /**
  * This function builds on and is one level higher than [streamNinjaStatements]. It adds variable
@@ -63,98 +67,141 @@ import java.io.StringReader
  */
 fun streamNinjaBuildCommands(
     file : File,
+    progress: ProgressCallback? = null,
     action : NinjaBuildUnexpandedCommand.() -> Unit) {
     val state = EvaluationState()
-    state.scope().use {
-        streamNinjaStatements(file) { node ->
-            when(node) {
-                is NinjaStatement.Assignment -> state.assignPropertyValue(node.name, node.value)
-                is NinjaStatement.RuleDef -> state.assignRule(node.name, node)
-                is NinjaStatement.BuildDef -> state.scope().use {
-                    node.properties.forEach { (name, value) ->
-                        state.assignPropertyValue(name, value)
-                    }
-                    val ins = (node.explicitInputs + node.implicitInputs).joinToString(" ")
-                    val outs = (node.explicitOutputs + node.implicitOutputs).joinToString(" ")
-                    state.assignPropertyValue("in", ins)
-                    state.assignPropertyValue("out", outs)
-                    val rule = state.getRule(node.rule)
 
-                    val unexpanded = NinjaBuildUnexpandedCommand(
-                        ruleName = rule.name,
-                        implicitInputs = node.implicitInputs.map { unescape(it) },
-                        explicitInputs = node.explicitInputs.map { unescape(it) },
-                        orderOnlyInputs = node.orderOnlyInputs.map { unescape(it) },
-                        implicitOutputs = node.implicitOutputs.map { unescape(it) },
-                        explicitOutputs = node.explicitOutputs.map { unescape(it) },
-                        unexpandedRuleProperties = rule.properties.map { it.key.lowercase() to it.value }.toMap(),
-                        getProperty = { s -> state.getPropertyValue(s) }
-                    )
-                    action(unexpanded)
 
-                }
-                is NinjaStatement.Default -> { }
-                else -> error("$node")
+    streamNinjaStatements(file, progress) { node ->
+        when(node) {
+            is NinjaStatement.Assignment -> state.assignPropertyValue(node.name, node.value.toString())
+            is NinjaStatement.RuleDef -> state.assignRule(node.name, node)
+            is NinjaStatement.BuildDef -> {
+                val rule = state.getRule(node.rule)
+                val unexpanded = NinjaBuildUnexpandedCommand(
+                    buildDef = node,
+                    ruleDef = rule,
+                    globalProperties = state.variables
+                )
+                action(unexpanded)
             }
+            is NinjaStatement.Default -> { }
+            else -> error("$node")
         }
     }
 }
-
-/**
- * Unescape a string. Converts $: to :, $$ to $, etc.
- */
-private fun unescape(value : String) : String {
-    val sb = StringBuilder()
-    StringReader(value).streamUnescapedNinja { token ->
-        when (token) {
-            is Literal -> sb.append(token.value)
-            is Variable -> error("Expected '$value' to have no variables")
-            is Comment -> { }
-            is EscapedColon -> sb.append(":")
-            is EscapedDollar -> sb.append("$")
-            is EscapedSpace -> sb.append(" ")
-        }
-    }
-    return sb.toString()
-}
-
 /**
  * Represents a Ninja 'build' statement along with the 'rule' that applies to it and an [expand]
  * function that can be used to expand property values.
  */
 data class NinjaBuildUnexpandedCommand(
-    val ruleName : String,
-    val explicitInputs : List<String>,
-    val implicitInputs : List<String>,
-    val orderOnlyInputs : List<String>,
-    val explicitOutputs : List<String>,
-    val implicitOutputs : List<String>,
-    val unexpandedRuleProperties : Map<String, String>,
-    private val getProperty : (String) -> String
+    private val ruleDef : NinjaStatement.RuleDef,
+    private val buildDef : NinjaStatement.BuildDef,
+    private val globalProperties : Map<String, String>
 ) {
+    val ruleName : String get() = ruleDef.name
+
+    // NOTE, the fields below use a pattern like:
+    //   var _field : String? = null
+    //   val field get() = _field ?: computeField().also { _field = it }
+    // This is roughly equivalent to:
+    //   val field by lazy { computeField() }
+    // The main difference is the former is more performant and also emits less boilerplate IL.
+    // This issue and its solution was pointed out by the Linter and I confirmed the byte-code
+    // difference is significant.
+
+    // All input files separated by spaces
+    private var _ins : String? = null
+    private val ins get() = _ins ?:
+        (buildDef.explicitInputs + buildDef.implicitInputs)
+            .joinToString(" ").also { _ins = it }
+
+    // All output files separated by spaces
+    private var _outs : String? = null
+    private val outs get() = _outs ?:
+        (buildDef.explicitOutputs + buildDef.implicitOutputs)
+            .joinToString(" ").also { _outs = it }
+
+    // Explicit inputs to a build step
+    private var _explicitInputs : List<String>? = null
+    val explicitInputs get() = _explicitInputs ?:
+        buildDef.explicitInputs.map { expand(it) }
+            .also {  _explicitInputs = it }
+
+    // Implicit inputs of a build step
+    private var _implicitInputs : List<String>? = null
+    val implicitInputs get() = _implicitInputs ?:
+        buildDef.implicitInputs.map { expand(it) }
+            .also {  _implicitInputs = it }
+
+    // Inputs used only to determine build order
+    private var _orderOnlyInputs : List<String>? = null
+    val orderOnlyInputs get() = _orderOnlyInputs ?:
+        buildDef.orderOnlyInputs.map { expand(it) }
+            .also { _orderOnlyInputs = it }
+
+    // Explicit outputs of a build step
+    private var _explicitOutputs : List<String>? = null
+    val explicitOutputs get() = _explicitOutputs ?:
+        buildDef.explicitOutputs.map { expand(it) }
+            .also { _explicitOutputs = it }
+
+    // Implicit outputs of a build step
+    private var _implicitOutputs : List<String>? = null
+    val implicitOutputs get() = _implicitOutputs ?:
+        buildDef.implicitOutputs.map { expand(it) }
+            .also { _implicitOutputs = it }
+
+    // Rule properties before ${macros} are expanded
+    private var _unexpandedRuleProperties : Map<String, String>? = null
+    private val unexpandedRuleProperties get() = _unexpandedRuleProperties ?:
+        ruleDef.properties.map { it.key.lowercase(Locale.getDefault()) to it.value }.toMap()
+            .also { _unexpandedRuleProperties = it }
+
+    private fun getProperty(name : String) : String {
+        return when(name) {
+            "in" -> ins
+            "out" -> outs
+            else -> buildDef.properties[name]
+                ?: globalProperties[name]
+                ?: ""
+        }
+    }
+
     /**
      * Expand the $ variables in the given [value].
      */
-    fun expand(value : String) : String {
-        var current = value
+    fun expand(value : String, buffer : DoubleStringBuilder = DoubleStringBuilder()) : String {
+        if (!value.contains("$")) return value
+        buffer.front.clear()
+        buffer.front.append(value)
         var loops = 0
         while(true) {
-            if (!current.contains("$")) return current
-            if (loops > 100) error("mutual recursion between ninja properties while expanding '$value'")
-            val sb = StringBuilder()
-            StringReader(current).streamUnescapedNinja { token ->
-                when (token) {
-                    is Literal -> sb.append(token.value)
-                    is Variable -> sb.append(getProperty(token.name))
-                    is Comment -> { }
-                    is EscapedColon -> sb.append(":")
-                    is EscapedDollar -> sb.append("$")
-                    is EscapedSpace -> sb.append(" ")
+            if (!buffer.front.contains("$")) return buffer.front.toString()
+            if (loops > 100) error("maximum recursion depth exceeded while expanding '$value'")
+            buffer.back.clear()
+            CharSequenceReader(buffer.front).streamUnescapedNinja { type, value ->
+                when (type) {
+                    LiteralType -> buffer.back.append(value)
+                    VariableType -> buffer.back.append(getProperty(value.toString()))
+                    VariableWithCurliesType -> buffer.back.append(getProperty(value.toString()))
+                    CommentType -> { }
+                    EscapedColonType -> buffer.back.append(":")
+                    EscapedDollarType -> buffer.back.append("$")
+                    EscapedSpaceType -> buffer.back.append(" ")
                 }
             }
-            current = sb.toString()
+            buffer.flip()
             ++loops
         }
+    }
+
+    /**
+     * Expand this command including replacing @rspFile with content of that file.
+     */
+    fun expandWithResponseFile(buffer : DoubleStringBuilder ): String {
+        return if (rspfile == null || rspfileContent == null) expand(command, buffer)
+        else expand(command.replace("@$rspfile", rspfileContent!!), buffer)
     }
 
     /**
@@ -162,75 +209,55 @@ data class NinjaBuildUnexpandedCommand(
      * doesn't exist then "" is returned and the caller is expected to handle it as an error.
      */
     val command : String get() = unexpandedRuleProperties["command"] ?: ""
-
     /**
      * A generator rule is one that's meant to regenerate the 'build.ninja' file.
      */
     val generator : String? get() = unexpandedRuleProperties["generator"]
-
     /**
      * Rule's response file.
      */
     val rspfile : String? get() = unexpandedRuleProperties["rspfile"]
-
     /**
      * Rule's response file content.
      */
     val rspfileContent : String? get() = unexpandedRuleProperties["rspfile_content"]
-}
 
+}
 private data class EvaluationState(
     /**
      * Key is the name of the property.
      * Value is the property value for that name at the current scope level.
      */
-    val variableScopes : MutableList<MutableMap<String, String>> = mutableListOf(),
+    var variables : MutableMap<String, String> = mutableMapOf(),
     /**
      * Key is the name of the rule.
      * Value is the definition of the rule at the current scope level.
      */
-    val ruleScopes : MutableList<MutableMap<String, NinjaStatement.RuleDef>> = mutableListOf(),
+    var rules : MutableMap<String, NinjaStatement.RuleDef> = mutableMapOf()
 ) {
-    fun scope() : AutoCloseable {
-        variableScopes.add(0, mutableMapOf())
-        ruleScopes.add(0, mutableMapOf())
-        return AutoCloseable {
-            ruleScopes.removeAt(0)
-            variableScopes.removeAt(0)
-        }
-    }
-
     fun assignPropertyValue(name : String, value : String) {
-        variableScopes[0][name] = value
-    }
-
-    fun getPropertyValue(name : String) : String {
-        for (scope in variableScopes) {
-            val value = scope[name]
-            if (value != null) {
-                return value
-            }
+        val existing = variables[name]
+        if (existing == value) {
+            return
         }
-        return ""
+        if (existing == null) {
+            variables[name] = value
+            return
+        }
+        // Replacing an existing value, make a copy so that existing detached copies of variables
+        // remain unchanged.
+        variables = variables.toMutableMap()
+        variables[name] = value
     }
-
     fun assignRule(name : String, value : NinjaStatement.RuleDef) {
-        ruleScopes[0][name] = value
+        rules[name] = value
     }
-
     fun getRule(name : String) : NinjaStatement.RuleDef {
         if (name == "phony") {
             // The "phony" rule is built in to ninja
             // See https://github.com/ninja-build/ninja/blob/master/doc/manual.asciidoc#the-phony-rule
             return NinjaStatement.RuleDef("phony", mapOf())
         }
-        for (scope in ruleScopes) {
-            val value = scope[name]
-            if (value != null) {
-                return value
-            }
-        }
-        error("Ninja rule '$name' was not found")
+        return rules[name] ?: error("Ninja rule '$name' was not found")
     }
 }
-

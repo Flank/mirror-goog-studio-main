@@ -4,6 +4,7 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
+# There are 2 entries.
 Source-File: path/to/cxx/build/CMakeFiles/foo.dir/cmake_pch.hxx.cxx (source0)
 Output-File: CMakeFiles/foo.dir/cmake_pch.hxx.pch (out0)
 Working-Dir: path/to/cxx/build (workdir0)

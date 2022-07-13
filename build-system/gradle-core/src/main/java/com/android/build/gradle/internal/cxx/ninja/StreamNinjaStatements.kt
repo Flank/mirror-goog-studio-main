@@ -16,16 +16,17 @@
 
 package com.android.build.gradle.internal.cxx.ninja
 
-import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.io.ProgressCallback
+import com.android.build.gradle.internal.cxx.io.progressReader
 import com.android.build.gradle.internal.cxx.ninja.FileState.EXPLICIT
 import com.android.build.gradle.internal.cxx.ninja.FileState.IMPLICIT
 import com.android.build.gradle.internal.cxx.ninja.FileState.ORDER_ONLY
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.DoublePipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOF
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.EOL
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Indent
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Pipe
-import com.android.build.gradle.internal.cxx.ninja.NinjaBuildToken.Text
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.DoublePipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOFType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.EOLType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.IndentType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.PipeType
+import com.android.build.gradle.internal.cxx.ninja.NinjaBuildTokenType.TextType
 import com.android.build.gradle.internal.cxx.ninja.NinjaStatement.Assignment
 import com.android.build.gradle.internal.cxx.ninja.NinjaStatement.BuildDef
 import com.android.build.gradle.internal.cxx.ninja.NinjaStatement.Default
@@ -48,13 +49,14 @@ import com.android.build.gradle.internal.cxx.ninja.State.EXPECT_PROPERTY_VALUE
 import com.android.build.gradle.internal.cxx.ninja.State.EXPECT_VALUE
 import com.android.build.gradle.internal.cxx.ninja.State.START
 import com.android.build.gradle.internal.cxx.ninja.State.SYNTAX_ERROR
-import java.io.BufferedReader
+import com.google.common.annotations.VisibleForTesting
 import java.io.File
-import java.io.FileReader
-import java.io.InputStreamReader
 import java.io.Reader
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
+
+/**
+ * Exception indicating a syntax
+ */
+class NinjaStatementSyntaxException(val token : String)  : Exception(token)
 
 /**
  * This function builds on and is one level higher than [streamNinjaBuildTokens]. Its purpose is to
@@ -65,15 +67,15 @@ import java.nio.file.StandardOpenOption
  * by this function. Instead, an outer function that knows how to locate those files should be
  * used.
  */
+@VisibleForTesting
 fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
     var state = START
     var fileState = EXPLICIT
     val stack = mutableListOf<Any>()
-    fun syntax(token : String) : State {
-        errorln("syntax error [$token]")
-        return SYNTAX_ERROR
+    fun syntax(token : CharSequence) : State {
+        throw NinjaStatementSyntaxException(token.toString())
     }
-    streamNinjaBuildTokens { token ->
+    streamNinjaBuildTokens { type, value ->
         var done: Boolean
         do {
             done = true
@@ -81,10 +83,10 @@ fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
                 START -> {
                     stack.clear()
                     fileState = EXPLICIT
-                    when (token) {
-                        is EOL, is EOF -> { }
-                        is Indent -> syntax(token.text)
-                        is Text -> state = when (token.text){
+                    when (type) {
+                        EOLType, EOFType -> { }
+                        IndentType -> syntax(value)
+                        TextType -> state = when (value) {
                             "include" -> {
                                 stack.push(Include(""))
                                 EXPECT_FILE
@@ -110,76 +112,80 @@ fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
                                 EXPECT_LIST
                             }
                             else -> {
-                                stack.push(token.text)
+                                stack.push(value.toString())
                                 EXPECT_EQUALS_THEN_VALUE
                             }
                         }
-                        is Pipe, is DoublePipe -> syntax("$token")
-                        else -> error("$token")
+                        PipeType, DoublePipeType -> syntax(value)
+                        else -> error(value)
                     }
                 }
-                EXPECT_EQUALS_THEN_VALUE -> state = when (token.text) {
+                EXPECT_EQUALS_THEN_VALUE -> state = when (value) {
                     "=" -> EXPECT_VALUE
-                    else -> syntax(token.text)
+                    else -> syntax(value)
                 }
                 EXPECT_VALUE -> {
                     val identifier = stack.pop<String>()
-                    action(Assignment(identifier, token.text))
+                    when(type) {
+                        TextType -> action(Assignment(identifier, value.toString()))
+                        EOLType -> action(Assignment(identifier, ""))
+                        else -> error(type.toString())
+                    }
                     state = START
                 }
                 EXPECT_FILE -> {
                     action(when(val node = stack.pop<Any>()) {
-                        is Include -> node.copy(file = token.text)
-                        is SubNinja ->node.copy(file = token.text)
+                        is Include -> node.copy(file = value.toString())
+                        is SubNinja ->node.copy(file = value.toString())
                         else -> error("${node.javaClass}")
                     })
                     state = START
                 }
                 BUILD_EXPECT_OUTPUT_OR_COLON -> {
-                    state = when (token) {
-                        Pipe -> {
+                    state = when (type) {
+                        PipeType -> {
                             fileState = IMPLICIT
                             BUILD_EXPECT_OUTPUT_OR_COLON
                         }
-                        DoublePipe -> {
+                        DoublePipeType -> {
                             fileState = ORDER_ONLY
                             BUILD_EXPECT_OUTPUT_OR_COLON
                         }
-                        is Text -> {
-                            if (token.text == ":") {
+                        TextType -> {
+                            if (value == ":") {
                                 fileState = EXPLICIT
                                 BUILD_EXPECT_RULE
                             } else {
                                 val outputs = stack.pop<MutableMap<FileState, MutableList<String>>>()
-                                outputs.computeIfAbsent(fileState) { mutableListOf() }.add(token.text)
+                                outputs.computeIfAbsent(fileState) { mutableListOf() }.add(value.toString())
                                 stack.push(outputs)
                                 BUILD_EXPECT_OUTPUT_OR_COLON
                             }
                         }
-                        is EOL, is EOF -> syntax(token.text)
-                        else -> error("$token")
+                        EOLType, EOFType -> syntax(value)
+                        else -> error(value)
                     }
                 }
-                BUILD_EXPECT_RULE -> state = when(token) {
-                    is Text -> {
-                        stack.push(token.text)
+                BUILD_EXPECT_RULE -> state = when(type) {
+                    TextType -> {
+                        stack.push(value.toString())
                         stack.push(mutableMapOf<FileState, MutableList<String>>())
                         BUILD_EXPECT_INPUTS_OR_EOL
                     }
-                    is EOF, is EOL -> syntax(token.text)
-                    else -> error("$token")
+                    EOFType, EOLType -> syntax(value)
+                    else -> error(value)
                 }
-                BUILD_EXPECT_INPUTS_OR_EOL -> state = when (token) {
-                    Pipe -> {
+                BUILD_EXPECT_INPUTS_OR_EOL -> state = when (type) {
+                    PipeType -> {
                         fileState = IMPLICIT
                         BUILD_EXPECT_INPUTS_OR_EOL
                     }
-                    DoublePipe -> {
+                    DoublePipeType -> {
                         fileState = ORDER_ONLY
                         BUILD_EXPECT_INPUTS_OR_EOL
                     }
-                    is EOF,
-                    is EOL -> {
+                    EOFType,
+                    EOLType -> {
                         val inputs = stack.pop<MutableMap<FileState, MutableList<String>>>()
                         val rule = stack.pop<String>()
                         val outputs = stack.pop<MutableMap<FileState, MutableList<String>>>()
@@ -195,20 +201,20 @@ fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
                         stack.push(mutableMapOf<String, String>())
                         EXPECT_PROPERTIES
                     }
-                    is Text -> {
+                    TextType -> {
                         // An input
                         val outputs = stack.pop<MutableMap<FileState, MutableList<String>>>()
-                        outputs.computeIfAbsent(fileState) { mutableListOf() }.add(token.text)
+                        outputs.computeIfAbsent(fileState) { mutableListOf() }.add(value.toString())
                         stack.push(outputs)
                         BUILD_EXPECT_INPUTS_OR_EOL
                     }
-                    else -> error("$token")
+                    else -> error(value)
                 }
-                EXPECT_PROPERTIES -> state = when (token) {
-                    is Indent -> EXPECT_PROPERTY_IDENTIFIER
-                    is EOL -> EXPECT_PROPERTIES
-                    is EOF,
-                    is Text -> {
+                EXPECT_PROPERTIES -> state = when (type) {
+                    IndentType -> EXPECT_PROPERTY_IDENTIFIER
+                    EOLType -> EXPECT_PROPERTIES
+                    EOFType,
+                    TextType -> {
                         val properties = stack.pop<MutableMap<String, String>>()
                         action(when(val receiver = stack.pop<NinjaStatement>()) {
                             is BuildDef -> receiver.copy(properties = properties)
@@ -221,48 +227,52 @@ fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
                         done = false
                         START
                     }
-                    else -> error("$token")
+                    else -> error(value)
                 }
-                EXPECT_PROPERTY_IDENTIFIER -> state = when(token) {
-                    is Indent, is EOL, is EOF -> {
+                EXPECT_PROPERTY_IDENTIFIER -> state = when(type) {
+                    IndentType, EOLType, EOFType -> {
                         done = false
                         EXPECT_PROPERTIES
                     }
-                    is Text -> {
-                        stack.push(token.text)
+                    TextType -> {
+                        stack.push(value.toString())
                         EXPECT_PROPERTY_EQUALS
                     }
-                    else -> error("$token")
+                    else -> error(value)
                 }
-               EXPECT_PROPERTY_EQUALS -> {
-                    state = if (token.text != "=") error(token)
+                EXPECT_PROPERTY_EQUALS -> {
+                    state = if (value != "=") error(value)
                     else EXPECT_PROPERTY_VALUE
                 }
                 EXPECT_PROPERTY_VALUE -> {
                     val identifier = stack.pop<String>()
                     val properties = stack.pop<MutableMap<String, String>>()
-                    properties[identifier] = token.text
+                    when(type) {
+                        TextType -> properties[identifier] = value.toString()
+                        EOLType -> properties[identifier] = ""
+                        else -> error(type)
+                    }
                     stack.push(properties)
                     state = EXPECT_PROPERTIES
                 }
                 EXPECT_LIST -> {
-                    state = when (token) {
-                        is EOL, is EOF -> {
+                    state = when (type) {
+                        EOLType, EOFType -> {
                             action(stack.pop<Default>())
                             START
                         }
-                        is Text -> {
+                        TextType -> {
                             val default = stack.pop<Default>()
-                            stack.push(default.copy(targets = default.targets + token.text))
+                            stack.push(default.copy(targets = default.targets + value.toString()))
                             EXPECT_LIST
                         }
-                        else -> error("$token")
+                        else -> error(value)
                     }
                 }
                 EXPECT_NAME_THEN_PROPERTIES -> {
                     stack.push(when(val node = stack.pop<Any>()) {
-                        is RuleDef -> node.copy(name = token.text)
-                        is PoolDef -> node.copy(name = token.text)
+                        is RuleDef -> node.copy(name = value.toString())
+                        is PoolDef -> node.copy(name = value.toString())
                         else -> error("${node.javaClass}")
                     })
                     stack.push(mutableMapOf<String, String>())
@@ -286,15 +296,21 @@ fun Reader.streamNinjaStatements(action:(NinjaStatement) -> Unit) {
  * also knows how to locate external files references from 'include' statements and expands them
  * inline in the [NinjaStatement] stream.
  */
-fun streamNinjaStatements(file : File, action:(NinjaStatement) -> Unit) {
-    BufferedReader(FileReader(file)).use { reader ->
+fun streamNinjaStatements(
+    file : File,
+    progress: ProgressCallback?,
+    action:(NinjaStatement) -> Unit) {
+    file.progressReader().use { reader ->
         reader.streamNinjaStatements { expression ->
-            when(expression) {
+            when (expression) {
                 is Include -> {
                     val include = file.parentFile.resolve(expression.file)
-                    streamNinjaStatements(include, action)
+                    streamNinjaStatements(include, progress, action)
                 }
                 else -> action(expression)
+            }
+            if (progress != null) {
+                reader.postProgress(progress)
             }
         }
     }
@@ -451,9 +467,3 @@ private enum class FileState {
     IMPLICIT,
     ORDER_ONLY
 }
-
-
-
-
-
-

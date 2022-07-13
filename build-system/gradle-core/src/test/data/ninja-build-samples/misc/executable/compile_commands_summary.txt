@@ -4,6 +4,7 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
+# There are 3 entries.
 Source-File: src/main/cxx/executable/main.cpp (source0)
 Output-File: CMakeFiles/hello-executable.dir/src/main/cxx/executable/main.cpp.o (out0)
 Working-Dir: path/to/cxx/build (workdir0)
