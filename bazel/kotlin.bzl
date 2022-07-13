@@ -48,8 +48,8 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
 
     args.add("-module-name", name)
     args.add("-nowarn")  # Mirrors the default javac opts.
-    args.add("-api-version", "1.5")
-    args.add("-language-version", "1.5")
+    args.add("-api-version", "1.6")
+    args.add("-language-version", "1.6")
     args.add("-Xjvm-default=all-compatibility")
     args.add("-no-stdlib")
     args.add("-Xsam-conversions=class")  # Needed for Gradle configuration caching (see b/202512551).
@@ -68,12 +68,6 @@ def kotlin_compile(ctx, name, srcs, deps, friend_jars, out, out_ijar, java_runti
         tools.append(ctx.file._compose_plugin)
         args.add(ctx.file._compose_plugin, format = "-Xplugin=%s")
         args.add("-P", "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true")
-
-    # Add "use-ir" to enable the new IR backend for kotlinc tasks when the
-    # attribute "kotlin_use_ir" is set
-    # Using the Compose Plugin implies the use of the IR backend
-    if ctx.attr.kotlin_use_ir or ctx.attr.kotlin_use_compose:
-        args.add("-Xuse-ir")
 
     # Use custom JRE instead of the default one picked by kotlinc.
     args.add("-jdk-home", java_runtime.java_home)
