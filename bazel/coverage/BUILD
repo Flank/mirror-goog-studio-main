@@ -626,6 +626,8 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanel.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssuePanelSplitter.java",
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error/FixEntry.form",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssueView.java",
+        "tools/adt/idea/designer/src/com/android/tools/idea/common/error/IssueView.form",
     ],
     srcpath_include = [
         "tools/adt/idea/designer/src/com/android/tools/idea/common/error",
@@ -634,6 +636,7 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/NlScannerLayoutParser.kt",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/WarningLayer.kt",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/visuallint",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/IssuePanelToggleAction.kt",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationForm.kt",
     ],
     tests = [
