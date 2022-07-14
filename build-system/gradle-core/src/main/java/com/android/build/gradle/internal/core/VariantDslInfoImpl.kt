@@ -125,7 +125,16 @@ open class VariantDslInfoImpl internal constructor(
 ): VariantDslInfo {
 
     private val dslNamespaceProvider: Provider<String>? = extension.getDslNamespace(componentType)?.let {
-        services.provider { it }
+        services.provider {
+            if (componentType.isTestComponent && extension.testNamespaceEqualsNamespace()) {
+                services.issueReporter
+                    .reportError(
+                        IssueReporter.Type.GENERIC,
+                        "namespace and testNamespace have the same value (\"$it\"), which is not allowed."
+                    )
+            }
+            it
+        }
     }
 
     override val buildType: String?
@@ -1196,6 +1205,9 @@ open class VariantDslInfoImpl internal constructor(
                 namespace
             }
         }
+
+        private fun CommonExtension<*, *, *, *>.testNamespaceEqualsNamespace(): Boolean =
+            this is TestedExtension && testNamespace != null && testNamespace == namespace
     }
 }
 
