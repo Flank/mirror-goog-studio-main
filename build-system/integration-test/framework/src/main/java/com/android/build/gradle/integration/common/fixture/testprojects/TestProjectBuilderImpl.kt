@@ -124,6 +124,9 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
 
                 android.compileSdk?.let { sb.append("  compileSdk = $it\n") }
                 android.minSdk?.let { sb.append("  minSdk = $it\n") }
+                android.buildToolsVersion?.let { sb.append("  buildToolsVersion = \"$it\"\n") }
+                android.ndkVersion?.let { sb.append("  ndkVersion = \"$it\"\n") }
+                android.ndkPath?.let { sb.append("  ndkPath = \"$it\"\n") }
 
                 sb.append("}\n\n")
             }
@@ -158,4 +161,7 @@ internal class SettingsBuilderImpl: SettingsBuilder {
 internal class AndroidSettingsBuilderImpl: AndroidSettingsBuilder {
     override var compileSdk: Int? = null
     override var minSdk: Int? = null
+    override var buildToolsVersion: String? = null
+    override var ndkVersion: String? = null
+    override var ndkPath: String? = null
 }

@@ -828,8 +828,19 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         settings.minSdkPreview?.let { minSdkPreview ->
             this.defaultConfig.minSdkPreview = minSdkPreview
         }
-    }
 
+        settings.ndkVersion?.let { ndkVersion ->
+            this.ndkVersion = ndkVersion
+        }
+
+        settings.ndkPath?.let { ndkPath ->
+            this.ndkPath = ndkPath
+        }
+
+        settings.buildToolsVersion?.let { buildToolsVersion ->
+            this.buildToolsVersion = buildToolsVersion
+        }
+    }
 
     // Create settings options, to be used in the global config,
     // with values from the android settings extension

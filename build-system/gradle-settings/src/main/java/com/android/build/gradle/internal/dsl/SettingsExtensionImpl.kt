@@ -103,4 +103,8 @@ internal open class SettingsExtensionImpl @Inject constructor(objectFactory: Obj
     override fun execution(action: Execution.() -> Unit) {
         action.invoke(execution)
     }
+
+    override var ndkVersion: String? = null
+    override var ndkPath: String? = null
+    override var buildToolsVersion: String? = null
 }

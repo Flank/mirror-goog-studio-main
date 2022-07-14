@@ -358,6 +358,9 @@ interface ExternalDependencyBuilder {
 interface AndroidSettingsBuilder {
     var compileSdk: Int?
     var minSdk: Int?
+    var buildToolsVersion: String?
+    var ndkVersion: String?
+    var ndkPath: String?
 }
 
 interface SettingsBuilder {

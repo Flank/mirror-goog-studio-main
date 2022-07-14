@@ -95,4 +95,27 @@ interface SettingsExtension {
 
     /** Set execution profiles and options for tools. */
     fun execution(action: Execution.() -> Unit)
+
+    /**
+     * Requires the specified NDK version to be used.
+     *
+     * See [com.android.build.api.dsl.CommonExtension.ndkVersion] for more information
+     */
+    var ndkVersion: String?
+
+    /**
+     * Requires the specified path to NDK be used.
+     *
+     * See [com.android.build.api.dsl.CommonExtension.ndkPath] for more information
+     */
+    var ndkPath: String?
+
+    /**
+     * Specifies the version of the
+     * [SDK Build Tools](https://developer.android.com/studio/releases/build-tools.html)
+     * to use when building your project.
+     *
+     * See [com.android.build.api.dsl.CommonExtension.buildToolsVersion] for more information
+     */
+    var buildToolsVersion: String?
 }
