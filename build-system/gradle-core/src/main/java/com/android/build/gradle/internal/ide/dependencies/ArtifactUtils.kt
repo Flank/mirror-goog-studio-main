@@ -270,8 +270,7 @@ class ArtifactCollections(
         AndroidArtifacts.ArtifactType.EXPLODED_AAR
     )
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     val explodedAarFileCollection: FileCollection
         get() = explodedAars.artifactFiles
 
