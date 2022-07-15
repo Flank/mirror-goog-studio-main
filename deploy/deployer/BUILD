@@ -80,6 +80,7 @@ coverage_java_library(
         "//tools/base/zipflinger",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.jetbrains.annotations",
         "@maven//:org.xerial.sqlite-jdbc",
     ],
 )
@@ -146,6 +147,7 @@ coverage_java_test(
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
+        "@maven//:org.jetbrains.annotations",
         "@maven//:org.mockito.mockito-core",
     ],
 )

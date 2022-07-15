@@ -553,10 +553,10 @@ com.android.tools.ddms:ddmlib
   pomName=Android Tools ddmlib
   description=Library providing APIs to talk to Android devices
   dependencies:
-    org.jetbrains.kotlin:kotlin-stdlib-jdk8 (compile)
     com.android.tools:common (runtime)
     com.google.protobuf:protobuf-java (runtime)
     net.sf.kxml:kxml2 (runtime)
+    org.jetbrains:annotations (runtime)
 
 com.android.tools.emulator:proto
   pomName=Emulator protos for Android Tools
