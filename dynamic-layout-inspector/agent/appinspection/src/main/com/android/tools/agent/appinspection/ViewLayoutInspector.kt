@@ -422,7 +422,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         captureExecutor: Executor,
         os: OutputStream
     ): AutoCloseable {
-        val timer = Timer()
+        val timer = Timer("ViewLayoutInspectorTimer")
         var stop = false
         val doCapture = {
             if (!stop) {
