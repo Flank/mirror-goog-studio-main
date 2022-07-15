@@ -71,7 +71,10 @@ void LiveEditCommand::Run(proto::InstallerResponse* response) {
   // Retrieve foreign processes events
   for (const auto& agent_response : resp->agent_responses()) {
     ConvertProtoEventsToEvents(agent_response.events());
-    if (agent_response.status() != proto::AgentResponse::OK) {
+    if (agent_response.status() == proto::AgentResponse::OK) {
+      auto success_agent = le_response->add_success_agents();
+      *success_agent = agent_response;
+    } else {
       auto failed_agent = le_response->add_failed_agents();
       *failed_agent = agent_response;
     }

@@ -23,6 +23,7 @@ import com.android.tools.idea.protobuf.ByteString;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -89,6 +90,17 @@ public class LiveUpdateDeployer {
         }
     }
 
+    public static final class UpdateLiveEditResult {
+        public final List<UpdateLiveEditError> errors;
+        public final Deploy.AgentLiveEditResponse.RecomposeType recomposeType;
+
+        public UpdateLiveEditResult(
+                List<UpdateLiveEditError> errors, Deploy.AgentLiveEditResponse.RecomposeType type) {
+            this.errors = errors;
+            recomposeType = type;
+        }
+    }
+
     /**
      * Everything is an error at the moment. While they are hard error that might cause the update
      * to be aborted. These should not be presented to the user with any sense of urgency due to the
@@ -117,6 +129,11 @@ public class LiveUpdateDeployer {
 
         private final String msg;
         private final Deploy.UnsupportedChange.Type type;
+
+        public UpdateLiveEditError(Exception e) {
+            this.msg = e.getMessage();
+            this.type = Deploy.UnsupportedChange.Type.UNKNOWN;
+        }
 
         public UpdateLiveEditError(String msg) {
             this.msg = msg;
@@ -294,7 +311,6 @@ public class LiveUpdateDeployer {
         requestBuilder.setDebugModeEnabled(param.debugModeEnabled);
         Deploy.LiveEditRequest request = requestBuilder.build();
 
-        List<UpdateLiveEditError> errors = new LinkedList<>();
 
         // TODO: Remove when we are fully connected to the agent.
         System.out.println(
@@ -306,8 +322,14 @@ public class LiveUpdateDeployer {
                         + param.classData.length
                         + " bytes.");
 
+        UpdateLiveEditResult result = null;
         try {
+            List<UpdateLiveEditError> errors = new LinkedList<>();
+
             Deploy.LiveEditResponse response = installer.liveEdit(request);
+            Deploy.AgentLiveEditResponse.RecomposeType recomposeType =
+                    Deploy.AgentLiveEditResponse.RecomposeType.NONE;
+
             if (response.getStatus() == Deploy.LiveEditResponse.Status.AGENT_ERROR) {
                 for (Deploy.AgentResponse failure : response.getFailedAgentsList()) {
                     failure.getLeResponse()
@@ -315,12 +337,27 @@ public class LiveUpdateDeployer {
                             .forEach(error -> errors.add(new UpdateLiveEditError(error)));
                 }
             }
-            if (response.getStatus() != Deploy.LiveEditResponse.Status.OK) {
+            if (response.getStatus() == Deploy.LiveEditResponse.Status.OK) {
+                for (Deploy.AgentResponse success : response.getSuccessAgentsList()) {
+                    if (!success.hasLeResponse()) {
+                        throw new RuntimeException(
+                                "Live Edit response does not contain agent response object");
+                    }
+                    Deploy.AgentLiveEditResponse ler = success.getLeResponse();
+                    recomposeType = ler.getRecomposeType();
+                }
+            } else {
                 errors.add(new UpdateLiveEditError(response.getStatus().toString()));
             }
+            result = new UpdateLiveEditResult(errors, recomposeType);
         } catch (IOException e) {
-            e.printStackTrace();
+            result =
+                    new UpdateLiveEditResult(
+                            Collections.singletonList(new UpdateLiveEditError(e)),
+                            Deploy.AgentLiveEditResponse.RecomposeType.NONE);
         }
-        return errors;
+
+        // TODO: Next CL: Change the return type and return the result object instead.
+        return result.errors;
     }
 }

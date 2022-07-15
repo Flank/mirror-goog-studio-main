@@ -211,6 +211,7 @@ message LiveEditResponse {
 
   Status status = 1;
   repeated AgentResponse failed_agents = 2;
+  repeated AgentResponse success_agents = 3;
 }
 
 message JvmtiError {
@@ -319,6 +320,14 @@ message AgentLiveEditResponse {
 
   Status status = 1;
   repeated UnsupportedChange errors = 2;
+
+  enum RecomposeType {
+    NONE = 0;          // Reserved for non-compose.
+    NORMAL = 1;        // Normal Recomposition with minimal invalidation
+    INIT_RESET = 2;    // State reset due to first time editing (newly primed)
+    FORCED_RESET = 3;  // Compose runtime only support full reset (pre-1.2.0)
+  }
+  RecomposeType recompose_type = 3;
 }
 
 message UnsupportedChange {
