@@ -16,31 +16,45 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState
+import com.android.build.gradle.internal.cxx.configure.createConfigurationInvalidationState
+import com.android.build.gradle.internal.cxx.configure.encode
+import com.android.build.gradle.internal.cxx.configure.shouldConfigure
+import com.android.build.gradle.internal.cxx.configure.shouldConfigureReasonMessages
+import com.android.build.gradle.internal.cxx.configure.recordConfigurationFingerPrint
+import com.android.build.gradle.internal.cxx.configure.softConfigureOkay
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
+import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment.Companion.requireExplicitLogger
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.logging.toJsonString
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState
-import com.android.build.gradle.internal.cxx.model.PrefabConfigurationState.Companion.fromJson
+import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
 import com.android.build.gradle.internal.cxx.model.buildSystemTag
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.compileCommandsJsonFile
 import com.android.build.gradle.internal.cxx.model.getBuildCommandArguments
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.lastConfigureFingerPrintFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationCommandFile
 import com.android.build.gradle.internal.cxx.model.metadataGenerationTimingFolder
+import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
+import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
+import com.android.build.gradle.internal.cxx.model.ninjaBuildLocationFile
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
+import com.android.build.gradle.internal.cxx.os.which
 import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
 import com.android.build.gradle.internal.cxx.timing.TimingEnvironment
 import com.android.build.gradle.internal.cxx.timing.time
@@ -58,7 +72,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -73,40 +86,14 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
 
-    // TODO(153964094) Reconcile this with jsonGenerationDependencyFiles
-    // They do the same work but one is for single abi and one is for all abis.
-    @Throws(IOException::class)
-    private fun getDependentBuildFiles(abi: CxxAbiModel): List<File> {
-        val result: MutableList<File> =
-            Lists.newArrayList()
-        if (!abi.jsonFile.exists()) {
-            return result
-        }
-
-        // Now check whether the JSON is out-of-date with respect to the build files it declares.
-        val config = AndroidBuildGradleJsons
-            .getNativeBuildMiniConfig(abi, variantBuilder)
-
-        // If anything in the prefab package changes, re-run. Note that this also depends on the
-        // directories, so added/removed files will also trigger a re-run.
-        for (pkgDir in abi.variant.prefabConfigurationPackages) {
-            Files.walk(pkgDir.toPath())
-                .forEach {
-                    result.add(it.toFile())
-                }
-        }
-        result.addAll(config.buildFiles)
-        return result
-    }
-
-    override fun generate(ops: ExecOperations, forceGeneration: Boolean) {
+    override fun configure(ops: ExecOperations, forceConfigure: Boolean) {
         requireExplicitLogger()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
         abi.variant.prefabConfigurationPackages
         abi.variant.prefabClassPath
         try {
-            buildForOneConfiguration(ops, forceGeneration, abi)
+            configureOneAbi(ops, forceConfigure, abi)
         } catch (e: GradleException) {
             errorln(
                     METADATA_GENERATION_FAILURE,
@@ -126,10 +113,9 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
     protected open fun checkPrefabConfig() {}
 
-    @Throws(GradleException::class, IOException::class, ProcessException::class)
-    private fun buildForOneConfiguration(
+    private fun configureOneAbi(
         ops: ExecOperations,
-        forceJsonGeneration: Boolean,
+        forceConfigure: Boolean,
         abi: CxxAbiModel
     ) {
         PassThroughPrefixingLoggingEnvironment(
@@ -155,42 +141,62 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
                     val processBuilder = getProcessBuilder(abi)
 
-                    // See whether the current build command matches a previously written build command.
+                    // Write the command-file if it changed
                     val currentBuildCommand = """
-                    ${processBuilder.argsText()}
-                    Build command args: ${abi.getBuildCommandArguments()}
-                    Version: $ANDROID_GRADLE_BUILD_VERSION
-                    """.trimIndent()
-                    val prefabState = PrefabConfigurationState(
+                        ${processBuilder.argsText()}
+                        Build command args: ${abi.getBuildCommandArguments()}
+                        Version: $ANDROID_GRADLE_BUILD_VERSION
+                        """.trimIndent()
+                    abi.metadataGenerationCommandFile.writeTextIfDifferent(currentBuildCommand)
+
+                    // Write the prefab configuration if it changed
+                    val prefabConfigurationState = PrefabConfigurationState(
                             abi.variant.module.project.isPrefabEnabled,
                             abi.variant.prefabClassPath,
                             abi.variant.prefabConfigurationPackages
-                    )
-                    val previousPrefabState =
-                            getPreviousPrefabConfigurationState(abi.prefabConfigFile)
+                        ).toJsonString()
+                    abi.prefabConfigFile.writeTextIfDifferent(prefabConfigurationState)
+
                     val invalidationState = time("create-invalidation-state") {
-                        JsonGenerationInvalidationState(
-                                forceJsonGeneration,
-                                abi.jsonFile,
-                                abi.metadataGenerationCommandFile,
-                                currentBuildCommand,
-                                getFileContent(abi.metadataGenerationCommandFile),
-                                getDependentBuildFiles(abi),
-                                prefabState,
-                                previousPrefabState
+                        createConfigurationInvalidationState(
+                            forceConfigure = forceConfigure,
+                            lastConfigureFingerPrintFile = abi.lastConfigureFingerPrintFile,
+                            configureInputFiles = getConfigureInputFiles(abi),
+                            requiredOutputFiles = listOf(abi.jsonFile),
+                            optionalOutputFiles = listOf(
+                                abi.miniConfigFile,
+                                abi.ninjaBuildFile,
+                                abi.ninjaBuildLocationFile,
+                                abi.symbolFolderIndexFile,
+                                abi.buildFileIndexFile,
+                                abi.additionalProjectFilesIndexFile,
+                                abi.compileCommandsJsonFile,
+                                abi.compileCommandsJsonBinFile,
+                                abi.prefabConfigFile),
+                            hardConfigureFiles = listOf(abi.metadataGenerationCommandFile)
                         )
                     }
-                    if (invalidationState.rebuild) {
+
+                    // Log information about why configuration was executed or not
+                    logStructured { encoder ->
+                        invalidationState.encode(encoder)
+                    }
+
+                    // Remove the fingerprint file if it exists. This ensures that any fingerprint
+                    // file is written as a result of a successful configure.
+                    abi.lastConfigureFingerPrintFile.delete()
+
+                    if (invalidationState.shouldConfigure) {
                         infoln("rebuilding JSON %s due to:", abi.jsonFile)
-                        for (reason in invalidationState.rebuildReasons) {
+                        for (reason in invalidationState.shouldConfigureReasonMessages) {
                             infoln(reason)
                         }
                         if (abi.shouldGeneratePrefabPackages()) {
                             time("generate-prefab-packages") {
                                 checkPrefabConfig()
                                 generatePrefabPackages(
-                                        ops,
-                                        abi
+                                    ops,
+                                    abi
                                 )
                             }
                         }
@@ -205,10 +211,10 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         // - If there is some other cause to recreate the JSon, such as command-line
                         // changed then wipe out the whole JSon folder.
                         if (abi.cxxBuildFolder.parentFile.exists()) {
-                            if (invalidationState.softRegeneration) {
+                            if (invalidationState.softConfigureOkay) {
                                 infoln(
-                                        "keeping json folder '%s' but regenerating project",
-                                        abi.cxxBuildFolder
+                                    "keeping json folder '%s' but regenerating project",
+                                    abi.cxxBuildFolder
                                 )
                             } else {
                                 infoln("removing stale contents from '%s'", abi.cxxBuildFolder)
@@ -223,48 +229,49 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         time("execute-generate-process") { executeProcess(ops, abi) }
                         infoln("done executing %s", abi.variant.module.buildSystemTag)
 
-                        if (!abi.jsonFile.exists()) {
+                        // Check that required outputs were produced
+                        for(requiredOutput in invalidationState.requiredOutputFilesList) {
+                            val file = File(requiredOutput)
+                            if (file.isFile) continue
+
                             throw GradleException(
-                                    String.format(
-                                            "Expected json generation to create '%s' but it didn't",
-                                            abi.jsonFile
-                                    )
+                                String.format(
+                                    "Expected metadata generation to create '%s' but it didn't",
+                                    file
+                                )
                             )
                         }
 
-                        variantBuilder?.let {
-                            synchronized(it) {
-                                // Related to https://issuetracker.google.com/69408798
-                                // Targets may have been removed or there could be other orphaned extra
-                                // .so files. Remove these and rely on the build step to replace them
-                                // if they are legitimate. This is to prevent unexpected .so files from
-                                // being packaged in the APK.
-                                time("remove-unexpected-so-files") {
-                                    removeUnexpectedSoFiles(
-                                            abi.soFolder,
-                                            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                                    abi, it
-                                            )
-                                    )
-                                }
+                        val variantBuilder = variantBuilder
+                        val miniconfig =
+                            if (variantBuilder == null) AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
+                            else synchronized(variantBuilder) {
+                                AndroidBuildGradleJsons.getNativeBuildMiniConfig(
+                                    abi, variantBuilder
+                                )
                             }
+
+                        // Related to https://issuetracker.google.com/69408798
+                        // Targets may have been removed or there could be other orphaned extra
+                        // .so files. Remove these and rely on the build step to replace them
+                        // if they are legitimate. This is to prevent unexpected .so files from
+                        // being packaged in the APK.
+                        time("remove-unexpected-so-files") {
+                            removeUnexpectedSoFiles(
+                                abi.soFolder,
+                                miniconfig
+                            )
                         }
 
-                        // Write the ProcessInfo to a file, this has all the flags used to generate the
-                        // JSON. If any of these change later the JSON will be regenerated.
-                        infoln("write command file %s", abi.metadataGenerationCommandFile.absolutePath)
-                        abi.metadataGenerationCommandFile.parentFile.mkdirs()
-                        Files.write(
-                            abi.metadataGenerationCommandFile.toPath(),
-                            currentBuildCommand.toByteArray(Charsets.UTF_8)
-                        )
+                        // Write the command file
+                        abi.metadataGenerationCommandFile.writeTextIfDifferent(currentBuildCommand)
 
-                        // Persist the prefab configuration as well.
-                        Files.write(
-                                abi.prefabConfigFile.toPath(),
-                                prefabState.toJsonString()
-                                        .toByteArray(Charsets.UTF_8)
-                        )
+                        // Write the prefab configuration
+                        abi.prefabConfigFile.writeTextIfDifferent(prefabConfigurationState)
+
+                        // Write extra metadata files
+                        abi.symbolFolderIndexFile.writeTextIfDifferent(abi.soFolder.absolutePath)
+                        abi.buildFileIndexFile.writeTextIfDifferent(miniconfig.buildFiles.joinToString(System.lineSeparator()))
 
                         // Record the outcome. JSON was built.
                         variantStats.outcome = GenerationOutcome.SUCCESS_BUILT
@@ -272,10 +279,10 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         infoln("JSON '%s' was up-to-date", abi.jsonFile)
                         variantStats.outcome = GenerationOutcome.SUCCESS_UP_TO_DATE
                     }
-                    time("generate-extra-metadata-files") {
-                        generateSymbolFolderIndexFile(abi)
-                        generateBuildFilesIndex(abi, variantBuilder)
-                    }
+
+                    // Record well-known files that were written
+                    invalidationState.recordConfigurationFingerPrint()
+
                     infoln("JSON generation completed without problems")
                 } catch (e: GradleException) {
                     variantStats.outcome = GenerationOutcome.FAILED
@@ -309,25 +316,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         }
     }
 
-    private fun generateSymbolFolderIndexFile(abi : CxxAbiModel) {
-        abi.symbolFolderIndexFile.parentFile.mkdirs()
-        abi.symbolFolderIndexFile.writeText(
-            abi.soFolder.absolutePath,
-            StandardCharsets.UTF_8
-        )
-    }
-
-    private fun generateBuildFilesIndex(abi : CxxAbiModel, variantBuilder: GradleBuildVariant.Builder?) {
-        abi.buildFileIndexFile.parentFile.mkdirs()
-        abi.buildFileIndexFile.writeText(
-            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                abi,
-                variantBuilder
-            ).buildFiles.joinToString(System.lineSeparator()),
-            StandardCharsets.UTF_8
-        )
-    }
-
     abstract fun getProcessBuilder(abi: CxxAbiModel): ExecuteProcessCommand
 
     /**
@@ -336,6 +324,46 @@ abstract class ExternalNativeJsonGenerator internal constructor(
      */
     abstract fun executeProcess(ops: ExecOperations, abi: CxxAbiModel)
 
+    private fun getConfigureInputFiles(abi: CxxAbiModel): List<File> {
+        val result = mutableSetOf<File>()
+
+        // Add the make file (like CMakeLists.txt)
+        result.add(abi.variant.module.makeFile)
+
+        // If there is a Ninja configure script then depend on it.
+        if (abi.variant.module.configureScript != null) {
+            // Find the tool on PATH. If not found, then just include the path as-is. In this
+            // case the tool will be listed in the configuration fingerprint file as missing.
+            result.add(
+                which(abi.variant.module.configureScript)
+                    ?: abi.variant.module.configureScript)
+        }
+
+        // If anything in the prefab package changes, re-run. Note that this also depends on the
+        // directories, so added/removed files will also trigger a re-run.
+        for (pkgDir in abi.variant.prefabConfigurationPackages) {
+            Files.walk(pkgDir.toPath())
+                .forEach {
+                    result.add(it.toFile())
+                }
+        }
+
+        // We're going to read the mini-config json file to get the list of input files. The
+        // mini-config is derived from jsonFile so we check for that file's existing before
+        // proceeding.
+        if (!abi.jsonFile.exists()) {
+            return result.toList()
+        }
+
+        // Now check whether the JSON is out-of-date with respect to the build files it declares.
+        // TODO : Populating variantBuilder should be decoupled from getNativeBuildMiniConfig.
+        //        The concerns are separate and its hard to reason about when variantBuilder
+        //        is actually updated (which should be once per C/C++ configure).
+        val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, variantBuilder)
+        result.addAll(config.buildFiles)
+        return result.toList()
+    }
+
     companion object {
         /**
          * Returns true if platform is windows
@@ -343,30 +371,6 @@ abstract class ExternalNativeJsonGenerator internal constructor(
         @JvmStatic
         protected val isWindows: Boolean
             get() = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
-
-        @Throws(IOException::class)
-        private fun getFileContent(commandFile: File): String {
-            return if (!commandFile.exists()) {
-                ""
-            } else String(
-                Files.readAllBytes(commandFile.toPath()),
-                Charsets.UTF_8
-            )
-        }
-
-        @Throws(IOException::class)
-        private fun getPreviousPrefabConfigurationState(
-            prefabStateFile: File
-        ): PrefabConfigurationState {
-            return if (!prefabStateFile.exists()) {
-                PrefabConfigurationState(false, null, emptyList())
-            } else fromJson(
-                String(
-                    Files.readAllBytes(prefabStateFile.toPath()),
-                    Charsets.UTF_8
-                )
-            )
-        }
 
         /**
          * This function removes unexpected so files from disk. Unexpected means they exist on disk but

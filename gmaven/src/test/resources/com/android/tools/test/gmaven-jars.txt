@@ -528,6 +528,7 @@ com/android/tools/build/gradle
   com/android/tools/profgen/
   cxx_attribution.proto
   cxx_caching.proto
+  cxx_configure.proto
   cxx_io.proto
   cxx_logging.proto
   cxx_process.proto

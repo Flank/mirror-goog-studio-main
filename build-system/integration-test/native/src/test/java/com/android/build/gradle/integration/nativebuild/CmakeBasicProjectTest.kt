@@ -26,7 +26,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.ModelBuilderV2.NativeModuleParams
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.fixture.model.assertEqualsMultiline
+import com.android.build.gradle.integration.common.fixture.model.assertLastConfigureWasNotRebuild
+import com.android.build.gradle.integration.common.fixture.model.assertLastConfigureWasRebuild
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
+import com.android.build.gradle.integration.common.fixture.model.deleteExistingStructuredLogs
 import com.android.build.gradle.integration.common.fixture.model.dump
 import com.android.build.gradle.integration.common.fixture.model.enableCxxStructuredLogging
 import com.android.build.gradle.integration.common.fixture.model.findAbiSegment
@@ -34,11 +37,13 @@ import com.android.build.gradle.integration.common.fixture.model.findConfigurati
 import com.android.build.gradle.integration.common.fixture.model.findCxxSegment
 import com.android.build.gradle.integration.common.fixture.model.goldenBuildProducts
 import com.android.build.gradle.integration.common.fixture.model.goldenConfigurationFlags
+import com.android.build.gradle.integration.common.fixture.model.lastConfigureInvalidationState
 import com.android.build.gradle.integration.common.fixture.model.minimizeUsingTupleCoverage
 import com.android.build.gradle.integration.common.fixture.model.readAsFileIndex
 import com.android.build.gradle.integration.common.fixture.model.readCompileCommandsJsonBin
 import com.android.build.gradle.integration.common.fixture.model.readStructuredLogs
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
+import com.android.build.gradle.integration.common.fixture.model.totalProcessExecuted
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
@@ -47,6 +52,7 @@ import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
+import com.android.build.gradle.internal.cxx.configure.shouldConfigure
 import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
 import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
@@ -54,6 +60,7 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNat
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
+import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
 import com.android.build.gradle.internal.cxx.os.bat
 import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
@@ -244,11 +251,10 @@ class CmakeBasicProjectTest(
     private fun moduleBodyNinjaRedirect(
         cmakeListsPath: String
     ): String {
-        val script = project.buildFile.resolveSibling("configure-script$bat")
         val scriptsBuildRoot = project.buildDir.parentFile.parentFile.resolve("script-build-root")
         scriptsBuildRoot.mkdirs()
         when(CURRENT_PLATFORM) {
-            PLATFORM_WINDOWS -> script.writeText(
+            PLATFORM_WINDOWS -> ninjaBuildConfigureScript.writeText(
                 """
                     set ABI=%1
                     set ABI_BUILD_ROOT=$scriptsBuildRoot\%2\%1
@@ -266,7 +272,7 @@ class CmakeBasicProjectTest(
                 """.trimIndent()
             )
             else -> {
-                script.writeText(
+                ninjaBuildConfigureScript.writeText(
                     """
                     ABI=$1
                     ABI_BUILD_ROOT=$scriptsBuildRoot/$2/$1
@@ -280,7 +286,7 @@ class CmakeBasicProjectTest(
                     $cmakeExe -B${'$'}ABI_BUILD_ROOT -DANDROID_ABI=${'$'}ABI "$@"
                 """.trimIndent()
                 )
-                script.setExecutable(true)
+                ninjaBuildConfigureScript.setExecutable(true)
             }
         }
 
@@ -324,6 +330,12 @@ class CmakeBasicProjectTest(
             }
         """.trimIndent()
     }
+
+    /**
+     * Name of the ninja build configure script.
+     */
+    private val ninjaBuildConfigureScript : File get() =
+        project.buildFile.resolveSibling("configure-script$bat")
 
     /**
      * Helper function that controls arguments when running a task
@@ -998,6 +1010,40 @@ apply plugin: 'com.android.application'
             outputFiles.add(outputFile.name)
         }
         assertThat(outputFiles).contains("cmake_pch.hxx.pch")
+    }
+
+    @Test
+    fun `bug 239090305 changes to ninja configure script trigger reconfigure`() {
+        Assume.assumeTrue(mode == Mode.NinjaRedirect)
+        enableCxxStructuredLogging(project)
+
+        // Execute configure the first time, make sure it ran
+        project.execute("configureNinjaDebug[x86_64]")
+        project.assertLastConfigureWasRebuild()
+        assertThat(project.totalProcessExecuted).isEqualTo(1) // Assert configure script was invoked
+
+        // Execute again with everything up-to-date
+        deleteExistingStructuredLogs(project)
+        project.execute("configureNinjaDebug[x86_64]")
+        project.assertLastConfigureWasNotRebuild()
+        assertThat(project.totalProcessExecuted).isEqualTo(0)
+
+        // Touch configure script. Should rebuild.
+        deleteExistingStructuredLogs(project)
+        assertThat(ninjaBuildConfigureScript).isFile()
+        ninjaBuildConfigureScript.appendText("\n")
+        project.execute("configureNinjaDebug[x86_64]")
+        project.assertLastConfigureWasRebuild()
+        assertThat(project.totalProcessExecuted).isEqualTo(1)
+
+        // Touch the output ninja file.
+        deleteExistingStructuredLogs(project)
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+        assertThat(abi.ninjaBuildFile.isFile).isTrue()
+        abi.ninjaBuildFile.appendText("\n")
+        project.execute("configureNinjaDebug[x86_64]")
+        assertThat(project.lastConfigureInvalidationState.shouldConfigure).isTrue()
+        assertThat(project.totalProcessExecuted).isEqualTo(1)
     }
 
     @Test

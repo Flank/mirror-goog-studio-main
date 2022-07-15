@@ -44,3 +44,19 @@ message EncodedSynchronizeFile {
     SynchronizeFile.Comparison initial_file_comparison = 4;
     SynchronizeFile.Outcome outcome = 5;
 }
+
+message FileFingerPrint {
+    string file_name = 1;
+    bool is_file = 2;
+    // Below here will be not set (default value) when this isn't a file
+    int64 length = 3;
+    int64 last_modified = 4;
+}
+
+message EncodedFileFingerPrint {
+    int32 file_name = 1;
+    bool is_file = 2;
+    int64 length = 3;
+    int64 last_modified = 4;
+}
+

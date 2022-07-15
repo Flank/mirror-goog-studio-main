@@ -153,7 +153,7 @@ class NativeModelBuilder(
                 .filter { (variantName, abi) -> filter(variantName, abi.abi.tag) }
                 .map { (_, abi) -> abi }
                 .forEach { abi ->
-                    createGenerator(abi).generate(ops, ideRefreshExternalNativeModel)
+                    createGenerator(abi).configure(ops, ideRefreshExternalNativeModel)
                 }
     }
 }

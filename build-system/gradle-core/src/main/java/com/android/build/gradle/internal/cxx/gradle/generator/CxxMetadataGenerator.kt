@@ -21,18 +21,18 @@ import org.gradle.api.tasks.Internal
 import org.gradle.process.ExecOperations
 
 /**
- * Abstraction of C/C++ gradle model generation and build.
+ * Abstraction of C/C++ configure and gradle model generation.
  */
 interface CxxMetadataGenerator {
     @get:Internal
     val variantBuilder: GradleBuildVariant.Builder?
 
     /**
-     * Create native build metadata.
+     * Configure C/C++ and create gradle model
      *
-     * If [forceGeneration] is true then rebuild metadata regardless of whether
-     * it is otherwise considered to be up-to-date. This flag will be set when
-     * the user chose Build/Refresh Linked C++ Projects.
+     * If [forceConfigure] is true then configure regardless of whether it is otherwise considered
+     * to be up-to-date. This flag will be set when the user chose Build/Refresh Linked C++
+     * Projects.
      */
-    fun generate(ops: ExecOperations, forceGeneration: Boolean)
+    fun configure(ops: ExecOperations, forceConfigure: Boolean)
 }

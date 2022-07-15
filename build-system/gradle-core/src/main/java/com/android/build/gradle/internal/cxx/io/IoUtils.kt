@@ -195,6 +195,36 @@ fun removeDuplicateFiles(files : List<File>): List<File> {
     return seen
 }
 
+/**
+ * Write a file only if that file's contents is different.
+ * Return true iff the content of the file changed.
+ */
+fun File.writeTextIfDifferent(text : String) : Boolean {
+    if (containsExactText(text)) return false
+    parentFile.mkdirs()
+    writeText(text)
+    return true
+}
+
+/**
+ * Return true if the file contains [text] exactly.
+ */
+fun File.containsExactText(text : String) = isFile && text == readText()
+
+/**
+ * Create a finger print record for this file. It contains the size, last modified stamp, and
+ * whether the file exist
+ */
+val File.fingerPrint : FileFingerPrint get() {
+    val fingerPrint = FileFingerPrint.newBuilder()
+    fingerPrint.fileName = path
+    fingerPrint.isFile = isFile
+    if (!isFile) return fingerPrint.build()
+    fingerPrint.lastModified = lastModified()
+    fingerPrint.length = length()
+    return fingerPrint.build()
+}
+
 private val SynchronizeFile.Comparison.areSameFileOrContent : Boolean
     get() = when(this) {
         NOT_SAME_SOURCE_DID_NOT_EXIST,

@@ -97,6 +97,38 @@ class CxxStructuredLogCodecTest {
         assertThat(count).isEqualTo(original.size)
     }
 
+    @Test
+    fun `typed read file ignores other types`() {
+        val folder = temporaryFolder.newFolder()
+        val file = folder.resolve("log.bin")
+
+        CxxStructuredLogEncoder(file).use { encoder ->
+            // Encode a DependenciesKey
+            encoder.write(DependenciesKey.newBuilder().build().encode(encoder))
+            // Encode a LoggingMessage
+            encoder.write(LoggingMessage.newBuilder().build().encode(encoder))
+        }
+
+        val result = readStructuredLog(file, ::decodeLoggingMessage)
+        assertThat(result).hasSize(1)
+    }
+
+    @Test
+    fun `typed read log ignores other types`() {
+        val folder = temporaryFolder.newFolder()
+        val file = folder.resolve("log.bin")
+
+        CxxStructuredLogEncoder(file).use { encoder ->
+            // Encode a DependenciesKey
+            encoder.write(DependenciesKey.newBuilder().build().encode(encoder))
+            // Encode a LoggingMessage
+            encoder.write(LoggingMessage.newBuilder().build().encode(encoder))
+        }
+
+        val result = readStructuredLogs(file.parentFile, ::decodeLoggingMessage)
+        assertThat(result).hasSize(1)
+    }
+
     /**
      * Try to trigger missing flush/close if they are introduced.
      */

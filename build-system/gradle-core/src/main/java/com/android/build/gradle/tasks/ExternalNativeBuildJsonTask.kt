@@ -69,7 +69,7 @@ abstract class ExternalNativeBuildJsonTask @Inject constructor(
                     abi,
                     analyticsService = analyticsService.get()
                 )
-            generator.generate(ops, false)
+            generator.configure(ops, false)
         }
     }
 }

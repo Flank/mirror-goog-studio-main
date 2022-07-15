@@ -49,9 +49,14 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 import com.android.SdkConstants.GRADLE_LATEST_VERSION
+import com.android.build.gradle.internal.cxx.configure.ConfigureInvalidationState
+import com.android.build.gradle.internal.cxx.configure.decodeConfigureInvalidationState
+import com.android.build.gradle.internal.cxx.configure.shouldConfigure
+import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
 import com.android.builder.model.v2.ide.SyncIssue
 import com.android.utils.SdkUtils.escapePropertyValue
 import com.google.common.truth.Truth.assertThat
+import com.google.protobuf.util.JsonFormat
 
 data class CompileCommandsJsonBinEntry(
         val sourceFile: String,
@@ -422,6 +427,15 @@ fun enableCxxStructuredLogging(project : GradleTestProject) {
 }
 
 /**
+ * Delete structured logs but leave structured logging enabled.
+ */
+fun deleteExistingStructuredLogs(project : GradleTestProject) {
+    val logFolder = getCxxStructuredLogFolder(project.rootProject.projectDir)
+    logFolder.deleteRecursively()
+    logFolder.mkdirs()
+}
+
+/**
  * Given a [GradleTestProject], read structured log records of a
  * particular type (the type returned by [decode] function).
  */
@@ -430,6 +444,57 @@ inline fun <reified Encoded, Decoded> GradleTestProject.readStructuredLogs(
     val logFolder = getCxxStructuredLogFolder(rootProject.projectDir)
     return readStructuredLogs(logFolder, decode)
 }
+
+/**
+ * Return the last [ConfigureInvalidationState] that was recorded.
+ */
+val GradleTestProject.lastConfigureInvalidationState : ConfigureInvalidationState get() {
+    val configures = readStructuredLogs(::decodeConfigureInvalidationState)
+    if (configures.isEmpty()) error("Configure was not run")
+    return configures.last()
+}
+
+/**
+ * Assert that the last C/C++ configure was a rebuild. If not, emit error with diagnostic.
+ */
+fun GradleTestProject.assertLastConfigureWasRebuild() {
+    val configure = lastConfigureInvalidationState
+    if (configure.shouldConfigure) return
+    val sb = StringBuilder("Expected last configure to be a rebuild but it wasn't ")
+    JsonFormat.printer().appendTo(makePathsShorter(configure), sb)
+    error(sb.toString())
+}
+
+/**
+ * Assert that the last C/C++ configure was not a rebuild. If it is, emit error with diagnostic.
+ */
+fun GradleTestProject.assertLastConfigureWasNotRebuild()  {
+    val configure = lastConfigureInvalidationState
+    if (!configure.shouldConfigure) return
+    val sb = StringBuilder("Expected last configure to not be a rebuild but it was ")
+    JsonFormat.printer().appendTo(makePathsShorter(configure), sb)
+    error(sb.toString())
+}
+
+private fun makePathsShorter(state : ConfigureInvalidationState) : ConfigureInvalidationState {
+    fun shorten(file : String) = File(file).name
+    return state.toBuilder()
+        .clearInputFiles().addAllInputFiles(state.inputFilesList.map(::shorten))
+        .clearRequiredOutputFiles().addAllRequiredOutputFiles(state.requiredOutputFilesList.map(::shorten))
+        .clearOptionalOutputFiles().addAllOptionalOutputFiles(state.optionalOutputFilesList.map(::shorten))
+        .clearHardConfigureFiles().addAllHardConfigureFiles(state.hardConfigureFilesList.map(::shorten))
+        .clearSoftConfigureReasons().addAllSoftConfigureReasons(state.softConfigureReasonsList.map { it.toBuilder().setFileName(shorten(it.fileName)).build()})
+        .clearHardConfigureReasons().addAllHardConfigureReasons(state.hardConfigureReasonsList.map { it.toBuilder().setFileName(shorten(it.fileName)).build()})
+        .clearAddedSinceFingerPrintsFiles().addAllAddedSinceFingerPrintsFiles(state.addedSinceFingerPrintsFilesList.map(::shorten))
+        .clearRemovedSinceFingerPrintsFiles().addAllRemovedSinceFingerPrintsFiles(state.removedSinceFingerPrintsFilesList.map(::shorten))
+        .build()
+}
+
+/**
+ * Return a total count of processes executed.
+ */
+val GradleTestProject.totalProcessExecuted : Int get() =
+    readStructuredLogs(::decodeExecuteProcess).size
 
 /**
  * Unzip [zip] to the folder [out] including subdirectories.
@@ -685,3 +750,4 @@ fun assertEqualsMultiline(actual : String, expected : String) {
 
     assertThat(actual).isEqualTo(expected)
 }
+
