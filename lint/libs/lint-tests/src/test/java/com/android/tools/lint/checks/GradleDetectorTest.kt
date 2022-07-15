@@ -3483,7 +3483,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .run()
             .expect(
                 "" +
-                    "build.gradle:3: Warning: Use the Lifecycle Java 8 API provided by the lifecycle-common-java8 library instead of Lifecycle annotations for faster incremental build. [LifecycleAnnotationProcessorWithJava8]\n" +
+                    "build.gradle:3: Warning: Use the Lifecycle Java 8 API provided by the lifecycle-common library instead of Lifecycle annotations for faster incremental build. [LifecycleAnnotationProcessorWithJava8]\n" +
                     "  annotationProcessor \"android.arch.lifecycle:compiler:1.1.1\"\n" +
                     "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                     "0 errors, 1 warnings"
