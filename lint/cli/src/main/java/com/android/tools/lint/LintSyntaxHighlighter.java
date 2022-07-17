@@ -31,6 +31,7 @@ import com.android.utils.HtmlBuilder;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -148,6 +149,18 @@ public class LintSyntaxHighlighter {
         boolean isKeyword(@NonNull String keyword);
     }
 
+    private static class NestingContext {
+        NestingContext(int depth, int style, int state) {
+            this.depth = depth;
+            this.style = style;
+            this.state = state;
+        }
+
+        int depth;
+        int style;
+        int state;
+    }
+
     private void tokenizeJavaLikeLanguage(
             KeywordChecker keywordLookup, boolean allowNestedComments) {
         // Simple Java/Kotlin/Groovy tokenizer
@@ -167,6 +180,8 @@ public class LintSyntaxHighlighter {
         int offset = 0;
         int identifierStart = -1;
         int blockCommentDepth = 0;
+        int braceDepth = 0;
+        ArrayDeque<NestingContext> stack = new ArrayDeque<>();
         while (offset < length) {
             char c = source.charAt(offset);
             switch (state) {
@@ -194,12 +209,27 @@ public class LintSyntaxHighlighter {
                                 offset += 3;
                                 continue;
                             }
+                        } else if (c == '`') {
+                            offset = source.indexOf('`', offset + 1);
+                            if (offset == -1) {
+                                break;
+                            }
                         } else if (Character.isDigit(c)) {
                             state = STATE_NUMBER;
                             styles.put(offset, STYLE_NUMBER);
                         } else if (Character.isJavaIdentifierStart(c)) {
                             state = STATE_IDENTIFIER;
                             identifierStart = offset;
+                        } else if (c == '{') {
+                            braceDepth++;
+                        } else if (c == '}') {
+                            braceDepth--;
+                            NestingContext last = stack.peekLast();
+                            if (last != null && last.depth == braceDepth) {
+                                last = stack.removeLast();
+                                state = last.state;
+                                styles.put(offset, last.style);
+                            }
                         }
                         offset++;
                         continue;
@@ -312,9 +342,16 @@ public class LintSyntaxHighlighter {
                             offset++;
                             styles.put(offset, STYLE_PLAIN_TEXT);
                             continue;
+                        } else if (c == '$' && source.startsWith("${", offset)) {
+                            offset += 2;
+                            stack.addLast(
+                                    new NestingContext(
+                                            braceDepth, STYLE_STRING, STATE_STRING_DOUBLE_QUOTE));
+                            braceDepth++;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_INITIAL;
+                            continue;
                         }
-
-                        // Worry about Groovy substitution strings?
 
                         offset++;
                         continue;
@@ -340,6 +377,17 @@ public class LintSyntaxHighlighter {
                     {
                         if (c == '"' && source.startsWith("\"\"\"", offset)) {
                             offset += 3;
+                            styles.put(offset, STYLE_PLAIN_TEXT);
+                            state = STATE_INITIAL;
+                            continue;
+                        } else if (c == '$' && source.startsWith("${", offset)) {
+                            offset += 2;
+                            stack.addLast(
+                                    new NestingContext(
+                                            braceDepth,
+                                            STYLE_STRING,
+                                            STATE_STRING_TRIPLE_DOUBLE_QUOTE));
+                            braceDepth++;
                             styles.put(offset, STYLE_PLAIN_TEXT);
                             state = STATE_INITIAL;
                             continue;
