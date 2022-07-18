@@ -252,6 +252,23 @@ java_binary(
     ],
 )
 
+py_binary(
+    name = "rename_jar_services",
+    srcs = ["rename_jar_services.py"],
+    visibility = ["//visibility:public"],
+)
+
+py_test(
+    name = "rename_jar_services_test",
+    srcs = ["rename_jar_services_test.py"],
+    tags = [
+        "no_mac",
+        "no_windows",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [":rename_jar_services"],
+)
+
 java_binary(
     name = "gradlew",
     main_class = "com.android.tools.gradle.GradleW",
@@ -355,6 +372,7 @@ java_jarjar(
         "@maven//:io.opencensus.opencensus-contrib-grpc-metrics",
         "@maven//:io.perfmark.perfmark-api",
     ],
+    rename_services = True,
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],
 )
