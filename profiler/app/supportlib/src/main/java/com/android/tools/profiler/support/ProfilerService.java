@@ -56,22 +56,25 @@ public class ProfilerService {
      *     This adds an additional property to the property namespace because the service address is
      *     required to be configurable for test to run in parallel.
      */
-    public static void initialize(String serviceAddressProperty, boolean unifiedPipeline) {
+    public static void initialize(
+            String serviceAddressProperty, boolean unifiedPipeline, boolean keyboardEventEnabled) {
         if (sInstance != null) {
             return;
         }
         sInstance =
                 new ProfilerService(
                         System.getProperty(serviceAddressProperty, DEFAULT_SERVICE_ADDRESS),
-                        unifiedPipeline);
+                        unifiedPipeline,
+                        keyboardEventEnabled);
     }
 
-    public ProfilerService(String serviceAddress, boolean unifiedPipeline) {
+    public ProfilerService(
+            String serviceAddress, boolean unifiedPipeline, boolean keyboardEventEnabled) {
         // Use 0 to indicate that the service address is of type ip address and not
         // an abstract socket.
         initializeNative(serviceAddress, unifiedPipeline);
         mComponents = new ArrayList<ProfilerComponent>();
-        mComponents.add(new EventProfiler());
+        mComponents.add(new EventProfiler(keyboardEventEnabled));
         mComponents.add(new MemoryProfiler(true));
 
         // TODO handle shutdown properly

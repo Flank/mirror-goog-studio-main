@@ -27,17 +27,17 @@ public class ProfilerService {
     private final List<ProfilerComponent> mComponents;
 
     /** Entry point for legacy profilers in the app. This is called via JNI from JVMTI agent. */
-    public static void initialize() {
+    public static void initialize(boolean keyboard_event_enabled) {
         if (sInstance != null) {
             return;
         }
-        sInstance = new ProfilerService();
+        sInstance = new ProfilerService(keyboard_event_enabled);
     }
 
-    public ProfilerService() {
+    public ProfilerService(boolean keyboard_event_enabled) {
         mComponents = new ArrayList<ProfilerComponent>();
         // TODO: Remove when fully moved to JVMTI
-        mComponents.add(new EventProfiler());
+        mComponents.add(new EventProfiler(keyboard_event_enabled));
 
         // TODO handle shutdown properly
     }

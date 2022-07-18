@@ -37,10 +37,13 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
     private static final String SERVICE_ADDRESS_PROPERTY = "profiler.service.address";
     private String superName;
     private final boolean myUnifiedPipeline;
+    private final boolean myKeyboardEventEnabled;
 
-    public InitializerAdapter(ClassVisitor classVisitor, boolean unifiedPipeline) {
+    public InitializerAdapter(
+            ClassVisitor classVisitor, boolean unifiedPipeline, boolean keyboardEvent) {
         super(ASM7, classVisitor);
         myUnifiedPipeline = unifiedPipeline;
+        myKeyboardEventEnabled = keyboardEvent;
     }
 
     @Override
@@ -58,7 +61,7 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
         if (superName.equals(ANDROID_ACTIVITY) ||
             superName.equals(ANDROID_APPLICATION)) {
             if (name.equals("<init>")) {
-                return new MethodAdapter(mv, myUnifiedPipeline);
+                return new MethodAdapter(mv, myUnifiedPipeline, myKeyboardEventEnabled);
             }
         }
         return mv;
@@ -66,10 +69,12 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
 
     private static final class MethodAdapter extends MethodVisitor implements Opcodes {
         private final boolean myUnifiedPipeline;
+        private final boolean myKeyboardEventEnabled;
 
-        public MethodAdapter(MethodVisitor mv, boolean unifiedPipeline) {
+        public MethodAdapter(MethodVisitor mv, boolean unifiedPipeline, boolean keyboardEvent) {
             super(ASM7, mv);
             myUnifiedPipeline = unifiedPipeline;
+            myKeyboardEventEnabled = keyboardEvent;
         }
 
         @Override
@@ -83,11 +88,12 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
                 case RETURN:
                     super.visitLdcInsn(SERVICE_ADDRESS_PROPERTY);
                     super.visitLdcInsn(myUnifiedPipeline ? 1 : 0);
+                    super.visitLdcInsn(myKeyboardEventEnabled ? 1 : 0);
                     super.visitMethodInsn(
                             INVOKESTATIC,
                             PROFILER_APPLICATION_CLASSNAME,
                             "initialize",
-                            "(Ljava/lang/String;Z)V",
+                            "(Ljava/lang/String;ZZ)V",
                             false);
             }
             super.visitInsn(opcode);

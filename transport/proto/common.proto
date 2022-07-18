@@ -455,4 +455,6 @@ message CommonConfig {
   bool profiler_unified_pipeline = 5;
   // equivalent to StudioFlags.PROFILER_CUSTOM_EVENT_VISUALIZATION
   bool profiler_custom_event_visualization = 6;
+  // equivalent to StudioFlags.KEYBOARD_EVENT
+  bool profiler_keyboard_event = 7;
 }

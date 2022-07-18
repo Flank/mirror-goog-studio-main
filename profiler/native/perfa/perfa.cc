@@ -197,8 +197,9 @@ void ProfilerInitializationWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
   AgentConfig* config = static_cast<AgentConfig*>(ptr);
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "()V");
-  jni->CallStaticVoidMethod(service, initialize);
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
+  jboolean keyboard_event_enabled = config->common().profiler_keyboard_event();
+  jni->CallStaticVoidMethod(service, initialize, keyboard_event_enabled);
 }
 
 void InitializePerfa(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
