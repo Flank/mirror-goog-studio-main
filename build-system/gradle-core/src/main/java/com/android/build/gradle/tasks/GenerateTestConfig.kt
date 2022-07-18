@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
+import com.android.builder.core.ComponentTypeImpl
 import com.android.ide.common.attribution.TaskCategoryLabel
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
@@ -167,7 +168,13 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
             )
             resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
             mergedAssets = creationConfig.mainVariant.artifacts.get(SingleArtifact.ASSETS)
-            mergedManifest = creationConfig.mainVariant.artifacts.get(PACKAGED_MANIFESTS)
+            mergedManifest = if (creationConfig.mainVariant.componentType.isApk) {
+                // for application
+                creationConfig.mainVariant.artifacts.get(PACKAGED_MANIFESTS)
+            } else {
+                creationConfig.artifacts.get(PACKAGED_MANIFESTS)
+            }
+
             mainVariantOutput = creationConfig.mainVariant.outputs.getMainSplit()
             packageNameOfFinalRClass = creationConfig.mainVariant.namespace
             buildDirectoryPath =

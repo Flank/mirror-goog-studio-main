@@ -37,6 +37,7 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.tools.build.apkzlib.utils.IOExceptionFunction;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -192,6 +193,10 @@ public class UnitTestingAndroidResourcesTest {
                 });
 
         assertThat(properties.getProperty("android_resource_apk")).isNotNull();
+
+        File manifestFile = project.file(properties.getProperty("android_merged_manifest"));
+        String manifestContent = Joiner.on("\n").join(Files.readAllLines(manifestFile.toPath()));
+        assertThat(manifestContent).contains("android:targetSdkVersion=");
 
         // Check the tests see the assets from dependencies, even in the library case where they
         // would not otherwise be merged.
