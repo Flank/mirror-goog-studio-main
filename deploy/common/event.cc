@@ -60,6 +60,16 @@ void LogEvent(const std::string& text) {
   AddEvent(Event::Type::Logging, text);
 }
 
+void InfoEvent(const std::string& text) {
+  AddEvent(Event::Type::Info, text);
+  Log::I("%s", text.c_str());
+}
+
+void WarnEvent(const std::string& text) {
+  AddEvent(Event::Type::Warning, text);
+  Log::W("%s", text.c_str());
+}
+
 void ErrEvent(const std::string& text) {
   AddEvent(Event::Type::Error, text);
   Log::E("%s", text.c_str());

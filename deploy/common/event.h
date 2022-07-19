@@ -27,7 +27,7 @@ namespace deploy {
 
 struct Event {
   uint64_t timestamp_ns;
-  enum Type { Logging, Error, Begin, BeginMetric, End };
+  enum Type { Logging, Error, Warning, Info, Begin, BeginMetric, End };
   Type type;
   int64_t pid;
   int64_t tid;
@@ -44,6 +44,8 @@ void ResetEvents();
 
 uint64_t GetTime() noexcept;
 void LogEvent(const std::string& text);
+void WarnEvent(const std::string& text);
+void InfoEvent(const std::string& text);
 void ErrEvent(const std::string& text);
 void BeginPhase(const std::string& text);
 void BeginMetric(const std::string& text);

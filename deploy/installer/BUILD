@@ -215,7 +215,15 @@ cc_binary(
     name = "installer",
     srcs = [
         "main.cc",
-    ],
+        "self.h",
+    ] + select_android(
+        [
+            "self_android.cc",
+        ],
+        [
+            "self.cc",
+        ],
+    ),
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],
