@@ -1,7 +1,6 @@
 load("//tools/base/bazel:repositories.bzl", "setup_external_repositories", "vendor_repository")
 load("//tools/base/bazel:emulator.bzl", "setup_external_sdk")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
-load("//tools/adt/idea/kotlin-integration:version.bzl", "KOTLIN_IDE_VERSION")
 
 setup_external_repositories()
 
