@@ -29590,6 +29590,17 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "org.jetbrains.kotlin.android.org.jetbrains.kotlin.android.gradle.plugin_1.7.10",
+    pom = "repository/org/jetbrains/kotlin/android/org.jetbrains.kotlin.android.gradle.plugin/1.7.10/org.jetbrains.kotlin.android.gradle.plugin-1.7.10.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jetbrains/kotlin/android/org.jetbrains.kotlin.android.gradle.plugin/1.7.10",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.10",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.6.10",
     pom = "repository/org/jetbrains/kotlin/jvm/org.jetbrains.kotlin.jvm.gradle.plugin/1.6.10/org.jetbrains.kotlin.jvm.gradle.plugin-1.6.10.pom",
     repo_root_path = "repository",

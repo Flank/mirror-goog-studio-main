@@ -381,6 +381,7 @@ DATA = [
     "org.jetbrains.dokka:dokka-base:1.4.32",
     "org.jetbrains.dokka:javadoc-plugin:1.4.32",
     "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.0",
+    "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.10",
     "org.jetbrains.kotlin:jvm-abi-gen:1.7.0",
     "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:1.6.10",
     "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:1.6.21",
