@@ -31,21 +31,8 @@ enum class Severity constructor(
      */
     val description: String
 ) {
-
-    /**
-     * Fatal: Use sparingly because a warning marked as fatal will be
-     * considered critical and will abort Export APK etc in ADT.
-     */
-    FATAL("Fatal"),
-
-    /**
-     * Errors: The issue is known to be a real error that must be
-     * addressed.
-     */
-    ERROR("Error"),
-
-    /** Warning: Probably a problem. */
-    WARNING("Warning"),
+    /** Ignore: The user doesn't want to see this issue. */
+    IGNORE("Ignore"),
 
     /**
      * Information only: Might not be a problem, but the check has found
@@ -53,8 +40,20 @@ enum class Severity constructor(
      */
     INFORMATIONAL("Information"),
 
-    /** Ignore: The user doesn't want to see this issue. */
-    IGNORE("Ignore");
+    /** Warning: Probably a problem. */
+    WARNING("Warning"),
+
+    /**
+     * Errors: The issue is known to be a real error that must be
+     * addressed.
+     */
+    ERROR("Error"),
+
+    /**
+     * Fatal: Use sparingly because a warning marked as fatal will be
+     * considered critical and will abort Export APK etc in ADT.
+     */
+    FATAL("Fatal");
 
     /** Returns true if this severity is at least an error. */
     val isError: Boolean
@@ -103,7 +102,7 @@ enum class Severity constructor(
         fun min(severity1: Severity, severity2: Severity): Severity =
             // Using ">" instead of "<" here because compareTo is inherited from
             // enum and the severity constants are in descending order of severity
-            if (severity1 > severity2) severity1 else severity2
+            if (severity1 < severity2) severity1 else severity2
 
         /**
          * Returns the largest / most severe of the two given severities
@@ -116,7 +115,7 @@ enum class Severity constructor(
         fun max(severity1: Severity, severity2: Severity): Severity =
             // Using "<" instead of ">" here because compareTo is inherited from
             // enum and the severity constants are in descending order of severity
-            if (severity1 < severity2) severity1 else severity2
+            if (severity1 > severity2) severity1 else severity2
     }
 }
 

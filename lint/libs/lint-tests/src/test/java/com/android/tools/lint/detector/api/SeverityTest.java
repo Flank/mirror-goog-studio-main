@@ -55,11 +55,12 @@ public class SeverityTest extends TestCase {
     }
 
     public void testCompare() {
-        assertThat(Severity.IGNORE).isGreaterThan(Severity.ERROR);
-        assertThat(Severity.WARNING).isGreaterThan(Severity.ERROR);
+        assertThat(Severity.IGNORE).isLessThan(Severity.ERROR);
+        assertThat(Severity.WARNING).isLessThan(Severity.ERROR);
         assertThat(Severity.ERROR).isEquivalentAccordingToCompareTo(Severity.ERROR);
-        assertThat(Severity.FATAL).isLessThan(Severity.ERROR);
-        assertThat(Severity.WARNING).isGreaterThan(Severity.ERROR);
+        assertThat(Severity.FATAL).isGreaterThan(Severity.ERROR);
+        assertThat(Severity.WARNING).isLessThan(Severity.ERROR);
+        assertThat(Severity.INFORMATIONAL).isLessThan(Severity.ERROR);
     }
 
     public void testIsError() {

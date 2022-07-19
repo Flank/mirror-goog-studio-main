@@ -397,7 +397,7 @@ class LintIssueDocGenerator constructor(
             }
         } else if (type == IndexType.SEVERITY) {
             sb.append("\n")
-            for (severity in Severity.values()) {
+            for (severity in Severity.values().reversed()) {
                 val applicable = issues.filter { it.defaultSeverity == severity }.toList()
                 if (applicable.isNotEmpty()) {
                     sb.append("\n$bullet${severity.description} (${applicable.size})\n\n")
