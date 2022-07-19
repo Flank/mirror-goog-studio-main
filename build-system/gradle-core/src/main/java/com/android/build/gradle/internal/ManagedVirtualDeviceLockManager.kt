@@ -40,14 +40,14 @@ private val DEFAULT_RETRY_WAIT_MS = 1000L
  * at [maxGMDs]. The way to request a number of managed devices is with the [lock] method.
  *
  * Example:
- *     val lockManager = VirtualManagedDeviceLockManager(locations, 3)
+ *     val lockManager = ManagedVirtualDeviceLockManager(locations, 3)
  *
  *     lockManager.lock(locksRequested).use { lock ->
  *         val locksAcquired = lock.lockCount
  *         // Do stuff with a number of devices equal to the locks acquired...
  *     }
  */
-class VirtualManagedDeviceLockManager(
+class ManagedVirtualDeviceLockManager(
     androidLocationsProvider: AndroidLocationsProvider,
     private val maxGMDs: Int,
     private val lockRetryWaitMs: Long = DEFAULT_RETRY_WAIT_MS
@@ -166,7 +166,7 @@ class VirtualManagedDeviceLockManager(
 
         override fun close() {
             if (!closed) {
-                this@VirtualManagedDeviceLockManager.releaseLocks(lockCount)
+                this@ManagedVirtualDeviceLockManager.releaseLocks(lockCount)
                 closed = true
             }
         }

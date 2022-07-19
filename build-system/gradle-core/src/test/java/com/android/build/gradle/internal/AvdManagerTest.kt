@@ -69,7 +69,7 @@ class AvdManagerTest {
     private lateinit var versionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
 
     @Mock(answer = RETURNS_DEEP_STUBS)
-    lateinit var lockManager: VirtualManagedDeviceLockManager
+    lateinit var lockManager: ManagedVirtualDeviceLockManager
 
     @Before
     fun setup() {

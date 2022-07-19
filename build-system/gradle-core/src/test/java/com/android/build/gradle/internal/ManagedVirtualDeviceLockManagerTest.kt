@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
 @RunWith(JUnit4::class)
-class VirtualManagedDeviceLockManagerTest {
+class ManagedVirtualDeviceLockManagerTest {
 
     @get:Rule
     val mockitoRule: MockitoRule = MockitoJUnit.rule()
@@ -70,7 +70,7 @@ class VirtualManagedDeviceLockManagerTest {
 
     @Test
     fun lock_basicLockUpdatesTrackingCorrectly() {
-        val lockManager = VirtualManagedDeviceLockManager(androidLocations, 1, 0L)
+        val lockManager = ManagedVirtualDeviceLockManager(androidLocations, 1, 0L)
 
         lockManager.lock().use {
             // We can go ahead and read the file here to assure it keeps track of the lock number
@@ -86,7 +86,7 @@ class VirtualManagedDeviceLockManagerTest {
 
     @Test
     fun lock_multipleLocksCanRunSimultaneously() {
-        val lockManager = VirtualManagedDeviceLockManager(androidLocations, 2, 0L)
+        val lockManager = ManagedVirtualDeviceLockManager(androidLocations, 2, 0L)
 
         lockManager.lock().use {
             assertThat(trackedFile).exists()
@@ -117,7 +117,7 @@ class VirtualManagedDeviceLockManagerTest {
 
     @Test
     fun lock_multipleLocksBlockCorrectly() {
-        val lockManager = VirtualManagedDeviceLockManager(androidLocations, 1, 0L)
+        val lockManager = ManagedVirtualDeviceLockManager(androidLocations, 1, 0L)
 
         lateinit var thread: Future<*>
 
@@ -147,7 +147,7 @@ class VirtualManagedDeviceLockManagerTest {
 
     @Test
     fun lock_worksWhenMultipleRequested() {
-        val lockManager = VirtualManagedDeviceLockManager(androidLocations, 8, 0L)
+        val lockManager = ManagedVirtualDeviceLockManager(androidLocations, 8, 0L)
 
         // Attempt to grab most of the locks
         lockManager.lock(6).use { lock ->
