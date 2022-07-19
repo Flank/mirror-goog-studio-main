@@ -556,6 +556,7 @@ def iml_module(
         split_test_targets = None,
         tags = None,
         test_tags = None,
+        test_agents = [],
         back_target = 0,
         iml_files = None,
         data = [],
@@ -653,6 +654,11 @@ def iml_module(
     # The default test_class (JarTestSuite) comes from testutils, so we add testutils as a runtime dep.
     test_utils = [] if name == "studio.android.sdktools.testutils" else ["//tools/base/testutils:studio.android.sdktools.testutils_testlib"]
 
+    # Run java agents in tests
+    for test_agent in test_agents:
+        test_data.extend(test_agents)
+        test_jvm_flags = test_jvm_flags + ["-javaagent:$(location " + test_agent + ")"]
+
     if split_test_targets and test_flaky:
         fail("must use the Flaky attribute per split_test_target")
     if split_test_targets and test_shard_count:
@@ -701,6 +707,8 @@ def iml_module(
             fail("enable_tests is False but test_shard_count was specified.")
         if split_test_targets:
             fail("enable_tests is False but split_test_targets was specified.")
+        if test_agents:
+            fail("enable_tests is False but test_agents was specified.")
 
 def iml_test(
         name,
