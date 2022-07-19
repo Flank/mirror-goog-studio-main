@@ -397,7 +397,6 @@ _iml_module_ = rule(
         "test_deps": attr.label_list(providers = [[JavaInfo], [ImlModuleInfo], [CcInfo]]),
         "test_friends": attr.label_list(providers = [JavaInfo]),
         "data": attr.label_list(allow_files = True),
-        "test_data": attr.label_list(allow_files = True),
         "_java_toolchain": attr.label(default = Label("//prebuilts/studio/jdk:jdk11_toolchain_java11")),
         "_kt_java_runtime_8": attr.label(
             # We need this to be able to target JRE 8 in Kotlin, because
@@ -603,7 +602,6 @@ def iml_module(
         test_deps = test_deps,
         test_friends = test_friends,
         data = data,
-        test_data = test_data,
         test_class = test_class,
     )
 
