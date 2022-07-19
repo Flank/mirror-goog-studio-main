@@ -35,6 +35,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.repository.Revision
+import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -307,4 +308,10 @@ val CxxModuleModel.intermediatesParentDirSuffix : String get() = when(buildSyste
     else -> "obj"
 }
 
+/**
+ * A predictable location to republish files like compile_commands.json.
+ *   ex, $moduleRootFolder/.cxx/tools
+ */
+val CxxModuleModel.predictableRepublishFolder : File
+    get() = cxxFolder.resolve("tools")
 

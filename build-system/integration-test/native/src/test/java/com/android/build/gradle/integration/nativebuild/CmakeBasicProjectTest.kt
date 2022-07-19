@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFi
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
+import com.android.build.gradle.internal.cxx.model.predictableRepublishFolder
 import com.android.build.gradle.internal.cxx.os.bat
 import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
 import com.android.build.gradle.internal.cxx.settings.Macro.ENV_THIS_FILE_DIR
@@ -1088,6 +1089,20 @@ apply plugin: 'com.android.application'
                 Truth.assertThat(abi.sourceFlagsFile.readCompileCommandsJsonBin(nativeModules.normalizer))
                         .hasSize(1)
             }
+        }
+    }
+
+    @Test
+    fun `ensure compile_commands json is republished for each native ABI in model`() {
+        Assume.assumeTrue(mode != Mode.NinjaRedirect) // Only creates compile_commands.json.bin
+        Assume.assumeTrue(mode != Mode.CMake || cmakeVersionInDsl != "3.6.0") // Only creates compile_commands.json.bin
+        project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+            .fetchNativeModules(NativeModuleParams())
+        val abis = project.recoverExistingCxxAbiModels()
+        assertThat(abis.size).isEqualTo(4)
+        for(abi in abis) {
+            assertThat(abi.predictableRepublishFolder.resolve("compile_commands.json")).isFile()
         }
     }
 

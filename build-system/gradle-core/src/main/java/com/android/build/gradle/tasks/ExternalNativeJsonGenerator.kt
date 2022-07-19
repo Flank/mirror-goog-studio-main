@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.cxx.configure.recordConfigurationFinger
 import com.android.build.gradle.internal.cxx.configure.softConfigureOkay
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
+import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
@@ -49,6 +50,7 @@ import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildLocationFile
+import com.android.build.gradle.internal.cxx.model.predictableRepublishFolder
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
@@ -272,6 +274,14 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         // Write extra metadata files
                         abi.symbolFolderIndexFile.writeTextIfDifferent(abi.soFolder.absolutePath)
                         abi.buildFileIndexFile.writeTextIfDifferent(miniconfig.buildFiles.joinToString(System.lineSeparator()))
+
+                        // Republish compile_commands.json to a predictable location.
+                        if (abi.compileCommandsJsonFile.isFile) {
+                            synchronizeFile(
+                                abi.compileCommandsJsonFile,
+                                abi.predictableRepublishFolder.resolve(abi.compileCommandsJsonFile.name)
+                            )
+                        }
 
                         // Record the outcome. JSON was built.
                         variantStats.outcome = GenerationOutcome.SUCCESS_BUILT

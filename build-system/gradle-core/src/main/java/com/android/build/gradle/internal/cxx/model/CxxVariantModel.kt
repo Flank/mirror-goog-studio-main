@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import java.io.File
 
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
@@ -131,5 +133,12 @@ val CxxVariantModel.cFlags
  */
 val CxxVariantModel.cppFlags
     get() = cppFlagsList.joinToString(" ")
+
+/**
+ * A predictable location to republish files like compile_commands.json.
+ *   ex, $moduleRootFolder/.cxx/tools/debug
+ */
+val CxxVariantModel.predictableRepublishFolder : File
+    get() = FileUtils.join(module.predictableRepublishFolder, variantName)
 
 
