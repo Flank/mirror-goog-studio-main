@@ -193,7 +193,9 @@ public class PreValidator {
             return false;
         }
         return description.equals(WEAR_APP_SUB_MANIFEST)
-                || description.equals(COMPATIBLE_SCREENS_SUB_MANIFEST);
+                || description.equals(COMPATIBLE_SCREENS_SUB_MANIFEST)
+                || description.endsWith(
+                        SdkConstants.PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX);
     }
 
     /**

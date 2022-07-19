@@ -171,6 +171,9 @@ public class AndroidArtifacts {
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS =
             "android-privacy-sandbox-sdk-apks";
 
+    private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET =
+            "android-privacy-sandbox-sdk-extracted-manifest-snippet";
+
     private static final String TYPE_FEATURE_PUBLISHED_DEX = "android-feature-published-dex";
 
     private static final String TYPE_SOURCES_JAR = "android-sources-jar";
@@ -523,7 +526,11 @@ public class AndroidArtifacts {
         ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE),
 
         // The artifact-transform derived APKs from a privacy sandbox SDK
-        ANDROID_PRIVACY_SANDBOX_SDK_APKS(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS);
+        ANDROID_PRIVACY_SANDBOX_SDK_APKS(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS),
+
+        // The artifact-transform derived manifest snippet from a privacy sandbox SDK
+        ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET(
+                TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET);
         @NonNull private final String type;
 
         ArtifactType(@NonNull String type) {
