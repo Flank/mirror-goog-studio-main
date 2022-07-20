@@ -4,3 +4,8 @@
 # Example 1: com.android.tools.SomeClass#doSomething
 # Example 2: com.android.tools.SomeClass$InnerClass#doSomethingElse
 
+# [b/239228291] Template rendering was originally happening on a worker thread, but was
+# switched to EDT thread in ag/10867901.
+com.android.tools.idea.npw.module.ModuleModel$ModuleTemplateRenderer#render
+com.android.tools.idea.npw.model.RenderTemplateModel$TemplateRenderer#render
+com.android.tools.idea.npw.model.NewProjectModel$ProjectTemplateRenderer#render
