@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.common.fixture.testprojects
 
 
-enum class PluginType(
+sealed class PluginType(
     val id: String,
     val oldId: String = id,
     val kotlinId: String? = null,
@@ -27,85 +27,89 @@ enum class PluginType(
     val useNewDsl: Boolean = true,
     val last: Boolean = false
 ) {
-    JAVA_LIBRARY(
+    object JAVA_LIBRARY: PluginType(
         id = "java-library",
         isJava = true
-    ),
-    JAVA(
+    )
+    object JAVA: PluginType(
         id = "java",
         isJava = true
-    ),
-    APPLICATION(
+    )
+    object APPLICATION: PluginType(
         id = "application",
         isJava = true
-    ),
-    KOTLIN_JVM(
+    )
+    object KOTLIN_JVM: PluginType(
         id = "org.jetbrains.kotlin.jvm",
         oldId = "kotlin",
         kotlinId = "jvm",
         isKotlin = true
-    ),
-    KOTLIN_ANDROID(
+    )
+    object KOTLIN_ANDROID: PluginType(
         id = "kotlin-android",
         isAndroid = true,
         isKotlin = true,
         useNewDsl = false,
         last = true
-    ),
-    KAPT(
+    )
+    object KAPT: PluginType(
         id = "kotlin-kapt",
         isKotlin = true,
         useNewDsl = false,
         last = true
-    ),
-    KOTLIN_MPP(
+    )
+    object KOTLIN_MPP: PluginType(
         id = "org.jetbrains.kotlin.multiplatform",
         oldId = "kotlin-multiplatform",
         isKotlin = true,
         last = true
-    ),
-    ANDROID_APP(
+    )
+    object ANDROID_APP: PluginType(
         id = "com.android.application",
         isAndroid = true,
         useNewDsl = false
-    ),
-    ANDROID_LIB(
+    )
+    object ANDROID_LIB: PluginType(
         id = "com.android.library",
         isAndroid = true,
         useNewDsl = false
-    ),
-    ANDROID_TEST(
+    )
+    object ANDROID_TEST: PluginType(
         id = "com.android.test",
         isAndroid = true,
         useNewDsl = false
-    ),
-    ANDROID_DYNAMIC_FEATURE(
+    )
+    object ANDROID_DYNAMIC_FEATURE: PluginType(
         id = "com.android.dynamic-feature",
         isAndroid = true,
         useNewDsl = false
-    ),
-    FUSED_LIBRARY(
+    )
+    object FUSED_LIBRARY: PluginType(
         id = "com.android.fused-library",
         isAndroid = true,
         useNewDsl = true,
-    ),
-    PRIVACY_SANDBOX_SDK(
+    )
+    object PRIVACY_SANDBOX_SDK: PluginType(
         id = "com.android.privacy-sandbox-sdk",
         isAndroid = true,
         useNewDsl = true,
-    ),
-    ANDROID_SETTINGS(
+    )
+    object ANDROID_SETTINGS: PluginType(
         id = "com.android.settings",
         isAndroid = true,
         useNewDsl = true
-    ),
-    JAVA_TEST_FIXTURES(
+    )
+    object JAVA_TEST_FIXTURES: PluginType(
         id = "java-test-fixtures",
         useNewDsl = true
-    ),
-    MAVEN_PUBLISH(
+    )
+    object MAVEN_PUBLISH: PluginType(
         id= "maven-publish",
-    ),
+    )
+    object JAVA_GRADLE_PLUGIN: PluginType(
+        id="java-gradle-plugin"
+    )
+    class Custom(id: String): PluginType(id)
 }
 
 internal fun Iterable<PluginType>.containsAndroid() = any { it.isAndroid }

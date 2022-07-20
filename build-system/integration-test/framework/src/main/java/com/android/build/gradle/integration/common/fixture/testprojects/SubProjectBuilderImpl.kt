@@ -26,6 +26,7 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
 
     override var group: String? = null
     override var version: String? = null
+    override var useNewPluginsDsl: Boolean = false
 
     private var android: AndroidProjectBuilderImpl? = null
     private var androidComponents: AndroidComponentsBuilderImpl? = null
@@ -106,6 +107,13 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
         val sb = StringBuilder()
         buildScriptContent?.let { sb.append(it) }
         sb.append('\n')
+        if (useNewPluginsDsl) {
+            sb.append("plugins {\n")
+            for (plugin in plugins) {
+                sb.append("  id '${plugin.id}'\n")
+            }
+            sb.append("}\n")
+        }
 
         group?.let {
             sb.append("group = \"$it\"\n")
@@ -114,8 +122,10 @@ internal class SubProjectBuilderImpl(override val path: String) : SubProjectBuil
             sb.append("version = \"$it\"\n")
         }
 
-        for (plugin in plugins) {
-            sb.append("apply plugin: '${plugin.oldId}'\n")
+        if (!useNewPluginsDsl) {
+            for (plugin in plugins) {
+                sb.append("apply plugin: '${plugin.oldId}'\n")
+            }
         }
 
         for ((fileName, libraryBinary) in wrappedLibraries) {

@@ -83,6 +83,7 @@ interface SubProjectBuilder {
     val path: String
     var group: String?
     var version: String?
+    var useNewPluginsDsl: Boolean
     val plugins: MutableList<PluginType>
 
     /**
