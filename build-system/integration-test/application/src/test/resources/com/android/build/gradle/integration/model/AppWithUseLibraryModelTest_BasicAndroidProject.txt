@@ -1,0 +1,3 @@
+- BasicAndroidProject:
+   - bootClasspath:
+      * {ANDROID_SDK}/platforms/android-{COMPILE_SDK_VERSION}/optional/android.car.jar{F}{ADDED}

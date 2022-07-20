@@ -53,6 +53,9 @@ internal class AndroidProjectBuilderImpl(
     private var compileOptions: CompileOptionsImpl? = null
     private var prefabContainer = PrefabContainerBuilderImpl()
     private var sourceSetsContainer = SourceSetsContainerBuilderImpl()
+
+    private val useLibraries = mutableListOf<String>()
+
     override fun defaultCompileSdk() {
         compileSdk = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.toInt()
     }
@@ -99,6 +102,10 @@ internal class AndroidProjectBuilderImpl(
         val options = compileOptions ?: CompileOptionsImpl().also { compileOptions = it}
 
         action(options)
+    }
+
+    override fun useLibrary(name: String) {
+        useLibraries.add(name)
     }
 
     internal fun prepareForWriting() {
@@ -298,6 +305,11 @@ internal class AndroidProjectBuilderImpl(
             }
             sb.append("    }\n") // sourceSets
         }
+
+        for (library in useLibraries) {
+            sb.append("    useLibrary(\"$library\")\n")
+        }
+
         sb.append("}\n") // ANDROID
     }
 }

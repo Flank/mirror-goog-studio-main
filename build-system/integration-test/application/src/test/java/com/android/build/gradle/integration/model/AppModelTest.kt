@@ -786,3 +786,40 @@ class DependencyWithoutFileWithDependenciesTest: ModelComparator() {
         with(result).compareVariantDependencies(goldenFile = "VariantDependencies")
     }
 }
+
+class AppWithUseLibraryModelTest: ReferenceModelComparator(
+    referenceConfig = {
+        rootProject {
+            plugins.add(PluginType.ANDROID_APP)
+            android {
+                setUpHelloWorld()
+            }
+        }
+    },
+    deltaConfig = {
+        rootProject {
+            android {
+                useLibrary("android.car")
+            }
+        }
+    },
+    syncOptions = {
+        ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+    }
+) {
+
+    @Test
+    fun `test BasicAndroidProject model`() {
+        compareBasicAndroidProjectWith(goldenFileSuffix = "BasicAndroidProject")
+    }
+
+    @Test
+    fun `test AndroidProject model`() {
+        ensureAndroidProjectDeltaIsEmpty()
+    }
+
+    @Test
+    fun `test AndroidDsl model`() {
+        ensureAndroidDslDeltaIsEmpty()
+    }
+}

@@ -179,6 +179,8 @@ interface AndroidProjectBuilder {
     fun androidResources(action: AndroidResources.() -> Unit)
 
     fun compileOptions(action: CompileOptions.() -> Unit)
+
+    fun useLibrary(name: String)
 }
 
 interface AndroidComponentsBuilder {
