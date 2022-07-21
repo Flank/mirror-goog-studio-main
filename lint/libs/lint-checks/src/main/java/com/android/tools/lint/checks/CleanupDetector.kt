@@ -30,12 +30,13 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
+import com.android.tools.lint.detector.api.isJava
 import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiResourceVariable
 import com.intellij.psi.PsiVariable
-import com.intellij.psi.util.PsiTreeUtil.getParentOfType
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.psi.KtSuperTypeCallEntry
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UDoWhileExpression
@@ -187,8 +188,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         node,
                         CONTENT_PROVIDER_CLIENT_CLS,
                         RELEASE,
-                        CLOSE,
-                        autoCloseable = true
+                        CLOSE
                     )
                 }
             QUERY, RAW_QUERY, QUERY_WITH_FACTORY, RAW_QUERY_WITH_FACTORY ->
@@ -214,7 +214,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     //    android.provider.MediaStore$Images$Media#query
                     //    android.widget.FilterQueryProvider#runQuery
 
-                    checkRecycled(context, node, CURSOR_CLS, CLOSE, autoCloseable = true)
+                    checkRecycled(context, node, CURSOR_CLS, CLOSE)
                 }
             OPEN_ASSET_FILE,
             OPEN_ASSET_FILE_DESCRIPTOR,
@@ -229,8 +229,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         context,
                         node,
                         ASSET_FILE_DESCRIPTOR_CLS,
-                        CLOSE,
-                        autoCloseable = true
+                        CLOSE
                     )
                 }
             OPEN_FILE, OPEN_FILE_DESCRIPTOR ->
@@ -244,17 +243,16 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                         node,
                         PARCEL_FILE_DESCRIPTOR_CLS,
                         CLOSE,
-                        CLOSE_WITH_ERROR,
-                        autoCloseable = true
+                        CLOSE_WITH_ERROR
                     )
                 }
             OPEN_INPUT_STREAM ->
                 if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
-                    checkRecycled(context, node, INPUT_STREAM_CLS, CLOSE, autoCloseable = true)
+                    checkRecycled(context, node, INPUT_STREAM_CLS, CLOSE)
                 }
             OPEN_OUTPUT_STREAM ->
                 if (evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false)) {
-                    checkRecycled(context, node, OUTPUT_STREAM_CLS, CLOSE, autoCloseable = true)
+                    checkRecycled(context, node, OUTPUT_STREAM_CLS, CLOSE)
                 }
 
             OF_INT, OF_ARGB, OF_FLOAT, OF_OBJECT, OF_PROPERTY_VALUES_HOLDER -> {
@@ -269,12 +267,12 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         context: JavaContext,
         node: UCallExpression,
         recycleType: String,
-        vararg recycleNames: String,
-        autoCloseable: Boolean = false
+        vararg recycleNames: String
     ) {
         // If it's an AutoCloseable in a try-with-resources clause, don't flag it: these will be
         // cleaned up automatically
-        if (autoCloseable && node.isInTryWithResourcesVariable()) {
+        val psi = node.sourcePsi
+        if (psi != null && isJava(psi) && PsiTreeUtil.getParentOfType(psi, PsiResourceVariable::class.java) != null) {
             return
         }
 
@@ -821,10 +819,3 @@ class CleanupDetector : Detector(), SourceCodeScanner {
         }
     }
 }
-
-private tailrec fun UElement?.isInTryWithResourcesVariable(): Boolean =
-    when {
-        this == null -> false
-        sourcePsi?.let { getParentOfType(it, PsiResourceVariable::class.java) } != null -> true
-        else -> uastParent.isInTryWithResourcesVariable()
-    }
