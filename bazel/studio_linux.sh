@@ -124,6 +124,7 @@ function run_bazel_test() {
     target_name="studio-linux_very_flaky"
     test_tag_filters=-no_linux,-no_test_linux,very_flaky
   elif [[ $BUILD_TYPE == "POSTSUBMIT" ]]; then
+    conditional_flags+=(--bes_keywords=ab-postsubmit)
     conditional_flags+=(--nocache_test_results)
     conditional_flags+=(--flaky_test_attempts=2)
   fi
