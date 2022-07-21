@@ -637,7 +637,7 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/WarningLayer.kt",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/visuallint",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/IssuePanelToggleAction.kt",
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationForm.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationFormVisualLintHandler.kt",
     ],
     tests = [
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
