@@ -377,6 +377,13 @@ java_jarjar(
     visibility = ["//visibility:public"],
 )
 
+java_jarjar(
+    name = "utp-core-proto-jarjar",
+    srcs = ["//prebuilts/tools/common/m2:utp-core-proto"],
+    rules = "jarjar_rules.txt",
+    visibility = ["//visibility:public"],
+)
+
 config_setting(
     name = "host_linux",
     values = {"host_cpu": "linux"},

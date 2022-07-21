@@ -1,4 +1,4 @@
-load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
+load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "maven_proto_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 maven_proto_library(
@@ -22,9 +22,8 @@ maven_proto_library(
 )
 
 # Android Studio only needs protobuf message without gRPC services.
-java_proto_library(
-    name = "studio.android-test-plugin-result-listener-gradle-proto",
+android_java_proto_library(
+    name = "libstudio.android-test-plugin-result-listener-gradle-proto",
     srcs = glob(["src/main/proto/*.proto"]),
-    proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
     visibility = ["//visibility:public"],
 )

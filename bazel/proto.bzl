@@ -200,7 +200,8 @@ def android_java_proto_library(
         protoc_grpc_version = PROTOC_GRPC_VERSION,
         java_deps = [],
         proto_deps = [],
-        visibility = None):
+        visibility = None,
+        **kwargs):
     """Compiles protobuf into a .jar file in Android Studio compatible runtime version.
 
     Unlike java_proto_library rule defined above, android_java_proto_library
@@ -230,6 +231,7 @@ def android_java_proto_library(
         protoc_grpc_version = protoc_grpc_version,
         java_deps = java_deps,
         proto_deps = proto_deps,
+        **kwargs
     )
     java_jarjar(
         name = name,
