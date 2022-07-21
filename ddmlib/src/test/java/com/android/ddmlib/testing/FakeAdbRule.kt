@@ -150,6 +150,10 @@ class FakeAdbRule : ExternalResource() {
     }
     EmulatorConsole.clearConsolesForTest()
   }
+
+  fun stop()  {
+    fakeAdbServer.stop()
+  }
 }
 
 class FakeEmulatorConsole(
