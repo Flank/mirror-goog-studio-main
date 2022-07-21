@@ -42,20 +42,6 @@ public class AdbSocketUtils {
     }
 
     /**
-     * Reads data of given length from a socket.
-     *
-     * @return the content in a ByteBuffer, with the position at the beginning.
-     * @throws IOException if there was not enough data to fill the buffer
-     */
-    @NonNull
-    static ByteBuffer read(@NonNull SocketChannel socket, int length) throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(length);
-        read(socket, buf);
-        buf.rewind();
-        return buf;
-    }
-
-    /**
      * Fills a buffer by reading data from a socket.
      *
      * @return the content of the buffer as a string, or null if it failed to convert the buffer.
@@ -89,36 +75,5 @@ public class AdbSocketUtils {
 
         // we receive something we can't read. It's better to reset the connection at this point.
         throw new IOException("Unable to read length");
-    }
-
-    @NonNull
-    static String readNullTerminatedString(@NonNull SocketChannel socket) throws IOException {
-        return readNullTerminatedString(socket, AdbHelper.DEFAULT_CHARSET);
-    }
-
-    @NonNull
-    static String readNullTerminatedString(@NonNull SocketChannel socket, @NonNull Charset charset)
-            throws IOException {
-        byte[] buffer = new byte[64];
-        ByteBuffer buf = ByteBuffer.wrap(buffer, 0, buffer.length);
-        ByteArrayDataOutput output = ByteStreams.newDataOutput(64);
-        boolean end = false;
-        while (!end) {
-            buf.rewind();
-            try {
-                read(socket, buf);
-            } catch (EOFException e) {
-                end = true;
-            }
-            int nullPosition = 0;
-            for (; nullPosition < buf.position(); nullPosition++) {
-                if (buffer[nullPosition] == 0) {
-                    end = true;
-                    break;
-                }
-            }
-            output.write(buffer, 0, nullPosition);
-        }
-        return new String(output.toByteArray(), charset);
     }
 }
