@@ -66,7 +66,6 @@ APPROVED_FLAKY_TESTS = [
     "//tools/base/build-system/integration-test/connected:AndroidTestResourcesConnectedTest",  # b/148626301
     "//tools/base/build-system/integration-test/connected:AdditionalTestOutputConnectedTest",  # b/148626301
     "//tools/adt/idea/adt-ui:intellij.android.adt.ui_tests",  # b/172521726
-    "//tools/adt/idea/android-uitests:RunOnEmulatorTest",  # b/181567595
     "//tools/adt/idea/android-uitests:DeploymentTest",  # b/200082548
     "//tools/adt/idea/android-uitests:CreateCppKotlinProjectTest",  # b/185998794
     "//tools/adt/idea/android-uitests:BasicLayoutEditTest",  # b/186225187
