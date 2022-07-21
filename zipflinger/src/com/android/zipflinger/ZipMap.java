@@ -42,6 +42,8 @@ public class ZipMap {
     private Location cdLocation;
     private Location eocdLocation;
 
+    @NonNull private EndOfCentralDirectory eocd;
+
     static final String LFH_LENGTH_ERROR =
             "The provided zip (%s) is invalid. Entry '%s' name field is %d bytes"
                     + " in the Central Directory but %d in the Local File Header";
@@ -97,7 +99,7 @@ public class ZipMap {
         try (FileChannel channel = FileChannel.open(zipFile, StandardOpenOption.READ)) {
             fileSize = channel.size();
 
-            EndOfCentralDirectory eocd = EndOfCentralDirectory.find(channel);
+            eocd = EndOfCentralDirectory.find(channel);
             if (!eocd.getLocation().isValid()) {
                 throw new IllegalStateException(
                         String.format("Could not find EOCD in '%s'", zipFile));
@@ -209,6 +211,11 @@ public class ZipMap {
     @NonNull
     CentralDirectory getCentralDirectory() {
         return cd;
+    }
+
+    @NonNull
+    byte[] getComment() {
+        return eocd.getComment();
     }
 
     public void parseCentralDirectoryRecord(

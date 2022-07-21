@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.internal.attribution
 
-import com.android.SdkConstants
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.Version
 import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildServiceName
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.build.gradle.internal.utils.getBuildscriptDependencies
 import com.android.builder.utils.SynchronizedFile
@@ -28,7 +29,6 @@ import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
 import com.android.tools.analytics.HostData
-import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
@@ -71,7 +71,7 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
             project.gradle.taskGraph.whenReady { taskGraph ->
                 val outputFileToTasksMap = mutableMapOf<String, MutableList<String>>()
                 val taskNameToClassNameMap = mutableMapOf<String, String>()
-
+                val taskNameToTaskCategoryLabelMap = mutableMapOf<String, List<TaskCategoryLabel>>()
                 taskGraph.allTasks.forEach { task ->
                     taskNameToClassNameMap[task.name] = getTaskClassName(task.javaClass.name)
 
@@ -80,6 +80,10 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                             ArrayList()
                         }.add(task.path)
                     }
+
+                    task::class.java.annotations.filterIsInstance(BuildAnalyzer::class.java).forEach {
+                        taskNameToTaskCategoryLabelMap[task.name] = it.taskCategoryLabels.toList()
+                    }
                 }
 
                 val buildscriptDependenciesInfo = getBuildscriptDependencies(project.rootProject)
@@ -87,6 +91,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
                 serviceRegistration.parameters.attributionFileLocation.set(attributionFileLocation)
                 serviceRegistration.parameters.taskNameToClassNameMap.set(taskNameToClassNameMap)
+                serviceRegistration.parameters.taskNameToTaskCategoryLabelMap.set(
+                        taskNameToTaskCategoryLabelMap)
                 serviceRegistration.parameters.tasksSharingOutputs.set(
                         outputFileToTasksMap.filter { it.value.size > 1 }
                 )
@@ -105,8 +111,6 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                         configurationCacheIsOn = project.gradle.startParameter.isConfigurationCache
                     )
                 )
-
-
                 listenersRegistry.onTaskCompletion(serviceRegistration.service)
             }
         }
@@ -192,6 +196,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         val buildscriptDependenciesInfo: SetProperty<String>
 
         val buildInfo: Property<BuildInfo>
+
+        val taskNameToTaskCategoryLabelMap: MapProperty<String, List<TaskCategoryLabel>>
     }
 
     class RegistrationAction(project: Project)

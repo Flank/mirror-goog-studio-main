@@ -49,7 +49,7 @@ fun RecipeExecutor.settingsActivityRecipe(
 
   val simpleName = activityToLayout(activityClass)
   addDependency("com.android.support:appcompat-v7:${moduleData.apis.appCompatVersion}.+")
-  addDependency("androidx.preference:preference:1.1+")
+  addDependency("androidx.preference:preference:+")
   addMaterialDependency(useAndroidX)
 
   generateManifest(

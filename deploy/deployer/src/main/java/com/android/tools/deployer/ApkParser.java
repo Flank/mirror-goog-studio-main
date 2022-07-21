@@ -137,7 +137,8 @@ public class ApkParser {
                         .setPackageName(manifest.getApplicationId())
                         .setTargetPackages(manifest.getInstrumentationTargetPackages())
                         .setActivities(manifest.activities())
-                        .setServices(manifest.services());
+                        .setServices(manifest.services())
+                        .setSdkLibraries(manifest.getSdkLibraries());
 
         for (ZipUtils.ZipEntry entry : zipEntries) {
             // Native libraries are stored in the APK under lib/<ABI>/

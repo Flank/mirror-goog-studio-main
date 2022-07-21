@@ -73,6 +73,7 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import com.android.tools.lint.detector.api.isJdkFolder
 import com.android.tools.lint.gradle.GroovyGradleVisitor
+import com.android.tools.lint.helpers.DefaultJavaEvaluator
 import com.android.tools.lint.helpers.DefaultUastParser
 import com.android.tools.lint.model.LintModelModuleType
 import com.android.tools.lint.model.PathVariables
@@ -86,6 +87,7 @@ import com.intellij.mock.MockProject
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.pom.java.LanguageLevel
+import com.intellij.psi.PsiClass
 import com.intellij.util.lang.UrlClassLoader
 import org.jetbrains.jps.model.java.impl.JavaSdkUtil
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.PERF_MANAGER
@@ -1858,6 +1860,17 @@ open class LintCliClient : LintClient {
                 target == null && projects.isNotEmpty()
             )
             return ok
+        }
+
+        override fun createEvaluator(project: Project?, p: com.intellij.openapi.project.Project): DefaultJavaEvaluator {
+            return object : DefaultJavaEvaluator(p, project!!) {
+                override fun findClass(qualifiedName: String): PsiClass? {
+                    if (::driver.isInitialized && driver.mode == LintDriver.DriverMode.MERGE) {
+                        error("Class lookup is not allowed during report merging; see the lint partial analysis documentation")
+                    }
+                    return super.findClass(qualifiedName)
+                }
+            }
         }
     }
 

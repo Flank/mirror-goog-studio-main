@@ -15,7 +15,6 @@
  */
 package com.android.adblib.tools.debugging
 
-import com.android.adblib.AdbLogger
 import com.android.adblib.DeviceSelector
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
@@ -141,8 +140,8 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
                     val process10 = list.first { it.pid == pid10 }
                     val process11 = list.first { it.pid == pid11 }
                     yieldUntil {
-                        (process10.processPropertiesFlow.value.processName != null) &&
-                                (process11.processPropertiesFlow.value.processName != null)
+                        (process10.propertiesFlow.value.processName != null) &&
+                                (process11.propertiesFlow.value.processName != null)
                     }
                     Pair(process10, process11)
                 } else {
@@ -152,12 +151,12 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
 
         // Assert
         Assert.assertEquals(pid10, process10.pid)
-        Assert.assertEquals("a.b.c", process10.processPropertiesFlow.value.processName)
-        Assert.assertEquals(100, process10.processPropertiesFlow.value.userId)
+        Assert.assertEquals("a.b.c", process10.propertiesFlow.value.processName)
+        Assert.assertEquals(100, process10.propertiesFlow.value.userId)
 
         Assert.assertEquals(pid11, process11.pid)
-        Assert.assertEquals("a.b.c.e", process11.processPropertiesFlow.value.processName)
-        Assert.assertEquals(101, process11.processPropertiesFlow.value.userId)
+        Assert.assertEquals("a.b.c.e", process11.propertiesFlow.value.processName)
+        Assert.assertEquals(101, process11.propertiesFlow.value.userId)
     }
 
     @Test

@@ -18,12 +18,12 @@ package com.android.adblib.tools.testutils
 import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbDeviceServices
 import com.android.adblib.AdbHostServices
-import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSessionHost
+import com.android.adblib.AdbSession
 import com.android.adblib.SOCKET_CONNECT_TIMEOUT_MS
 import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.adblib.testingutils.TestingAdbSessionHost
 import com.android.fakeadbserver.DeviceState
 import org.junit.Rule
 import org.junit.rules.ExpectedException
@@ -44,10 +44,10 @@ open class AdbLibToolsTestBase {
     }
 
     protected fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
-        val host = registerCloseable(TestingAdbLibHost())
+        val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
         val session =
-            AdbLibSession.create(
+            AdbSession.create(
                 host,
                 channelProvider,
                 Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)
@@ -69,18 +69,18 @@ open class AdbLibToolsTestBase {
         return fakeDevice
     }
 
-    internal fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
-        val host = registerCloseable(TestingAdbLibHost())
+    protected fun createHostServices(fakeAdb: FakeAdbServerProvider): AdbHostServices {
+        val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
         val session = registerCloseable(createSession(host, channelProvider))
         return session.hostServices
     }
 
     private fun createSession(
-        host: AdbLibHost,
-        channelProvider: AdbChannelProvider
-    ): AdbLibSession {
-        return AdbLibSession.create(
+      host: AdbSessionHost,
+      channelProvider: AdbChannelProvider
+    ): AdbSession {
+        return AdbSession.create(
             host,
             channelProvider,
             Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)

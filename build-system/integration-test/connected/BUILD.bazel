@@ -46,8 +46,7 @@ TEST_DEPS = [
     "@maven//:com.google.protobuf.protobuf-java-util",
     "@maven//:com.google.truth.extensions.truth-java8-extension",
     "@maven//:com.google.truth.truth",
-    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
-    "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
     "@maven//:org.jetbrains.kotlin.kotlin-test",
 ]
 

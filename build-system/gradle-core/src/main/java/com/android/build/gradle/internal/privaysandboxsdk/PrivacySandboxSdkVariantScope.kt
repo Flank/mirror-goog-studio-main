@@ -16,46 +16,36 @@
 
 package com.android.build.gradle.internal.privaysandboxsdk
 
+import com.android.build.api.artifact.impl.ArtifactsImpl
+import com.android.build.api.dsl.FusedLibraryExtension
 import com.android.build.api.dsl.PrivacySandboxSdkExtension
 import com.android.build.gradle.internal.dsl.PrivacySandboxSdkBundleImpl
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryConfigurations
+import com.android.build.gradle.internal.fusedlibrary.FusedLibraryDependencies
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScopeImpl
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
 import com.android.build.gradle.internal.utils.validatePreviewTargetValue
+import com.android.builder.model.ApiVersion
 import org.gradle.api.Project
 import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.specs.Spec
 
-class PrivacySandboxSdkVariantScope(
-    project: Project,
-    val services: TaskCreationServices,
-    extensionProvider: () -> PrivacySandboxSdkExtension,
-    private val bootClasspathConfigProvider: () -> BootClasspathConfig
-): FusedLibraryVariantScopeImpl(project, extensionProvider) {
-
-    override val extension: PrivacySandboxSdkExtension by lazy {
-        extensionProvider.invoke()
-    }
-
-    override val mergeSpec = Spec { componentIdentifier: ComponentIdentifier ->
-        true // so far, all dependencies are consumed by the sdk library plugin.
-    }
-
-    val compileSdkVersion: String by lazy {
-        extension.compileSdkPreview?.let { validatePreviewTargetValue(it) }?.let { "android-$it" } ?:
-        extension.compileSdkExtension?.let { "android-${extension.compileSdk}-ext$it" } ?:
-        extension.compileSdk?.let {"android-$it"} ?: throw RuntimeException(
-            "compileSdk version is not set"
-        )
-    }
-
+interface PrivacySandboxSdkVariantScope {
+    val layout: ProjectLayout
+    val artifacts: ArtifactsImpl
+    val incomingConfigurations: FusedLibraryConfigurations
+    val outgoingConfigurations: FusedLibraryConfigurations
+    val dependencies: FusedLibraryDependencies
+    val extension: PrivacySandboxSdkExtension
+    val mergeSpec: Spec<ComponentIdentifier>
+    val compileSdkVersion: String
+    val minSdkVersion: ApiVersion
     val bootClasspath: Provider<List<RegularFile>>
-            get() = bootClasspathConfigProvider.invoke().bootClasspath
-
     val bundle: PrivacySandboxSdkBundleImpl
-        get() = extension.bundle as PrivacySandboxSdkBundleImpl
-
+    val services: TaskCreationServices
 }

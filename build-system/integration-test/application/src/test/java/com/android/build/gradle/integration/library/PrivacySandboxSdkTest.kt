@@ -125,13 +125,12 @@ class PrivacySandboxSdkTest {
             android {
                 defaultCompileSdk()
                 minSdk = 12
-                namespace = "com.example.privacysandboxsdk"
             }
             appendToBuildFile {
                 """
                         android {
                             bundle {
-                                packageName = "com.example.privacysandboxsdk"
+                                applicationId = "com.example.privacysandboxsdk"
                                 sdkProviderClassName = "Test"
                                 setVersion(1, 2, 3)
                             }
@@ -251,7 +250,7 @@ class PrivacySandboxSdkTest {
         executor().run(":example-app:buildPrivacySandboxSdkApksForDebug")
 
         val privacySandboxSdkApk = project.getSubproject(":example-app")
-                .getIntermediateFile("extracted_apks_from_privacy_sandbox_sdks", "debug", "privacy-sandbox-sdk-standalone.apk")
+                .getIntermediateFile("extracted_apks_from_privacy_sandbox_sdks", "debug", "privacy-sandbox-sdk", "standalone.apk")
 
         Apk(privacySandboxSdkApk).use {
             assertThat(it).containsClass(ANDROID_LIB1_CLASS)

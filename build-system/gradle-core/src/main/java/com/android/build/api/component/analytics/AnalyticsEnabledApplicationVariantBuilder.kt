@@ -61,11 +61,11 @@ open class AnalyticsEnabledApplicationVariantBuilder @Inject constructor(
             delegate.enableTestFixtures = value
         }
 
-    override var codeMinification: Boolean
-        get() = delegate.codeMinification
+    override var isMinifyEnabled: Boolean
+        get() = delegate.isMinifyEnabled
         set(value) {
             stats.variantApiAccessBuilder.addVariantAccessBuilder().type = VariantMethodType.CODE_MINIFICATION_VALUE_VALUE
-            delegate.codeMinification = value
+            delegate.isMinifyEnabled = value
         }
 
     override var shrinkResources: Boolean

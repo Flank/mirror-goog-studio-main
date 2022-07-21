@@ -44,9 +44,7 @@ open class Location
  * end. If the length of the range is not known, end may be null.
  *
  * @param file the associated file (but see the documentation for
- * * [Location.file] for more information on what the file
- * * represents)
- *
+ *     [Location.file] for more information on what the file represents)
  * @param start the starting position, or null
  * @param end the ending position, or null
  */

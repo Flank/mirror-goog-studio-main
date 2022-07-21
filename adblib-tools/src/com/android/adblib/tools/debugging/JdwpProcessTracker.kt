@@ -16,7 +16,7 @@
 package com.android.adblib.tools.debugging
 
 import com.android.adblib.AdbDeviceServices
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.ProcessIdList
 import com.android.adblib.createDeviceScope
@@ -49,8 +49,8 @@ private val TRACK_JDWP_RETRY_DELAY = Duration.ofSeconds(2)
  * Start a [ProcessMap] tracker [Flow] by calling the [createFlow] method.
  */
 class JdwpProcessTracker(
-    private val session: AdbLibSession,
-    private val device: DeviceSelector
+  private val session: AdbSession,
+  private val device: DeviceSelector
 ) {
 
     private val logger = thisLogger(session)

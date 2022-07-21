@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
@@ -26,6 +27,7 @@ import org.gradle.work.DisableCachingByDefault
  * Runs instrumentation tests of a variant on a device defined in the DSL.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
 abstract class DeviceSerialTestTask: DefaultTask() {
     @Option(
         option = "serial",

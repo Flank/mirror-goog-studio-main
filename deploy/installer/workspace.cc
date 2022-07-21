@@ -28,7 +28,9 @@ namespace {
 constexpr const char* kBaseDir = "/data/local/tmp/.studio";
 constexpr const char* kDefaultPmPath = "/system/bin/pm";
 constexpr const char* kDefaultCmdPath = "/system/bin/cmd";
-constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
+
+// We need to make sure other does not have write.
+constexpr int kDirectoryMode = (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }  // namespace
 
 Workspace::Workspace(const std::string& version)

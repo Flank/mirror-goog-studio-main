@@ -263,10 +263,9 @@ class AvdSnapshotHandler(
                 """.trimIndent())
             }
             logger.info("Successfully created snapshot for: $avdName")
-        } catch (e: Exception) {
+        } finally {
             closeEmulatorWithId(adbExecutable, process, deviceId, logger)
             process.waitFor()
-            throw e
         }
     }
 

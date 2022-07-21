@@ -83,21 +83,12 @@ buildscript {
     @Test
     fun testKotlinPluginDependencyDetectedAppliedWithPluginsDsl() {
         val attributionFileLocation = temporaryFolder.newFolder()
-
-        TestFileUtils.searchAndReplace(project.file("settings.gradle"),
-                "eachPlugin {",
-                """
-eachPlugin {
-            if(requested.id.namespace == "org.jetbrains.kotlin") {
-                useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
-            }
-                """.trimIndent())
         project.file("build.gradle").delete()
         project.file("build.gradle").writeText("""
 
 plugins {
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.android' version "${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
 }
 apply from: "../commonHeader.gradle"
 apply from: "../commonLocalRepo.gradle"

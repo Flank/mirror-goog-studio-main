@@ -55,6 +55,25 @@ public class ThreadingCheckerTrampolineTest {
     }
 
     @Test
+    public void removeHook() {
+        ThreadingCheckerHook hook1 = createThreadingCheckerHook();
+        ThreadingCheckerHook hook2 = createThreadingCheckerHook();
+        ThreadingCheckerTrampoline.installHook(hook1);
+        ThreadingCheckerTrampoline.installHook(hook2);
+
+        ThreadingCheckerTrampoline.verifyOnUiThread();
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(2);
+
+        ThreadingCheckerTrampoline.removeHook(hook1);
+        ThreadingCheckerTrampoline.verifyOnUiThread();
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(3);
+
+        ThreadingCheckerTrampoline.removeHook(hook2);
+        ThreadingCheckerTrampoline.verifyOnUiThread();
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(3);
+    }
+
+    @Test
     public void threadingViolationChecks_notEnforcedOnMethodInBaselineFile() {
         ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
 

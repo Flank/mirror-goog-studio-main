@@ -59,6 +59,7 @@ internal class FusedLibraryArtifactMergeTaskTest {
                 }
             }
             addFile("src/main/assets/android_lib_one_asset.txt", "androidLib1")
+            addFile("src/main/assets/subdir/android_lib_one_asset_in_subdir.txt", "androidLib1")
             addFile("src/main/resources/my_java_resource.txt", "androidLib1")
             addFile("src/main/rs/com/example/androidLib1/ip.rsh",
                     "#pragma version(1)\n" +
@@ -165,7 +166,8 @@ internal class FusedLibraryArtifactMergeTaskTest {
                         .map(ZipEntry::getName)).containsAtLeastElementsIn(
                         listOf(
                                 "assets/android_lib_one_asset.txt",
-                                "assets/android_lib_two_asset.txt"
+                                "assets/android_lib_two_asset.txt",
+                                "assets/subdir/android_lib_one_asset_in_subdir.txt"
                         )
                 )
             }

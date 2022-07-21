@@ -15,7 +15,9 @@
  */
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
@@ -29,6 +31,7 @@ import java.io.IOException
 
 /** A task that processes the manifest  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
 abstract class ManifestProcessorTask : NonIncrementalTask() {
 
     @get:Optional

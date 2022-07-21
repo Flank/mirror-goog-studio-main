@@ -52,7 +52,9 @@ class L8ToolTest {
         Files.list(dir).filter { it.toString().endsWith(".dex") }.count()
 
     companion object {
-        val bootClasspath = listOf(TestUtils.resolvePlatformPath("android.jar"))
+        val bootClasspath = listOf(
+            TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP)
+        )
         val desugarJar = listOf(TestUtils.getDesugarLibJar())
         val desugarConfig = TestUtils.getDesugarLibConfigContent()
     }

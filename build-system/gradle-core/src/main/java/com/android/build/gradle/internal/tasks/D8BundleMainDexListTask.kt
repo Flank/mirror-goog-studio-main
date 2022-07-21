@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.multidex.D8MainDexList
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -50,6 +51,7 @@ import java.io.File
  * A task calculating the main dex list for bundle using D8.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
 abstract class D8BundleMainDexListTask : NonIncrementalTask() {
 
     @get:Input

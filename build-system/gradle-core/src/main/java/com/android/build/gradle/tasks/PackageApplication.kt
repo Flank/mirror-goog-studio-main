@@ -23,7 +23,9 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.APK_IDE_MODEL
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
@@ -36,6 +38,7 @@ import java.nio.file.Files
 
 /** Task to package an Android application (APK).  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.APK_PACKAGING])
 abstract class PackageApplication : PackageAndroidArtifact() {
     private lateinit var transformationRequest: ArtifactTransformationRequest<PackageApplication>
 

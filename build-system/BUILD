@@ -90,7 +90,7 @@ maven_library(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "7.5-rc-2"
+GRADLE_VERSION = "7.5"
 
 filegroup(
     name = "gradle-distrib",
@@ -186,30 +186,23 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-GRADLE_PLUGIN_ARTIFACTS = [
-    "//tools/base/build-system/aapt2:aapt2",
-    "//tools/base/build-system/gradle-core:gradle-core",
-    "//tools/base/lint:tools.lint-gradle",
-    "@maven//:com.github.javaparser.javaparser-core",
-    "//tools/data-binding:tools.compiler",
-]
-
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
     artifacts = [
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.6.20",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.0",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
         "@maven//:androidx.activity.activity-compose_1.3.1",
@@ -224,37 +217,6 @@ maven_repository(
         "@maven//:androidx.lifecycle.lifecycle-livedata-ktx_2.2.0",
     ],
     visibility = ["//prebuilts/studio/buildbenchmarks:__subpackages__"],
-)
-
-# Legacy maven repository representing what used to be packaged inside Studio
-#
-# This doesn't correspond to anything we publish and is obsolete.
-#
-# Tests that depend on this should migrate to using the Android Gradle plugin
-# as built with Gradle (wrapped in Bazel), i.e.
-#
-#    "//tools/base/build-system:android_gradle_plugin.zip",
-#    "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
-#
-# For an example of a migration, see
-# https://cs.android.com/android-studio/platform/tools/adt/idea/+/599c84251b2a6e5acefbe94015bebb278d4b5db8
-maven_repository(
-    name = "studio_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS,
-    # Don't add new targets here, see above for how to migrate
-    visibility = [
-        "//tools/adt/idea/android-uitests:__pkg__",
-        "//tools/adt/idea/designer:__pkg__",
-        "//tools/adt/idea/designer-perf-tests:__pkg__",
-        "//tools/adt/idea/ide-perf-tests:__pkg__",
-        "//tools/adt/idea/kotlin-integration:__pkg__",
-        "//tools/adt/idea/mlkit:__pkg__",
-        "//tools/adt/idea/nav/safeargs:__pkg__",
-        "//tools/adt/idea/project-system-gradle-sync:__pkg__",
-        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
-        "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//tools/vendor/google/lldb-integration-tests:__pkg__",
-    ],
 )
 
 filegroup(
@@ -401,10 +363,10 @@ maven_repository(
         "@maven//:org.jacoco.org.jacoco.report",
         "@maven//:org.jetbrains.dokka.dokka-android-gradle-plugin",
         "@maven//:org.jetbrains.dokka.dokka-core",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime",
-        "@maven//:org.jetbrains.kotlin.kotlin-compiler-embeddable",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin",
-        "@maven//:org.jetbrains.kotlin.kotlin-scripting-compiler-embeddable",
+        "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin",
+        "@maven//:org.jetbrains.kotlin.kotlin-compiler",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api",
+        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
         "@maven//:org.jetbrains.kotlin.kotlin-test",
         "@maven//:org.mockito.mockito-core",
         "@maven//:org.smali.baksmali",
@@ -420,7 +382,7 @@ maven_repository(
     # keep sorted
     artifacts = [
         "//tools/base/testutils:tools.testutils",
-        "@maven//:org.jetbrains.kotlin.kotlin-test-junit_1.5.31",
+        "@maven//:org.jetbrains.kotlin.kotlin-test-junit_1.7.10",
     ],
 )
 
@@ -535,4 +497,20 @@ gradle_test(
     tasks = [":base:gradle-api:metalavaTest"],
     test_output_dir = "build/base/gradle-api/build/test-results/metalavaTest",
     visibility = ["//visibility:public"],
+)
+
+# This should be kept in sync with
+# tools/base/testutils/src/main/java/com/android/testutils/TestUtils.ANDROID_PLATFORM_FOR_AGP_UNIT_TESTS
+filegroup(
+    name = "android_platform_for_tests",
+    srcs = ["//prebuilts/studio/sdk:platforms/android-33"],
+    visibility = [":__subpackages__"],
+)
+
+filegroup(
+    name = "android_platform_for_performance_tests",
+    srcs = ["//prebuilts/studio/sdk:platforms/android-33_build_only"],
+    visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+    ],
 )

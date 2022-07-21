@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.services.DslServices;
+import com.android.builder.core.ComponentType;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.model.ObjectFactory;
 
@@ -25,14 +26,17 @@ import org.gradle.api.model.ObjectFactory;
 public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
 
     @NonNull private final DslServices dslServices;
+    @NonNull private final ComponentType componentType;
 
-    public BuildTypeFactory(@NonNull DslServices dslServices) {
+    public BuildTypeFactory(
+            @NonNull DslServices dslServices, @NonNull ComponentType componentType) {
         this.dslServices = dslServices;
+        this.componentType = componentType;
     }
 
     @NonNull
     @Override
     public BuildType create(@NonNull String name) {
-        return dslServices.newDecoratedInstance(BuildType.class, name, dslServices);
+        return dslServices.newDecoratedInstance(BuildType.class, name, dslServices, componentType);
     }
 }

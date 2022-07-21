@@ -16,6 +16,9 @@ iml_module(
     ],
 )
 
+# Build adblib.tools as a standalone library, with side effect of ensuring that it does
+# not use unwanted dependencies from "studio-sdk" in the iml_module rule above
+# Build with: bazel build //tools/base/adblib-tools:adblib.tools
 kotlin_library(
     name = "adblib.tools",
     srcs = glob([
@@ -48,6 +51,7 @@ kotlin_library(
     ],
 )
 
+# Test with: bazel test //tools/base/adblib-tools:adblib.tools.tests
 kotlin_test(
     name = "adblib.tools.tests",
     srcs = glob([
@@ -63,12 +67,17 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base/adblib",
         ":adblib.tools",
         "//tools/base/adblib:adblib.tests.testlib",
         # For "JarTestSuite"
         "//tools/base/testutils:tools.testutils",
         # For JUnit4 support
         "@maven//:junit.junit",
+        # Hamcrest Matchers classes
+        "@maven//:org.hamcrest.hamcrest-library",
+        # Coroutine utilities
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         # FakeAdbServer
         "//tools/base/fakeadbserver:tools.fakeadbserver",
     ],

@@ -19,8 +19,10 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import org.gradle.api.file.DirectoryProperty;
@@ -34,6 +36,7 @@ import org.gradle.work.DisableCachingByDefault;
  * Task that writes the FeatureSplitDeclaration file and publish it for other modules to consume.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.METADATA})
 public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;

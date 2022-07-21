@@ -70,5 +70,7 @@
     </orderEntry>
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="module" module-name="android.sdktools.manifest-parser" />
+    <orderEntry type="module" module-name="android.sdktools.adblib" />
+    <orderEntry type="module" module-name="android.sdktools.adblib.tools" />
   </component>
 </module>

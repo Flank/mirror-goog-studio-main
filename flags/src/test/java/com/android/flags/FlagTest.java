@@ -24,7 +24,7 @@ import org.junit.Test;
 public class FlagTest {
 
     @Test
-    public void validateFlagValues() throws Exception {
+    public void validateFlagValues() {
         assertThat(GameFeatures.GRAPHICS.getFlags()).isEqualTo(GameFeatures.FLAGS);
         assertThat(GameFeatures.GRAPHICS.getDisplayName()).isEqualTo("Graphics");
         assertThat(GameFeatures.AUDIO.getFlags()).isEqualTo(GameFeatures.FLAGS);
@@ -52,36 +52,40 @@ public class FlagTest {
     }
 
     @Test
-    public void testFailureInputsThrowException() throws Exception {
+    public void testFailureInputsThrowException() {
         Flags flags = new Flags();
         try {
-            new FlagGroup(flags, "dummy", "");
+            FlagGroup group = new FlagGroup(flags, "dummy", "");
+            group.validate();
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         FlagGroup group = new FlagGroup(flags, "dummy", "Dummy");
         try {
-            Flag.create(group, "", "Dummy", "Dummy Description", false);
+            Flag<Boolean> flag = Flag.create(group, "", "Dummy", "Dummy Description", false);
+            flag.validate();
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            Flag.create(group, "dummy", "", "Dummy Description", false);
+            Flag<Boolean> flag = Flag.create(group, "dummy", "", "Dummy Description", false);
+            flag.validate();
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            Flag.create(group, "dummy", "Dummy", "", false);
+            Flag<Boolean> flag = Flag.create(group, "dummy", "Dummy", "", false);
+            flag.validate();
             Assert.fail();
         } catch (IllegalArgumentException ignored) {
         }
     }
 
     @Test
-    public void verifyIdThrowsExceptionForInvalidCases() throws Exception {
+    public void verifyIdThrowsExceptionForInvalidCases() {
         Flag.verifyFlagIdFormat("valid");
         Flag.verifyFlagIdFormat("valid.id");
         Flag.verifyFlagIdFormat("v");
@@ -126,7 +130,7 @@ public class FlagTest {
     }
 
     @Test
-    public void verifyDisplayTextThrowsExceptionForInvalidCases() throws Exception {
+    public void verifyDisplayTextThrowsExceptionForInvalidCases() {
         Flag.verifyDisplayTextFormat("Valid");
         Flag.verifyDisplayTextFormat("Valid name");
         Flag.verifyDisplayTextFormat("V");
@@ -158,7 +162,7 @@ public class FlagTest {
     }
 
     @Test
-    public void flagCanOverrideValue() throws Exception {
+    public void flagCanOverrideValue() {
         Flags flags = new Flags();
         FlagGroup group = new FlagGroup(flags, "dummy", "Dummy");
         Flag<Boolean> boolFlag = Flag.create(group, "bool", "Dummy", "Dummy", true);

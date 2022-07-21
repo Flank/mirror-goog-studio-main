@@ -16,10 +16,10 @@
 package com.android.adblib.tools
 
 import com.android.adblib.AdbDeviceServices
+import com.android.adblib.AdbInputChannel
 import com.android.adblib.DeviceSelector
 import com.android.adblib.utils.TextShellCollector
 import kotlinx.coroutines.flow.Flow
-import java.nio.file.Path
 
 internal class PMPm(deviceServices: AdbDeviceServices) : PM(deviceServices) {
 
@@ -31,11 +31,9 @@ internal class PMPm(deviceServices: AdbDeviceServices) : PM(deviceServices) {
         return deviceService.shell(device, cmd, TextShellCollector())
     }
 
-    override suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: Path, filename: String, size: Long) : Flow<String>{
+    override suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: AdbInputChannel, filename: String, size: Long) : Flow<String>{
         val cmd = "$CMD install-write -S $size $sessionID $filename -"
-        deviceService.session.channelFactory.openFile(apk).use {
-            return deviceService.exec(device, cmd, TextShellCollector(), it, shutdownOutput = false)
-        }
+        return deviceService.exec(device, cmd, TextShellCollector(), apk, shutdownOutput = false)
     }
 
     override suspend fun commit(device: DeviceSelector, sessionID: String) : Flow<String> {

@@ -1020,7 +1020,7 @@ class VariantDslInfoTest2 :
             action(defaultConfig)
         }
 
-        val buildType: BuildType = dslServices.newDecoratedInstance(BuildType::class.java, "Build-Type", dslServices)
+        val buildType: BuildType = dslServices.newDecoratedInstance(BuildType::class.java, "Build-Type", dslServices, componentType)
 
         fun buildType(action: BuildType.() -> Unit) {
             action(buildType)

@@ -18,7 +18,9 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.util.Preconditions
 import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.google.common.base.Supplier
@@ -39,6 +41,7 @@ import org.gradle.work.DisableCachingByDefault
  * or overlay manifests
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
 abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:InputFile

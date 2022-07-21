@@ -26,6 +26,7 @@ public class Timeouts {
     static final long CMD_SWAP_MS = T_5_MINUTES;
     static final long CMD_OSWAP_MS = T_5_MINUTES;
     static final long CMD_OINSTALL_MS = T_5_MINUTES;
+    static final long CMD_ROOT_PUSH_INSTALL = T_5_MINUTES;
     static final long CMD_VERIFY_OID_MS = T_5_SECONDS;
     static final long CMD_DELTA_PREINSTALL_MS = T_5_MINUTES;
     static final long CMD_DELTA_INSTALL_MS = T_5_MINUTES;

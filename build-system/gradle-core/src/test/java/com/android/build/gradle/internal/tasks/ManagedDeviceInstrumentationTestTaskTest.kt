@@ -20,7 +20,7 @@ import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService.VersionedSdkLoader
-import com.android.build.gradle.internal.VirtualManagedDeviceLockManager
+import com.android.build.gradle.internal.ManagedVirtualDeviceLockManager
 import com.android.build.gradle.internal.dsl.EmulatorSnapshots
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
@@ -157,8 +157,8 @@ class ManagedDeviceInstrumentationTestTaskTest {
         `when`(avdDirectory.asFile).thenReturn(avdFolder)
         `when`(avdService.avdFolder).thenReturn(FakeGradleProvider(avdDirectory))
 
-        val lockManager = mock(VirtualManagedDeviceLockManager::class.java)
-        val lock = mock(VirtualManagedDeviceLockManager.DeviceLock::class.java)
+        val lockManager = mock(ManagedVirtualDeviceLockManager::class.java)
+        val lock = mock(ManagedVirtualDeviceLockManager.DeviceLock::class.java)
         `when`(lock.lockCount).thenReturn(1)
         `when`(lockManager.lock(any())).thenReturn(lock)
         `when`(avdService.lockManager).thenReturn(lockManager)

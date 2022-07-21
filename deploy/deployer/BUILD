@@ -44,6 +44,8 @@ iml_module(
         "//tools/base/deploy/deployer:libjava_sites",
         "//tools/adt/idea/.idea/libraries:truth[test]",
         "//tools/base/manifest-parser:studio.android.sdktools.manifest-parser[module]",
+        "//tools/base/adblib:studio.android.sdktools.adblib[module]",
+        "//tools/base/adblib-tools:studio.android.sdktools.adblib.tools[module]",
     ],
 )
 
@@ -64,6 +66,8 @@ coverage_java_library(
     deps = [
         ":java_version",
         "//prebuilts/r8",
+        "//tools/base/adblib",
+        "//tools/base/adblib-tools:adblib.tools",
         "//tools/base/annotations",
         "//tools/base/apkparser:tools.binary-resources",
         "//tools/base/bazel:langtools",
@@ -76,6 +80,7 @@ coverage_java_library(
         "//tools/base/zipflinger",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.protobuf.protobuf-java",
+        "@maven//:org.jetbrains.annotations",
         "@maven//:org.xerial.sqlite-jdbc",
     ],
 )
@@ -142,6 +147,7 @@ coverage_java_test(
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:com.google.truth.truth",
         "@maven//:junit.junit",
+        "@maven//:org.jetbrains.annotations",
         "@maven//:org.mockito.mockito-core",
     ],
 )

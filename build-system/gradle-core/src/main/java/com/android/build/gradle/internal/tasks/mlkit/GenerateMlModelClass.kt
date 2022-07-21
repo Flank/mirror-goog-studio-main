@@ -19,10 +19,12 @@ import com.android.SdkConstants.DOT_TFLITE
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ML_MODELS
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.mlkit.MlConstants
 import com.android.tools.mlkit.MlNames
 import org.gradle.api.file.DirectoryProperty
@@ -39,6 +41,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateMlModelClass : NonIncrementalTask() {
 
     @get:PathSensitive(PathSensitivity.NAME_ONLY)

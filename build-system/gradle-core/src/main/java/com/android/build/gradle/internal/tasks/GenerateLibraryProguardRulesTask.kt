@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableChange
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.generateKeepRulesFromLayoutXmlFile
 import com.android.ide.common.symbols.generateMinifyKeepRules
@@ -56,6 +57,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * collects information from them and generates the keep rules file.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.OPTIMIZATION, TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateLibraryProguardRulesTask : NewIncrementalTask() {
 
     @get:OutputFile

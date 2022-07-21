@@ -191,7 +191,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
-                this,
                 dslInfo,
                 internalServices,
                 renderscriptTargetApi = variantBuilder.renderscriptTargetApi

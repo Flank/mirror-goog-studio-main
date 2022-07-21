@@ -445,7 +445,7 @@ public class DexArchiveMergerTest {
     @NonNull
     private Collection<Path> getLibraryFiles() {
         List<Path> files = Lists.newArrayList();
-        files.add(TestUtils.resolvePlatformPath("android.jar"));
+        files.add(TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP));
         return files;
     }
 }

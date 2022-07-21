@@ -48,7 +48,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.internal.component.external.model.ModuleComponentArtifactIdentifier
 
-abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
+abstract class AbstractFusedLibraryPlugin (
     protected val softwareComponentFactory: SoftwareComponentFactory,
     listenerRegistry: BuildEventsListenerRegistry,
 ): AndroidPluginBaseServices(listenerRegistry), Plugin<Project> {
@@ -68,11 +68,11 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
         }
     }
 
-    abstract val variantScope: SCOPE
+    abstract val variantScope: FusedLibraryVariantScope
 
-    inline fun <reified TASK_SCOPE: FusedLibraryVariantScope> createTasks(
+    internal fun createTasks(
         project: Project,
-        variantScope: TASK_SCOPE,
+        variantScope: FusedLibraryVariantScope,
         tasksCreationActions: List<TaskCreationAction<out DefaultTask>>,
     ) {
         configureTransforms(project)
@@ -97,8 +97,6 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
     abstract val artifactForPublication: Artifact.Single<RegularFile>?
 
     abstract val artifactTypeForPublication: AndroidArtifacts.ArtifactType
-
-    abstract val allowUnmergedArtifacts: Boolean
 
     override fun apply(project: Project) {
         super.basePluginApply(project)
@@ -221,9 +219,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_API)
             )
-            if (allowUnmergedArtifacts) {
-                apiElements.extendsFrom(includedApiUnmerged)
-            }
+            apiElements.extendsFrom(includedApiUnmerged)
         }
 
         // this is the outgoing configuration for JAVA_RUNTIME scoped declarations, it will contain
@@ -234,9 +230,7 @@ abstract class AbstractFusedLibraryPlugin<SCOPE: FusedLibraryVariantScope>(
                 Usage.USAGE_ATTRIBUTE,
                 project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME)
             )
-            if (allowUnmergedArtifacts) {
-                runtimeElements.extendsFrom(includeRuntimeUnmerged)
-            }
+            runtimeElements.extendsFrom(includeRuntimeUnmerged)
         }
 
         maybePublishToMaven(

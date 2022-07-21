@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getErrorFormatMode
 import com.android.build.gradle.internal.services.registerAaptService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -41,6 +42,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
@@ -72,6 +74,7 @@ import java.io.IOException
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val debuggable: Property<Boolean>

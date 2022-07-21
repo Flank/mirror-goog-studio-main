@@ -105,19 +105,28 @@ public final class Flags {
     }
 
     /**
-     * Verifies that the target flag has a unique ID across all flags registered with this Flags
-     * instance.
+     * Registers a new flag with this flag registry.
+     *
+     * <p>Also verifies that the target flag has a unique ID across all flags registered with this
+     * Flags instance.
      *
      * <p>Although it's unlikely one would define flags across multiple threads, this method is
      * still thread-safe just in case.
      */
-    void verifyUniqueId(@NonNull Flag<?> flag) {
+    void register(@NonNull Flag<?> flag) {
         Flag<?> existingFlag = registeredFlags.putIfAbsent(flag.getId(), flag);
         if (existingFlag != null) {
             throw new IllegalArgumentException(
                     String.format(
                             "Flag \"%s\" shares duplicate ID \"%s\" with flag \"%s\"",
                             flag.getDisplayName(), flag.getId(), existingFlag.getDisplayName()));
+        }
+    }
+
+    /** Validates the flags registered with this flags registry. */
+    public void validate() {
+        for (Flag<?> flag : registeredFlags.values()) {
+            flag.validate();
         }
     }
 }

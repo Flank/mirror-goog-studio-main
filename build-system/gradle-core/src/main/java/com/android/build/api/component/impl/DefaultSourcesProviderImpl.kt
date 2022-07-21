@@ -135,7 +135,7 @@ class DefaultSourcesProviderImpl(
                 )
             )
         }
-        if (taskContainer.aidlCompileTask != null) {
+        if (this is ConsumableCreationConfig && buildFeatures.aidl) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(
                     "generated_aidl",
@@ -144,24 +144,6 @@ class DefaultSourcesProviderImpl(
             )
         }
         if (buildFeatures.dataBinding || buildFeatures.viewBinding) {
-            // DATA_BINDING_TRIGGER artifact is created for data binding only (not view binding)
-            if (buildFeatures.dataBinding) {
-                // Under some conditions (e.g., for a unit test variant where
-                // includeAndroidResources == false or testedVariantType != AAR, see
-                // TaskManager.createUnitTestVariantTasks), the artifact may not have been created,
-                // so we need to check its presence first (using internal AGP API instead of Gradle
-                // API---see https://android.googlesource.com/platform/tools/base/+/ca24108e58e6e0dc56ce6c6f639cdbd0fa3b812f).
-                if (!artifacts.getArtifactContainer(InternalArtifactType.DATA_BINDING_TRIGGER)
-                        .needInitialProducer().get()
-                ) {
-                    sourceSets.add(
-                        TaskProviderBasedDirectoryEntryImpl(
-                            name = "databinding_generated",
-                            directoryProvider = artifacts.get(InternalArtifactType.DATA_BINDING_TRIGGER),
-                        )
-                    )
-                }
-            }
             if (this !is UnitTestCreationConfig) {
                 sourceSets.add(
                     TaskProviderBasedDirectoryEntryImpl(
@@ -171,9 +153,6 @@ class DefaultSourcesProviderImpl(
                 )
             }
         }
-        (component as? ConsumableCreationConfig)
-            ?.renderscriptCreationConfig
-            ?.addRenderscriptSources(sourceSets)
         if (buildFeatures.mlModelBinding) {
             sourceSets.add(
                 TaskProviderBasedDirectoryEntryImpl(

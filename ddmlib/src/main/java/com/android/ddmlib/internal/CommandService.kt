@@ -86,7 +86,7 @@ internal class CommandService(private val mListenPort: Int) : Runnable {
 
     fun start() {
         if (startTimer == null) {
-            startTimer = Timer()
+            startTimer = Timer("CommandServiceTimer")
             startTimer!!.schedule(ServerHostTimer(), 0, RETRY_SERVER_MILLIS)
         }
     }

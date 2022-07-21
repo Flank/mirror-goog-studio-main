@@ -21,7 +21,7 @@ import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
 import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.adblib.testingutils.TestingAdbSessionHost
 import com.android.adblib.testingutils.asAdbInputChannel
 import com.android.adblib.testingutils.setTestLoggerMinLevel
 import com.android.adblib.utils.AdbProtocolUtils
@@ -1995,10 +1995,10 @@ class AdbDeviceServicesTest {
     }
 
     private fun createDeviceServices(fakeAdb: FakeAdbServerProvider): AdbDeviceServices {
-        val host = registerCloseable(TestingAdbLibHost())
+        val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
         val session =
-            AdbLibSession.create(
+            AdbSession.create(
                 host,
                 channelProvider,
                 Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)

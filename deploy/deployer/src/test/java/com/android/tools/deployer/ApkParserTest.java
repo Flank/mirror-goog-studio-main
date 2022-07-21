@@ -331,6 +331,20 @@ public class ApkParserTest {
     }
 
     @Test
+    public void testParseSdkManifest() throws DeployerException {
+        Path file = TestUtils.resolveWorkspacePath(BASE + "apks/sdk.apk");
+        Apk apk = new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0);
+
+        assertEquals(1, apk.sdkLibraries.size());
+        String sdkName = apk.sdkLibraries.get(0);
+        assertEquals("com.example.privacysandbox.provider", sdkName);
+
+        file = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        apk = new ApkParser().parsePaths(ImmutableList.of(file.toString())).get(0);
+        assertEquals(0, apk.sdkLibraries.size());
+    }
+
+    @Test
     public void testApkInJarFile() throws IOException, DeployerException {
         Path srcFile = TestUtils.resolveWorkspacePath(BASE + "parserTest/app.apk");
         Path jarFile = Files.createTempFile("container", ".jar");

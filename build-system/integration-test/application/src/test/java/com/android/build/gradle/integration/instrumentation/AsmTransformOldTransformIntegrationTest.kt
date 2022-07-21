@@ -17,10 +17,10 @@
 package com.android.build.gradle.integration.instrumentation
 
 import com.android.SdkConstants.DOT_CLASS
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.AsmApiApiTestUtils
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -156,7 +156,10 @@ class AsmTransformOldTransformIntegrationTest(private val withCoverage: Boolean)
         AsmApiApiTestUtils.configureExtensionForAnnotationAddingVisitor(project)
         AsmApiApiTestUtils.configureExtensionForInterfaceAddingVisitor(project)
 
-        val result = project.executor().run(":app:assembleDebug")
+        val result =
+            project.executor()
+                .with(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL, true)
+                .run(":app:assembleDebug")
 
         assertThat(result.didWorkTasks).containsAtLeastElementsIn(
             listOf(

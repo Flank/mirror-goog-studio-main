@@ -16,6 +16,7 @@
 package com.android.adblib.ddmlibcompatibility.debugging
 
 import com.android.adblib.tools.debugging.JdwpProcess
+import com.android.adblib.tools.debugging.properties
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
 import com.android.ddmlib.DebugViewDumpHandler
@@ -39,6 +40,9 @@ internal class AdblibClientWrapper(
     }
 
     override fun isDdmAware(): Boolean {
+        // Note: This should return `true` when there has been DDMS packet seen
+        //  on the JDWP connection to the process. This is a signal the process
+        //  is a process running on an Android VM.
         TODO("Not yet implemented")
     }
 
@@ -50,17 +54,32 @@ internal class AdblibClientWrapper(
         TODO("Not yet implemented")
     }
 
+    /**
+     * In ddmlib case, this method would return `true` when ddmlib had an active JDWP socket
+     * connection with the process on the device.
+     * Since we use "on-demand" JDWP connection, we return `true` when 1) the process is still
+     * active and 2) we were able to retrieve all process properties during the initial JDWP
+     * connection.
+     */
     override fun isValid(): Boolean {
         return jdwpProcess.scope.isActive &&
-                jdwpProcess.processPropertiesFlow.value.exception == null
+                jdwpProcess.properties.exception == null
     }
 
+    /**
+     * Returns the TCP port (on "localhost") that an "external" debugger (i.e. IntelliJ or
+     * Android Studio) can connect to open a JDWP session with the process.
+     */
     override fun getDebuggerListenPort(): Int {
-        TODO("Not yet implemented")
+        return jdwpProcess.properties.jdwpSessionProxyStatus.socketAddress?.port ?: -1
     }
 
+    /**
+     * Returns `true' if there is an "external" debugger (i.e. IntelliJ or Android Studio)
+     * currently attached to the process via a JDWP session.
+     */
     override fun isDebuggerAttached(): Boolean {
-        TODO("Not yet implemented")
+        return jdwpProcess.properties.jdwpSessionProxyStatus.isExternalDebuggerAttached
     }
 
     override fun executeGarbageCollector() {

@@ -46,6 +46,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -53,6 +54,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
+import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -64,6 +66,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import org.jetbrains.kotlin.gradle.utils.`is`
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
@@ -78,6 +81,7 @@ import javax.inject.Inject
  *
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
 abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 
@@ -111,6 +115,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:IgnoreEmptyDirectories
     abstract val assetsFilesDirectory: DirectoryProperty
 
     @get:InputFiles
@@ -169,10 +174,10 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
 
         jarCreator.use {
             it.addDirectory(
-                assetsFilesDirectory.get().asFile.toPath(),
-                null,
-                null,
-                Relocator(FD_ASSETS)
+                    assetsFilesDirectory.get().asFile.toPath(),
+                    null,
+                    null,
+                    Relocator(FD_ASSETS)
             )
 
             it.addJar(resFiles.get().asFile.toPath(), excludeJarManifest, ResRelocator())
@@ -263,9 +268,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             )
             task.assetsFilesDirectory.setDisallowChanges(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS).map {
-                    it.dir(SdkConstants.FD_ASSETS)
-                }
+                    creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_ASSETS)
             )
             task.resFiles.setDisallowChanges(
                 creationConfig.artifacts.get(

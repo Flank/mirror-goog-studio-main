@@ -27,19 +27,19 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.repository.GradleVersion
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -73,6 +73,7 @@ import javax.inject.Inject
 
 /** Task to invoke lint in a process isolated worker passing in the new lint models. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT])
 abstract class AndroidLintTask : NonIncrementalTask() {
 
     @get:Nested
@@ -613,8 +614,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             task.projectInputs.initialize(variant, lintMode)
             task.outputs.upToDateWhen {
                 // Workaround for b/193244776
-                // Ensure the task runs if baselineFile is set and the file doesn't exist
+                // Ensure the task runs if inputBaselineFile is set and the file doesn't exist,
+                // unless missingBaselineIsEmptyBaseline is true.
                 task.projectInputs.lintOptions.inputBaselineFile.orNull?.asFile?.exists() ?: true
+                        || task.missingBaselineIsEmptyBaseline.get()
             }
             val hasDynamicFeatures = creationConfig.global.hasDynamicFeatures
             task.variantInputs.initialize(
@@ -863,8 +866,10 @@ abstract class AndroidLintTask : NonIncrementalTask() {
             .initializeForStandalone(project, javaPluginConvention, lintOptions, lintMode)
         this.outputs.upToDateWhen {
             // Workaround for b/193244776
-            // Ensure the task runs if inputBaselineFile is set and the file doesn't exist
+            // Ensure the task runs if inputBaselineFile is set and the file doesn't exist, unless
+            // missingBaselineIsEmptyBaseline is true.
             this.projectInputs.lintOptions.inputBaselineFile.orNull?.asFile?.exists() ?: true
+                    || this.missingBaselineIsEmptyBaseline.get()
         }
         // Do not support check dependencies in the standalone lint plugin
         this.variantInputs

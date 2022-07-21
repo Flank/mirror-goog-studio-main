@@ -83,7 +83,8 @@ import org.objectweb.asm.Opcodes;
 public class FixStackFramesDelegateTest {
 
     private static final Set<File> ANDROID_JAR =
-            ImmutableSet.of(TestUtils.resolvePlatformPath("android.jar").toFile());
+            ImmutableSet.of(
+                    TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP).toFile());
 
     private WorkerExecutor executor;
 

@@ -15,7 +15,7 @@
  */
 package com.android.adblib.tools
 
-import com.android.adblib.testing.FakeAdbLibSession
+import com.android.adblib.testing.FakeAdbSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
@@ -89,7 +89,7 @@ class EmulatorConsoleTest {
         fakeEmulator.outputQueue.put("Hello\r\nOK\r\n")
 
         return runBlockingWithTimeout {
-            FakeAdbLibSession().openEmulatorConsole(
+            FakeAdbSession().openEmulatorConsole(
                 localConsoleAddress(fakeEmulator.port),
                 { "" })
         }
@@ -163,7 +163,7 @@ class EmulatorConsoleTest {
         fakeEmulator.outputQueue.put("Android Console: Authentication required\r\nOK\r\n")
 
         val consoleAsync = scope.async {
-            FakeAdbLibSession().openEmulatorConsole(
+            FakeAdbSession().openEmulatorConsole(
                 localConsoleAddress(fakeEmulator.port),
                 { "my secret token" })
         }

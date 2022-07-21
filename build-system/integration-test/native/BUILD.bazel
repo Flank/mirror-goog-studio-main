@@ -8,7 +8,6 @@ DATA = [
     "//prebuilts/studio/sdk:platform-tools",
     "//prebuilts/studio/sdk:platforms/android-19_build_only",
     "//prebuilts/studio/sdk:platforms/android-24_build_only",
-    "//prebuilts/studio/sdk:platforms/android-32_build_only",  # b/236754841
     "//tools/base/build-system:gradle-distrib",
     "//tools/base/build-system/aapt2:aapt2_for_tests",
     "//tools/base/build-system/integration-test:android_platform_for_tests",

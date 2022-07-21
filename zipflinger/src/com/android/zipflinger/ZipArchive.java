@@ -39,6 +39,9 @@ public class ZipArchive implements Archive {
     private ZipInfo zipInfo;
     private boolean modified;
 
+    // The comment to append at the end of the EOCD.
+    @NonNull private byte[] comment;
+
     public ZipArchive(@NonNull Path file) throws IOException {
         this(file, Zip64.Policy.ALLOW);
     }
@@ -55,11 +58,13 @@ public class ZipArchive implements Archive {
             ZipMap map = ZipMap.from(file, true, policy);
             zipInfo = new ZipInfo(map.getPayloadLocation(), map.getCdLoc(), map.getEocdLoc());
             cd = map.getCentralDirectory();
+            comment = map.getComment();
             freestore = new FreeStore(map.getEntries());
         } else {
             zipInfo = new ZipInfo();
             Map<String, Entry> entries = new LinkedHashMap<>();
             cd = new CentralDirectory(ByteBuffer.allocate(0), entries);
+            comment = new byte[0];
             freestore = new FreeStore(entries);
         }
 
@@ -234,7 +239,8 @@ public class ZipArchive implements Archive {
         writeZip64Footers(writer, cdLocation, numEntries);
 
         // Write EOCD
-        Location eocdLocation = EndOfCentralDirectory.write(writer, cdLocation, numEntries);
+        Location eocdLocation =
+                EndOfCentralDirectory.write(writer, cdLocation, numEntries, comment);
         writer.truncate(writer.position());
 
         // Build and return location map
@@ -338,5 +344,12 @@ public class ZipArchive implements Archive {
             String msg = String.format(template, file.toAbsolutePath().toString(), name);
             throw new IllegalStateException(msg);
         }
+    }
+
+    public void setComment(@NonNull byte[] comment) {
+        if (comment == null) {
+            throw new IllegalStateException("Null comment not permitted");
+        }
+        this.comment = comment;
     }
 }

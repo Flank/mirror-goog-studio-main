@@ -1,13 +1,34 @@
-apply plugin: 'java-library'
-apply plugin: 'sdk-java-lib'
-
-dependencies {
-    compile libs.com.android.tools.sdkCommon
-    compile 'com.google.guava:guava:17.0'
-    compile 'com.ibm.icu:icu4j:54.1.1'
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
 
-group = 'com.android.tools'
-archivesBaseName = 'generate-locale-data'
-version = rootProject.ext.baseVersion
-sdkJar.manifest.attributes("Main-Class": "com.android.ide.common.generate.locale.LocaleTableGenerator")
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'application'
+}
+
+
+application {
+    mainClass = 'com.android.ide.common.generate.locale.LocaleTableGenerator'
+    applicationName = "generate-locale-data"
+}
+
+group 'generate-locale-data'
+version '1.0'
+
+repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+dependencies {
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'com.ibm.icu:icu4j:71.1'
+}
+

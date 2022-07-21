@@ -40,7 +40,9 @@ maven_repository(
         "@maven//:com.googlecode.jarjar.jarjar",
         "@maven//:commons-io.commons-io",
         "@maven//:gradle.plugin.org.jetbrains.gradle.plugin.idea-ext.gradle-idea-ext",
+        "@maven//:org.jetbrains.kotlin.kotlin-compiler",
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin",
+        "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core",
         "@maven//:org.jsoup.jsoup",
     ],
     visibility = [

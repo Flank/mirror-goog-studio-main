@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.variant.SigningConfig;
 import com.android.build.api.variant.impl.SigningConfigImpl;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
@@ -51,6 +52,7 @@ import org.gradle.work.DisableCachingByDefault;
  * Report tasks displaying the signing information for all variants.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.HELP})
 public class SigningReportTask extends DefaultTask {
 
     private List<ApkCreationConfig> components;

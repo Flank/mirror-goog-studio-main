@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ASSETS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.features.AssetsTaskCreationAction
@@ -34,6 +35,7 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.ide.common.resources.AssetMerger
 import com.android.ide.common.resources.AssetSet
@@ -67,6 +69,7 @@ import java.io.File
 import java.io.IOException
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING])
 abstract class MergeSourceSetFolders : NewIncrementalTask() {
 
     @get:OutputDirectory

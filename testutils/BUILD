@@ -6,10 +6,6 @@ load("//tools/base/common:version.bzl", "BASE_VERSION")
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.testutils",
-    data = [
-        # For TestUtils.getKotlinVersionForTests.
-        "//tools/buildSrc/base:dependencies.properties",
-    ],
     iml_files = ["android.sdktools.testutils.iml"],
     test_srcs = ["src/main/java"],
     test_tags = ["manual"],  # src/main/java is TEST scoped but contains no runnable tests
@@ -55,10 +51,6 @@ maven_library(
         "src/main/java/**/*.java",
     ]),
     coordinates = "com.android.tools:testutils:" + BASE_VERSION,
-    data = [
-        # For TestUtils.getKotlinVersionForTests.
-        "//tools/buildSrc/base:dependencies.properties",
-    ],
     description = "Internal test utilities for Android Studio and other tools developed alongside Studio",
     lint_baseline = "lint_baseline.xml",
     module_name = "testutils",

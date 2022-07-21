@@ -149,6 +149,7 @@ class AndroidLintTextOutputTaskTest {
         } catch (e: RuntimeException) {
             assertThat(e.message).contains("Lint found errors in the project")
             assertThat(e.message).contains("android {")
+            assertThat(e.message).contains("Foo")
         }
         assertThat((task as TaskForTest).testLogger.lifeCycles).contains("Foo")
         assertThat((task as TaskForTest).testLogger.errors).isEmpty()
@@ -170,6 +171,7 @@ class AndroidLintTextOutputTaskTest {
         } catch (e: RuntimeException) {
             assertThat(e.message).contains("Lint found errors in the project")
             assertThat(e.message).doesNotContain("android {")
+            assertThat(e.message).contains("Foo")
         }
         assertThat((task as TaskForTest).testLogger.lifeCycles).contains("Foo")
         assertThat((task as TaskForTest).testLogger.errors).isEmpty()
@@ -193,6 +195,7 @@ class AndroidLintTextOutputTaskTest {
                 "Lint found fatal errors while assembling a release target."
             )
             assertThat(e.message).contains("android {")
+            assertThat(e.message).contains("Foo")
         }
         assertThat((task as TaskForTest).testLogger.lifeCycles).contains("Foo")
         assertThat((task as TaskForTest).testLogger.errors).isEmpty()

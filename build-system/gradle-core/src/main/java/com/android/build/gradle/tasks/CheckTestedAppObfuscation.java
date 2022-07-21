@@ -19,9 +19,12 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.component.TestVariantCreationConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
+
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -32,6 +35,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 /** Task to check if Proguard needs to be enabled for test plugin. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.VERIFICATION})
 public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
     FileCollection mappingFile;
 

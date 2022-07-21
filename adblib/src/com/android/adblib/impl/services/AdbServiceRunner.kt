@@ -19,8 +19,8 @@ import com.android.adblib.AdbChannel
 import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbFailResponseException
 import com.android.adblib.AdbInputChannel
-import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSessionHost
+import com.android.adblib.AdbSession
 import com.android.adblib.AdbOutputChannel
 import com.android.adblib.AdbProtocolErrorException
 import com.android.adblib.DeviceSelector
@@ -46,9 +46,9 @@ private const val TRANSPORT_ID_BYTE_COUNT = 8
 /**
  * Helper class used to perform service requests with the ADB host
  */
-internal class AdbServiceRunner(val session: AdbLibSession, private val channelProvider: AdbChannelProvider) {
+internal class AdbServiceRunner(val session: AdbSession, private val channelProvider: AdbChannelProvider) {
 
-    val host : AdbLibHost
+    val host : AdbSessionHost
         get() = session.host
 
     private val logger = thisLogger(host)

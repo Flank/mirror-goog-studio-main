@@ -1525,19 +1525,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val name = getInternalMethodName(method)
 
             if (!apiDatabase.containsClass(owner)) {
-                // Not a method in the API database, but it could be an extension method
-                // decorating one of the SDK methods (e.g. "fun AutoCloseable.use(...)"),
-                // so check for that. For now, we've just hardcoded this to the Kotlin
-                // stdlib "use" method, but ideally we'll handle additional
-                if (name == "use" && (owner == KOTLIN_CLOSEABLE_EXT || owner == KOTLIN_AUTO_CLOSEABLE_EXT)) {
-                    val receiverType = call.receiverType as? PsiClassType ?: return
-                    val receiverTypeFqn = context.evaluator.getQualifiedName(receiverType)
-                    checkCast(
-                        call.methodIdentifier ?: call, receiverTypeFqn,
-                        if (owner == KOTLIN_CLOSEABLE_EXT) "java.io.Closeable" else "java.lang.AutoCloseable", implicit = true
-                    )
-                }
-
+                handleKotlinExtensionMethods(name, owner, call, evaluator, method, reference)
                 return
             }
 
@@ -1549,6 +1537,20 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // failure to resolve parameter types
                 ?: return
 
+            visitCall(method, call, reference, containingClass, owner, name, desc)
+        }
+
+        private fun visitCall(
+            method: PsiMethod,
+            call: UCallExpression,
+            reference: UElement,
+            containingClass: PsiClass,
+            owner: String,
+            name: String,
+            desc: String
+        ) {
+            val apiDatabase = apiDatabase ?: return
+            val evaluator = context.evaluator
             if (startsWithEquivalentPrefix(owner, "java/text/SimpleDateFormat") &&
                 name == CONSTRUCTOR_NAME &&
                 desc != "()V"
@@ -1835,6 +1837,49 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 desc,
                 desugaring
             )
+        }
+
+        private fun handleKotlinExtensionMethods(
+            name: String,
+            owner: String,
+            call: UCallExpression,
+            evaluator: JavaEvaluator,
+            method: PsiMethod,
+            reference: UElement
+        ) {
+            // Not a method in the API database, but it could be an extension method
+            // decorating one of the SDK methods (e.g. "fun AutoCloseable.use(...)"),
+            // so check for that. For now, we've just hardcoded this to the Kotlin
+            // stdlib "use" method, but ideally we'll handle additional
+            if (name == "use" && (owner == KOTLIN_CLOSEABLE_EXT || owner == KOTLIN_AUTO_CLOSEABLE_EXT)) {
+                val receiverType = call.receiverType as? PsiClassType ?: return
+                val receiverTypeFqn = context.evaluator.getQualifiedName(receiverType)
+                checkCast(
+                    call.methodIdentifier ?: call, receiverTypeFqn,
+                    if (owner == KOTLIN_CLOSEABLE_EXT) "java.io.Closeable" else "java.lang.AutoCloseable", implicit = true
+                )
+            }
+
+            if (owner == "kotlin.collections.jdk8.CollectionsJDK8Kt") {
+                val mapClass = evaluator.findClass("java.util.Map") ?: return
+                if (name == "getOrDefault") {
+                    // See Collections.kt in the Kotlin stdlib collections.jdk8 package
+                    // It's really owner = "java.util.Map"
+                    visitCall(
+                        method,
+                        call,
+                        reference,
+                        mapClass,
+                        "java.util.Map",
+                        name,
+                        "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"
+                    )
+                } else if (name == "remove") {
+                    // See Collections.kt in the Kotlin stdlib collections.jdk8 package
+                    // It's really owner = "java.util.Map"
+                    visitCall(method, call, reference, mapClass, "java.util.Map", name, "(Ljava/lang/Object;Ljava/lang/Object;)Z")
+                }
+            }
         }
 
         private fun checkAnimator(context: JavaContext, call: UCallExpression) {

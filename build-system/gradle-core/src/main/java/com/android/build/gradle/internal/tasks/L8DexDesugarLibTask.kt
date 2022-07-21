@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -52,6 +53,7 @@ import java.nio.file.Path
  * A task using L8 tool to dex and shrink (if needed) desugar library with keep rules.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
 abstract class L8DexDesugarLibTask : NonIncrementalTask() {
 
     @get:Input

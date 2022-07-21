@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.services.DslServices
 import com.android.builder.core.AbstractBuildType
 import com.android.builder.core.BuilderConstants
+import com.android.builder.core.ComponentType
 import com.android.builder.errors.IssueReporter
 import com.android.builder.internal.ClassFieldImpl
 import com.android.builder.model.BaseConfig
@@ -46,7 +47,8 @@ import javax.inject.Inject
 /** DSL object to configure build types.  */
 abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") constructor(
     private val name: String,
-    private val dslServices: DslServices
+    private val dslServices: DslServices,
+    private val componentType: ComponentType
 ) :
     AbstractBuildType(), CoreBuildType, Serializable,
     VariantDimensionBinaryCompatibilityFix,
@@ -124,7 +126,8 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
 
     private val _postProcessing: PostProcessingBlock = dslServices.newInstance(
         PostProcessingBlock::class.java,
-        dslServices
+        dslServices,
+        componentType
     )
     private var _postProcessingConfiguration: PostProcessingConfiguration? = null
     private var postProcessingDslMethodUsed: String? = null
@@ -496,6 +499,7 @@ abstract class BuildType @Inject @WithLazyInitialization(methodName="lazyInit") 
                 _postProcessing.isRemoveUnusedResources
             }
         set(value) {
+            checkShrinkResourceEligibility(componentType, dslServices, value)
             checkPostProcessingConfiguration(
                 PostProcessingConfiguration.OLD_DSL,
                 "setShrinkResources"

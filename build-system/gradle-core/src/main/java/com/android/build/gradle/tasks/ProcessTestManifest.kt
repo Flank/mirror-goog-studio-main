@@ -32,12 +32,14 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MANIFESTS
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.builder.internal.InstrumentedTestManifestGenerator
 import com.android.builder.internal.UnitTestManifestGenerator
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.MergeFailureException
 import com.android.manifmerger.ManifestProvider
@@ -53,11 +55,11 @@ import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
@@ -82,6 +84,7 @@ import java.io.IOException
  * [AndroidArtifacts.TYPE_METADATA] of the tested app.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
 abstract class ProcessTestManifest : ManifestProcessorTask() {
 
     @get:OutputDirectory
@@ -120,7 +123,7 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             handleProfiling.orNull,
             functionalTest.orNull,
             testLabel.orNull,
-            testManifestFile.orNull,
+            if (testManifestFile.get().asFile.isFile) testManifestFile.get().asFile else null,
             computeProviders(),
             placeholdersValues.get(),
             navJsons,
@@ -366,10 +369,9 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         logger.verbose("Merged manifest saved to $outFile")
     }
 
-    @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:InputFile
-    abstract val testManifestFile: Property<File?>
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:InputFiles // Use InputFiles rather than InputFile to allow the file not to exist
+    abstract val testManifestFile: RegularFileProperty
 
     @get:Input
     abstract val testApplicationId: Property<String>
@@ -471,11 +473,8 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
             super.configure(task)
             val project = task.project
             val variantSources = creationConfig.variantSources
-            // Use getMainManifestIfExists() instead of getMainManifestFilePath() because this task
-            // accepts either a non-null file that exists or a null file, it does not accept a
-            // non-null file that does not exist.
             task.testManifestFile
-                .set(project.provider(variantSources::mainManifestIfExists))
+                .fileProvider(project.provider(variantSources::mainManifestFilePath))
             task.testManifestFile.disallowChanges()
             task.manifestOverlays.set(task.project.provider(variantSources::manifestOverlays))
             task.manifestOverlays.disallowChanges()

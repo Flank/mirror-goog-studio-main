@@ -61,15 +61,11 @@ fun RecipeExecutor.generateCppGameActivity(
         cppVersion = DEFAULT_CMAKE_VERSION
     )
 
+    val libraryName = packageName.deriveNativeLibraryName()
+
     generateManifest(
         moduleData , activityClass, packageName, isLauncher, false,
-        generateActivityTitle = false
-    )
-
-    val libraryName = packageName.deriveNativeLibraryName()
-    mergeXml(
-        androidManifestXml(libraryName),
-        moduleData.manifestDir.resolve("AndroidManifest.xml")
+        generateActivityTitle = false, libraryName = libraryName
     )
 
     addAllKotlinDependencies(moduleData)

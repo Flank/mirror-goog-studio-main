@@ -35,7 +35,7 @@ import java.io.EOFException
 /**
  * Serialize the [DdmsChunkView] into an [AdbOutputChannel].
  *
- * @throws IllegalArgumentException if [DdmsChunkView.data] does not contain exactly
+ * @throws IllegalArgumentException if [DdmsChunkView.payload] does not contain exactly
  * [DdmsChunkView.length] bytes
  *
  * @param workBuffer (Optional) The [ResizableBuffer] used to transfer data
@@ -52,16 +52,16 @@ internal suspend fun DdmsChunkView.writeToChannel(
     workBuffer.appendInt(length)
     channel.writeExactly(workBuffer.forChannelWrite())
 
-    // Write data
-    val byteCount = data.forwardTo(channel, workBuffer)
-    data.rewind()
+    // Write payload
+    val byteCount = payload.forwardTo(channel, workBuffer)
+    payload.rewind()
     checkChunkLength(byteCount)
 }
 
 /**
  * Returns an in-memory copy of this [DdmsChunkView].
  *
- * @throws IllegalArgumentException if [DdmsChunkView.data] does not contain exactly
+ * @throws IllegalArgumentException if [DdmsChunkView.payload] does not contain exactly
  * [DdmsChunkView.length] bytes
  *
  * @param workBuffer (Optional) The [ResizableBuffer] used to transfer data
@@ -75,18 +75,18 @@ internal suspend fun DdmsChunkView.clone(
     ddmsChunk.length = length
     ddmsChunk.type = type
 
-    // Copy data to "workBuffer"
+    // Copy payload to "workBuffer"
     workBuffer.clear()
     val dataCopy = ByteBufferAdbOutputChannel(workBuffer)
-    val byteCount = data.forwardTo(dataCopy)
-    data.rewind()
+    val byteCount = payload.forwardTo(dataCopy)
+    payload.rewind()
     ddmsChunk.checkChunkLength(byteCount)
 
     // Make a copy into our own ByteBuffer
     val bufferCopy = workBuffer.forChannelWrite().copy()
 
-    // Create rewindable data channel
-    ddmsChunk.data = AdbBufferedInputChannel.forByteBuffer(bufferCopy)
+    // Create rewindable channel for payload
+    ddmsChunk.payload = AdbBufferedInputChannel.forByteBuffer(bufferCopy)
 
     return ddmsChunk
 }
@@ -95,11 +95,11 @@ internal suspend fun DdmsChunkView.clone(
  * Provides a view of a [JdwpPacketView] as a "DDMS" packet. A "DDMS" packet is a
  * "JDWP" packet that contains one or more [chunks][DdmsChunkView].
  *
- * Each chunk starts with an 8 bytes header followed by chunk specific data
+ * Each chunk starts with an 8 bytes header followed by chunk specific payload
  *
  *  * chunk type (4 bytes)
  *  * chunk length (4 bytes)
- *  * chunk data (variable, specific to the chunk type)
+ *  * chunk payload (variable, specific to the chunk type)
  */
 internal fun JdwpPacketView.ddmsChunks(
     workBuffer: ResizableBuffer = ResizableBuffer()
@@ -110,32 +110,32 @@ internal fun JdwpPacketView.ddmsChunks(
             throw IllegalArgumentException("JDWP packet is not a DDMS command packet (and is not a reply packet)")
         }
 
-        jdwpPacketView.data.rewind()
+        jdwpPacketView.payload.rewind()
         workBuffer.clear()
         workBuffer.order(DDMS_CHUNK_BYTE_ORDER)
         while (true) {
             try {
-                jdwpPacketView.data.readExactly(workBuffer.forChannelRead(DDMS_CHUNK_HEADER_LENGTH))
+                jdwpPacketView.payload.readExactly(workBuffer.forChannelRead(DDMS_CHUNK_HEADER_LENGTH))
             } catch (e: EOFException) {
                 // Regular exit: there are no more chunks to be read
                 break
             }
-            val data = workBuffer.afterChannelRead()
+            val payloadBuffer = workBuffer.afterChannelRead()
 
             // Prepare chunk source
             val chunk = MutableDdmsChunk().apply {
-                this.type = data.getInt()
-                this.length = data.getInt()
-                val slice = AdbInputChannelSlice(jdwpPacketView.data, this.length)
-                this.data = AdbBufferedInputChannel.forInputChannel(slice)
+                this.type = payloadBuffer.getInt()
+                this.length = payloadBuffer.getInt()
+                val slice = AdbInputChannelSlice(jdwpPacketView.payload, this.length)
+                this.payload = AdbBufferedInputChannel.forInputChannel(slice)
             }
 
             // Emit it to collector
             emit(chunk)
 
-            // Ensure we consume all bytes from the chunk data in case the collector did not
+            // Ensure we consume all bytes from the chunk payload in case the collector did not
             // do anything with it
-            chunk.data.skipRemaining(workBuffer)
+            chunk.payload.skipRemaining(workBuffer)
         }
     }
 }

@@ -348,7 +348,7 @@ class Incident(
                 Comparator.reverseOrder()
             )
             .compare(issue.id, other.issue.id)
-            .compare(severity, other.severity)
+            .compare(other.severity, severity) // deliberately reversed: want higher severity first
             .compare(
                 fileName1,
                 fileName2,

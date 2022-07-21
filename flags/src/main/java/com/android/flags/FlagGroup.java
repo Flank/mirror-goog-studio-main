@@ -25,8 +25,6 @@ public final class FlagGroup {
     private final String displayName;
 
     public FlagGroup(@NonNull Flags flags, @NonNull String name, @NonNull String displayName) {
-        Flag.verifyFlagIdFormat(name);
-        Flag.verifyDisplayTextFormat(displayName);
         this.flags = flags;
         this.name = name;
         this.displayName = displayName;
@@ -45,5 +43,10 @@ public final class FlagGroup {
     @NonNull
     String getName() {
         return name;
+    }
+
+    public void validate() {
+        Flag.verifyFlagIdFormat(name);
+        Flag.verifyDisplayTextFormat(displayName);
     }
 }

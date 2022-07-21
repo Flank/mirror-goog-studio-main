@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.internal.services.FakeServices;
+import com.android.builder.core.ComponentTypeImpl;
 import com.android.builder.model.CodeShrinker;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableList;
@@ -36,21 +37,28 @@ public class PostProcessingBlockTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 PostProcessingBlock.class,
-                new PostProcessingBlock(dslServices, Collections.emptyList()),
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, Collections.emptyList()),
                 original -> {
                     PostProcessingBlock copy =
-                            new PostProcessingBlock(dslServices, Collections.emptyList());
+                            new PostProcessingBlock(
+                                    dslServices,
+                                    ComponentTypeImpl.BASE_APK,
+                                    Collections.emptyList());
                     copy.initWith(original);
 
                     // Explicitly copy the String getter.
                     original.getCodeShrinker();
+
                     original.getCodeShrinkerEnum();
                 });
     }
 
     @Test
     public void testDefaultObject() {
-        PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
+        PostProcessingBlock options =
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, Collections.emptyList());
 
         assertThat(options.getCodeShrinkerEnum()).isEqualTo(CodeShrinker.R8);
         assertThat(options.isObfuscate()).isFalse();
@@ -68,7 +76,8 @@ public class PostProcessingBlockTest {
         File file2 = mock(File.class);
         List<File> files = ImmutableList.of(file1, file2);
 
-        PostProcessingBlock options = new PostProcessingBlock(dslServices, files);
+        PostProcessingBlock options =
+                new PostProcessingBlock(dslServices, ComponentTypeImpl.BASE_APK, files);
 
         assertThat(options.getProguardFiles(EXPLICIT)).containsExactly(file1, file2);
     }
@@ -79,7 +88,9 @@ public class PostProcessingBlockTest {
         File testFile = new File("testFile");
         File consumerFile = new File("consumerFile");
 
-        PostProcessingBlock options = new PostProcessingBlock(dslServices, Collections.emptyList());
+        PostProcessingBlock options =
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, Collections.emptyList());
         options.setCodeShrinker("R8");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
@@ -106,7 +117,8 @@ public class PostProcessingBlockTest {
         File consumerFile = new File("consumerFile");
 
         PostProcessingBlock options =
-                new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, ImmutableList.of(explicitFile));
         options.setCodeShrinker("R8");
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
@@ -115,7 +127,9 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(consumerFile));
 
-        PostProcessingBlock copy = new PostProcessingBlock(dslServices, Collections.emptyList());
+        PostProcessingBlock copy =
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, Collections.emptyList());
 
         copy.initWith(options);
 
@@ -137,7 +151,8 @@ public class PostProcessingBlockTest {
         File consumerFile = new File("consumerFile");
 
         PostProcessingBlock options =
-                new PostProcessingBlock(dslServices, ImmutableList.of(explicitFile));
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, ImmutableList.of(explicitFile));
         options.setObfuscate(true);
         options.setRemoveUnusedCode(true);
         options.setRemoveUnusedResources(true);
@@ -145,7 +160,9 @@ public class PostProcessingBlockTest {
         options.setTestProguardFiles(ImmutableList.of(testFile));
         options.setConsumerProguardFiles(ImmutableList.of(consumerFile));
 
-        PostProcessingBlock copy = new PostProcessingBlock(dslServices, Collections.emptyList());
+        PostProcessingBlock copy =
+                new PostProcessingBlock(
+                        dslServices, ComponentTypeImpl.BASE_APK, Collections.emptyList());
 
         copy.initWith(options);
 

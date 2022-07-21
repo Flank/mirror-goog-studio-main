@@ -16,8 +16,10 @@
 package com.android.adblib.tools.debugging
 
 import com.android.adblib.DeviceSelector
+import com.android.adblib.tools.debugging.impl.JdwpSessionProxy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
+import java.net.InetSocketAddress
 
 /**
  * A JDWP process tracked by [JdwpProcessTracker]. Each instance has a [pid] and a [StateFlow]
@@ -41,7 +43,7 @@ interface JdwpProcess {
 
     /**
      * The [CoroutineScope] whose lifetime matches the lifetime of the process on the device.
-     * This [scope] can be used for example when collecting the [processPropertiesFlow]
+     * This [scope] can be used for example when collecting the [propertiesFlow]
      */
     val scope: CoroutineScope
 
@@ -49,5 +51,33 @@ interface JdwpProcess {
      * A [StateFlow] that describes the current process information as well
      * as changes over time.
      */
-    val processPropertiesFlow: StateFlow<JdwpProcessProperties>
+    val propertiesFlow: StateFlow<JdwpProcessProperties>
 }
+
+/**
+ * Returns a snapshot of the current [JdwpProcessProperties] for this process.
+ *
+ * Note: This is a shortcut for [processPropertiesFlow.value][JdwpProcess.propertiesFlow].
+ *
+ * @see JdwpProcess.propertiesFlow
+ */
+val JdwpProcess.properties: JdwpProcessProperties
+    get() = this.propertiesFlow.value
+
+
+data class JdwpSessionProxyStatus(
+    /**
+     * The [InetSocketAddress] (typically on `localhost`) a Java debugger can use to open a
+     * JDWP debugging session with the Android process.
+     *
+     * @see JdwpSessionProxy
+     */
+    var socketAddress: InetSocketAddress? = null,
+
+    /**
+     * `true` if there is an active JDWP debugging session on [socketAddress].
+     *
+     * @see JdwpSessionProxy
+     */
+    var isExternalDebuggerAttached: Boolean = false,
+)

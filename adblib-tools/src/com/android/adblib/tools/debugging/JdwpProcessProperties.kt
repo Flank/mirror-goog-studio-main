@@ -15,6 +15,7 @@
  */
 package com.android.adblib.tools.debugging
 
+import com.android.adblib.tools.debugging.impl.JdwpSessionProxy
 import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkTypes
 import com.android.adblib.tools.debugging.packets.ddms.chunks.DdmsFeatChunk
 import com.android.adblib.tools.debugging.packets.ddms.chunks.DdmsReaqChunk
@@ -79,7 +80,14 @@ data class JdwpProcessProperties(
      * `true` if the process is waiting for a debugger to attach.
      * `false` if we don't know or if a debugger is already attached.
      */
-    val isWaitingForDebugger: Boolean = false,
+    var isWaitingForDebugger: Boolean = false,
+
+    /**
+     * The status of JDWP session proxy between an external debugger and the Android Process.
+     *
+     * @see JdwpSessionProxy
+     */
+    val jdwpSessionProxyStatus: JdwpSessionProxyStatus = JdwpSessionProxyStatus(),
 
     /**
      * List of features reported by the [DdmsFeatChunk] packet

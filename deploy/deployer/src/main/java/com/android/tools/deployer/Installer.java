@@ -158,6 +158,22 @@ public abstract class Installer {
         return response;
     }
 
+    public Deploy.RootPushInstallResponse rootPushInstall(Deploy.RootPushInstallRequest request)
+            throws IOException {
+        Deploy.InstallerRequest.Builder reqBuilder = buildRequest("rootpushinstall");
+        reqBuilder.setRootPushInstallRequest(request);
+        Deploy.InstallerRequest req = reqBuilder.build();
+
+        Deploy.InstallerResponse resp = send(req, Timeouts.CMD_ROOT_PUSH_INSTALL);
+        if (!resp.hasRootPushInstallResponse()) {
+            errorAsymetry(req, resp);
+        }
+
+        Deploy.RootPushInstallResponse response = resp.getRootPushInstallResponse();
+        logger.verbose("installer pushinstall: " + response.getStatus().toString());
+        return response;
+    }
+
     /**
      * Verify the App's current OverlayID. The app's OverlayID will not be change should it differs.
      */

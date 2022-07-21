@@ -21,9 +21,11 @@ import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
@@ -40,6 +42,7 @@ import java.nio.file.Files
  * [AndroidLintTask] fails
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT])
 abstract class AndroidLintCopyReportTask : UnsafeOutputsTask("The lintOptions DSL has configured potentially multiple lint tasks to write to the same location, but task should not have overlapping outputs.") {
 
     @get:Internal

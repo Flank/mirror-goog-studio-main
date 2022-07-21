@@ -24,11 +24,13 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
 import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.tasks.AarMetadataTask
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.Action
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.CopySpec
@@ -48,6 +50,7 @@ import java.util.Locale
 
 /** Custom Zip task to allow archive name to be set lazily. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.AAR_PACKAGING])
 abstract class BundleAar : Zip(), VariantAwareTask {
 
     @Internal

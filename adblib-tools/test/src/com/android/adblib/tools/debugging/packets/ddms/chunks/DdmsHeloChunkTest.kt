@@ -47,7 +47,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -82,7 +82,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -118,7 +118,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -155,7 +155,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -193,7 +193,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act
@@ -232,7 +232,7 @@ class DdmsHeloChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.HELO
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act

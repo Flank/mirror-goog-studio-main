@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Detector
 
@@ -95,7 +96,10 @@ class ApiDetectorDesugaringTest : AbstractCheckTest() {
             manifest().minSdk(1),
             gradleVersion24_language17,
             tryWithResources
-        ).run().expect(expected)
+        )
+            // Can't easily test 1.7 desugaring in partial mode (and minor corner case since AGP has default to 1.8 f
+            .skipTestModes(TestMode.PARTIAL)
+            .run().expect(expected)
     }
 
     fun testTryWithResourcesDesugar() {

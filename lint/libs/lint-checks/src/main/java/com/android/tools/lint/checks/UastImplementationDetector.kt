@@ -79,6 +79,8 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
         private fun isAllowedUastImplementation(fqName: String): Boolean = when (fqName) {
             "org.jetbrains.uast.java.JavaUastLanguagePlugin", // plugin
             "org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin", // plugin
+            "org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService", // service
+            // TODO(b/229742431): remove FE1.0-specific uses
             "org.jetbrains.uast.kotlin.KotlinUastResolveProviderService", // service
             "org.jetbrains.uast.kotlin.KotlinBinaryExpressionWithTypeKinds", // See below
             "org.jetbrains.uast.kotlin.KotlinBinaryOperators", // no API to retrieve lang-specific op

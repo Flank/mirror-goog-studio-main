@@ -27,14 +27,10 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Set;
 
-/** host:features returns list of features. */
-// TODO: Refactor this class. Split in two. One for Device features and one fore Host features.
+/** host:features returns list of features supported by both the device and the HOST. */
 public class FeaturesCommandHandler extends HostCommandHandler {
 
     @NonNull public static final String COMMAND = "features";
-    @NonNull public static final String HOST_COMMAND = "host-features";
-
-    // By default, HOST supports all features.,
 
     @Override
     public boolean invoke(
@@ -43,21 +39,19 @@ public class FeaturesCommandHandler extends HostCommandHandler {
             @Nullable DeviceState device,
             @NonNull String args) {
         try {
-            OutputStream out = responseSocket.getOutputStream();
             if (device == null) {
-                // This is a host-features request
-                CommandHandler.writeOkayResponse(
-                        out, String.join(",", fakeAdbServer.getFeatures()));
+                CommandHandler.writeFailMissingDevice(responseSocket.getOutputStream(), COMMAND);
+                return false;
             }
-            else {
-                // This is a features request. It should contain only the features supported by
-                // both the server and the device.
-                Set deviceFeatures = device.getFeatures();
-                Set hostFeatures = fakeAdbServer.getFeatures();
-                Set commonFeatures = new HashSet(deviceFeatures);
-                commonFeatures.retainAll(hostFeatures);
-                CommandHandler.writeOkayResponse(out, String.join(",", commonFeatures));
-            }
+
+            OutputStream out = responseSocket.getOutputStream();
+            // This is a features request. It should contain only the features supported by
+            // both the server and the device.
+            Set deviceFeatures = device.getFeatures();
+            Set hostFeatures = fakeAdbServer.getFeatures();
+            Set commonFeatures = new HashSet(deviceFeatures);
+            commonFeatures.retainAll(hostFeatures);
+            CommandHandler.writeOkayResponse(out, String.join(",", commonFeatures));
         } catch (IOException e) {
             // Ignored (this is from responseSocket.getOutputStream())
         }

@@ -30,6 +30,7 @@ import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.r8.ClassFileProviderFactory
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.sdklib.AndroidVersion
 import com.google.common.io.Closer
 import org.gradle.api.file.ConfigurableFileCollection
@@ -48,6 +49,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
 abstract class DexFileDependenciesTask: NonIncrementalTask() {
 
     @get:OutputDirectory

@@ -15,9 +15,12 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
+import com.android.adblib.ddmlibcompatibility.testutils.FakeIDevice
 import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener
+import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED
+import com.android.adblib.ddmlibcompatibility.testutils.TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED
 import com.android.adblib.ddmlibcompatibility.testutils.connectTestDevice
-import com.android.adblib.ddmlibcompatibility.testutils.createAdbLibSession
+import com.android.adblib.ddmlibcompatibility.testutils.createAdbSession
 import com.android.adblib.ddmlibcompatibility.testutils.disconnectTestDevice
 import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
@@ -26,8 +29,6 @@ import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.testing.FakeAdbRule
 import junit.framework.Assert
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.job
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
@@ -53,32 +54,71 @@ class AdbLibDeviceClientManagerTest {
     }
 
     @Test
-    fun testScopeIsCancelledWhenDeviceDisconnects() = runBlockingWithTimeout {
+    fun testTrackingWaitsUntilDeviceIsTracked() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
-        val (device, _) = fakeAdb.connectTestDevice()
+
+        // Act
+        val fakeIDevice = FakeIDevice("1234")
+        val deviceClientManager =
+            clientManager.createDeviceClientManager(
+                fakeAdb.bridge,
+                fakeIDevice,
+                listener
+            )
+
+        // Delay a little, to make sure deviceClientManager has to wait a little
+        // before it starts tracking the device. Note the delay here should be less than
+        // the DEVICE_TRACKER_WAIT_TIMEOUT timeout used by AdbLibDeviceClientManager.
+        delay(500)
+        val clientSizeBeforeTracking = deviceClientManager.clients.size
+        val (_, deviceState) = fakeAdb.connectTestDevice()
+        deviceState.startClient(10, 0, "foo.bar", false)
+
+        // If things work as expected, the client list should be updated
+        yieldUntil {
+            deviceClientManager.clients.size == 1
+        }
+
+        // Assert
+        Assert.assertEquals(0, clientSizeBeforeTracking)
+    }
+
+    @Test
+    fun testScopeIsCancelledWhenDeviceDisconnects() = runBlockingWithTimeout {
+        // Prepare
+        val session = registerCloseable(fakeAdb.createAdbSession())
+        val clientManager = AdbLibClientManager(session)
+        val listener = TestDeviceClientManagerListener()
+        val (device, deviceState) = fakeAdb.connectTestDevice()
         val deviceClientManager =
             clientManager.createDeviceClientManager(
                 fakeAdb.bridge,
                 device,
                 listener
             )
+        deviceState.startClient(10, 0, "foo.bar", false)
+        deviceState.startClient(12, 0, "foo.bar.baz", false)
+        yieldUntil {
+            deviceClientManager.clients.size == 2
+        }
 
         // Act
         fakeAdb.disconnectTestDevice(device.serialNumber)
-        deviceClientManager.deviceScope.coroutineContext.job.join()
+        yieldUntil {
+            deviceClientManager.clients.size == 0
+        }
 
         // Assert
-        Assert.assertFalse(deviceClientManager.deviceScope.isActive)
-        Assert.assertEquals(0, listener.events.size)
+        Assert.assertEquals(1, listener.events().size)
     }
 
     @Test
     fun testClientListIsUpdatedWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -93,7 +133,9 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         deviceState.startClient(12, 0, "foo.bar.baz", false)
         yieldUntil {
-            deviceClientManager.clients.size == 2
+            // Wait for both processes to show up and for their JDWP proxy to start
+            deviceClientManager.clients.size == 2 &&
+                    deviceClientManager.clients.all { it.debuggerListenPort > 0 }
         }
 
         // Assert
@@ -110,8 +152,8 @@ class AdbLibDeviceClientManagerTest {
         assertThrows { client.isDdmAware }
         assertThrows { client.kill() }
         Assert.assertTrue(client.isValid)
-        assertThrows { client.debuggerListenPort }
-        assertThrows { client.isDebuggerAttached }
+        Assert.assertTrue(client.debuggerListenPort > 0)
+        Assert.assertFalse(client.isDebuggerAttached)
         assertThrows { client.executeGarbageCollector() }
         assertThrows { client.startMethodTracer() }
         assertThrows { client.stopMethodTracer() }
@@ -140,7 +182,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testClientListIsUpdatedWhenProcessesStop() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -169,7 +211,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -184,21 +226,22 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         deviceState.startClient(12, 0, "foo.bar.baz", false)
         yieldUntil {
-            listener.events.isNotEmpty()
+            listener.events().isNotEmpty()
         }
 
         // Assert
-        Assert.assertTrue(listener.events.size >= 1)
-        Assert.assertSame(deviceClientManager, listener.events[0].deviceClientManager)
-        Assert.assertSame(fakeAdb.bridge, listener.events[0].bridge)
-        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED, listener.events[0].kind)
-        Assert.assertNull(listener.events[0].client)
+        Assert.assertTrue(listener.events().isNotEmpty())
+        val firstEvent = listener.events()[0]
+        Assert.assertSame(deviceClientManager, firstEvent.deviceClientManager)
+        Assert.assertSame(fakeAdb.bridge, firstEvent.bridge)
+        Assert.assertEquals(PROCESS_LIST_UPDATED, firstEvent.kind)
+        Assert.assertNull(firstEvent.client)
     }
 
     @Test
     fun testListenerIsCalledWhenProcessesEnd() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -213,27 +256,28 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         deviceState.startClient(12, 0, "foo.bar.baz", false)
         yieldUntil {
-            listener.events.isNotEmpty()
+            listener.events().isNotEmpty()
         }
-        val eventCount = listener.events.size
+        listener.clearEvents()
 
         deviceState.stopClient(10)
         deviceState.stopClient(12)
         yieldUntil {
-            listener.events.size > eventCount
+            listener.filterEvents { events -> events.any { it.kind == PROCESS_LIST_UPDATED } } &&
+                deviceClientManager.clients.isEmpty()
         }
 
         // Assert
-        Assert.assertSame(deviceClientManager, listener.events.last().deviceClientManager)
-        Assert.assertSame(fakeAdb.bridge, listener.events.last().bridge)
-        Assert.assertEquals(TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED, listener.events.last().kind)
-        Assert.assertNull(listener.events.last().client)
+        val processListUpdatedEvent = listener.events().last { it.kind == PROCESS_LIST_UPDATED }
+        Assert.assertSame(deviceClientManager, processListUpdatedEvent.deviceClientManager)
+        Assert.assertSame(fakeAdb.bridge, processListUpdatedEvent.bridge)
+        Assert.assertNull(processListUpdatedEvent.client)
     }
 
     @Test
     fun testListenerIsCalledWhenProcessPropertiesChange() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbLibSession())
+        val session = registerCloseable(fakeAdb.createAdbSession())
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -247,21 +291,20 @@ class AdbLibDeviceClientManagerTest {
         // Act
         deviceState.startClient(10, 0, "foo.bar", false)
         yieldUntil {
-            // Temporary implementation updates process properties every 100 millis
-            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED }
+            listener.filterEvents { events -> events.any { it.kind == PROCESS_NAME_UPDATED } }
                     && deviceClientManager.clients.any { it.clientData.clientDescription == "foo.bar" }
         }
 
         // Assert
         Assert.assertTrue(
             "Should have received a process list changed event",
-            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED })
+            listener.events().any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED })
 
         Assert.assertTrue(
             "Should have received at least one process name changed event",
-            listener.events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED })
+            listener.events().any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED })
 
-        val event = listener.events.last { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED }
+        val event = listener.filterEvents { events -> events.last { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED } }
         Assert.assertSame(event.deviceClientManager, deviceClientManager)
         Assert.assertNotNull(event.client)
         Assert.assertEquals("FakeVM", event.client!!.clientData.vmIdentifier)

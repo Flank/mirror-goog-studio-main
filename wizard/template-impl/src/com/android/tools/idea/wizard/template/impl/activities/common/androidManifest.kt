@@ -27,7 +27,8 @@ fun androidManifestXml(
   isLibraryProject: Boolean,
   activityThemeName: String,
   generateActivityTitle: Boolean = true,
-  isResizeable: Boolean = false
+  isResizeable: Boolean = false,
+  libraryName: String = ""
 ): String {
   val appName = if (isNewModule) "app_name" else "title_" + activityToLayout(activityClass)
 
@@ -47,6 +48,8 @@ fun androidManifestXml(
 
   val toolsNameSpace = renderIf(isResizeable) {"xmlns:tools=\"http://schemas.android.com/tools\""}
 
+  val appNameBlock = renderIf(appName.isNotEmpty()) { "<meta-data android:name=\"android.app.lib_name\" android:value=\"$libraryName\" />" }
+
   val launcher = isLauncher || isNewModule
   return """
     <manifest xmlns:android ="http://schemas.android.com/apk/res/android"
@@ -58,6 +61,7 @@ fun androidManifestXml(
     $themeBlock
     $isResizeableBlock>
     ${commonActivityBody(launcher, isLibraryProject)}
+    $appNameBlock
     </activity>
     </application>
     </manifest>

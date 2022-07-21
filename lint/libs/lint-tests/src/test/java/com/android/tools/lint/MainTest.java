@@ -42,6 +42,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.security.Permission;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import kotlin.io.FilesKt;
@@ -808,6 +809,7 @@ public class MainTest extends AbstractCheckTest {
                                         + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                                         + "    <Button android:id='@+id/duplicated'/>\n"
                                         + "    <Button android:id='@+id/duplicated'/>\n"
+                                        + "    <ImageButton/>\n"
                                         + "</LinearLayout>\n"));
         checkDriver(
                 ""
@@ -823,7 +825,12 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {
-                    "-w", "--disable", "LintError,UsesMinSdkAttributes", project.getPath()
+                    "--info",
+                    "ContentDescription",
+                    "-w",
+                    "--disable",
+                    "LintError,UsesMinSdkAttributes",
+                    project.getPath()
                 });
     }
 
@@ -1289,6 +1296,42 @@ public class MainTest extends AbstractCheckTest {
 
                 // Args
                 new String[] {"--version", "--check", "HardcodedText", project.getPath()});
+    }
+
+    public void testSetExitCode() {
+        if (System.getSecurityManager() != null) {
+            // When running in a sandbox such as Bazel we won't be allowed to modify the security
+            // manager:
+            // "java.lang.SecurityException: GoogleTestSecurityManager is not designed to handle
+            // other security managers."
+            System.out.println("Skipping " + this.getClass().getSimpleName() + "." + getName());
+            return;
+        }
+
+        try {
+            // Trap System.exit calls:
+            System.setSecurityManager(
+                    new SecurityManager() {
+                        @Override
+                        public void checkPermission(Permission perm) {}
+
+                        @Override
+                        public void checkExit(int status) {
+                            throw new SecurityException(
+                                    "Ignoring System.exit(" + status + ") from unit test");
+                        }
+                    });
+
+            // Note that we're call Main.main here, not new Main().run as done by other tests;
+            // this is what will *really* call System.exit.
+            Main.main(new String[] {"--version"});
+            fail("System.exit was not called");
+        } catch (SecurityException e) {
+            assertEquals("Ignoring System.exit(0) from unit test", e.getMessage());
+        } finally {
+            // Re-enable system exit for unit test
+            System.setSecurityManager(null);
+        }
     }
 
     @Override

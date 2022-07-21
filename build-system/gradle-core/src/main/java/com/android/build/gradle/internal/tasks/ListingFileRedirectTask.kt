@@ -21,6 +21,7 @@ import com.android.ide.common.build.ListingFileRedirect
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -45,6 +46,7 @@ import org.gradle.work.DisableCachingByDefault
  * execution should be so fast, that it outweighs the benefits in performance.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
 abstract class ListingFileRedirectTask: NonIncrementalTask() {
 
     @get:OutputFile

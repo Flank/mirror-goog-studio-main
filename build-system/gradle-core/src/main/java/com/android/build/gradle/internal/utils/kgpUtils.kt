@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
-import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.utils.appendCapitalized
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -101,7 +100,10 @@ fun getKotlinPluginVersion(project: Project): String? {
     val plugin = project.plugins.findPlugin("kotlin-android") ?: return null
     return try {
         // No null checks below because we're catching all exceptions.
-        val method = plugin.javaClass.getMethod("getKotlinPluginVersion")
+        // KGP 1.7.0+ has getPluginVersion and older version have getKotlinPluginVersion
+        val method = plugin.javaClass.methods.first {
+            it.name == "getKotlinPluginVersion" || it.name == "getPluginVersion"
+        }
         method.isAccessible = true
         method.invoke(plugin).toString()
     } catch (e: Throwable) {
@@ -174,6 +176,15 @@ private fun getKotlinOptionsValueIfSet(task: Task, extension: BaseExtension, met
     return defaultValue
 }
 
+/** User reflection as API has been removed in newer KGP versions. */
+private fun enableUseIr(task: Task) {
+    // We need reflection because AGP and KGP can be in different class loaders.
+    val getKotlinOptions = task.javaClass.getMethod("getKotlinOptions")
+    val kotlinOptions = getKotlinOptions.invoke(task)
+    val method = kotlinOptions.javaClass.getMethod("setUseIR", Boolean::class.java)
+    method.invoke(kotlinOptions, true)
+}
+
 private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, project: Project) {
     val buildService: AnalyticsConfiguratorService =
             getBuildService(
@@ -212,7 +223,7 @@ fun addComposeArgsToKotlinCompile(
         kotlinVersion?.let { version ->
             when {
                 version >= irBackendByDefault -> return@let // IR is enabled by default
-                version >= irBackendIntroduced -> it.kotlinOptions.useIR = true
+                version >= irBackendIntroduced -> enableUseIr(it)
             }
         }
         val extraFreeCompilerArgs = mutableListOf(

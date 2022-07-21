@@ -37,7 +37,6 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:android_platform_for_tests",
     "//tools/base/build-system/integration-test:androidx_test_latest",
     "//tools/base/build-system/integration-test:dagger_prebuilts",
-    "//tools/base/build-system/integration-test:gradle_kotlin_dsl_prebuilts",
     "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
     "//tools/base/build-system/integration-test:support_library_latest",
     "//tools/base/build-system/integration-test:test-projects/databinding",
@@ -81,8 +80,7 @@ coverage_java_test(
         "tools/base/build-system/integration-test/support_library_latest.manifest," +
         "tools/base/build-system/integration-test/androidx_test_latest.manifest," +
         "tools/base/build-system/integration-test/dagger_prebuilts.manifest," +
-        "tools/base/build-system/integration-test/kotlin_gradle_plugin_prebuilts.manifest," +
-        "tools/base/build-system/integration-test/gradle_kotlin_dsl_prebuilts.manifest",
+        "tools/base/build-system/integration-test/kotlin_gradle_plugin_prebuilts.manifest",
     ],
     shard_count = 8,
     tags = [

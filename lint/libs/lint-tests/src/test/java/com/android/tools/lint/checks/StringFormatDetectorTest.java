@@ -25,7 +25,7 @@ import com.android.tools.lint.detector.api.Detector;
 import java.util.HashSet;
 import java.util.Set;
 
-@SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
+@SuppressWarnings({"ClassNameDiffersFromFileName"})
 public class StringFormatDetectorTest extends AbstractCheckTest {
 
     @Override
@@ -2140,6 +2140,20 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "    <string name=\"test\">test: %1$s</string>\n"
                                         + "</resources>\n"
                                         + "\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void test238797451() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "class Test {\n"
+                                        + "    public void test(Throwable e) {\n"
+                                        + "        String s = String.format(\"Exception [%s] : %s\", e);\n"
+                                        + "    }"
+                                        + "}"))
                 .run()
                 .expectClean();
     }

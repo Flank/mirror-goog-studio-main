@@ -28,6 +28,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 
@@ -91,6 +92,7 @@ class ProcessLibraryManifestTest {
         task.reportFile.set(temporaryFolder.newFile())
         task.mergeBlameFile.set(temporaryFolder.newFile())
         task.disableMinSdkVersionCheck.set(false)
+        task.mainManifest.set(File("/does/not/exist"))
         task.taskAction()
         assertThat(task.manifestOutputFile.get().asFile.readText(Charsets.UTF_8))
                 .contains("package=\"random.word\"")

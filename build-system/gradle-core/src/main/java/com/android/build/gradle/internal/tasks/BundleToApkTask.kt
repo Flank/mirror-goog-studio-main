@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
 import com.android.utils.FileUtils
@@ -50,6 +51,7 @@ import java.util.concurrent.ForkJoinPool
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.APK_PACKAGING])
 abstract class BundleToApkTask : NonIncrementalTask() {
 
     @get:InputFiles

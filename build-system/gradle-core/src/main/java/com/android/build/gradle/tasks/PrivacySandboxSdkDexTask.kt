@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInter
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.DEFAULT_NUM_BUCKETS
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTaskDelegate
@@ -31,6 +32,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.sdklib.AndroidVersion
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -47,6 +49,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
 abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
 
     @get:Incremental
@@ -130,9 +133,9 @@ abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
         override fun configure(task: PrivacySandboxSdkDexTask) {
             task.configureVariantProperties("", task.project.gradle.sharedServices)
             task.classes.fromDisallowChanges(
-                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.CLASSES_WITH_REWRITTEN_R_CLASS_REFS)
+                creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES)
             )
-            val minSdk = creationConfig.extension.minSdk ?: 1
+            val minSdk = creationConfig.minSdkVersion.apiLevel
             task.dexParams.apply {
                 debuggable.setDisallowChanges(false)
                 // Enable desugaring by default as speed isn't a high priority for the privacy

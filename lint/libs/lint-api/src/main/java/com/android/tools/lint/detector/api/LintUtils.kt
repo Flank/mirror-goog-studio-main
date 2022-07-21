@@ -93,7 +93,7 @@ import com.google.common.io.ByteStreams
 import com.intellij.ide.util.JavaAnonymousClassesHelper
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
-import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.CommonClassNames
@@ -113,24 +113,15 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.ClassUtil
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.psi.util.PsiTypesUtil
 import com.intellij.psi.util.PsiUtil
-import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
-import org.jetbrains.kotlin.asJava.elements.KtLightMemberImpl
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtConstructor
 import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
-import org.jetbrains.kotlin.psi.psiUtil.isExtensionDeclaration
-import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
-import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
 import org.jetbrains.uast.UArrayAccessExpression
-import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -141,10 +132,8 @@ import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UastFacade
 import org.jetbrains.uast.getContainingUFile
-import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
+import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.skipParenthesizedExprUp
-import org.jetbrains.uast.toUElement
-import org.jetbrains.uast.util.isAssignment
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -594,158 +583,24 @@ fun assertionsEnabled(): Boolean = LintJavaUtils.assertionsEnabled()
  * array access expression.
  *
  * Temporary workaround for
- * https://youtrack.jetbrains.com/issue/KTIJ-18765:
+ * https://youtrack.jetbrains.com/issue/KTIJ-18765
  */
+// TODO(kotlin-uast-cleanup): remove this when a fix for https://youtrack.jetbrains.com/issue/KTIJ-18765 arrives.
 fun UArrayAccessExpression.resolveOperator(): PsiMethod? {
     val receiver = this.receiver
     // for normal arrays this is typically PsiArrayType; a PsiClassType
     // is a sign that it's an operator overload
-    val type = receiver.getExpressionType() as? PsiClassType ?: return null
+    if (receiver.getExpressionType() !is PsiClassType) return null
 
     // No UAST accessor method to find the corresponding get/set methods; see
     // https://youtrack.jetbrains.com/issue/KTIJ-18765
     // Instead we'll search ourselves.
 
-    // First try Kotlin resolving service
-    val source = resolveKotlinCall(sourcePsi)
-    if (source is PsiMethod) {
-        return source
-    } // else can be KtFunction which is referenced by methods; see light member check below
-
-    val clz = type.resolve() ?: return null
-    val parent = this.uastParent as? UBinaryExpression
-    val isSetter = parent != null && parent.isAssignment()
-    val indices = this.indices
-    val parameterCount = indices.size
-    val methods = clz.findMethodsByName(if (isSetter) "set" else "get", true)
-
-    if (source != null) {
-        for (method in methods) {
-            if (method is KtLightMemberImpl<*> && method.lightMemberOrigin?.originalElement === source) {
-                return method
-            }
-        }
-
-        // Extension functions can be in a different compilation unit and therefore class.
-        // Try to find it more directly.
-        if (source is KtNamedFunction && source.isExtensionDeclaration()) {
-            val method = source.toUElement()
-            if (method is UMethod) {
-                return method
-            }
-        }
-    }
-
-    val expectedCount = if (isSetter) parameterCount + 1 else parameterCount
-    if (methods.isEmpty()) {
-        // Should not happen (if the code compiles)
-        return null
-    } else if (methods.size == 1) {
-        // There's only one set method; this must be it
-        val only = methods[0]
-        return if (expectedCount == only.parameterList.parametersCount) only else null
-    }
-
-    val arityCountMatch = methods.singleOrNull { method ->
-        val parameters = method.parameterList
-        parameters.parametersCount == expectedCount
-    }
-    if (arityCountMatch != null) {
-        // Only one method has the right number of parameters
-        return arityCountMatch
-    }
-
-    // Need to match by types
-    val typeEqualsMatch = methods.singleOrNull { method ->
-        val parameters = method.parameterList.parameters
-        if (parameters.size == expectedCount) {
-            var matches = true
-            for (i in 0 until parameterCount) {
-                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = true)) {
-                    matches = false
-                    break
-                }
-            }
-            if (isSetter && matches) {
-                // Check type of last parameter
-                val assignmentType = parent?.rightOperand?.getExpressionType()
-                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = true)) {
-                    matches = false
-                }
-            }
-            matches
-        } else {
-            false
-        }
-    }
-
-    if (typeEqualsMatch != null) {
-        // Only one type matched by type equality
-        return typeEqualsMatch
-    }
-
-    // Need to match by wildcard/erasure and hierarchy checks
-    val typeMatch = methods.firstOrNull { method ->
-        val parameters = method.parameterList.parameters
-        if (parameters.size == expectedCount) {
-            var matches = true
-            for (i in 0 until parameterCount) {
-                if (!sameType(indices[i].getExpressionType(), parameters[i].type, equalsOnly = false)) {
-                    matches = false
-                    break
-                }
-            }
-            if (isSetter && matches) {
-                // Check type of last parameter
-                val assignmentType = parent?.rightOperand?.getExpressionType()
-                if (!sameType(assignmentType, parameters[parameterCount].type, equalsOnly = false)) {
-                    matches = false
-                }
-            }
-            matches
-        } else {
-            false
-        }
-    }
-
-    return typeMatch
-}
-
-internal fun resolveKotlinCall(sourcePsi: PsiElement?): PsiElement? {
-    // First try Kotlin resolving service
+    // First try Kotlin resolving service (base version, not FE1.0 variant)
     val ktElement = sourcePsi as? KtElement ?: return null
-    val service = sourcePsi.project.getService(KotlinUastResolveProviderService::class.java)
+    val baseService = ApplicationManager.getApplication().getService(BaseKotlinUastResolveProviderService::class.java)
         ?: return null
-    val bindingContext = service.getBindingContext(ktElement)
-    val resolvedCall = ktElement.getResolvedCall(bindingContext) ?: return null
-    return resolvedCall.resultingDescriptor.toSource()
-        ?: LintJavaUtils.resolveToPsiMethod(ktElement, resolvedCall.resultingDescriptor, null)
-}
-
-// See src/org/jetbrains/uast/kotlin/internal/kotlinInternalUastUtils.kt
-private fun DeclarationDescriptor.toSource(): PsiElement? {
-    return try {
-        DescriptorToSourceUtils.getEffectiveReferencedDescriptors(this)
-            .asSequence()
-            .mapNotNull { DescriptorToSourceUtils.getSourceFromDescriptor(it) }
-            .firstOrNull()
-    } catch (e: ProcessCanceledException) {
-        throw e
-    } catch (e: Exception) {
-        null
-    }
-}
-
-private fun sameType(type1: PsiType?, type2: PsiType?, equalsOnly: Boolean): Boolean {
-    val equals = PsiTypesUtil.compareTypes(type1, type2, true)
-    if (equals || equalsOnly) {
-        return equals
-    }
-
-    type1 ?: return false
-    type2 ?: return false
-
-    return TypeConversionUtil.areTypesConvertible(type2, type1)
+    return baseService.resolveCall(ktElement)
 }
 
 /**

@@ -44,7 +44,9 @@ class JdkImageTransformDelegateTest {
 
     fun copyCfsmJarToTempFolder(): File {
         val originalCfsmJar =
-                TestUtils.resolvePlatformPath(SdkConstants.FN_CORE_FOR_SYSTEM_MODULES).toFile()
+                TestUtils.resolvePlatformPath(
+                    SdkConstants.FN_CORE_FOR_SYSTEM_MODULES, TestUtils.TestType.AGP
+                ).toFile()
         val cfsmJar = tmp.newFile(originalCfsmJar.name)
         FileUtils.copyFile(originalCfsmJar, cfsmJar)
         return cfsmJar
@@ -248,7 +250,6 @@ class JdkImageTransformDelegateTest {
             contains("exports java.lang")
             contains("exports android.icu.lang")
             contains("exports dalvik.system")
-            contains("contains ojluni.src.lambda.java.java.lang.invoke")
             contains("platform android")
         }
     }
@@ -306,7 +307,8 @@ class JdkImageTransformDelegateTest {
         //compile a java 11 source file against the system image
         assertThat(java11SourceFile).exists()
 
-        val androidJar = TestUtils.resolvePlatformPath(SdkConstants.FN_FRAMEWORK_LIBRARY)
+        val androidJar =
+            TestUtils.resolvePlatformPath(SdkConstants.FN_FRAMEWORK_LIBRARY, TestUtils.TestType.AGP)
 
         val pib = ProcessInfoBuilder().apply {
             setExecutable(javaHome.resolve("bin").resolve("javac".optionalExe()))

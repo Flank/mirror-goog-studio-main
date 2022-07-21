@@ -29,8 +29,9 @@
             android:minSdkVersion="21"
             android:targetSdkVersion="24" />
 
-    <activity
-            android:name="com.example.ActivityOne" />
+    <application android:name="com.example.test.TheApp" >
+        <activity android:name="com.example.test.ActivityOne" />
+    </application>
 
 </manifest>
 
@@ -58,21 +59,7 @@
 
 </manifest>
 
-@result
-
-<manifest
-xmlns:android="http://schemas.android.com/apk/res/android"
-package="com.example.test" >
-
-<uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="24" />
-
-<activity
-        android:name="com.example.ActivityOne" />
-
-</manifest>
-
+@result-same-as-main
 @errors
 
 ERROR:Namespace 'com.example.test' used in: ManifestMerger2Test0_main.xml, ManifestMerger2Test1_lib1.xml.

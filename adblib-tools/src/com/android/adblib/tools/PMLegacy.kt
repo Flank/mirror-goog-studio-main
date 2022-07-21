@@ -16,19 +16,19 @@
 package com.android.adblib.tools
 
 import com.android.adblib.AdbDeviceServices
+import com.android.adblib.AdbInputChannel
 import com.android.adblib.DeviceSelector
 import com.android.adblib.RemoteFileMode
 import com.android.adblib.utils.TextShellCollector
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import java.nio.file.Path
 
 val INSTALL_APK_STAGING = "/data/local/tmp/adblib_tmp.apk"
 
 internal class PMLegacy(deviceServices: AdbDeviceServices) : PM(deviceServices) {
 
-    var apk : Path? = null
+    var streamed : Boolean = false
     var options : String = ""
 
     override suspend fun createSession(device: DeviceSelector, options: List<String>) : Flow<String> {
@@ -38,16 +38,14 @@ internal class PMLegacy(deviceServices: AdbDeviceServices) : PM(deviceServices) 
         }
     }
 
-    override suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: Path, filename: String, size: Long) : Flow<String>{
-        this.apk?.let{
+    override suspend fun streamApk(device: DeviceSelector, sessionID: String, apk: AdbInputChannel, filename: String, size: Long) : Flow<String>{
+        if (streamed) {
            throw IllegalStateException("Multiple APKs installation not supported on api < 20")
         }
-        this.apk = apk
+        streamed = true
 
         // Push APK to device
-        deviceService.session.channelFactory.openFile(apk!!).use {
-            deviceService.sync(device).send(it, INSTALL_APK_STAGING, RemoteFileMode.DEFAULT, null, null)
-        }
+        deviceService.sync(device).send(apk, INSTALL_APK_STAGING, RemoteFileMode.DEFAULT, null, null)
 
         // Install
         val parameters = mutableListOf<String>("pm", "install")

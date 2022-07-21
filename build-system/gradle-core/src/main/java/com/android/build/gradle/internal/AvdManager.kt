@@ -53,7 +53,7 @@ class AvdManager(
     private val sdkHandler: AndroidSdkHandler,
     private val androidLocationsProvider: AndroidLocationsProvider,
     private val snapshotHandler: AvdSnapshotHandler,
-    val deviceLockManager: VirtualManagedDeviceLockManager
+    val deviceLockManager: ManagedVirtualDeviceLockManager
 ) {
 
     private val sdkDirectory: File

@@ -138,6 +138,14 @@
 
 
 @result
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example"
+          android:versionCode="100"
+          android:versionName="1.0.0" >
+
+<application android:name="com.example.TheApp"/>
+</manifest>
 
 @errors
 ERROR:uses-sdk element cannot have a "tools:node" attribute

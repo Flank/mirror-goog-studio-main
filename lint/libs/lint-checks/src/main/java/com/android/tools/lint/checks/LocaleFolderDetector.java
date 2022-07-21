@@ -493,22 +493,11 @@ public class LocaleFolderDetector extends Detector
     private static List<String> sortRegions(
             @NonNull final String language, @NonNull List<String> regions) {
         List<String> sortedRegions = Lists.newArrayList(regions);
-        final String primary = LocaleManager.getLanguageRegion(language);
-        final String secondary = LocaleManager.getDefaultLanguageRegion(language);
+        final String primary = LocaleManager.getDefaultLanguageRegion(language);
         sortedRegions.sort(
                 (r1, r2) -> {
-                    int rank1 =
-                            r1.equals(primary)
-                                    ? 1
-                                    : r1.equals(secondary)
-                                            ? 2
-                                            : r1.equalsIgnoreCase(language) ? 3 : 4;
-                    int rank2 =
-                            r2.equals(primary)
-                                    ? 1
-                                    : r2.equals(secondary)
-                                            ? 2
-                                            : r2.equalsIgnoreCase(language) ? 3 : 4;
+                    int rank1 = r1.equals(primary) ? 1 : 2;
+                    int rank2 = r2.equals(primary) ? 1 : 2;
                     int delta = rank1 - rank2;
                     if (delta == 0) {
                         delta = r1.compareTo(r2);

@@ -29,9 +29,11 @@ import com.android.build.gradle.internal.cxx.prefab.PrefabModuleTaskData
 import com.android.build.gradle.internal.cxx.prefab.versionOrError
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.api.provider.Property
@@ -57,6 +59,7 @@ import javax.inject.Inject
  * The exported artifacts are named [InternalArtifactType.PREFAB_PACKAGE]
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
 abstract class PrefabPackageTask : NonIncrementalTask() {
     @Inject
     protected abstract fun getFileOperations(): FileOperations

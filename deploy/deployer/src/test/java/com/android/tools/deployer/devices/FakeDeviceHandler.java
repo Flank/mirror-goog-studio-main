@@ -75,6 +75,8 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
                             return sync(device, args, socket);
                         case "abb_exec":
                             return abb_exec(device, args, socket);
+                        case "root":
+                            return root(device, socket);
                     }
                     return false;
                 }
@@ -83,6 +85,13 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
             e.printStackTrace(System.err);
         }
         return false;
+    }
+
+    private boolean root(FakeDevice device, Socket socket) throws IOException {
+        OutputStream output = socket.getOutputStream();
+        CommandHandler.writeOkay(output);
+        device.setCurrentUser(device.getRootUser());
+        return true;
     }
 
     private boolean abb_exec(FakeDevice device, String args, Socket socket) throws IOException {

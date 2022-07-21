@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.utils.FileUtils
-import com.android.utils.PathUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -80,7 +79,7 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
         }
     }
 
-    class CreationAction(val creationConfig: FusedLibraryVariantScope) :
+    class FusedLibraryCreationAction(val creationConfig: FusedLibraryVariantScope) :
         TaskCreationAction<FusedLibraryMergeClasses>() {
         override val name: String
             get() = "mergeClasses"
@@ -101,6 +100,31 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
                     Usage.JAVA_RUNTIME,
                     creationConfig.mergeSpec,
                     AndroidArtifacts.ArtifactType.CLASSES_JAR)
+            )
+        }
+    }
+
+    class PrivacySandboxSdkCreationAction(val creationConfig: PrivacySandboxSdkVariantScope) :
+            TaskCreationAction<FusedLibraryMergeClasses>() {
+        override val name: String
+            get() = "mergeClasses"
+        override val type: Class<FusedLibraryMergeClasses>
+            get() = FusedLibraryMergeClasses::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<FusedLibraryMergeClasses>) {
+            super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(
+                    taskProvider,
+                    FusedLibraryMergeClasses::outputDirectory
+            ).on(FusedLibraryInternalArtifactType.MERGED_CLASSES)
+        }
+
+        override fun configure(task: FusedLibraryMergeClasses) {
+            task.incoming.setFrom(
+                    creationConfig.dependencies.getArtifactFileCollection(
+                            Usage.JAVA_RUNTIME,
+                            creationConfig.mergeSpec,
+                            AndroidArtifacts.ArtifactType.CLASSES_JAR)
             )
         }
     }

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.core.ComponentType;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -52,6 +53,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 /** Task doing test report aggregation. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
 public abstract class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private final transient List<AndroidTestTask> subTasks = Lists.newArrayList();

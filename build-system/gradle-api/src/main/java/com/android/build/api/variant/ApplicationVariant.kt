@@ -26,8 +26,8 @@ interface ApplicationVariant : GeneratesApk,
     Variant,
     HasAndroidTest,
     HasTestFixtures,
-    MinifyableVariant,
-    ResourcesShrinkableVariant {
+    CanMinifyCode,
+    CanMinifyAndroidResources {
 
     /**
      * Variant's application ID as present in the final manifest file of the APK.

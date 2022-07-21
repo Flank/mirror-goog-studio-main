@@ -155,6 +155,22 @@ class UpdateLintBaselineTest {
             .run("updateLintBaseline")
         PathSubject.assertThat(baselineFile).doesNotExist()
 
+        // Then run lint twice with the boolean flag and check that the lint reporting task is
+        // up-to-date the second time. Regression test for b/237813416.
+        projectWithoutIssues.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .run("lint")
+            .also { result ->
+                GradleTaskSubject.assertThat(result.getTask(":lintReportDebug")).didWork()
+            }
+        PathSubject.assertThat(baselineFile).doesNotExist()
+        projectWithoutIssues.executor()
+            .with(BooleanOption.MISSING_LINT_BASELINE_IS_EMPTY_BASELINE, true)
+            .run("lint")
+            .also { result ->
+                GradleTaskSubject.assertThat(result.getTask(":lintReportDebug")).wasUpToDate()
+            }
+
         // Finally, run lint with the boolean flag and without a baseline file when there is an
         // issue, in which case the build should fail.
         TestFileUtils.searchAndReplace(projectWithoutIssues.buildFile, "disable", "error")

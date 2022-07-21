@@ -39,6 +39,7 @@
 #include "tools/base/deploy/installer/executor/executor_impl.h"
 #include "tools/base/deploy/installer/executor/redirect_executor.h"
 #include "tools/base/deploy/installer/highlander.h"
+#include "tools/base/deploy/installer/self.h"
 #include "tools/base/deploy/installer/server/app_servers.h"
 #include "tools/base/deploy/installer/workspace.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
@@ -220,12 +221,26 @@ int main(int argc, char** argv) {
   // We request to get EPIPE instead of a signal.
   signal(SIGPIPE, SIG_IGN);
 
+  // Monitor the binary associated with this process.
+  Self self;
+
   while (running) {
     // Retrieve request from stdin.
     auto request = GetRequestFromFD(STDIN_FILENO);
     if (request == nullptr) {
       break;
     }
+
+    InfoEvent("Received request '" + request->command_name() + "'");
+
+    // If the installer binary was deleted under our feet, this is not a good
+    // idea to process the request.  Close the connection and let the Host
+    // re-create the installer env and then retry the request instead.
+    if (self.gone()) {
+      WarnEvent("installer binary is gone. Closing connection");
+      break;
+    }
+
     ProcessRequest(std::move(request), workspace);
   }
 

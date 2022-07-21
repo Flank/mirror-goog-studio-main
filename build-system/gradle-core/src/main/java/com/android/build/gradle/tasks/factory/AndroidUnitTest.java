@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.dsl.TestOptions.UnitTestOptions;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
+import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
@@ -42,6 +43,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.ComponentType;
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -68,6 +70,7 @@ import org.jetbrains.annotations.NotNull;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
 public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
     private String variantName;

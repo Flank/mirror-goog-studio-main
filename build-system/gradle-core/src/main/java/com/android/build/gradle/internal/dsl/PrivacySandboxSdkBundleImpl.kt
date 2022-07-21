@@ -19,6 +19,11 @@ package com.android.build.gradle.internal.dsl
 import com.android.build.api.dsl.PrivacySandboxSdkBundle
 
 abstract class PrivacySandboxSdkBundleImpl: PrivacySandboxSdkBundle {
+
+    override var packageName: String?
+        get() = applicationId
+        set(value) { applicationId = value }
+
     var version: KotlinVersion? = null
 
     override fun setVersion(major: Int, minor: Int, patch: Int) {

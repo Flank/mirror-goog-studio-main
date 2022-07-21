@@ -788,12 +788,12 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
             .appendText(
                 """androidComponents {
     beforeVariants(selector().withBuildType("minified"), { variant ->
-        println("beforeVariants.appMinified=" + variant.getCodeMinification())
-        variant.setCodeMinification(false);
-        println("beforeVariants.appMinifiedDisabled=" + variant.getCodeMinification())
+        println("beforeVariants.appMinified=" + variant.isMinifyEnabled())
+        variant.setMinifyEnabled(false);
+        println("beforeVariants.appMinifiedEnabled=" + variant.isMinifyEnabled())
     })
     onVariants(selector().withBuildType("minified"), { variant ->
-          println("onVariants.appMinified=" + variant.getCodeMinification())
+          println("onVariants.appMinified=" + variant.isMinifyEnabled())
     })
 }
                     """
@@ -801,7 +801,7 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
         val output = project.executor().run("tasks")
         output.stdout.use {
             ScannerSubject.assertThat(it).contains("beforeVariants.appMinified=true")
-            ScannerSubject.assertThat(it).contains("beforeVariants.appMinifiedDisabled=false")
+            ScannerSubject.assertThat(it).contains("beforeVariants.appMinifiedEnabled=false")
             ScannerSubject.assertThat(it).contains("onVariants.appMinified=false")
         }
     }

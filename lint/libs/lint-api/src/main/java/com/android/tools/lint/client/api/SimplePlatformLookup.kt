@@ -112,6 +112,16 @@ internal class SimplePlatformLookup(private val sdkHome: File) : PlatformLookup 
     }
 
     companion object {
+        private val cache = mutableMapOf<File, SimplePlatformLookup>()
+
+        /**
+         * Returns a [SimplePlatformLookup] for the given SDK folder
+         */
+        fun get(sdkHome: File): SimplePlatformLookup {
+            return cache[sdkHome]
+                ?: SimplePlatformLookup(sdkHome).also { cache[sdkHome] = it }
+        }
+
         /**
          * Skim through a platforms folder and adds any platforms found
          * within to the given list. This only works for directory

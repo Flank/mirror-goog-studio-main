@@ -93,6 +93,7 @@ public class Deployer {
         COLLECT_SWAP_DATA,
         OPTIMISTIC_SWAP,
         OPTIMISTIC_INSTALL,
+        ROOT_PUSH_INSTALL,
 
         // New DDMLib
         GET_PIDS,
@@ -166,21 +167,35 @@ public class Deployer {
      * level.
      */
     public Result install(
-            String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
+            String packageName,
+            List<String> apks,
+            InstallOptions installOptions,
+            InstallMode installMode)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
-            Canceller canceller = options.getCancelChecker();
+            Canceller canceller = installOptions.getCancelChecker();
             String sessionUID = UUID.randomUUID().toString();
 
             InstallInfo info;
-            if (supportsNewPipeline()) {
-                info = optimisticInstall(sessionUID, packageName, apks, options, installMode);
+            if (options.useRootPushInstall) {
+                info = rootPushInstall(sessionUID, packageName, apks, installOptions, installMode);
+            } else if (supportsNewPipeline()) {
+                info =
+                        optimisticInstall(
+                                sessionUID, packageName, apks, installOptions, installMode);
             } else {
-                info = packageManagerInstall(sessionUID, packageName, apks, options, installMode);
+                info =
+                        packageManagerInstall(
+                                sessionUID, packageName, apks, installOptions, installMode);
             }
 
-            Task<List<Apk>> parsedApksTask = runner.create(info.apks);
+            App app = new App(packageName, info.apks, adb.getDevice(), logger);
+            if (options.skipPostInstallTasks) {
+                return new Result(info.skippedInstall, false, false, app);
+            }
+
             Task<Boolean> installCoroutineDebugger = null;
+            Task<List<Apk>> parsedApksTask = runner.create(info.apks);
             if (useCoroutineDebugger()) {
                 installCoroutineDebugger =
                         runner.create(
@@ -195,7 +210,6 @@ public class Deployer {
             runner.create(Tasks.APK_CHECK, checker::log, parsedApksTask);
             runner.runAsync(canceller);
 
-            App app = new App(packageName, info.apks, adb.getDevice(), logger);
             // we call get to make sure the coroutine debugger is installer before the app can start
             boolean coroutineDebuggerInstalled =
                     installCoroutineDebugger != null ? installCoroutineDebugger.get() : false;
@@ -221,6 +235,42 @@ public class Deployer {
                         metrics.getDeployMetrics());
         // TODO(b/138467905): Prevent double-parsing inside ApkInstaller and here
         return new InstallInfo(skippedInstall, new ApkParser().parsePaths(paths));
+    }
+
+    private InstallInfo rootPushInstall(
+            String deploySessionUID,
+            String packageName,
+            List<String> paths,
+            InstallOptions installOptions,
+            InstallMode installMode)
+            throws DeployerException {
+        logger.info("Deploy Root Push Install Session %s", deploySessionUID);
+        Canceller canceller = installOptions.getCancelChecker();
+
+        Task<List<Apk>> apks =
+                runner.create(Tasks.PARSE_PATHS, new ApkParser()::parsePaths, runner.create(paths));
+        Task<Boolean> installSuccess =
+                runner.create(
+                        Tasks.ROOT_PUSH_INSTALL,
+                        new RootPushApkInstaller(adb, installer, logger)::install,
+                        runner.create(packageName),
+                        apks);
+
+        TaskResult result = runner.run(canceller);
+        result.getMetrics().forEach(metrics::add);
+
+        boolean skippedInstall = false;
+        if (!result.isSuccess() || !installSuccess.get()) {
+            ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
+            skippedInstall =
+                    !apkInstaller.install(
+                            packageName,
+                            paths,
+                            installOptions,
+                            installMode,
+                            metrics.getDeployMetrics());
+        }
+        return new InstallInfo(skippedInstall, apks.get());
     }
 
     private InstallInfo optimisticInstall(

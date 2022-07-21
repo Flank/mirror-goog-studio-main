@@ -61,7 +61,8 @@ fun RecipeExecutor.generateManifest(
   manifestOut: File = moduleData.manifestDir,
   baseFeatureResOut: File = moduleData.baseFeature?.resDir ?: moduleData.resDir,
   generateActivityTitle: Boolean,
-  isResizeable: Boolean = false
+  isResizeable: Boolean = false,
+  libraryName: String = "",
 ) {
   generateManifestStrings(activityClass, baseFeatureResOut, isNewModule, generateActivityTitle)
 
@@ -74,7 +75,8 @@ fun RecipeExecutor.generateManifest(
     isLibraryProject = isLibrary,
     activityThemeName = activityThemeName,
     generateActivityTitle = generateActivityTitle,
-    isResizeable = isResizeable
+    isResizeable = isResizeable,
+    libraryName = libraryName,
   )
 
   mergeXml(manifest, manifestOut.resolve("AndroidManifest.xml"))

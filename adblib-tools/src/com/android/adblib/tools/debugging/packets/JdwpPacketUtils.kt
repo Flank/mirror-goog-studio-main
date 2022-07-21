@@ -27,8 +27,8 @@ import java.nio.ByteBuffer
 /**
  * Serialize the [JdwpPacketView] into an [AdbOutputChannel].
  *
- * @throws IllegalArgumentException if [JdwpPacketView.data] does not contain exactly
- * [JdwpPacketView.packetLength] minus [JdwpPacketConstants.PACKET_HEADER_LENGTH] bytes.
+ * @throws IllegalArgumentException if [JdwpPacketView.payload] does not contain exactly
+ * [JdwpPacketView.length] minus [JdwpPacketConstants.PACKET_HEADER_LENGTH] bytes.
  *
  * @param workBuffer (Optional) The [ResizableBuffer] used to transfer data
  */
@@ -42,17 +42,17 @@ suspend fun JdwpPacketView.writeToChannel(
 
     // If packet is somewhat large, write incrementally, otherwise write in a single
     // "write" operation
-    if (packetLength >= DEFAULT_CHANNEL_BUFFER_SIZE) {
+    if (length >= DEFAULT_CHANNEL_BUFFER_SIZE) {
         channel.writeExactly(workBuffer.forChannelWrite())
         workBuffer.clear()
-        val byteCount = channel.write(data, workBuffer)
+        val byteCount = channel.write(payload, workBuffer)
         checkPacketLength(byteCount)
     } else {
-        val byteCount = data.readRemaining(workBuffer)
+        val byteCount = payload.readRemaining(workBuffer)
         checkPacketLength(byteCount)
         channel.writeExactly(workBuffer.afterChannelRead(0))
     }
-    this.data.rewind()
+    this.payload.rewind()
 }
 
 /**
@@ -67,12 +67,12 @@ fun ResizableBuffer.appendJdwpHeader(jdwpPacketView: JdwpPacketView) {
     // Byte [8, 8] : flags
     // Byte [9, 9] : cmd set   || errorCode high byte (if reply)
     // Byte [10, 10] : cmd     || errorCode low byte (if reply)
-    appendInt(jdwpPacketView.packetLength)
-    appendInt(jdwpPacketView.packetId)
-    appendByte(jdwpPacketView.packetFlags.toByte())
+    appendInt(jdwpPacketView.length)
+    appendInt(jdwpPacketView.id)
+    appendByte(jdwpPacketView.flags.toByte())
     if (jdwpPacketView.isCommand) {
-        appendByte(jdwpPacketView.packetCmdSet.toByte())
-        appendByte(jdwpPacketView.packetCmd.toByte())
+        appendByte(jdwpPacketView.cmdSet.toByte())
+        appendByte(jdwpPacketView.cmd.toByte())
     } else {
         appendShort(jdwpPacketView.errorCode.toShort())
     }
@@ -81,8 +81,8 @@ fun ResizableBuffer.appendJdwpHeader(jdwpPacketView: JdwpPacketView) {
 /**
  * Returns an in-memory copy of this [JdwpPacketView].
  *
- * @throws IllegalArgumentException if [JdwpPacketView.data] does not contain exactly
- * [JdwpPacketView.packetLength] minus [JdwpPacketConstants.PACKET_HEADER_LENGTH] bytes
+ * @throws IllegalArgumentException if [JdwpPacketView.payload] does not contain exactly
+ * [JdwpPacketView.length] minus [JdwpPacketConstants.PACKET_HEADER_LENGTH] bytes
  *
  * @param workBuffer (Optional) The [ResizableBuffer] used to transfer data
  */
@@ -97,24 +97,24 @@ internal suspend fun JdwpPacketView.clone(
     val mutableJdwpPacket = MutableJdwpPacket()
     mutableJdwpPacket.parseHeader(workBuffer.forChannelWrite())
 
-    // Copy data into our workBuffer
+    // Copy payload into our workBuffer
     workBuffer.clear()
     val copyChannel = ByteBufferAdbOutputChannel(workBuffer)
-    val byteCount = copyChannel.write(this.data)
+    val byteCount = copyChannel.write(this.payload)
     checkPacketLength(byteCount)
 
     // Make a copy into our own ByteBuffer
     val bufferCopy = workBuffer.forChannelWrite().copy()
 
     // Make an input channel for it
-    mutableJdwpPacket.data = AdbBufferedInputChannel.forByteBuffer(bufferCopy)
+    mutableJdwpPacket.payload = AdbBufferedInputChannel.forByteBuffer(bufferCopy)
 
-    this.data.rewind()
+    this.payload.rewind()
     return mutableJdwpPacket
 }
 
 private fun JdwpPacketView.checkPacketLength(byteCount: Int) {
-    val expectedByteCount = packetLength - JdwpPacketConstants.PACKET_HEADER_LENGTH
+    val expectedByteCount = length - JdwpPacketConstants.PACKET_HEADER_LENGTH
     if (byteCount != expectedByteCount) {
         throw IllegalArgumentException(
             "JDWP packet should contain $expectedByteCount " +
@@ -149,8 +149,8 @@ internal suspend fun AdbOutputChannel.write(
 }
 
 /**
- * Read the first 11 bytes of [buffer] into [MutableJdwpPacket.packetLength],
- * [MutableJdwpPacket.packetId] and so on. The [MutableJdwpPacket.data] field
+ * Read the first 11 bytes of [buffer] into [MutableJdwpPacket.length],
+ * [MutableJdwpPacket.id] and so on. The [MutableJdwpPacket.payload] field
  * is not modified.
  */
 internal fun MutableJdwpPacket.parseHeader(buffer: ByteBuffer) {
@@ -161,13 +161,13 @@ internal fun MutableJdwpPacket.parseHeader(buffer: ByteBuffer) {
     // Byte [8, 8] : flags     || (if reply) 0x80
     // Byte [9, 9] : cmd set   || (if reply) error code high byte
     // Byte [10, 10] : cmd     || (if reply) error code low byte
-    packetLength = buffer.getInt()
-    packetId = buffer.getInt()
-    packetFlags = buffer.get().toUByte().toInt()
+    length = buffer.getInt()
+    id = buffer.getInt()
+    flags = buffer.get().toUByte().toInt()
     if (isReply) {
         errorCode = buffer.getShort().toUShort().toInt()
     } else {
-        packetCmdSet = buffer.get().toUByte().toInt()
-        packetCmd = buffer.get().toUByte().toInt()
+        cmdSet = buffer.get().toUByte().toInt()
+        cmd = buffer.get().toUByte().toInt()
     }
 }

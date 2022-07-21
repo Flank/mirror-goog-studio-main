@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.scope.getRegularFiles
 import com.android.build.gradle.internal.services.ClassesHierarchyBuildService
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.JarsClasspathInputsWithIdentity
 import com.android.build.gradle.internal.tasks.JarsIdentityMapping
 import com.android.build.gradle.internal.tasks.NewIncrementalTask
@@ -45,6 +46,7 @@ import com.android.build.gradle.internal.tasks.factory.features.InstrumentationT
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.SerializableFileChanges
 import com.android.builder.utils.isValidZipEntryName
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
@@ -78,6 +80,7 @@ import java.util.zip.ZipInputStream
  * A task that instruments the project classes with the asm visitors registered via the DSL.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING])
 abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
     @get:Input

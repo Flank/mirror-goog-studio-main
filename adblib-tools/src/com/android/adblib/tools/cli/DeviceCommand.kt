@@ -15,11 +15,9 @@
  */
 package com.android.adblib.tools.cli
 
-import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
-import com.android.adblib.tools.Host
 
 internal abstract class DeviceCommand(val name : String) {
-    abstract fun run(session : AdbLibSession, Adbdevice : DeviceSelector, args : Arguments) : Boolean
+    abstract fun run(session : AdbSession, Adbdevice : DeviceSelector, args : Arguments) : Boolean
 }

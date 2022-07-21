@@ -3,8 +3,8 @@ package com.android.adblib.impl
 import com.android.adblib.AdbChannelProvider
 import com.android.adblib.AdbHostServices
 import com.android.adblib.AdbHostServices.DeviceInfoFormat
-import com.android.adblib.AdbLibHost
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSessionHost
+import com.android.adblib.AdbSession
 import com.android.adblib.AdbProtocolErrorException
 import com.android.adblib.DeviceAddress
 import com.android.adblib.DeviceList
@@ -23,13 +23,13 @@ import java.io.EOFException
 import java.util.concurrent.TimeUnit
 
 internal class AdbHostServicesImpl(
-    override val session: AdbLibSession,
-    channelProvider: AdbChannelProvider,
-    private val timeout: Long,
-    private val unit: TimeUnit
+  override val session: AdbSession,
+  channelProvider: AdbChannelProvider,
+  private val timeout: Long,
+  private val unit: TimeUnit
 ) : AdbHostServices {
 
-    private val host: AdbLibHost
+    private val host: AdbSessionHost
         get() = session.host
     private val serviceRunner = AdbServiceRunner(session, channelProvider)
     private val deviceParser = DeviceListParser()

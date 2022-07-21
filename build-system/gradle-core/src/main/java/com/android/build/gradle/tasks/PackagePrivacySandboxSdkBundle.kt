@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
@@ -27,9 +28,11 @@ import com.android.bundle.Config
 import com.android.bundle.SdkBundleConfigProto
 import com.android.bundle.SdkModulesConfigOuterClass
 import com.android.bundle.SdkModulesConfigOuterClass.SdkModulesConfig
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.bundletool.commands.BuildSdkBundleCommand
 import com.android.tools.build.bundletool.model.version.BundleToolVersion
 import com.google.common.collect.ImmutableList
+import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -51,6 +54,7 @@ import java.util.Objects
  * should just package already compiled and packaged stuff.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
 abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
 
     @get:OutputFile
@@ -75,6 +79,16 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
 
     override fun doTaskAction() {
         val modulesPaths = ImmutableList.of(baseModuleZip.get().asFile.toPath())
+
+        if (sdkBundleProperties.packageName.get().isEmpty()) {
+            throw GradleException("The identity for this Privacy Sandbox SDK bundle needs to be set through android.bundle.applicationId")
+        }
+        if (sdkBundleProperties.version.major.get() < 0 || sdkBundleProperties.version.minor.get() < 0 || sdkBundleProperties.version.patch.get() < 0) {
+            throw GradleException("version needs to bet set through android.bundle.setVersion")
+        }
+        if (sdkBundleProperties.sdkProviderClassName.get().isEmpty()) {
+            throw GradleException("sdkProviderClassName needs to bet set through android.bundle.sdkProviderClassName")
+        }
 
         val sdkModulesConfig =
             SdkModulesConfig
@@ -160,25 +174,12 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
             )
 
             creationConfig.bundle.let { bundle ->
-                Objects.requireNonNull(
-                    bundle.packageName,
-                    "packageName needs to bet set through android.bundle.packageName"
-                )
-                Objects.requireNonNull(
-                    bundle.sdkProviderClassName,
-                    "sdkProviderClassName needs to bet set through android.bundle.sdkProviderClassName"
-                )
-                Objects.requireNonNull(
-                    bundle.version,
-                    "version needs to bet set through android.bundle.setVersion"
-                )
-
                 task.sdkBundleProperties.apply {
-                    packageName.setDisallowChanges(bundle.packageName!!)
-                    version.major.setDisallowChanges(bundle.version!!.major)
-                    version.minor.setDisallowChanges(bundle.version!!.minor)
-                    version.patch.setDisallowChanges(bundle.version!!.patch)
-                    sdkProviderClassName.setDisallowChanges(bundle.sdkProviderClassName!!)
+                    packageName.setDisallowChanges(bundle.applicationId ?: "")
+                    version.major.setDisallowChanges(bundle.version?.major ?: -1)
+                    version.minor.setDisallowChanges(bundle.version?.minor ?: -1)
+                    version.patch.setDisallowChanges(bundle.version?.patch ?: -1)
+                    sdkProviderClassName.setDisallowChanges(bundle.sdkProviderClassName ?: "")
                 }
             }
 

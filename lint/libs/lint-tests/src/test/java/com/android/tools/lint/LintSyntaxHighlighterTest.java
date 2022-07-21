@@ -393,4 +393,40 @@ public class LintSyntaxHighlighterTest extends TestCase {
                         + "</pre>\n",
                 html);
     }
+
+    public void testSubstitutionStrings() {
+        String s2 =
+                "fun `There's something going on \"\"\"`() {\n"
+                        + "    /* Comment /* Nested comment fun commentedOut() { } */  */\n"
+                        + "    val x = '\\ufffe'; val y = '\\''; val z = '\"'\n"
+                        + "    val s = \"This is a string! ${z.dec() /* test */.plus(\"test ${x.dec()}\")[21]}\" // bye\n"
+                        + "    val t = \"\"\"This is a raw string! ${'\"'.minus(50) /**  KDoc  comment */}string\"\"\"\n"
+                        + "}\n";
+        //noinspection all // Sample code
+        @Language("kotlin")
+        String source =
+                ""
+                        + "fun `There's something going on \"\"\"`() {\n"
+                        + "    /* Comment /* Nested comment fun commentedOut() { } */  */\n"
+                        + "    val x = '\\ufffe'; val y = '\\''; val z = '\"'\n"
+                        + "    val s = \"This is a string! ${z.dec() /* test */.plus(\"test ${x.dec()}\")[21]}\" // bye\n"
+                        + "    val t = \"\"\"This is a raw string! ${'\"'.minus(50) /* comment */}string\"\"\"\n"
+                        + "}\n";
+        int beginOffset = source.indexOf("This is a");
+        int endOffset = source.indexOf("// bye", beginOffset);
+        @Language("HTML")
+        String html = highlight(source, beginOffset, endOffset, false, "Foo2.kt", false);
+
+        assertEquals(
+                ""
+                        + "<pre class=\"errorlines\">\n"
+                        + "<span class=\"lineno\"> 1 </span><span class=\"keyword\">fun</span> `There's something going on \"\"\"`() {\n"
+                        + "<span class=\"lineno\"> 2 </span>    <span class=\"comment\">/* Comment /* Nested comment fun commentedOut() { } */  */</span>\n"
+                        + "<span class=\"lineno\"> 3 </span>    <span class=\"keyword\">val</span> x = <span class=\"string\">'\\ufffe'</span>; <span class=\"keyword\">val</span> y = <span class=\"string\">'\\''</span>; <span class=\"keyword\">val</span> z = <span class=\"string\">'\"'</span>\n"
+                        + "<span class=\"caretline\"><span class=\"lineno\"> 4 </span>    <span class=\"keyword\">val</span> s = <span class=\"string\">\"</span><span class=\"warning\"><span class=\"string\">This is a string! ${</span>z.dec() <span class=\"comment\">/* test */</span>.plus(<span class=\"string\">\"test ${</span>x.dec()<span class=\"string\">}\"</span>)[<span class=\"number\">21</span>]<span class=\"string\">}\"</span> </span><span class=\"comment\">// bye</span></span>\n"
+                        + "<span class=\"lineno\"> 5 </span>    <span class=\"keyword\">val</span> t = <span class=\"string\">\"\"\"This is a raw string! ${'\"'</span>.minus(<span class=\"number\">50</span>) <span class=\"comment\">/* comment */</span><span class=\"string\">}string\"\"\"</span>\n"
+                        + "<span class=\"lineno\"> 6 </span>}\n"
+                        + "</pre>\n",
+                html);
+    }
 }

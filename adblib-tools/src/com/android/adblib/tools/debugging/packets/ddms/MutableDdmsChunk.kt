@@ -27,7 +27,7 @@ internal class MutableDdmsChunk : DdmsChunkView {
 
     override var length: Int = 0
 
-    override var data = AdbBufferedInputChannel.empty()
+    override var payload = AdbBufferedInputChannel.empty()
 
     override fun toString(): String {
         return "DDMS Chunk: type=$type (${chunkTypeToString(type)}), length=$length"

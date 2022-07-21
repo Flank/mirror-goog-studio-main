@@ -68,17 +68,13 @@ class VariantSources internal constructor(
             } else null
         }
 
-    val artProfileIfExists: File?
+    /** Returns the path to the art profile file. It may or may not exist. */
+    val artProfile: File
         get() {
             // this is really brittle, we need to review where those sources will be located and
             // what we offer to make visible in the SourceProvider interface.
             // src/main/baseline-prof.txt will do for now.
-            val composeFile = File(
-                    File(defaultSourceProvider.manifestFile.parent),
-                    SdkConstants.FN_ART_PROFILE)
-            return if (composeFile.isFile) {
-                composeFile
-            } else null
+            return File(File(mainManifestFilePath.parent), SdkConstants.FN_ART_PROFILE)
         }
 
     /**

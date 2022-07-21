@@ -39,7 +39,7 @@ class DdmsWaitChunkTest {
         val chunk = MutableDdmsChunk().apply {
             type = DdmsChunkTypes.WAIT
             length = payload.remaining()
-            data = AdbBufferedInputChannel.forByteBuffer(payload)
+            this.payload = AdbBufferedInputChannel.forByteBuffer(payload)
         }
 
         // Act

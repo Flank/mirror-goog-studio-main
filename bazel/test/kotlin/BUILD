@@ -32,6 +32,23 @@ java_library(
     ],
 )
 
+# Test filegroups as inputs.
+kotlin_library(
+    name = "test_filegroup",
+    srcs = [
+        "filegroup/a.kt",
+        ":bc_group",
+    ],
+)
+
+filegroup(
+    name = "bc_group",
+    srcs = [
+        "filegroup/b.kt",
+        "filegroup/c.kt",
+    ],
+)
+
 ### Maven version:
 
 # Test just kotlin

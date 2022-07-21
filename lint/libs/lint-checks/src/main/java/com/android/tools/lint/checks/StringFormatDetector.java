@@ -1708,6 +1708,9 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
         int count = getFormatArgumentCount(s, null);
         for (int i = 1; i <= count; i++) {
             int argumentIndex = i + stringIndex;
+            if (argumentIndex >= args.size()) {
+                return;
+            }
             PsiType type = args.get(argumentIndex).getExpressionType();
             if (type != null) {
                 String formatType = getFormatArgumentType(s, i);

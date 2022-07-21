@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.files.SerializableChange
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils
 import com.google.common.base.Preconditions
@@ -67,6 +68,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
 abstract class JacocoTask : NewIncrementalTask() {
 
     @get:Classpath

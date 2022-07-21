@@ -15,7 +15,7 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.DeviceState
 import com.android.adblib.createDeviceScope
@@ -24,22 +24,33 @@ import com.android.adblib.tools.debugging.JdwpProcess
 import com.android.adblib.tools.debugging.JdwpProcessProperties
 import com.android.adblib.tools.debugging.JdwpProcessTracker
 import com.android.adblib.trackDeviceInfo
+import com.android.adblib.trackDevices
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
+import com.android.ddmlib.ClientData.DebuggerStatus
 import com.android.ddmlib.IDevice
 import com.android.ddmlib.clientmanager.DeviceClientManager
 import com.android.ddmlib.clientmanager.DeviceClientManagerListener
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
+
+/**
+ * Maximum amount of time to wait for a device to show up in [AdbSession.trackDevices]
+ * after an [AdbLibDeviceClientManager] instance is created.
+ */
+private val DEVICE_TRACKER_WAIT_TIMEOUT = Duration.ofSeconds(2)
 
 internal class AdbLibDeviceClientManager(
     private val clientManager: AdbLibClientManager,
@@ -52,17 +63,12 @@ internal class AdbLibDeviceClientManager(
 
     private val deviceSelector = DeviceSelector.fromSerialNumber(iDevice.serialNumber)
 
-    private val session: AdbLibSession
+    private val session: AdbSession
         get() = clientManager.session
 
     private val retryDelay = Duration.ofSeconds(2)
 
     private val clientList = AtomicReference<List<Client>>(emptyList())
-
-    /**
-     * The [CoroutineScope] that is active as long as [iDevice] is connected.
-     */
-    val deviceScope = session.createDeviceScope(deviceSelector)
 
     override fun getDevice(): IDevice {
         return iDevice
@@ -73,38 +79,69 @@ internal class AdbLibDeviceClientManager(
     }
 
     fun startDeviceTracking() {
-        deviceScope.launch(session.host.ioDispatcher) {
-            session.trackDeviceInfo(deviceSelector)
-                .filter {
-                    // Wait until device is "ONLINE"
-                    it.deviceState == DeviceState.ONLINE
-                }.map {
-                    // Run the 'jdwp-track' service and collect PIDs
-                    trackProcesses()
-                }.retryWhen { throwable, _ ->
-                    logger.warn(
-                        throwable,
-                        "Device process tracking failed for device $deviceSelector " +
-                                "($throwable), retrying in ${retryDelay.seconds} sec"
-                    )
-                    // We retry as long as the device is valid
-                    if (deviceScope.isActive) {
-                        delay(retryDelay.toMillis())
-                    }
-                    deviceScope.isActive
-                }.collect()
+        session.scope.launch {
+            // Wait for the device to show in the list of tracked devices
+            val deviceScope = withTimeoutOrNull(DEVICE_TRACKER_WAIT_TIMEOUT.toMillis()) {
+                logger.debug { "Waiting for device ${iDevice.serialNumber} to show up in device tracker" }
+                waitForDevice(iDevice.serialNumber)
+                logger.debug { "Found device ${iDevice.serialNumber} in device tracker, creating device scope" }
+                session.createDeviceScope(deviceSelector)
+            } ?: run {
+                val msg = "Could not find device ${iDevice.serialNumber} in list of tracked devices"
+                logger.info { msg }
+                throw CancellationException(msg)
+            }
+
+            // Track processes running on the device
+            launchProcessTracking(deviceScope)
         }
     }
 
-    private suspend fun trackProcesses() {
+    private suspend fun waitForDevice(serialNumber: String) {
+        // Collects the list of device tracking flow until the device shows up.
+        session.trackDevices().takeWhile { list ->
+            list.devices.entries.none { it.serialNumber == serialNumber }
+        }.collect()
+    }
+
+    private fun launchProcessTracking(deviceScope: CoroutineScope) {
+        deviceScope.launch(session.host.ioDispatcher) {
+            logger.debug { "Starting process tracking for device $iDevice" }
+            try {
+                session.trackDeviceInfo(deviceSelector)
+                    .filter {
+                        // Wait until device is "ONLINE"
+                        it.deviceState == DeviceState.ONLINE
+                    }.map {
+                        // Run the 'jdwp-track' service and collect PIDs
+                        trackProcesses(deviceScope)
+                    }.retryWhen { throwable, _ ->
+                        logger.warn(
+                            throwable,
+                            "Device process tracking failed for device $deviceSelector " +
+                                    "($throwable), retrying in ${retryDelay.seconds} sec"
+                        )
+                        // We retry as long as the device is valid
+                        if (deviceScope.isActive) {
+                            delay(retryDelay.toMillis())
+                        }
+                        deviceScope.isActive
+                    }.collect()
+            } finally {
+                logger.debug { "Stop process tracking for device $iDevice (scope.isActive=${deviceScope.isActive})" }
+            }
+        }
+    }
+
+    private suspend fun trackProcesses(deviceScope: CoroutineScope) {
         val processEntryMap = mutableMapOf<Int, AdblibClientWrapper>()
         try {
             JdwpProcessTracker(clientManager.session, deviceSelector).createFlow()
                 .collect { processList ->
-                    updateProcessList(processEntryMap, processList)
+                    updateProcessList(deviceScope, processEntryMap, processList)
                 }
         } finally {
-            updateProcessList(processEntryMap, emptyList())
+            updateProcessList(deviceScope, processEntryMap, emptyList())
         }
     }
 
@@ -112,6 +149,7 @@ internal class AdbLibDeviceClientManager(
      * Update our list of processes and invoke listeners.
      */
     private fun updateProcessList(
+        deviceScope: CoroutineScope,
         currentProcessEntryMap: MutableMap<Int, AdblibClientWrapper>,
         newJdwpProcessList: List<JdwpProcess>
     ) {
@@ -137,8 +175,8 @@ internal class AdbLibDeviceClientManager(
 
         assert(currentProcessEntryMap.keys.size == newJdwpProcessList.size)
         clientList.set(currentProcessEntryMap.values.toList())
-        invokeListener {
-            listener.processListUpdated(bridge, this@AdbLibDeviceClientManager)
+        invokeListener(deviceScope) {
+            listener.processListUpdated(bridge, this)
         }
     }
 
@@ -150,8 +188,8 @@ internal class AdbLibDeviceClientManager(
     }
 
     private suspend fun trackProcessInfo(clientWrapper: AdblibClientWrapper) {
-        var lastProcessInfo = clientWrapper.jdwpProcess.processPropertiesFlow.value
-        clientWrapper.jdwpProcess.processPropertiesFlow.collect { processInfo ->
+        var lastProcessInfo = clientWrapper.jdwpProcess.propertiesFlow.value
+        clientWrapper.jdwpProcess.propertiesFlow.collect { processInfo ->
             try {
                 updateProcessInfo(clientWrapper, lastProcessInfo, processInfo)
             } finally {
@@ -170,49 +208,79 @@ internal class AdbLibDeviceClientManager(
         }
 
         // Always update "Client" wrapper data
-        val names =
-            ClientData.Names(
-                newProcessInfo.processName ?: "",
-                newProcessInfo.userId,
-                newProcessInfo.packageName
-            )
-        clientWrapper.clientData.setNames(names)
-        clientWrapper.clientData.vmIdentifier = newProcessInfo.vmIdentifier
-        clientWrapper.clientData.abi = newProcessInfo.abi
-        clientWrapper.clientData.jvmFlags = newProcessInfo.jvmFlags
-        clientWrapper.clientData.isNativeDebuggable = newProcessInfo.isNativeDebuggable
+        val previousDebuggerStatus = clientWrapper.clientData.debuggerConnectionStatus
+        updateClientWrapper(clientWrapper, newProcessInfo)
+        val newDebuggerStatus = clientWrapper.clientData.debuggerConnectionStatus
 
         // Check if anything related to process info has changed
-        if (hasChanged(previousProcessInfo.processName, newProcessInfo.processName) ||
-            hasChanged(previousProcessInfo.userId, newProcessInfo.userId) ||
-            hasChanged(previousProcessInfo.packageName, newProcessInfo.packageName) ||
-            hasChanged(previousProcessInfo.vmIdentifier, newProcessInfo.vmIdentifier) ||
-            hasChanged(previousProcessInfo.abi, newProcessInfo.abi) ||
-            hasChanged(previousProcessInfo.jvmFlags, newProcessInfo.jvmFlags) ||
-            hasChanged(previousProcessInfo.isNativeDebuggable, newProcessInfo.isNativeDebuggable)
-        ) {
-            invokeListener {
-                // Note that "name" is really "any property"
-                listener.processNameUpdated(
+        with(previousProcessInfo) {
+            if (hasChanged(processName, newProcessInfo.processName) ||
+                hasChanged(userId, newProcessInfo.userId) ||
+                hasChanged(packageName, newProcessInfo.packageName) ||
+                hasChanged(vmIdentifier, newProcessInfo.vmIdentifier) ||
+                hasChanged(abi, newProcessInfo.abi) ||
+                hasChanged(jvmFlags, newProcessInfo.jvmFlags) ||
+                hasChanged(isWaitingForDebugger, newProcessInfo.isWaitingForDebugger) ||
+                hasChanged(isNativeDebuggable, newProcessInfo.isNativeDebuggable)
+            ) {
+                invokeListener(clientWrapper.jdwpProcess.scope) {
+                    // Note that "name" is really "any property"
+                    listener.processNameUpdated(
+                        bridge,
+                        this@AdbLibDeviceClientManager,
+                        clientWrapper
+                    )
+                }
+            }
+        }
+
+        // Debugger status change is handled through its own callback
+        if (hasChanged(previousDebuggerStatus, newDebuggerStatus)) {
+            clientWrapper.clientData.debuggerConnectionStatus = newDebuggerStatus
+            invokeListener(clientWrapper.jdwpProcess.scope) {
+                listener.processDebuggerStatusUpdated(
                     bridge,
                     this@AdbLibDeviceClientManager,
                     clientWrapper
                 )
             }
         }
-
-        // TODO: Invoke debugger status updated once implemented
-        //invokeListener {
-        //    listener.processDebuggerStatusUpdated(
-        //        bridge,
-        //        this@AdbLibDeviceClientManager,
-        //        clientWrapper
-        //    )
-        //}
     }
 
-    private fun invokeListener(block: () -> Unit) {
-        deviceScope.launch(session.host.ioDispatcher) {
+    private fun updateClientWrapper(
+        clientWrapper: AdblibClientWrapper,
+        newProperties: JdwpProcessProperties
+    ) {
+        val names = ClientData.Names(
+            newProperties.processName ?: "",
+            newProperties.userId,
+            newProperties.packageName
+        )
+        clientWrapper.clientData.setNames(names)
+        clientWrapper.clientData.vmIdentifier = newProperties.vmIdentifier
+        clientWrapper.clientData.abi = newProperties.abi
+        clientWrapper.clientData.jvmFlags = newProperties.jvmFlags
+        clientWrapper.clientData.isNativeDebuggable = newProperties.isNativeDebuggable
+
+        // "DebuggerStatus" is trickier: order is important
+        clientWrapper.clientData.debuggerConnectionStatus = when {
+            // This comes from the JDWP connection proxy, when a JDWP connection is started
+            newProperties.jdwpSessionProxyStatus.isExternalDebuggerAttached -> DebuggerStatus.ATTACHED
+
+            // This comes from seeing a DDMS_WAIT packet on the JDWP connection
+            newProperties.isWaitingForDebugger -> DebuggerStatus.WAITING
+
+            // This comes from any error during process properties polling
+            newProperties.exception != null -> DebuggerStatus.ERROR
+
+            // This happens when process properties have been collected and also
+            // when there is no active jdwp debugger connection
+            else -> DebuggerStatus.DEFAULT
+        }
+    }
+
+    private fun invokeListener(scope: CoroutineScope, block: () -> Unit) {
+        scope.launch(session.host.ioDispatcher) {
             kotlin.runCatching {
                 block()
             }.onFailure { throwable ->

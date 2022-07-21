@@ -1027,7 +1027,7 @@ com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration exte
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.valueOf: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration.values: com.android.build.gradle.internal.dsl.BuildType$PostProcessingConfiguration[] ()
 com.android.build.gradle.internal.dsl.BuildType$WhenMappings
-com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.BuildType.<init>: com.android.build.gradle.internal.dsl.BuildType (java.lang.String, com.android.build.gradle.internal.services.DslServices, com.android.builder.core.ComponentType)
 com.android.build.gradle.internal.dsl.BuildType._initWith: void (com.android.builder.model.BaseConfig)
 com.android.build.gradle.internal.dsl.BuildType._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.gradle.internal.dsl.BuildType.buildConfigField: void (java.lang.String, java.lang.String, java.lang.String)
@@ -1136,7 +1136,7 @@ com.android.build.gradle.internal.dsl.BuildType.testProguardFile: java.lang.Obje
 com.android.build.gradle.internal.dsl.BuildType.testProguardFiles: com.android.build.gradle.internal.dsl.BuildType (java.lang.Object[])
 com.android.build.gradle.internal.dsl.BuildType.testProguardFiles: java.lang.Object (java.lang.Object[])
 com.android.build.gradle.internal.dsl.BuildTypeFactory implements org.gradle.api.NamedDomainObjectFactory
-com.android.build.gradle.internal.dsl.BuildTypeFactory.<init>: com.android.build.gradle.internal.dsl.BuildTypeFactory (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.BuildTypeFactory.<init>: com.android.build.gradle.internal.dsl.BuildTypeFactory (com.android.build.gradle.internal.services.DslServices, com.android.builder.core.ComponentType)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: com.android.build.gradle.internal.dsl.BuildType (java.lang.String)
 com.android.build.gradle.internal.dsl.BuildTypeFactory.create: java.lang.Object (java.lang.String)
 com.android.build.gradle.internal.dsl.BundleOptions implements com.android.build.api.dsl.Bundle
@@ -1675,7 +1675,7 @@ com.android.build.gradle.internal.dsl.PackagingOptions.setExcludes: void (java.u
 com.android.build.gradle.internal.dsl.PackagingOptions.setMerges: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PackagingOptions.setPickFirsts: void (java.util.Set<java.lang.String>)
 com.android.build.gradle.internal.dsl.PostProcessingBlock implements com.android.build.gradle.internal.ProguardFilesProvider, com.android.build.api.dsl.PostProcessing
-com.android.build.gradle.internal.dsl.PostProcessingBlock.<init>: com.android.build.gradle.internal.dsl.PostProcessingBlock (com.android.build.gradle.internal.services.DslServices)
+com.android.build.gradle.internal.dsl.PostProcessingBlock.<init>: com.android.build.gradle.internal.dsl.PostProcessingBlock (com.android.build.gradle.internal.services.DslServices, com.android.builder.core.ComponentType)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFile: void (java.lang.Object)
 com.android.build.gradle.internal.dsl.PostProcessingBlock.consumerProguardFiles: void (java.lang.Object[])
 com.android.build.gradle.internal.dsl.PostProcessingBlock.getCodeShrinker: java.lang.String ()
@@ -1813,6 +1813,8 @@ com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure<?>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
+com.android.build.gradle.internal.dsl.ValidationUtilKt
+com.android.build.gradle.internal.dsl.ValidationUtilKt.checkShrinkResourceEligibility: void (com.android.builder.core.ComponentType, com.android.build.gradle.internal.services.DslServices, boolean)
 com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix implements com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFixParent
 com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix._internal_getSigingConfig: com.android.build.api.dsl.ApkSigningConfig ()
 com.android.build.gradle.internal.dsl.VariantDimensionBinaryCompatibilityFix.getSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig ()

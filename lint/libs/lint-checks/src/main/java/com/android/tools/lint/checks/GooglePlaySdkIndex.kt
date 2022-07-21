@@ -283,21 +283,21 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
 
     /** Generate a message for a library that has policy issues */
     fun generatePolicyMessage(groupId: String, artifactId: String, versionString: String) =
-        "$groupId:$artifactId version $versionString has policy issues that will block publishing to Play Console"
+        "$groupId:$artifactId version $versionString has policy issues that will block publishing of your app to Play Console"
 
     /**
      * Generate a message for a library that has blocking critical
      * issues
      */
     fun generateBlockingCriticalMessage(groupId: String, artifactId: String, versionString: String) =
-        "$groupId:$artifactId version $versionString has an associated message from its author that will block publishing to Play Console"
+        "$groupId:$artifactId version $versionString has been reported as problematic by its author and will block publishing of your app to Play Console"
 
     /**
      * Generate a message for a library that has blocking outdated
      * issues
      */
     fun generateBlockingOutdatedMessage(groupId: String, artifactId: String, versionString: String) =
-        "$groupId:$artifactId version $versionString has been marked as outdated by its author and will block publishing to Play Console"
+        "$groupId:$artifactId version $versionString has been marked as outdated by its author and will block publishing of your app to Play Console"
 
     /**
      * Generate a message for a library that has blocking outdated

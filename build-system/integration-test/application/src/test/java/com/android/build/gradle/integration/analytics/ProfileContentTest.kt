@@ -93,7 +93,7 @@ class ProfileContentTest {
             }).isTrue()
             assertThat(gbp.appliedPluginsList.any {
                 it.className == "org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper" &&
-                        it.jarName == "kotlin-gradle-plugin-${TestUtils.KOTLIN_VERSION_FOR_TESTS}"
+                        it.jarName.startsWith("kotlin-gradle-plugin-${TestUtils.KOTLIN_VERSION_FOR_TESTS}")
             }).isTrue()
         }
         for (profile in listOf(cleanBuild, noOpBuild)) {

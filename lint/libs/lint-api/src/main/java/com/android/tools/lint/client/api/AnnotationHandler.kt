@@ -56,9 +56,9 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.hasImplicitDefaultConstructor
-import com.android.tools.lint.detector.api.resolveKotlinCall
 import com.android.tools.lint.detector.api.resolveOperator
 import com.google.common.collect.Multimap
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.psi.PsiAnonymousClass
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
@@ -111,6 +111,7 @@ import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isNullLiteral
+import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.skipParenthesizedExprUp
 import org.jetbrains.uast.tryResolve
@@ -847,7 +848,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
         val evaluator = context.evaluator
         val containingClass = call.classReference?.resolve() as? PsiClass
             ?: (call.sourcePsi as? PsiNewExpression)?.anonymousClass?.baseClassType?.let { evaluator.getTypeClass(it) }
-            ?: resolveKotlinCall(call.classReference?.sourcePsi) as? PsiClass
+            ?: resolveToClassIfConstructorCall(call)
         doCheckCall(context, null, call, containingClass)
 
         if (call.isSuperCall() && call.valueArgumentCount == 0) {
@@ -859,6 +860,17 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                 checkSuperImplicitConstructor(context, call, uClass, method, IMPLICIT_CONSTRUCTOR, true)
             }
         }
+    }
+
+    // TODO(kotlin-uast-cleanup): upstream UAST has a fix for an anonymous object whose supertype is a Java class
+    //  Remove this when https://github.com/JetBrains/intellij-community/commit/ff25b4debe7b7b9cf7207dbc653d85139a1dd76a is bundled
+    private fun resolveToClassIfConstructorCall(
+        call: UCallExpression
+    ): PsiClass? {
+        val ktCallElement = call.classReference?.sourcePsi as? KtSuperTypeCallEntry ?: return null
+        val baseService = ApplicationManager.getApplication().getService(BaseKotlinUastResolveProviderService::class.java)
+            ?: return null
+        return baseService.resolveToClassIfConstructorCall(ktCallElement, call)
     }
 
     /**

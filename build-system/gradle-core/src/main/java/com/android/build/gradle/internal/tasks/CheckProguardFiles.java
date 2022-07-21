@@ -26,6 +26,8 @@ import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
@@ -37,6 +39,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.DisableCachingByDefault;
 
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.VERIFICATION})
 public abstract class CheckProguardFiles extends NonIncrementalTask {
 
     @Override

@@ -79,13 +79,6 @@ open class AnalyticsEnabledTestVariant @Inject constructor(
 
     override val unitTest: UnitTest? = null
 
-    override val codeMinification: Boolean
-        get() {
-            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
-                VariantPropertiesMethodType.CODE_MINIFICATION_VALUE
-            return delegate.codeMinification
-        }
-
     private val generatesApk: GeneratesApk by lazy {
         AnalyticsEnabledGeneratesApk(
                 delegate,

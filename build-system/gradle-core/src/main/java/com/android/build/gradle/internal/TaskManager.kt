@@ -29,6 +29,7 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantBuilder
+import com.android.build.api.variant.impl.TaskProviderBasedDirectoryEntryImpl
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.attribution.CheckJetifierBuildService
@@ -969,7 +970,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     }
 
     fun createRenderscriptTask(creationConfig: ConsumableCreationConfig) {
-        if (creationConfig.renderscriptCreationConfig != null) {
+        creationConfig.renderscriptCreationConfig?.let { renderscriptCreationConfig ->
             val taskContainer = creationConfig.taskContainer
             val rsTask = taskFactory.register(
                 RenderscriptCompile.
@@ -980,6 +981,17 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                     } else (creationConfig as VariantCreationConfig).ndkConfig
                 )
             )
+
+            if (!renderscriptCreationConfig.renderscript.ndkModeEnabled.get()) {
+                creationConfig.sources.java.addSource(
+                    TaskProviderBasedDirectoryEntryImpl(
+                        name = "generated_renderscript",
+                        directoryProvider = creationConfig.artifacts.get(
+                            InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+                        ),
+                    )
+                )
+            }
             taskContainer.resourceGenTask.dependsOn(rsTask)
             // since rs may generate Java code, always set the dependency.
             taskContainer.sourceGenTask.dependsOn(rsTask)
@@ -2535,6 +2547,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 }
             }
             taskFactory.register(DataBindingTriggerTask.CreationAction(creationConfig))
+            creationConfig.sources.java.addSource(
+                TaskProviderBasedDirectoryEntryImpl(
+                    name = "databinding_generated",
+                    directoryProvider = creationConfig.artifacts.get(
+                        InternalArtifactType.DATA_BINDING_TRIGGER
+                    ),
+                )
+            )
             setDataBindingAnnotationProcessorParams(creationConfig)
         }
     }

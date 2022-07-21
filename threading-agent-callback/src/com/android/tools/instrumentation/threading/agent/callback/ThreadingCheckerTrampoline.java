@@ -40,6 +40,10 @@ public final class ThreadingCheckerTrampoline {
         baselineViolations = BaselineViolations.fromResource();
     }
 
+    public static void removeHook(ThreadingCheckerHook hook) {
+        hooks.remove(hook);
+    }
+
     static void clearHooks() {
         hooks.clear();
     }

@@ -41,8 +41,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
-import com.android.tools.lint.client.api.LintDriver.DriverMode.ANALYSIS_ONLY
-import com.android.tools.lint.client.api.LintDriver.DriverMode.MERGE
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
@@ -585,8 +583,11 @@ class LintDriver(
             client.log(null, "No projects found for %1\$s", request.files.toString())
             return emptyList()
         }
-        initializeTimeMs += measureTimeMillis {
-            realClient.performInitializeProjects(projects)
+
+        if (mode != DriverMode.MERGE) { // The costly parsing environment is not required (or supported!) when merging
+            initializeTimeMs += measureTimeMillis {
+                realClient.performInitializeProjects(projects)
+            }
         }
 
         for (project in projects) {
@@ -822,7 +823,7 @@ class LintDriver(
         for (detector in detectors) {
             val detectorClass = detector.javaClass
             val detectorIssues = issueMap.get(detectorClass)
-            if (detectorIssues != null) {
+            if (detectorIssues.isNotEmpty()) {
                 var add = false
                 for (issue in detectorIssues) {
                     // The reason we have to check whether the detector is enabled
@@ -1541,7 +1542,7 @@ class LintDriver(
                             "See https://developer.android.com/studio/write/lint#commandline for more details.\n" +
                             "If you are using lint in a custom context, such as in tests, add org.codehaus.groovy:groovy to the runtime classpath."
                         val context = Context(this, project, main, file)
-                        context.report(Incident(IssueRegistry.LINT_WARNING, Location.Companion.create(context.file), message))
+                        context.report(Incident(IssueRegistry.LINT_WARNING, Location.create(context.file), message))
                         break // Only report once.
                     }
                 }
@@ -3046,7 +3047,6 @@ class LintDriver(
         instruction: AbstractInsnNode?
     ): Boolean {
         if (method.invisibleAnnotations != null) {
-            @Suppress("UNCHECKED_CAST")
             val annotations = method.invisibleAnnotations as List<AnnotationNode>
             return isSuppressed(issue, annotations)
         }
@@ -3133,7 +3133,6 @@ class LintDriver(
     // API; reserve need to require driver state later
     fun isSuppressed(issue: Issue?, field: FieldNode): Boolean {
         if (field.invisibleAnnotations != null) {
-            @Suppress("UNCHECKED_CAST")
             val annotations = field.invisibleAnnotations as List<AnnotationNode>
             return isSuppressed(issue, annotations)
         }
@@ -3152,7 +3151,6 @@ class LintDriver(
      */
     fun isSuppressed(issue: Issue?, classNode: ClassNode): Boolean {
         if (classNode.invisibleAnnotations != null) {
-            @Suppress("UNCHECKED_CAST")
             val annotations = classNode.invisibleAnnotations as List<AnnotationNode>
             return isSuppressed(issue, annotations)
         }

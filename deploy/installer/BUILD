@@ -156,6 +156,7 @@ cc_library(
         "overlay_install.cc",
         "overlay_swap.cc",
         "patch_applier.cc",
+        "root_push_install.cc",
         "server/app_servers.cc",
         "server/install_client.cc",
         "swap.cc",
@@ -186,6 +187,7 @@ cc_library(
         "overlay_install.h",
         "overlay_swap.h",
         "patch_applier.h",
+        "root_push_install.h",
         "server/app_servers.h",
         "server/install_client.h",
         "swap.h",
@@ -215,7 +217,15 @@ cc_binary(
     name = "installer",
     srcs = [
         "main.cc",
-    ],
+        "self.h",
+    ] + select_android(
+        [
+            "self_android.cc",
+        ],
+        [
+            "self.cc",
+        ],
+    ),
     copts = ANDROID_COPTS,
     linkopts = ANDROID_LINKOPTS,
     tags = ["no_windows"],

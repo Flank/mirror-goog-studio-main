@@ -20,7 +20,7 @@ import com.android.adblib.testingutils.CloseablesRule
 import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
 import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.testingutils.TestingAdbLibHost
+import com.android.adblib.testingutils.TestingAdbSessionHost
 import com.android.fakeadbserver.DeviceState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -339,10 +339,10 @@ class ConnectedDevicesTrackerTest {
         Assert.assertEquals(0, deviceCacheManager.connectedDevices.value.size)
     }
 
-    private fun createSession(fakeAdb: FakeAdbServerProvider): AdbLibSession {
-        val host = registerCloseable(TestingAdbLibHost())
+    private fun createSession(fakeAdb: FakeAdbServerProvider): AdbSession {
+        val host = registerCloseable(TestingAdbSessionHost())
         val channelProvider = fakeAdb.createChannelProvider(host)
-        return AdbLibSession.create(
+        return AdbSession.create(
             host,
             channelProvider,
             Duration.ofMillis(SOCKET_CONNECT_TIMEOUT_MS)

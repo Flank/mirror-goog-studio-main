@@ -130,4 +130,9 @@ public class ZipSource {
     String getName() {
         return map.getPath().toString();
     }
+
+    @NonNull
+    public byte[] getComment() {
+        return map.getComment();
+    }
 }

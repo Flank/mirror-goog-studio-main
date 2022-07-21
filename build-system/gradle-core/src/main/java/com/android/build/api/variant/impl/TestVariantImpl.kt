@@ -125,7 +125,7 @@ open class TestVariantImpl @Inject constructor(
     }
 
     override val minifiedEnabled: Boolean
-        get() = variantBuilder.codeMinification
+        get() = variantBuilder.isMinifyEnabled
     override val resourcesShrink: Boolean
         get() = false
 
@@ -163,9 +163,6 @@ open class TestVariantImpl @Inject constructor(
             )
         }
     }
-
-    override val codeMinification: Boolean
-        get() = variantBuilder.codeMinification
 
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API

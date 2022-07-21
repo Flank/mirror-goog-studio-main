@@ -29,8 +29,10 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.compiling.GeneratedCodeFileCreator
 import com.android.build.gradle.internal.generators.BuildConfigGenerator
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationActionImpl
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty
@@ -51,6 +53,7 @@ import org.gradle.api.tasks.TaskProvider
 import java.io.Serializable
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_GENERATION])
 abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- PUBLIC TASK API -----

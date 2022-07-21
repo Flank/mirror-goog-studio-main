@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.google.protobuf.ByteString
 import org.gradle.api.artifacts.ArtifactCollection
@@ -59,6 +60,7 @@ import java.security.MessageDigest
 
 /** Task that publishes the app dependencies proto for each app or dynamic feature module. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
 abstract class PerModuleReportDependenciesTask : NonIncrementalTask() {
 
     @get:Internal

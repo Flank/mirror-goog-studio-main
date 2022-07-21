@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
@@ -53,6 +54,7 @@ import java.util.zip.ZipInputStream
  * Task that generates the standalone from a bundle.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.APK_PACKAGING])
 abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
 
     @get:InputFiles

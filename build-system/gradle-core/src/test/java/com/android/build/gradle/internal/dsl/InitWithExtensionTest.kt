@@ -17,6 +17,8 @@ package com.android.build.gradle.internal.dsl
 
 import com.android.build.api.dsl.HasInitWith
 import com.android.build.gradle.internal.services.createDslServices
+import com.android.builder.core.ComponentType
+import com.android.builder.core.ComponentTypeImpl
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
@@ -65,8 +67,14 @@ class InitWithExtensionTest {
 
     @Test
     fun testBuildTypeInitWithExtension() {
-        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "debug", dslServices)
-        val qaBuildType = dslServices.newDecoratedInstance(BuildType::class.java, "qa", dslServices)
+        val debugBuildType = dslServices.newDecoratedInstance(BuildType::class.java,
+            "debug",
+            dslServices,
+            ComponentTypeImpl.BASE_APK)
+        val qaBuildType = dslServices.newDecoratedInstance(BuildType::class.java,
+            "qa",
+            dslServices,
+            ComponentTypeImpl.BASE_APK)
         for (buildType in listOf(debugBuildType, qaBuildType)) {
             buildType.extensions.create(MyExtension::class.java, "my", MyExtensionImpl::class.java)
         }

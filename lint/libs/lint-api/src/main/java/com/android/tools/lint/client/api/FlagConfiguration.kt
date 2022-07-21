@@ -27,9 +27,9 @@ import com.android.tools.lint.detector.api.guessGradleLocationForFile
 import java.io.File
 
 /**
- * Consult the lint.xml file, but override with the --enable
- * and --disable flags supplied on the command line (as well as any
- * other applicable flags)
+ * Consult the lint.xml file, but override with the --enable and
+ * --disable flags supplied on the command line (as well as any other
+ * applicable flags)
  */
 open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configuration(configurations) {
     var associatedLocation: Location? = null
@@ -95,7 +95,7 @@ open class FlagConfiguration(configurations: ConfigurationHierarchy) : Configura
                 }
                 severity = Severity.ERROR
             }
-            if (isIgnoreWarnings() && impliedSeverity === Severity.WARNING) {
+            if (isIgnoreWarnings() && impliedSeverity <= Severity.WARNING) {
                 severity = Severity.IGNORE
             }
         }

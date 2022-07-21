@@ -73,7 +73,7 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testGetAll() {
-        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val addedSourceFromTask = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
         val testTarget = createTestTarget(addedSrcDir)
         val directories = testTarget.all.get()
@@ -90,7 +90,7 @@ internal class SourceDirectoriesImplTest {
             project.objects.fileTree(),
             project.objects.fileTree(),
         )
-        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val addedSourceFromTask = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
         val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.getAsFileTrees().get()
@@ -103,7 +103,7 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testVariantSourcesForModel() {
-        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val addedSourceFromTask = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
         val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.variantSourcesForModel { true }
@@ -116,7 +116,7 @@ internal class SourceDirectoriesImplTest {
 
     @Test
     fun testVariantSourcesWithFilteringForModel() {
-        val addedSourceFromTask = project.layout.buildDirectory.dir("_for_test/srcAddingTask").get().asFile
+        val addedSourceFromTask = project.layout.buildDirectory.dir("generated/_for_test/srcAddingTask").get().asFile
         val addedSrcDir = temporaryFolder.newFolder("somewhere/safe")
         val testTarget = createTestTarget(addedSrcDir)
         val fileTrees = testTarget.variantSourcesForModel { entry ->

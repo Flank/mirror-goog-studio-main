@@ -26,6 +26,8 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.core.ComponentType;
 import java.io.IOException;
 import java.util.stream.Collectors;
+
+import com.android.ide.common.attribution.TaskCategoryLabel;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.diagnostics.ProjectBasedReportTask;
 import org.gradle.api.tasks.diagnostics.internal.ReportRenderer;
@@ -35,6 +37,7 @@ import org.gradle.work.DisableCachingByDefault;
 
 /** Prints out the DSL names and directory names of available source sets. */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.HELP})
 public class SourceSetsTask extends ProjectBasedReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();

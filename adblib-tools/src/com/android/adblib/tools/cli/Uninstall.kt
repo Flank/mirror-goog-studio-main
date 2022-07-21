@@ -15,7 +15,7 @@
  */
 package com.android.adblib.tools.cli
 
-import com.android.adblib.AdbLibSession
+import com.android.adblib.AdbSession
 import com.android.adblib.DeviceSelector
 import com.android.adblib.thisLogger
 import com.android.adblib.tools.UninstallResult
@@ -28,7 +28,7 @@ internal class Uninstall : DeviceCommand("uninstall")  {
         println("Usage: uninstall ['FLAGS'] APPLICATION_ID")
     }
 
-    override fun run(session : AdbLibSession, device : DeviceSelector, args : Arguments) : Boolean {
+    override fun run(session : AdbSession, device : DeviceSelector, args : Arguments) : Boolean {
         val logger = thisLogger(session.host)
         val options : Array<String>
         val applicationID : String

@@ -214,9 +214,7 @@ public class Main {
      */
     public static void main(String[] args) {
         int exitCode = new Main().run(args);
-        if (exitCode != ERRNO_SUCCESS) {
-            System.exit(exitCode);
-        }
+        System.exit(exitCode);
     }
 
     /** Hook intended for tests */

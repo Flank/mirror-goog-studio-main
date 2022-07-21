@@ -198,6 +198,34 @@ public class DeployerRunnerTest {
     }
 
     @Test
+    public void testSkipPostInstallTasks() throws Exception {
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+        Path file = TestUtils.resolveWorkspacePath(BASE + "sample.apk");
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+        String[] args = {
+            "install",
+            "com.example.helloworld",
+            file.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath.toString(),
+            "--skip-post-install"
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.helloworld", file);
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
+        assertTrue(dexDB.dump().isEmpty());
+        assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
+    }
+
+    @Test
     @ApiLevel.InRange(min = 28)
     public void testInstallCoroutineDebuggerSuccessful() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
@@ -283,7 +311,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.helloworld
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.helloworld
                     "/system/bin/run-as com.example.helloworld id -u",
                     String.format(
@@ -305,7 +334,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.helloworld
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.helloworld
                     "/system/bin/run-as com.example.helloworld id -u",
                     String.format(
@@ -383,7 +413,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION,
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION,
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -469,7 +500,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -587,7 +619,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -775,7 +808,8 @@ public class DeployerRunnerTest {
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
-                        AdbInstallerTest.CHMOD,
+                        AdbInstallerTest.CHMOD_DIR,
+                        AdbInstallerTest.CHMOD_INSTALLER,
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -900,7 +934,8 @@ public class DeployerRunnerTest {
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
-                        AdbInstallerTest.CHMOD,
+                        AdbInstallerTest.CHMOD_DIR,
+                        AdbInstallerTest.CHMOD_INSTALLER,
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -1032,7 +1067,8 @@ public class DeployerRunnerTest {
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
-                        AdbInstallerTest.CHMOD,
+                        AdbInstallerTest.CHMOD_DIR,
+                        AdbInstallerTest.CHMOD_INSTALLER,
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -1175,7 +1211,8 @@ public class DeployerRunnerTest {
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
-                        AdbInstallerTest.CHMOD,
+                        AdbInstallerTest.CHMOD_DIR,
+                        AdbInstallerTest.CHMOD_INSTALLER,
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -1284,7 +1321,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -1413,7 +1451,8 @@ public class DeployerRunnerTest {
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         AdbInstallerTest.RM_DIR,
                         AdbInstallerTest.MK_DIR,
-                        AdbInstallerTest.CHMOD,
+                        AdbInstallerTest.CHMOD_DIR,
+                        AdbInstallerTest.CHMOD_INSTALLER,
                         INSTALLER_INVOCATION, // dump com.example.simpleapp
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
@@ -1706,7 +1745,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -1818,7 +1858,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -1937,6 +1978,50 @@ public class DeployerRunnerTest {
                 Duration.ofSeconds(5));
 
         assertFalse(dexDB.hasDuplicates());
+    }
+
+    @Test
+    @ApiLevel.InRange(min = 24)
+    public void testRootPushInstall() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        Path oldApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple.apk");
+        Path newApk = TestUtils.resolveWorkspacePath(BASE + "apks/simple+code.apk");
+
+        assertTrue(device.getApps().isEmpty());
+        DeployerRunner runner = new DeployerRunner(cacheDb, dexDB, service);
+
+        Path installersPath = DeployerTestUtils.prepareInstaller().toPath();
+
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            oldApk.toString(),
+            "--force-full-install",
+            "--installers-path=" + installersPath
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", oldApk);
+
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    newApk.toString(),
+                    "--installers-path=" + installersPath,
+                    "--use-root-push-install",
+                    "--skip-post-install"
+                };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", newApk);
+        assertMetrics(
+                runner.getMetrics(),
+                ":Success",
+                "PARSE_PATHS:Success",
+                ":Success",
+                "ROOT_PUSH_INSTALL:Success");
     }
 
     @Test
@@ -2123,7 +2208,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
@@ -2231,7 +2317,8 @@ public class DeployerRunnerTest {
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     AdbInstallerTest.RM_DIR,
                     AdbInstallerTest.MK_DIR,
-                    AdbInstallerTest.CHMOD,
+                    AdbInstallerTest.CHMOD_DIR,
+                    AdbInstallerTest.CHMOD_INSTALLER,
                     INSTALLER_INVOCATION, // dump com.example.simpleapp
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",

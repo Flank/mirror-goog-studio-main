@@ -278,7 +278,6 @@ open class AndroidTestImpl @Inject constructor(
     override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
-                this,
                 dslInfo,
                 internalServices,
                 renderscriptTargetApi = mainVariant.renderscriptCreationConfig!!.renderscriptTargetApi

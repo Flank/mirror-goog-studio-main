@@ -1076,7 +1076,7 @@ abstract class LintClient {
             ?: run {
                 val sdkHome = getSdkHome()
                 if (sdkHome != null) {
-                    SimplePlatformLookup(sdkHome).also { platformLookup = it }
+                    SimplePlatformLookup.get(sdkHome).also { platformLookup = it }
                 } else {
                     null
                 }
@@ -1161,8 +1161,9 @@ abstract class LintClient {
         // anyway and override the getDesugaring method above; this is the default
         // handling.)
         val version = project.gradleModelVersion ?: return Desugaring.DEFAULT
+        val languageLevel = getLanguageLevel(project, project.javaLanguageLevel)
         return getGradleDesugaring(
-            version, getLanguageLevel(project, JDK_1_7), project.isCoreLibraryDesugaringEnabled
+            version, languageLevel, project.isCoreLibraryDesugaringEnabled
         )
     }
 

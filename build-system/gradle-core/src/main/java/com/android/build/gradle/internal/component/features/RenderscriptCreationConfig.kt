@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.component.features
 
 import com.android.build.api.variant.Renderscript
-import com.android.build.api.variant.impl.DirectoryEntry
 
 /**
  * Creation config for components that support renderscript.
@@ -32,5 +31,4 @@ interface RenderscriptCreationConfig {
     val renderscriptTargetApi: Int
     @Deprecated("DO NOT USE, instead use the final value from the renderscript variant api value")
     val dslRenderscriptNdkModeEnabled: Boolean
-    fun addRenderscriptSources(sourceSets: MutableList<DirectoryEntry>)
 }

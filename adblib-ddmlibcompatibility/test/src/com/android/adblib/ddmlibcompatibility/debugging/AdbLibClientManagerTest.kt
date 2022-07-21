@@ -15,7 +15,7 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
-import com.android.adblib.testing.FakeAdbLibSession
+import com.android.adblib.testing.FakeAdbSession
 import junit.framework.Assert
 import org.junit.Test
 
@@ -23,7 +23,7 @@ class AdbLibClientManagerTest {
     @Test
     fun testSessionIsStored() {
         // Prepare
-        val session = FakeAdbLibSession()
+        val session = FakeAdbSession()
 
         // Act
         val clientManager = AdbLibClientManager(session)

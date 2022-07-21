@@ -96,14 +96,14 @@ inline fun <reified T : Any> T.thisLogger(loggerFactory: AdbLoggerFactory): AdbL
 /**
  * Creates an [AdbLogger] for the class of this instance.
  */
-inline fun <reified T : Any> T.thisLogger(host: AdbLibHost): AdbLogger {
+inline fun <reified T : Any> T.thisLogger(host: AdbSessionHost): AdbLogger {
     return thisLogger(host.loggerFactory)
 }
 
 /**
  * Creates an [AdbLogger] for the class of this instance.
  */
-inline fun <reified T : Any> T.thisLogger(session: AdbLibSession): AdbLogger {
+inline fun <reified T : Any> T.thisLogger(session: AdbSession): AdbLogger {
     return thisLogger(session.host)
 }
 

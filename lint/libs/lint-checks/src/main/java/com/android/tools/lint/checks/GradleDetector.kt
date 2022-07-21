@@ -512,7 +512,7 @@ open class GradleDetector : Detector(), GradleScanner {
                         report(
                             context, valueCookie, LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8,
                             "Use the Lifecycle Java 8 API provided by the " +
-                                "`lifecycle-common-java8` library instead of Lifecycle annotations " +
+                                "`lifecycle-common` library instead of Lifecycle annotations " +
                                 "for faster incremental build.",
                             null
                         )

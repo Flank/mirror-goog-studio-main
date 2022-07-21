@@ -30,11 +30,13 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.LintMap
+import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.PartialResult
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.utils.findGradleBuildFile
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
@@ -116,7 +118,8 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
         if (context.isGlobalAnalysis()) {
             if (context.mainProject.targetSdk < MIN_TARGET ||
                 isHoldingPostNotificationsViaAnnotations(node) ||
-                isHoldingPostNotifications(context.mainProject) != false
+                isHoldingPostNotifications(context.mainProject) != false ||
+                context.mainProject.isLibrary
             ) {
                 return
             }
@@ -169,14 +172,14 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
     }
 
     override fun afterCheckRootProject(context: Context) {
-        if (context.isGlobalAnalysis() && context.driver.scope.contains(Scope.JAVA_LIBRARIES)) {
+        if (context.isGlobalAnalysis() && context.driver.scope.contains(Scope.JAVA_LIBRARIES) && !context.mainProject.isLibrary) {
             checkClassReference(context.getPartialResults(ISSUE).map(), context)
         }
     }
 
     override fun checkPartialResults(context: Context, partialResults: PartialResult) {
         assert(!context.isGlobalAnalysis())
-        if (context.project === context.mainProject) {
+        if (context.project === context.mainProject && !context.mainProject.isLibrary) {
             val map = partialResults.map()
             checkClassReference(map, context)
         }
@@ -195,7 +198,27 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
             return
         }
 
-        val location = map.getLocation(KEY_CLASS) ?: return
+        // Allow suppressing via the manifest
+        val mergedManifest = context.mainProject.mergedManifest?.documentElement
+        if (mergedManifest != null && context.driver.isSuppressed(null, ISSUE, mergedManifest)) {
+            return
+        }
+
+        // Avoid pointing to the .jar file which referenced the notification directly; these
+        // paths often contain paths that vary from machine to machine so cannot be properly
+        // baselined:
+        // ~/.gradle/caches/transforms-3/4366a02f2b10003dc48387e903833c2d/transformed/leakcanary-android-core-2.8.1/jars/classes.jar
+        //
+        // It's not as if the user needs to go to the file to make changes;
+        // this is the path where the usage was found; instead, point them to the manifest file
+        // where they should be making these changes (adding the permission).
+        val manifest = context.mainProject.manifestFiles.firstOrNull()
+        val gradleFile = findGradleBuildFile(context.mainProject.dir)
+
+        val location =
+            if (manifest != null) Location.create(manifest)
+            else if (gradleFile.isFile) Location.create(gradleFile)
+            else map.getLocation(KEY_CLASS) ?: return
         val owner = map.get(KEY_CLASS_NAME) ?: return
         val message = getWarningMessage() + " (usage from ${ClassContext.getFqcn(owner)})"
         context.report(ISSUE, location, message, createFix())
@@ -270,7 +293,8 @@ class NotificationPermissionDetector : Detector(), SourceCodeScanner, ClassScann
     }
 
     override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
-        if (context.mainProject.targetSdk >= MIN_TARGET && isHoldingPostNotifications(context.mainProject) == false) {
+        val project = context.mainProject
+        if (project.targetSdk >= MIN_TARGET && !project.isLibrary && isHoldingPostNotifications(project) == false) {
             map.put(KEY_SOURCE, true)
             return true
         }

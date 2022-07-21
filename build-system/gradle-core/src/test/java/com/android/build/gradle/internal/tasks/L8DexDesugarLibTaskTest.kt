@@ -84,7 +84,8 @@ class L8DexDesugarLibTaskTest {
     }
 
     companion object {
-        val bootClasspath = TestUtils.resolvePlatformPath("android.jar").toFile()
+        val bootClasspath =
+            TestUtils.resolvePlatformPath("android.jar", TestUtils.TestType.AGP).toFile()
         val desugarJar = listOf(TestUtils.getDesugarLibJar().toFile())
         val desugarConfig = TestUtils.getDesugarLibConfigContent()
     }

@@ -19,6 +19,8 @@ package com.android.manifmerger;
 import static com.android.manifmerger.ManifestMergerTestUtil.loadTestData;
 import static com.android.manifmerger.ManifestMergerTestUtil.transformParameters;
 import static com.android.manifmerger.MergingReport.Record;
+import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -62,6 +64,7 @@ public class ManifestMerger2Test {
                 "03d_inject_attributes_no_warnings.xml",
                 "05_inject_package.xml",
                 "05_inject_package_placeholder.xml",
+                "05_inject_package_placeholder_not_provided.xml",
                 "05_inject_package_with_overlays.xml",
                 "06_inject_attributes_with_specific_prefix.xml",
                 "05_inject_applicationid_not_provided.xml",
@@ -89,6 +92,7 @@ public class ManifestMerger2Test {
                 "28_uses_perm_merge",
                 "29_uses_perm_selector",
                 "29b_uses_perm_invalidSelector",
+                "29c_uses_perm_unsupportedSelector",
                 "30_uses_sdk_ok",
                 "32_uses_sdk_minsdk_ok",
                 "33_uses_sdk_minsdk_conflict",
@@ -117,6 +121,7 @@ public class ManifestMerger2Test {
                 "77_app_metadata_conflict",
                 "78_removeAll",
                 "78b_removeAllActivities",
+                "78c_removeAll_invalid.xml",
                 "79_custom_node.xml",
                 "80_remove_ns_in_nodes",
                 "81_do_not_duplicate_xmlns_in_nodes",
@@ -214,51 +219,55 @@ public class ManifestMerger2Test {
         MergingReport mergeReport = invoker.merge();
 
         // this is obviously quite hacky, refine once merge output is better defined.
-        boolean notExpectingError = !isExpectingError(testFiles.getExpectedErrors());
+        boolean expectingError = isExpectingError(testFiles.getExpectedErrors());
         mergeReport.log(stdLogger);
-        if (mergeReport.getResult().isSuccess()) {
-            String xmlDocument = mergeReport.getMergedDocument(testFiles.getResultKind());
-            assertNotNull(xmlDocument);
-            stdLogger.info(xmlDocument);
 
-            if (testFiles.getActualResult() != null) {
-                try (FileWriter writer = new FileWriter(testFiles.getActualResult())) {
-                    writer.append(xmlDocument);
-                }
+        String xmlDocument = mergeReport.getMergedDocument(testFiles.getResultKind());
+        assertNotNull(xmlDocument);
+        stdLogger.info("Resulting manifest:");
+        stdLogger.info(xmlDocument);
+
+        if (testFiles.getActualResult() != null) {
+            try (FileWriter writer = new FileWriter(testFiles.getActualResult())) {
+                writer.append(xmlDocument);
             }
-
-            if (!notExpectingError) {
-                fail("Did not get expected error : " + testFiles.getExpectedErrors());
-            }
-
-            XmlDocument expectedResult =
-                    TestUtils.xmlDocumentFromString(
-                            TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
-                            testFiles.getExpectedResult(),
-                            model);
-
-            XmlDocument actualResult =
-                    TestUtils.xmlDocumentFromString(
-                            TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
-                            xmlDocument,
-                            model);
-
-            Optional<String> comparingMessage =
-                    expectedResult.compareTo(actualResult);
-
-            if (comparingMessage.isPresent()) {
-                Logger.getAnonymousLogger().severe(comparingMessage.get());
-                fail(comparingMessage.get());
-            }
-            // process any warnings.
-            compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
-        } else {
-            for (Record record : mergeReport.getLoggingRecords()) {
-                Logger.getAnonymousLogger().info("Returned log: " + record);
-            }
-            compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
-            assertFalse(notExpectingError);
         }
+
+        if (mergeReport.getResult().isSuccess() && expectingError) {
+            fail("Did not get expected error : " + testFiles.getExpectedErrors());
+        }
+
+        XmlDocument expectedResult =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
+                        testFiles.getExpectedResult(),
+                        model);
+
+        XmlDocument actualResult =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), testFiles.getMain().getName()),
+                        xmlDocument,
+                        model);
+
+        Optional<String> comparingMessage = expectedResult.compareTo(actualResult);
+
+        for (Record record : mergeReport.getLoggingRecords()) {
+            Logger.getAnonymousLogger().info("Returned log: " + record);
+        }
+
+        if (comparingMessage.isPresent()) {
+            Logger.getAnonymousLogger().severe(comparingMessage.get());
+            assertThat(actualResult.prettyPrint()).isEqualTo(expectedResult.prettyPrint());
+        }
+
+        // process any warnings.
+        compareExpectedAndActualErrors(mergeReport, testFiles.getExpectedErrors());
+        if (mergeReport.getResult().isSuccess()) {
+            assertFalse(expectingError);
+        } else {
+            assertTrue(expectingError);
+        }
+
     }
 
     private List<ManifestMerger2.Invoker.Feature> getFeaturesForTestCase() {

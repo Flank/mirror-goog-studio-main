@@ -17,7 +17,9 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.NotificationTrampolineDetectorTest.Companion.notificationStubs
+import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
 import com.android.tools.lint.checks.infrastructure.TestFile
+import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.detector.api.Detector
 
 class NotificationPermissionDetectorTest : AbstractCheckTest() {
@@ -84,12 +86,12 @@ class NotificationPermissionDetectorTest : AbstractCheckTest() {
             *notificationStubs
         ).run().expect(
             """
-            libs/usage.jar: Error: When targeting Android 13 or higher, posting a permission requires holding the POST_NOTIFICATIONS permission (usage from test.pkg.NotificationTestAndroidx) [NotificationPermission]
+            AndroidManifest.xml: Error: When targeting Android 13 or higher, posting a permission requires holding the POST_NOTIFICATIONS permission (usage from test.pkg.NotificationTestAndroidx) [NotificationPermission]
             1 errors, 0 warnings
             """
         ).expectFixDiffs(
             """
-            Data for libs/usage.jar line 0:   missing : android.permission.POST_NOTIFICATIONS
+            Data for AndroidManifest.xml line 0:   missing : android.permission.POST_NOTIFICATIONS
             """
         )
     }
@@ -180,6 +182,43 @@ class NotificationPermissionDetectorTest : AbstractCheckTest() {
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg.permissiontest">
                     <uses-sdk android:minSdkVersion="17" android:targetSdkVersion="28" />
                     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+                </manifest>
+                """
+            ).indented(),
+            bytecodeUsage,
+            *notificationStubs
+        ).run().expectClean()
+    }
+
+    fun testNotificationInLibrary() {
+        val library = project().files(
+            manifest().minSdk(29).targetSdk(33),
+            javaNotificationUsage,
+            *notificationStubs
+        ).type(LIBRARY)
+
+        lint().projects(library).testModes(TestMode.PARTIAL).run().expectClean()
+    }
+
+    fun testNotificationViaBytecodeInLibrary() {
+        val library = project().files(
+            manifest().minSdk(29).targetSdk(33),
+            bytecodeUsage,
+            *notificationStubs
+        ).type(LIBRARY)
+
+        lint().projects(library).run().expectClean()
+    }
+
+    fun testSuppressedBytecodeViaLibraryInManifest() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    package="test.pkg.permissiontest"
+                    tools:ignore='NotificationPermission'>
+                    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="33" />
                 </manifest>
                 """
             ).indented(),

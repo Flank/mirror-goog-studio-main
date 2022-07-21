@@ -129,13 +129,11 @@ maven_library(
     pom_name = "Android Tools ddmlib",
     resource_strip_prefix = "tools/base/ddmlib",
     visibility = ["//visibility:public"],
-    exports = [
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
-    ],
     deps = [
         "//tools/base/common:tools.common",
         "@maven//:com.google.protobuf.protobuf-java",
         "@maven//:net.sf.kxml.kxml2",
+        "@maven//:org.jetbrains.annotations",
     ],
 )
 

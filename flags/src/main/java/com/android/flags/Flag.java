@@ -93,13 +93,13 @@ public final class Flag<T> {
     }
 
     private final FlagGroup group;
-    private final String name;
     private final String id;
     private final String displayName;
     private final String description;
     private final ValueConverter<T> valueConverter;
 
     @NonNull private final String defaultValue;
+    @NonNull private final T originalDefaultValue;
 
     /** Use one of the {@code Flag#create} convenience methods to construct this class. */
     private Flag(
@@ -110,18 +110,22 @@ public final class Flag<T> {
             @NonNull T defaultValue,
             @NonNull ValueConverter<T> valueConverter) {
         this.group = group;
-        this.name = name;
         this.id = group.getName() + "." + name;
         this.displayName = displayName;
         this.description = description;
         this.valueConverter = valueConverter;
         this.defaultValue = valueConverter.serialize(defaultValue);
+        this.originalDefaultValue = defaultValue;
+        group.getFlags().register(this);
+    }
 
-        verifyDefaultValue(defaultValue, this.defaultValue, valueConverter);
+    /** Verifies that this flag has valid information */
+    public void validate() {
+        group.validate();
+        verifyDefaultValue(originalDefaultValue, this.defaultValue, valueConverter);
         verifyFlagIdFormat(getId());
         verifyDisplayTextFormat(displayName);
         verifyDisplayTextFormat(description);
-        group.getFlags().verifyUniqueId(this);
     }
 
     /**

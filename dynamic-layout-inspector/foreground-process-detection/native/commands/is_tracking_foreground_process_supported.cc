@@ -24,17 +24,16 @@ namespace layout_inspector {
 grpc::Status IsTrackingForegroundProcessSupported::ExecuteOn(
     profiler::Daemon* daemon) {
   // Check if foreground process detection is supported
-  bool is_supported = ForegroundProcessTracker::Instance(daemon->buffer())
-                          .IsTrackingForegroundProcessSupported();
+  TrackingForegroundProcessSupported tracking_supported =
+      ForegroundProcessTracker::Instance(daemon->buffer())
+          .IsTrackingForegroundProcessSupported();
 
   // Send the result to Studio.
   profiler::proto::Event event;
   event.set_kind(profiler::proto::Event::
                      LAYOUT_INSPECTOR_TRACKING_FOREGROUND_PROCESS_SUPPORTED);
-  auto* layoutInspectorForegroundProcessSupported =
-      event.mutable_layout_inspector_tracking_foreground_process_supported();
-
-  layoutInspectorForegroundProcessSupported->set_supported(is_supported);
+  event.mutable_layout_inspector_tracking_foreground_process_supported()
+      ->CopyFrom(tracking_supported);
   daemon->buffer()->Add(event);
 
   return grpc::Status::OK;

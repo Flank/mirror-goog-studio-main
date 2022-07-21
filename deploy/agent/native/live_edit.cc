@@ -198,9 +198,10 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
           req.group_id(), error);
       Log::V("InvalidateGroupsWithKey %d", req.group_id());
       if (!result) {
-        Log::E("%s", error.c_str());
-        resp.set_status(proto::AgentLiveEditResponse::ERROR);
-        return resp;
+        // TODO: This needs to be reported back to Studio's UI.
+        Log::W("Falling back to full recompose: %s", error.c_str());
+        jobject state = recompose.SaveStateAndDispose(reloader);
+        recompose.LoadStateAndCompose(reloader, state);
       }
     } else {
       jobject state = recompose.SaveStateAndDispose(reloader);

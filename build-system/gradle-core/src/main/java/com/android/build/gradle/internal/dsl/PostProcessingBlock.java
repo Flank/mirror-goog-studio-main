@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import static com.android.build.gradle.internal.ProguardFileType.CONSUMER;
 import static com.android.build.gradle.internal.ProguardFileType.EXPLICIT;
 import static com.android.build.gradle.internal.ProguardFileType.TEST;
+import static com.android.build.gradle.internal.dsl.ValidationUtilKt.checkShrinkResourceEligibility;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.ProguardFilesProvider;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.services.DslServices;
+import com.android.builder.core.ComponentType;
 import com.android.builder.model.CodeShrinker;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -54,6 +56,7 @@ import org.jetbrains.annotations.NotNull;
 @Incubating
 public class PostProcessingBlock implements ProguardFilesProvider, PostProcessing {
     @NonNull private final DslServices dslServices;
+    @NonNull private final ComponentType componentType;
 
     private boolean removeUnusedCode = true;
     private boolean removeUnusedResources;
@@ -65,9 +68,11 @@ public class PostProcessingBlock implements ProguardFilesProvider, PostProcessin
     private List<File> consumerProguardFiles;
 
     @Inject
-    public PostProcessingBlock(@NonNull DslServices dslServices) {
+    public PostProcessingBlock(
+            @NonNull DslServices dslServices, @NonNull ComponentType componentType) {
         this(
                 dslServices,
+                componentType,
                 ImmutableList.of(
                         ProguardFiles.getDefaultProguardFile(
                                 ProguardFiles.ProguardFile.NO_ACTIONS.fileName,
@@ -75,8 +80,12 @@ public class PostProcessingBlock implements ProguardFilesProvider, PostProcessin
     }
 
     @VisibleForTesting
-    PostProcessingBlock(@NonNull DslServices dslServices, List<File> proguardFiles) {
+    PostProcessingBlock(
+            @NonNull DslServices dslServices,
+            @NonNull ComponentType componentType,
+            List<File> proguardFiles) {
         this.dslServices = dslServices;
+        this.componentType = componentType;
         this.proguardFiles = Lists.newArrayList(proguardFiles);
         this.testProguardFiles = new ArrayList<>();
         this.consumerProguardFiles = new ArrayList<>();
@@ -112,6 +121,7 @@ public class PostProcessingBlock implements ProguardFilesProvider, PostProcessin
     }
 
     public void setRemoveUnusedResources(boolean removeUnusedResources) {
+        checkShrinkResourceEligibility(componentType, dslServices, removeUnusedResources);
         this.removeUnusedResources = removeUnusedResources;
     }
 

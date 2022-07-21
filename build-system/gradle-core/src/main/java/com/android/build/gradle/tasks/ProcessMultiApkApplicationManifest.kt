@@ -26,9 +26,11 @@ import com.android.build.api.variant.impl.dirName
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.ManifestMerger2
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
@@ -52,6 +54,7 @@ import java.io.File
  * versions that are each suitable for all [VariantOutputImpl] for this variant.
  */
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
 abstract class ProcessMultiApkApplicationManifest: ManifestProcessorTask() {
 
     @get:Nested

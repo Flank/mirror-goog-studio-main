@@ -428,6 +428,7 @@ message InstallerRequest {
     LiveEditRequest le_request = 11;
     NetworkTestRequest network_test_request = 12;
     TimeoutRequest timeout_request = 13;
+    RootPushInstallRequest root_push_install_request = 15;
   }
 
   // The InstallerResponse should match the ID of the request.
@@ -461,6 +462,7 @@ message InstallerResponse {
     LiveEditResponse le_response = 11;
     NetworkTestResponse network_test_response = 12;
     TimeoutResponse timeout_response = 13;
+    RootPushInstallResponse root_push_install_response = 16;
   }
 
   string error_message = 14;
@@ -565,6 +567,21 @@ message DeltaInstallResponse {
   // either "pm install" or "pm commit". Parsed to determine
   // reason upon failure.
   string install_output = 2;
+}
+
+message RootPushInstallRequest {
+  string install_dir = 1;
+  InstallInfo install_info = 2;
+}
+
+message RootPushInstallResponse {
+  enum Status {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Status status = 1;
+  string error_message = 2;
 }
 
 message CheckSetupRequest {

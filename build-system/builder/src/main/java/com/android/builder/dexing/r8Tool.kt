@@ -28,7 +28,6 @@ import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.ArchiveProgramResourceProvider
 import com.android.tools.r8.AssertionsConfiguration
 import com.android.tools.r8.ClassFileConsumer
-import com.android.tools.r8.CompatProguardCommandBuilder
 import com.android.tools.r8.CompilationMode
 import com.android.tools.r8.DataDirectoryResource
 import com.android.tools.r8.DataEntryResource
@@ -39,6 +38,8 @@ import com.android.tools.r8.DiagnosticsHandler
 import com.android.tools.r8.ProgramResource
 import com.android.tools.r8.ProgramResourceProvider
 import com.android.tools.r8.R8
+import com.android.tools.r8.R8Command
+import com.android.tools.r8.R8Command.Builder
 import com.android.tools.r8.StringConsumer
 import com.android.tools.r8.Version
 import com.android.tools.r8.origin.Origin
@@ -104,11 +105,15 @@ fun runR8(
         outputKeepRules?.let{ logger.fine("Keep rules for shrinking desugar lib: $it") }
     }
     val r8CommandBuilder =
-            CompatProguardCommandBuilder(!useFullR8,
+            R8Command.builder(
                     R8DiagnosticsHandler(
                             proguardConfig.proguardOutputFiles.missingKeepRules,
                             messageReceiver,
                             "R8"))
+
+    if (!useFullR8) {
+      r8CommandBuilder.setProguardCompatibility(true);
+    }
 
     if (toolConfig.r8OutputType == R8OutputType.DEX) {
         r8CommandBuilder.minApiLevel = toolConfig.minSdkVersion

@@ -664,6 +664,8 @@ interface CommonExtension<
      *
      * For additional information about NDK installation see
      * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.ndkVersion]
      */
     @get:Incubating
     @set:Incubating
@@ -685,6 +687,8 @@ interface CommonExtension<
      *
      * For additional information about NDK installation see
      * [Install and configure the NDK](https://developer.android.com/studio/projects/install-ndk).
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.ndkPath]
      */
     @get:Incubating
     @set:Incubating
@@ -714,6 +718,8 @@ interface CommonExtension<
      *
      * Note that the value assigned to this property is parsed and stored in a normalized form,
      * so reading it back may give a slightly different result.
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.buildToolsVersion]
      */
     @get:Incubating
     @set:Incubating
@@ -798,6 +804,8 @@ interface CommonExtension<
      *
      * The value you assign to this property is parsed and stored in a normalized form, so
      * reading it back may return a slightly different value.
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.compileSdk]
      */
     var compileSdk: Int?
 
@@ -805,6 +813,8 @@ interface CommonExtension<
      * Specifies the SDK Extension level to compile your project against. This value is optional.
      *
      * When not provided the base extension for the given `compileSdk` API level will be selected.
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.compileSdkExtension]
      */
     var compileSdkExtension: Int?
 
@@ -815,9 +825,20 @@ interface CommonExtension<
      * rather than `compileSdk = 30` you can use `compileSdkPreview = "S"`
      *
      * Once the preview APIs are finalized, they will be allocated a stable integer value.
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.compileSdkPreview]
      */
     var compileSdkPreview: String?
 
+    /**
+     * Specify an SDK add-on to compile your project against.
+     *
+     * This can be set on all Gradle projects with [com.android.build.api.dsl.SettingsExtension.compileSdkAddon]
+     *
+     * @param vendor the vendor name of the add-on.
+     * @param name the name of the add-on
+     * @param version the integer API level of the add-on
+     */
     fun compileSdkAddon(vendor: String, name: String, version: Int)
 
     @Incubating

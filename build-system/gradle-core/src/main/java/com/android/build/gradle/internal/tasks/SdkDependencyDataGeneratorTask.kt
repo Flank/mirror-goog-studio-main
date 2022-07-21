@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.tools.build.libraries.metadata.AppDependencies
 import org.gradle.api.tasks.OutputFile
 import com.google.crypto.tink.BinaryKeysetReader
@@ -47,6 +48,7 @@ import java.util.zip.DeflaterOutputStream
  * of the APK.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
 abstract class SdkDependencyDataGeneratorTask : NonIncrementalTask() {
 
   companion object {
