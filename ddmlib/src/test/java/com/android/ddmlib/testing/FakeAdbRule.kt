@@ -154,6 +154,15 @@ class FakeAdbRule : ExternalResource() {
   fun stop()  {
     fakeAdbServer.stop()
   }
+
+  /**
+   * Add a [DeviceCommandHandler] to an already initialized  [FakeAdbServer].
+   *
+   * The handler is inserted as the first to be evaluated so handlers can override preexisting ones.
+   */
+  fun addDeviceCommandHandler(deviceCommandHandler: DeviceCommandHandler) {
+    fakeAdbServer.handlers.add(0, deviceCommandHandler)
+  }
 }
 
 class FakeEmulatorConsole(
