@@ -86,8 +86,7 @@ def _iml_module_jar_impl(
         form_deps,
         exports,
         friend_jars,
-        module_name,
-        use_ijar):
+        module_name):
     jars = []
     ijars = []
     sourcepath = []
@@ -95,8 +94,8 @@ def _iml_module_jar_impl(
 
     java_jar = ctx.actions.declare_file(name + ".java.jar") if java_srcs else None
     kotlin_jar = ctx.actions.declare_file(name + ".kotlin.jar") if kotlin_srcs else None
-    kotlin_ijar = ctx.actions.declare_file(name + ".kotlin-ijar.jar") if kotlin_srcs and use_ijar else None
-    full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar") if use_ijar else None
+    kotlin_ijar = ctx.actions.declare_file(name + ".kotlin-ijar.jar") if kotlin_srcs else None
+    full_ijar = ctx.actions.declare_file(name + ".merged-ijar-iml.jar")
 
     # Compiler args and JVM target.
     java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
@@ -130,8 +129,7 @@ def _iml_module_jar_impl(
             transitive_classpath = False,  # Matches JPS.
         )]
         jars += [kotlin_jar]
-        if use_ijar:
-            ijars += [kotlin_ijar]
+        ijars += [kotlin_ijar]
 
     # Resources.
     if resources:
@@ -154,11 +152,10 @@ def _iml_module_jar_impl(
             javac_opts = javac_opts,
             java_toolchain = java_toolchain,
             sourcepath = sourcepath,
-            # TODO(b/216385876) After updating to Bazel 5.0, use enable_compile_jar_action = use_ijar,
         )
-        if use_ijar:
-            # Note: we exclude formc output from ijars, since formc does not generate APIs used downstream.
-            ijars += java_provider.compile_jars.to_list()
+
+        # Note: we exclude formc output from ijars, since formc does not generate APIs used downstream.
+        ijars += java_provider.compile_jars.to_list()
 
         # Forms
         if form_srcs:
@@ -210,13 +207,12 @@ def _iml_module_jar_impl(
         allow_duplicates = True,  # TODO: Ideally we could be more strict here.
     )
 
-    if use_ijar:
-        run_singlejar(
-            ctx = ctx,
-            jars = ijars,
-            out = full_ijar,
-            allow_duplicates = True,
-        )
+    run_singlejar(
+        ctx = ctx,
+        jars = ijars,
+        out = full_ijar,
+        allow_duplicates = True,
+    )
 
     providers = []
     providers = [JavaInfo(
@@ -318,7 +314,6 @@ def _iml_module_impl(ctx):
         exports = exports,
         friend_jars = [],
         module_name = module_name,
-        use_ijar = True,
     )
 
     friend_jars = main_provider.compile_jars.to_list()
@@ -341,7 +336,6 @@ def _iml_module_impl(ctx):
         exports = exports + test_exports,
         friend_jars = friend_jars,
         module_name = module_name,
-        use_ijar = False,
     )
 
     iml_module_info = ImlModuleInfo(
