@@ -826,10 +826,14 @@ coverage_report(
 coverage_report(
     name = "play-sdk-index",
     srcpath_include = [
-        "tools/base/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/GooglePlaySdkIndex.kt",
         "tools/adt/idea/project-system-gradle/src/com/android/tools/idea/projectsystem/gradle/IdeGooglePlaySdkIndex.kt",
+        "tools/adt/idea/project-system-gradle-psd/src/com/android/tools/idea/gradle/structure/quickfix/SdkIndexLinkQuickFix.kt",
+        "tools/base/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/GooglePlaySdkIndex.kt",
     ],
     tests = [
+        # Currently diisabled due to flakiness
+        # "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
+        "//tools/adt/idea/project-system-gradle-psd:intellij.android.projectSystem.gradle.psd.tests_tests",
         "//tools/base/lint/libs/lint-tests:tests.test",
     ],
 )
