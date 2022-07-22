@@ -27,12 +27,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.io.File
 
-/**
- * A [Context] used when checking XML files.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A [Context] used when checking XML files. */
 open class XmlContext(
     /** the driver running through the checks */
     driver: LintDriver,

@@ -53,12 +53,7 @@ import javax.swing.text.PlainDocument
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * The result of running a [TestLintTask].
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** The result of running a [TestLintTask]. */
 
 class TestLintResult internal constructor(
     private val task: TestLintTask,

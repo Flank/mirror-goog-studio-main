@@ -33,12 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Flags used by the {@link LintCliClient}
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** Flags used by the {@link LintCliClient} */
 public class LintCliFlags {
     private final Set<String> suppress = new HashSet<>();
     private final Set<String> enabled = new HashSet<>();

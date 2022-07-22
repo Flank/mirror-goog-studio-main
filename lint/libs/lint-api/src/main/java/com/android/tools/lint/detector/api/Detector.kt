@@ -64,9 +64,6 @@ import java.util.EnumSet
  * If a detector needs information when processing a file type that
  * comes from a type of file later in the order above, they can request
  * a second phase; see [LintDriver.requestRepeat].
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 abstract class Detector {
     /**

@@ -40,12 +40,7 @@ import java.util.Date
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * A reporter which emits lint results into an HTML report.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A reporter which emits lint results into an HTML report. */
 class HtmlReporter(
     client: LintCliClient,
     output: File,

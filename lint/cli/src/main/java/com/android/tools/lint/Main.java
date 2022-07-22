@@ -100,12 +100,7 @@ import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-/**
- * Command line driver for the lint framework
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** Command line driver for the lint framework */
 public class Main {
     static final int MAX_LINE_WIDTH = 78;
     private static final String ARG_ENABLE = "--enable";

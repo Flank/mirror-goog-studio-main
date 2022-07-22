@@ -50,9 +50,6 @@ import java.util.HashSet
  * Context passed to the detectors during an analysis run. It provides
  * information about the file being analyzed, it allows shared
  * properties (so the detectors can share results), etc.
- *
- * *NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 open class Context(
     /** The driver running through the checks. */

@@ -160,7 +160,8 @@ open class LintFix protected constructor(
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun name(displayName: String, familyName: String): Builder {
@@ -192,7 +193,8 @@ open class LintFix protected constructor(
          * Sets the family name.
          *
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun sharedName(familyName: String?): Builder {
@@ -476,7 +478,8 @@ open class LintFix protected constructor(
          * @param robot whether this fix can be applied by a robot, e.g.
          *     does not require human intervention
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun autoFix(robot: Boolean, independent: Boolean): AnnotateBuilder {
@@ -551,7 +554,8 @@ open class LintFix protected constructor(
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun name(displayName: String, familyName: String): GroupBuilder {
@@ -564,7 +568,8 @@ open class LintFix protected constructor(
          * Sets the family name.
          *
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun sharedName(familyName: String?): GroupBuilder {
@@ -632,7 +637,8 @@ open class LintFix protected constructor(
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun name(displayName: String, familyName: String): ReplaceStringBuilder {
@@ -645,7 +651,8 @@ open class LintFix protected constructor(
          * Sets the family name.
          *
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun sharedName(familyName: String?): ReplaceStringBuilder {
@@ -821,7 +828,8 @@ open class LintFix protected constructor(
          * will reanalyze the file N times, which is obviously slower.
          *
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun independent(independent: Boolean): ReplaceStringBuilder {
@@ -836,7 +844,8 @@ open class LintFix protected constructor(
          * @param robot whether this fix can be applied by a robot, e.g.
          *     does not require human intervention
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun autoFix(robot: Boolean, independent: Boolean): ReplaceStringBuilder {
@@ -898,7 +907,8 @@ open class LintFix protected constructor(
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun name(displayName: String? = null, familyName: String? = null): CreateFileBuilder {
@@ -1001,7 +1011,8 @@ open class LintFix protected constructor(
          * will reanalyze the file N times, which is obviously slower.
          *
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun independent(independent: Boolean): CreateFileBuilder {
@@ -1016,7 +1027,8 @@ open class LintFix protected constructor(
          * @param robot whether this fix can be applied by a robot, e.g.
          *     does not require human intervention
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun autoFix(robot: Boolean, independent: Boolean): CreateFileBuilder {
@@ -1104,7 +1116,8 @@ open class LintFix protected constructor(
          *
          * @param displayName the displayName
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun name(displayName: String, familyName: String): SetAttributeBuilder {
@@ -1117,7 +1130,8 @@ open class LintFix protected constructor(
          * Sets the family name.
          *
          * @param familyName the "family" name; the shared name to use
-         *     to apply *all* fixes of the same family name in a single go.
+         *     to apply *all* fixes of the same family name in a single
+         *     go.
          * @return this
          */
         fun sharedName(familyName: String?): SetAttributeBuilder {
@@ -1310,7 +1324,8 @@ open class LintFix protected constructor(
          * will reanalyze the file N times, which is obviously slower.
          *
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun independent(independent: Boolean): SetAttributeBuilder {
@@ -1325,7 +1340,8 @@ open class LintFix protected constructor(
          * @param robot whether this fix can be applied by a robot, e.g.
          *     does not require human intervention
          * @param independent whether it is **not** the case that
-         *     applying other fixes simultaneously can invalidate this fix
+         *     applying other fixes simultaneously can invalidate this
+         *     fix
          * @return this
          */
         fun autoFix(robot: Boolean, independent: Boolean): SetAttributeBuilder {

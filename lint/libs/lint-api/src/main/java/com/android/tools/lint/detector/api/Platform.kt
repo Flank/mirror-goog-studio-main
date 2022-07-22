@@ -24,9 +24,6 @@ import java.util.EnumSet
  * of [Scope] as referring to the types of files that a lint check
  * considers whereas the [Platform] refers to how those files should be
  * interpreted.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 enum class Platform {
     /**

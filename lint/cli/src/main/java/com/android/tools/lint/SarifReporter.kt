@@ -64,9 +64,6 @@ import kotlin.text.Charsets.UTF_8
  * https://sarifweb.azurewebsites.net/Validation (remember that the unit
  * test golden output replaces $ with ＄; change back before validating
  * if copying output verbatim from unit test output)
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 class SarifReporter
 

@@ -54,9 +54,6 @@ import java.io.File
  * @constructor Constructs a [JavaContext] for running lint on the given
  *     file, with the given scope, in the given
  *     project reporting errors to the given client.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 open class JavaContext(
     /** the driver running through the checks */

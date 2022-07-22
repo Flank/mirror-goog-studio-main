@@ -16,12 +16,7 @@
 
 package com.android.tools.lint.detector.api
 
-/**
- * Information about a position in a file/document.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** Information about a position in a file/document. */
 abstract class Position {
     /**
      * Returns the line number (0-based where the first line is line 0)

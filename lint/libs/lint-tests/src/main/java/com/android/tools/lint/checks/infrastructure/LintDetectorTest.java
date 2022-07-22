@@ -91,12 +91,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * Test case for lint detectors.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** Test case for lint detectors. */
 @SuppressWarnings("javadoc")
 public abstract class LintDetectorTest extends BaseLintDetectorTest {
     @Override

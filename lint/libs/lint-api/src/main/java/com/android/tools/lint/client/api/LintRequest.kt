@@ -22,12 +22,7 @@ import com.android.tools.lint.detector.api.Scope
 import java.io.File
 import java.util.EnumSet
 
-/**
- * Information about a request to run lint.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** Information about a request to run lint. */
 open class LintRequest(
     /**
      * The lint client requesting the lint check

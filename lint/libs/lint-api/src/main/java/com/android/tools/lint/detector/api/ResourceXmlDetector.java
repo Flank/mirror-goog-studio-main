@@ -22,9 +22,6 @@ import com.android.resources.ResourceFolderType;
 /**
  * Specialized detector intended for XML resources. Detectors that apply to XML resources should
  * extend this detector instead since it provides special iteration hooks that are more efficient.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
  */
 public abstract class ResourceXmlDetector extends Detector implements XmlScanner {
 

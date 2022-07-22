@@ -44,12 +44,7 @@ import kotlin.io.FilesKt;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.CapitalizeDecapitalizeKt;
 
-/**
- * A utility class which provides unit test file descriptions
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** A utility class which provides unit test file descriptions */
 public class TestFiles {
 
     private TestFiles() {}

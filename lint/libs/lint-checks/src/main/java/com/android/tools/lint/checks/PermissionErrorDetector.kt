@@ -45,18 +45,17 @@ import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Attr
-import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.util.Arrays
 
 /**
- * looks for errors related to:
- * Declaring permissions in a `<permission ... />` element
- * Declaring permission usage in a `<uses-permission ... />` element
- * Declaring components restricted by permissions in an `android:permission="..."` attribute
+ * looks for errors related to: Declaring permissions in a `<permission
+ * ... />` element Declaring permission usage in a `<uses-permission
+ * ... />` element Declaring components restricted by permissions in an
+ * `android:permission="..."` attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(
             TAG_PERMISSION,
             TAG_USES_PERMISSION,
@@ -83,11 +82,11 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Collect *all* custom permissions (and their usages)
-     * across manifests.  Then report on any typos.
-     * Many custom permissions may be included
-     * from libraries, etc., and we want to catch those typos as well
-     * as typos on custom permissions defined in the same manifest.
+     * Collect *all* custom permissions (and their usages) across
+     * manifests. Then report on any typos. Many custom permissions may
+     * be included from libraries, etc., and we want to catch those
+     * typos as well as typos on custom permissions defined in the same
+     * manifest.
      */
     private fun walkDocument(context: Context, root: Element) {
         var customPermissions: MutableList<String>? = null
@@ -152,8 +151,8 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Report incidents related to permission definitions that are
-     * NOT related to custom permission typos.
+     * Report incidents related to permission definitions that are NOT
+     * related to custom permission typos.
      */
     private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr) {
         val packageName =
@@ -186,8 +185,8 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Report incidents related to permission usages that are
-     * NOT related to custom permission typos.
+     * Report incidents related to permission usages that are NOT
+     * related to custom permission typos.
      */
     private fun reportPermissionUsageIncidents(context: Context, attr: Attr) {
         if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {

@@ -49,9 +49,6 @@ import org.objectweb.asm.tree.MethodNode;
  *
  * It also notifies all the detectors before and after the document is processed such that they can
  * do pre- and post-processing.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
  */
 class AsmVisitor {
     /**

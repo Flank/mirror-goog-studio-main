@@ -55,7 +55,6 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
      * we're modifying the source itself, which affects the sources
      * snippets shown in the error output as well as the error ranges.
      * However, we want to treat this error:
-     *
      * ```
      *    src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
      *            bitmap.extractAlpha(); // WARNING
@@ -63,7 +62,6 @@ abstract class SourceTransformationTestMode(description: String, testMode: Strin
      * ```
      *
      * and this error:
-     *
      * ```
      *    src/test/pkg/CheckPermissions.java:22: Warning: The result of extractAlpha is not used [CheckResult]
      *            (bitmap).extractAlpha(); // WARNING

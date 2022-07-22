@@ -34,11 +34,11 @@ import java.io.File
  *     project is the root project of all library projects,
  *     not necessarily the directly including project.
  * @param file the file being checked
- * @property resourceFolderType the
- *     [com.android.resources.ResourceFolderType] of this file, if any
  * @constructor Constructs a new [ResourceContext] <p> **NOTE: This is
  *     not a public or final API; if you rely on this be prepared
  *     to adjust your code for the next tools release.**
+ * @property resourceFolderType the
+ *     [com.android.resources.ResourceFolderType] of this file, if any
  */
 open class ResourceContext(
     driver: LintDriver,

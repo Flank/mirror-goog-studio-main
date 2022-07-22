@@ -33,9 +33,6 @@ import java.util.EnumSet
  * want to be able to different severities for different issues, the
  * ability to suppress one but not other issues from the same detector,
  * and so on.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 class Issue private constructor(
     /**
@@ -95,9 +92,9 @@ class Issue private constructor(
 
     /**
      * If non-null, this issue can **only** be suppressed with
-     * one of the given annotations: not with @Suppress, not with
-     * @SuppressLint, not with lint.xml, not with lintOptions{} and not
-     * with baselines.
+     * one of the given annotations: not with @Suppress, not
+     * with @SuppressLint, not with lint.xml, not with lintOptions{} and
+     * not with baselines.
      *
      * These suppress names can take various forms:
      * * Valid qualified names in Kotlin and Java (identifier characters

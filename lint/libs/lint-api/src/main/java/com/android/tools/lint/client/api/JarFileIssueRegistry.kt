@@ -472,7 +472,10 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
             }
         }
 
-        /** Is the given [issueId] the id of an issue which was rejected as incompatible */
+        /**
+         * Is the given [issueId] the id of an issue which was rejected
+         * as incompatible
+         */
         fun isRejectedIssueId(issueId: String): Boolean {
             return rejectedIssueIds?.contains(issueId) ?: false
         }

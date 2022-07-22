@@ -114,12 +114,7 @@ import java.io.Writer
 import java.net.MalformedURLException
 import java.net.URLEncoder
 
-/**
- * A reporter is an output generator for lint warnings
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A reporter is an output generator for lint warnings */
 abstract class Reporter protected constructor(
     @JvmField
     protected val client: LintCliClient,
