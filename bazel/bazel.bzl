@@ -656,7 +656,7 @@ def iml_module(
 
     # Run java agents in tests
     for test_agent in test_agents:
-        test_data.extend(test_agents)
+        test_data = test_data + [test_agent]
         test_jvm_flags = test_jvm_flags + ["-javaagent:$(location " + test_agent + ")"]
 
     if split_test_targets and test_flaky:
