@@ -61,6 +61,16 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Note that this class tracks {@link com.android.ddmlib.Client}s for all devices tied to an adb
  * host. Devices are keyed off of the given {@link Socketchannel} connection.
+ *
+ * <p>Depending on the version of the device being monitored, different ADB services are used. - For
+ * pre-S (API 31), "track-jdwp" is used. This service only retrieves the debuggable apps and only
+ * returns the PIDs. The application ID of the app process is retrieved later when the VM sends an
+ * APNM packets.
+ *
+ * <p>- S and post-S devices use "track-app" service. On top of the pid, the debuggable and
+ * profileable status are also returned. The VM does NOT send an APNM packet to declare its
+ * application ID. This information is retrieved via a separate command sent for each PID "cat
+ * /proc/XXX/cmdline".
  */
 class DeviceClientMonitorTask implements Runnable {
     private volatile boolean mQuit;
