@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
@@ -62,7 +63,7 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
                     jarFile.getInputStream(jarEntry).use { inputStream ->
                         val outputDir = outputDirectory.get().dir(jarEntry.name.substringBeforeLast('/'))
                         val fileName = jarEntry.name.substringAfterLast('/')
-                        if (fileName.endsWith((".class"))) {
+                        if (CLASS_MATCHER.test(fileName)) {
                             val outputFile = File(outputDir.asFile, fileName)
                             if (outputFile.exists()) {
                                 throw DuplicateFileCopyingException(
