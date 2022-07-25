@@ -49,14 +49,10 @@ class AdbLibDeviceClientManagerTest {
     @Rule
     var exceptionRule: ExpectedException = ExpectedException.none()
 
-    private fun <T : AutoCloseable> registerCloseable(item: T): T {
-        return closeables.register(item)
-    }
-
     @Test
     fun testTrackingWaitsUntilDeviceIsTracked() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
 
@@ -89,7 +85,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testScopeIsCancelledWhenDeviceDisconnects() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -118,7 +114,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testClientListIsUpdatedWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -182,7 +178,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testClientListIsUpdatedWhenProcessesStop() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -211,7 +207,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -241,7 +237,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessesEnd() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -277,7 +273,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessPropertiesChange() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
