@@ -17,15 +17,18 @@ package com.android.adblib.tools.testutils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.yield
 import java.time.Duration
+import kotlin.math.max
+import kotlin.math.min
 
 object CoroutineTestUtils {
 
     fun <T> runBlockingWithTimeout(
-        timeout: Duration = Duration.ofSeconds(10),
+        timeout: Duration = Duration.ofSeconds(30),
         block: suspend CoroutineScope.() -> T
     ): T {
         return runBlocking {
@@ -35,7 +38,7 @@ object CoroutineTestUtils {
                 }
             } catch (e: TimeoutCancellationException) {
                 throw AssertionError(
-                    "A test did not terminate within the specified timeout, " +
+                    "A test did not terminate within the specified timeout ($timeout), " +
                             "there is a bug somewhere (in the test or in the tested code)", e
                 )
             }
@@ -43,25 +46,25 @@ object CoroutineTestUtils {
     }
 
     suspend fun yieldUntil(
-        timeout: Duration = Duration.ofSeconds(5),
+        timeout: Duration = Duration.ofSeconds(30),
         predicate: suspend () -> Boolean
     ) {
         try {
             withTimeout(timeout.toMillis()) {
                 while (!predicate()) {
-                    yield()
+                    delayForTimeout(timeout)
                 }
             }
         } catch (e: TimeoutCancellationException) {
             throw AssertionError(
-                "A yieldUntil condition was not satisfied within " +
-                        "5 seconds, there is a bug somewhere (in the test or in the tested code)", e
+                "A yieldUntil condition was not satisfied within the specified timeout " +
+                        "($timeout), there is a bug somewhere (in the test or in the tested code)", e
             )
         }
     }
 
     suspend fun <T> waitNonNull(
-        timeout: Duration = Duration.ofSeconds(5),
+        timeout: Duration = Duration.ofSeconds(30),
         provider: suspend () -> T?
     ): T {
         suspend fun <T> loop(provider: suspend () -> T?): T {
@@ -70,7 +73,7 @@ object CoroutineTestUtils {
                 if (value != null) {
                     return value
                 }
-                yield()
+                delayForTimeout(timeout)
             }
         }
 
@@ -80,9 +83,14 @@ object CoroutineTestUtils {
             }
         } catch (e: TimeoutCancellationException) {
             throw AssertionError(
-                "A yieldUntil condition was not satisfied within " +
-                        "5 seconds, there is a bug somewhere (in the test or in the tested code)", e
+                "A waitNonNull condition was not satisfied within the specified timeout " +
+                        "($timeout), there is a bug somewhere (in the test or in the tested code)", e
             )
         }
+    }
+
+    private suspend fun delayForTimeout(timeout: Duration) {
+        // Delay between 1 and 100 millis
+        delay(min(100, max(1, timeout.toMillis() / 20)))
     }
 }
