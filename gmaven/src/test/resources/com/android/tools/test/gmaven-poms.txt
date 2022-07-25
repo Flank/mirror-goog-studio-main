@@ -437,7 +437,6 @@ com.android.tools.build:builder
     org.ow2.asm:asm-commons (runtime)
     org.ow2.asm:asm-util (runtime)
     net.sf.jopt-simple:jopt-simple (runtime)
-    com.googlecode.json-simple:json-simple (runtime)
 
 com.android.tools.build:builder-model
   pomName=com.android.tools.build.builder-model

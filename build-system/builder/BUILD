@@ -44,7 +44,6 @@ kotlin_library(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/signflinger",
-        "@maven//:com.googlecode.json-simple.json-simple",
         "@maven//:commons-codec.commons-codec",
         "@maven//:javax.inject.javax.inject",
         "@maven//:net.sf.jopt-simple.jopt-simple",

@@ -29,11 +29,10 @@ dependencies {
     implementation libs.asm
     implementation libs.asm_tree
     implementation libs.javax_inject
-    // R8 deps
+
     implementation libs.asm_commons
     implementation libs.asm_util
     implementation libs.jopt
-    implementation libs.json_simple
 
     testImplementation libs.kotlin_test
     testImplementation libs.junit

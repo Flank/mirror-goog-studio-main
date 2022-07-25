@@ -1864,27 +1864,6 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.googlecode.json-simple.json-simple_1.1",
-    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/googlecode/json-simple/json-simple/1.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "com.googlecode.json-simple.json-simple",
-    classifiers = [],
-    jars = [
-        "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.jar"
-    ],
-    original_deps = [],
-    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/googlecode/json-simple/json-simple/1.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.googlecode.juniversalchardet.juniversalchardet_1.0.3",
     pom = "repository/com/googlecode/juniversalchardet/juniversalchardet/1.0.3/juniversalchardet-1.0.3.pom",
     repo_root_path = "repository",
@@ -26495,6 +26474,14 @@ maven_artifact(
         "com.google.auto.value.auto-value-annotations_1.6.3",
         "com.google.errorprone.error_prone_annotations_2.3.3",
     ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.googlecode.json-simple.json-simple_1.1",
+    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
+    repo_root_path = "repository",
+    repo_path = "com/googlecode/json-simple/json-simple/1.1",
     visibility = ["//visibility:public"],
 )
 

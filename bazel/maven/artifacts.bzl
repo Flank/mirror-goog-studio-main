@@ -40,7 +40,6 @@ ARTIFACTS = [
     "com.google.truth.extensions:truth-java8-extension:0.44",
     "com.google.truth:truth:0.44",
     "com.googlecode.jarjar:jarjar:1.3",
-    "com.googlecode.json-simple:json-simple:1.1",
     "com.googlecode.juniversalchardet:juniversalchardet:1.0.3",
     "com.nothome:javaxdelta:2.0.1",
     "com.squareup:javapoet:1.10.0",
