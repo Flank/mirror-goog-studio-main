@@ -220,7 +220,6 @@ class AvdManager(
                 snapshotHandler.generateSnapshot(
                     deviceName,
                     emulatorExecutable,
-                    adbExecutable,
                     avdFolder,
                     emulatorGpuFlag,
                     logger

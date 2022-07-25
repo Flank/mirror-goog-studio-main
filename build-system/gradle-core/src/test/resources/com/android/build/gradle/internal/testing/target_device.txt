@@ -1,0 +1,2 @@
+SomeDeviceAndroidDebugTest
+OK
