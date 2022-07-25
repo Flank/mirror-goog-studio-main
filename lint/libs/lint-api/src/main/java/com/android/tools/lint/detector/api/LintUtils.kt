@@ -876,7 +876,7 @@ fun getEncodedString(data: ByteArray?, createString: Boolean): CharSequence {
             } else {
                 seenOddZero = true
             }
-        } else if (data[lineEnd] == '\n'.toByte() || data[lineEnd] == '\r'.toByte()) {
+        } else if (data[lineEnd] == '\n'.code.toByte() || data[lineEnd] == '\r'.code.toByte()) {
             break
         }
     }

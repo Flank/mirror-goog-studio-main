@@ -78,7 +78,7 @@ class TypoLookup private constructor(
 
                 // Don't allow matching uncapitalized words, such as "enlish", when
                 // the dictionary word is capitalized, "Enlish".
-                if (data[offset] != text[begin].toByte() && Character.isLowerCase(text[begin])) {
+                if (data[offset] != text[begin].code.toByte() && Character.isLowerCase(text[begin])) {
                     return null
                 }
 
@@ -93,7 +93,7 @@ class TypoLookup private constructor(
                     if (b.toInt() == 0) {
                         offset--
                         break
-                    } else if (b == '*'.toByte()) {
+                    } else if (b == '*'.code.toByte()) {
                         var globEnd = i
                         while (globEnd < text.length && Character.isLetter(text[globEnd])) {
                             globEnd++
@@ -102,7 +102,7 @@ class TypoLookup private constructor(
                         break
                     }
                     val c = text[i]
-                    val cb = c.toByte()
+                    val cb = c.code.toByte()
                     if (b != cb && i > begin) {
                         return null
                     }
@@ -166,7 +166,7 @@ class TypoLookup private constructor(
                     if (b.toInt() == 0) {
                         offset--
                         break
-                    } else if (b == '*'.toByte()) {
+                    } else if (b == '*'.code.toByte()) {
                         var globEnd = i
                         while (globEnd < utf8Text.size && isLetter(utf8Text[globEnd])) {
                             globEnd++
@@ -588,7 +588,7 @@ class TypoLookup private constructor(
             var j = begin
             while (true) {
                 var b = data[i]
-                if (b == ' '.toByte()) {
+                if (b == ' '.code.toByte()) {
                     // We've matched up to the space in a split-word typo, such as
                     // in German all zu⇒allzu; here we've matched just past "all".
                     // Rather than terminating, attempt to continue in the buffer.
@@ -615,15 +615,15 @@ class TypoLookup private constructor(
                     break
                 }
 
-                if (b == '*'.toByte()) {
+                if (b == '*'.code.toByte()) {
                     // Glob match (only supported at the end)
                     return 0
                 }
                 val c = s[j]
-                var cb = c.toByte()
+                var cb = c.code.toByte()
                 var delta = b - cb
                 if (delta != 0) {
-                    cb = Character.toLowerCase(c).toByte()
+                    cb = Character.toLowerCase(c).code.toByte()
                     if (b != cb) {
                         // Ensure that it has the right sign
                         b = Character.toLowerCase(b.toInt()).toByte()
@@ -658,7 +658,7 @@ class TypoLookup private constructor(
             var j = begin
             while (true) {
                 var b = data[i]
-                if (b == ' '.toByte()) {
+                if (b == ' '.code.toByte()) {
                     // We've matched up to the space in a split-word typo, such as
                     // in German all zu⇒allzu; here we've matched just past "all".
                     // Rather than terminating, attempt to continue in the buffer.
@@ -667,12 +667,12 @@ class TypoLookup private constructor(
                     // Rather than terminating, attempt to continue in the buffer.
                     if (j == end) {
                         val max = s.size
-                        if (end < max && s[end] == ' '.toByte()) {
+                        if (end < max && s[end] == ' '.code.toByte()) {
                             // Find next word
                             while (end < max) {
                                 val cb = s[end]
                                 if (!isLetter(cb)) {
-                                    if (cb == ' '.toByte() && end == j) {
+                                    if (cb == ' '.code.toByte() && end == j) {
                                         end++
                                         continue
                                     }
@@ -687,7 +687,7 @@ class TypoLookup private constructor(
                 if (j == end) {
                     break
                 }
-                if (b == '*'.toByte()) {
+                if (b == '*'.code.toByte()) {
                     // Glob match (only supported at the end)
                     return 0
                 }
@@ -720,11 +720,11 @@ class TypoLookup private constructor(
         // help us properly deal with punctuation and spacing characters.
 
         private fun isUpperCase(b: Byte): Boolean {
-            return Character.isUpperCase(b.toChar())
+            return Character.isUpperCase(b.toInt().toChar())
         }
 
         private fun toLowerCase(b: Byte): Byte {
-            return Character.toLowerCase(b.toChar()).toByte()
+            return Character.toLowerCase(b.toInt().toChar()).code.toByte()
         }
 
         @JvmStatic
@@ -732,7 +732,7 @@ class TypoLookup private constructor(
             // Assume that multi byte characters represent letters in other languages.
             // Obviously, it could be unusual punctuation etc but letters are more likely
             // in this context.
-            return Character.isLetter(b.toChar()) || b.toInt() and 0x80 != 0
+            return Character.isLetter(b.toInt().toChar()) || b.toInt() and 0x80 != 0
         }
     }
 }

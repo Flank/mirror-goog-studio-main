@@ -73,7 +73,7 @@ class PrivateApiClass(name: String) : ApiClassBase(name) {
             assert(b.toInt() == (b.toInt() and 0x7f)) { member }
             buffer.put(b)
             // Skip types on methods
-            if (b == ')'.toByte()) {
+            if (b == ')'.code.toByte()) {
                 break
             }
         }
