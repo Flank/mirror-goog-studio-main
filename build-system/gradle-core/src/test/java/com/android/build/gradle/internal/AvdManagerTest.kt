@@ -215,7 +215,6 @@ class AvdManagerTest {
                 anyString(),
                 any(File::class.java),
                 any(File::class.java),
-                any(File::class.java),
                 anyString(),
                 any(ILogger::class.java))
     }
@@ -245,7 +244,6 @@ class AvdManagerTest {
         verify(snapshotHandler, times(0))
             .generateSnapshot(
                 anyString(),
-                any(File::class.java),
                 any(File::class.java),
                 any(File::class.java),
                 anyString(),

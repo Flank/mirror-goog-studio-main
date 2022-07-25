@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal
 
+import com.android.build.gradle.internal.testing.AdbHelper
 import com.android.utils.GrabProcessOutput
 import com.android.utils.ILogger
 import java.io.File
@@ -46,6 +47,7 @@ private const val MINIMUM_MICRO_VERSION = 4
 class AvdSnapshotHandler(
     private val showEmulatorKernelLogging: Boolean,
     private val deviceBootAndSnapshotCheckTimeoutSec: Int?,
+    private val adbHelper: AdbHelper,
     private val processFactory: (List<String>) -> ProcessBuilder = { ProcessBuilder(it) }) {
     /**
      * Checks whether the emulator directory contains a valid emulator executable, and returns it.
@@ -158,7 +160,6 @@ class AvdSnapshotHandler(
     fun generateSnapshot(
         avdName: String,
         emulatorExecutable: File,
-        adbExecutable: File,
         avdLocation: File,
         emulatorGpuFlag: String,
         logger: ILogger
@@ -189,7 +190,7 @@ class AvdSnapshotHandler(
                 var emulatorSerial: String? = null
                 while(process.isAlive) {
                     try {
-                        emulatorSerial = findDeviceSerialWithId(adbExecutable, deviceId)
+                        emulatorSerial = adbHelper.findDeviceSerialWithId(deviceId)
                         break
                     } catch (e: Exception) {
                         logger.verbose("Waiting for $avdName to be attached to adb.")
@@ -204,7 +205,7 @@ class AvdSnapshotHandler(
                 logger.verbose("$avdName is attached to adb ($emulatorSerial).")
 
                 while(process.isAlive) {
-                    if (isBootCompleted(emulatorSerial, adbExecutable, logger)) {
+                    if (adbHelper.isBootCompleted(emulatorSerial, logger)) {
                         break
                     }
                     logger.verbose("Waiting for $avdName to boot up.")
@@ -213,7 +214,7 @@ class AvdSnapshotHandler(
                 logger.verbose("Booting $avdName is completed.")
 
                 while(process.isAlive) {
-                    if (isPackageManagerStarted(emulatorSerial, adbExecutable)) {
+                    if (adbHelper.isPackageManagerStarted(emulatorSerial)) {
                         break
                     }
                     logger.verbose("Waiting for PackageManager to be ready on $avdName.")
@@ -224,7 +225,7 @@ class AvdSnapshotHandler(
                 if (process.isAlive) {
                     bootCompleted.set(true)
                     Thread.sleep(WAIT_AFTER_BOOT_MS)
-                    killDevice(adbExecutable, emulatorSerial)
+                    adbHelper.killDevice(emulatorSerial)
                 }
             }.start()
 
@@ -245,7 +246,7 @@ class AvdSnapshotHandler(
             )
             process.waitUntilTimeout(logger) {
                 logger.verbose("Snapshot creation timed out. Closing emulator.")
-                closeEmulatorWithId(adbExecutable, process, deviceId, logger)
+                closeEmulatorWithId(process, deviceId, logger)
                 process.waitFor()
                 error("""
                     Gradle was not able to complete device setup for: $avdName
@@ -264,184 +265,26 @@ class AvdSnapshotHandler(
             }
             logger.info("Successfully created snapshot for: $avdName")
         } finally {
-            closeEmulatorWithId(adbExecutable, process, deviceId, logger)
+            closeEmulatorWithId(process, deviceId, logger)
             process.waitFor()
         }
-    }
-
-    private fun isBootCompleted(emulatorSerial: String, adbExecutable: File, logger: ILogger): Boolean {
-        val bootCompleted = AtomicBoolean(false)
-        getDeviceProperty("sys.boot_completed", emulatorSerial, adbExecutable) {
-            if (it.toIntOrNull() == 1) {
-                logger.info("sys.boot_completed=1")
-                bootCompleted.set(true)
-            }
-        }
-        if (bootCompleted.get()) {
-            return true
-        }
-
-        getDeviceProperty("dev.bootcomplete", emulatorSerial, adbExecutable) {
-            if (it.toIntOrNull() == 1) {
-                logger.info("dev.bootcomplete=1")
-                bootCompleted.set(true)
-            }
-        }
-        return bootCompleted.get()
-    }
-
-    private fun isPackageManagerStarted(emulatorSerial: String, adbExecutable: File): Boolean {
-        val result = AtomicBoolean(false)
-        runAdbShell(emulatorSerial, adbExecutable, listOf("/system/bin/pm", "path", "android")) {
-            if (it.contains("package:")) {
-                result.set(true)
-            }
-        }
-        return result.get()
-    }
-
-    private fun getDeviceProperty(
-        propertyName: String,
-        emulatorSerial: String,
-        adbExecutable: File,
-        stdoutTextProcessor: (String)->Unit) {
-        runAdbShell(
-            emulatorSerial,
-            adbExecutable,
-            listOf("getprop", propertyName),
-            stdoutTextProcessor
-        )
-    }
-
-    private fun runAdbShell(
-        emulatorSerial: String,
-        adbExecutable: File,
-        shellCommandArgs: List<String>,
-        stdoutTextProcessor: (String)->Unit) {
-        val getPropProcess = processFactory(
-            listOf(
-                adbExecutable.absolutePath,
-                "-s",
-                emulatorSerial,
-                "shell",
-            ) + shellCommandArgs
-        ).start()
-
-        GrabProcessOutput.grabProcessOutput(
-            getPropProcess,
-            GrabProcessOutput.Wait.WAIT_FOR_READERS,
-            object : GrabProcessOutput.IProcessOutput {
-                override fun out(line: String?) {
-                    line ?: return
-                    stdoutTextProcessor(line.trim())
-                }
-
-                override fun err(line: String?) {}
-            }
-        )
     }
 
     /**
      * Attempts to close the emulator with the given id.
      **/
     private fun closeEmulatorWithId(
-        adbExecutable: File,
         emulatorProcess: Process,
         idValue: String,
         logger: ILogger
     ) {
         try {
-            val emulatorSerial = findDeviceSerialWithId(adbExecutable, idValue)
-            killDevice(adbExecutable, emulatorSerial)
+            val emulatorSerial = adbHelper.findDeviceSerialWithId(idValue)
+            adbHelper.killDevice(emulatorSerial)
         } catch (e: Exception) {
             logger.info("Failed to close emulator properly from adb. Reason: $e")
             emulatorProcess.destroy()
         }
-    }
-
-    private fun killDevice(adb: File, serial: String) {
-        val killProcess = processFactory(
-            listOf(
-                adb.absolutePath,
-                "-s",
-                serial,
-                "emu",
-                "kill"
-            )
-        ).start()
-        killProcess.waitFor()
-    }
-
-    private fun findDeviceSerialWithId(adb: File, idValue: String): String {
-        // Retrieve all serials from ADB
-        val serials = mutableListOf<String>()
-        val allSerialsProcess = processFactory(
-            listOf(
-                adb.absolutePath,
-                "devices"
-            )
-        ).start()
-        GrabProcessOutput.grabProcessOutput(
-            allSerialsProcess,
-            GrabProcessOutput.Wait.ASYNC,
-            object : GrabProcessOutput.IProcessOutput {
-                override fun out(line: String?) {
-                    line ?: return
-                    val trimmed = line.trim()
-                    val values = trimmed.split("\\s+".toRegex())
-                    // Looking for "<serial>    device"
-                    if (values.size == 2 && values[1] == "device") {
-                        serials.add(values[0])
-                    }
-                }
-
-                override fun err(line: String?) {}
-            }
-        )
-        if (!allSerialsProcess.waitFor(ADB_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-            allSerialsProcess.destroy()
-            allSerialsProcess.waitFor()
-            error("Adb device retrieval timed out. Failed to destroy emulator properly")
-        }
-        // Search the serials by ID.
-        for (serial in serials) {
-            var id: String? = null
-            val idDetectionProcess = processFactory(
-                listOf(
-                    adb.absolutePath,
-                    "-s",
-                    serial,
-                    "emu",
-                    "avd",
-                    "id"
-                )
-            ).start()
-            GrabProcessOutput.grabProcessOutput(
-                idDetectionProcess,
-                GrabProcessOutput.Wait.ASYNC,
-                object : GrabProcessOutput.IProcessOutput {
-                    override fun out(line: String?) {
-                        line ?: return
-                        val trimmed = line.trim()
-                        if (trimmed.isNotEmpty() && trimmed != "OK") {
-                            id = trimmed
-                        }
-                    }
-
-                    override fun err(line: String?) {}
-                }
-            )
-            if (!idDetectionProcess.waitFor(ADB_TIMEOUT_SEC, TimeUnit.SECONDS)) {
-                // Skip this serial, won't be a failure unless we can't detect the one we're
-                // looking for
-                idDetectionProcess.destroy()
-                idDetectionProcess.waitFor()
-            }
-            if (id == idValue) {
-                return serial
-            }
-        }
-        error("Failed to find serial for device id: $idValue")
     }
 
     /**
