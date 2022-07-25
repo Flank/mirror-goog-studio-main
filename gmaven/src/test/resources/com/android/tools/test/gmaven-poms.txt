@@ -436,7 +436,6 @@ com.android.tools.build:builder
     javax.inject:javax.inject (runtime)
     org.ow2.asm:asm-commons (runtime)
     org.ow2.asm:asm-util (runtime)
-    it.unimi.dsi:fastutil (runtime)
     net.sf.jopt-simple:jopt-simple (runtime)
     com.googlecode.json-simple:json-simple (runtime)
 

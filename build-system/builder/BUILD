@@ -46,7 +46,6 @@ kotlin_library(
         "//tools/base/signflinger",
         "@maven//:com.googlecode.json-simple.json-simple",
         "@maven//:commons-codec.commons-codec",
-        "@maven//:it.unimi.dsi.fastutil",
         "@maven//:javax.inject.javax.inject",
         "@maven//:net.sf.jopt-simple.jopt-simple",
         "@maven//:org.bouncycastle.bcpkix-jdk15on",

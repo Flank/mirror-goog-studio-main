@@ -32,7 +32,6 @@ dependencies {
     // R8 deps
     implementation libs.asm_commons
     implementation libs.asm_util
-    implementation libs.fastutil
     implementation libs.jopt
     implementation libs.json_simple
 

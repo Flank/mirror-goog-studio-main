@@ -341,7 +341,6 @@ maven_repository(
         "@maven//:io.grpc.grpc-all",
         "@maven//:io.grpc.protoc-gen-grpc-java_1.39.0",
         "@maven//:io.netty.netty-all",
-        "@maven//:it.unimi.dsi.fastutil",
         "@maven//:javax.annotation.javax.annotation-api",
         "@maven//:net.java.dev.jna.jna-platform",
         "@maven//:net.sf.jopt-simple.jopt-simple",
