@@ -158,6 +158,9 @@ class NodeUtils {
                     } else {
                         attributes.removeNamedItem(attribute.getLocalName());
                     }
+                    // When removing a node, the next item will be at the same index.
+                    i--;
+                    n--;
                 }
             }
         }
