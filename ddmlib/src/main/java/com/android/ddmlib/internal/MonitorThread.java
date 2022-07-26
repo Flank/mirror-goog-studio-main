@@ -16,9 +16,7 @@
 
 package com.android.ddmlib.internal;
 
-import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmJdwpExtension;
-import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.Log.LogLevel;
@@ -39,7 +37,48 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-/** Monitor open connections. */
+/* Singleton Thread (which should really be named JDWPThread), bridging JDWP duplex traffic between
+ *  a Client (Dalvik/ART VM on device) and a JDWP third party. Multiple bridges are handled via
+ *  a [Selector].
+ *  The Thread relies on a single [Selector] upon which [SocketChannel] are registered.
+ *
+ *  Case 1: A "simple" Client (Android VM) to monitor is added. The connection to the Client is already
+ *  established (via jdwp:PID service). The socket is selected for READ.
+ *
+ *                       Selector          ADB Server        Adbd        Dalvik/ART VM
+ *                          ||                 |              |             |
+ *    ClientImpl  <----   [READ]         <--   |    <--       |    <--      *
+ *                          ||                 |              |             |
+ *
+ *  Then data is incoming, the selector triggers. A full JDWP packet is read and forwarded to
+ *  the ClientImpl.
+ *  - WRITE operations (toward the Android VM) do NOT go through the selector, the socket write()
+ *    are directly performed from the ClientImpl.
+ *  - In this case, the traffic consist in JDWP extension (ID > 127).
+ *
+ *
+ *  Case 2: A "debugged" Client is added. Alike in case 1, the connection to the Client is already
+ *  established (via jdwp:PID service). However the Client VM may be waiting for a debugger to connect.
+ *
+ *     1/ A socket to accept the debugger connection is created and selected for ACCEPT.
+ *
+ *                         Selector      ADB Server        Adbd        Dalvik/ART VM
+ *                            ||              |              |             |
+ *      Debugger    ---->  [ACCEPT]           |              |             |
+ *                            ||              |              |             |
+ *
+ *     2/ Once the debugger is accepted, both sockets are registered for READ.
+ *
+ *                         Selector      ADB Server        Adbd        Dalvik/ART VM
+ *                            ||              |              |             |
+ *      Debugger    ---->   [READ]            |              |             |
+ *                            ||              |              |             |
+ *                          [READ]      <--   |    <--       |    <--      *
+ *                            ||              |              |             |
+ *
+ *     3/ When either of the socket pair triggers for READ, the socket buffer is emptied and written
+ *        in the matching paired socket.
+ */
 public final class MonitorThread extends Thread {
 
     private final DdmJdwpExtension mDdmJdwpExtension;
