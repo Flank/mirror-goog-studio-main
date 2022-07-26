@@ -16,7 +16,9 @@
 
 package com.android.ddmlib.testing
 
+import com.android.ddmlib.AdbInitOptions
 import com.android.ddmlib.AndroidDebugBridge
+import com.android.ddmlib.DdmPreferences
 import com.android.ddmlib.EmulatorConsole
 import com.android.fakeadbserver.DeviceState
 import com.android.fakeadbserver.FakeAdbServer
@@ -40,6 +42,7 @@ class FakeAdbRule : ExternalResource() {
   lateinit var bridge: AndroidDebugBridge
     private set
 
+  private val isJdwpProxyEnabledDefault = DdmPreferences.isJdwpProxyEnabled()
   private var initAdbBridgeDuringSetup = true
   private var closeFakeAdbServerDuringCleanUp = true
   private lateinit var fakeAdbServer: FakeAdbServer
@@ -129,7 +132,11 @@ class FakeAdbRule : ExternalResource() {
 
     if (initAdbBridgeDuringSetup) {
       AndroidDebugBridge.enableFakeAdbServerMode(fakeAdbServer.port)
-      AndroidDebugBridge.initIfNeeded(true)
+      val options = AdbInitOptions.builder()
+          .setClientSupportEnabled(true)
+          .useJdwpProxyService(false)
+          .build()
+      AndroidDebugBridge.init(options)
       bridge = AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) ?: error("Could not create ADB bridge")
       val startTime = System.currentTimeMillis()
       while ((!bridge.isConnected || !bridge.hasInitialDeviceList()) &&
@@ -142,6 +149,7 @@ class FakeAdbRule : ExternalResource() {
   override fun after() {
     AndroidDebugBridge.terminate()
     AndroidDebugBridge.disableFakeAdbServerMode()
+    DdmPreferences.enableJdwpProxyService(isJdwpProxyEnabledDefault)
     if (closeFakeAdbServerDuringCleanUp) {
       fakeAdbServer.close()
       if (fakeAdbServer.awaitServerTermination(30, TimeUnit.SECONDS) == false) {
