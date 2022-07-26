@@ -431,12 +431,8 @@ com.android.tools.build:builder
     org.bouncycastle:bcpkix-jdk15on (runtime)
     commons-codec:commons-codec (runtime)
     org.bouncycastle:bcprov-jdk15on (runtime)
-    org.ow2.asm:asm (runtime)
-    org.ow2.asm:asm-tree (runtime)
     javax.inject:javax.inject (runtime)
     org.ow2.asm:asm-commons (runtime)
-    org.ow2.asm:asm-util (runtime)
-    net.sf.jopt-simple:jopt-simple (runtime)
 
 com.android.tools.build:builder-model
   pomName=com.android.tools.build.builder-model

@@ -26,13 +26,8 @@ dependencies {
     implementation libs.bouncycastle_pkix
     implementation libs.apache_commons_codec
     implementation libs.bouncycastle_prov
-    implementation libs.asm
-    implementation libs.asm_tree
     implementation libs.javax_inject
-
     implementation libs.asm_commons
-    implementation libs.asm_util
-    implementation libs.jopt
 
     testImplementation libs.kotlin_test
     testImplementation libs.junit

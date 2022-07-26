@@ -46,14 +46,10 @@ kotlin_library(
         "//tools/base/signflinger",
         "@maven//:commons-codec.commons-codec",
         "@maven//:javax.inject.javax.inject",
-        "@maven//:net.sf.jopt-simple.jopt-simple",
         "@maven//:org.bouncycastle.bcpkix-jdk15on",
         "@maven//:org.bouncycastle.bcprov-jdk15on",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
-        "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-commons",
-        "@maven//:org.ow2.asm.asm-tree",
-        "@maven//:org.ow2.asm.asm-util",
     ],
 )
 
