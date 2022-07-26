@@ -848,8 +848,7 @@ coverage_report(
         "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
     ],
     tests = [
-        # TODO(b/235625101)
-        # "//tools/vendor/google/firebase:firebase_tests__FirebaseAppManagerTest",
+        "//tools/vendor/google/firebase:firebase_tests__FirebaseAppManagerTest",
         "//tools/vendor/google/firebase:firebase_tests__other",
     ],
 )
