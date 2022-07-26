@@ -36,6 +36,7 @@ import org.jetbrains.uast.UPostfixExpression
 import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UUnaryExpression
+import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.util.isAssignment
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -138,7 +139,7 @@ fun UElement.asCall(): UCallExpression? {
  * function.
  */
 fun UBinaryExpression.asCall(): UCallExpression? {
-    val operator = resolveOperator() ?: return null
+    val operator = resolveOperatorWorkaround() ?: return null
     return asCall(operator)
 }
 
@@ -234,12 +235,29 @@ private class BinaryExpressionAsCallExpression(
     override val methodIdentifier: UIdentifier?
         get() = binary.operatorIdentifier
     override val receiver: UExpression?
-        get() = if (isSingleParameter) if (isReversed) binary.rightOperand else binary.leftOperand else null
+        get() = when (binary.operator) {
+            UastBinaryOperator.ASSIGN ->
+                (binary.leftOperand as? UArrayAccessExpression)?.receiver
+            else ->
+                if (isSingleParameter) if (isReversed) binary.rightOperand else binary.leftOperand else null
+        }
     override val receiverType: PsiType?
         get() = receiver?.getExpressionType()
+    private var _arguments: List<UExpression>? = null
     override val valueArguments: List<UExpression>
         get() {
-            return if (isReversed) {
+            val arguments = _arguments
+            if (arguments != null) {
+                return arguments
+            }
+            if (binary.operator == UastBinaryOperator.ASSIGN && binary.leftOperand is UArrayAccessExpression) {
+                // overloaded, indexed setter: rcv[index1, index2, ...] = value
+                // which invokes rcv.set(index, index2, ..., value)
+                val newArguments = (binary.leftOperand as UArrayAccessExpression).indices + listOfNotNull(binary.rightOperand)
+                _arguments = newArguments
+                return newArguments
+            }
+            val newArguments = if (isReversed) {
                 if (isSingleParameter)
                 // extension function, second parameter is receiver
                     listOf(binary.leftOperand)
@@ -254,6 +272,8 @@ private class BinaryExpressionAsCallExpression(
                     listOf(binary.leftOperand, binary.rightOperand)
                 }
             }
+            _arguments = newArguments
+            return newArguments
         }
 
     override fun resolve(): PsiMethod {

@@ -93,7 +93,7 @@ class UImplicitCallExpressionTest {
                 resource.get(1,2,3)
                   from "resource[1, 2, 3]"
                 resource.set(1,2,3,hello)
-                  from "resource[1, 2, 3]"
+                  from "resource[1, 2, 3] = "hello""
                 resource.contains(color)
                   from "color in resource"
                 resource.contains(string)
@@ -226,7 +226,7 @@ class UImplicitCallExpressionTest {
                     ~
             src/test/pkg/Test.kt:12: Error: Found overloaded function call set [_DispatchTestIssue]
                 test[string] = color
-                    ~
+                             ~
             src/test/pkg/Test.kt:26: Error: Found overloaded function call inc [_DispatchTestIssue]
                 point++
                      ~~

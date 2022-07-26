@@ -57,6 +57,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.asCall
 import com.android.tools.lint.detector.api.hasImplicitDefaultConstructor
 import com.android.tools.lint.detector.api.resolveOperator
+import com.android.tools.lint.detector.api.resolveOperatorWorkaround
 import com.google.common.collect.Multimap
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.psi.PsiAnonymousClass
@@ -234,7 +235,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
         }
 
         // Overloaded operators
-        val method = node.resolveOperator()
+        val method = node.resolveOperatorWorkaround()
         if (method != null) {
             if ((node.operator == UastBinaryOperator.EQUALS || node.operator == UastBinaryOperator.NOT_EQUALS) &&
                 (node.rightOperand.isNullLiteral() || node.leftOperand.isNullLiteral())
@@ -711,7 +712,7 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
                 prev = parent
                 parent = parent.uastParent ?: break
             } else if (parent is UBinaryExpression && parent.leftOperand === prev) {
-                val operatorMethod = parent.resolveOperator()
+                val operatorMethod = parent.resolveOperatorWorkaround()
                 if (operatorMethod != null && parent.operator is UastBinaryOperator.AssignOperator) {
                     // The call is just the left hand side expression of an overloaded operator
                     // so we won't actually call it (the overloaded operator will instead
