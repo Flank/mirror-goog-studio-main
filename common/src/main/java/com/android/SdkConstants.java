@@ -2427,12 +2427,6 @@ public final class SdkConstants {
     public static final String GRAVITY_VALUE_CLIP_VERTICAL = "clip_vertical";
     public static final String GRAVITY_VALUE_FILL = "fill";
 
-    // Mockup
-    public static final String ATTR_MOCKUP = "mockup";
-    public static final String ATTR_MOCKUP_CROP = "mockup_crop";
-    public static final String ATTR_MOCKUP_POSITION = "mockup_crop";
-    public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity";
-
     // Baselines
     /**
      * Root tag in baseline files (which can be the XML output report files from lint, or a
