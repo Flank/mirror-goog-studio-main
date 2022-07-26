@@ -27,7 +27,7 @@ public class AndroidxName {
     private final String myOldName;
     private final String myNewName;
 
-    private AndroidxName(@NonNull String oldName, @NonNull String newName) {
+    public AndroidxName(@NonNull String oldName, @NonNull String newName) {
         myOldName = oldName;
         myNewName = newName;
     }
