@@ -412,6 +412,7 @@ DATA = [
     "org.jetbrains.kotlin:kotlin-script-runtime:1.6.10",
     "org.jetbrains.kotlin:kotlin-script-runtime:1.6.21",
     "org.jetbrains.kotlin:kotlin-script-runtime:1.7.0",
+    "org.jetbrains.kotlin:kotlin-stdlib-js:1.7.0",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.32",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.31",
     "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.21",
