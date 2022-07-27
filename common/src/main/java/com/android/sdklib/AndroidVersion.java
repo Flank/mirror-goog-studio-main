@@ -141,6 +141,9 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
     /** Last version of Android with supported 32-bit system images. */
     public static final int MAX_32_BIT_API = 30;
 
+    /** First version to support rectangular Wear display */
+    public static final int MIN_RECTANGULAR_WEAR_API = 28;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */
