@@ -15,7 +15,7 @@
  */
 package com.android.tools.idea.wizard.template
 
-val DEFAULT_CMAKE_VERSION = "3.18.1"
+val DEFAULT_CMAKE_VERSION = "3.22.1"
 
 fun PackageName.deriveNativeLibraryName(): String = split('.').last()
 
