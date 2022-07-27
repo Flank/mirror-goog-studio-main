@@ -864,14 +864,6 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/api/variant/impl/SourcesImpl.kt"
-            line="178"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
             file="src/main/java/com/android/build/gradle/internal/dependency/SubtractingArtifactCollection.kt"
             line="77"/>
     </issue>

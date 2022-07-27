@@ -262,7 +262,7 @@ fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContaine
             if (!hasMpp) {
                 sourceDir.srcDirs((it.kotlin as DefaultAndroidSourceDirectorySet).srcDirs)
             }
-            it.kotlin.setSrcDirs(listOf(sourceDir.sourceDirectories))
+            it.kotlin.setSrcDirs(sourceDir.srcDirs)
         }
     }
 }
