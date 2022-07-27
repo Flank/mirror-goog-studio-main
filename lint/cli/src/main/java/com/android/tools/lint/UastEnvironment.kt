@@ -73,8 +73,11 @@ interface UastEnvironment {
              * structure, classpath, compiler flags, etc.
              */
             @JvmStatic @JvmOverloads
-            fun create(enableKotlinScripting: Boolean = true): Configuration {
-                return if (useFirUast())
+            fun create(
+                enableKotlinScripting: Boolean = true,
+                useFirUast: Boolean = useFirUast(),
+            ): Configuration {
+                return if (useFirUast)
                     FirUastEnvironment.Configuration.create(enableKotlinScripting)
                 else
                     Fe10UastEnvironment.Configuration.create(enableKotlinScripting)
@@ -126,10 +129,12 @@ interface UastEnvironment {
         fun create(
             config: Configuration,
         ): UastEnvironment {
-            return if (useFirUast())
-                FirUastEnvironment.create(config)
-            else
-                Fe10UastEnvironment.create(config)
+            return when(config) {
+                is FirUastEnvironment.Configuration ->
+                    FirUastEnvironment.create(config)
+                else ->
+                    Fe10UastEnvironment.create(config)
+            }
         }
 
         /**

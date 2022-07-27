@@ -56,7 +56,7 @@ class FirUastEnvironment private constructor(
 
         companion object {
             @JvmStatic
-            fun create(enableKotlinScripting: Boolean = true): Configuration =
+            fun create(enableKotlinScripting: Boolean): Configuration =
                 Configuration(createKotlinCompilerConfig(enableKotlinScripting))
         }
     }
