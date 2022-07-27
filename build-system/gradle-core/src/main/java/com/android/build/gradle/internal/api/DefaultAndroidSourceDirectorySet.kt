@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.api
 
+import com.android.build.api.variant.impl.ProviderBasedDirectoryEntryImpl
+import com.android.build.api.variant.impl.SourceDirectoriesImpl
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
 import com.google.common.collect.ImmutableList
@@ -32,7 +34,6 @@ import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.api.tasks.util.PatternSet
 import java.io.File
 import java.util.ArrayList
-import java.util.Collections
 import java.util.concurrent.Callable
 
 /**
@@ -47,6 +48,13 @@ class DefaultAndroidSourceDirectorySet(
     : AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
     override val filter = PatternSet()
+    /**
+     * Set once the sourceset is read to produce the android components, so that subsequent
+     * additions (e.g. during the applicationVariants API) are not ignored.
+     *
+     * This ends up being the list of variant source directories this source set feeds into.
+     */
+    private val lateAdditionsDelegates = mutableListOf<SourceDirectoriesImpl>()
 
     override fun getName(): String {
         return "$sourceSetName $name"
@@ -56,18 +64,47 @@ class DefaultAndroidSourceDirectorySet(
 
     override fun srcDir(srcDir: Any): AndroidSourceDirectorySet {
         source.add(srcDir)
+        if (lateAdditionsDelegates.isNotEmpty()) {
+            val directoryEntry = ProviderBasedDirectoryEntryImpl(name, project.files(srcDir).elements)
+            lateAdditionsDelegates.forEach { it.addSource(directoryEntry) }
+        }
         return this
     }
 
     override fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet {
-        Collections.addAll(source, *srcDirs)
+        for (dir in srcDirs) {
+            srcDir(dir)
+        }
         return this
     }
 
     override fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet {
+        if (lateAdditionsDelegates.isNotEmpty()) {
+            /**
+             * Filter out potential duplicates to avoid re-registering things that have already
+             * been registered. (Note that actually removing things that have already been added
+             * is not supported after AGP DSL finalization)
+             *
+             *  If a build author writes in groovy `srcDirs += "othersrc"`
+             *  this becomes something like
+             *  setSrcDirs(mutableSetOf().also {addAll(getSrcDirs()); add("otherSrc") })
+             *
+             *  So if this sourceDirectorySet contained ["src/main/java"], `srcDirs += "othersrc"` will
+             *  call setSrcDirs(listOf(File("/absolute/path/src/main/java"), "othersrc")).
+             *
+             *  And we want to avoid registering src/main/java twice to avoid duplicate definition
+             *  errors when compiling.
+             */
+            val previousFiles = this.srcDirs
+            val newFiles = project.files(srcDirs).files
+            for (newFile in (newFiles - previousFiles)) {
+                val directoryEntry = ProviderBasedDirectoryEntryImpl(name, project.files(newFile).elements)
+                lateAdditionsDelegates.forEach { it.addSource(directoryEntry) }
+            }
+        }
         source.clear()
-        for (srcDir in srcDirs) {
-            source.add(srcDir)
+        for (dir in srcDirs) {
+            source.add(dir)
         }
         return this
     }
@@ -91,7 +128,6 @@ class DefaultAndroidSourceDirectorySet(
             }
             .collect(ImmutableList.toImmutableList())
     }
-
     override val srcDirs: Set<File>
         get() = ImmutableSet.copyOf(project.files(*source.toTypedArray()).files)
 
@@ -169,6 +205,10 @@ class DefaultAndroidSourceDirectorySet(
 
     override fun getBuildableArtifact() : FileCollection {
         return project.files(Callable<Collection<File>> { srcDirs })
+    }
+
+    internal fun addLateAdditionDelegate(lateAdditionDelegate: SourceDirectoriesImpl) {
+        lateAdditionsDelegates += lateAdditionDelegate
     }
 }
 
