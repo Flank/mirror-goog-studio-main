@@ -25,57 +25,6 @@ import org.junit.Test;
 public class AndroidxNameTest {
 
     @Test
-    public void className() {
-        AndroidxName pkgName =
-                AndroidxName.of("android.support.design.widget.", "FloatingActionButton");
-        assertEquals("android.support.design.widget.FloatingActionButton", pkgName.oldName());
-        assertEquals(
-                "com.google.android.material.floatingactionbutton.FloatingActionButton",
-                pkgName.newName());
-
-        // Test a non-existent class name
-        pkgName = AndroidxName.of("android.support.wear.", "TestClassName");
-        assertEquals("android.support.wear.TestClassName", pkgName.oldName());
-        assertEquals("androidx.wear.TestClassName", pkgName.newName());
-
-        // Test a non-existent class name with a subpackage
-        pkgName = AndroidxName.of("android.support.wear.subpackage.", "TestClassName");
-        assertEquals("android.support.wear.subpackage.TestClassName", pkgName.oldName());
-        assertEquals("androidx.wear.subpackage.TestClassName", pkgName.newName());
-
-        pkgName = AndroidxName.of("android.support.v4.widget.", "TestClassName");
-        assertEquals("android.support.v4.widget.TestClassName", pkgName.oldName());
-        assertEquals("androidx.core.widget.TestClassName", pkgName.newName());
-
-        pkgName = AndroidxName.of("android.support.v4.widget.", "TestClassName");
-        assertEquals("android.support.v4.widget.TestClassName", pkgName.oldName());
-        assertEquals("androidx.core.widget.TestClassName", pkgName.newName());
-    }
-
-    @Test
-    public void specificClass() {
-        AndroidxName className = AndroidxName.of("android.support.v4.view.", "PagerTabStrip");
-        assertEquals("android.support.v4.view.PagerTabStrip", className.oldName());
-        assertEquals("androidx.viewpager.widget.PagerTabStrip", className.newName());
-    }
-
-    @Test
-    public void pkgName() {
-        AndroidxName pkgName = AndroidxName.of("android.support.v4.app.");
-        assertEquals("android.support.v4.app.", pkgName.oldName());
-        assertEquals("androidx.core.app.", pkgName.newName());
-
-        pkgName = AndroidxName.of("android.arch.persistence.room.");
-        assertEquals("android.arch.persistence.room.", pkgName.oldName());
-        assertEquals("androidx.room.", pkgName.newName());
-
-        // Test a non-existent name
-        pkgName = AndroidxName.of("android.support.wear.test.");
-        assertEquals("android.support.wear.test.", pkgName.oldName());
-        assertEquals("androidx.wear.test.", pkgName.newName());
-    }
-
-    @Test
     public void getNewName() {
         assertEquals(
                 "com.google.android.material.floatingactionbutton.FloatingActionButton",
@@ -87,16 +36,9 @@ public class AndroidxNameTest {
     }
 
     @Test
-    public void innerClassHandling() {
-        AndroidxName className =
-                AndroidxName.of("android.support.v7.widget.", "RecyclerView$Adapter");
-        assertEquals("androidx.recyclerview.widget.RecyclerView$Adapter", className.newName());
-    }
-
-    @Test
     public void isEquals() {
         AndroidxName className =
-                AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+                new AndroidxName("android.support.v7.widget.RecyclerView", "androidx.recyclerview.widget.RecyclerView");
         assertTrue(className.isEquals("android.support.v7.widget.RecyclerView"));
         assertTrue(className.isEquals("androidx.recyclerview.widget.RecyclerView"));
         assertTrue(className.isEquals("android.support.v7.widget.RecyclerView"));
@@ -110,7 +52,7 @@ public class AndroidxNameTest {
     @SuppressWarnings({"SimplifiableAssertion", "EqualsBetweenInconvertibleTypes"})
     public void equals() {
         AndroidxName className =
-                AndroidxName.of("android.support.v7.widget.", "RecyclerView");
+                new AndroidxName("android.support.v7.widget.RecyclerView", "androidx.recyclerview.widget.RecyclerView");
         assertTrue(className.equals("android.support.v7.widget.RecyclerView"));
     }
     /**

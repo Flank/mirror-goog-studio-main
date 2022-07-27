@@ -21,6 +21,10 @@ import com.android.support.AndroidxName;
  * Class containing all the {@link AndroidxName} constants. This is separate from {@link
  * SdkConstants} to avoid users of {@link SdkConstants} from preloading the migration map when not
  * used at all.
+ *
+ * The constants' values can be found in the migration file (see
+ * `AndroidxMigrationParserKt#parseMigrationFile`). Instead of computing them at run time, we inline
+ * the values directly here to improve performance (see b/234509793).
  */
 public class AndroidXConstants {
     public static final AndroidxName CLASS_DATA_BINDING_COMPONENT = new AndroidxName("android.databinding.DataBindingComponent", "androidx.databinding.DataBindingComponent");
@@ -139,6 +143,11 @@ public class AndroidXConstants {
     public static final AndroidxName CLASS_APP_COMPAT_ACTIVITY = new AndroidxName("android.support.v7.app.AppCompatActivity", "androidx.appcompat.app.AppCompatActivity");
     public static final AndroidxName CLASS_MEDIA_ROUTE_ACTION_PROVIDER = new AndroidxName("android.support.v7.app.MediaRouteActionProvider", "androidx.mediarouter.app.MediaRouteActionProvider");
     public static final AndroidxName CLASS_RECYCLER_VIEW_ADAPTER = new AndroidxName("android.support.v7.widget.RecyclerView$Adapter", "androidx.recyclerview.widget.RecyclerView$Adapter");
+
+    public static final AndroidxName SERVICES_APK_PACKAGE = new AndroidxName("android.support.test.services.", "androidx.test.services.");
+    public static final AndroidxName SHELL_MAIN_CLASS = new AndroidxName("android.support.test.services.shellexecutor.ShellMain", "androidx.test.services.shellexecutor.ShellMain");
+    public static final AndroidxName ORCHESTRATOR_PACKAGE = new AndroidxName("android.support.test.orchestrator.", "androidx.test.orchestrator.");
+    public static final AndroidxName ORCHESTRATOR_CLASS = new AndroidxName("android.support.test.orchestrator.AndroidTestOrchestrator", "androidx.test.orchestrator.AndroidTestOrchestrator");
 
     public static final class PreferenceAndroidX {
         public static final AndroidxName CLASS_PREFERENCE_ANDROIDX = new AndroidxName("android.support.v7.preference.Preference", "androidx.preference.Preference");

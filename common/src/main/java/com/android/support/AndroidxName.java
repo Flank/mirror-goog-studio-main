@@ -32,21 +32,6 @@ public class AndroidxName {
         myNewName = newName;
     }
 
-    /** Creates a new instance for the package in the {@code com.android.support} and class name */
-    @NonNull
-    public static AndroidxName of(@NonNull String oldPackage, @NonNull String simpleClassName) {
-        assert oldPackage.endsWith(".") : oldPackage + " needs to end with a dot.";
-        assert oldPackage.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG)
-                || oldPackage.startsWith(AndroidxNameUtils.ANDROID_ARCH_PKG)
-                || oldPackage.startsWith(AndroidxNameUtils.ANDROID_DATABINDING_PKG);
-
-        // We first check if there is a specific class name mapping. If there is not, we'll try to find a mapping
-        // for the package name
-        String fullOldName = oldPackage + simpleClassName;
-
-        return new AndroidxName(fullOldName, AndroidxNameUtils.getNewName(fullOldName));
-    }
-
     /** Creates a new instance for the given package and class name */
     @NonNull
     public static AndroidxName of(@NonNull AndroidxName pkg, @NonNull String simpleClassName) {
@@ -55,18 +40,6 @@ public class AndroidxName {
         return new AndroidxName(
                 pkg.oldName() + (pkg.oldName().endsWith(".") ? "" : ".") + simpleClassName,
                 pkg.newName() + (pkg.newName().endsWith(".") ? "" : ".") + simpleClassName);
-    }
-
-    /** Creates a new package instance for for the package in the {@code com.android.support} */
-    @NonNull
-    public static AndroidxName of(@NonNull String oldPackageName) {
-        assert oldPackageName.endsWith(".");
-        assert oldPackageName.startsWith(AndroidxNameUtils.ANDROID_SUPPORT_PKG)
-                || oldPackageName.startsWith(AndroidxNameUtils.ANDROID_ARCH_PKG)
-                || oldPackageName.startsWith(AndroidxNameUtils.ANDROID_DATABINDING_PKG);
-
-        return new AndroidxName(
-                oldPackageName, AndroidxNameUtils.getPackageMapping(oldPackageName, true));
     }
 
     /** Returns the {@code com.android.support} version of the name */

@@ -15,6 +15,11 @@
  */
 package com.android.ddmlib.testrunner;
 
+import static com.android.AndroidXConstants.ORCHESTRATOR_CLASS;
+import static com.android.AndroidXConstants.ORCHESTRATOR_PACKAGE;
+import static com.android.AndroidXConstants.SERVICES_APK_PACKAGE;
+import static com.android.AndroidXConstants.SHELL_MAIN_CLASS;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.IShellEnabledDevice;
@@ -25,14 +30,6 @@ import java.util.List;
 
 /** Runs an instrumented Android test using the adb command and AndroidTestOrchestrator. */
 public class AndroidTestOrchestratorRemoteAndroidTestRunner extends RemoteAndroidTestRunner {
-    private static final AndroidxName SERVICES_APK_PACKAGE =
-            AndroidxName.of("android.support.test.services.");
-    private static final AndroidxName SHELL_MAIN_CLASS =
-            AndroidxName.of("android.support.test.services.shellexecutor.", "ShellMain");
-    private static final AndroidxName ORCHESTRATOR_PACKAGE =
-            AndroidxName.of("android.support.test.orchestrator.");
-    private static final AndroidxName ORCHESTRATOR_CLASS =
-            AndroidxName.of("android.support.test.orchestrator.", "AndroidTestOrchestrator");
 
     /** Whether to use new ATSL names. */
     private final boolean useAndroidx;
