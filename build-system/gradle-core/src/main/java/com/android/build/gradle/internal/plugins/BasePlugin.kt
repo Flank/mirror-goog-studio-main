@@ -579,6 +579,11 @@ abstract class BasePlugin<
     @VisibleForTesting
     fun createAndroidTasks(project: Project) {
         val globalConfig = variantManager.globalTaskCreationConfig
+        if (hasCreatedTasks.get()) {
+            return
+        }
+        hasCreatedTasks.set(true)
+        variantManager.variantApiOperationsRegistrar.executeDslFinalizationBlocks()
         if (extension.compileSdkVersion == null) {
             if (SyncOptions.getModelQueryMode(projectServices.projectOptions)
                 == SyncOptions.EvaluationMode.IDE
@@ -636,11 +641,6 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
         ) {
             return
         }
-        if (hasCreatedTasks.get()) {
-            return
-        }
-        hasCreatedTasks.set(true)
-        variantManager.variantApiOperationsRegistrar.executeDslFinalizationBlocks()
         variantInputModel.lock()
         extension.disableWrite()
         val projectBuilder = configuratorService.getProjectBuilder(
