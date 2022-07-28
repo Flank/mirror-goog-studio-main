@@ -406,17 +406,22 @@ def _maven_library_impl(ctx):
     repo_files.append((coordinates.repo_path + "/" + basename + ".pom", ctx.outputs.pom))
 
     maven_jar = None
+    maven_ijar = None
     if ctx.attr.library:
         maven_jar_name = ctx.attr.jar_name if ctx.attr.jar_name else "%s.jar" % ctx.attr.name
         maven_jar = ctx.actions.declare_file(maven_jar_name)
+        maven_ijar = ctx.actions.declare_file("%s.compile.jar" % ctx.attr.name)
 
         library_java_info = ctx.attr.library[JavaInfo]
         bundled_jars = []
         bundled_jars.extend(library_java_info.outputs.jars)
+        bundled_ijars = []
+        bundled_ijars.extend(library_java_info.compile_jars.to_list())
         source_jars = []
         source_jars.extend(library_java_info.source_jars)
         for dep in ctx.attr.bundled_deps:
             bundled_jars.extend(dep[JavaInfo].outputs.jars)
+            bundled_ijars.extend(dep[JavaInfo].compile_jars.to_list())
             source_jars.extend(dep[JavaInfo].source_jars)
 
         run_singlejar(
@@ -424,6 +429,14 @@ def _maven_library_impl(ctx):
             jars = [java_out.class_jar for java_out in bundled_jars],
             manifest_lines = ctx.attr.manifest_lines,
             out = maven_jar,
+        )
+        run_singlejar(
+            ctx = ctx,
+            jars = bundled_ijars,
+            out = maven_ijar,
+            # There may be duplicates in ijars; protoc adds META-INF/* which can conflict
+            # when there are multiple proto dependencies
+            allow_duplicates = True,
         )
         outputs.append(maven_jar)
         repo_files.append((coordinates.repo_path + "/" + basename + ".jar", maven_jar))
@@ -459,7 +472,7 @@ def _maven_library_impl(ctx):
         providers.append(
             JavaInfo(
                 output_jar = maven_jar,
-                compile_jar = maven_jar,
+                compile_jar = maven_ijar,
                 exports = [export[JavaInfo] for export in ctx.attr.exports],
                 deps = [dep[JavaInfo] for dep in ctx.attr.deps + ctx.attr.neverlink_deps],
             ),

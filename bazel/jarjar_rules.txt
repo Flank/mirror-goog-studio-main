@@ -1,3 +1,3 @@
 rule com.google.protobuf.** com.android.tools.idea.protobuf.@1
-rule io.grpc.protobuf.** com.android.tools.idea.io.grpc.protobuf.@1
+rule io.grpc.** com.android.tools.idea.io.grpc.@1
 rule io.netty.** com.android.tools.idea.io.netty.@1

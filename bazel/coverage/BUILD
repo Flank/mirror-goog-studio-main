@@ -637,7 +637,7 @@ coverage_report(
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/surface/WarningLayer.kt",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/visuallint",
         "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/IssuePanelToggleAction.kt",
-        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationForm.kt",
+        "tools/adt/idea/designer/src/com/android/tools/idea/uibuilder/visual/VisualizationFormVisualLintHandler.kt",
     ],
     tests = [
         "//tools/adt/idea/designer:intellij.android.designer.tests_tests",
@@ -826,10 +826,14 @@ coverage_report(
 coverage_report(
     name = "play-sdk-index",
     srcpath_include = [
-        "tools/base/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/GooglePlaySdkIndex.kt",
         "tools/adt/idea/project-system-gradle/src/com/android/tools/idea/projectsystem/gradle/IdeGooglePlaySdkIndex.kt",
+        "tools/adt/idea/project-system-gradle-psd/src/com/android/tools/idea/gradle/structure/quickfix/SdkIndexLinkQuickFix.kt",
+        "tools/base/lint/libs/lint-checks/src/main/java/com/android/tools/lint/checks/GooglePlaySdkIndex.kt",
     ],
     tests = [
+        # Currently diisabled due to flakiness
+        # "//tools/adt/idea/project-system-gradle:intellij.android.projectSystem.gradle.tests_tests",
+        "//tools/adt/idea/project-system-gradle-psd:intellij.android.projectSystem.gradle.psd.tests_tests",
         "//tools/base/lint/libs/lint-tests:tests.test",
     ],
 )
@@ -837,12 +841,14 @@ coverage_report(
 # Coverage report for AQI
 coverage_report(
     name = "aqi",
+    srcpath_exclude = [
+        "tools/vendor/google/firebase/src/com/google/services/firebase/insights/client/grpc/LegacyCrashlyticsGrpcClientImpl.kt",
+    ],
     srcpath_include = [
         "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
     ],
     tests = [
-        # TODO(b/235625101)
-        # "//tools/vendor/google/firebase:firebase_tests__FirebaseAppManagerTest",
+        "//tools/vendor/google/firebase:firebase_tests__FirebaseAppManagerTest",
         "//tools/vendor/google/firebase:firebase_tests__other",
     ],
 )

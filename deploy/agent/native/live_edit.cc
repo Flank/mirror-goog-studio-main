@@ -170,7 +170,7 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 
   const auto& target_class = req.target_class();
-  const bool needFullRecompose =
+  const bool hasNewlyPrimedClass =
       PrimeClass(jvmti, jni, target_class.class_name());
   for (auto support_class : req.support_classes()) {
     PrimeClass(jvmti, jni, support_class.class_name());
@@ -191,19 +191,21 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
 
     // When the recompose API is stable, we will only call the new API
     // and never call whole program recompose.
-    if (req.composable() && !needFullRecompose) {
+    if (req.composable() && !hasNewlyPrimedClass) {
       std::string error = "";
       bool result = recompose.InvalidateGroupsWithKey(
           reloader, jni->NewStringUTF(target_class.class_name().c_str()),
           req.group_id(), error);
       Log::V("InvalidateGroupsWithKey %d", req.group_id());
-      if (!result) {
-        // TODO: This needs to be reported back to Studio's UI.
-        Log::W("Falling back to full recompose: %s", error.c_str());
+      if (result) {
+        resp.set_recompose_type(proto::AgentLiveEditResponse::NORMAL);
+      } else {
+        resp.set_recompose_type(proto::AgentLiveEditResponse::FORCED_RESET);
         jobject state = recompose.SaveStateAndDispose(reloader);
         recompose.LoadStateAndCompose(reloader, state);
       }
     } else {
+      resp.set_recompose_type(proto::AgentLiveEditResponse::INIT_RESET);
       jobject state = recompose.SaveStateAndDispose(reloader);
       recompose.LoadStateAndCompose(reloader, state);
     }

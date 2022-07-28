@@ -52,9 +52,10 @@ setlocal
     set NOCACHE=--nocache_test_results
     set CONDITIONAL_FLAGS=!ATTEMPTS! !NOCACHE!
   ) else if %BUILD_TYPE%==POSTSUBMIT (
+    set AB_POSTSUBMIT=--bes_keywords=ab-postsubmit
     set NOCACHE=--nocache_test_results
     set FLAKY_ATTEMPTS=--flaky_test_attempts=2
-    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS!
+    set CONDITIONAL_FLAGS=!NOCACHE! !FLAKY_ATTEMPTS! !ANTS! !AB_POSTSUBMIT!
   )
 
   set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_smoke,-qa_fast,-qa_unreliable,-perfgate

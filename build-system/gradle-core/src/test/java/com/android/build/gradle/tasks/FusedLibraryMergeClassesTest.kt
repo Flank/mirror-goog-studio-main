@@ -50,6 +50,18 @@ internal class FusedLibraryMergeClassesTest {
         Truth.assertThat(File(build, "source2.class").exists()).isTrue()
     }
 
+    @Test
+    fun testPermittedConflicts() {
+        testWithTask { jar1: File, jar2: File, task: FusedLibraryMergeClasses ->
+            createJar(jar1, "source1.class", "meta-inf/somedir/module-info.class")
+            createJar(jar2, "source2.class", "meta-inf/somedir/module-info.class")
+
+            task.taskAction()
+        }
+        Truth.assertThat(build.listFiles().toList()).doesNotContain(
+                "meta-inf/somedir/module-info.class"
+        )
+    }
 
     @Test(expected = DuplicateFileCopyingException::class)
     fun testConflicts() {

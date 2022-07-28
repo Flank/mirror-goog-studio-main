@@ -360,7 +360,7 @@ private fun ByteBuffer.positionAfterMagicAndVersion() : Pair<Int, Int> {
             return 0 to 0
         }
         val actual = get()
-        if (actual != expected.toByte()) {
+        if (actual != expected.code.toByte()) {
             return 0 to 0
         }
     }

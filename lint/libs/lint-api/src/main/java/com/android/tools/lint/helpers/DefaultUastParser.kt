@@ -168,7 +168,7 @@ open class DefaultUastParser(
      * large and costly generated classes, so it's worthwhile skipping
      * the UAST conversion.
      */
-    private fun isAnnotatedWithSkipAnnotation(psiFile: PsiFile, skipAnnotations: List<String>): Boolean {
+    protected fun isAnnotatedWithSkipAnnotation(psiFile: PsiFile, skipAnnotations: List<String>): Boolean {
         if (psiFile is PsiJavaFile) {
             val topLevel = psiFile.classes.firstOrNull() ?: return false
             //noinspection ExternalAnnotations
@@ -184,7 +184,7 @@ open class DefaultUastParser(
      * Returns true if any of the given Kotlin [annotations] are any of
      * the fully qualified [names]
      */
-    private fun containsAnnotation(names: List<String>, annotations: List<KtAnnotationEntry>): Boolean {
+    protected fun containsAnnotation(names: List<String>, annotations: List<KtAnnotationEntry>): Boolean {
         for (annotation in annotations) {
             if (names.any { it.endsWith(annotation.shortName?.identifier ?: "?") }) {
                 val uAnnotation = UastFacade.convertElement(annotation, null, UAnnotation::class.java) as? UAnnotation

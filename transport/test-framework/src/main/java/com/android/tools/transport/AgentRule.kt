@@ -18,9 +18,9 @@ package com.android.tools.transport
 import com.android.tools.profiler.proto.Agent
 import com.android.tools.profiler.proto.AgentServiceGrpc
 import com.android.tools.profiler.proto.Common
-import io.grpc.Server
-import io.grpc.netty.NettyServerBuilder
-import io.grpc.stub.StreamObserver
+import com.android.tools.idea.io.grpc.Server
+import com.android.tools.idea.io.grpc.netty.NettyServerBuilder
+import com.android.tools.idea.io.grpc.stub.StreamObserver
 import org.junit.rules.ExternalResource
 import java.net.ServerSocket
 import java.util.Queue

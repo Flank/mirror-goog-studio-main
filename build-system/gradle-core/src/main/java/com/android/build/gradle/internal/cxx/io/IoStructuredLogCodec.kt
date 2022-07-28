@@ -54,3 +54,38 @@ fun decodeSynchronizeFile(
     encoded : EncodedSynchronizeFile,
     decoder : StringDecoder
 ) = encoded.decode(decoder)
+
+/**
+ * Transform a [FileFingerPrint] into an [EncodedFileFingerPrint] by encoding
+ * strings with [StringEncoder].
+ */
+fun FileFingerPrint.encode(encoder : StringEncoder) : EncodedFileFingerPrint {
+    val encoded = EncodedFileFingerPrint.newBuilder()
+    encoded.fileName = encoder.encode(fileName)
+    encoded.isFile = isFile
+    encoded.lastModified = lastModified
+    encoded.length = length
+    return encoded.build()
+}
+
+/**
+ * Transform a [EncodedFileFingerPrint] into an [FileFingerPrint] by decoding
+ * strings with [StringDecoder].
+ */
+fun EncodedFileFingerPrint.decode(decoder: StringDecoder) : FileFingerPrint {
+    val decoded = FileFingerPrint.newBuilder()
+    decoded.fileName = decoder.decode(fileName)
+    decoded.isFile = isFile
+    decoded.lastModified = lastModified
+    decoded.length = length
+    return decoded.build()
+}
+
+/**
+ * Helper function for calling decode for this [EncodedFileFingerPrint]
+ */
+fun decodeFileFingerPrint(
+    encoded : EncodedFileFingerPrint,
+    decoder : StringDecoder
+) = encoded.decode(decoder)
+

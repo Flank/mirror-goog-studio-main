@@ -1571,8 +1571,9 @@ class CleanupDetectorTest : AbstractCheckTest() {
     }
 
     fun testAutoCloseable() {
-        // Regression test for
+        // Regression test for:
         //   https://code.google.com/p/android/issues/detail?id=214086
+        //   https://issuetracker.google.com/239504900
         //
         // Queries assigned to try/catch resource variables are automatically
         // closed.
@@ -1583,9 +1584,12 @@ class CleanupDetectorTest : AbstractCheckTest() {
                 package test.pkg;
 
                 import android.content.ContentResolver;
+                import android.content.Context;
+                import android.content.res.TypedArray;
                 import android.database.Cursor;
                 import android.net.Uri;
                 import android.os.Build;
+
                 @SuppressWarnings({"unused", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class TryWithResources {
                     public void test(ContentResolver resolver, Uri uri, String[] projection) {
@@ -1596,6 +1600,33 @@ class CleanupDetectorTest : AbstractCheckTest() {
                                     // ..
                                 }
                             }
+                        }
+                    }
+
+                    public static int testTypedArray(Context context) {
+                        try (TypedArray a = context.obtainStyledAttributes(null, null)) {
+                            return a.getColor(0, 0);
+                        }
+                    }
+                }
+                """
+            ).indented()
+        ).run().expectClean()
+    }
+
+    fun testAutoCloseableKotlin() {
+        lint().files(
+            kotlin(
+                "src/test/pkg/AutoCloseableKotlin.kt",
+                """
+                package test.pkg
+
+                import android.content.Context
+
+                object Test {
+                    fun test(context: Context): Int {
+                        context.obtainStyledAttributes(0, intArrayOf()).use { a ->
+                            return a.getColor(0, 0)
                         }
                     }
                 }

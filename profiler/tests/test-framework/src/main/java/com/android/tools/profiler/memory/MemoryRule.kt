@@ -22,7 +22,7 @@ import com.android.tools.profiler.proto.MemoryProfiler.MemoryStopRequest
 import com.android.tools.profiler.proto.MemoryServiceGrpc
 import com.android.tools.transport.TransportRule
 import com.android.tools.transport.device.SdkLevel
-import io.grpc.StatusRuntimeException
+import com.android.tools.idea.io.grpc.StatusRuntimeException
 import org.junit.rules.ExternalResource
 import org.junit.rules.RuleChain
 import org.junit.runner.Description

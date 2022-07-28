@@ -83,6 +83,7 @@ interface SubProjectBuilder {
     val path: String
     var group: String?
     var version: String?
+    var useNewPluginsDsl: Boolean
     val plugins: MutableList<PluginType>
 
     /**
@@ -179,6 +180,8 @@ interface AndroidProjectBuilder {
     fun androidResources(action: AndroidResources.() -> Unit)
 
     fun compileOptions(action: CompileOptions.() -> Unit)
+
+    fun useLibrary(name: String)
 }
 
 interface AndroidComponentsBuilder {

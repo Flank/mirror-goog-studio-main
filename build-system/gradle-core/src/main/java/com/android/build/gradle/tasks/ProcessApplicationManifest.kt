@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
+import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -51,6 +52,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -96,6 +98,11 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:Optional
     @get:InputFiles
     abstract val microApkManifest: RegularFileProperty
+
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    @get:InputFiles
+    abstract val privacySandboxSdkManifestSnippets: ConfigurableFileCollection
 
     @get:Optional
     @get:Input
@@ -224,6 +231,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 )
             }
         }
+        privacySandboxSdkManifestSnippets.forEach {
+            providers.add(ManifestProviderImpl(it, it.name))
+        }
+
         if (featureManifests != null) {
             providers.addAll(computeProviders(featureManifests!!.artifacts))
         }
@@ -372,6 +383,18 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         task.microApkManifest
                 )
             }
+            if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+                task.privacySandboxSdkManifestSnippets.fromDisallowChanges(
+                    creationConfig.variantDependencies.getArtifactFileCollection(
+                        ConsumedConfigType.RUNTIME_CLASSPATH,
+                        ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET
+                    )
+                )
+            } else {
+                task.privacySandboxSdkManifestSnippets.disallowChanges()
+            }
+
             task.applicationId.set(creationConfig.applicationId)
             task.applicationId.disallowChanges()
             task.componentType.set(creationConfig.componentType.toString())

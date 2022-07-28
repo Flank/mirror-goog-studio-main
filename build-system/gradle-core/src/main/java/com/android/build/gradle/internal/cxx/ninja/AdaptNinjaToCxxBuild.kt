@@ -5,18 +5,12 @@ package com.android.build.gradle.internal.cxx.ninja
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.build.gradle.internal.cxx.collections.ancestors
 import com.android.build.gradle.internal.cxx.collections.breadthFirst
+import com.android.build.gradle.internal.cxx.io.filenameStartsWithIgnoreCase
+import com.android.build.gradle.internal.cxx.io.hasExtensionIgnoreCase
+import com.android.build.gradle.internal.cxx.io.removeExtensionIfPresent
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
-import com.android.build.gradle.internal.cxx.os.OsBehavior
-import com.android.build.gradle.internal.cxx.os.createOsBehavior
 import com.android.build.gradle.internal.cxx.string.StringTable
-import com.android.utils.TokenizedCommandLine
-import com.android.utils.allocateTokenizeCommandLineBuffer
-import com.android.utils.cxx.CompileCommandsEncoder
-import com.android.utils.cxx.STRIP_FLAGS_WITHOUT_ARG
-import com.android.utils.cxx.STRIP_FLAGS_WITH_ARG
-import com.android.utils.cxx.STRIP_FLAGS_WITH_IMMEDIATE_ARG
-import com.android.utils.minimumSizeOfTokenizeCommandLineBuffer
 import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
@@ -41,17 +35,18 @@ fun adaptNinjaToCxxBuild(
         abi,
         cxxBuildFolder,
         createNinjaCommand,
-        buildFileFilter,
-        createOsBehavior(platform)
+        buildFileFilter
     )
 
     // Create the graph of build outputs and inputs
     val graph = adapter.createBuildGraph(ninjaBuildFile)
 
     // Generate compile_commands.json.bin
-    adapter.writeCompileCommandsJsonBin(
+    writeCompileCommandsJsonBin(
         ninjaBuildFile,
-        compileCommandsJsonBin
+        cxxBuildFolder,
+        compileCommandsJsonBin,
+        platform
     )
 
     // Create the libraries configuration
@@ -66,8 +61,7 @@ private class NinjaToCxxBuildAdapter(
     private val targetAbi : String,
     private val cxxBuildFolder : File,
     private val createNinjaCommand : (List<String>) -> List<String>,
-    private val buildFileFilter : (File) -> Boolean,
-    private val os: OsBehavior
+    private val buildFileFilter : (File) -> Boolean
 ) {
     // Maintain string to int mapping
     val strings = StringTable()
@@ -192,28 +186,6 @@ private class NinjaToCxxBuildAdapter(
     }
 
     /**
-     * Writes source files and flags to compile_commands.json.com
-     */
-    fun writeCompileCommandsJsonBin(
-        ninjaBuildFile: File,
-        compileCommandsJsonBin: File) {
-        CompileCommandsEncoder(compileCommandsJsonBin).use { encoder ->
-            streamNinjaBuildCommands(ninjaBuildFile) {
-                tryExtractSourceCompileCommand()?.apply {
-                    encoder.writeCompileCommand(
-                        sourceFile = resolveFile(source),
-                        compiler = File(compiler),
-                        flags = flags,
-                        workingDirectory = cxxBuildFolder,
-                        outputFile = File(objectFile),
-                        target = ""
-                    )
-                }
-            }
-        }
-    }
-
-    /**
      * Create a [NativeLibraryValueMini].
      */
     private fun BuildGraph.createLibrary(
@@ -243,60 +215,14 @@ private class NinjaToCxxBuildAdapter(
                 // This is a safe check because we're only interested in targets that eventually
                 // lead to source files. This isn't possible if there are no inputs.
                 explicitInputs.isNotEmpty() &&
-                explicitOutputs[0].hasExtension(*extensions)
-
-    /**
-     * Try to evaluate this command as a clang command that converts a source file to a .o or .pch
-     */
-    private fun NinjaBuildUnexpandedCommand.tryExtractSourceCompileCommand(): CompileCommand? {
-        if (explicitOutputs.isEmpty()) return null
-        if (!explicitOutputs[0].hasExtension("o", "pch")) return null
-
-        // Expand response file if there is one
-        val expandedCommand =
-            if (rspfile == null || rspfileContent == null) expand(command)
-            else expand(command.replace("@$rspfile", rspfileContent!!))
-
-        for(subcommand in os.splitCommandLine(expandedCommand)) {
-            val tokens = tokenizeCommandLine(subcommand)
-            // Look at first two tokens for a toolchain tool. If it is the second tokent, then
-            // the first token is a toolchain wrapper like wrapper.sh
-            repeat(2) {
-                tokens.removeNth(0)?.let { token ->
-                    if (isToolchainTool(token)) {
-                        val input = deconflictSourceFiles(explicitInputs)
-                        tokens.stripFlags(input)
-                        return CompileCommand(
-                            compiler = token,
-                            source = input,
-                            objectFile = explicitOutputs[0],
-                            flags = tokens.toTokenList()
-                        )
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    /**
-     * Split an individual command-line into tokens using the current platform's escaping rules.
-     */
-    private fun tokenizeCommandLine(commandLine : String): TokenizedCommandLine {
-        // Grow the buffer if necessary
-        if (commandLineBuffer.size <= minimumSizeOfTokenizeCommandLineBuffer(commandLine)) {
-            commandLineBuffer = allocateTokenizeCommandLineBuffer(commandLine)
-        }
-        return TokenizedCommandLine(commandLine, true, os.platform, commandLineBuffer)
-    }
-
+                explicitOutputs[0].hasExtensionIgnoreCase(*extensions)
     private fun idOf(value : String) = strings.encode(value)
     private fun idSetOf(values : List<String>) = values.map(::idOf).toSortedSet()
     private fun stringOf(id : Int) = strings.decode(id)
     private fun resolveFile(id : Int)  = resolveFile(stringOf(id))
     private fun resolveFile(path : String)  = cxxBuildFolder.resolve(path).normalize()
     private fun removeExtension(value : Int, ext : String) =
-        idOf(stringOf(value).removeExtension(ext))
+        idOf(stringOf(value).removeExtensionIfPresent(ext))
     private fun ninjaCommand(vararg args : String) = createNinjaCommand(args.toList())
     private fun ninjaCommand(vararg args : Int) = createNinjaCommand(args.map(::stringOf).toList())
     private fun isPackageable(id : Int) = isPackageable(stringOf(id))
@@ -308,8 +234,8 @@ private class NinjaToCxxBuildAdapter(
  */
 @VisibleForTesting
 fun isPackageable(name: String) : Boolean {
-    return name.hasExtension("") ||
-            (name.hasExtension("so") &&
+    return name.hasExtensionIgnoreCase("") ||
+            (name.hasExtensionIgnoreCase("so") &&
                     (!name.contains("ndk") || !NDK_SYSTEM_LIBS.any { name.endsWith(it) }))
 }
 
@@ -341,61 +267,17 @@ private val NDK_SYSTEM_LIBS = listOf(
     "libz.so")
 
 /**
- * Heuristic to check whether [exe] looks like a relevant tool from the NDK toolset
- */
-private fun isToolchainTool(exe : String) =
-        exe.fileNameEndsWith("clang", "clang++", "ar") &&
-        exe.hasExtension("exe", "")
-
-/**
- * Reduce a list of source files to one source file by removing a .pch if there is one.
- */
-@VisibleForTesting
-fun deconflictSourceFiles(sources: List<String>) =
-    sources.singleOrNull { !it.hasExtension("pch") } ?: sources.first()
-
-/**
  * Assign a name to a target. Strip "lib" from front and ".a" or ".so" from the end.
  * Preserve case.
  */
 @VisibleForTesting
 fun assignTargetName(target : String) : String {
     val targetFile = File(target)
-    if (!target.hasExtension("so", "a")) return targetFile.name
+    if (!target.hasExtensionIgnoreCase("so", "a")) return targetFile.name
     val name = targetFile.nameWithoutExtension
-    return if (target.fileNameStartsWith("lib") &&
-                !target.fileNameStartsWith("lib.")) name.substring(3)
+    return if (target.filenameStartsWithIgnoreCase("lib") &&
+                !target.filenameStartsWithIgnoreCase("lib.")) name.substring(3)
             else name
-}
-
-/**
- * Strip flags that would prevent coalescing with flags of other clang commands.
- * This is mainly:
- * - The source file
- * - The output file
- * - Flags related to #include dependency detection
- */
-private fun TokenizedCommandLine.stripFlags(sourceFile : String) {
-    // Remove the source file
-    removeTokenGroup(
-        sourceFile,
-        0,
-        filePathSlashAgnostic = true)
-
-    // Remove the output file
-    removeTokenGroup("-o", 1)
-    removeTokenGroup("--output=", 0, matchPrefix = true)
-    removeTokenGroup("--output", 1)
-
-    for (flag in STRIP_FLAGS_WITH_ARG) {
-        removeTokenGroup(flag, 1)
-    }
-    for (flag in STRIP_FLAGS_WITH_IMMEDIATE_ARG) {
-        removeTokenGroup(flag, 0, matchPrefix = true)
-    }
-    for (flag in STRIP_FLAGS_WITHOUT_ARG) {
-        removeTokenGroup(flag, 0)
-    }
 }
 
 /**
@@ -409,40 +291,4 @@ private class BuildGraph(
     val archiveIds: Set<Int>
 )
 
-/**
- * Represents a single parsed command-line.
- */
-private data class CompileCommand(
-    val compiler: String,
-    val source: String,
-    val objectFile: String,
-    val flags: List<String>
-)
 
-/**
- * Check whether the name of the file starts with [prefix]. Ignore case.
- */
-private fun String.fileNameStartsWith(prefix : String) : Boolean {
-    return File(lowercase()).name.startsWith(prefix.lowercase())
-}
-
-/**
- * Check whether the name of the file starts with any of [suffixes]. Ignore case.
- */
-private fun String.fileNameEndsWith(vararg suffixes : String) : Boolean {
-    val name = File(lowercase()).nameWithoutExtension
-    return suffixes.any { prefix -> name.endsWith(prefix) }
-}
-
-/**
- * Check whether the file has any of [extensions]. Ignore case.
- */
-private fun String.hasExtension(vararg extensions : String) : Boolean {
-    val extension = File(this).extension
-    return extensions.any { candidate -> extension.compareTo(candidate, ignoreCase = true) == 0 }
-}
-
-/**
- * Remove the given [ext] from the file name in the [String]
- */
-private fun String.removeExtension(ext : String) = substringBeforeLast(".$ext")

@@ -20,6 +20,8 @@ import com.android.build.gradle.internal.cxx.EditType.Insert
 import com.android.build.gradle.internal.cxx.EditType.Delete
 import com.android.build.gradle.internal.cxx.EditType.Replace
 import com.google.common.annotations.VisibleForTesting
+import com.google.protobuf.MessageOrBuilder
+import com.google.protobuf.util.JsonFormat
 import java.lang.Integer.min
 
 /**
@@ -34,8 +36,9 @@ fun explainLineDifferences(before : String, after : String) : String {
     var difference = minimumEditDifference(beforeLines, afterLines)
     val sb = StringBuilder()
     while (difference != null) {
-        val from = beforeLines[difference.fromIndex]
-        val to = afterLines[difference.toIndex]
+        val from = describeSpecial(beforeLines[difference.fromIndex])
+        val to = describeSpecial(afterLines[difference.toIndex])
+
         when(difference.type) {
             Insert -> sb.append("INSERTED $to (at line ${difference.toIndex + 1})\n")
             Delete -> sb.append("DELETED $from (at line ${difference.fromIndex + 1})\n")
@@ -61,6 +64,11 @@ fun explainLineDifferences(before : String, after : String) : String {
         difference = difference.prior
     }
     return sb.toString().trim('\n')
+}
+
+private fun describeSpecial(value : String) = when(value) {
+    "" -> "{NewLine}"
+    else -> value
 }
 
 /**

@@ -31,7 +31,7 @@ import com.android.deploy.service.proto.Service;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerRunner;
-import io.grpc.stub.StreamObserver;
+import com.android.tools.idea.io.grpc.stub.StreamObserver;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

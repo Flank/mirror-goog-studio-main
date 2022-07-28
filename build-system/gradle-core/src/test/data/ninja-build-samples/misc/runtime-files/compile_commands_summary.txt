@@ -4,13 +4,15 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
-Source-File: baz.cpp (source0)
-Output-File: CMakeFiles/baz.dir/baz.cpp.o (out0)
+# There are 3 entries.
+Source-File: bar.cpp (source0)
+Output-File: CMakeFiles/bar.dir/bar.cpp.o (out0)
 Working-Dir: path/to/cxx/build (workdir0)
 Compiler:    [NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++ (toolchain0)
               --target=x86_64-none-linux-android21
               --gcc-toolchain=[NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64
               --sysroot=[NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+              -Dbar_EXPORTS
               -g
               -DANDROID
               -fdata-sections
@@ -26,14 +28,13 @@ Compiler:    [NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang
               -fno-limit-debug-info
               -fPIC (flags0)
 
-Source-File: bar.cpp (source1)
-Output-File: CMakeFiles/bar.dir/bar.cpp.o (out1)
+Source-File: baz.cpp (source1)
+Output-File: CMakeFiles/baz.dir/baz.cpp.o (out1)
 Working-Dir: [workdir0]
 Compiler:    [toolchain0]
               --target=x86_64-none-linux-android21
               --gcc-toolchain=[NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64
               --sysroot=[NDK]/21.4.7075529/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
-              -Dbar_EXPORTS
               -g
               -DANDROID
               -fdata-sections

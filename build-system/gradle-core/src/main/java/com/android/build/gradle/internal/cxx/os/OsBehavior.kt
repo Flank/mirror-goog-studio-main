@@ -19,8 +19,10 @@ package com.android.build.gradle.internal.cxx.os
 import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.build.gradle.internal.cxx.configure.getEnvironmentPaths
 import com.android.utils.StringHelperPOSIX
 import com.android.utils.StringHelperWindows
+import java.io.File
 
 /**
  * File extension to use for executable files for the current host OS.
@@ -39,6 +41,12 @@ val bat get() = os.bat
  * it is treated as a single argument with all text, including special characters, kept unchanged.
  */
 fun quoteCommandLineArgument(argument: String) = os.quoteCommandLineArgument(argument)
+
+/**
+ * Given a name like 'executable' find the full path by searching on PATH. On Windows, look
+ * for .exe, .bat, and .cmd. Return null if not found.
+ */
+fun which(executable : File) : File? = os.which(executable)
 
 /**
  * Behavior of the current host platform.
@@ -84,12 +92,22 @@ interface OsBehavior {
      * it is treated as a single argument all text, including special characters, kept intact.
      */
     fun quoteCommandLineArgument(argument: String) : String
+
+    /**
+     * Given a name like 'executable' find the full path by searching on PATH. On Windows, look
+     * for .exe, .bat, and .cmd. Return null if not found.
+     */
+    fun which(executable : File) : File?
 }
 
 /**
  * Create a host behavior object that encapsulates differences between Windows, MacOs, and Posix.
  */
-fun createOsBehavior(platform : Int) : OsBehavior {
+fun createOsBehavior(
+    platform : Int,
+    environmentPaths : List<File> = getEnvironmentPaths(),
+    executableExtensions : List<String> = getExecutableExtensions(platform)
+) : OsBehavior {
     return if (platform == PLATFORM_WINDOWS) object : OsBehavior {
         override val platform: Int get() = platform
         override val exe = ".exe"
@@ -117,7 +135,27 @@ fun createOsBehavior(platform : Int) : OsBehavior {
                     .replace("\\", "\\\\")
                     .replace("\"", "\"\"")}\""
             } else escaped
+        }
 
+        override fun which(executable: File): File? {
+
+            fun find(file : File) : File? {
+                if (file.extension != "" && file.isFile) return file
+                for(ext in executableExtensions) {
+                    val candidate = File("$file$ext")
+                    if (candidate.isFile) return candidate
+                }
+                return null
+            }
+
+            find(executable)?.let { return@which it }
+
+            if (!executable.isRooted) {
+                for (path in environmentPaths) {
+                    find(path.resolve(executable))?.let { return@which it }
+                }
+            }
+            return null
         }
     }
     else object : OsBehavior {
@@ -142,8 +180,30 @@ fun createOsBehavior(platform : Int) : OsBehavior {
                     .replace("`", "\\`")
             }
         }
+
+        override fun which(executable: File): File? {
+            if (executable.isFile) return executable
+            if (!executable.isRooted) {
+                for (path in environmentPaths) {
+                    val candidate = path.resolve(executable)
+                    if (candidate.isFile) return candidate
+                }
+            }
+            return null
+        }
     }
 }
+
+/**
+ * Retrieve the file extensions that this [platform] uses for executables.
+ */
+private fun getExecutableExtensions(platform : Int) = when(platform) {
+        PLATFORM_WINDOWS ->
+            // See https://ss64.com/nt/path.html
+            (System.getenv("PATHEXT") ?: ".COM;.EXE;.BAT;.CMD").split(';')
+        else -> listOf()
+    }
+
 
 fun createOsBehavior() = createOsBehavior(CURRENT_PLATFORM)
 fun createWindowsBehavior() = createOsBehavior(PLATFORM_WINDOWS)

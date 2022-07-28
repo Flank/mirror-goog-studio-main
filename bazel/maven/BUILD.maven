@@ -1864,27 +1864,6 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.googlecode.json-simple.json-simple_1.1",
-    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/googlecode/json-simple/json-simple/1.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "com.googlecode.json-simple.json-simple",
-    classifiers = [],
-    jars = [
-        "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.jar"
-    ],
-    original_deps = [],
-    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/googlecode/json-simple/json-simple/1.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.googlecode.juniversalchardet.juniversalchardet_1.0.3",
     pom = "repository/com/googlecode/juniversalchardet/juniversalchardet/1.0.3/juniversalchardet-1.0.3.pom",
     repo_root_path = "repository",
@@ -26499,6 +26478,14 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.googlecode.json-simple.json-simple_1.1",
+    pom = "repository/com/googlecode/json-simple/json-simple/1.1/json-simple-1.1.pom",
+    repo_root_path = "repository",
+    repo_path = "com/googlecode/json-simple/json-simple/1.1",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.ibm.icu.icu4j_53.1",
     pom = "repository/com/ibm/icu/icu4j/53.1/icu4j-53.1.pom",
     repo_root_path = "repository",
@@ -32058,6 +32045,17 @@ maven_artifact(
     deps = [
         "org.jetbrains.kotlin.kotlin-stdlib_1.2.0",
         "org.jetbrains.kotlin.kotlin-stdlib-jre7_1.2.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.jetbrains.kotlin.kotlin-stdlib-js_1.7.0",
+    pom = "repository/org/jetbrains/kotlin/kotlin-stdlib-js/1.7.0/kotlin-stdlib-js-1.7.0.pom",
+    repo_root_path = "repository",
+    repo_path = "org/jetbrains/kotlin/kotlin-stdlib-js/1.7.0",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib-common_1.7.0",
     ],
     visibility = ["//visibility:public"],
 )

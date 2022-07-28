@@ -35,7 +35,10 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.psi.JavaTokenType
+import com.intellij.psi.PsiJavaToken
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiWhiteSpace
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.UMethod
@@ -152,6 +155,12 @@ class LintFixVerifierTest {
                        private void updateBuildGradle() {
                            String x = "Say hello, lint!";
                        }
+                       private void deleteStatement() {
+                       }
+                       public void test() {
+                           Test.deleteStatement();
+                           Test.deleteStatement() ;
+                       }
                     }
                     """
                 ).indented(),
@@ -174,7 +183,13 @@ class LintFixVerifierTest {
                 src/main/java/test/pkg/Test.java:5: Warning: This error has a quickfix which edits something in a separate build.gradle file instead [_LintFixVerifier]
                        updateBuildGradle();
                        ~~~~~~~~~~~~~~~~~~~
-                0 errors, 2 warnings
+                src/main/java/test/pkg/Test.java:15: Warning: This method call should be fully deleted [_LintFixVerifier]
+                       Test.deleteStatement();
+                       ~~~~~~~~~~~~~~~~~~~~~~
+                src/main/java/test/pkg/Test.java:16: Warning: This method call should be fully deleted [_LintFixVerifier]
+                       Test.deleteStatement() ;
+                       ~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 4 warnings
                 """
             )
             .expectFixDiffs(
@@ -208,6 +223,12 @@ class LintFixVerifierTest {
                 + First line in [new]| file.
                 + Second line.
                 + The End.
+                Fix for src/main/java/test/pkg/Test.java line 15: Delete:
+                @@ -15 +15
+                -        Test.deleteStatement();
+                Fix for src/main/java/test/pkg/Test.java line 16: Delete:
+                @@ -16 +16
+                -        Test.deleteStatement() ;
                 """
             )
     }
@@ -404,8 +425,8 @@ class LintFixVerifierTest {
 
 @SuppressWarnings("ALL")
 class LintFixVerifierDetector : Detector(), Detector.UastScanner {
-    override fun getApplicableMethodNames(): List<String>? {
-        return listOf("renameMethodNameInstead", "updateBuildGradle")
+    override fun getApplicableMethodNames(): List<String> {
+        return listOf("renameMethodNameInstead", "updateBuildGradle", "deleteStatement")
     }
 
     override fun visitMethodCall(
@@ -488,6 +509,32 @@ class LintFixVerifierDetector : Detector(), Detector.UastScanner {
                 "This error has a quickfix which edits something in a separate build.gradle file instead",
                 composite
             )
+        } else if (method.name == "deleteStatement") {
+            val deleteFix = fix().replace().with("").reformat(true)
+
+            val sourcePsi = node.sourcePsi
+            if (sourcePsi != null) {
+                var curr = sourcePsi.nextSibling
+                while (curr != null) {
+                    if (curr is PsiJavaToken && curr.tokenType == JavaTokenType.SEMICOLON) {
+                        deleteFix.range(context.getRangeLocation(sourcePsi, 0, curr, 0))
+                        break
+                    } else if (curr !is PsiWhiteSpace) { // allow whitespace between expression and semicolon
+                        break
+                    }
+                    curr = curr.nextSibling
+                }
+            }
+
+            context.report(
+                ISSUE,
+                node,
+                context.getLocation(node),
+                "This method call should be fully deleted",
+                deleteFix.build()
+            )
+        } else {
+            error(method.name)
         }
     }
 

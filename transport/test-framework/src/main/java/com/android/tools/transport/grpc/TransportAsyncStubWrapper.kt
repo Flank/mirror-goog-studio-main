@@ -19,8 +19,8 @@ import com.android.tools.profiler.proto.Common
 import com.android.tools.profiler.proto.Transport
 import com.android.tools.profiler.proto.TransportServiceGrpc
 import com.android.tools.profiler.proto.TransportServiceGrpc.TransportServiceStub
-import io.grpc.Context
-import io.grpc.stub.StreamObserver
+import com.android.tools.idea.io.grpc.Context
+import com.android.tools.idea.io.grpc.stub.StreamObserver
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

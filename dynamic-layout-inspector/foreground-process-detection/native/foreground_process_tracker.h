@@ -86,7 +86,8 @@ class ForegroundProcessTracker {
   static constexpr int kPollingDelayMs = 250;
 
   // Main constructor takes BashCommandRunner to facilitate mocking it in unit
-  // tests
+  // tests. Takes ownership of the profiler::BashCommandRunner passed as
+  // arguments.
   ForegroundProcessTracker(
       profiler::EventBuffer* buffer,
       profiler::BashCommandRunner* dumpsysPathCommandRunner,
@@ -114,9 +115,6 @@ class ForegroundProcessTracker {
         isThreadRunning_.store(false);
       }
     }
-    delete dumpsysTopActivityCommandRunner_;
-    delete dumpsysSleepingActivitiesCommandRunner_;
-    delete dumpsysAwakeActivitiesCommandRunner_;
   }
 
   // Runs dumpsys and tries to extract the foreground process for its output.
@@ -158,11 +156,13 @@ class ForegroundProcessTracker {
   // EventBuffer from transport
   profiler::EventBuffer* eventBuffer_;
 
-  profiler::BashCommandRunner* dumpsysPathCommandRunner_;
-  profiler::BashCommandRunner* grepPathCommandRunner_;
-  profiler::BashCommandRunner* dumpsysTopActivityCommandRunner_;
-  profiler::BashCommandRunner* dumpsysSleepingActivitiesCommandRunner_;
-  profiler::BashCommandRunner* dumpsysAwakeActivitiesCommandRunner_;
+  std::unique_ptr<profiler::BashCommandRunner> dumpsysPathCommandRunner_;
+  std::unique_ptr<profiler::BashCommandRunner> grepPathCommandRunner_;
+  std::unique_ptr<profiler::BashCommandRunner> dumpsysTopActivityCommandRunner_;
+  std::unique_ptr<profiler::BashCommandRunner>
+      dumpsysSleepingActivitiesCommandRunner_;
+  std::unique_ptr<profiler::BashCommandRunner>
+      dumpsysAwakeActivitiesCommandRunner_;
 
   // Used to keep track of the last seen foreground process
   ProcessInfo latestForegroundProcess_;

@@ -78,14 +78,13 @@ class PrivateApiLookup private constructor(
             if (desc != null) {
                 // Method
                 val nameLength = name.length
-                compare = compare(mData, offset, '('.toByte(), name, 0, nameLength)
+                compare = compare(mData, offset, '('.code.toByte(), name, 0, nameLength)
                 if (compare == 0) {
                     offset += nameLength
                     val argsEnd = desc.indexOf(')')
                     // Only compare up to the ) -- after that we have a return value in the
                     // input description, which isn't there in the database.
-                    compare =
-                        compare(mData, offset, ')'.toByte(), desc, 0, argsEnd)
+                    compare = compare(mData, offset, ')'.code.toByte(), desc, 0, argsEnd)
                     if (compare == 0) {
                         if (DEBUG_SEARCH) {
                             println("Found " + dumpEntry(offset))

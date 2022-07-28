@@ -4,6 +4,7 @@
 # - There is a similar behavior for workdir, toolchain, etc.
 # This is to shorten the file and to make it more evident when unique values appear.
 
+# There are 1 entries.
 Source-File: src/main/cxx/hello-jni.c (source0)
 Output-File: CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o (out0)
 Working-Dir: path/to/cxx/build (workdir0)

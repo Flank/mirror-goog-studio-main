@@ -122,6 +122,7 @@ data class CxxAbiModel(
  * The model json
  *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/android_gradle_build.json
  */
+// TODO : rename to androidGradleBuildFile
 val CxxAbiModel.jsonFile: File
     get() = join(cxxBuildFolder, "android_gradle_build.json")
 
@@ -129,6 +130,7 @@ val CxxAbiModel.jsonFile: File
  * The json mini-config file contains a subset of the regular json file that is much smaller and
  * less memory-intensive to read.
  */
+// TODO : rename to androidGradleBuildMiniFile
 val CxxAbiModel.miniConfigFile: File
     get() = join(modelMetadataFolder, "android_gradle_build_mini.json")
 
@@ -273,6 +275,14 @@ val CxxAbiModel.cmakeServerLogFile: File
  */
 val CxxAbiModel.prefabConfigFile: File
     get() = join(cxxBuildFolder, "prefab_config.json")
+
+/**
+ * File that contains fingerprints of files involved in the last C++ configure run.
+ *
+ *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/configure_fingerprint.bin
+ */
+val CxxAbiModel.lastConfigureFingerPrintFile: File
+    get() = join(cxxBuildFolder, "configure_fingerprint.bin")
 
 /**
  * compile_commands.json file for this ABI.

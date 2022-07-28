@@ -307,5 +307,20 @@ inline fun <reified Encoded, Decoded> readStructuredLogs(
     return events.sortedBy { it.first }.map { it.second }
 }
 
+inline fun <reified Encoded, Decoded> readStructuredLog(
+    logFile : File,
+    crossinline decode: (Encoded, StringDecoder) -> Decoded) : List<Decoded> {
+    val events = mutableListOf<Pair<Long, Decoded>>()
+    streamCxxStructuredLog(logFile) {
+            strings,
+            timestamp,
+            event ->
+        if (event is Encoded) {
+            events.add(timestamp to decode(event, strings))
+        }
+    }
+    return events.sortedBy { it.first }.map { it.second }
+}
+
 
 

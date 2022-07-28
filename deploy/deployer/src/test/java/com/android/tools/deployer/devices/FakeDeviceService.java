@@ -15,8 +15,8 @@
  */
 package com.android.tools.deployer.devices;
 
+import com.android.tools.idea.io.grpc.stub.StreamObserver;
 import com.android.tools.idea.protobuf.ByteString;
-import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

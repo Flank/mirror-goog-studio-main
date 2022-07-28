@@ -24,22 +24,18 @@ import org.gradle.api.Project
 import org.gradle.api.logging.LogLevel
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val REGISTERED_EXTENSION_EXT_PROPERTY_NAME =
-    "_internalAndroidGradlePluginDependencyCheckerRegistered"
-
 /** Check to ensure dependencies are not resolved during configuration.
  *
  * See  https://github.com/gradle/gradle/issues/2298
  */
 fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
-    if (project.rootProject.extensions.findByName(REGISTERED_EXTENSION_EXT_PROPERTY_NAME) != null) {
-        // Only register once
-        return
-    }
-    project.rootProject.extensions.add(REGISTERED_EXTENSION_EXT_PROPERTY_NAME, true)
-
     val warn = projectOptions[BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
     val fail = projectOptions[BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
+
+    if (skipDependencyCheck(project, projectOptions, warn, fail)) {
+        return
+    }
+
     val isResolutionAllowed = AtomicBoolean(false)
     when {
         // If configuration-on-demand is enabled and there are included builds, configurations may
@@ -56,17 +52,12 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
         else -> project.gradle.taskGraph.whenReady { isResolutionAllowed.set(true) }
     }
 
-    val modelOnly = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY] || projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY_V2]
-
     project.configurations.all { configuration ->
         configuration.incoming.beforeResolve {
             if (isResolutionAllowed.get()) {
                 return@beforeResolve
             }
             if (configuration.name == "classpath") {
-                return@beforeResolve
-            }
-            if (modelOnly) {
                 return@beforeResolve
             }
 
@@ -90,6 +81,18 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
             }
         }
     }
+}
+
+private fun skipDependencyCheck(
+    project: Project,
+    projectOptions: ProjectOptions,
+    warn: Boolean,
+    fail: Boolean
+): Boolean {
+    val modelOnly = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY]
+            || projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY_V2]
+    val silentMode = !warn && !fail && !project.logger.isEnabled(LogLevel.INFO)
+    return modelOnly || silentMode
 }
 
 private fun errorMessage(configurationName: String): String {

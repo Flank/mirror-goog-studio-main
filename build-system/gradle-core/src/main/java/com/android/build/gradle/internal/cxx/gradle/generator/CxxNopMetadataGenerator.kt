@@ -26,5 +26,5 @@ import org.gradle.process.ExecOperations
 class CxxNopMetadataGenerator(
         override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
-    override fun generate(ops: ExecOperations, forceGeneration: Boolean) { }
+    override fun configure(ops: ExecOperations, forceConfigure: Boolean) { }
 }

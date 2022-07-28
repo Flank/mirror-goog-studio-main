@@ -20,9 +20,10 @@ import com.android.adblib.AdbSession
 import com.android.adblib.CoroutineScopeCache
 import com.android.adblib.DeviceProperties
 import com.android.adblib.DeviceProperty
+import com.android.adblib.DevicePropertyNames.RO_BUILD_VERSION_SDK
 import com.android.adblib.DeviceSelector
-import com.android.adblib.shellAsLines
 import com.android.adblib.thisLogger
+import com.android.adblib.utils.LineShellCollector
 import com.android.adblib.utils.toImmutableMap
 import kotlinx.coroutines.flow.toList
 
@@ -38,7 +39,7 @@ class DevicePropertiesImpl(
         get() = deviceServices.session
 
     override suspend fun all(): List<DeviceProperty> {
-        val lines = deviceServices.shellAsLines(device, "getprop").toList()
+        val lines = deviceServices.shell(device, "getprop", LineShellCollector()).toList()
         return DevicePropertiesParser().parse(lines.asSequence())
     }
 
@@ -53,7 +54,7 @@ class DevicePropertiesImpl(
 
     override suspend fun api(default: Int): Int {
         return try {
-            readonlyValue("ro.build.version.sdk").toInt()
+            readonlyValue(RO_BUILD_VERSION_SDK).toInt()
         } catch (t: Throwable) {
             thisLogger(this.session).info(t) { "API level could not be determined, returning $default instead" }
             return default

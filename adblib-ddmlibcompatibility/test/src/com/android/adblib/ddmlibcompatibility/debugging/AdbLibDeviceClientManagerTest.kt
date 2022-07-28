@@ -49,14 +49,10 @@ class AdbLibDeviceClientManagerTest {
     @Rule
     var exceptionRule: ExpectedException = ExpectedException.none()
 
-    private fun <T : AutoCloseable> registerCloseable(item: T): T {
-        return closeables.register(item)
-    }
-
     @Test
     fun testTrackingWaitsUntilDeviceIsTracked() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
 
@@ -89,7 +85,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testScopeIsCancelledWhenDeviceDisconnects() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -108,17 +104,24 @@ class AdbLibDeviceClientManagerTest {
         // Act
         fakeAdb.disconnectTestDevice(device.serialNumber)
         yieldUntil {
-            deviceClientManager.clients.size == 0
+            listener.filterEvents { events -> events.any { it.kind == PROCESS_LIST_UPDATED } }
+                    && deviceClientManager.clients.size == 0
         }
 
         // Assert
-        Assert.assertEquals(1, listener.events().size)
+        listener.events()
+            .lastOrNull { it.kind == PROCESS_LIST_UPDATED }
+            ?.also { lastEvent ->
+                Assert.assertSame(deviceClientManager, lastEvent.deviceClientManager)
+                Assert.assertSame(fakeAdb.bridge, lastEvent.bridge)
+            } ?: Assert.fail("No PROCESS_LIST_UPDATED event")
+        Unit
     }
 
     @Test
     fun testClientListIsUpdatedWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -182,7 +185,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testClientListIsUpdatedWhenProcessesStop() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -211,7 +214,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessesStart() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -226,12 +229,11 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         deviceState.startClient(12, 0, "foo.bar.baz", false)
         yieldUntil {
-            listener.events().isNotEmpty()
+            listener.filterEvents { events -> events.any { it.kind == PROCESS_LIST_UPDATED } }
         }
 
         // Assert
-        Assert.assertTrue(listener.events().isNotEmpty())
-        val firstEvent = listener.events()[0]
+        val firstEvent = listener.events().first { it.kind == PROCESS_LIST_UPDATED }
         Assert.assertSame(deviceClientManager, firstEvent.deviceClientManager)
         Assert.assertSame(fakeAdb.bridge, firstEvent.bridge)
         Assert.assertEquals(PROCESS_LIST_UPDATED, firstEvent.kind)
@@ -241,7 +243,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessesEnd() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -277,7 +279,7 @@ class AdbLibDeviceClientManagerTest {
     @Test
     fun testListenerIsCalledWhenProcessPropertiesChange() = runBlockingWithTimeout {
         // Prepare
-        val session = registerCloseable(fakeAdb.createAdbSession())
+        val session = fakeAdb.createAdbSession(closeables)
         val clientManager = AdbLibClientManager(session)
         val listener = TestDeviceClientManagerListener()
         val (device, deviceState) = fakeAdb.connectTestDevice()
@@ -292,17 +294,20 @@ class AdbLibDeviceClientManagerTest {
         deviceState.startClient(10, 0, "foo.bar", false)
         yieldUntil {
             listener.filterEvents { events -> events.any { it.kind == PROCESS_NAME_UPDATED } }
+                    && listener.filterEvents { events -> events.any { it.kind == PROCESS_LIST_UPDATED } }
                     && deviceClientManager.clients.any { it.clientData.clientDescription == "foo.bar" }
         }
 
         // Assert
         Assert.assertTrue(
             "Should have received a process list changed event",
-            listener.events().any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED })
+            listener.filterEvents { events ->
+                events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_LIST_UPDATED } })
 
         Assert.assertTrue(
             "Should have received at least one process name changed event",
-            listener.events().any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED })
+            listener.filterEvents { events ->
+                events.any { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED } })
 
         val event = listener.filterEvents { events -> events.last { it.kind == TestDeviceClientManagerListener.EventKind.PROCESS_NAME_UPDATED } }
         Assert.assertSame(event.deviceClientManager, deviceClientManager)

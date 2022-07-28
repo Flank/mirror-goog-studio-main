@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.library
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProjectBuilder
 import com.android.build.gradle.integration.common.truth.ApkSubject
@@ -297,19 +298,43 @@ class PrivacySandboxSdkTest {
             assertThat(it).exists()
             assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
             assertThat(it).doesNotContainClass(ANDROID_LIB1_CLASS)
-            val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
-            assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
-            assertThat(manifestContent).doesNotContain(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
+            // TODO(b/240128152): Snippet injection should ideally only happen when deploying
+            // through Studio. Re-enable the following check when that's done.
+            // val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
+            // assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
+            // assertThat(manifestContent).doesNotContain(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
         }
         Apk(baseMaster2Apk).use {
             assertThat(it).doesNotExist()
         }
 
+        executor()
+            .with(StringOption.IDE_APK_SELECT_CONFIG, apkSelectConfig.absolutePath)
+            .run(":example-app:assembleDebug")
+        Apk(project.getSubproject(":example-app").getApk(GradleTestProject.ApkType.DEBUG).file).use {
+            assertThat(it).exists()
+            val manifestContent = ApkSubject.getManifestContent(it.file)
+            assertThat(manifestContent.normalizeManifestContent()).containsAtLeastElementsIn(
+                listOf(
+                "      E: application (line=14)",
+                "          E: uses-sdk-library (line=15)",
+                "            A: http://schemas.android.com/apk/res/android:name(0x01010003)=\"com.example.privacysandboxsdk\" (Raw: \"com.example.privacysandboxsdk\")",
+                "            A: http://schemas.android.com/apk/res/android:certDigest(0x01010548)=\"15:D3:8B:C5:64:63:F1:BE:1E:BE:8C:FD:1F:E8:C9:AB:73:8C:5B:2F:68:2A:35:D7:54:F0:C2:7A:68:B3:3B:AF\" (Raw: \"15:D3:8B:C5:64:63:F1:BE:1E:BE:8C:FD:1F:E8:C9:AB:73:8C:5B:2F:68:2A:35:D7:54:F0:C2:7A:68:B3:3B:AF\")",
+                "            A: http://schemas.android.com/apk/res/android:versionMajor(0x01010577)=10002"
+                ).normalizeManifestContent()
+            )
+        }
+    }
+
+    private fun List<String>.normalizeManifestContent(): List<String> = map {
+        certDigestPattern.replace(it, "CERT_DIGEST")
     }
 
     companion object {
+        private val certDigestPattern = Regex("([0-9A-F]{2}:){31}[0-9A-F]{2}")
         private const val ANDROID_LIB1_CLASS = "Lcom/example/androidlib1/Example;"
         private const val USES_SDK_LIBRARY_MANIFEST_ELEMENT = "uses-sdk-library"
         private const val MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE = "=\"com.example.privacysandboxsdk\""
     }
 }
+

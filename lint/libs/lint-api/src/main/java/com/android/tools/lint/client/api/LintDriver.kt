@@ -3632,6 +3632,12 @@ class LintDriver(
                 return
             }
 
+            if (LintClient.isStudio) {
+                // In the IDE, log to idea.log.
+                driver.client.log(Severity.ERROR, throwable, null)
+                return
+            }
+
             val sb = StringBuilder(100)
             sb.append("Unexpected failure during lint analysis")
             context?.file?.name?.let { sb.append(" of ").append(it) }

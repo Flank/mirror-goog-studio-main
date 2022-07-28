@@ -44,18 +44,12 @@ kotlin_library(
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/signflinger",
-        "@maven//:com.googlecode.json-simple.json-simple",
         "@maven//:commons-codec.commons-codec",
-        "@maven//:it.unimi.dsi.fastutil",
         "@maven//:javax.inject.javax.inject",
-        "@maven//:net.sf.jopt-simple.jopt-simple",
         "@maven//:org.bouncycastle.bcpkix-jdk15on",
         "@maven//:org.bouncycastle.bcprov-jdk15on",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8",
-        "@maven//:org.ow2.asm.asm",
         "@maven//:org.ow2.asm.asm-commons",
-        "@maven//:org.ow2.asm.asm-tree",
-        "@maven//:org.ow2.asm.asm-util",
     ],
 )
 

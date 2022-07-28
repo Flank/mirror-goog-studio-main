@@ -2229,6 +2229,12 @@ public final class SdkConstants {
     public static final String FN_MANIFEST_CLASS = FN_MANIFEST_BASE + DOT_JAVA;
     /** BuildConfig java class filename, i.e. "BuildConfig.java" */
     public static final String FN_BUILD_CONFIG = FN_BUILD_CONFIG_BASE + DOT_JAVA;
+    /**
+     * Filename for the automatically generated manifest snippet from a privacy sandbox SDK to be
+     * merged into app manifest.
+     */
+    public static final String PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX =
+            "-privacy-sandbox-sdk-dependency-manifest-snippet" + DOT_XML;
 
     public static final String DRAWABLE_FOLDER = "drawable";
     public static final String MIPMAP_FOLDER = "mipmap";
@@ -2420,12 +2426,6 @@ public final class SdkConstants {
     public static final String GRAVITY_VALUE_CLIP_HORIZONTAL = "clip_horizontal";
     public static final String GRAVITY_VALUE_CLIP_VERTICAL = "clip_vertical";
     public static final String GRAVITY_VALUE_FILL = "fill";
-
-    // Mockup
-    public static final String ATTR_MOCKUP = "mockup";
-    public static final String ATTR_MOCKUP_CROP = "mockup_crop";
-    public static final String ATTR_MOCKUP_POSITION = "mockup_crop";
-    public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity";
 
     // Baselines
     /**

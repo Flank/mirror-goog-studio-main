@@ -29,6 +29,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import com.android.build.gradle.internal.cxx.string.StringTable
+import com.android.utils.cxx.CompileCommand
+import java.util.Locale
 
 class AdaptNinjaToCxxBuildTest {
 
@@ -276,13 +278,6 @@ class AdaptNinjaToCxxBuildTest {
         assertThat(assignTargetName("lib.xyz")).isEqualTo("lib.xyz")
     }
 
-    @Test
-    fun `check deconflict sources`() {
-        assertThat(deconflictSourceFiles(listOf("source.cpp"))).isEqualTo("source.cpp")
-        assertThat(deconflictSourceFiles(listOf("source.cpp", "pch.pch"))).isEqualTo("source.cpp")
-        assertThat(deconflictSourceFiles(listOf("pch.pch", "source.cpp"))).isEqualTo("source.cpp")
-        assertThat(deconflictSourceFiles(listOf("pch.pch", "pch.pch"))).isEqualTo("pch.pch")
-    }
 
     @Test
     fun `check isPackageable`() {
@@ -656,12 +651,20 @@ class AdaptNinjaToCxxBuildTest {
         val workdir = StringTable()
         val toolchain = StringTable()
         val lists = StringTable()
+        val commands = mutableListOf<CompileCommand>()
         streamCompileCommands(compileCommandsJsonBin) {
-            sb.appendLine("Source-File: ${sources.text(sourceFile, "source")}")
-            sb.appendLine("Output-File: ${out.text(outputFile, "out")}")
-            sb.appendLine("Working-Dir: ${workdir.text(workingDirectory, "workdir")}")
-            sb.appendLine("Compiler:    ${toolchain.text(compiler, "toolchain")}")
-            sb.append(lists.text(flags))
+            commands.add(this)
+        }
+        sb.appendLine("# There are ${commands.size} entries.")
+        commands.sortedBy {
+            it.outputFile.path.lowercase(Locale.getDefault())
+                .replace("\\", "/")
+        }.forEach { command ->
+            sb.appendLine("Source-File: ${sources.text(command.sourceFile, "source")}")
+            sb.appendLine("Output-File: ${out.text(command.outputFile, "out")}")
+            sb.appendLine("Working-Dir: ${workdir.text(command.workingDirectory, "workdir")}")
+            sb.appendLine("Compiler:    ${toolchain.text(command.compiler, "toolchain")}")
+            sb.append(lists.text(command.flags))
             sb.appendLine()
             sb.appendLine()
         }
@@ -675,7 +678,7 @@ class AdaptNinjaToCxxBuildTest {
             if (currentText != originalText) {
                 // Fail the first time but leave the file changed to the new content
                 original.writeText(currentText)
-                error("$original content changed: \\n${explainLineDifferences(originalText, currentText)}")
+                error("$original content changed: \n${explainLineDifferences(originalText, currentText)}")
             }
         }
         original.parentFile.mkdirs()

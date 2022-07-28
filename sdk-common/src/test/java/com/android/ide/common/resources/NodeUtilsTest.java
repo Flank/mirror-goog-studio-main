@@ -22,6 +22,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -186,6 +187,27 @@ public class NodeUtilsTest extends TestCase {
                 node,
                 NodeUtils.duplicateNode(document2, node),
                 true));
+    }
+
+    public void testLocalTagXmlnsDeclarationsNodeAdoption() throws Exception {
+        Document document = createDocument();
+
+        Node node = document.createElement("some-node");
+
+        Element child = document.createElement("child");
+        node.appendChild(child);
+        NodeUtils.addAttribute(
+                document, child, SdkConstants.XMLNS_URI, "xmlns:app", "http://some.uri/");
+        NodeUtils.addAttribute(
+                document,
+                child,
+                SdkConstants.XMLNS_URI,
+                "xmlns:card_view",
+                "http://someother.uri/");
+
+        assertEquals(child.getAttributes().getLength(), 2);
+        NodeUtils.adoptNode(document, child);
+        assertEquals(child.getAttributes().getLength(), 0);
     }
 
     public void testDuplicateAdoptNodeUpdatesNS() throws Exception {
