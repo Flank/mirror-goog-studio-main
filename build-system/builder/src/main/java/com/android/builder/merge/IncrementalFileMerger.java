@@ -19,6 +19,9 @@ package com.android.builder.merge;
 import com.android.annotations.NonNull;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closer;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +56,7 @@ public final class IncrementalFileMerger {
      * @param state state of the previous merge; an empty state if this is the first merge
      * @param noCompressPredicate a predicate indicating whether paths should be uncompressed
      */
+    @SuppressWarnings("UnstableApiUsage")
     @NonNull
     public static IncrementalFileMergerState merge(
             @NonNull List<IncrementalFileMergerInput> inputs,
@@ -72,16 +76,22 @@ public final class IncrementalFileMerger {
                         .map(IncrementalFileMergerInput::getName)
                         .collect(Collectors.toList());
 
-        output.open();
-        inputs.forEach(IncrementalFileMergerInput::open);
-        if (inputNames.equals(state.getInputNames())) {
-            mergeNoChangedInputs(inputs, output, state, newState, noCompressPredicate);
-        } else {
-            mergeChangedInputs(inputs, output, state, newState, noCompressPredicate);
+        try (Closer closer = Closer.create()) {
+            inputs.forEach(
+                    it -> {
+                        it.open();
+                        closer.register(it);
+                    });
+            output.open();
+            closer.register(output);
+            if (inputNames.equals(state.getInputNames())) {
+                mergeNoChangedInputs(inputs, output, state, newState, noCompressPredicate);
+            } else {
+                mergeChangedInputs(inputs, output, state, newState, noCompressPredicate);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        inputs.forEach(IncrementalFileMergerInput::close);
-        output.close();
 
         return newState.build();
     }

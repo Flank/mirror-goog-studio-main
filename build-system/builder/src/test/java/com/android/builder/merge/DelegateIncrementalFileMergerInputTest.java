@@ -16,6 +16,7 @@
 
 package com.android.builder.merge;
 
+import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class DelegateIncrementalFileMergerInputTest {
     }
 
     @Test
-    public void close() {
+    public void close() throws IOException {
         delegate.close();
         Mockito.verify(mockInput).close();
     }
