@@ -44,9 +44,8 @@ fun RecipeExecutor.composeWearActivityRecipe(
     val composeVersionVarName = getDependencyVarName("androidx.compose.ui:ui", "compose_version")
     val wearComposeVersionVarName =
         getDependencyVarName("androidx.wear.compose:compose-material", "wear_compose_version")
-    // Replace this hardcoded version with COMPOSE_UI_VERSION once Wear launches.
-    setExtVar(composeVersionVarName, "1.2.0-alpha05")
-    setExtVar(wearComposeVersionVarName, "1.0.0-alpha18")
+    setExtVar(composeVersionVarName, COMPOSE_UI_VERSION)
+    setExtVar(wearComposeVersionVarName, "1.0.0")
 
     // Note: Compose versioning is per group. "androidx.compose.ui:ui" group has its own variable
     addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeVersionVarName}")
