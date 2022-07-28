@@ -402,8 +402,8 @@ class Issue private constructor(
          *
          * @param id the fixed id of the issue
          * @param briefDescription short summary (typically 5-6 words or
-         *     less), typically describing the **problem** rather
-         *     than the **fix** (e.g. "Missing minSdkVersion")
+         *     less), typically describing the **problem** rather than
+         *     the **fix** (e.g. "Missing minSdkVersion")
          * @param explanation a full explanation of the issue, with
          *     suggestions for
          * @param implementation the default implementation for this
@@ -414,11 +414,11 @@ class Issue private constructor(
          *     being most important/severe
          * @param severity the default severity of the issue
          * @param androidSpecific true if this issue only applies to
-         *     Android, false if it does not apply to Android
-         *     at all, and null if not specified or should run
-         *     on all platforms. Convenience for specifying
-         *     platforms=[ANDROID]. @param platforms Set of
-         *     platform scopes where this issue applies.
+         *     Android, false if it does not apply to Android at all,
+         *     and null if not specified or should run on all platforms.
+         *     Convenience for specifying platforms=[ANDROID].
+         * @param platforms Set of platform scopes where this issue
+         *     applies.
          * @return a new [Issue]
          */
         fun create(

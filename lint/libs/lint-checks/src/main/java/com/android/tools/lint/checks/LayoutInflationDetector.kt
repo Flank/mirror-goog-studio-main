@@ -205,7 +205,7 @@ class LayoutInflationDetector : LayoutDetector(), SourceCodeScanner {
         /**
          * Is this call to the layout inflater used for the
          * Alert Dialog? If so, a null root is okay. See
-         * for example "Every Rule Has An Exception" herE:
+         * for example "Every Rule Has An Exception" here:
          * https://wundermanthompsonmobile.com/2013/05/layout-inflation-as-intended/
          */
         private fun isUsedWithAlertDialog(
