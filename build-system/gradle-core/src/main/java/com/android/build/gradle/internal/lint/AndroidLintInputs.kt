@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.ProjectInfo
 import com.android.build.gradle.internal.services.LintClassLoaderBuildService
+import com.android.build.gradle.internal.services.LintParallelBuildService
 import com.android.build.gradle.internal.services.TaskCreationServices
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -255,7 +256,10 @@ abstract class LintTool {
                 // Default to using the main Gradle daemon heap size to smooth the transition
                 // for build authors.
                 it.forkOptions.maxHeapSize =
-                    workerHeapSize.orNull ?: "${Runtime.getRuntime().maxMemory() / 1024 / 1024}m"
+                    LintParallelBuildService.calculateLintHeapSize(
+                        workerHeapSize.orNull,
+                        Runtime.getRuntime().maxMemory()
+                    )
             }
         }
         workQueue.submit(AndroidLintWorkAction::class.java) { parameters ->

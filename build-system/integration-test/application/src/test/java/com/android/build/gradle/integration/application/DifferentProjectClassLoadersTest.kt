@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.services.LintParallelBuildService
 import com.android.build.gradle.options.StringOption
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.google.common.truth.Truth.assertThat
@@ -63,6 +64,15 @@ class DifferentProjectClassLoadersTest {
     @Test
     fun testCleanBuild() {
         project.executor().run("assembleDebug")
+    }
+
+    /**
+     * Test lint because we register the [LintParallelBuildService] once instead of registering one
+     * per classloader.
+     */
+    @Test
+    fun testLint() {
+        project.executor().run("lintDebug")
     }
 
     @Test
