@@ -18,6 +18,7 @@ package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Output of a merge operation. The output receives notifications of the operations that need to be
@@ -45,9 +46,9 @@ public interface IncrementalFileMergerOutput extends OpenableCloseable {
      *
      * @param path the OS-independent path
      * @param inputs the inputs where the paths exists and that should be combined to generate the
-     *     output; the inputs are provided in the same order they were provided to {@link
-     *     IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
-     *     IncrementalFileMergerState)}
+     *     output. The inputs should not be opened when passed to this method. The inputs are
+     *     provided in the same order they were provided to {@link IncrementalFileMerger#merge(List,
+     *     IncrementalFileMergerOutput, IncrementalFileMergerState, Predicate)}
      * @param compress whether the data will be compressed
      */
     void create(
@@ -61,9 +62,9 @@ public interface IncrementalFileMergerOutput extends OpenableCloseable {
      * @param path the OS-independent path
      * @param prevInputNames the previous inputs used to create or update the path
      * @param inputs the inputs where the paths exists and that should be combined to generate the
-     *     output; the inputs are provided in the same order they were provided to {@link
-     *     IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
-     *     IncrementalFileMergerState)}
+     *     output. The inputs should not be opened when passed to this method. The inputs are
+     *     provided in the same order they were provided to {@link IncrementalFileMerger#merge(List,
+     *     IncrementalFileMergerOutput, IncrementalFileMergerState, Predicate)}
      * @param compress whether the data will be compressed
      */
     void update(

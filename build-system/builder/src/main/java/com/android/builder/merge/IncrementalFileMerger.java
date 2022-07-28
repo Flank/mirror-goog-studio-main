@@ -19,6 +19,8 @@ package com.android.builder.merge;
 import com.android.annotations.NonNull;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -73,15 +75,15 @@ public final class IncrementalFileMerger {
                         .collect(Collectors.toList());
 
         output.open();
-        inputs.forEach(IncrementalFileMergerInput::open);
-        if (inputNames.equals(state.getInputNames())) {
-            mergeNoChangedInputs(inputs, output, state, newState, noCompressPredicate);
-        } else {
-            mergeChangedInputs(inputs, output, state, newState, noCompressPredicate);
+        try (output) {
+            if (inputNames.equals(state.getInputNames())) {
+                mergeNoChangedInputs(inputs, output, state, newState, noCompressPredicate);
+            } else {
+                mergeChangedInputs(inputs, output, state, newState, noCompressPredicate);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-
-        inputs.forEach(IncrementalFileMergerInput::close);
-        output.close();
 
         return newState.build();
     }

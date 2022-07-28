@@ -67,7 +67,7 @@ public final class IncrementalFileMergerOutputs {
             }
 
             @Override
-            public void close() {
+            public void close() throws IOException {
                 writer.close();
             }
 
@@ -76,12 +76,18 @@ public final class IncrementalFileMergerOutputs {
                 writer.remove(path);
             }
 
+            @SuppressWarnings("UnstableApiUsage")
             @Override
             public void create(
                     @NonNull String path,
                     @NonNull List<IncrementalFileMergerInput> inputs,
                     boolean compress) {
                 try (Closer closer = Closer.create()) {
+                    inputs.forEach(
+                            it -> {
+                                it.open();
+                                closer.register(it);
+                            });
                     List<InputStream> inStreams =
                             inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
                     InputStream mergedStream =
@@ -94,6 +100,7 @@ public final class IncrementalFileMergerOutputs {
                 }
             }
 
+            @SuppressWarnings("UnstableApiUsage")
             @Override
             public void update(
                     @NonNull String path,
@@ -101,6 +108,11 @@ public final class IncrementalFileMergerOutputs {
                     @NonNull List<IncrementalFileMergerInput> inputs,
                     boolean compress) {
                 try (Closer closer = Closer.create()) {
+                    inputs.forEach(
+                            it -> {
+                                it.open();
+                                closer.register(it);
+                            });
                     List<InputStream> inStreams =
                             inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
                     InputStream mergedStream =
