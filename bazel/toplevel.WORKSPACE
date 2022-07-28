@@ -13,6 +13,7 @@ register_toolchains(
     "//prebuilts/studio/jdk:runtime_toolchain_definition",
     "//prebuilts/studio/jdk:jdk11_toolchain_java8_definition",
     "//prebuilts/studio/jdk:jdk11_toolchain_java11_definition",
+    "//prebuilts/studio/jdk:jdk17_toolchain_java11_definition",
 )
 
 new_local_repository(
