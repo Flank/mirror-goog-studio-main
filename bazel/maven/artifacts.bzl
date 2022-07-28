@@ -247,6 +247,7 @@ DATA = [
     "androidx.test:rules:1.3.0",
     "androidx.test:rules:1.4.0-alpha06",
     "androidx.test:runner:1.4.0-alpha06",
+    "androidx.tracing:tracing-perfetto-common:1.0.0-alpha01",
     "androidx.wear:wear:1.2.0",
     "androidx.wear.compose:compose-material:1.0.0",
     "com.android.support:animated-vector-drawable:26.1.0",

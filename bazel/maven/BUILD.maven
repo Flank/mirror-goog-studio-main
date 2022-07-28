@@ -15639,6 +15639,17 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "androidx.tracing.tracing-perfetto-common_1.0.0-alpha01",
+    pom = "repository/androidx/tracing/tracing-perfetto-common/1.0.0-alpha01/tracing-perfetto-common-1.0.0-alpha01.pom",
+    repo_root_path = "repository",
+    repo_path = "androidx/tracing/tracing-perfetto-common/1.0.0-alpha01",
+    deps = [
+        "androidx.annotation.annotation_1.3.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "androidx.tracing.tracing_1.0.0",
     pom = "repository/androidx/tracing/tracing/1.0.0/tracing-1.0.0.pom",
     repo_root_path = "repository",
