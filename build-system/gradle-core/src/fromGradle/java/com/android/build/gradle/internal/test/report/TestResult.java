@@ -101,8 +101,9 @@ class TestResult extends TestResultModel implements Comparable<TestResult> {
         failures.add(new TestFailure(message, stackTrace, null));
     }
 
-    public void ignored() {
+    public void ignored(String deviceName, String projectName, String flavorName) {
         ignored = true;
+        classResults.skipped(deviceName, projectName, flavorName);
     }
 
     @Override

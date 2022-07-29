@@ -32,6 +32,7 @@ public abstract class CompositeTestResults extends TestResultModel {
     private final CompositeTestResults parent;
     private int tests;
     private final Set<TestResult> failures = new TreeSet<>();
+    private int skips = 0;
     private long duration;
 
     private final Map<String, DeviceTestResults> devices = new TreeMap<>();
@@ -56,6 +57,10 @@ public abstract class CompositeTestResults extends TestResultModel {
 
     public int getFailureCount() {
         return failures.size();
+    }
+
+    public int getSkipCount() {
+        return skips;
     }
 
     @Override
@@ -94,12 +99,13 @@ public abstract class CompositeTestResults extends TestResultModel {
     }
 
     public Number getSuccessRate() {
-        if (getTestCount() == 0) {
+        if (getTestCount() == 0 || getTestCount() == getSkipCount()) {
             return null;
         }
 
-        BigDecimal tests = BigDecimal.valueOf(getTestCount());
-        BigDecimal successful = BigDecimal.valueOf(getTestCount() - getFailureCount());
+        BigDecimal tests = BigDecimal.valueOf(getTestCount() - getSkipCount());
+        BigDecimal successful =
+                BigDecimal.valueOf(getTestCount() - getFailureCount() - getSkipCount());
 
         return successful.divide(tests, 2,
                 BigDecimal.ROUND_DOWN).multiply(BigDecimal.valueOf(100)).intValue();
@@ -121,6 +127,24 @@ public abstract class CompositeTestResults extends TestResultModel {
         VariantTestResults variantResults = variants.get(key);
         if (variantResults != null) {
             variantResults.failed(failedTest, deviceName, projectName, flavorName);
+        }
+    }
+
+    protected void skipped(String deviceName, String projectName, String flavorName) {
+        skips++;
+        if (parent != null) {
+            parent.skipped(deviceName, projectName, flavorName);
+        }
+
+        DeviceTestResults deviceResults = devices.get(deviceName);
+        if (deviceResults != null) {
+            deviceResults.skipped(deviceName, projectName, flavorName);
+        }
+
+        String key = getVariantKey(projectName, flavorName);
+        VariantTestResults variantResults = variants.get(key);
+        if (variantResults != null) {
+            variantResults.skipped(deviceName, projectName, flavorName);
         }
     }
 
