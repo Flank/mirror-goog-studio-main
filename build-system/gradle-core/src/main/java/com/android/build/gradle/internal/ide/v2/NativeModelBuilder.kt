@@ -17,9 +17,15 @@
 package com.android.build.gradle.internal.ide.v2
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.cxx.configure.NativeModelBuilderOutcome
+import com.android.build.gradle.internal.cxx.configure.NativeModelBuilderOutcome.Outcome.FAILED_DURING_GENERATE
+import com.android.build.gradle.internal.cxx.configure.NativeModelBuilderOutcome.Outcome.NO_CONFIGURATION_MODELS
+import com.android.build.gradle.internal.cxx.configure.NativeModelBuilderOutcome.Outcome.SUCCESS
+import com.android.build.gradle.internal.cxx.configure.encode
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.gradle.generator.createCxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.additionalProjectFilesIndexFile
 import com.android.build.gradle.internal.cxx.model.buildFileIndexFile
@@ -44,6 +50,7 @@ import org.gradle.process.ExecOperations
 import org.gradle.process.ExecSpec
 import org.gradle.process.JavaExecSpec
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder
+import java.lang.RuntimeException
 
 class NativeModelBuilder(
     private val project: Project,
@@ -97,47 +104,73 @@ class NativeModelBuilder(
         params: NativeModelBuilderParameter?,
         project: Project
     ): NativeModule? {
-        if (configurationModels.isEmpty()) return null
-        val analyticsService =
-            getBuildService<AnalyticsService>(project.gradle.sharedServices).get()
-        val configurationModel = configurationModels.first().second
-        return IssueReporterLoggingEnvironment(
+        // Nested IssueReporterLoggingEnvironment is due to the fact that we always want to
+        // capture the structured log outcome. If there are no configuration models then we
+        // log NO_CONFIGURATION_MODELS outcome but we need an IssueReporterLoggingEnvironment
+        // on the stack so that logStructured { } will not be NOP.
+        IssueReporterLoggingEnvironment(
             issueReporter,
-            analyticsService,
-            configurationModel.variant
-        ).use {
-            val cxxModuleModel = configurationModel.variant.module
-
-            val buildSystem = when(cxxModuleModel.buildSystem) {
-                NativeBuildSystem.NINJA -> NINJA
-                NativeBuildSystem.CMAKE -> CMAKE
-                NativeBuildSystem.NDK_BUILD -> NDK_BUILD
-                else -> error("${cxxModuleModel.buildSystem}")
-            }
-
-            val variants: List<NativeVariant> = configurationModels
-                .flatMap { (variantName, model) -> model.activeAbis.map { variantName to it } }
-                .groupBy { (variantName, abi) -> variantName }
-                .map { (variantName, abis) ->
-                    NativeVariantImpl(variantName, abis.map { (_, abi) ->
-                        NativeAbiImpl(
-                            abi.abi.tag,
-                            abi.compileCommandsJsonBinFile.canonicalFile,
-                            abi.symbolFolderIndexFile.canonicalFile,
-                            abi.buildFileIndexFile.canonicalFile,
-                            abi.additionalProjectFilesIndexFile
-                        )
-                    })
+            project.rootProject.rootDir,
+            null).use {
+            val outcome = NativeModelBuilderOutcome.newBuilder().setGradlePath(project.path)
+            try {
+                val analyticsService =
+                    getBuildService<AnalyticsService>(project.gradle.sharedServices).get()
+                if (configurationModels.isEmpty()) {
+                    outcome.outcome = NO_CONFIGURATION_MODELS
+                    return null
                 }
-            NativeModuleImpl(
-                project.name,
-                variants,
-                buildSystem,
-                cxxModuleModel.ndkVersion.toString(),
-                cxxModuleModel.makeFile.canonicalFile
-            ).also {
-                // Generate build files and compile_commands.json on request.
-                generateBuildFilesAndCompileCommandsJson(params.asPredicate())
+                val configurationModel = configurationModels.first().second
+                IssueReporterLoggingEnvironment(
+                    issueReporter,
+                    analyticsService,
+                    configurationModel.variant
+                ).use {
+                    params?.abisToGenerateBuildInformation?.let {
+                        outcome.addAllRequestedAbis(it)
+                    }
+                    params?.variantsToGenerateBuildInformation?.let {
+                        outcome.addAllRequestedVariants(it)
+                    }
+                    val cxxModuleModel = configurationModel.variant.module
+
+                    val buildSystem = when (cxxModuleModel.buildSystem) {
+                        NativeBuildSystem.NINJA -> NINJA
+                        NativeBuildSystem.CMAKE -> CMAKE
+                        NativeBuildSystem.NDK_BUILD -> NDK_BUILD
+                        else -> error("${cxxModuleModel.buildSystem}")
+                    }
+
+                    val variants: List<NativeVariant> = configurationModels
+                        .flatMap { (variantName, model) -> model.activeAbis.map { variantName to it } }
+                        .groupBy { (variantName, abi) -> variantName }
+                        .map { (variantName, abis) ->
+                            NativeVariantImpl(variantName, abis.map { (_, abi) ->
+                                NativeAbiImpl(
+                                    abi.abi.tag,
+                                    abi.compileCommandsJsonBinFile.canonicalFile,
+                                    abi.symbolFolderIndexFile.canonicalFile,
+                                    abi.buildFileIndexFile.canonicalFile,
+                                    abi.additionalProjectFilesIndexFile
+                                )
+                            })
+                        }
+
+                    return NativeModuleImpl(
+                        project.name,
+                        variants,
+                        buildSystem,
+                        cxxModuleModel.ndkVersion.toString(),
+                        cxxModuleModel.makeFile.canonicalFile
+                    ).also {
+                        // Generate build files and compile_commands.json on request.
+                        generateBuildFilesAndCompileCommandsJson(outcome, params.asPredicate())
+                    }
+                }
+            } finally {
+                logStructured { encoder ->
+                    outcome.build().encode(encoder)
+                }
             }
         }
     }
@@ -147,13 +180,39 @@ class NativeModelBuilder(
                 this?.abisToGenerateBuildInformation?.contains(abi) ?: true
     }
 
-    private fun generateBuildFilesAndCompileCommandsJson(filter: (variant: String, abi: String) -> Boolean) {
+    /**
+     * Configure C/C++ projects that match [filter].
+     * The first configure exception, if there is one, is thrown after attempting to configure
+     * all C/C++ configurations.
+     */
+    private fun generateBuildFilesAndCompileCommandsJson(
+        outcome: NativeModelBuilderOutcome.Builder,
+        filter: (variant: String, abi: String) -> Boolean) {
+
+        var firstException : Throwable? = null
+        outcome.outcome = SUCCESS
         configurationModels
                 .flatMap { (variantName, model) -> model.activeAbis.map { abi -> variantName to abi } }
-                .filter { (variantName, abi) -> filter(variantName, abi.abi.tag) }
-                .map { (_, abi) -> abi }
-                .forEach { abi ->
-                    createGenerator(abi).configure(ops, ideRefreshExternalNativeModel)
+                .onEach { (variantName, abi) ->
+                    outcome.addAvailableVariantAbis("$variantName:${abi.abi.tag}")
                 }
+                .filter { (variantName, abi) -> filter(variantName, abi.abi.tag) }
+                .forEach { (variantName, abi) ->
+                    try {
+                        createGenerator(abi).configure(ops, ideRefreshExternalNativeModel)
+                        outcome.addSuccessfullyConfiguredVariantAbis("$variantName:${abi.abi.tag}")
+                    } catch (e :Throwable) {
+                        firstException = firstException ?: e
+                        val variantAbi = "$variantName:${abi.abi.tag}"
+                        val message = "${outcome.gradlePath} $variantAbi failed to configure C/C++\n${e.message}\n" +
+                                "${e.stackTraceToString()}\n"
+                        outcome.outcome = FAILED_DURING_GENERATE
+                        outcome.addFailedConfigureVariantAbis(variantAbi)
+                        outcome.addFailedConfigureMessages(message)
+                    }
+                }
+        if (firstException != null) {
+            throw RuntimeException(outcome.failedConfigureMessagesList.first(), firstException!!)
+        }
     }
 }

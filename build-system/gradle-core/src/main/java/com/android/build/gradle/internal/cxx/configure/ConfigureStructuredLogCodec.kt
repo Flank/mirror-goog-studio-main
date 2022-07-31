@@ -95,3 +95,49 @@ fun EncodedChangedFile.decode(decoder : StringDecoder) : ChangedFile {
     decoded.type = type
     return decoded.build()
 }
+
+
+/**
+ * Transform a [NativeModelBuilderOutcome] into an [EncodedNativeModelBuilderOutcome] by encoding
+ * strings with [StringEncoder].
+ */
+fun NativeModelBuilderOutcome.encode(encoder : StringEncoder) : EncodedNativeModelBuilderOutcome {
+    val encoded = EncodedNativeModelBuilderOutcome.newBuilder()
+    encoded.outcome = outcome
+    encoded.gradlePath = encoder.encode(gradlePath)
+    encoded.requestedAbis = encoder.encodeList(requestedAbisList)
+    encoded.requestedVariants = encoder.encodeList(requestedVariantsList)
+    encoded.availableVariantAbis = encoder.encodeList(availableVariantAbisList)
+    encoded.successfullyConfiguredVariantAbis = encoder.encodeList(successfullyConfiguredVariantAbisList)
+    encoded.failedConfigureVariantAbis = encoder.encodeList(failedConfigureVariantAbisList)
+    encoded.failedConfigureMessages = encoder.encodeList(failedConfigureMessagesList)
+    return encoded.build()
+}
+
+/**
+ * Transform a [EncodedNativeModelBuilderOutcome] into an [CxxGradleConfigureOutcome] by decoding
+ * strings with [StringDecoder].
+ */
+fun EncodedNativeModelBuilderOutcome.decode(decoder : StringDecoder) : NativeModelBuilderOutcome {
+    val decoded = NativeModelBuilderOutcome.newBuilder()
+    decoded.outcome = outcome
+    decoded.gradlePath = decoder.decode(gradlePath)
+    decoded.addAllRequestedAbis(decoder.decodeList(requestedAbis))
+    decoded.addAllRequestedVariants(decoder.decodeList(requestedVariants))
+    decoded.addAllAvailableVariantAbis(decoder.decodeList(availableVariantAbis))
+    decoded.addAllSuccessfullyConfiguredVariantAbis(decoder.decodeList(successfullyConfiguredVariantAbis))
+    decoded.addAllFailedConfigureVariantAbis(decoder.decodeList(failedConfigureVariantAbis))
+    decoded.addAllFailedConfigureMessages(decoder.decodeList(failedConfigureMessages))
+    return decoded.build()
+}
+
+/**
+ * Helper function for calling decode for this [EncodedNativeModelBuilderOutcome]
+ */
+fun decodeNativeModelBuilderOutcome(
+    encoded : EncodedNativeModelBuilderOutcome,
+    decoder : StringDecoder
+) = encoded.decode(decoder)
+
+
+
