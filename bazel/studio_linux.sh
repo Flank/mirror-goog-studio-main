@@ -45,6 +45,7 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac_arm.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio_build_manifest.textproto ${artifacts_dir}/android-studio_build_manifest.textproto
   cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
