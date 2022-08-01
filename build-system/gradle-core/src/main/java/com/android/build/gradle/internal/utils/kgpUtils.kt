@@ -37,7 +37,6 @@ import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.SourceSet
-import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -122,25 +121,37 @@ fun isKotlinKaptPluginApplied(project: Project) =
 fun isKspPluginApplied(project: Project) =
     project.pluginManager.hasPlugin(KSP_PLUGIN_ID)
 
-fun getKotlinCompile(project: Project, creationConfig: ComponentCreationConfig): TaskProvider<Task> =
-        project.tasks.named(creationConfig.computeTaskName("compile", "Kotlin"))
+/** Configure Kotlin compile tasks for the current project and the current variant. */
+fun configureKotlinCompileForProject(
+    project: Project,
+    creationConfig: ComponentCreationConfig,
+    action: (KotlinCompile) -> Unit
+) {
+    // KGP has names like compileDebugKotlin but KMP may create compileDebugKotlinAndroid
+    // so make sure to match both.
+    val expectedTaskNameOrPrefix = creationConfig.computeTaskName("compile", "Kotlin")
+    project.tasks.withType(KotlinCompile::class.java).configureEach {
+        if (it.project == project && it.name.startsWith(expectedTaskNameOrPrefix)) {
+            action(it)
+        }
+    }
+}
 
 /* Record information if IR backend is enabled. */
 fun recordIrBackendForAnalytics(allPropertiesList: List<ComponentCreationConfig>, extension: BaseExtension, project: Project, composeIsEnabled: Boolean) {
     for (creationConfig in allPropertiesList) {
         try {
-            val compileKotlin = getKotlinCompile(project, creationConfig)
-            compileKotlin.configure { task: Task ->
+            configureKotlinCompileForProject(project, creationConfig) { task: KotlinCompile ->
                 try {
                     // Enabling compose forces IR, so handle that case.
                     if (composeIsEnabled) {
                         setIrUsedInAnalytics(creationConfig, project)
-                        return@configure
+                        return@configureKotlinCompileForProject
                     }
 
                     val kotlinVersion = getProjectKotlinPluginKotlinVersion(project)
                     val irBackendEnabled = when {
-                        kotlinVersion == null -> return@configure
+                        kotlinVersion == null -> return@configureKotlinCompileForProject
                         kotlinVersion >= irBackendByDefault -> {
                             !getKotlinOptionsValueIfSet(task, extension, "getUseOldBackend", false)
                         }

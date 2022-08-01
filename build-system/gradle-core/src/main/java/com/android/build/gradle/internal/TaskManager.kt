@@ -176,7 +176,7 @@ import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
 import com.android.build.gradle.internal.utils.KOTLIN_KAPT_PLUGIN_ID
 import com.android.build.gradle.internal.utils.addComposeArgsToKotlinCompile
-import com.android.build.gradle.internal.utils.getKotlinCompile
+import com.android.build.gradle.internal.utils.configureKotlinCompileForProject
 import com.android.build.gradle.internal.utils.getProjectKotlinPluginKotlinVersion
 import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
 import com.android.build.gradle.internal.utils.isKotlinPluginApplied
@@ -749,11 +749,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // add compose args to all kotlin compile tasks
         for (creationConfig in allPropertiesList) {
             try {
-                val compileKotlin = getKotlinCompile(project, creationConfig)
-
-                compileKotlin.configure {
+                configureKotlinCompileForProject(project, creationConfig) {
                     addComposeArgsToKotlinCompile(
-                            it, creationConfig, project.files(kotlinExtension), useLiveLiterals)
+                        it, creationConfig, project.files(kotlinExtension), useLiveLiterals
+                    )
                 }
             } catch (e: UnknownTaskException) {
                 // ignore
