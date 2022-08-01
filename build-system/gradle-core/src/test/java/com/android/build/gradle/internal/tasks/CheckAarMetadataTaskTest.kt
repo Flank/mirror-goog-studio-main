@@ -447,7 +447,7 @@ class CheckAarMetadataTaskTest {
                                 minCompileSdk = 28,
                                 minCompileSdkExtension = 0,
                                 minAgpVersion = "3.0.0",
-                                forceCompileSdkPreview = "Tiramisu"
+                                forceCompileSdkPreview = "TiramisuPrivacySandbox"
                             )
                         },
                         identifier = FakeComponentIdentifier("displayName")
@@ -468,13 +468,13 @@ class CheckAarMetadataTaskTest {
                     An issue was found when checking AAR metadata:
 
                       1.  Dependency 'displayName' requires libraries and applications that
-                          depend on it to compile against codename "Tiramisu" of the
+                          depend on it to compile against codename "TiramisuPrivacySandbox" of the
                           Android APIs.
 
                           :app is currently compiled against android-28.
 
                           Recommended action: Use a different version of dependency 'displayName',
-                          or set compileSdkPreview to "Tiramisu" in your build.gradle
+                          or set compileSdkPreview to "TiramisuPrivacySandbox" in your build.gradle
                           file if you intend to experiment with that preview SDK.
                 """.trimIndent()
             )

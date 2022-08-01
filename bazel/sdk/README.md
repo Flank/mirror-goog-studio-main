@@ -152,7 +152,7 @@ the file from local_manifests.
 $ cd /path/to/studio-main/
 
 # This branch name will become the topic name for your CLs so choose a unique name.
-# Of course, your branch name will be different... 
+# Of course, your branch name will be different...
 $ repo start devsdk+build-tools+19_0_3 \
     prebuilts/studio/sdk/darwin \
     prebuilts/studio/sdk/linux \
@@ -253,7 +253,7 @@ $ repo forall \
     prebuilts/studio/sdk/linux \
     prebuilts/studio/sdk/windows \
     tools/base \
-    -c git add -A; git commit -a -m "Updated SDK with build-tools;19.0.3"
+    -c 'git add -A; git commit -a -m "Updated SDK with build-tools;19.0.3"'
 
 # When uploading, include -t to ensure all code reviews have the
 # same topic (the topic will be set to your current branch name).

@@ -19,6 +19,7 @@ build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms.
+platforms;android-TiramisuPrivacySandbox
 platforms;android-33
 platforms;android-32
 platforms;android-31
@@ -53,5 +54,3 @@ cmake;3.22.1
 
 # Instant apps sdk used in integration tests
 extras;google;instantapps
-
-ndk;21.4.7075529:**:{**/OWNERS,**/BUILD.bazel}

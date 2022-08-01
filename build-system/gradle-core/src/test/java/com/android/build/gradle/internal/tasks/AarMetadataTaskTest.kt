@@ -76,7 +76,7 @@ class AarMetadataTaskTest {
         task.minCompileSdk.set(28)
         task.minCompileSdkExtension.set(1)
         task.minAgpVersion.set("7.0.0")
-        task.forceCompileSdkPreview.set("Tiramisu")
+        task.forceCompileSdkPreview.set("TiramisuPrivacySandbox")
         task.taskAction()
 
         checkAarMetadataFile(
@@ -86,7 +86,7 @@ class AarMetadataTaskTest {
             minCompileSdk = "28",
             minCompileSdkExtension = "1",
             minAgpVersion = "7.0.0",
-            compileSdkPreview = "Tiramisu"
+            compileSdkPreview = "TiramisuPrivacySandbox"
         )
     }
 
