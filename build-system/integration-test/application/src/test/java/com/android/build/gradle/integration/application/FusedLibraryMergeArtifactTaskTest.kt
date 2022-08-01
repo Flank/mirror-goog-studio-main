@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.testprojects.PluginTy
 import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 import com.android.build.gradle.internal.tasks.AarMetadataReader
-import com.android.build.gradle.tasks.FusedLibraryMergeArtifactTask
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -31,7 +30,7 @@ import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
 /** Tests for [FusedLibraryMergeArtifactTask] */
-internal class FusedLibraryMergeArtifactTaskTest {
+internal class FusedLibraryArtifactMergeTaskTest {
 
     @JvmField
     @Rule

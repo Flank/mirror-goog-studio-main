@@ -134,9 +134,13 @@ public class IncrementalFileMergerOutputsTest {
         i1.add("/blah");
         i1.setData("/blah", new byte[] { 8, 9 });
 
+        i0.open();
+        i1.open();
         out.open();
         out.create("/blah", ImmutableList.of(i0, i1), true);
         out.close();
+        i1.close();
+        i0.close();
 
         assertEquals(0, removes.size());
         assertEquals(0, replaces.size());
@@ -158,9 +162,13 @@ public class IncrementalFileMergerOutputsTest {
         i1.add("/blah");
         i1.setData("/blah", new byte[] { 8, 9 });
 
+        i0.open();
+        i1.open();
         out.open();
         out.update("/blah", ImmutableList.of("foobar"), ImmutableList.of(i0, i1), true);
         out.close();
+        i1.close();
+        i0.close();
 
         assertEquals(0, removes.size());
         assertEquals(0, creates.size());

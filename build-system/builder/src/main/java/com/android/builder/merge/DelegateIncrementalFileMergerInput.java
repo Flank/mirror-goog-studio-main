@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -51,7 +50,7 @@ public class DelegateIncrementalFileMergerInput implements IncrementalFileMerger
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         delegate.close();
     }
 

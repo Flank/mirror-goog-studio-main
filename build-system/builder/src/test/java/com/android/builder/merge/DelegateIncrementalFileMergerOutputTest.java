@@ -17,7 +17,6 @@
 package com.android.builder.merge;
 
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +46,7 @@ public class DelegateIncrementalFileMergerOutputTest {
     }
 
     @Test
-    public void close() throws IOException {
+    public void close() {
         delegate.close();
         Mockito.verify(mockOutput).close();
     }
