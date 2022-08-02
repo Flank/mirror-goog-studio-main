@@ -33,7 +33,6 @@ call %BASEDIR%\tools\base\bazel\bazel.cmd ^
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   --define=meta_android_build_number=%BUILD_NUMBER% ^
   --tool_tag=studio-win-canary ^
-  --verbose_failures ^
   -- ^
  //tools/...
 
