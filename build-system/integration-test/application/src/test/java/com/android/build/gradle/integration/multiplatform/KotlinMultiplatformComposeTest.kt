@@ -80,8 +80,7 @@ class KotlinMultiplatformComposeTest {
         }
     }
         .withKotlinGradlePlugin(true)
-        // TODO(b/228340676): update Kotlin after a compatible compose version is released.
-        .withKotlinVersion("1.6.10")
+        .withKotlinVersion("1.7.0")
         .create()
 
     /** Regression test for b/203594737. */

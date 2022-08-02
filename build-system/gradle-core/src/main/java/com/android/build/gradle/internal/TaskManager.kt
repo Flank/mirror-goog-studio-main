@@ -3481,7 +3481,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
-        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.2.0-alpha05"
+        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.2.0"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**
