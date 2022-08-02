@@ -297,13 +297,14 @@ class AndroidEval implements Eval {
         String name = methodDesc.getName();
         String description = methodDesc.getDesc();
         Type[] parameterType = Type.getArgumentTypes(description);
+        Type returnType = Type.getReturnType(description);
         try {
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
                 argValues[i] = args.get(i).obj(parameterType[i]);
             }
 
-            Method method = methodLookup(owner, name, parameterType);
+            Method method = methodLookup(owner, name, parameterType, returnType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException(methodNotFoundMsg(owner, name, description));
@@ -328,6 +329,7 @@ class AndroidEval implements Eval {
         String methodName = description.getName();
         String signature = description.getDesc();
         Type[] parameterType = Type.getArgumentTypes(signature);
+        Type returnType = Type.getReturnType(signature);
         try {
             Object[] argValues = new Object[args.size()];
             for (int i = 0; i < argValues.length; i++) {
@@ -335,7 +337,7 @@ class AndroidEval implements Eval {
             }
 
             // Static method are inherited, the lookup must be recursive starting from the owner.
-            Method method = methodLookup(owner, methodName, parameterType);
+            Method method = methodLookup(owner, methodName, parameterType, returnType);
             if (method == null) {
                 // Unlikely since we know that the class compiles.
                 throw new IllegalStateException(methodNotFoundMsg(owner, methodName, signature));
@@ -518,9 +520,9 @@ class AndroidEval implements Eval {
         }
     }
 
-    protected Method methodLookup(String className, String methodName, Type[] parameterType)
+    protected Method methodLookup(
+            String className, String methodName, Type[] parameterType, Type returnType)
             throws ClassNotFoundException {
-        Method method = null;
 
         Class<?>[] parameterClass = new Class[parameterType.length];
         for (int i = 0; i < parameterClass.length; i++) {
@@ -529,14 +531,16 @@ class AndroidEval implements Eval {
 
         Class curClass = forName(className.replace('/', '.'));
         while (curClass != null) {
-            try {
-                method = curClass.getDeclaredMethod(methodName, parameterClass);
-                break;
-            } catch (NoSuchMethodException e) {
-                curClass = curClass.getSuperclass();
+            for (Method method : curClass.getDeclaredMethods()) {
+                if (method.getName().equals(methodName)
+                        && Type.getReturnType(method).equals(returnType)
+                        && Arrays.equals(Type.getArgumentTypes(method), parameterType)) {
+                    return method;
+                }
             }
+            curClass = curClass.getSuperclass();
         }
-        return method;
+        return null;
     }
 
     private String methodNotFoundMsg(String className, String method, String desc) {

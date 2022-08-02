@@ -190,7 +190,9 @@ class ProxyClassEval extends BackPorterEval {
             // To detect these methods, we check if a given static method exists in the original,
             // and that it wasn't added by the user via a LiveEdit operation.
             Type[] parameterTypes = Type.getArgumentTypes(methodDesc);
-            Method originalMethod = methodLookup(internalName, methodName, parameterTypes);
+            Type returnType = Type.getReturnType(methodDesc);
+            Method originalMethod =
+                    methodLookup(internalName, methodName, parameterTypes, returnType);
             boolean isLiveEdited = clazz.hasLiveEditedMethod(methodName, methodDesc);
             if (originalMethod == null && !isLiveEdited) {
                 Log.v("live.deploy.lambda", "invokeStaticMethod: " + method);
