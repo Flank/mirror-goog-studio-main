@@ -35,7 +35,6 @@ import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NativeBuildSystem.NINJA
 import com.android.repository.Revision
-import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -314,4 +313,11 @@ val CxxModuleModel.intermediatesParentDirSuffix : String get() = when(buildSyste
  */
 val CxxModuleModel.predictableRepublishFolder : File
     get() = cxxFolder.resolve("tools")
+
+/**
+ * Location of reference metadata from other modules in this project.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/refs
+ */
+val CxxModuleModel.refsFolder: File
+    get() = join(intermediatesFolder, "refs")
 

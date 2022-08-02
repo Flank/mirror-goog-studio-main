@@ -16,17 +16,25 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.cxx.hashing.sha256Of
+import com.android.build.gradle.internal.cxx.hashing.shortSha256Of
+import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
+import com.android.build.gradle.internal.cxx.json.writeJsonFileIfDifferent
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.lifecycleln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
-import com.android.build.gradle.internal.cxx.model.prefabPackageConfigurationDirectoriesList
+import com.android.build.gradle.internal.cxx.model.refsFolder
 import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
-import com.android.build.gradle.internal.cxx.prefab.PREFAB_PACKAGE_CONFIGURATION_SEGMENT
-import com.android.build.gradle.internal.cxx.prefab.PREFAB_PACKAGE_SEGMENT
+import com.android.build.gradle.internal.cxx.prefab.PREFAB_PUBLICATION_FILE
+import com.android.build.gradle.internal.cxx.prefab.PayloadMapping
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType.Configuration
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType.HeaderOnly
+import com.android.build.gradle.internal.cxx.prefab.buildPrefabPackage
+import com.android.build.gradle.internal.cxx.prefab.copyAsSingleAbi
+import com.android.build.gradle.internal.cxx.prefab.readPublicationFileOrNull
 import com.android.build.gradle.internal.cxx.process.ExecuteProcessType.PREFAB_PROCESS
 import com.android.build.gradle.internal.cxx.process.createJavaExecuteProcessCommand
 import com.android.build.gradle.internal.cxx.process.executeProcess
@@ -35,6 +43,8 @@ import com.android.build.gradle.tasks.ErrorMatchType.OtherError
 import com.android.build.gradle.tasks.ErrorMatchType.RelevantLibraryDiscovery
 import com.android.build.gradle.tasks.ErrorMatchType.RelevantLibraryError
 import com.android.build.gradle.tasks.ErrorMatchType.Unrecognized
+import com.android.build.gradle.tasks.PrefabCliInput.AarPackage
+import com.android.build.gradle.tasks.PrefabCliInput.ModulePackage
 import com.android.utils.cxx.CxxDiagnosticCode
 import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_FATAL
 import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_JSON_FORMAT_PROBLEM
@@ -49,8 +59,18 @@ import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_SINGLE_STL_VIOLATION_LIBRA
 import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_MISMATCHED_MIN_SDK_VERSION
 import org.gradle.process.ExecOperations
 import java.io.File
+import kotlin.io.path.createTempDirectory
 
-fun generatePrefabPackages(
+/**
+ * Invokes the Prefab CLI to generate CMake or ndk-build build system glue for connecting to
+ * Prefab packages. The Prefab packages may be an unzipped AAR or they may be module references.
+ *
+ * In the case of module references a temporary Prefab package is generated in a temporary
+ * folder. However, the resulting CMake (or ndk-build) glue will *not* have references to the
+ * temporary folder. Instead, the glue will have references to the header files and libraries
+ * from the originating module.
+ */
+fun createPrefabBuildSystemGlue(
     ops: ExecOperations,
     abi: CxxAbiModel) {
 
@@ -65,87 +85,166 @@ fun generatePrefabPackages(
     val prefabClassPath: File = abi.variant.prefabClassPath
         ?: error("CxxAbiModule.prefabClassPath cannot be null when Prefab is used")
 
-    val configureOutput = abi.prefabFolder.resolve("prefab-configure")
-    val finalOutput = abi.prefabFolder.resolve("prefab")
 
-    // TODO: Get main class from manifest.
-    val executeCommand = createJavaExecuteProcessCommand(
-        classPath = prefabClassPath.path,
-        main = "com.google.prefab.cli.AppKt")
-        .addArgs("--build-system", buildSystem)
-        .addArgs("--platform", "android")
-        .addArgs("--abi", abi.abi.tag)
-        .addArgs("--os-version", osVersion.toString())
-        .addArgs("--stl", abi.variant.stlType)
-        .addArgs("--ndk-version", abi.variant.module.ndkVersion.major.toString())
-        .addArgs("--output", configureOutput.path)
-        .addArgs(abi.variant.prefabConfigurationPackages.map { it.path })
+   abi.createFolderLayout().use { layout ->
 
-    abi.executeProcess(
-        processType = PREFAB_PROCESS,
-        command = executeCommand,
-        ops = ops,
-        processStderr = ::reportErrors)
-    translateFromConfigurationToFinal(configureOutput, finalOutput)
+        val prefabPackages = getPrefabCliInputs(
+            abi.abi.tag,
+            layout.cliStagedInput,
+            abi.variant.prefabPackageDirectoryList
+        )
+
+        // TODO: Get main class from manifest.
+        val executeCommand = createJavaExecuteProcessCommand(
+            classPath = prefabClassPath.path,
+            main = "com.google.prefab.cli.AppKt")
+            .addArgs("--build-system", buildSystem)
+            .addArgs("--platform", "android")
+            .addArgs("--abi", abi.abi.tag)
+            .addArgs("--os-version", osVersion.toString())
+            .addArgs("--stl", abi.variant.stlType)
+            .addArgs("--ndk-version", abi.variant.module.ndkVersion.major.toString())
+            .addArgs("--output", layout.cliStagedOutput.path)
+            .addArgs(prefabPackages.map { it.packageFolder.path })
+
+        abi.executeProcess(
+            processType = PREFAB_PROCESS,
+            command = executeCommand,
+            ops = ops,
+            processStderr = ::reportErrors
+        )
+        // TODO it should be possible to avoid this translation phase by implementing
+        //  com.google.prefab.api.BuildSystemProvider and passing its jar to the CLI
+        //  via classpath.
+        translateFromStagedToFinal(
+            layout.cliStagedOutput,
+            layout.cliFinalOutput,
+            prefabPackages.filterIsInstance<ModulePackage>().flatMap { it.payloadMappings }
+        )
+    }
+}
+
+const val TEMP_FOLDER_NAME_BASE_NAME = "agp-prefab-staging"
+
+/**
+ * Create the folder layout for this Prefab package generation.
+ */
+private fun CxxAbiModel.createFolderLayout() : FolderLayout {
+    val temporaryRootFolder = createTempDirectory(TEMP_FOLDER_NAME_BASE_NAME).toFile()
+    return FolderLayout(
+        cliFinalOutput = prefabFolder.resolve("prefab"),
+        cliStagedInput = variant.module.refsFolder,
+        cliStagedOutput = temporaryRootFolder.resolve("staged-cli-output"),
+        temporaryRootFolder = temporaryRootFolder
+    )
 }
 
 /**
- * Copy files from [configureOutput] to [finalOutput]. Along the way, translate lines that
+ * Directory structure for staging and invoking Prefab CLI to generate CMake and ndk-build
+ * glue code.
+ */
+private data class FolderLayout(
+    // The final location for the glue code generated by Prefab.
+    val cliFinalOutput : File,
+    // The staged location for glue code generated by Prefab.
+    val cliStagedOutput : File,
+    // The staged location for any dynamically generated Prefab packages.
+    val cliStagedInput : File,
+    // The root temporary folder that, when deleted, will completely clean up temporaries
+    private val temporaryRootFolder : File) : AutoCloseable {
+    override fun close() {
+        temporaryRootFolder.deleteRecursively()
+    }
+}
+
+/**
+ * Abstract source for a Prefab package
+ */
+sealed class PrefabCliInput {
+    abstract val packageFolder : File
+
+    /**
+     * A Prefab package coming from an unzipped AAR directory.
+     */
+    data class AarPackage(
+        override val packageFolder: File) : PrefabCliInput()
+
+    /**
+     * A Prefab package coming from another module in this project.
+     */
+    data class ModulePackage(
+        override val packageFolder: File,
+        val payloadMappings: List<PayloadMapping>
+    ) : PrefabCliInput()
+}
+
+private fun getPrefabCliInputs(
+    abiName: String,
+    cliStagedInput: File,
+    realPackages: List<File>,
+) : List<PrefabCliInput> {
+    val modulePublications = realPackages.map { realPackage ->
+        // When purely building from the command-line then only 'Configuration' will be available.
+        // When purely syncing from Android Studio then only 'HeaderOnly' will be available.
+        // When both are available, use 'Configuration'. It is the same as 'HeaderOnly' but it
+        // also has libraru information (paths to .so files).
+        Configuration.readPublicationFileOrNull(realPackage)
+            ?: HeaderOnly.readPublicationFileOrNull(realPackage)
+    }
+
+    return realPackages.indices.map { i ->
+        val realPackage = realPackages[i]
+        val publication = modulePublications[i]
+        if (publication != null) {
+            val patched = publication.copyAsSingleAbi(abiName)
+            // Try to create a short base path for the package. Prefab packages can have relatively
+            // long subfolder structures and this file is already nested inside build/intermediates.
+            // For example,
+            //     app/build/intermediates/cxx/refs/lib/2u45445o/modules/foo/libs/android.arm64-v8a/libfoo.so
+            // Fortunately, these packages don't contain payload so we don't need to worry about
+            // the user's own include folder structures which can be arbitrarily deep.
+            val sha = shortSha256Of(patched.packageInfo)
+            val gradleSegment = patched.gradlePath.replace(":", "/").trim('/')
+            val temporaryPackageFolder = cliStagedInput.resolve(gradleSegment).resolve(sha)
+            val temporaryPackagePublicationFile = temporaryPackageFolder.resolve(PREFAB_PUBLICATION_FILE)
+            writeJsonFileIfDifferent(temporaryPackagePublicationFile, patched)
+            val payloadMappings = buildPrefabPackage(
+                payloadIndirection = true,
+                publication = patched.copy(installationFolder = temporaryPackageFolder)
+            )
+            ModulePackage(
+                temporaryPackageFolder,
+                payloadMappings
+            )
+        } else AarPackage(realPackage)
+    }
+}
+
+/**
+ * Copy files from [cliStagedOutput] to [cliFinalOutput]. Along the way, translate lines that
  * reference the configuration folder to reference the final folder when needed
  */
-private fun translateFromConfigurationToFinal(configureOutput : File, finalOutput : File) {
-    for (configureFile in configureOutput.walkTopDown()) {
-        val relativeFile = configureFile.relativeTo(configureOutput)
-        val finalFile = finalOutput.resolve(relativeFile)
+private fun translateFromStagedToFinal(
+    cliStagedOutput : File,
+    cliFinalOutput : File,
+    payloadMappings : List<PayloadMapping>
+) {
+    for (configureFile in cliStagedOutput.walkTopDown()) {
+        val relativeFile = configureFile.relativeTo(cliStagedOutput)
+        val finalFile = cliFinalOutput.resolve(relativeFile)
         if (configureFile.isDirectory) {
             finalFile.mkdirs()
             continue
         }
-        when(relativeFile.extension) {
-            "cmake" -> {
-                val sb = StringBuilder()
-                configureFile.forEachLine { line ->
-                    sb.appendLine(
-                        if (line.contains("IMPORTED_LOCATION")) {
-                            toFinalPrefabPackage(line)
-                        } else line
-                    )
-                }
-                finalFile.writeText(sb.toString())
-            }
-            else -> configureFile.copyTo(finalFile)
+
+        var body = configureFile.readText()
+        for ((to, from) in payloadMappings) {
+            body = body.replace(from, to)
         }
+        finalFile.writeTextIfDifferent(body)
     }
 }
 
-/**
- * Return the list of folders that should be used to configure prefab.
- *
- * - For module-to-module references then those are from [prefabPackageConfigurationDirectoriesList].
- *
- * - For AARs those are from [prefabPackageDirectoryList] which is fully populated with .so files.
- *   AARs are defined as everything in [prefabPackageDirectoryList] which are not covered already by
- *   [prefabPackageConfigurationDirectoriesList].
- *
- */
-val CxxVariantModel.prefabConfigurationPackages : List<File> get() {
-    val coveredByConfigurationPackage = prefabPackageConfigurationDirectoriesList.map {
-            toFinalPrefabPackage(it.path)
-        }.toSet()
-
-    val aarPackages = prefabPackageDirectoryList.filter {
-        !coveredByConfigurationPackage.contains(it.path)
-    }
-    return prefabPackageConfigurationDirectoriesList + aarPackages
-}
-
-/**
- * If [from] contains [PREFAB_PACKAGE_CONFIGURATION_SEGMENT] then replace it with
- * [PREFAB_PACKAGE_SEGMENT].
- */
-private fun toFinalPrefabPackage(from : String) : String {
-    return from.replaceFirst(PREFAB_PACKAGE_CONFIGURATION_SEGMENT, PREFAB_PACKAGE_SEGMENT)
-}
 
 /*
     Handle prefab STDERR such as:

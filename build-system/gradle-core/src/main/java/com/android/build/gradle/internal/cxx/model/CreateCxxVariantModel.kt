@@ -114,8 +114,9 @@ val CxxVariantModel.prefabClassPath : File?
 val CxxVariantModel.prefabPackageDirectoryList : List<File>
     get() = prefabPackages?.toList()?:listOf()
 
-val CxxVariantModel.prefabPackageConfigurationDirectoriesList : List<File>
-    get() = prefabPackageConfigurations?.toList()?:listOf()
+val CxxVariantModel.prefabPackageConfigurationDirectoryList : List<File>
+    get() = (prefabPackageConfigurations?.toList()?:listOf())
+
 
 
 

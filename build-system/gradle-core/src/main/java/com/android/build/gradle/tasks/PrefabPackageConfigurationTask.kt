@@ -16,93 +16,43 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.component.LibraryCreationConfig
-import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
-import com.android.build.gradle.internal.cxx.model.jsonFile
-import com.android.build.gradle.internal.cxx.prefab.PrefabModuleTaskData
-import com.android.build.gradle.internal.cxx.prefab.configurePrefab
-import com.android.build.gradle.internal.cxx.prefab.versionOrError
-import com.android.build.gradle.internal.scope.InternalArtifactType.PREFAB_PACKAGE_CONFIGURATION
-import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.cxx.prefab.PREFAB_PUBLICATION_FILE
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublication
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType.Configuration
+import com.android.build.gradle.internal.cxx.prefab.writePublicationFile
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.ide.common.attribution.TaskCategoryLabel
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.internal.file.FileOperations
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import javax.inject.Inject
 
 /**
- * Publishes only the configuration information for a prefab
- * package. This is intended to be consumed by other module's
- * in this project during their configuration phase.
- *
- * The exported artifacts are named [PREFAB_PACKAGE_CONFIGURATION]
+ * Task write a [PrefabPublication] with library information added to it to disk.
  */
 @DisableCachingByDefault
 @BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
 abstract class PrefabPackageConfigurationTask : NonIncrementalTask() {
-    @Inject
-    protected abstract fun getFileOperations(): FileOperations
-
-    @get:Internal
-    abstract val sdkComponents: Property<SdkComponentsBuildService>
-
-    private lateinit var configurationModel: CxxConfigurationModel
-
-    @get:OutputDirectory
-    abstract val outputDirectory: DirectoryProperty
-
-    @get:Input
-    lateinit var packageName: String
-        private set
-
-    @get:Input
-    @get:Optional
-    var packageVersion: String? = null
-        private set
 
     @get:Nested
-    lateinit var modules: List<PrefabModuleTaskData>
+    lateinit var publication: PrefabPublication
         private set
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    val jsonFiles get() = configurationModel.activeAbis.map { it.jsonFile }
+    @get:OutputFile
+    abstract val publicationFile: RegularFileProperty
 
-    @get:Input
-    val ndkAbiFilters get() = configurationModel.variant.validAbiList
-
-    override fun doTaskAction() {
-        configurePrefab(
-            getFileOperations(),
-            outputDirectory.get().asFile,
-            packageName,
-            packageVersion,
-            modules,
-            configurationModel
-        )
-    }
+    override fun doTaskAction() = Configuration.writePublicationFile(publication)
 
     class CreationAction(
+        private val publication: PrefabPublication,
         private val taskName : String,
-        private val location : String,
-        private val modules : List<PrefabModuleTaskData>,
-        private val config : CxxConfigurationModel,
-        componentProperties: LibraryCreationConfig
+        componentProperties: LibraryCreationConfig,
     ) : VariantTaskCreationAction<PrefabPackageConfigurationTask, LibraryCreationConfig>(
         componentProperties
     ) {
@@ -114,27 +64,16 @@ abstract class PrefabPackageConfigurationTask : NonIncrementalTask() {
 
         override fun handleProvider(taskProvider: TaskProvider<PrefabPackageConfigurationTask>) {
             super.handleProvider(taskProvider)
-
             creationConfig.artifacts.setInitialProvider(
                 taskProvider,
-                PrefabPackageConfigurationTask::outputDirectory
-            ).withName("prefab")
-             .atLocation(location)
-             .on(PREFAB_PACKAGE_CONFIGURATION)
+                PrefabPackageConfigurationTask::publicationFile
+            ).withName(PREFAB_PUBLICATION_FILE).on(InternalArtifactType.PREFAB_PACKAGE_CONFIGURATION)
         }
 
         override fun configure(task: PrefabPackageConfigurationTask) {
             super.configure(task)
-            val projectInfo = creationConfig.services.projectInfo
             task.description = "Creates a configuration for Prefab package"
-            task.packageName = projectInfo.name
-            task.packageVersion = versionOrError(projectInfo.version)
-            task.modules = modules
-
-            task.configurationModel = config
-            task.sdkComponents.setDisallowChanges(
-                getBuildService(creationConfig.services.buildServiceRegistry)
-            )
+            task.publication= publication
         }
     }
 }

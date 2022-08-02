@@ -346,7 +346,7 @@ single_gradle_integration_test(
     ],
     maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = MAVEN_REPOS,
-    shard_count = 3,
+    shard_count = 6,
     deps = DEPS,
 )
 

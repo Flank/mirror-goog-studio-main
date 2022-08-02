@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json
 
-import com.google.common.base.Charsets
+import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
 import com.google.gson.GsonBuilder
 import java.io.File
 
@@ -32,22 +32,33 @@ fun <T> jsonStringOf(value : T) = GsonBuilder()
 /**
  * Write a value to a file as JSON.
  */
-fun <T> writeJsonFile(file : File, value : T)
-{
+fun <T> writeJsonFile(file : File, value : T) {
     val parent = file.parentFile
     if (!parent.exists()) parent.mkdirs()
-    file.writeText(
-        jsonStringOf(value),
-        Charsets.UTF_8)
+    file.writeText(jsonStringOf(value))
+}
+
+/**
+ * Write a value to a file as JSON. Only write if it changed.
+ */
+fun <T> writeJsonFileIfDifferent(file : File, value : T) {
+    val parent = file.parentFile
+    if (!parent.exists()) parent.mkdirs()
+    file.writeTextIfDifferent(jsonStringOf(value))
 }
 
 /**
  * Read a value of specific type from a JSON file.
  */
-fun <T> readJsonFile(file : File, type : Class<T>) : T
-{
+inline fun <reified T> readJsonFile(file : File) = readJsonFile(file, T::class.java)
+
+/**
+ * Read a value of specific type from a JSON file.
+ */
+fun <T> readJsonFile(file : File, type : Class<T>) : T {
     return GsonBuilder()
         .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
         .create()
         .fromJson(file.readText(), type)
 }
+

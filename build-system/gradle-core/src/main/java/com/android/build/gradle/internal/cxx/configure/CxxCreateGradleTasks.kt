@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.variant.ComponentBuilder
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.core.Abi
@@ -35,16 +36,16 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublication
+import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType.HeaderOnly
+import com.android.build.gradle.internal.cxx.prefab.createPrefabPublication
+import com.android.build.gradle.internal.cxx.prefab.writePublicationFile
 import com.android.build.gradle.tasks.PrefabPackageConfigurationTask
 import com.android.build.gradle.tasks.PrefabPackageTask
-import com.android.build.gradle.internal.cxx.prefab.prefabConfigurePackageTaskName
-import com.android.build.gradle.internal.cxx.prefab.prefabPackageConfigurationData
-import com.android.build.gradle.internal.cxx.prefab.prefabPackageConfigurationLocation
-import com.android.build.gradle.internal.cxx.prefab.prefabPackageLocation
-import com.android.build.gradle.internal.cxx.prefab.prefabPackageTaskName
 import com.android.build.gradle.internal.cxx.settings.calculateConfigurationArguments
 import com.android.build.gradle.internal.cxx.timing.TimingEnvironment
 import com.android.build.gradle.internal.cxx.timing.time
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -62,7 +63,6 @@ import com.android.utils.appendCapitalized
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PREFAB_PACKAGE_CONFIGURATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.getBuildService
@@ -158,7 +158,7 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                             variant.variantDependencies.getArtifactCollection(
                                 COMPILE_CLASSPATH,
                                 ALL,
-                                PREFAB_PACKAGE_CONFIGURATION
+                                AndroidArtifacts.ArtifactType.PREFAB_PACKAGE_CONFIGURATION
                             ).artifactFiles
                         )
                         configureTask.dependsOn(variant.taskContainer.preBuildTask)
@@ -173,9 +173,14 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         // Add prefab configure task
                         if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
+                            val publication = createPrefabPublication(configuration, variant)
+                            if (configuration.variant.module.project.isBuildOnlyTargetAbiEnabled) {
+                                // Write the header-only publication only if this is an IDE build.
+                                HeaderOnly.writePublicationFile(publication)
+                            }
                             createPrefabConfigurePackageTask(
                                 taskFactory,
-                                configuration,
+                                publication,
                                 configureTask,
                                 variant)
                         }
@@ -215,9 +220,11 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         // Add prefab package task
                         if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
+                            val publication = createPrefabPublication(configuration, variant)
+
                             createPrefabPackageTask(
                                 taskFactory,
-                                configuration,
+                                publication,
                                 buildTask,
                                 variant)
                         }
@@ -235,40 +242,33 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
 
 private fun createPrefabConfigurePackageTask(
     taskFactory: TaskFactory,
-    configurationModel: CxxConfigurationModel,
+    publication: PrefabPublication,
     configureTask: TaskProvider<Task>,
     libraryVariant: LibraryCreationConfig) {
-    val modules = libraryVariant.prefabPackageConfigurationData()
-    if (modules.isNotEmpty()) {
-        val configurePackageTask = taskFactory.register(
+    if (publication.packageInfo.modules.isNotEmpty()) {
+        val task = taskFactory.register(
             PrefabPackageConfigurationTask.CreationAction(
+                publication,
                 libraryVariant.prefabConfigurePackageTaskName(),
-                libraryVariant.prefabPackageConfigurationLocation(),
-                modules,
-                configurationModel,
                 libraryVariant))
-        configurePackageTask
-            .get()
-            .dependsOn(configureTask)
+        task.dependsOn(configureTask)
     }
 }
 
 private fun createPrefabPackageTask(
     taskFactory: TaskFactory,
-    configurationModel: CxxConfigurationModel,
+    publication: PrefabPublication,
     buildTask: TaskProvider<out ExternalNativeBuildTask>,
     libraryVariant: LibraryCreationConfig) {
-    val modules = libraryVariant.prefabPackageConfigurationData()
-    if (modules.isNotEmpty()) {
+    if (publication.packageInfo.modules.isNotEmpty()) {
         val packageTask = taskFactory.register(
             PrefabPackageTask.CreationAction(
+                publication,
                 libraryVariant.prefabPackageTaskName(),
-                libraryVariant.prefabPackageLocation(),
-                modules,
-                configurationModel,
                 libraryVariant))
         packageTask
             .get()
+            .dependsOn(libraryVariant.prefabConfigurePackageTaskName())
             .dependsOn(buildTask)
     }
 }
@@ -352,11 +352,21 @@ fun createInitialCxxModel(
     }
 }
 
-fun CxxAbiModel.toConfigurationModel() = listOf(this).toConfigurationModel()
-
 private fun List<CxxAbiModel>.toConfigurationModel() =
         CxxConfigurationModel(
                 variant = first().variant,
                 activeAbis = filter { it.isActiveAbi },
                 unusedAbis = filter { !it.isActiveAbi },
         )
+
+/**
+ * Return the name of the prefab[Variant]Package task.
+ */
+private fun ComponentCreationConfig.prefabPackageTaskName() =
+    computeTaskName("prefab", "Package")
+
+/**
+ * Return the name of the prefab[ConfigurePackage]Package task.
+ */
+private fun ComponentCreationConfig.prefabConfigurePackageTaskName() =
+    computeTaskName("prefab", "ConfigurePackage")

@@ -539,9 +539,6 @@ class CmakeBasicProjectTest(
         val fooPath = abi.soFolder.resolve("libfoo.so")
         assertThat(fooPath).doesNotExist()
 
-        val json = abi.miniConfigFile
-        assertThat(json).isFile()
-
         val config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(abi, null)
         val library = config
             .libraries

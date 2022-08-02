@@ -288,7 +288,7 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_NATIVE_DEBUG_METADATA: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "native-debug-symbols"), Replaceable
 
     // Partial prefab directory without libraries built yet.
-    object PREFAB_PACKAGE_CONFIGURATION: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object PREFAB_PACKAGE_CONFIGURATION: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Assembled prefab directory to be packaged in the AAR.
     object PREFAB_PACKAGE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
