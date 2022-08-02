@@ -56,11 +56,6 @@ fun bugln(bugCode: CxxBugDiagnosticCode, format: String, vararg args: Any) =
 /**
  * Report an error.
  */
-fun errorln(format: String, vararg args: Any) =
-    ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(
-        checkedFormat(format, args), null
-    )
-
 fun errorln(diagnosticCode: CxxDiagnosticCode, format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(
         checkedFormat(format, args),
@@ -109,7 +104,7 @@ fun logStructured(message : (StringEncoder) -> GeneratedMessageV3) =
  * necessarily a code bug (for example a user string might be passed in format and that user
  * string has an invalid %)
  */
-private fun checkedFormat(format: String, args: Array<out Any>): String {
+internal fun checkedFormat(format: String, args: Array<out Any>): String {
     if (args.isEmpty()) {
         return format
     }
@@ -227,7 +222,7 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          */
         fun reportFormattedErrorToCurrentLogger(
             message: String,
-            diagnosticCode: CxxDiagnosticCode?
+            diagnosticCode: CxxDiagnosticCode
         ) =
             logger.log(errorRecordOf(message, diagnosticCode))
 

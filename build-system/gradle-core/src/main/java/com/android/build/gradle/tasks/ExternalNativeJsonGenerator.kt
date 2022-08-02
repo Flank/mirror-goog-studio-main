@@ -65,7 +65,10 @@ import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
+import com.android.utils.cxx.CxxDiagnosticCode
 import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_FAILURE
+import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_GRADLE_EXCEPTION
+import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_PROCESS_FAILURE
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -100,17 +103,17 @@ abstract class ExternalNativeJsonGenerator internal constructor(
             configureOneAbi(ops, forceConfigure, abi)
         } catch (e: GradleException) {
             errorln(
-                    METADATA_GENERATION_FAILURE,
-                    "exception while building Json %s",
-                    e.message!!
+                METADATA_GENERATION_GRADLE_EXCEPTION,
+                "exception while building Json %s",
+                e.message!!
             )
         } catch (e: ProcessException) {
             errorln(
-                    METADATA_GENERATION_FAILURE,
-                    "error when building with %s using %s: %s",
-                    abi.variant.module.buildSystemTag,
-                    abi.variant.module.makeFile,
-                    e.message!!
+                METADATA_GENERATION_PROCESS_FAILURE,
+                "error when building with %s using %s: %s",
+                abi.variant.module.buildSystemTag,
+                abi.variant.module.makeFile,
+                e.message!!
             )
         }
     }

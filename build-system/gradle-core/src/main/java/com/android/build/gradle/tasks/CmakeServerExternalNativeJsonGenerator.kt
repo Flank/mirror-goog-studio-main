@@ -52,6 +52,9 @@ import com.android.build.gradle.internal.cxx.model.createNinjaCommand
 import com.android.build.gradle.internal.cxx.process.ExecuteProcessCommand
 import com.android.build.gradle.internal.cxx.process.createExecuteProcessCommand
 import com.android.ide.common.process.ProcessException
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_SERVER_INTERACTIVE_ERROR
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_SERVER_SOURCE_DIRECTORY_MISSING
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Maps
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -239,7 +242,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
         cmakeServerProtocolVersion: ProtocolVersion
     ): HandshakeRequest {
         if (!sourceDirectory.isDirectory) {
-            errorln("Not a directory: %s", sourceDirectory)
+            errorln(CMAKE_SERVER_SOURCE_DIRECTORY_MISSING, "Not a directory: %s", sourceDirectory)
         }
         val handshakeRequest = HandshakeRequest()
         handshakeRequest.cookie = "gradle-cmake-cookie"
@@ -396,7 +399,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             // Note: This is not the same as a message with type "message" with error information, that
             // case is handled below.
             if (message.type != null && message.type == "error") {
-                errorln(makeCmakeMessagePathsAbsolute(message.errorMessage, makeFileDirectory))
+                errorln(CMAKE_SERVER_INTERACTIVE_ERROR, makeCmakeMessagePathsAbsolute(message.errorMessage, makeFileDirectory))
                 return
             }
             val correctedMessage =
@@ -404,7 +407,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
             if (message.title != null && message.title == "Error"
                 || message.message.startsWith(cmakeErrorPrefix)
             ) {
-                errorln(correctedMessage)
+                errorln(CMAKE_SERVER_INTERACTIVE_ERROR, correctedMessage)
                 return
             }
             if (message.title != null && message.title == "Warning"

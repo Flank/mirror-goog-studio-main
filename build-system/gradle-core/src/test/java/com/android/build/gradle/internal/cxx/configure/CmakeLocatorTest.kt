@@ -17,10 +17,15 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.external.cmake.CmakeUtils
+import com.android.build.gradle.internal.cxx.codeText
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.repository.testframework.FakePackage
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_INVALID
+import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_VERSION_IS_UNSUPPORTED
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
@@ -130,7 +135,7 @@ class CmakeLocatorTest {
         )  // This is a fallback.
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
-            "[CXX1301] CMake version '$cmakeVersion' is not formatted correctly."
+            "${CMAKE_VERSION_IS_INVALID.codeText} CMake version '$cmakeVersion' is not formatted correctly."
         )
         assertThat(encounter.downloadAttempts).isEqualTo(0)
     }
@@ -156,7 +161,7 @@ class CmakeLocatorTest {
             repositoryPackages = { listOf(defaultCmake, threeSix) })
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
-            "[CXX1302] CMake version '" + cmakeVersion.removeSuffix("+") + "' is too low. Use 3.7.0 or higher."
+            "${CMAKE_VERSION_IS_UNSUPPORTED.codeText} CMake version '" + cmakeVersion.removeSuffix("+") + "' is too low. Use 3.7.0 or higher."
         )
         assertThat(encounter.result).isNotNull()  // Falls back to either 3.6 or 3.10.
         assertThat(encounter.downloadAttempts).isEqualTo(0)
@@ -196,7 +201,7 @@ class CmakeLocatorTest {
         )
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors.single()).isEqualTo(
-            "[CXX1301] CMake version '$cmakeVersionWithoutPlus' does not have enough precision. Use major.minor.micro in version."
+            "${CMAKE_VERSION_IS_INVALID.codeText} CMake version '$cmakeVersionWithoutPlus' does not have enough precision. Use major.minor.micro in version."
         )
         assertThat(encounter.result).isNotNull()  // This is a fallback
         assertThat(encounter.downloadAttempts).isEqualTo(0)
@@ -266,8 +271,8 @@ class CmakeLocatorTest {
     @Test
     fun findByCmakeDirWrongVersion() {
         expectException(
-            "[CXX1300] CMake '3.13.0' was not found in SDK, PATH, or by cmake.dir property.$newline" +
-                    "[CXX1301] - CMake '3.12.0' found from cmake.dir did not satisfy requested version."
+            "${CMAKE_IS_MISSING.codeText} CMake '3.13.0' was not found in SDK, PATH, or by cmake.dir property.$newline" +
+                    "${CMAKE_VERSION_IS_INVALID.codeText} - CMake '3.12.0' found from cmake.dir did not satisfy requested version."
         ) {
             findCmakePath(
                 cmakeVersionFromDsl = "3.13.0",
@@ -365,7 +370,7 @@ class CmakeLocatorTest {
         ) // This is a fallback
         assertThat(encounter.warnings).hasSize(0)
         assertThat(encounter.errors).containsExactly(
-            "[CXX1301] Could not get version from " +
+            "${CMAKE_VERSION_IS_INVALID.codeText} Could not get version from " +
                     "cmake.dir path '${slash}a${slash}b${slash}c${slash}cmake${slash}bin-mistake'."
         )
         assertThat(encounter.downloadAttempts).isEqualTo(0)
@@ -440,8 +445,8 @@ class CmakeLocatorTest {
     private fun sdkCmakeNoExactMatchTestCase(cmakeVersion: String) {
         val localCmake = fakeLocalCmakeOf("3.8.0", "3.8.0")
         expectException(
-            "[CXX1300] CMake '$cmakeVersion' was not found in SDK, PATH, or by cmake.dir property.$newline" +
-                    "[CXX1301] - CMake '3.8.0' found in SDK did not satisfy requested version."
+            "${CMAKE_IS_MISSING.codeText} CMake '$cmakeVersion' was not found in SDK, PATH, or by cmake.dir property.$newline" +
+                    "${CMAKE_VERSION_IS_INVALID.codeText} - CMake '3.8.0' found in SDK did not satisfy requested version."
         )
         {
             findCmakePath(
@@ -470,8 +475,8 @@ class CmakeLocatorTest {
         val localCmake = fakeLocalCmakeOf("3.9.4111459", "3.9.2")
         val cmakeVersionOrDefault = cmakeVersion ?: defaultCmakeVersion.toString()
         expectException(
-            "[CXX1300] CMake '$cmakeVersionOrDefault' was not found in SDK, PATH, or by cmake.dir property.$newline" +
-                    "[CXX1301] - CMake '3.9.2' found in SDK did not satisfy requested version."
+            "${CMAKE_IS_MISSING.codeText} CMake '$cmakeVersionOrDefault' was not found in SDK, PATH, or by cmake.dir property.$newline" +
+                    "${CMAKE_VERSION_IS_INVALID.codeText} - CMake '3.9.2' found in SDK did not satisfy requested version."
         ) {
             findCmakePath(
                 cmakeVersionFromDsl = cmakeVersion,
@@ -554,8 +559,8 @@ class CmakeLocatorTest {
     fun sdkCmakeInternalCmakeVersionRejected() {
         val threeSix = fakeLocalCmakeOf(CMakeVersion.FORK)
         expectException(
-            "[CXX1300] CMake '3.6.4111459' was not found in SDK, PATH, or by cmake.dir property.$newline" +
-                    "[CXX1301] - CMake '3.6.0' found in SDK did not satisfy requested version."
+            "${CMAKE_IS_MISSING.codeText} CMake '3.6.4111459' was not found in SDK, PATH, or by cmake.dir property.$newline" +
+                    "${CMAKE_VERSION_IS_INVALID.codeText} - CMake '3.6.0' found in SDK did not satisfy requested version."
         ) {
             findCmakePath(
                 cmakeVersionFromDsl = "3.6.4111459",
@@ -614,8 +619,8 @@ class CmakeLocatorTest {
         val cmakeVersion = "3.10.2"
         val localCmake = fakeLocalCmakeOf("3.8.0", "3.8.0")
         expectException(
-            "[CXX1300] CMake '$cmakeVersion' or higher was not found in SDK, PATH, or by cmake.dir property.$newline" +
-                    "[CXX1301] - CMake '3.8.0' found in SDK did not satisfy requested version."
+            "${CMAKE_IS_MISSING.codeText} CMake '$cmakeVersion' or higher was not found in SDK, PATH, or by cmake.dir property.$newline" +
+                    "${CMAKE_VERSION_IS_INVALID.codeText} - CMake '3.8.0' found in SDK did not satisfy requested version."
         )
         {
             findCmakePath(

@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationMo
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.jsonFile
 import com.android.build.gradle.internal.cxx.model.minSdkVersion
+import com.android.utils.cxx.CxxDiagnosticCode.PREFAB_GRADLE_VERSION_NOT_COMPATIBLE_WITH_PREFAB
 import java.util.regex.Pattern
 
 /**
@@ -87,7 +88,9 @@ private fun gradleVersionToPrefabPackageVersion(version : String) : String? {
         else -> {
             // Emit a build error but allow progress to continue so that downstream
             // error messages and warnings will also be emitted.
-            errorln("The version package version '$version' is incompatible with CMake")
+            errorln(
+                PREFAB_GRADLE_VERSION_NOT_COMPATIBLE_WITH_PREFAB,
+                "The package version '$version' is incompatible with Prefab")
             version
         }
     }

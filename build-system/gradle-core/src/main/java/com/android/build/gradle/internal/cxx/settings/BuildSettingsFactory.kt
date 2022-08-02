@@ -21,6 +21,8 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_GENERIC
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_JSON_EMPTY
 import com.google.gson.Gson
 import java.io.File
 
@@ -39,12 +41,12 @@ fun createBuildSettingsFromJson(json: String): BuildSettingsConfiguration {
                 ?: emptyList()
             )
         } else {
-            errorln("Json is empty")
+            errorln(BUILD_SETTINGS_JSON_EMPTY, "Json is empty")
             BuildSettingsConfiguration()
         }
 
     } catch (e: Throwable) {
-        errorln(e.message ?: e.cause?.message ?: e.javaClass.name)
+        errorln(BUILD_SETTINGS_GENERIC, e.message ?: e.cause?.message ?: e.javaClass.name)
         BuildSettingsConfiguration()
     }
 }

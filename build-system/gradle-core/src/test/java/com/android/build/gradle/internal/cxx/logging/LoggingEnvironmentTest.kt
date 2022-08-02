@@ -16,7 +16,12 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.*
+import com.android.build.gradle.internal.cxx.codeText
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.ERROR
+import com.android.utils.cxx.CxxDiagnosticCode.RESERVED_FOR_TESTS
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import kotlin.concurrent.thread
@@ -42,7 +47,7 @@ class LoggingEnvironmentTest {
         lateinit var thread2Messages : List<String>
         val thread1 = thread {
             TestLoggingEnvironment("thread 1").use { logger ->
-                errorln("error")
+                errorln(RESERVED_FOR_TESTS, "error")
                 warnln("warn")
                 lifecycleln("lifecycle")
                 infoln("info")
@@ -51,7 +56,7 @@ class LoggingEnvironmentTest {
         }
         val thread2 = thread {
             TestLoggingEnvironment("thread 2").use { logger ->
-                errorln("error")
+                errorln(RESERVED_FOR_TESTS, "error")
                 warnln("warn")
                 lifecycleln("lifecycle")
                 infoln("info")
@@ -60,37 +65,37 @@ class LoggingEnvironmentTest {
         }
         thread1.join()
         thread2.join()
-        assertThat(thread1Messages).containsExactly("error thread 1: C/C++: error",
+        assertThat(thread1Messages).containsExactly("error thread 1: ${RESERVED_FOR_TESTS.codeText} error",
             "warn thread 1: C/C++: warn", "lifecycle thread 1: C/C++: lifecycle", "info thread 1: C/C++: info")
-        assertThat(thread2Messages).containsExactly("error thread 2: C/C++: error",
+        assertThat(thread2Messages).containsExactly("error thread 2: ${RESERVED_FOR_TESTS.codeText} error",
             "warn thread 2: C/C++: warn", "lifecycle thread 2: C/C++: lifecycle", "info thread 2: C/C++: info")
     }
 
     @Test
     fun testEnvironmentsNest() {
         TestLoggingEnvironment("nest 1").use { outer ->
-            errorln("error")
+            errorln(RESERVED_FOR_TESTS, "error")
             TestLoggingEnvironment("nest 2").use { inner ->
-                errorln("error")
-                assertThat(inner.messages).containsExactly("error nest 2: C/C++: error")
+                errorln(RESERVED_FOR_TESTS, "error")
+                assertThat(inner.messages).containsExactly("error nest 2: ${RESERVED_FOR_TESTS.codeText} error")
             }
-            errorln("error")
-            assertThat(outer.messages).containsExactly("error nest 1: C/C++: error",
-                "error nest 1: C/C++: error")
+            errorln(RESERVED_FOR_TESTS, "error")
+            assertThat(outer.messages).containsExactly("error nest 1: ${RESERVED_FOR_TESTS.codeText} error",
+                "error nest 1: ${RESERVED_FOR_TESTS.codeText} error")
         }
     }
 
     @Test
     fun `131271062 percent in format with no args`() {
         TestLoggingEnvironment("nest 1").use {
-            errorln("error %F")
+            errorln(RESERVED_FOR_TESTS, "error %F")
         }
     }
 
     @Test
     fun `131271062 percent in format with args`() {
         TestLoggingEnvironment("nest 1").use {
-            errorln("error %F", "arg")
+            errorln(RESERVED_FOR_TESTS, "error %F", "arg")
         }
     }
 }

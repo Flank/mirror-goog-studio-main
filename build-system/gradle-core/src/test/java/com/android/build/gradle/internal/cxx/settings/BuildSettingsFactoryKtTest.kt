@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.codeText
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_JSON_EMPTY
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
@@ -55,7 +58,7 @@ class BuildSettingsFactoryKtTest {
         PassThroughDeduplicatingLoggingEnvironment().apply {
             val model = createBuildSettingsFromJson(invalidJson)
 
-            assertThat(errors.single()).isEqualTo("C/C++: Json is empty")
+            assertThat(errors.single()).isEqualTo("${BUILD_SETTINGS_JSON_EMPTY.codeText} Json is empty")
             assertThat(model).isEqualTo(BuildSettingsConfiguration())
             assertThat(model.environmentVariables?.size).isEqualTo(0)
         }

@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.codeText
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.sdklib.AndroidVersion
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_INVALID
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_DOES_NOT_SUPPORT_API_LEVEL
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Before
@@ -267,7 +270,7 @@ class PlatformConfiguratorTest {
            )
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "C/C++: API codeName 'O-MR2' is not supported by NDK '$ndk17'."
+            "${NDK_DOES_NOT_SUPPORT_API_LEVEL.codeText} API codeName 'O-MR2' is not supported by NDK '$ndk17'."
         )
     }
 
@@ -378,7 +381,7 @@ class PlatformConfiguratorTest {
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "C/C++: API codeName 'O-MR2' is not supported by NDK '$ndk17'.")
+            "${NDK_DOES_NOT_SUPPORT_API_LEVEL.codeText} API codeName 'O-MR2' is not supported by NDK '$ndk17'.")
     }
 
     @Test
@@ -390,7 +393,7 @@ class PlatformConfiguratorTest {
             13,
             null)
         assertThat(platform).isEqualTo(AndroidVersion.MIN_RECOMMENDED_API)
-        assertThat(logger.errors).containsExactly("[CXX1200] Specified abi='bob' " +
+        assertThat(logger.errors).containsExactly("${ABI_IS_INVALID.codeText} Specified abi='bob' " +
                 "is not recognized.")
     }
 
@@ -474,7 +477,7 @@ class PlatformConfiguratorTest {
             "Z")
         assertThat(platform).isEqualTo(28)
         assertThat(logger.errors).containsExactly(
-            "C/C++: API codeName 'Z' is not supported by NDK '$ndk17'.")
+            "${NDK_DOES_NOT_SUPPORT_API_LEVEL.codeText} API codeName 'Z' is not supported by NDK '$ndk17'.")
     }
 
     @Test

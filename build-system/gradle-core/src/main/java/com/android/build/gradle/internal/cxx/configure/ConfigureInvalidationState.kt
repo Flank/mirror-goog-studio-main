@@ -139,7 +139,6 @@ private fun tryReadFingerPrintFile(lastConfigureFingerPrintFile: File): List<Fil
                     FINGER_PRINT_FILE_CORRUPTED,
                     "Could not read '$lastConfigureFingerPrintFile': ${e.message}"
                 )
-                errorln(e.stackTraceToString())
                 null
             }
         else null
