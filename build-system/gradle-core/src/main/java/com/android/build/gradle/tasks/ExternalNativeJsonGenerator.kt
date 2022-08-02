@@ -168,15 +168,22 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             configureInputFiles = getConfigureInputFiles(abi),
                             requiredOutputFiles = listOf(abi.jsonFile),
                             optionalOutputFiles = listOf(
-                                abi.miniConfigFile,
                                 abi.ninjaBuildFile,
                                 abi.ninjaBuildLocationFile,
-                                abi.symbolFolderIndexFile,
-                                abi.buildFileIndexFile,
-                                abi.additionalProjectFilesIndexFile,
                                 abi.compileCommandsJsonFile,
-                                abi.compileCommandsJsonBinFile,
-                                abi.prefabConfigFile),
+                                abi.prefabConfigFile,
+                                // -------------------------------------------------------------
+                                // Don't include files written to build/ folder since clean will
+                                // remove them and we don't want to trigger a C/C++ configure.
+                                // See b/240718091
+                                // -------------------------------------------------------------
+                                // abi.miniConfigFile,
+                                // abi.symbolFolderIndexFile,
+                                // abi.buildFileIndexFile,
+                                // abi.additionalProjectFilesIndexFile,
+                                // abi.compileCommandsJsonBinFile
+                                // -------------------------------------------------------------
+                            ),
                             hardConfigureFiles = listOf(abi.metadataGenerationCommandFile)
                         )
                     }
