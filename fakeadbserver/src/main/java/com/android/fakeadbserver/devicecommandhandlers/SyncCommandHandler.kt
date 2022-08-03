@@ -77,13 +77,8 @@ class SyncCommandHandler : DeviceCommandHandler("sync") {
                     val modifiedDate = readDonePacket(input)
                     val bytes = bytePackets.flatMap { it.asIterable() }.toByteArray()
                     val file = DeviceFileState(path, permission, modifiedDate, bytes)
-                    val existingFile = device.getFile(path)
-                    if (existingFile != null && !existingFile.isOwnerWritable()) {
-                        sendSyncFail(output, "File not writable")
-                    } else {
-                        device.createFile(file)
-                        sendSyncOkay(output)
-                    }
+                    device.createFile(file)
+                    sendSyncOkay(output)
                     break
                 }
                 else -> {
