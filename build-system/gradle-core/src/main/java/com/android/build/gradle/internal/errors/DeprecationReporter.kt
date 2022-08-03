@@ -62,7 +62,7 @@ interface DeprecationReporter {
                 "Gradle plugin optimizes dexing automatically."),
 
         // Deprecation of Task Access in the variant API
-        TASK_ACCESS_VIA_VARIANT(Version.VERSION_8_0),
+        TASK_ACCESS_VIA_VARIANT(Version.VERSION_9_0),
 
         USE_PROPERTIES(
             Version.VERSION_8_0,

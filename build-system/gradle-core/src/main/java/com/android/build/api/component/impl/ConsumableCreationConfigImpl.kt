@@ -32,7 +32,7 @@ import com.android.builder.errors.IssueReporter
  * repeating implementation in various disparate VariantImpl sub-classes.
  *
  * Instead [com.android.build.api.variant.impl.VariantImpl] will delegate
- * to these objects for methods which are cross cutting across the VariantProperties
+ * to these objects for methods which are cross cutting across the Variant
  * implementation hierarchy.
  */
 
@@ -40,9 +40,8 @@ import com.android.builder.errors.IssueReporter
  * Constructor for [ConsumableCreationConfigImpl].
  *
  * @param config configuration object that will be delegating calls to this
- * object, and will also provide access to other VariantProperties configuration data
- * @param globalScope pointer to the global scope to access project wide options.
- * @param variantDslInfo variant configuration coming from the DSL.
+ * object, and will also provide access to other Variant configuration data
+ * @param dslInfo variant configuration coming from the DSL.
  */
 open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
     protected val config: T,
