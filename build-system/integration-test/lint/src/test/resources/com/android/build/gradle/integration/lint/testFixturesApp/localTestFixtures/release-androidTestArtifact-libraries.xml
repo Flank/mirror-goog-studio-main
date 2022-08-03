@@ -1,5 +1,13 @@
 <libraries>
   <library
+      name="${projectDir}@@:javaLib"
+      jars="${projectDir}/javaLib/build/libs/javaLib.jar"
+      resolved="::"/>
+  <library
+      name="${projectDir}@@:lib::release"
+      project=":lib"
+      provided="true"/>
+  <library
       name="${projectDir}@@:app::release::testFixtures"
       jars="${projectDir}/app/build/.transforms/<digest>/transformed/out-test-fixtures/jars/classes.jar"
       resolved="artifacts:app:unspecified"
@@ -16,6 +24,23 @@
       name="${projectDir}@@:app::release"
       jars="${projectDir}/app/build/intermediates/compile_app_classes_jar/release/classes.jar"
       resolved="::"/>
+  <library
+      name="${projectDir}@@:javaLib::testFixtures"
+      jars="${projectDir}/javaLib/build/libs/javaLib-test-fixtures.jar"
+      resolved="::"/>
+  <library
+      name="${projectDir}@@:lib::release::testFixtures"
+      jars="${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures/jars/classes.jar:${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures/jars/libs/R.jar"
+      resolved="testFixturesApp:lib:unspecified"
+      folder="${projectDir}/lib/build/.transforms/<digest>/transformed/out-test-fixtures"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
   <library
       name="com.google.truth:truth:0.44@jar"
       jars="${mavenRepo}/com/google/truth/truth/0.44/truth-0.44.jar"
@@ -68,4 +93,8 @@
       name="com.google.auto.value:auto-value-annotations:1.6.3@jar"
       jars="${mavenRepo}/com/google/auto/value/auto-value-annotations/1.6.3/auto-value-annotations-1.6.3.jar"
       resolved="com.google.auto.value:auto-value-annotations:1.6.3"/>
+  <library
+      name="androidx.annotation:annotation:1.1.0@jar"
+      jars="${mavenRepo}/androidx/annotation/annotation/1.1.0/annotation-1.1.0.jar"
+      resolved="androidx.annotation:annotation:1.1.0"/>
 </libraries>

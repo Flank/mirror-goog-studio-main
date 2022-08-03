@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.testprojects
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProject
 import com.android.testutils.MavenRepoGenerator
 import com.android.utils.FileUtils
@@ -91,6 +92,10 @@ internal open class TestProjectBuilderImpl(override val name: String): TestProje
         if (subprojects.isNotEmpty() || includedBuilds.isNotEmpty()) {
             val file = File(projectDir, "settings.gradle")
             val sb = StringBuilder()
+
+            projectDir.parentFile.resolve("commonLocalRepo.gradle").takeIf { it.exists() }?.readText()?.let { projectRepoScript ->
+                sb.append("pluginManagement {\n").append(projectRepoScript.prependIndent("    ")).append("\n}\n\n")
+            }
 
             for (build in includedBuilds) {
                 sb.append("includeBuild(\"${build.name}\")\n")

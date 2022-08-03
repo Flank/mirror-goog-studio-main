@@ -49,4 +49,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation testFixtures(project(":javaLib"))
     testImplementation testFixtures(project(":lib"))
+
+    androidTestImplementation testFixtures(project(":javaLib"))
+    androidTestImplementation testFixtures(project(":lib"))
 }
