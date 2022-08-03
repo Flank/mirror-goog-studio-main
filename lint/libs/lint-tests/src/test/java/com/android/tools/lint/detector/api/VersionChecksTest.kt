@@ -18,7 +18,6 @@ package com.android.tools.lint.detector.api
 import com.android.tools.lint.checks.AbstractCheckTest
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.SdkIntDetector
-import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.checks.infrastructure.TestMode
 import com.android.tools.lint.checks.infrastructure.TestMode.Companion.PARTIAL
 import com.android.tools.lint.detector.api.VersionChecks.Companion.getMinSdkVersionFromMethodName
@@ -62,7 +61,7 @@ class VersionChecksTest : AbstractCheckTest() {
 
                     private void test3(Rect rect) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-                            new RectEvaluator(); // ERROR
+                            new RectEvaluator(); // ERROR 1
                         }
                     }
 
@@ -71,15 +70,17 @@ class VersionChecksTest : AbstractCheckTest() {
                             System.out.println("Something");
                             new RectEvaluator(rect); // OK
                         } else {
-                            new RectEvaluator(rect); // ERROR
+                            new RectEvaluator(rect); // ERROR 2
                         }
                     }
 
                     private void test5(Rect rect) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
-                            new RectEvaluator(rect); // ERROR
+                            new RectEvaluator(rect); // ERROR 3
                         } else {
-                            new RectEvaluator(rect); // ERROR
+                            // Here we know that SDK_INT < 3, *and* (from minSdkVersion) SDK_INT >= 14;
+                            // an impossibility. We should consider flagging this as unused code!
+                            new RectEvaluator(rect); // OK
                         }
                     }
                 }
@@ -94,16 +95,13 @@ class VersionChecksTest : AbstractCheckTest() {
             .expect(
                 """
                 src/test/pkg/ConditionalApiTest.java:28: Error: Call requires API level 18 (current min is 14): new android.animation.RectEvaluator [NewApi]
-                            new RectEvaluator(); // ERROR
+                            new RectEvaluator(); // ERROR 1
                             ~~~~~~~~~~~~~~~~~
                 src/test/pkg/ConditionalApiTest.java:37: Error: Call requires API level 21 (current min is 14): new android.animation.RectEvaluator [NewApi]
-                            new RectEvaluator(rect); // ERROR
+                            new RectEvaluator(rect); // ERROR 2
                             ~~~~~~~~~~~~~~~~~
                 src/test/pkg/ConditionalApiTest.java:43: Error: Call requires API level 21 (current min is 14): new android.animation.RectEvaluator [NewApi]
-                            new RectEvaluator(rect); // ERROR
-                            ~~~~~~~~~~~~~~~~~
-                src/test/pkg/ConditionalApiTest.java:45: Error: Call requires API level 21 (current min is 14): new android.animation.RectEvaluator [NewApi]
-                            new RectEvaluator(rect); // ERROR
+                            new RectEvaluator(rect); // ERROR 3
                             ~~~~~~~~~~~~~~~~~
                 src/test/pkg/ConditionalApiTest.java:27: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
@@ -111,7 +109,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/ConditionalApiTest.java:42: Warning: Unnecessary; SDK_INT is always >= 14 [ObsoleteSdkInt]
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                4 errors, 2 warnings
+                3 errors, 2 warnings
                 """
             )
     }
@@ -306,16 +304,16 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional1.java:54: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
                             new GridLayout(null).getOrientation(); // Flagged
                             ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:60: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1.java:60: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                                      ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:60: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1.java:60: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:62: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1.java:62: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                                      ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:62: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1.java:62: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                 ~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional1.java:65: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
@@ -333,10 +331,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional1.java:90: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
                             new GridLayout(null); // Flagged
                             ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:94: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1.java:94: Error: Call requires API level 14 (current min is 13): android.widget.GridLayout#getOrientation [NewApi]
                             new GridLayout(null).getOrientation(); // Flagged
                                                  ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1.java:94: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1.java:94: Error: Call requires API level 14 (current min is 13): new android.widget.GridLayout [NewApi]
                             new GridLayout(null).getOrientation(); // Flagged
                             ~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional1.java:96: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
@@ -534,16 +532,16 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional1b.java:23: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
                             new GridLayout(null); // Flagged
                             ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:31: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1b.java:31: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                                      ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:31: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1b.java:31: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:33: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1b.java:33: Error: Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                                      ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:33: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1b.java:33: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]
                                 new GridLayout(null).getOrientation(); // Flagged
                                 ~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional1b.java:36: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
@@ -600,10 +598,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional1b.java:106: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
                             new GridLayout(null); // Flagged
                             ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:110: Error: Call requires API level 14 (current min is 4): android.widget.GridLayout#getOrientation [NewApi]
+                src/test/pkg/VersionConditional1b.java:110: Error: Call requires API level 14 (current min is 13): android.widget.GridLayout#getOrientation [NewApi]
                             new GridLayout(null).getOrientation(); // Flagged
                                                  ~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional1b.java:110: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
+                src/test/pkg/VersionConditional1b.java:110: Error: Call requires API level 14 (current min is 13): new android.widget.GridLayout [NewApi]
                             new GridLayout(null).getOrientation(); // Flagged
                             ~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional1b.java:112: Error: Call requires API level 14 (current min is 4): new android.widget.GridLayout [NewApi]
@@ -792,43 +790,43 @@ class VersionChecksTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                src/test/pkg/VersionConditional2.java:20: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:20: Error: Call requires API level 16 (current min is 10): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:24: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:24: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:42: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:42: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:46: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:46: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:50: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:50: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:66: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:66: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:72: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:72: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:78: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:78: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:98: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:98: Error: Call requires API level 16 (current min is 10): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:104: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:104: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:128: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:128: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:132: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:132: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2.java:136: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2.java:136: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
                 13 errors, 0 warnings
@@ -1035,43 +1033,43 @@ class VersionChecksTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                src/test/pkg/VersionConditional2b.java:17: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:17: Error: Call requires API level 16 (current min is 10): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:23: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:23: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:47: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:47: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:53: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:53: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:59: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:59: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:79: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:79: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:87: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:87: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:95: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:95: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:119: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:119: Error: Call requires API level 16 (current min is 10): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:127: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:127: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:157: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:157: Error: Call requires API level 16 (current min is 9): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:163: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:163: Error: Call requires API level 16 (current min is 14): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional2b.java:169: Error: Call requires API level 16 (current min is 4): android.view.View#setBackground [NewApi]
+                src/test/pkg/VersionConditional2b.java:169: Error: Call requires API level 16 (current min is 15): android.view.View#setBackground [NewApi]
                             root.setBackground(background); // Flagged
                                  ~~~~~~~~~~~~~
                 13 errors, 0 warnings
@@ -1183,28 +1181,28 @@ class VersionChecksTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-                src/test/pkg/VersionConditional3.java:13: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:13: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > 18 && property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:15: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:15: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > 19 && property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:24: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:24: Error: Call requires API level 21 (current min is 18): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 18 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:26: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:26: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 19 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:28: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:28: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 20 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:35: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:35: Error: Call requires API level 21 (current min is 18): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 18 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:37: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:37: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 19 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:39: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:39: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 20 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional3.java:46: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
@@ -1219,10 +1217,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional3.java:52: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT <= 22 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:56: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:56: Error: Call requires API level 21 (current min is 10): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD && property.hasAdjacentMapping()) { // ERROR
                                                                                                 ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3.java:58: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3.java:58: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > VERSION_CODES.KITKAT && property.hasAdjacentMapping()) { // ERROR
                                                                                      ~~~~~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional3.java:66: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
@@ -1419,10 +1417,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional3b.java:44: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > 21 || property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:59: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:59: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > VERSION_CODES.KITKAT && property.hasAdjacentMapping()) { // ERROR
                                                                                      ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:64: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:64: Error: Call requires API level 21 (current min is 10): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > VERSION_CODES.GINGERBREAD && property.hasAdjacentMapping()) { // ERROR
                                                                                           ~~~~~~~~~~~~~~~~~~
                 src/test/pkg/VersionConditional3b.java:69: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
@@ -1437,28 +1435,28 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditional3b.java:84: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT < 18 && property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:99: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:99: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 20 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:104: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:104: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 19 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:109: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:109: Error: Call requires API level 21 (current min is 18): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT == 18 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:124: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:124: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 20 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:129: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:129: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 19 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:134: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:134: Error: Call requires API level 21 (current min is 18): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT >= 18 && property.hasAdjacentMapping()) { // ERROR
                                                                     ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:154: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:154: Error: Call requires API level 21 (current min is 20): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > 19 && property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/VersionConditional3b.java:159: Error: Call requires API level 21 (current min is 4): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
+                src/test/pkg/VersionConditional3b.java:159: Error: Call requires API level 21 (current min is 19): android.view.ViewDebug.ExportedProperty#hasAdjacentMapping [NewApi]
                         if (Build.VERSION.SDK_INT > 18 && property.hasAdjacentMapping()) { // ERROR
                                                                    ~~~~~~~~~~~~~~~~~~
                 16 errors, 0 warnings
@@ -1597,13 +1595,13 @@ class VersionChecksTest : AbstractCheckTest() {
                 src/test/pkg/VersionConditionals4.java:16: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
                         if (methodN() || SDK_INT < N) { } // ERROR
                             ~~~~~~~
-                src/test/pkg/VersionConditionals4.java:24: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                src/test/pkg/VersionConditionals4.java:24: Error: Call requires API level 24 (current min is 10): methodN [NewApi]
                         if (isAtLeast(10)) { methodN(); } // ERROR
                                              ~~~~~~~
-                src/test/pkg/VersionConditionals4.java:25: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+                src/test/pkg/VersionConditionals4.java:25: Error: Call requires API level 24 (current min is 23): methodN [NewApi]
                         if (isAtLeast(23)) { methodN(); } // ERROR
                                              ~~~~~~~
-                src/test/pkg/VersionConditionals4.java:30: Error: Call requires API level 25 (current min is 4): methodN_MR1 [NewApi]
+                src/test/pkg/VersionConditionals4.java:30: Error: Call requires API level 25 (current min is 24): methodN_MR1 [NewApi]
                         if (BuildCompat.isAtLeastN()) { methodN_MR1(); } // ERROR
                                                         ~~~~~~~~~~~
                 src/test/pkg/VersionConditionals4.java:40: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
@@ -1828,7 +1826,7 @@ class VersionChecksTest : AbstractCheckTest() {
             .run()
             .expect(
                 """
-            src/test/pkg/CheckInLibraryTest.java:14: Error: Call requires API level 24 (current min is 4): methodN [NewApi]
+            src/test/pkg/CheckInLibraryTest.java:14: Error: Call requires API level 24 (current min is 14): methodN [NewApi]
                     if (versionCheck(14)) { methodN(); } // ERROR
                                             ~~~~~~~
             1 errors, 0 warnings
@@ -1987,29 +1985,29 @@ class VersionChecksTest : AbstractCheckTest() {
                         if (Build.VERSION.SDK_INT < 22) {
                             return;
                         }
-                        requiresLollipop(); // OK
+                        requiresLollipop(); // OK 1
                     }
 
                     public void test2() {
                         if (Build.VERSION.SDK_INT < 18) {
                             return;
                         }
-                        requiresLollipop(); // ERROR: API level could be 18-21
+                        requiresLollipop(); // ERROR 1: API level could be 18-21
                     }
 
                     public void test3() {
-                        requiresLollipop(); // ERROR: Version check is after
+                        requiresLollipop(); // ERROR 2: Version check is after
                         if (Build.VERSION.SDK_INT < 22) {
                             return;
                         }
-                        requiresLollipop(); // OK
+                        requiresLollipop(); // OK 2
                     }
 
                     public void test4() {
                         if (Build.VERSION.SDK_INT > 22) {
                             return;
                         }
-                        requiresLollipop(); // ERROR: Version check is going in the wrong direction: API can be 1
+                        requiresLollipop(); // ERROR 3: Version check is going in the wrong direction: API can be 1
                     }
 
                     public void test5() {
@@ -2018,7 +2016,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         } else {
                             return;
                         }
-                        requiresLollipop(); // OK
+                        requiresLollipop(); // OK 3
                     }
 
                     public void test6() {
@@ -2027,7 +2025,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         } else {
                             return;
                         }
-                        requiresLollipop(); // ERROR: API level can be less than 22
+                        requiresLollipop(); // ERROR 4: API level can be less than 22
                     }
 
                     public void test7() {
@@ -2036,7 +2034,7 @@ class VersionChecksTest : AbstractCheckTest() {
                         } else {
                             return;
                         }
-                        requiresLollipop(); // ERROR: API level can be less than 22
+                        requiresLollipop(); // ERROR 5: API level can be less than 22
                     }
                 }
                 """
@@ -2045,19 +2043,19 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expect(
             """
                 src/test/pkg/TestPrecededByVersionCheck.java:24: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
-                        requiresLollipop(); // ERROR: API level could be 18-21
+                        requiresLollipop(); // ERROR 1: API level could be 18-21
                         ~~~~~~~~~~~~~~~~
                 src/test/pkg/TestPrecededByVersionCheck.java:28: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
-                        requiresLollipop(); // ERROR: Version check is after
+                        requiresLollipop(); // ERROR 2: Version check is after
                         ~~~~~~~~~~~~~~~~
                 src/test/pkg/TestPrecededByVersionCheck.java:39: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
-                        requiresLollipop(); // ERROR: Version check is going in the wrong direction: API can be 1
+                        requiresLollipop(); // ERROR 3: Version check is going in the wrong direction: API can be 1
                         ~~~~~~~~~~~~~~~~
                 src/test/pkg/TestPrecededByVersionCheck.java:57: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
-                        requiresLollipop(); // ERROR: API level can be less than 22
+                        requiresLollipop(); // ERROR 4: API level can be less than 22
                         ~~~~~~~~~~~~~~~~
                 src/test/pkg/TestPrecededByVersionCheck.java:66: Error: Call requires API level 22 (current min is 10): requiresLollipop [NewApi]
-                        requiresLollipop(); // ERROR: API level can be less than 22
+                        requiresLollipop(); // ERROR 5: API level can be less than 22
                         ~~~~~~~~~~~~~~~~
                 5 errors, 0 warnings
                 """
@@ -2354,24 +2352,7 @@ class VersionChecksTest : AbstractCheckTest() {
                     }.toString()
                 }"""
             ).indented()
-        ).run().expect(
-            """
-           src/test.kt:8: Warning: Field requires API level 24 (current min is 4): android.text.Html#FROM_HTML_MODE_LEGACY [InlinedApi]
-                   false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~
-           src/test.kt:9: Warning: Field requires API level 24 (current min is 4): android.text.Html#FROM_HTML_MODE_LEGACY [InlinedApi]
-                   true || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~
-           src/test.kt:8: Error: Call requires API level 24 (current min is 4): android.text.Html#fromHtml [NewApi]
-                   false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-                                                 ~~~~~~~~
-           src/test.kt:9: Error: Call requires API level 24 (current min is 4): android.text.Html#fromHtml [NewApi]
-                   true || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
-                                                ~~~~~~~~
-           2 errors, 2 warnings
-           """
-        )
-        // .expectClean() // Should be same as [testKotlinWhenStatement]
+        ).run().expectClean()
     }
 
     fun testKotlinWhenStatement2() {
@@ -2519,6 +2500,108 @@ class VersionChecksTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun testEarlyExit() {
+        // Regression test for b/247135738
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                fun methodWithReflection() {
+                    if (Build.VERSION.SDK_INT < 28) return
+
+                    requires27() // OK 1
+                    requires28() // OK 2
+                    requires29() // ERROR 1
+                    try {
+                        requires27() // OK 3
+                        requires28() // OK 4
+                        requires29() // ERROR 2
+                    } catch (e: Exception) {
+                        return
+                    }
+                }
+
+                @RequiresApi(27) fun requires27() { }
+                @RequiresApi(28) fun requires28() { }
+                @RequiresApi(29) fun requires29() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:11: Error: Call requires API level 29 (current min is 1): requires29 [NewApi]
+                requires29() // ERROR 1
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:15: Error: Call requires API level 29 (current min is 1): requires29 [NewApi]
+                    requires29() // ERROR 2
+                    ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testEarlyExit2() {
+        // like testEarlyExit, but with the early exit inside an alternative if.
+        //
+        // The early exit finder isn't super accurate; in particular, it doesn't enforce that
+        // the earlier exit is really going to always run. This normally isn't a problem (code
+        // doesn't tend to get written that way), but this test encodes the current behavior
+        // both as documentation that this is indeed the current limited behavior, and as a goal
+        // for us to improve this.
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                fun methodWithReflection() {
+                    when {
+                        false -> {
+                            if (Build.VERSION.SDK_INT < 28) return
+                        }
+                        else -> {
+                            // This shouldn't be OK because the above if-check doesn't apply
+                            // here but the current exit-finder doesn't limit itself to known-executed
+                            // code.
+                            requires27() // OK 1
+                            requires28() // OK 2
+                            requires29() // ERROR 1
+                            try {
+                                requires27() // OK 3
+                                requires28() // OK 4
+                                requires29() // ERROR 2
+                            } catch (e: Exception) {
+                                return
+                            }
+                        }
+                    }
+                }
+
+                @RequiresApi(27) fun requires27() { }
+                @RequiresApi(28) fun requires28() { }
+                @RequiresApi(29) fun requires29() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:17: Error: Call requires API level 29 (current min is 1): requires29 [NewApi]
+                        requires29() // ERROR 1
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:21: Error: Call requires API level 29 (current min is 1): requires29 [NewApi]
+                            requires29() // ERROR 2
+                            ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
     fun testWhenEarlyReturns() {
         lint().files(
             manifest().minSdk(16),
@@ -2534,34 +2617,52 @@ class VersionChecksTest : AbstractCheckTest() {
                         SDK_INT > 30 -> { }
                         else -> return
                     }
-                    requires21() // ERROR 1: SDK_INT can be 22 through 30
+                    requires21() // OK 1: SDK_INT is never <= 30 here
+                }
+
+                fun testWhen1b() {
+                    when {
+                        SDK_INT > 30 -> { return }
+                        SDK_INT > 21 -> { return }
+                    }
+                    requires21() // ERROR 2: SDK_INT can be 1
+                }
+
+                fun testWhen1c() {
+                    when {
+                        false -> { return }
+                        SDK_INT < 21 -> { return }
+                    }
+                    requires21() // OK 2 - SDK_INT is always >= 21
+                }
+
+                fun testWhen1d() {
+                    when {
+                        SDK_INT > 30 -> { return }
+                    }
+                    requires21() // ERROR 3: SDK_INT can be 16 through 30
                 }
 
                 fun testWhen2() {
                     when {
                         SDK_INT > 30 -> { }
-                        SDK_INT > 23 -> { }
+                        SDK_INT > 21 -> { }
                         else -> return
                     }
-                    requires21() // ERROR 2: SDK_INT can be 22 through 23
+                    requires21() // OK 3 -- we return for anything less than 22
+                    requires24() // ERROR 4: SDK_INT can be > 21
                 }
 
                 fun testWhen3() {
                     when {
                         SDK_INT > 30 -> { }
                         SDK_INT > 22 -> { }
-                        else -> return
+                        else -> return // return if SDK_INT <= 22, meaning after this when, SDK_INT > 22, so SDK_INT >= 23
                     }
-                    requires21() // ERROR 3: SDK_INT can be 22 through 22
-                }
-
-                fun testWhen4() {
-                    when {
-                        SDK_INT > 30 -> { }
-                        SDK_INT > 21 -> { }
-                        else -> return
-                    }
-                    requires21() // OK 1: We know SDK_INT <= 21
+                    requires21() // OK 4: SDK_INT > 22
+                    requires22() // OK 5: SDK_INT > 22
+                    requires23() // OK 6: SDK_INT > 22
+                    requires24() // ERROR 5: SDK_INT might be 23
                 }
 
                 fun testWhen5() {
@@ -2570,52 +2671,160 @@ class VersionChecksTest : AbstractCheckTest() {
                         SDK_INT > 30 -> { } // never true
                         else -> return
                     }
-                    requires21() // OK 2: We know SDK_INT <= 20
+                    requires20() // OK 7
+                    requires21() // OK 8
+                    requires22() // ERROR 6 -- SDK_INT can be 21
+                    requires23() // ERROR 7
                 }
 
                 fun testWhen6() {
                     when {
                         SDK_INT > 30 -> {
-                            requires21() // OK 3: We know SDK_INT >= 31
+                            requires21() // OK 9: We know SDK_INT >= 31
                         }
                         SDK_INT >= 21 -> {
-                            requires21() // OK 4: We know SDK_INT >= 21
+                            requires21() // OK 10: We know SDK_INT >= 21
                         }
                         SDK_INT >= 20 -> {
-                            requires21() // ERROR 4: SDK_INT can be 20
+                            requires21() // ERROR 8: SDK_INT can be 20
                         }
                         SDK_INT >= 19 -> {
-                            requires21() // ERROR 5: SDK_INT can be 19
+                            requires21() // ERROR 9: SDK_INT can be 19
                         }
                         else -> return
                     }
                 }
 
-                @RequiresApi(21)
-                fun requires21() { }
+                fun testNestedWhen() {
+                    when {
+                        SDK_INT < 30 -> {
+                            if (true) {
+                              val temp = 0
+                              return
+                            } else {
+                              return
+                            }
+                        }
+                    }
+                    requires21() // OK 11: SDK_INT always >= 30 here
+                }
+
+                fun testVersionUtility() {
+                    when {
+                        isAtLeast(30) -> requires21()
+                        isAtLeast(22) -> {
+                            requires24() // ERROR 10
+                            requires21() // OK 12
+                        }
+                        else -> return
+                    }
+                    requires24() // ERROR 11 -- SDK_INT could be 30 here
+                }
+
+                fun testWhenCase(foo: Boolean) {
+                    when {
+                        SDK_INT < 18 -> { }
+                        SDK_INT < 21 -> { }
+                        foo -> requires21() // OK 14
+                        else -> {
+                            requires21() // OK 15
+                        }
+                    }
+                }
+
+                fun testMultipleReturns(foo: Boolean) {
+                    when {
+                        SDK_INT < 21 -> {
+                            if (true) return else return
+                        }
+                    }
+                    requires21() // OK 16
+                }
+
+                fun isAtLeast(api: Int): Boolean {
+                    return SDK_INT >= api
+                }
+
+                @RequiresApi(20) fun requires20() { }
+                @RequiresApi(21) fun requires21() { }
+                @RequiresApi(22) fun requires22() { }
+                @RequiresApi(23) fun requires23() { }
+                @RequiresApi(24) fun requires24() { }
                 """
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/test/pkg/test.kt:11: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                requires21() // ERROR 1: SDK_INT can be 22 through 30
+            src/test/pkg/test.kt:19: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                requires21() // ERROR 2: SDK_INT can be 1
                 ~~~~~~~~~~
-            src/test/pkg/test.kt:20: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                requires21() // ERROR 2: SDK_INT can be 22 through 23
+            src/test/pkg/test.kt:34: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                requires21() // ERROR 3: SDK_INT can be 16 through 30
                 ~~~~~~~~~~
-            src/test/pkg/test.kt:29: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                requires21() // ERROR 3: SDK_INT can be 22 through 22
+            src/test/pkg/test.kt:44: Error: Call requires API level 24 (current min is 16): requires24 [NewApi]
+                requires24() // ERROR 4: SDK_INT can be > 21
                 ~~~~~~~~~~
-            src/test/pkg/test.kt:59: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                        requires21() // ERROR 4: SDK_INT can be 20
+            src/test/pkg/test.kt:56: Error: Call requires API level 24 (current min is 16): requires24 [NewApi]
+                requires24() // ERROR 5: SDK_INT might be 23
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:67: Error: Call requires API level 22 (current min is 16): requires22 [NewApi]
+                requires22() // ERROR 6 -- SDK_INT can be 21
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:68: Error: Call requires API level 23 (current min is 16): requires23 [NewApi]
+                requires23() // ERROR 7
+                ~~~~~~~~~~
+            src/test/pkg/test.kt:80: Error: Call requires API level 21 (current min is 20): requires21 [NewApi]
+                        requires21() // ERROR 8: SDK_INT can be 20
                         ~~~~~~~~~~
-            src/test/pkg/test.kt:62: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                        requires21() // ERROR 5: SDK_INT can be 19
+            src/test/pkg/test.kt:83: Error: Call requires API level 21 (current min is 19): requires21 [NewApi]
+                        requires21() // ERROR 9: SDK_INT can be 19
                         ~~~~~~~~~~
-            5 errors, 0 warnings
+            src/test/pkg/test.kt:107: Error: Call requires API level 24 (current min is 22): requires24 [NewApi]
+                        requires24() // ERROR 10
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:112: Error: Call requires API level 24 (current min is 16): requires24 [NewApi]
+                requires24() // ERROR 11 -- SDK_INT could be 30 here
+                ~~~~~~~~~~
+            10 errors, 0 warnings
             """
         )
+    }
+
+    fun testUnconditionalExitViaWhen() {
+        // Makes sure we correctly detect that you unconditionally return when the statement
+        // is a when statement.
+        lint().files(
+            manifest().minSdk(16),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build.VERSION.SDK_INT
+                import androidx.annotation.RequiresApi
+
+                fun testNestedWhen2() {
+                    when {
+                        SDK_INT < 30 -> {
+                            when {
+                                true -> {
+                                    val temp = 0
+                                    return
+                                }
+
+                                else -> {
+                                    return
+                                }
+                            }
+                        }
+                    }
+                    requires21() // OK 1: SDK_INT always >= 30 here
+                }
+
+                @RequiresApi(21) fun requires21() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
     }
 
     fun testPreviousWhenStatements() {
@@ -2634,7 +2843,7 @@ class VersionChecksTest : AbstractCheckTest() {
                             requires21() // ERROR 1: SDK_INT can be 20
                         }
                         else -> {
-                            requires21() // OK 2: We know SDK_INT < 20
+                            requires21() // ERROR 2: SDK_INT can be less than 21
                         }
                     }
                 }
@@ -2642,10 +2851,21 @@ class VersionChecksTest : AbstractCheckTest() {
                 fun testWhen1() {
                     when {
                         SDK_INT >= 21 -> {
-                            requires21() // OK 3: We know SDK_INT >= 21
+                            requires21() // OK 1: We know SDK_INT >= 21
                         }
                         else -> {
-                            requires21() // OK 4: We know SDK_INT < 21
+                            requires21() // ERROR 3: SDK_INT can be less than 21
+                        }
+                    }
+                }
+
+                fun testWhen1() {
+                    when {
+                        SDK_INT <= 21 -> {
+                            requires21() // ERROR 4: SDK_INT can be less than 21
+                        }
+                        else -> {
+                            requires21() // OK 2: SDK_INT is never less than 21
                         }
                     }
                 }
@@ -2653,10 +2873,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 fun testWhen2() {
                     when {
                         SDK_INT >= 22 -> {
-                            requires21() // OK 5: We know SDK_INT >= 22
+                            requires21() // OK 3: We know SDK_INT >= 22
                         }
                         else -> {
-                            requires21() // OK 6: We know SDK_INT < 22
+                            requires21() // ERROR 5: SDK_INT can be less than 21
                         }
                     }
                 }
@@ -2664,10 +2884,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 fun testWhen3() {
                     when {
                         SDK_INT >= 23 -> {
-                            requires21() // OK 7: We know SDK_INT >= 23
+                            requires21() // OK 4: We know SDK_INT >= 23
                         }
                         else -> {
-                            requires21() // ERROR 2: SDK_INT can be 22
+                            requires21() // ERROR 6: SDK_INT can be 22
                         }
                     }
                 }
@@ -2675,10 +2895,10 @@ class VersionChecksTest : AbstractCheckTest() {
                 fun testWhen4() {
                     when {
                         SDK_INT >= 24 -> {
-                            requires21() // OK 8: We know SDK_INT >= 24
+                            requires21() // OK 5: We know SDK_INT >= 24
                         }
                         else -> {
-                            requires21() // ERROR 3: SDK_INT can be 22 or 23
+                            requires21() // ERROR 7: SDK_INT can be 22 or 23
                         }
                     }
                 }
@@ -2687,10 +2907,10 @@ class VersionChecksTest : AbstractCheckTest() {
                     when {
                         SDK_INT >= 30 -> { }
                         SDK_INT >= 22 -> {
-                            requires21() // OK 5: We know SDK_INT >= 22
+                            requires21() // OK 6: We know SDK_INT >= 22
                         }
                         else -> {
-                            requires21() // OK 6: We know SDK_INT < 22
+                            requires21() // ERROR 8: SDK_INT can be less than 21
                         }
                     }
                 }
@@ -2702,23 +2922,36 @@ class VersionChecksTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
             """
-            src/test/pkg/test.kt:9: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+            src/test/pkg/test.kt:9: Error: Call requires API level 21 (current min is 20): requires21 [NewApi]
                         requires21() // ERROR 1: SDK_INT can be 20
                         ~~~~~~~~~~
+            src/test/pkg/test.kt:12: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 2: SDK_INT can be less than 21
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:23: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 3: SDK_INT can be less than 21
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:31: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 4: SDK_INT can be less than 21
+                        ~~~~~~~~~~
             src/test/pkg/test.kt:45: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                        requires21() // ERROR 2: SDK_INT can be 22
+                        requires21() // ERROR 5: SDK_INT can be less than 21
                         ~~~~~~~~~~
             src/test/pkg/test.kt:56: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                        requires21() // ERROR 3: SDK_INT can be 22 or 23
+                        requires21() // ERROR 6: SDK_INT can be 22
                         ~~~~~~~~~~
-            3 errors, 0 warnings
+            src/test/pkg/test.kt:67: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 7: SDK_INT can be 22 or 23
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:79: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+                        requires21() // ERROR 8: SDK_INT can be less than 21
+                        ~~~~~~~~~~
+            8 errors, 0 warnings
             """
         )
     }
 
     fun testWhenSubject() {
-        // We don't currently handle cases where the SDK_INT is the subject of a when statement
-        // and we're using ranges.
         lint().files(
             manifest().minSdk(16),
             kotlin(
@@ -2743,15 +2976,146 @@ class VersionChecksTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expect(
-            // Note that we have a false positives here; this unit test
-            // is capturing the current state until this is fixed
             """
-            src/test/pkg/test.kt:10: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
+            src/test/pkg/test.kt:10: Error: Call requires API level 21 (current min is 17): requires21 [NewApi]
                     in 17..20 -> requires21() // ERROR
                                  ~~~~~~~~~~
-            src/test/pkg/test.kt:11: Error: Call requires API level 21 (current min is 16): requires21 [NewApi]
-                    in 24..30 -> requires21() // OK
-                                 ~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testWhenSubject2() {
+        // Regression test for b/247146231
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build.VERSION.SDK_INT
+                import androidx.annotation.RequiresApi
+
+                fun test1() {
+                    if (SDK_INT in 24..28) {
+                        requires21() // OK 1
+                        requires24() // OK 2
+                    } else if (SDK_INT in 21..24) {
+                        requires21() // OK 3
+                        requires24() // ERROR 1
+                    }
+
+                    if (SDK_INT in 21 until 24) {
+                        requires21() // OK 4
+                        requires24() // ERROR 2
+                    }
+                }
+
+                @RequiresApi(21) fun requires21() { }
+                @RequiresApi(24) fun requires24() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:12: Error: Call requires API level 24 (current min is 21): requires24 [NewApi]
+                    requires24() // ERROR 1
+                    ~~~~~~~~~~
+            src/test/pkg/test.kt:17: Error: Call requires API level 24 (current min is 21): requires24 [NewApi]
+                    requires24() // ERROR 2
+                    ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testKotlinWhenRange1() {
+        // Regression test for b/247135738
+        lint().files(
+            manifest().minSdk(4),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                fun test() {
+                    when (Build.VERSION.SDK_INT) {
+                        in 1 until 17 -> { }
+                        19, in 19..20 -> {
+                            requires19() // OK 1
+                        }
+                        in 21..24 -> {
+                            requires21() // OK 2
+                            requires24() // ERROR 1
+                        }
+                        in 25..28 -> {
+                            requires21() // OK 3
+                            requires24() // OK 4
+                        }
+                        else -> {
+                            requires24() // ERROR 2: API level can be 17 or 18!
+                        }
+                    }
+                }
+
+                @RequiresApi(19) fun requires19() { }
+                @RequiresApi(21) fun requires21() { }
+                @RequiresApi(24) fun requires24() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:14: Error: Call requires API level 24 (current min is 21): requires24 [NewApi]
+                        requires24() // ERROR 1
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:21: Error: Call requires API level 24 (current min is 17): requires24 [NewApi]
+                        requires24() // ERROR 2: API level can be 17 or 18!
+                        ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testKotlinWhenRange2() {
+        // Regression test for b/247135738
+        lint().files(
+            manifest().minSdk(4),
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+
+                fun test2() {
+                    when (Build.VERSION.SDK_INT) {
+                        in 1 until 18 -> { return }
+                        18 -> { return }
+                        in 19..20 -> { return }
+                        else -> {
+                            requires21() // OK 1
+                            requires24() // ERROR 1
+                        }
+                    }
+                    requires21() // OK 2
+                    requires24() // ERROR 2
+                }
+
+                @RequiresApi(21) fun requires21() { }
+                @RequiresApi(24) fun requires24() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:13: Error: Call requires API level 24 (current min is 21): requires24 [NewApi]
+                        requires24() // ERROR 1
+                        ~~~~~~~~~~
+            src/test/pkg/test.kt:17: Error: Call requires API level 24 (current min is 4): requires24 [NewApi]
+                requires24() // ERROR 2
+                ~~~~~~~~~~
             2 errors, 0 warnings
             """
         )
@@ -2960,6 +3324,7 @@ class VersionChecksTest : AbstractCheckTest() {
             manifest().minSdk(1),
             kotlin(
                 """
+
                 import android.app.Activity
 
                 import android.widget.TextView
@@ -2968,14 +3333,11 @@ class VersionChecksTest : AbstractCheckTest() {
                 class SameTest : Activity() {
 
                     fun test(textView: TextView) {
-                        if (SDK_INT != 11 || getActionBar() == null) { // OK
-                            //NO ERROR
+                        if (SDK_INT != 10 || /*Call requires API level 11 (current min is 10): android.app.Activity#getActionBar*/getActionBar/**/() == null) { // ERROR 1
                         }
-                        if (SDK_INT != 10 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) { // ERROR
-                            //ERROR
+                        if (SDK_INT != 11 || getActionBar() == null) { // OK 1
                         }
-                        if (SDK_INT != 12 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) { // ERROR
-                            //ERROR
+                        if (SDK_INT != 12 || getActionBar() == null) { // OK 2
                         }
                     }
                 }
@@ -2983,6 +3345,48 @@ class VersionChecksTest : AbstractCheckTest() {
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectInlinedMessages(false)
+    }
+
+    fun testNotEquals2() {
+        // Regression test for issue 69661204
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.os.Build
+                import androidx.annotation.RequiresApi
+                import android.os.Build.VERSION.SDK_INT
+
+                fun test() {
+                    if (SDK_INT != 22 || requires23()) { }    // ERROR 1
+                    when {
+                        SDK_INT != 22 || requires23() -> { }  // ERROR 2
+                    }
+                    if (SDK_INT != 23 || requires23()) { }    // OK 1
+                    when {
+                        SDK_INT != 23 || requires23() -> { }  // OK 2
+                    }
+                    if (SDK_INT != 24 || requires23()) { }    // OK 1
+                    when {
+                        SDK_INT != 24 || requires23() -> { }  // OK 2
+                    }
+                }
+                @RequiresApi(23) fun requires23() { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/test.kt:8: Error: Call requires API level 23 (current min is 22): requires23 [NewApi]
+                if (SDK_INT != 22 || requires23()) { }    // ERROR 1
+                                     ~~~~~~~~~~
+            src/test/pkg/test.kt:10: Error: Call requires API level 23 (current min is 22): requires23 [NewApi]
+                    SDK_INT != 22 || requires23() -> { }  // ERROR 2
+                                     ~~~~~~~~~~
+            2 errors, 0 warnings
+            """
+        )
     }
 
     fun test143324759() {
@@ -3743,7 +4147,8 @@ class VersionChecksTest : AbstractCheckTest() {
                                 requires9()  // OK 6
                                 requires12() // OK 7
                                 requires13() // OK 8
-                                requires14() // ERROR 7
+                                requires14() // OK 9
+                                requires16() // ERROR 7
                             }
                         }
                     }
@@ -3771,17 +4176,17 @@ class VersionChecksTest : AbstractCheckTest() {
             src/test/pkg/Test.kt:16: Error: Call requires API level 13 (current min is 10): requires13 [NewApi]
                             requires13() // ERROR 3
                             ~~~~~~~~~~
-            src/test/pkg/Test.kt:22: Error: Call requires API level 14 (current min is 10): requires14 [NewApi]
+            src/test/pkg/Test.kt:22: Error: Call requires API level 14 (current min is 13): requires14 [NewApi]
                             requires14() // ERROR 4 (not covered by this case)
                             ~~~~~~~~~~
-            src/test/pkg/Test.kt:23: Error: Call requires API level 15 (current min is 10): requires15 [NewApi]
+            src/test/pkg/Test.kt:23: Error: Call requires API level 15 (current min is 13): requires15 [NewApi]
                             requires15() // ERROR 5 (could be 13)
                             ~~~~~~~~~~
-            src/test/pkg/Test.kt:24: Error: Call requires API level 16 (current min is 10): requires16 [NewApi]
+            src/test/pkg/Test.kt:24: Error: Call requires API level 16 (current min is 13): requires16 [NewApi]
                             requires16() // ERROR 6
                             ~~~~~~~~~~
-            src/test/pkg/Test.kt:30: Error: Call requires API level 14 (current min is 10): requires14 [NewApi]
-                            requires14() // ERROR 7
+            src/test/pkg/Test.kt:31: Error: Call requires API level 16 (current min is 14): requires16 [NewApi]
+                            requires16() // ERROR 7
                             ~~~~~~~~~~
             7 errors, 0 warnings
             """

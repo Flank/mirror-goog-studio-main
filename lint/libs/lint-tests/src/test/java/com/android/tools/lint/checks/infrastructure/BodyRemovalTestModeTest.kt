@@ -56,8 +56,8 @@ class BodyRemovalTestModeTest {
                 return if (x > 0) { test(x-1) } else { 0 }
             }
         """.trimIndent().trim()
-        val parenthesized = convertKotlin(kotlin)
-        assertEquals(expected, parenthesized)
+        val converted = convertKotlin(kotlin)
+        assertEquals(expected, converted)
     }
 
     @Test
@@ -93,8 +93,8 @@ class BodyRemovalTestModeTest {
                 }
             }
         """.trimIndent().trim()
-        val parenthesized = convertJava(java)
-        assertEquals(expected, parenthesized)
+        val converted = convertJava(java)
+        assertEquals(expected, converted)
     }
 
     @Test
@@ -120,8 +120,8 @@ class BodyRemovalTestModeTest {
                 return
             }
         """.trimIndent().trim()
-        val parenthesized = convertKotlin(kotlin)
-        assertEquals(expected, parenthesized)
+        val converted = convertKotlin(kotlin)
+        assertEquals(expected, converted)
     }
 
     @Test
@@ -150,7 +150,41 @@ class BodyRemovalTestModeTest {
             "        \n" +
             "    }\n" +
             "}"
-        val parenthesized = convertKotlin(kotlin)
-        assertEquals(expected, parenthesized)
+        val converted = convertKotlin(kotlin)
+        assertEquals(expected, converted)
+    }
+
+    @Test
+    fun testElse() {
+        @Language("kotlin")
+        val kotlin = """
+            import android.os.Build
+            import androidx.annotation.RequiresApi
+
+            fun methodWithReflection() {
+                // We can't remove the braces here, because it would associate our outer else
+                // with the inner if statement!
+                if (false) {
+                    if (Build.VERSION.SDK_INT < 28) return
+                } else {println("test")}
+            }
+        """.trimIndent()
+
+        @Language("kotlin")
+        val expected = """
+            import android.os.Build
+            import androidx.annotation.RequiresApi
+
+            fun methodWithReflection() {
+                // We can't remove the braces here, because it would associate our outer else
+                // with the inner if statement!
+                if (false) {
+                    if (Build.VERSION.SDK_INT < 28) { return }
+                } else println("test")
+            }
+        """.trimIndent()
+
+        val converted = convertKotlin(kotlin)
+        assertEquals(expected, converted)
     }
 }

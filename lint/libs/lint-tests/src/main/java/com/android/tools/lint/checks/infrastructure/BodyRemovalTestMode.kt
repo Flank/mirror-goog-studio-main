@@ -88,7 +88,10 @@ class BodyRemovalTestMode : UastSourceTransformationTestMode(
                 node ?: return
                 if (node is UBlockExpression) {
                     val statements = node.expressions
-                    if (statements.size == 1 && statements[0] !is UDeclarationsExpression) {
+                    if (statements.size == 1) {
+                        val statement = statements[0]
+                        if (statement is UDeclarationsExpression) return
+                        if (statement is UIfExpression && statement.elseExpression == null) return
                         edits.unsurround(node, node, "{", "}", source)
                     }
                     return

@@ -71,6 +71,7 @@ import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.AnnotationInfo
 import com.android.tools.lint.detector.api.AnnotationUsageInfo
 import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.ApiConstraint
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
 import com.android.tools.lint.detector.api.ConstantEvaluator
@@ -685,7 +686,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         val member = usageInfo.referenced as? PsiMember
         val api = getApiLevel(context, annotation, annotationInfo.qualifiedName)
         if (api == -1) return
-        val minSdk = getMinSdk(context)
+        var minSdk = getMinSdk(context)
         val evaluator = context.evaluator
         if (usageInfo.type == AnnotationUsageType.DEFINITION) {
             val fix = fix()
@@ -714,9 +715,21 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         }
         val (targetAnnotation, target) = getTargetApiAnnotation(evaluator, element)
         if (target == -1 || api > target) {
-            if (isWithinVersionCheckConditional(context, element, api)) {
-                return
+            minSdk = max(minSdk, target)
+            var constraint = VersionChecks.Companion.getOuterVersionCheckConstraint(context, element)
+            if (constraint != null) {
+                val atLeast = ApiConstraint.Companion.atLeast(minSdk)
+                constraint = constraint and atLeast
+                if (constraint.notLowerThan(api)) {
+                    return
+                }
+                val lowest = constraint.fromInclusive()
+                // If the constraint implies a higher SDK_INT, bump up the value here to include in the
+                // error message. This will make it clearer to users that the SDK_INT is being taken into
+                // account, yet still isn't high enough.
+                minSdk = max(minSdk, lowest)
             }
+
             if (isPrecededByVersionCheckExit(context, element, api)) {
                 return
             }
@@ -1033,10 +1046,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (api == -1) {
                 return
             }
-            val minSdk = getMinSdk(context)
-            if (isSuppressed(context, api, expression, minSdk)) {
+            var minSdk = getMinSdk(context)
+            val (suppressed, localMinSdk) = getSuppressed(context, api, expression, minSdk)
+            if (suppressed) {
                 return
             }
+            minSdk = max(minSdk, localMinSdk)
 
             val signature = expression.asSourceString()
             val location = context.getLocation(expression)
@@ -1106,10 +1121,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (api == -1) {
                 return true
             }
-            val minSdk = getMinSdk(context)
-            if (isSuppressed(context, api, node, minSdk)) {
+            var minSdk = getMinSdk(context)
+            val (suppressed, localMinSdk) = getSuppressed(context, api, node, minSdk)
+            if (suppressed) {
                 return true
             }
+            minSdk = max(minSdk, localMinSdk)
 
             val location = context.getLocation(node)
             report(
@@ -1159,14 +1176,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return
             }
 
-            val minSdk = getMinSdk(context)
+            var minSdk = getMinSdk(context)
             if (api <= minSdk) {
                 return
             }
 
-            if (isSuppressed(context, api, node, minSdk)) {
+            val (suppressed, localMinSdk) = getSuppressed(context, api, node, minSdk)
+            if (suppressed) {
                 return
             }
+            minSdk = max(minSdk, localMinSdk)
 
             // Also see if this cast has been explicitly checked for
             var curr = node
@@ -1277,8 +1296,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         val owner = evaluator.getQualifiedName(cls) ?: return
                         val api = apiDatabase.getMethodVersion(owner, name, desc)
                         if (api > buildSdk && buildSdk != -1) {
-                            if (context.driver
-                                .isSuppressed(context, OVERRIDE, node as UElement)
+                            if (context.driver.isSuppressed(context, OVERRIDE, node as UElement)
                             ) {
                                 return
                             }
@@ -1402,10 +1420,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (api == -1) {
                 return
             }
-            val minSdk = getMinSdk(context)
-            if (isSuppressed(context, api, element, minSdk)) {
+            var minSdk = getMinSdk(context)
+            val (suppressed, localMinSdk) = getSuppressed(context, api, element, minSdk)
+            if (suppressed) {
                 return
             }
+            minSdk = max(minSdk, localMinSdk)
 
             // It's okay to reference classes from annotations
             if (element.getParentOfType<UElement>(UAnnotation::class.java) != null) {
@@ -1433,10 +1453,12 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api == -1) {
                     return
                 }
-                val minSdk = getMinSdk(context)
-                if (isSuppressed(context, api, node, minSdk)) {
+                var minSdk = getMinSdk(context)
+                val (suppressed, localMinSdk) = getSuppressed(context, api, node, minSdk)
+                if (suppressed) {
                     return
                 }
+                minSdk = max(minSdk, localMinSdk)
 
                 val location = context.getLocation(value)
                 var message =
@@ -1568,7 +1590,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             if (api == -1) {
                 return
             }
-            val minSdk = getMinSdk(context)
+            var minSdk = getMinSdk(context)
             if (api <= minSdk) {
                 return
             }
@@ -1724,9 +1746,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
             }
 
-            if (isSuppressed(context, api, reference, minSdk)) {
+            val (suppressed, localMinSdk) = getSuppressed(context, api, reference, minSdk)
+            if (suppressed) {
                 return
             }
+            minSdk = max(minSdk, localMinSdk)
 
             if (receiver != null || call.isMethodCall()) {
                 var target: PsiClass? = null
@@ -2018,12 +2042,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             ) {
 
                 val api = 19 // minSdk for try with resources
-                val minSdk = getMinSdk(context)
+                var minSdk = getMinSdk(context)
 
                 if (api > minSdk && api > getTargetApi(node)) {
-                    if (isSuppressed(context, api, node, minSdk)) {
+                    val (suppressed, localMinSdk) = getSuppressed(context, api, node, minSdk)
+                    if (suppressed) {
                         return
                     }
+                    minSdk = max(minSdk, localMinSdk)
 
                     // Create location range for the resource list
                     val first = resourceList[0]
@@ -2042,12 +2068,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             for (catchClause in node.catchClauses) {
                 // Special case reflective operation exception which can be implicitly used
                 // with multi-catches: see issue 153406
-                val minSdk = getMinSdk(context)
+                var minSdk = getMinSdk(context)
                 if (minSdk < 19 && isMultiCatchReflectiveOperationException(catchClause)) {
                     // No -- see 131349148: Dalvik: java.lang.VerifyError
-                    if (isSuppressed(context, 19, node, minSdk)) {
+                    val (suppressed, localMinSdk) = getSuppressed(context, 19, node, minSdk)
+                    if (suppressed) {
                         return
                     }
+                    minSdk = max(minSdk, localMinSdk)
 
                     val message =
                         "Multi-catch with these reflection exceptions requires API level 19 (current min is %1\$d) " +
@@ -2109,6 +2137,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
                 }
 
+                // Don't use getSuppressed to pick up a higher minSdkVersion from SDK_INT checks here;
+                // on art we're dealing with class loading verification before it runs those evaluations.
                 if (isSuppressed(context, api, statement, minSdk)) {
                     // Normally having a surrounding version check is enough, but on Dalvik
                     // just loading the class, whether or not the try statement is ever
@@ -2200,7 +2230,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             var api = apiDatabase.getFieldVersion(owner, name)
             if (api != -1) {
-                val minSdk = getMinSdk(context)
+                var minSdk = getMinSdk(context)
                 if (api > minSdk && api > getTargetApi(node)) {
                     // Only look for compile time constants. See JLS 15.28 and JLS 13.4.9.
                     val issue = if (isInlined(field, evaluator)) INLINED else UNSUPPORTED
@@ -2233,9 +2263,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         }
                     }
 
-                    if (isSuppressed(context, api, node, minSdk)) {
+                    val (suppressed, localMinSdk) = getSuppressed(context, api, node, minSdk)
+                    if (suppressed) {
                         return
                     }
+                    minSdk = max(minSdk, localMinSdk)
 
                     // Look to see if it's a field reference for a specific sub class
                     // or interface which defined the field or constant at an earlier
@@ -2414,6 +2446,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         private const val KOTLIN_AUTO_CLOSEABLE_EXT = "kotlin.jdk7.AutoCloseableKt"
 
         private val JAVA_IMPLEMENTATION = Implementation(ApiDetector::class.java, Scope.JAVA_FILE_SCOPE)
+        private val NOT_SUPPRESSED: Pair<Boolean, Int> = Pair(false, -1) // return value from [getSuppressed]
+        private val SUPPRESSED: Pair<Boolean, Int> = Pair(true, -1) // return value from [getSuppressed]
 
         /** Accessing an unsupported API. */
         @JvmField
@@ -2799,8 +2833,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          *
          * @param context Current context.
          * @param minGradleVersionString Version in which support for a
-         *     given feature was added, or null if
-         *     it's not supported at build time.
+         *     given feature was added, or null if it's not supported at
+         *     build time.
          */
         private fun featureProvidedByGradle(
             context: XmlContext,
@@ -2909,10 +2943,10 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          * @param derivedClass the derived class
          * @param baseClass the base class
          * @return The first found inheritance chain connecting the two
-         *     classes, or `null` if the classes are not
-         *     related by inheritance. The `baseClass` is not
-         *     included in the returned inheritance chain, which
-         *     will be empty if the two classes are the same.
+         *     classes, or `null` if the classes are not related by
+         *     inheritance. The `baseClass` is not included in the
+         *     returned inheritance chain, which will be empty if the
+         *     two classes are the same.
          */
         private fun getInheritanceChain(
             derivedClass: PsiClassType,
@@ -2969,6 +3003,54 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 driver.isSuppressed(context, INLINED, element) ||
                 isWithinVersionCheckConditional(context, element, api) ||
                 isPrecededByVersionCheckExit(context, element, api)
+        }
+
+        /**
+         * Like [isSuppressed] but in addition to returning whether
+         * the element is suppressed, also returns the new effective
+         * minSdkVersion, if found. This makes it possible to have the
+         * error messages include not just the module-wide minSdk, but
+         * any locally inferred SDK_INT constraints.
+         */
+        private fun getSuppressed(
+            context: JavaContext,
+            api: Int,
+            element: UElement,
+            minSdk: Int
+        ): Pair<Boolean, Int> {
+            if (api <= minSdk) {
+                return SUPPRESSED
+            }
+            val target = getTargetApi(element)
+            if (target != -1) {
+                if (api <= target) {
+                    return SUPPRESSED
+                }
+            }
+
+            val driver = context.driver
+            if (driver.isSuppressed(context, UNSUPPORTED, element) ||
+                driver.isSuppressed(context, INLINED, element)
+            ) {
+                return SUPPRESSED
+            }
+
+            var constraint = VersionChecks.Companion.getOuterVersionCheckConstraint(context, element)
+            if (constraint != null) {
+                val min = max(target, minSdk)
+                val atLeast = ApiConstraint.Companion.atLeast(min)
+                constraint = constraint and atLeast
+                val lowest = constraint.fromInclusive()
+                val suppressed = constraint.notLowerThan(api)
+                // Return the new SDK_INT implied by the version checks here
+                return Pair(suppressed, max(min, lowest))
+            }
+
+            if (isPrecededByVersionCheckExit(context, element, api)) {
+                return SUPPRESSED
+            }
+
+            return NOT_SUPPRESSED
         }
 
         @JvmOverloads

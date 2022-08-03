@@ -26,6 +26,8 @@ import com.android.tools.lint.detector.api.ApiConstraint.Companion.above
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atLeast
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.atMost
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.below
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.exactly
+import com.android.tools.lint.detector.api.ApiConstraint.Companion.not
 import com.android.tools.lint.detector.api.ApiConstraint.Companion.range
 import com.android.tools.lint.detector.api.VersionChecks.SdkIntAnnotation.Companion.findSdkIntAnnotation
 import com.android.utils.SdkUtils
@@ -36,7 +38,6 @@ import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiField
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.PsiModifier
@@ -84,7 +85,6 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.skipParenthesizedExprDown
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import kotlin.math.min
 
 private typealias ApiLevelLookup = (UElement) -> Int
 
@@ -96,8 +96,7 @@ private typealias ApiLevelLookup = (UElement) -> Int
 class VersionChecks(
     private val client: LintClient,
     private val evaluator: JavaEvaluator,
-    private val project: Project?,
-    private val lowerBound: Boolean = true
+    private val project: Project?
 ) {
     companion object {
         /**
@@ -133,7 +132,6 @@ class VersionChecks(
         private const val SDK_SUPPRESS_ANNOTATION = "android.support.test.filters.SdkSuppress"
         private const val ANDROIDX_SDK_SUPPRESS_ANNOTATION = "androidx.test.filters.SdkSuppress"
         private const val ROBO_ELECTRIC_CONFIG_ANNOTATION = "org.robolectric.annotation.Config"
-        private const val ATTR_PROPERTY_VALUES_HOLDER = "propertyValuesHolder"
 
         @JvmField
         val REQUIRES_API_ANNOTATION = AndroidxName.of(AndroidXConstants.SUPPORT_ANNOTATIONS_PREFIX, "RequiresApi")
@@ -308,11 +306,25 @@ class VersionChecks(
             val client = context.client
             val evaluator = context.evaluator
             val project = context.project
-            val check = VersionChecks(client, evaluator, project, lowerBound)
-            val constraint = check.getWithinVersionCheckConditional(
-                evaluator = evaluator, element = element, apiLookup = null
-            ) ?: return false
-            return constraint.matches(api)
+            val check = VersionChecks(client, evaluator, project)
+            val constraint = check.getWithinVersionCheckConditional(element = element, apiLookup = null) ?: return false
+            return if (lowerBound) {
+                constraint.notLowerThan(api)
+            } else {
+                constraint.not().notLowerThan(api)
+            }
+        }
+
+        @JvmStatic
+        fun getOuterVersionCheckConstraint(
+            context: JavaContext,
+            element: UElement,
+        ): ApiConstraint? {
+            val client = context.client
+            val evaluator = context.evaluator
+            val project = context.project
+            val check = VersionChecks(client, evaluator, project)
+            return check.getWithinVersionCheckConditional(element = element, apiLookup = null)
         }
 
         @JvmStatic
@@ -324,11 +336,13 @@ class VersionChecks(
             api: Int,
             lowerBound: Boolean = true
         ): Boolean {
-            val check = VersionChecks(client, evaluator, null, lowerBound)
-            val constraint = check.getWithinVersionCheckConditional(
-                evaluator = evaluator, element = element, apiLookup = null
-            ) ?: return false
-            return constraint.matches(api)
+            val check = VersionChecks(client, evaluator, null)
+            val constraint = check.getWithinVersionCheckConditional(element = element, apiLookup = null) ?: return false
+            return if (lowerBound) {
+                constraint.notLowerThan(api)
+            } else {
+                constraint.not().notLowerThan(api)
+            }
         }
 
         @JvmStatic
@@ -378,27 +392,160 @@ class VersionChecks(
             return false
         }
 
+        private fun isSdkInt(element: PsiElement): Boolean {
+            if (element is PsiReferenceExpression) {
+                if (SDK_INT == element.referenceName) {
+                    return true
+                }
+                val resolved = element.resolve()
+                if (resolved is PsiVariable) {
+                    val initializer = resolved.initializer
+                    if (initializer != null) {
+                        return isSdkInt(initializer)
+                    }
+                }
+            } else if (element is PsiMethodCallExpression) {
+                if (GET_BUILD_SDK_INT == element.methodExpression.referenceName) {
+                    return true
+                } // else look inside the body?
+            }
+            return false
+        }
+
+        private fun isSdkInt(element: UElement?): Boolean {
+            if (element is UReferenceExpression) {
+                if (SDK_INT == element.resolvedName) {
+                    return true
+                }
+                val resolved = element.resolve()
+                if (resolved is ULocalVariable) {
+                    val initializer = resolved.uastInitializer
+                    if (initializer != null) {
+                        return isSdkInt(initializer)
+                    }
+                } else if (resolved is PsiVariable) {
+                    val initializer = resolved.initializer
+                    if (initializer != null) {
+                        return isSdkInt(initializer)
+                    }
+                }
+            } else if (element is UCallExpression) {
+                if (GET_BUILD_SDK_INT == getMethodName(element)) {
+                    return true
+                } // else look inside the body?
+            } else if (element is UParenthesizedExpression) {
+                return isSdkInt(element.expression)
+            }
+            return false
+        }
+
         /**
          * Returns the actual API constraint enforced by the given
          * SDK_INT comparison.
          */
         @JvmStatic
-        fun getVersionCheckConditional(binary: UBinaryExpression): ApiConstraint? {
-            val tokenType = binary.operator
+        fun getVersionCheckConditional(
+            binary: UBinaryExpression,
+            apiLevelLookup: ApiLevelLookup? = null
+        ): ApiConstraint? {
+            var tokenType = binary.operator
             if (tokenType === UastBinaryOperator.GREATER ||
                 tokenType === UastBinaryOperator.GREATER_OR_EQUALS ||
                 tokenType === UastBinaryOperator.LESS_OR_EQUALS ||
                 tokenType === UastBinaryOperator.LESS ||
                 tokenType === UastBinaryOperator.EQUALS ||
-                tokenType === UastBinaryOperator.IDENTITY_EQUALS
+                tokenType === UastBinaryOperator.IDENTITY_EQUALS ||
+                tokenType === UastBinaryOperator.NOT_EQUALS ||
+                tokenType === UastBinaryOperator.IDENTITY_NOT_EQUALS
             ) {
                 val left = binary.leftOperand
-                val right = binary.rightOperand
-                return getVersionCheckBinaryConditional(left, right, tokenType)
-                    // reverse order, SDK_INT on the right. Handle it but reverse the constraint
-                    ?: getVersionCheckBinaryConditional(right, left, tokenType.flip() ?: return null)
+                val level: Int
+                val right: UExpression
+                if (!isSdkInt(left)) {
+                    right = binary.rightOperand
+                    if (isSdkInt(right)) {
+                        tokenType = tokenType.flip() ?: tokenType
+                        level = getApiLevel(left, apiLevelLookup)
+                    } else {
+                        return null
+                    }
+                } else {
+                    right = binary.rightOperand
+                    level = getApiLevel(right, apiLevelLookup)
+                }
+
+                if (level != -1) {
+                    when (tokenType) {
+                        UastBinaryOperator.GREATER_OR_EQUALS -> return atLeast(level)
+                        UastBinaryOperator.GREATER -> return above(level)
+                        UastBinaryOperator.LESS_OR_EQUALS -> return atMost(level)
+                        UastBinaryOperator.LESS -> return below(level)
+                        UastBinaryOperator.EQUALS, UastBinaryOperator.IDENTITY_EQUALS -> return exactly(level)
+                        UastBinaryOperator.NOT_EQUALS, UastBinaryOperator.IDENTITY_NOT_EQUALS -> return not(level)
+                        else -> assert(false) { tokenType }
+                    }
+                }
+            } else if (tokenType.text == "in") {
+                val left = binary.leftOperand
+                if (!isSdkInt(left)) {
+                    return null
+                }
+                val right: UExpression = binary.rightOperand.skipParenthesizedExprDown()
+                if (right is UBinaryExpression) {
+                    return getSdkIntConstraintFromExpression(right, apiLevelLookup)
+                }
             }
+
             return null
+        }
+
+        private fun getSdkIntConstraintFromExpression(
+            expression: UBinaryExpression,
+            apiLevelLookup: ApiLevelLookup? = null
+        ): ApiConstraint? {
+            if (expression.operands.size == 2) {
+                // We assume there's no step, downTo etc -- there's no good reason to do that with API level range checks.
+                val from = getApiLevel(expression.operands[0], apiLevelLookup)
+                var to = getApiLevel(expression.operands[1], apiLevelLookup)
+                if (expression.operator.text == "..") {
+                    // If it's a range like "1..10", then the end point is included,
+                    // whereas if it's "1 until 10", it's not.
+                    to++
+                }
+                return range(from, to)
+            }
+
+            return null
+        }
+
+        private fun getApiLevel(
+            element: UExpression?,
+            apiLevelLookup: ApiLevelLookup?
+        ): Int {
+            var level = -1
+            if (element is UReferenceExpression) {
+                val codeName = element.resolvedName
+                if (codeName != null) {
+                    level = SdkVersionInfo.getApiByBuildCode(codeName, false)
+                }
+                if (level == -1) {
+                    val constant = ConstantEvaluator.evaluate(null, element)
+                    if (constant is Number) {
+                        level = constant.toInt()
+                    }
+                }
+            } else if (element is ULiteralExpression) {
+                val value = element.value
+                if (value is Int) {
+                    level = value
+                }
+            } else if (element is UParenthesizedExpression) {
+                return getApiLevel(element.expression, apiLevelLookup)
+            }
+            if (level == -1 && apiLevelLookup != null && element != null) {
+                level = apiLevelLookup(element)
+            }
+            return level
         }
 
         // From "X op Y" to "Y op X" -- e.g. "a > b" = "b < a" and "a >= b" = "b <= a"
@@ -410,48 +557,6 @@ class VersionChecks(
                 UastBinaryOperator.LESS -> UastBinaryOperator.GREATER
                 else -> null
             }
-        }
-
-        private fun getVersionCheckBinaryConditional(
-            leftOperand: UExpression,
-            rightOperand: UExpression,
-            tokenType: UastBinaryOperator
-        ): ApiConstraint? {
-            val left = leftOperand.skipParenthesizedExprDown() ?: return null
-            if (left is UReferenceExpression) {
-                if (SDK_INT == left.resolvedName) {
-                    val right = rightOperand.skipParenthesizedExprDown() ?: return null
-                    var level = -1
-                    if (right is UReferenceExpression) {
-                        val codeName = right.resolvedName ?: return null
-                        level = SdkVersionInfo.getApiByBuildCode(codeName, true)
-                    } else if (right is ULiteralExpression) {
-                        val value = right.value
-                        if (value is Int) {
-                            level = value
-                        }
-                    }
-                    if (level != -1) {
-                        if (tokenType === UastBinaryOperator.GREATER_OR_EQUALS) {
-                            // SDK_INT >= ICE_CREAM_SANDWICH
-                            return atLeast(level)
-                        } else if (tokenType === UastBinaryOperator.GREATER) {
-                            // SDK_INT > ICE_CREAM_SANDWICH
-                            return above(level)
-                        } else if (tokenType === UastBinaryOperator.LESS_OR_EQUALS) {
-                            return atMost(level)
-                        } else if (tokenType === UastBinaryOperator.LESS) {
-                            // SDK_INT < ICE_CREAM_SANDWICH
-                            return below(level)
-                        } else if (tokenType === UastBinaryOperator.EQUALS ||
-                            tokenType === UastBinaryOperator.IDENTITY_EQUALS
-                        ) {
-                            return range(level, level + 1)
-                        }
-                    }
-                }
-            }
-            return null
         }
 
         private val VERSION_METHOD_NAME_PREFIXES = arrayOf(
@@ -500,7 +605,6 @@ class VersionChecks(
     }
 
     private fun isUnconditionalReturn(statement: UExpression): Boolean {
-
         @Suppress("UnstableApiUsage") // UYieldExpression not yet stable
         if (statement is UBlockExpression) {
             statement.expressions.lastOrNull()?.let { return isUnconditionalReturn(it) }
@@ -514,6 +618,22 @@ class VersionChecks(
             }
         } else if (statement is UParenthesizedExpression) {
             return isUnconditionalReturn(statement.expression)
+        } else if (statement is UIfExpression) {
+            val thenExpression = statement.thenExpression
+            val elseExpression = statement.elseExpression
+            if (thenExpression != null && elseExpression != null) {
+                return isUnconditionalReturn(thenExpression) && isUnconditionalReturn(elseExpression)
+            }
+            return false
+        } else if (statement is USwitchExpression) {
+            for (case in statement.body.expressions) {
+                if (case is USwitchClauseExpressionWithBody) {
+                    if (!isUnconditionalReturn(case.body)) {
+                        return false
+                    }
+                }
+            }
+            return true
         }
 
         if (statement is UReturnExpression || statement is UThrowExpression) {
@@ -530,188 +650,246 @@ class VersionChecks(
     }
 
     private fun getWithinVersionCheckConditional(
-        evaluator: JavaEvaluator,
         element: UElement,
         apiLookup: ApiLevelLookup?
     ): ApiConstraint? {
         var current = element.uastParent
         var prev = element
+        var constraint: ApiConstraint? = null
         while (current != null) {
-
-            if (current is UPolyadicExpression) {
-                val anded = getAndedWithConditional(current, prev)
-                if (anded != null) {
-                    return anded
-                }
-                val ored = getOredWithConditional(current, prev)
-                if (ored != null) {
-                    return ored
-                }
-            }
-
-            if (current is UIfExpression) {
-                val ifStatement = current
-                val condition = ifStatement.condition
-                if (prev !== condition) {
-                    val fromThen = prev == ifStatement.thenExpression
-                    getVersionCheckConditional(
-                        element = condition,
-                        and = fromThen,
-                        prev = prev,
-                        apiLookup = apiLookup
-                    )?.let { return it }
-                }
-            } else if (current is USwitchClauseExpressionWithBody) {
-                for (condition in current.caseValues) {
-                    getVersionCheckConditional(
-                        element = condition,
-                        and = true,
-                        prev = prev,
-                        apiLookup = apiLookup
-                    )?.let { return it }
-                }
-
-                val switch = current.getParentOfType(USwitchExpression::class.java, true)
-                val entries = switch?.body?.expressions?.filterIsInstance<USwitchClauseExpression>() ?: emptyList()
-                val switchExpression = switch?.expression
-                val casesAreApiLevels = switchExpression != null && isSdkInt(switchExpression)
-                if (casesAreApiLevels && lowerBound) {
-                    if (current.caseValues.isNotEmpty()) {
-                        // It's for a specific set of API values listed by the case values.
-                        // Take the min of these values and now we can allow methods for that API level and up
-                        val apiLevel = current.caseValues.fold(-1) { min, expression ->
-                            val apiLevel = getApiLevel(expression, apiLookup)
-                            if (min == -1) apiLevel else min(min, apiLevel)
-                        }
-                        if (apiLevel != -1) {
-                            return atMost(apiLevel)
-                        }
+            if (current is UMethod) {
+                if (current.uastParent !is UAnonymousClass) break
+            } else if (current is UFile) {
+                break
+            } else {
+                val currentConstraint = getVersionConditional(current, prev, apiLookup)
+                if (currentConstraint != null) {
+                    if (constraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                        constraint = constraint and currentConstraint
                     } else {
-                        val apiLevels = mutableSetOf<Int>()
-                        // it's the else clause: subtract out all the other API levels in the case
-                        // statements
-                        for (entry in entries) {
-                            for (case in entry.caseValues) {
-                                apiLevels.add(getApiLevel(case, apiLookup))
-                            }
-                        }
-                        val (_, target) = getTargetApiAnnotation(evaluator, switch)
-                        val min = kotlin.math.max(target, project?.minSdk ?: -1)
-                        var firstMissing = min + 1
-                        while (true) {
-                            if (!apiLevels.contains(firstMissing)) {
-                                break
-                            }
-                            firstMissing++
-                        }
-                        return atMost(firstMissing - 1)
+                        constraint = currentConstraint
                     }
-                } else {
-                    var prevConstraint: ApiConstraint? = null
-                    for (entry in entries) {
-                        if (entry === current) {
-                            break
-                        }
-
-                        for (case in entry.caseValues) {
-                            val constraint = getVersionCheckConditional(
-                                element = case,
-                                and = true,
-                                apiLookup = apiLookup
-                            ) ?: getVersionCheckConditional(
-                                element = case,
-                                and = false,
-                                apiLookup = apiLookup
-                            )
-
-                            prevConstraint = if (prevConstraint == null) constraint else prevConstraint and constraint
-                        }
-                    }
-
-                    if (prevConstraint != null) {
-                        return prevConstraint.adjust(0, -2).not()
+                    // For cases inside switch clauses we'll reach up and scan the when cases
+                    // (to see if there are previous cases which implies SDK_INT constraints for
+                    // the target case) and in this case we don't want to repeat the analysis on
+                    // the clause.
+                    if (current.uastParent is USwitchClauseExpression) {
+                        prev = current
+                        current = current.uastParent ?: break
                     }
                 }
-            } else if (current is UCallExpression &&
-                (prev as? UExpression)?.skipParenthesizedExprDown() is ULambdaExpression
-            ) {
-                // If the API violation is in a lambda that is passed to a method,
-                // see if the lambda parameter is invoked inside that method, wrapped within
-                // a suitable version conditional.
-                //
-                // Optionally also see if we're passing in the API level as a parameter
-                // to the function.
-                //
-                // Algorithm:
-                //  (1) Figure out which parameter we're mapping the lambda argument to.
-                //  (2) Find that parameter invoked within the function
-                //  (3) From the invocation see if it's a suitable version conditional
-                //
-                val call = current
-                val method = call.resolve()
-                if (method != null) {
-                    val annotation = SdkIntAnnotation.get(method)
-                    if (annotation != null) {
-                        val value = annotation.getApiLevel(evaluator, method, call)
-                        if (value != null) {
-                            return atMost(value)
-                        } // else: lambda
-                    }
-
-                    val mapping = evaluator.computeArgumentMapping(call, method)
-                    val parameter = mapping[prev]
-                    if (parameter != null) {
-                        val lambdaInvocation = getLambdaInvocation(parameter, method)
-                        if (lambdaInvocation != null) {
-                            val constraint = getWithinVersionCheckConditional(
-                                evaluator = evaluator,
-                                element = lambdaInvocation,
-                                apiLookup = getReferenceApiLookup(call)
-                            )
-                            if (constraint != null) {
-                                return constraint
-                            }
-                        }
-                    }
-                }
-            } else if (current is UCallExpression &&
-                (prev as? UExpression)?.skipParenthesizedExprDown() is UObjectLiteralExpression
-            ) {
-                val method = current.resolve()
-                if (method != null) {
-                    val annotation = SdkIntAnnotation.get(method)
-                    if (annotation != null) {
-                        val value = annotation.getApiLevel(evaluator, method, current)
-                        if (value != null) {
-                            return atMost(value)
-                        } // else: lambda
-                    }
-
-                    val mapping = evaluator.computeArgumentMapping(current, method)
-                    val parameter = mapping[prev]
-                    if (parameter != null) {
-                        val lambdaInvocation = getLambdaInvocation(parameter, method)
-                        if (lambdaInvocation != null) {
-                            val constraint = getWithinVersionCheckConditional(
-                                evaluator = evaluator,
-                                element = lambdaInvocation,
-                                apiLookup = getReferenceApiLookup(current)
-                            )
-                            if (constraint != null) {
-                                return constraint
-                            }
-                        }
-                    }
-                }
-            } else if (current is UMethod) {
-                if (current.uastParent !is UAnonymousClass) return null
-            } else if (current is PsiFile) {
-                return null
             }
             prev = current
             current = current.uastParent
         }
+        return constraint
+    }
+
+    /**
+     * Looks up the version conditional for a specific [current]
+     * element, coming up from [prev].
+     */
+    private fun getVersionConditional(
+        current: UElement,
+        prev: UElement?,
+        apiLookup: ApiLevelLookup?
+    ): ApiConstraint? {
+        if (current is UPolyadicExpression) {
+            val anded = getAndedWithConstraint(current, prev)
+            if (anded != null) {
+                return anded
+            }
+            val ored = getOredWithConstraint(current, prev)
+            if (ored != null) {
+                return ored
+            }
+        }
+
+        if (current is UIfExpression) {
+            val ifStatement = current
+            val condition = ifStatement.condition
+            if (prev !== condition) {
+                val fromThen = prev == ifStatement.thenExpression
+                getVersionCheckConstraint(
+                    element = condition,
+                    prev = prev,
+                    apiLookup = apiLookup
+                )?.let { return if (fromThen) it else it.not() }
+            }
+        } else if (current is USwitchClauseExpressionWithBody) {
+            for (condition in current.caseValues) {
+                getVersionCheckConstraint(
+                    element = condition,
+                    prev = prev,
+                    apiLookup = apiLookup
+                )?.let { return it }
+            }
+
+            val switch = current.getParentOfType(USwitchExpression::class.java, true)
+            val entries = switch?.body?.expressions?.filterIsInstance<USwitchClauseExpression>() ?: emptyList()
+            val switchExpression = switch?.expression
+            val casesAreApiLevels = switchExpression != null && isSdkInt(switchExpression)
+            var currentConstraint: ApiConstraint? = null
+            for (entry in entries) {
+                val caseConstraint = getCaseConstraint(entry, casesAreApiLevels)
+
+                if (entry === current) {
+                    val constraint = if (caseConstraint != null) {
+                        if (currentConstraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                            caseConstraint and currentConstraint
+                        } else {
+                            caseConstraint
+                        }
+                    } else if (currentConstraint != null) {
+                        currentConstraint
+                    } else {
+                        break
+                    }
+                    return constraint
+                }
+
+                // Invert the constraint and combine it with the current constraint; this is now the currentConstraint for the next case.
+                if (caseConstraint != null) {
+                    val reverse = caseConstraint.not()
+                    if (currentConstraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                        currentConstraint = reverse and currentConstraint
+                    } else {
+                        currentConstraint = reverse
+                    }
+                }
+            }
+        } else if (current is UCallExpression &&
+            (prev as? UExpression)?.skipParenthesizedExprDown() is ULambdaExpression
+        ) {
+            // If the API violation is in a lambda that is passed to a method,
+            // see if the lambda parameter is invoked inside that method, wrapped within
+            // a suitable version conditional.
+            //
+            // Optionally also see if we're passing in the API level as a parameter
+            // to the function.
+            //
+            // Algorithm:
+            //  (1) Figure out which parameter we're mapping the lambda argument to.
+            //  (2) Find that parameter invoked within the function
+            //  (3) From the invocation see if it's a suitable version conditional
+            //
+            val call = current
+            val method = call.resolve()
+            if (method != null) {
+                val annotation = SdkIntAnnotation.get(method)
+                if (annotation != null) {
+                    val value = annotation.getApiLevel(evaluator, method, call)
+                    if (value != null) {
+                        return atLeast(value)
+                    } // else: lambda
+                }
+
+                val mapping = evaluator.computeArgumentMapping(call, method)
+                val parameter = mapping[prev]
+                if (parameter != null) {
+                    val lambdaInvocation = getLambdaInvocation(parameter, method)
+                    if (lambdaInvocation != null) {
+                        val constraint = getWithinVersionCheckConditional(
+                            element = lambdaInvocation,
+                            apiLookup = getReferenceApiLookup(call)
+                        )
+                        if (constraint != null) {
+                            return constraint
+                        }
+                    }
+                }
+            }
+        } else if (current is UCallExpression &&
+            (prev as? UExpression)?.skipParenthesizedExprDown() is UObjectLiteralExpression
+        ) {
+            val method = current.resolve()
+            if (method != null) {
+                val annotation = SdkIntAnnotation.get(method)
+                if (annotation != null) {
+                    val value = annotation.getApiLevel(evaluator, method, current)
+                    if (value != null) {
+                        return atLeast(value)
+                    } // else: lambda
+                }
+
+                val mapping = evaluator.computeArgumentMapping(current, method)
+                val parameter = mapping[prev]
+                if (parameter != null) {
+                    val lambdaInvocation = getLambdaInvocation(parameter, method)
+                    if (lambdaInvocation != null) {
+                        val constraint = getWithinVersionCheckConditional(
+                            element = lambdaInvocation,
+                            apiLookup = getReferenceApiLookup(current)
+                        )
+                        if (constraint != null) {
+                            return constraint
+                        }
+                    }
+                }
+            }
+        }
         return null
+    }
+
+    /**
+     * Given a [USwitchClauseExpression] (a case in a when statement),
+     * returns the SDK_INT constraint implied by this case, if any. If
+     * [casesAreApiLevels], this means the when-statement is switching
+     * on SDK_INT as the subject, so the cases will just be integers or
+     * ranges understood to refer to SDK_INT. Otherwise, this must be a
+     * subject-less when-statement where each case should include the
+     * SDK_INT comparison (or version checking utility calls).
+     */
+    private fun getCaseConstraint(
+        entry: USwitchClauseExpression,
+        casesAreApiLevels: Boolean,
+        apiLevelLookup: ApiLevelLookup? = null
+    ): ApiConstraint? {
+        val caseValues = entry.caseValues
+        if (caseValues.isEmpty()) {
+            // It's the else clause: no constraint here.
+            return null
+        }
+
+        if (!casesAreApiLevels) {
+            // When the when-statement has no subject, there's exactly one case (we've ruled out the else clause above).
+            val case = caseValues.first().skipParenthesizedExprDown()
+            return getVersionCheckConstraint(element = case)
+        }
+
+        // When the SDK_INT is the subject of the when, we can have multiple cases, and combinations of specific
+        // integers and range-expressions; iterate through each and combine into a single constraint.
+        var constraint: ApiConstraint? = null
+        for (case in caseValues) {
+            val expression = case.skipParenthesizedExprDown()
+            val caseConstraint =
+                // We have a when (SDK_INT) so we already know it's an SDK_INT version check, here the case
+                // is just the range of API levels
+                if (expression is UBinaryExpression && expression.operator.text == "in") {
+                    val range = expression.operands.lastOrNull()?.skipParenthesizedExprDown() as? UBinaryExpression
+                    if (range != null) {
+                        getSdkIntConstraintFromExpression(range)
+                    } else {
+                        null
+                    }
+                } else {
+                    val level = getApiLevel(expression, apiLevelLookup)
+                    if (level != -1) {
+                        exactly(level)
+                    } else {
+                        null
+                    }
+                }
+
+            caseConstraint ?: continue
+            if (constraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                constraint = caseConstraint or constraint
+            } else {
+                constraint = caseConstraint
+            }
+        }
+
+        return constraint
     }
 
     private fun getReferenceApiLookup(call: UCallExpression): (UElement) -> Int {
@@ -794,34 +972,32 @@ class VersionChecks(
         return match.get()
     }
 
-    private fun getVersionCheckConditional(
+    private fun getVersionCheckConstraint(
         element: UElement,
-        and: Boolean,
         prev: UElement? = null,
         apiLookup: ApiLevelLookup? = null
     ): ApiConstraint? {
         if (element is UPolyadicExpression) {
             if (element is UBinaryExpression) {
                 getVersionCheckConditional(
-                    fromThen = and,
                     binary = element,
                     apiLevelLookup = apiLookup
                 )?.let { return it }
             }
             val tokenType = element.operator
-            if (and && tokenType === UastBinaryOperator.LOGICAL_AND) {
-                val constraint = getAndedWithConditional(element, prev)
+            if (tokenType === UastBinaryOperator.LOGICAL_AND) {
+                val constraint = getAndedWithConstraint(element, prev)
                 if (constraint != null) {
                     return constraint
                 }
-            } else if (!and && tokenType === UastBinaryOperator.LOGICAL_OR) {
-                val constraint = getOredWithConditional(element, prev)
+            } else if (tokenType === UastBinaryOperator.LOGICAL_OR) {
+                val constraint = getOredWithConstraint(element, prev)
                 if (constraint != null) {
-                    return constraint
+                    return constraint.not()
                 }
             }
         } else if (element is UCallExpression) {
-            return getValidVersionCall(and, element)
+            return getValidVersionCall(element)
         } else if (element is UReferenceExpression) {
             // Constant expression for an SDK version check?
             val resolved = element.resolve()
@@ -841,10 +1017,7 @@ class VersionChecks(
                 if (modifierList != null && modifierList.hasExplicitModifier(PsiModifier.STATIC)) {
                     val initializer = UastFacade.getInitializerBody(field)?.skipParenthesizedExprDown()
                     if (initializer != null) {
-                        val constraint = getVersionCheckConditional(
-                            element = initializer,
-                            and = and
-                        )
+                        val constraint = getVersionCheckConstraint(element = initializer)
                         if (constraint != null) {
                             return constraint
                         }
@@ -855,11 +1028,10 @@ class VersionChecks(
                 element.selector is UCallExpression
             ) {
                 val call = element.selector as UCallExpression
-                return getValidVersionCall(and, call)
+                return getValidVersionCall(call)
             } else if (resolved is PsiMethod) {
                 // Method call via Kotlin property syntax
                 return getValidVersionCall(
-                    and = and,
                     call = element,
                     method = resolved
                 )
@@ -867,7 +1039,6 @@ class VersionChecks(
                 val selector = element.selector
                 if (selector is UCallExpression) {
                     return getValidVersionCall(
-                        and = and,
                         call = selector
                     )
                 }
@@ -875,10 +1046,10 @@ class VersionChecks(
         } else if (element is UUnaryExpression) {
             if (element.operator === UastPrefixOperator.LOGICAL_NOT) {
                 val operand = element.operand
-                getVersionCheckConditional(element = operand, and = !and)?.let { return it }
+                getVersionCheckConstraint(element = operand)?.let { return it.not() }
             }
         } else if (element is UParenthesizedExpression) {
-            return getVersionCheckConditional(element.expression, and, element, apiLookup)
+            return getVersionCheckConstraint(element.expression, element, apiLookup)
         }
         return null
     }
@@ -891,7 +1062,7 @@ class VersionChecks(
             owner, true, CHECKS_SDK_INT_AT_LEAST_ANNOTATION
         ) ?: return null
         val value = SdkIntAnnotation(annotation).getApiLevel(evaluator, owner, call) ?: return null
-        return atMost(value)
+        return atLeast(value)
     }
 
     /**
@@ -918,13 +1089,10 @@ class VersionChecks(
             else -> return null
         }
         val value = annotation.getApiLevel(evaluator, owner, call) ?: return null
-        return atMost(value)
+        return atLeast(value)
     }
 
-    private fun getValidVersionCall(
-        and: Boolean,
-        call: UCallExpression
-    ): ApiConstraint? {
+    private fun getValidVersionCall(call: UCallExpression): ApiConstraint? {
         val method = call.resolve()
         if (method == null) {
             // Fallback when we can't resolve call: Try to guess just based on the method name
@@ -933,16 +1101,15 @@ class VersionChecks(
                 val name = identifier.name
                 val version = getMinSdkVersionFromMethodName(name)
                 if (version != -1) {
-                    return (if (and) ::atMost else ::above)(version)
+                    return atLeast(version)
                 }
             }
             return null
         }
-        return getValidVersionCall(and, call, method)
+        return getValidVersionCall(call, method)
     }
 
     private fun getValidVersionCall(
-        and: Boolean,
         call: UElement,
         method: PsiMethod
     ): ApiConstraint? {
@@ -966,22 +1133,22 @@ class VersionChecks(
                 "BuildCompat" == containingClass.name
             ) {
                 when {
-                    name == "isAtLeastN" -> return atMost(24)
-                    name == "isAtLeastNMR1" -> return atMost(25)
-                    name == "isAtLeastO" -> return atMost(26)
-                    name.startsWith("isAtLeastP") -> return atMost(28)
-                    name.startsWith("isAtLeastQ") -> return atMost(29)
+                    name == "isAtLeastN" -> return atLeast(24)
+                    name == "isAtLeastNMR1" -> return atLeast(25)
+                    name == "isAtLeastO" -> return atLeast(26)
+                    name.startsWith("isAtLeastP") -> return atLeast(28)
+                    name.startsWith("isAtLeastQ") -> return atLeast(29)
                     // Try to guess future API levels before they're announced
                     name.startsWith("isAtLeast") &&
                         name.length == 10 && Character.isUpperCase(name[9]) &&
                         name[9] > 'Q' ->
-                        return atMost(SdkVersionInfo.HIGHEST_KNOWN_API + 1)
+                        return atLeast(SdkVersionInfo.HIGHEST_KNOWN_API + 1)
                 }
             }
         }
         val version = getMinSdkVersionFromMethodName(name)
         if (version != -1) {
-            return atMost(version)
+            return atLeast(version)
         }
 
         // Unconditional version utility method? If so just attempt to call it
@@ -1006,17 +1173,15 @@ class VersionChecks(
                         returnValue is UCallExpression ||
                         returnValue is UQualifiedReferenceExpression
                     ) {
-                        val constraint =
-                            getVersionCheckConditional(element = returnValue, and = and)
+                        val constraint = getVersionCheckConstraint(element = returnValue)
                         if (constraint != null) {
                             return constraint
                         }
                     }
                 } else if (arguments.size == 1) {
                     // See if we're passing in a value to the version utility method
-                    val constraint = getVersionCheckConditional(
+                    val constraint = getVersionCheckConstraint(
                         element = returnValue,
-                        and = and,
                         apiLookup = { reference ->
                             var apiLevel = -1
                             if (reference is UReferenceExpression) {
@@ -1047,187 +1212,8 @@ class VersionChecks(
         return null
     }
 
-    private fun isSdkInt(element: PsiElement): Boolean {
-        if (element is PsiReferenceExpression) {
-            if (SDK_INT == element.referenceName) {
-                return true
-            }
-            val resolved = element.resolve()
-            if (resolved is PsiVariable) {
-                val initializer = resolved.initializer
-                if (initializer != null) {
-                    return isSdkInt(initializer)
-                }
-            }
-        } else if (element is PsiMethodCallExpression) {
-            if (GET_BUILD_SDK_INT == element.methodExpression.referenceName) {
-                return true
-            } // else look inside the body?
-        }
-        return false
-    }
-
-    private fun isSdkInt(element: UElement): Boolean {
-        if (element is UReferenceExpression) {
-            if (SDK_INT == element.resolvedName) {
-                return true
-            }
-            val resolved = element.resolve()
-            if (resolved is ULocalVariable) {
-                val initializer = resolved.uastInitializer
-                if (initializer != null) {
-                    return isSdkInt(initializer)
-                }
-            } else if (resolved is PsiVariable) {
-                val initializer = resolved.initializer
-                if (initializer != null) {
-                    return isSdkInt(initializer)
-                }
-            }
-        } else if (element is UCallExpression) {
-            if (GET_BUILD_SDK_INT == getMethodName(element)) {
-                return true
-            } // else look inside the body?
-        } else if (element is UParenthesizedExpression) {
-            return isSdkInt(element.expression)
-        }
-        return false
-    }
-
-    /**
-     * For a given SDK_INT check, this method returns the API
-     * constraints for **safe** API level usages within the then-body of
-     * this if-check. If [fromThen] is false, the code is in the else
-     * clause instead.
-     *
-     * For example, this code:
-     *
-     *     if (SDK_INT >= 28) {
-     *         requiresN()
-     *
-     * is safe for values of N from 1 up through 28, so it will return
-     *
-     * an API constraint of API <= 28, whereas the
-     * [getVersionCheckConditional] method returns API >= 28.
-     */
-    private fun getVersionCheckConditional(
-        binary: UBinaryExpression,
-        fromThen: Boolean,
-        apiLevelLookup: ApiLevelLookup? = null
-    ): ApiConstraint? {
-        @Suppress("NAME_SHADOWING")
-        var fromThen = fromThen
-        val tokenType = binary.operator
-        if (tokenType === UastBinaryOperator.GREATER ||
-            tokenType === UastBinaryOperator.GREATER_OR_EQUALS ||
-            tokenType === UastBinaryOperator.LESS_OR_EQUALS ||
-            tokenType === UastBinaryOperator.LESS ||
-            tokenType === UastBinaryOperator.EQUALS ||
-            tokenType === UastBinaryOperator.IDENTITY_EQUALS ||
-            tokenType === UastBinaryOperator.NOT_EQUALS ||
-            tokenType === UastBinaryOperator.IDENTITY_NOT_EQUALS
-        ) {
-            val left = binary.leftOperand
-            val level: Int
-            val right: UExpression
-            if (!isSdkInt(left)) {
-                right = binary.rightOperand
-                if (isSdkInt(right)) {
-                    fromThen = !fromThen
-                    level = getApiLevel(left, apiLevelLookup)
-                } else {
-                    return null
-                }
-            } else {
-                right = binary.rightOperand
-                level = getApiLevel(right, apiLevelLookup)
-            }
-
-            if (level != -1) {
-                if (tokenType === UastBinaryOperator.GREATER_OR_EQUALS) {
-                    return if (lowerBound) {
-                        // Here we we know that we're on ice cream sandwich or later.
-                        // That means it's safe to use call from all older versions
-                        // up to and including ice cream sandwich itself.
-                        if (fromThen) atMost(level) else null
-                    } else {
-                        // if (SDK_INT >= ICE_CREAM_SANDWICH) {  } else { <here> }
-                        // so in <here>, SDK_INT < ICE_CREAM_SANDWICH
-                        if (!fromThen) atLeast(level - 2) else null
-                    }
-                } else if (tokenType === UastBinaryOperator.GREATER) {
-                    return if (lowerBound) {
-                        if (fromThen) atMost(level + 1) else null
-                    } else {
-                        if (!fromThen) atLeast(level - 1) else null
-                    }
-                } else if (tokenType === UastBinaryOperator.LESS_OR_EQUALS) {
-                    return if (lowerBound) {
-                        if (!fromThen) atMost(level + 1) else null
-                    } else {
-                        if (fromThen) atLeast(level - 2) else null
-                    }
-                } else if (tokenType === UastBinaryOperator.LESS) {
-                    return if (lowerBound) {
-                        if (!fromThen) atMost(level) else null
-                    } else {
-                        if (fromThen) atLeast(level - 3) else null
-                    }
-                } else if (tokenType === UastBinaryOperator.EQUALS ||
-                    tokenType === UastBinaryOperator.IDENTITY_EQUALS
-                ) {
-                    // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else { ... }
-                    return if (lowerBound) {
-                        if (fromThen) atMost(level) else null
-                    } else {
-                        if (fromThen) atLeast(level) else null
-                    }
-                } else if (tokenType === UastBinaryOperator.NOT_EQUALS ||
-                    tokenType === UastBinaryOperator.IDENTITY_NOT_EQUALS
-                ) {
-                    // if (SDK_INT != ICE_CREAM_SANDWICH) { ... } else { <call> }
-                    return if (!fromThen) range(level, level + 1) else null
-                } else {
-                    assert(false) { tokenType }
-                }
-            }
-        }
-
-        return null
-    }
-
-    private fun getApiLevel(
-        element: UExpression?,
-        apiLevelLookup: ApiLevelLookup?
-    ): Int {
-        var level = -1
-        if (element is UReferenceExpression) {
-            val codeName = element.resolvedName
-            if (codeName != null) {
-                level = SdkVersionInfo.getApiByBuildCode(codeName, false)
-            }
-            if (level == -1) {
-                val constant = ConstantEvaluator.evaluate(null, element)
-                if (constant is Number) {
-                    level = constant.toInt()
-                }
-            }
-        } else if (element is ULiteralExpression) {
-            val value = element.value
-            if (value is Int) {
-                level = value
-            }
-        } else if (element is UParenthesizedExpression) {
-            return getApiLevel(element.expression, apiLevelLookup)
-        }
-        if (level == -1 && apiLevelLookup != null && element != null) {
-            level = apiLevelLookup(element)
-        }
-        return level
-    }
-
     @Suppress("SpellCheckingInspection")
-    private fun getOredWithConditional(
+    private fun getOredWithConstraint(
         element: UElement,
         before: UElement?
     ): ApiConstraint? {
@@ -1235,36 +1221,30 @@ class VersionChecks(
             if (element.operator === UastBinaryOperator.LOGICAL_OR) {
                 val left = element.leftOperand
                 if (before !== left) {
-                    getVersionCheckConditional(element = left, and = false)?.let { return it }
+                    getVersionCheckConstraint(element = left)?.let { return it.not() }
                     val right = element.rightOperand
-                    getVersionCheckConditional(element = right, and = false)?.let { return it }
+                    getVersionCheckConstraint(element = right)?.let { return it.not() }
                 }
             }
-            getVersionCheckConditional(fromThen = false, binary = element)?.let { return it }
+            getVersionCheckConditional(binary = element)?.let { return it.not() }
         } else if (element is UPolyadicExpression) {
             if (element.operator === UastBinaryOperator.LOGICAL_OR) {
                 for (operand in element.operands) {
                     if (operand == before) {
                         break
                     } else {
-                        val constraint = getOredWithConditional(
-                            element = operand,
-                            before = before
-                        )
-                        if (constraint != null) {
-                            return constraint
-                        }
+                        getOredWithConstraint(element = operand, before = before).let { return it }
                     }
                 }
             }
         } else if (element is UParenthesizedExpression) {
-            return getOredWithConditional(element.expression, element)
+            return getOredWithConstraint(element.expression, element)
         }
         return null
     }
 
     @Suppress("SpellCheckingInspection")
-    private fun getAndedWithConditional(
+    private fun getAndedWithConstraint(
         element: UElement,
         before: UElement?
     ): ApiConstraint? {
@@ -1272,27 +1252,24 @@ class VersionChecks(
             if (element.operator === UastBinaryOperator.LOGICAL_AND) {
                 val left = element.leftOperand
                 if (before !== left) {
-                    getVersionCheckConditional(element = left, and = true)?.let { return it }
+                    getVersionCheckConstraint(element = left)?.let { return it }
                     val right = element.rightOperand
-                    getVersionCheckConditional(element = right, and = true)?.let { return it }
+                    getVersionCheckConstraint(element = right)?.let { return it }
                 }
             }
-            getVersionCheckConditional(fromThen = true, binary = element)?.let { return it }
+            getVersionCheckConditional(binary = element)?.let { return it }
         } else if (element is UPolyadicExpression) {
             if (element.operator === UastBinaryOperator.LOGICAL_AND) {
                 for (operand in element.operands) {
                     if (operand == before) {
                         break
                     } else {
-                        val constraint = getVersionCheckConditional(operand, and = true)
-                        if (constraint != null) {
-                            return constraint
-                        }
+                        getVersionCheckConstraint(operand)?.let { return it }
                     }
                 }
             }
         } else if (element is UParenthesizedExpression) {
-            return getAndedWithConditional(element.expression, element)
+            return getAndedWithConstraint(element.expression, element)
         }
         return null
     }
@@ -1325,12 +1302,9 @@ class VersionChecks(
             }
             val thenBranch = node.thenExpression
             val elseBranch = node.elseExpression
+            val constraint = getVersionCheckConstraint(element = node.condition)
             if (thenBranch != null) {
-                val constraint = getVersionCheckConditional(
-                    element = node.condition,
-                    and = false
-                )
-                if (constraint?.matches(api) == true) {
+                if (constraint?.not()?.notLowerThan(api) == true) {
                     // See if the body does an immediate return
                     if (isUnconditionalReturn(thenBranch)) {
                         found = true
@@ -1339,11 +1313,7 @@ class VersionChecks(
                 }
             }
             if (elseBranch != null) {
-                val constraint = getVersionCheckConditional(
-                    element = node.condition,
-                    and = true
-                )
-                if (constraint?.matches(api) == true) {
+                if (constraint?.notLowerThan(api) == true) {
                     if (isUnconditionalReturn(elseBranch)) {
                         found = true
                         done = true
@@ -1354,7 +1324,7 @@ class VersionChecks(
         }
 
         override fun visitSwitchExpression(node: USwitchExpression): Boolean {
-            val exit = super.visitSwitchExpression(node)
+            super.visitSwitchExpression(node)
             if (done) {
                 return true
             }
@@ -1364,54 +1334,87 @@ class VersionChecks(
                 return true
             }
 
-            if (node.expression == null) {
-                var knownConstraint: ApiConstraint? = null
-                for (entry in node.body.expressions) {
-                    if (entry is USwitchClauseExpression) {
-                        if (entry is USwitchClauseExpressionWithBody) {
-                            for (case in entry.caseValues) {
-                                val constraint = getVersionCheckConditional(
-                                    element = case,
-                                    and = false
-                                )
-                                if (constraint != null) {
-                                    if (constraint.matches(api)) {
-                                        // See if the body does an immediate return
-                                        if (isUnconditionalReturn(entry.body)) {
-                                            found = true
-                                            done = true
-                                        }
-                                    }
-                                }
-                            }
-                        }
+            // when { } instead of when (subject) { } ? If so, check if any condition is an SDK_INT check.
+            val subject = node.expression
+            if (subject != null) {
+                // We only check for SDK_INT constraints in subject-less when statements. In theory
+                // you could do a range-based SDK_INT check (when (SDK_INT) 1...21 -> ... etc) but that
+                // would need to be handled differently.
+                if (!isSdkInt(subject)) {
+                    return done
+                }
+            }
 
-                        for (case in entry.caseValues) {
-                            val constraint = getVersionCheckConditional(
-                                element = case,
-                                and = true
-                            )
-                            if (constraint != null) {
-                                knownConstraint = constraint and knownConstraint
-                            }
-                        }
+            // Known constraint about SDK_INT *after* the switch statement. This is the highest possible SDK_INT.
+            var fallthroughConstraint: ApiConstraint? = null
 
-                        if (knownConstraint != null &&
-                            entry is USwitchClauseExpressionWithBody &&
-                            isUnconditionalReturn(entry.body)
-                        ) {
-                            if (knownConstraint.neverAtMost(api + 2)) {
-                                // We've had earlier clauses which checked the API level.
-                                // No, this isn't right; we need to lower the level
-                                found = true
-                                done = true
+            // Known constraint about SDK_INT before each case.
+            // For example, after the when-statement
+            //   when {
+            //      SDK_INT > 30 -> { something(); return; }
+            //      SDK_INT > 20 -> { somethingElse(); }
+            //      else -> return;
+            //   }
+            // here the fallthroughConstraint will be SDK_INT <= 30. The elseConstraint will be
+            // SDK_INT <= 30 for the second case, and SDK_INT <= 20 for the third (else) case.
+            var currentConstraint: ApiConstraint? = null
+
+            for (entry in node.body.expressions) {
+                if (entry is USwitchClauseExpression) {
+                    val body = (entry as? USwitchClauseExpressionWithBody)?.body
+                    val caseConstraint = getCaseConstraint(entry, subject != null)
+                    // If the current element falls through, update the fallthroughConstraint: take the worst-case combination
+                    // of currentConstraint and caseConstraint with the current
+                    if (body != null && fallsThrough(body)) {
+                        fallthroughConstraint = if (caseConstraint != null) {
+                            if (fallthroughConstraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                                caseConstraint or /*currentConstraint or*/ fallthroughConstraint
+                            } else {
+                                caseConstraint
                             }
+                        } else if (currentConstraint != null) {
+                            if (fallthroughConstraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                                currentConstraint or fallthroughConstraint
+                            } else {
+                                currentConstraint
+                            }
+                        } else {
+                            fallthroughConstraint
                         }
+                    }
+
+                    // Invert the constraint and combine it with the current constraint; this is now the currentConstraint for the next case.
+                    if (caseConstraint != null) {
+                        val reverse = caseConstraint.not()
+                        if (currentConstraint != null) { // Work around KT-52913; cannot allow nullable parameter in ApiConstraint.and()
+                            currentConstraint = reverse and currentConstraint
+                        } else {
+                            currentConstraint = reverse
+                        }
+                    }
+
+                    // Handle final else clause; if it returns unconditionally, the constraint for after the switch statement
+                    // would be the negation of the current constraint.
+                    if (entry.caseValues.isEmpty() && body != null && !fallsThrough(body)) {
+                        currentConstraint = currentConstraint?.not()
+                        break
                     }
                 }
             }
 
-            return exit
+            val constraint = fallthroughConstraint ?: currentConstraint ?: return done
+            if (constraint.notLowerThan(api)) {
+                // We've had earlier clauses which checked the API level.
+                // No, this isn't right; we need to lower the level
+                found = true
+                done = true
+            }
+
+            return done
+        }
+
+        private fun fallsThrough(body: UExpression): Boolean {
+            return !isUnconditionalReturn(body)
         }
 
         fun found(): Boolean {

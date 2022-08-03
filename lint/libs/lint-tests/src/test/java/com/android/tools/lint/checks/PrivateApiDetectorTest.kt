@@ -517,23 +517,11 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             src/test/pkg/application/ReflectionTest.java:15: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 1
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:18: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 2
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:21: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 3
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:29: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 4
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:32: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 5
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:35: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 6
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:38: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 7
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:46: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 8
@@ -541,20 +529,29 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             src/test/pkg/application/ReflectionTest.java:49: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 9
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:52: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 10
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:66: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // warn 11
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.java:69: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        clz.getDeclaredMethod(name, Bundle.class); // warn 12
+            src/test/pkg/application/ReflectionTest.java:18: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 2
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:21: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 3
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:24: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 1
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:35: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 6
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:38: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 7
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:41: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 2
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:52: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 10
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:55: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 3
@@ -565,13 +562,16 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             src/test/pkg/application/ReflectionTest.java:61: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 3c
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.java:69: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+                        clz.getDeclaredMethod(name, Bundle.class); // warn 12
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:72: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 4
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             src/test/pkg/application/ReflectionTest.java:75: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         clz.getDeclaredMethod(name, Bundle.class); // error 5
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            7 errors, 12 warnings
+            13 errors, 6 warnings
             """
         )
     }
@@ -579,22 +579,22 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
     fun testMaybeListKotlinCall() {
         val expected =
             """
-            src/test/pkg/application/ReflectionTest.kt:11: Error: Reflective access to getContentCaptureManager is forbidden when targeting API 28 and above [BlockedPrivateApi]
+            src/test/pkg/application/ReflectionTest.kt:10: Error: Reflective access to getContentCaptureManager is forbidden when targeting API 28 and above [BlockedPrivateApi]
                         25 -> clazz.getDeclaredMethod("getContentCaptureManager") // DENY
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.kt:13: Warning: Reflective access to setParent, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                        27 -> clazz.getDeclaredMethod("setParent", Activity::class.java) // MAYBE_MAX_P
-                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.kt:18: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
-                            clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java)
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.kt:12: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+            src/test/pkg/application/ReflectionTest.kt:11: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
                         26 -> clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java)
                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            src/test/pkg/application/ReflectionTest.kt:14: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
+            src/test/pkg/application/ReflectionTest.kt:12: Warning: Reflective access to setParent, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
+                        27 -> clazz.getDeclaredMethod("setParent", Activity::class.java) // MAYBE_MAX_P
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.kt:17: Warning: Reflective access to restoreManagedDialogs, which is not part of the public SDK and therefore likely to change in future Android releases [DiscouragedPrivateApi]
+                            clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java)
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/application/ReflectionTest.kt:13: Error: Reflective access to restoreManagedDialogs will throw an exception when targeting API 28 and above [SoonBlockedPrivateApi]
                         else -> clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java) // MAYBE_MAX_O
                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            3 errors, 2 warnings
+            2 errors, 3 warnings
             """.trimIndent()
         lint().files(
             manifest().targetSdk(28),
@@ -608,7 +608,6 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
                     private fun test() {
                         val clazz = Activity::class.java
                         clazz.getDeclaredMethod("dismissDialog", Int::class.javaPrimitiveType) // OK
-                        // TODO: Fix VersionChecks to recognize this
                         when (android.os.Build.VERSION.SDK_INT) {
                             25 -> clazz.getDeclaredMethod("getContentCaptureManager") // DENY
                             26 -> clazz.getDeclaredMethod("restoreManagedDialogs", android.os.Bundle::class.java)

@@ -2223,6 +2223,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class ConfigTest {\n"
                                         + "    public void test(Configuration configuration) {\n"
                                         + "        System.out.println(configuration.densityDpi);\n"
+                                        + "        if (android.os.Build.VERSION.SDK_INT >= 15)\n"
+                                        + "            System.out.println(configuration.densityDpi);\n"
                                         + "    }\n"
                                         + "}\n"))
                 .run()
@@ -2231,7 +2233,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/ConfigTest.java:7: Error: Field requires API level 17 (current min is 8): android.content.res.Configuration#densityDpi [NewApi]\n"
                                 + "        System.out.println(configuration.densityDpi);\n"
                                 + "                           ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "1 errors, 0 warnings");
+                                + "src/test/pkg/ConfigTest.java:9: Error: Field requires API level 17 (current min is 15): android.content.res.Configuration#densityDpi [NewApi]\n"
+                                + "            System.out.println(configuration.densityDpi);\n"
+                                + "                               ~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "2 errors, 0 warnings");
     }
 
     public void test38195() {
@@ -4078,8 +4083,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/Class.java:7: Error: Method reference requires API level 17 (current min is 4): TextView::getCompoundPaddingEnd [NewApi]\n"
                         + "        System.out.println(TextView::getCompoundPaddingEnd);\n"
                         + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
-        //noinspection all // Sample code
+                        + "src/test/pkg/Class.java:9: Error: Method reference requires API level 17 (current min is 15): TextView::getCompoundPaddingEnd [NewApi]\n"
+                        + "            System.out.println(TextView::getCompoundPaddingEnd);\n"
+                        + "                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "2 errors, 0 warnings";
         lint().files(
                         manifest().minSdk(4),
                         java(
@@ -4091,9 +4098,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "public class Class {\n"
                                         + "    protected void test(TextView textView) {\n"
                                         + "        System.out.println(TextView::getCompoundPaddingEnd);\n"
+                                        + "        if (android.os.Build.VERSION.SDK_INT >= 15)\n"
+                                        + "            System.out.println(TextView::getCompoundPaddingEnd);\n"
                                         + "    }\n"
                                         + "}"))
-                .allowCompilationErrors(true)
                 .allowSystemErrors(false)
                 .checkMessage(this::checkReportedError)
                 .run()
@@ -4197,7 +4205,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/CastTest.java:27: Error: Class requires API level 19 (current min is 14): android.animation.Animator.AnimatorPauseListener [NewApi]\n"
                         + "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
                         + "                                          ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "3 errors, 0 warnings\n";
+                        + "src/test/pkg/CastTest.java:32: Error: Cast from KeyCharacterMap to Parcelable requires API level 16 (current min is 15) [NewApi]\n"
+                        + "            Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
+                        + "                                     ~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/CastTest.java:33: Error: Class requires API level 19 (current min is 15): android.animation.Animator.AnimatorPauseListener [NewApi]\n"
+                        + "            AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
+                        + "                                              ~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "5 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                         java(
@@ -4230,6 +4244,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    public void test(AnimatorListenerAdapter adapter) {\n"
                                         + "        // Uh oh - what if the cast isn't needed anymore\n"
                                         + "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public void test2(CursorWindow window, KeyCharacterMap map, AnimatorListenerAdapter adapter) {\n"
+                                        + "        if (android.os.Build.VERSION.SDK_INT >= 15) {\n"
+                                        + "            Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
+                                        + "            AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
+                                        + "        }\n"
                                         + "    }\n"
                                         + "}"),
                         manifest().minSdk(14))
@@ -5404,7 +5425,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/MapUsage.java:7: Error: The type of the for loop iterated value is java.util.concurrent.ConcurrentHashMap.KeySetView<java.lang.String,java.lang.Object>, which requires API level 24 (current min is 1); to work around this, add an explicit cast to (Map) before the keySet call. [NewApi]\n"
                         + "        for (String key : map.keySet()) {\n"
                         + "                          ~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+                        + "src/test/pkg/MapUsage.java:11: Error: The type of the for loop iterated value is java.util.concurrent.ConcurrentHashMap.KeySetView<java.lang.String,java.lang.Object>, which requires API level 24 (current min is 21); to work around this, add an explicit cast to (Map) before the keySet call. [NewApi]\n"
+                        + "            for (String key : map.keySet()) {\n"
+                        + "                              ~~~~~~~~~~~~\n"
+                        + "2 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                         java(
@@ -5418,6 +5442,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    public void dumpKeys(ConcurrentHashMap<String, Object> map) {\n"
                                         + "        for (String key : map.keySet()) {\n"
                                         + "            System.out.println(key);\n"
+                                        + "        }\n"
+                                        + "        if (android.os.Build.VERSION.SDK_INT >= 21) {\n"
+                                        + "            for (String key : map.keySet()) {\n"
+                                        + "                System.out.println(key);\n"
+                                        + "            }\n"
                                         + "        }\n"
                                         + "    }\n"
                                         + "}"),
@@ -6041,6 +6070,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "                System.out.println(s);\n"
                                         + "            }\n"
                                         + "        });\n"
+                                        + "        if (android.os.Build.VERSION.SDK_INT >= 23) {\n"
+                                        + "            list.forEach(new Consumer<String>() {\n"
+                                        + "                @Override\n"
+                                        + "                public void accept(String s) {\n"
+                                        + "                    System.out.println(s);\n"
+                                        + "                }\n"
+                                        + "            });\n"
+                                        + "        }\n"
                                         + "    }\n"
                                         + "}\n"),
                         kotlin(
@@ -6070,7 +6107,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/JavaForEach.java:8: Error: Class requires API level 24 (current min is 21): java.util.function.Consumer [NewApi]\n"
                                 + "        list.forEach(new Consumer<String>() {\n"
                                 + "                         ~~~~~~~~~~~~~~~~\n"
-                                + "2 errors, 0 warnings");
+                                + "src/test/pkg/JavaForEach.java:15: Error: Call requires API level 24 (current min is 23): java.lang.Iterable#forEach [NewApi]\n"
+                                + "            list.forEach(new Consumer<String>() {\n"
+                                + "                 ~~~~~~~\n"
+                                + "src/test/pkg/JavaForEach.java:15: Error: Class requires API level 24 (current min is 23): java.util.function.Consumer [NewApi]\n"
+                                + "            list.forEach(new Consumer<String>() {\n"
+                                + "                             ~~~~~~~~~~~~~~~~\n"
+                                + "4 errors, 0 warnings");
     }
 
     public void testCastsToSelf() {
@@ -6771,7 +6814,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    fun test3(rect: Rect) {\n"
                                         + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {\n"
-                                        + "            /*Call requires API level 18 (current min is 1): android.animation.RectEvaluator()*/RectEvaluator()/**/; // ERROR\n"
+                                        + "            /*Call requires API level 18 (current min is 9): android.animation.RectEvaluator()*/RectEvaluator()/**/; // ERROR\n"
                                         + "        }\n"
                                         + "    }\n"
                                         + "\n"
@@ -6786,7 +6829,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "    fun test5(rect: Rect) {\n"
                                         + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {\n"
-                                        + "            /*Call requires API level 21 (current min is 1): android.animation.RectEvaluator()*/RectEvaluator(rect)/**/; // ERROR\n"
+                                        + "            /*Call requires API level 21 (current min is 3): android.animation.RectEvaluator()*/RectEvaluator(rect)/**/; // ERROR\n"
                                         + "        } else {\n"
                                         + "            /*Call requires API level 21 (current min is 1): android.animation.RectEvaluator()*/RectEvaluator(rect)/**/; // ERROR\n"
                                         + "        }\n"
@@ -6838,9 +6881,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        // Nested conditionals\n"
                                         + "        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {\n"
                                         + "            if (priority) {\n"
-                                        + "                /*Call requires API level 14 (current min is 1): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 1): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
+                                        + "                /*Call requires API level 14 (current min is 11): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
                                         + "            } else {\n"
-                                        + "                /*Call requires API level 14 (current min is 1): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 1): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
+                                        + "                /*Call requires API level 14 (current min is 11): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 11): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
                                         + "            }\n"
                                         + "        } else {\n"
                                         + "            /*Call requires API level 14 (current min is 1): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 1): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
@@ -6872,7 +6915,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "\n"
                                         + "        if (android.os.Build.VERSION.SDK_INT >= 13) {\n"
-                                        + "            /*Call requires API level 14 (current min is 1): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 1): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
+                                        + "            /*Call requires API level 14 (current min is 13): android.widget.GridLayout()*/GridLayout(null)/**/./*Call requires API level 14 (current min is 13): android.widget.GridLayout#getOrientation*/getOrientation/**/(); // Flagged\n"
                                         + "        } else {\n"
                                         + "            /*Call requires API level 14 (current min is 1): android.widget.GridLayout()*/GridLayout(null)/**/; // Flagged\n"
                                         + "        }\n"
@@ -6960,7 +7003,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "            //NO ERROR\n"
                                         + "        }\n"
                                         + "\n"
-                                        + "        if (SDK_INT < 10 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
+                                        + "        if (SDK_INT < 10 || /*Call requires API level 11 (current min is 10): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
                                         + "            //ERROR\n"
                                         + "        }\n"
                                         + "\n"
@@ -6969,11 +7012,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "\n"
                                         + "        if (SDK_INT != 11 || getActionBar() == null) {\n"
-                                        + "            //NO ERROR\n"
+                                        + "            // OK -- SDK_INT is always 11 when getActionBar is called\n"
                                         + "        }\n"
                                         + "\n"
-                                        + "        if (SDK_INT != 12 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
-                                        + "            //ERROR\n"
+                                        + "        if (SDK_INT != 12 || getActionBar() == null) {\n"
+                                        + "            // OK -- SDK_INT is always 12 when getActionBar is called\n"
                                         + "        }\n"
                                         + "\n"
                                         + "        if (SDK_INT <= 11 || getActionBar() == null) {\n"
@@ -6988,11 +7031,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "            //NO ERROR\n"
                                         + "        }\n"
                                         + "\n"
-                                        + "        if (SDK_INT < 9 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
+                                        + "        if (SDK_INT < 9 || /*Call requires API level 11 (current min is 9): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
                                         + "            //ERROR\n"
                                         + "        }\n"
                                         + "\n"
-                                        + "        if (SDK_INT <= 9 || /*Call requires API level 11 (current min is 1): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
+                                        + "        if (SDK_INT <= 9 || /*Call requires API level 11 (current min is 10): android.app.Activity#getActionBar*/getActionBar/**/() == null) {\n"
                                         + "            //ERROR\n"
                                         + "        }\n"
                                         + "    }\n"

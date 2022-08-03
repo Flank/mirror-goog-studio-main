@@ -391,6 +391,18 @@ class LintBaselineTest {
     @Test
     fun tolerateApiDetectorMessageChanges() {
         val baseline = LintBaseline(null, File(""))
+
+        // minSdk changes can happen anytime; be flexible with these:
+        assertTrue(
+            baseline.sameMessage(
+                ApiDetector.UNSUPPORTED,
+                "Call requires API level 23 (current min is 1): `foo`",
+                "Call requires API level 23 (current min is 22): `foo`"
+            )
+        )
+
+        // When we switch from preview builds to finalized APIs the target can change:
+
         assertTrue(
             baseline.sameMessage(
                 ApiDetector.UNSUPPORTED,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,162 +16,299 @@
 
 package com.android.tools.lint.detector.api
 
-import kotlin.math.max
-import kotlin.math.min
-
 /**
  * Expresses an API constraint, such as "API level must be at least 21"
  */
-@Suppress("EXPERIMENTAL_FEATURE_WARNING")
-inline class ApiConstraint(val bits: Int) {
-    /*
-     * The API constraint stores the interval [from, to). For example,
-     * "if (SDK_INT >= 16) X else Y" would have the range constraint [16,∞) for
-     * X and [1,16) for Y. Here ∞ is using the special marker value 0xFFF.
-     * The int basically is represented by from in the least significant byte
-     * and to in the next byte: from | to << TO_SHIFTS.
+@JvmInline
+value class ApiConstraint(
+    /**
+     * The bits here represent API levels; bit 0 is API level 1, bit 1
+     * is API level 2 etc, all the way up. The very last bit represents
+     * infinity.
      */
+    private val bits: ULong
+) {
+    fun fromInclusive(): Int {
+        val bit = bits.lowestBitSet()
+        if (bit == -1) {
+            return INFINITY // nonsensical; you called fromInclusive() on Nothing
+        }
+        return fromInternalApiLevel(bit)
+    }
 
-    private fun fromInclusive(): Int = bits and FROM_MASK
-    private fun toExclusive(): Int = (bits shr TO_SHIFTS) and FROM_MASK
+    fun toExclusive(): Int {
+        val bit = bits.highestBitSet()
+        if (bit == -1) {
+            return INFINITY // nonsensical; you called toExclusive() on Nothing
+        }
+        return fromInternalApiLevel(bit + 1) // it's exclusive; bit is the inclusive position
+    }
 
     /** Is the given [apiLevel] valid for this constraint? */
     fun matches(apiLevel: Int): Boolean {
-        return apiLevel >= fromInclusive() && apiLevel < toExclusive()
+        return (bits and getApiLevelMask(apiLevel)) != 0UL
     }
 
     /**
      * Will this API level or anything higher always match this
      * constraint?
+     *
+     * For example, if we know from minSdkVersion that SDK_INT >= 32,
+     * and we see a check if SDK_INT is >= 21, that check will always
+     * be true. That's what this method is for; this [ApiConstraint]
+     * is the SDK_INT check, and the passed in [apiLevel] represents
+     * the minimum value of SDK_INT (the known constraint from
+     * minSdkVersion).
      */
     fun alwaysAtLeast(apiLevel: Int): Boolean {
-        return apiLevel >= fromInclusive() && toExclusive() == INFINITY
+        val minSdk = atLeast(apiLevel)
+        return minSdk.bits and bits == minSdk.bits
+    }
+
+    /**
+     * Returns true if this API constraint includes any versions that
+     * are higher than the given [apiLevel].
+     */
+    fun everHigher(apiLevel: Int): Boolean {
+        val minSdk = atLeast(apiLevel + 1)
+        return (minSdk.bits and bits) != 0UL
     }
 
     /**
      * Will this API level or anything higher never match this
      * constraint?
+     *
+     * For example, if we know from minSdkVersion that SDK_INT
+     * >= 32, and we see a check if SDK_INT is <= 21, that check
+     * will never be true. That's what this method is for; this
+     * [ApiConstraint] is the minSdkVersion requirement, and the passed
+     * in [apiLevel] represents the maximum value of the at-most check.
      */
     fun neverAtMost(apiLevel: Int): Boolean {
-        return apiLevel >= toExclusive()
+        val minSdk = atLeast(apiLevel)
+        return minSdk.bits and bits == 0UL
     }
 
     /**
-     * Combines two API constraints. The result may be empty. (This
-     * basically is an intersection operator.)
+     * True if this constraint is *not* lower than the given API level.
+     * This means that an API reference to [apiLevel] is safe if the API
+     * level is known to be this constraint.
      */
-    operator fun plus(other: ApiConstraint): ApiConstraint {
-        val from = max(fromInclusive(), other.fromInclusive())
-        val to = min(toExclusive(), other.toExclusive())
-        return if (from >= to) {
-            createConstraint(from, from)
-        } else {
-            createConstraint(from, to)
-        }
+    fun notLowerThan(apiLevel: Int): Boolean {
+        val bit = toInternalApiLevel(apiLevel)
+        val intersection = bits and getBitMask(bit)
+        return intersection == 0UL || intersection == getApiLevelMask(apiLevel)
     }
 
     /** Inverts the given constraint, e.g. X < 20 becomes X >= 20. */
     operator fun not(): ApiConstraint {
-        val from = fromInclusive()
-        val to = toExclusive()
-        return createConstraint(
-            if (to == INFINITY) 1 else to,
-            if (from == 1) INFINITY else from
-        )
+        return ApiConstraint(bits.inv())
     }
 
     /**
      * Returns a new constraint which takes the union of the two
      * constraints.
      */
-    infix fun or(other: ApiConstraint?): ApiConstraint {
-        other ?: return this
-        val from = min(fromInclusive(), other.fromInclusive())
-        val to = max(toExclusive(), other.toExclusive())
-        return range(from, to)
+    infix fun or(other: ApiConstraint): ApiConstraint {
+        return ApiConstraint(bits or other.bits)
     }
 
     /**
      * Returns a new constraint which takes the intersection of the two
      * constraints.
      */
-    infix fun and(other: ApiConstraint?): ApiConstraint {
-        other ?: return this
-        val from = max(fromInclusive(), other.fromInclusive())
-        val to = max(min(toExclusive(), other.toExclusive()), from)
-        return range(from, to)
+    infix fun and(other: ApiConstraint): ApiConstraint {
+        return ApiConstraint(bits and other.bits)
     }
 
-    /**
-     * Adjusts the API level range by adding the given adjustments
-     * (which can be negative) to the from and to levels.
-     */
-    fun adjust(fromAdjustment: Int, toAdjustment: Int): ApiConstraint {
-        val from = fromInclusive()
-        val to = toExclusive()
-
-        val newFrom = max(1, from + fromAdjustment)
-        val newTo = if (to == INFINITY) INFINITY else max(newFrom, to + toAdjustment)
-        return createConstraint(newFrom, newTo)
+    private fun includesApiLevel(level: Int): Boolean {
+        return bits and (1UL shl level) != 0UL
     }
 
     override fun toString(): String {
-        val from = fromInclusive()
-        val to = toExclusive()
-        return when {
-            from == to -> "Nothing"
-            to == INFINITY -> "API level ≥ $from"
-            from == 1 -> "API level < $to"
-            else -> "API level ≥ $from and API level < $to"
+        if (bits == NO_LEVELS.bits) {
+            return "No API levels"
+        } else if (bits == ALL_LEVELS.bits) {
+            return "All API levels"
         }
+
+        // Simple != x ? See if the negation of the number (== x) has a single bit
+        val negated = bits.inv()
+        var lowest = negated and (-negated.toLong()).toULong()
+        if (lowest == negated) {
+            var from = 1
+            while (true) {
+                if (lowest == 1UL || lowest == 0UL) {
+                    break
+                }
+                lowest = lowest shr 1
+                from++
+            }
+            return "API level ≠ $from"
+        }
+
+        val spans = mutableListOf<String>()
+        var next = 0
+        val max = 64
+        while (true) {
+            // Find next span
+            while (next < max && !includesApiLevel(next)) {
+                next++
+            }
+            if (next == max) {
+                break
+            }
+
+            val start = fromInternalApiLevel(next++)
+            // Find next span
+            while (next < max && includesApiLevel(next)) {
+                next++
+            }
+
+            val end = fromInternalApiLevel(next)
+            val startString = start.toString()
+            val endString = end.toString()
+            if (end == start + 1) {
+                spans.add("API level = $startString")
+            } else if (start == 1) {
+                spans.add("API level < $endString")
+            } else if (end == max || next == max) {
+                spans.add("API level ≥ $startString")
+                break
+            } else {
+                spans.add("API level ≥ $startString and API level < $endString")
+            }
+        }
+
+        return spans.joinToString(" or ")
     }
 
     companion object {
-        // Large enough to hold the 10000 value used by Build.VERSION_CODES.CUR_DEVELOPMENT
-        private const val INFINITY = 0x7FFF
-        private const val TO_SHIFTS = 16
-        private const val FROM_MASK = 0xFFFF
+        // The level in the 0th bit. Later, when we get closer to the [MAX] level, we can bump this,
+        // since small API levels will not be useful (in fact nearly all apps have minSdkVersion 15+ already,
+        // so the first 15 levels aren't very interesting; the main impact here is on all the older unit tests
+        // which were written for API detector to target then-new APIs.
+        private const val FIRST_LEVEL = 1
 
-        private fun createConstraint(
-            fromInclusive: Int? = null,
-            toExclusive: Int? = null
-        ): ApiConstraint {
-            val from = fromInclusive ?: 1
-            val to = toExclusive ?: INFINITY
-            return ApiConstraint(from or (to shl TO_SHIFTS))
+        // Represents the end point in an open interval corresponding to say "API > 26", e.g. [26, ∞)
+        private const val INFINITY = 65 // the final bit (64) is usd to mark infinity; this is an exclusive index
+        /** Marker for the special API level CUR_DEVELOPMENT = 10000 */
+        private const val CUR_DEVELOPMENT_MARKER = 63
+        private const val CUR_DEVELOPMENT = 10000
+        /** Largest API level we allow being set */
+        private const val MAX_LEVEL = 63
+
+        val ALL_LEVELS = ApiConstraint(0xffffffffffffffffUL)
+        val NO_LEVELS = ApiConstraint(0UL)
+
+        // for debugging
+        private fun ULong.binary(): String {
+            val set = this.toString(2)
+            return "0".repeat(64 - set.length) + set
+        }
+
+        private fun getApiLevelMask(apiLevel: Int): ULong {
+            return 1UL shl toInternalApiLevel(apiLevel)
+        }
+
+        private fun toInternalApiLevel(level: Int?, default: Int): Int {
+            return toInternalApiLevel(level ?: return default - FIRST_LEVEL)
+        }
+        private fun toInternalApiLevel(level: Int): Int {
+            return if (level <= MAX_LEVEL) {
+                level - FIRST_LEVEL
+            } else if (level == CUR_DEVELOPMENT)
+                CUR_DEVELOPMENT_MARKER - FIRST_LEVEL
+            else {
+                error("Unsupported API level $level")
+            }
+        }
+
+        private fun fromInternalApiLevel(level: Int): Int {
+            val userLevel = level + FIRST_LEVEL
+            if (userLevel == CUR_DEVELOPMENT_MARKER) {
+                return CUR_DEVELOPMENT
+            } else {
+                return userLevel
+            }
         }
 
         /**
-         * Create constraint where the API level is at least [apiLevel]
+         * Gets a bit mask with all the bits up to (but not including)
+         * [bit] set.
+         *
+         * This is used to quickly create constraint vectors. For
+         * example, to create the constraint "less than N" we just
+         * look up `longArray[N]`, and to take the constraint
+         * "greater than or equals to N" we just reverse the bits of
+         * `longArray[N]`. To set all the bits from A to B we take
+         * `longArray[B] & ~longArray[A]` (modulo small adjustments
+         * depending on whether the bounds are inclusive or exclusive.)
+         */
+        private fun getBitMask(bit: Int): ULong {
+            return if (bit >= 63) ULong.MAX_VALUE else (1UL shl (bit + 1)) - 1UL
+        }
+
+        /**
+         * Sets all the bits from [fromInclusive] until [toExclusive]
+         */
+        private fun getBitMaskRange(fromInclusive: Int, toExclusive: Int): ULong {
+            val inv = if (fromInclusive == 0) 0UL.inv() else getBitMask(fromInclusive - 1).inv()
+            return getBitMask(toExclusive - 1) and inv
+        }
+
+        /** Lowest bit set. Undefined if called on an empty set. */
+        private fun ULong.lowestBitSet(): Int {
+            return this.countTrailingZeroBits()
+        }
+
+        /** Lowest bit set. Undefined if called on an empty set. */
+        private fun ULong.highestBitSet(): Int {
+            return 63 - this.countLeadingZeroBits()
+        }
+
+        private fun createConstraint(
+            fromInclusive: Int? = null,
+            toExclusive: Int? = null,
+            negate: Boolean = false
+        ): ApiConstraint {
+            val from = toInternalApiLevel(fromInclusive, 1)
+            val to = toInternalApiLevel(toExclusive, INFINITY)
+            val bits = getBitMaskRange(from, to).let {
+                if (negate) it.inv() else it
+            }
+
+            return ApiConstraint(bits)
+        }
+
+        /**
+         * Create constraint where the API level is at least [apiLevel].
          */
         fun atLeast(apiLevel: Int): ApiConstraint {
-            assert(apiLevel < INFINITY)
             return createConstraint(fromInclusive = apiLevel)
         }
 
         /**
-         * Create constraint where the API level is less than [apiLevel]
+         * Create constraint where the API level is less than
+         * [apiLevel].
          */
         fun below(apiLevel: Int): ApiConstraint {
-            assert(apiLevel < INFINITY)
             return createConstraint(toExclusive = apiLevel)
         }
 
         /**
          * Create constraint where the API level is higher than
-         * [apiLevel]
+         * [apiLevel].
          */
         fun above(apiLevel: Int): ApiConstraint {
-            assert(apiLevel < INFINITY)
             return createConstraint(fromInclusive = apiLevel + 1)
         }
 
         /**
          * Create constraint where the API level is lower than or equal
-         * to [apiLevel]
+         * to [apiLevel].
          */
         fun atMost(apiLevel: Int): ApiConstraint {
-            assert(apiLevel < INFINITY)
             return createConstraint(toExclusive = apiLevel + 1)
         }
 
@@ -183,11 +320,19 @@ inline class ApiConstraint(val bits: Int) {
         }
 
         /**
-         * Creates an API constraint for API level equals a specific
-         * level.
+         * Creates an API constraint where the API level equals a
+         * specific level.
          */
-        fun same(apiLevel: Int): ApiConstraint {
+        fun exactly(apiLevel: Int): ApiConstraint {
             return createConstraint(apiLevel, apiLevel + 1)
+        }
+
+        /**
+         * Creates an API constraint where the API level is **not** a
+         * specific value (e.g. API != apiLevel).
+         */
+        fun not(apiLevel: Int): ApiConstraint {
+            return createConstraint(apiLevel, apiLevel + 1, negate = true)
         }
 
         /**
@@ -195,7 +340,7 @@ inline class ApiConstraint(val bits: Int) {
          * later be retrieved by calling [deserialize].
          */
         fun serialize(constraint: ApiConstraint): String {
-            return Integer.toHexString(constraint.bits)
+            return constraint.bits.toString(16)
         }
 
         /**
@@ -203,7 +348,7 @@ inline class ApiConstraint(val bits: Int) {
          * [serialize] into the corresponding constraint.
          */
         fun deserialize(s: String): ApiConstraint {
-            return ApiConstraint(s.toInt(16))
+            return ApiConstraint(s.toULong(16))
         }
     }
 }

@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.client.api.LintClient
+import com.android.tools.lint.detector.api.ApiConstraint
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Context
@@ -451,46 +452,28 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             )
         }
 
-        val client = context.client
-        val evaluator = context.evaluator
         when (restriction) {
             Restriction.DENY -> fatal()
             Restriction.MAYBE_MAX_O ->
-                if (targetSdk <= AndroidVersion.VersionCodes.O ||
-                    VersionChecks.isWithinVersionCheckConditional(
-                            client, evaluator, call, AndroidVersion.VersionCodes.O, false
-                        )
-                ) {
+                if (isAllowed(context, call, targetSdk, AndroidVersion.VersionCodes.O)) {
                     warning()
                 } else {
                     error()
                 }
             Restriction.MAYBE_MAX_P ->
-                if (targetSdk <= AndroidVersion.VersionCodes.P ||
-                    VersionChecks.isWithinVersionCheckConditional(
-                            client, evaluator, call, AndroidVersion.VersionCodes.P, false
-                        )
-                ) {
+                if (isAllowed(context, call, targetSdk, AndroidVersion.VersionCodes.P)) {
                     warning()
                 } else {
                     error()
                 }
             Restriction.MAYBE_MAX_Q ->
-                if (targetSdk <= AndroidVersion.VersionCodes.Q ||
-                    VersionChecks.isWithinVersionCheckConditional(
-                            client, evaluator, call, AndroidVersion.VersionCodes.Q, false
-                        )
-                ) {
+                if (isAllowed(context, call, targetSdk, AndroidVersion.VersionCodes.Q)) {
                     warning()
                 } else {
                     error()
                 }
             Restriction.MAYBE_MAX_R ->
-                if (targetSdk <= AndroidVersion.VersionCodes.R ||
-                    VersionChecks.isWithinVersionCheckConditional(
-                            client, evaluator, call, AndroidVersion.VersionCodes.R, false
-                        )
-                ) {
+                if (isAllowed(context, call, targetSdk, AndroidVersion.VersionCodes.R)) {
                     warning()
                 } else {
                     error()
@@ -498,6 +481,21 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.MAYBE -> warning()
             else -> return // nothing to report
         }
+    }
+
+    /**
+     * This method checks whether the targetSdkVersion is less than the
+     * given [apiLevel], or whether the code is guarded by a runtime
+     * SDK_INT check which guarantees that we are running on [apiLevel]
+     * or older. This is true if the [ApiConstraint] does not include
+     * any higher API levels.
+     */
+    private fun isAllowed(context: JavaContext, element: UCallExpression, targetSdk: Int, apiLevel: Int): Boolean {
+        if (targetSdk <= apiLevel) {
+            return true
+        }
+        val constraint = VersionChecks.getOuterVersionCheckConstraint(context, element) ?: return false
+        return !constraint.everHigher(apiLevel)
     }
 
     private fun reportUnknownMember(
