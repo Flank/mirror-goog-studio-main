@@ -38,6 +38,7 @@ enum class TaskCategoryLabel {
     JAVA_RESOURCES,
     // Tasks that involve Java docs
     JAVA_DOC,
+    KOTLIN,
     // Tasks that invovle AIDL
     AIDL,
     // Tasks involving Renderscript framework
@@ -78,5 +79,12 @@ enum class TaskCategoryLabel {
     ZIPPING,
     LINKING,
     MERGING,
-    FUSING
+    FUSING,
+    // org.gradle tasks - No tasks in AGP should have this annotation label
+    GRADLE,
+    // Various tasks that do not fall into any other category
+    // No tasks in AGP should have this annotation label
+    MISC,
+    // Other TP plugins - No task in AGP should have this annotation label
+    UNKNOWN
 }

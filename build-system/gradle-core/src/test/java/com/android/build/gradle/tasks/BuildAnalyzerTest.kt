@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TestPreBuildTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
+import com.android.ide.common.attribution.TaskCategoryLabel
 import org.gradle.api.Task
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
@@ -46,6 +47,19 @@ class BuildAnalyzerTest {
         assertEquals(expectedTasksWithoutAnnotations.toSet().size, expectedTasksWithoutAnnotations.size)
         // Tasks without annotations has to be added into allow-list, otherwise it needs annotation
         assertThat(actualTasksWithoutAnnotations).containsExactlyElementsIn(expectedTasksWithoutAnnotations)
+    }
+
+    @Test
+    fun `build analyzer annotated tasks does not have unallowed labels`() {
+        val allTasks = getAllTasks()
+        val unallowedLabels = listOf(TaskCategoryLabel.GRADLE,
+                TaskCategoryLabel.MISC, TaskCategoryLabel.UNKNOWN)
+        val tasksWithUnallowedLabels = allTasks.filter {
+            it.isAnnotationPresent(BuildAnalyzer::class.java)
+        }.filter { clazz ->
+            clazz.getAnnotation(BuildAnalyzer::class.java).taskCategoryLabels.any{ it in unallowedLabels }
+        }
+        assertThat(tasksWithUnallowedLabels).isEmpty()
     }
 
     // Allow-list of tasks that are defined to not have annotations.
