@@ -82,7 +82,8 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
             try {
                 index = Index.parseFrom(GZIPInputStream(findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE)))
             } catch (exception: Exception) {
-                logCachingError(exception.message)
+                val message = if (exception.message.isNullOrEmpty()) exception.toString() else exception.message
+                logCachingError(message)
                 try {
                     index = Index.parseFrom(GZIPInputStream(readDefaultData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE)))
                 } catch (defaultException: Exception) {
