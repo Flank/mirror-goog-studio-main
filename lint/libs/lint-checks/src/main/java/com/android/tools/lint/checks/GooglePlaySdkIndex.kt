@@ -34,13 +34,15 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
     cacheExpiryHours = TimeUnit.DAYS.toHours(GOOGLE_PLAY_SDK_CACHE_EXPIRY_INTERVAL_DAYS).toInt()
 ) {
     companion object {
+        const val SDK_INDEX_SNAPSHOT_TEST_BASE_URL_ENV_VAR = "SDK_INDEX_TEST_BASE_URL"
+        private const val DEFAULT_SDK_INDEX_SNAPSHOT_BASE_URL = "https://dl.google.com/play-sdk/index/"
         const val DEFAULT_SHOW_MESSAGES = true
         const val DEFAULT_SHOW_LINKS = true
         const val DEFAULT_SHOW_POLICY_ISSUES = false
         const val DEFAULT_SHOW_CRITICAL_ISSUES = true
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE = "snapshot.gz"
         const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE = "sdk-index-offline-snapshot.proto.gz"
-        const val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL = "https://dl.google.com/play-sdk/index/"
+        val GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_URL = System.getenv(SDK_INDEX_SNAPSHOT_TEST_BASE_URL_ENV_VAR) ?: DEFAULT_SDK_INDEX_SNAPSHOT_BASE_URL
         const val GOOGLE_PLAY_SDK_INDEX_KEY = "sdk_index"
         const val GOOGLE_PLAY_SDK_CACHE_EXPIRY_INTERVAL_DAYS = 7L
         const val GOOGLE_PLAY_SDK_INDEX_URL = "https://play.google.com/sdks"
