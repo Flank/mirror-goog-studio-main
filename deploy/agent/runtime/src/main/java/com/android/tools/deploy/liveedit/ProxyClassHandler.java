@@ -101,7 +101,8 @@ public final class ProxyClassHandler implements InvocationHandler {
                 throw new LiveEditException("Could not invoke method '" + name + desc + "'", e);
             }
         }
-        throw new LiveEditException("No such method '" + name + desc + "' found in class");
+        throw new LiveEditException(
+                "No such method '" + name + desc + "' found in " + clazz.getClassInternalName());
     }
 
     boolean isInstanceOf(Type type) {
