@@ -206,26 +206,6 @@ abstract class VariantImpl(
 
     override var unitTest: UnitTest? = null
 
-    /**
-     * adds renderscript sources if present.
-     */
-    override fun addRenderscriptSources(
-            sourceSets: MutableList<DirectoryEntry>,
-    ) {
-        renderscript?.let {
-            if (!it.ndkModeEnabled.get()
-                && artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR).isPresent
-            ) {
-                sourceSets.add(
-                    TaskProviderBasedDirectoryEntryImpl(
-                        name = "generated_renderscript",
-                        directoryProvider = artifacts.get(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR),
-                    )
-                )
-            }
-        }
-    }
-
     override val pseudoLocalesEnabled: Property<Boolean> =
         internalServices.newPropertyBackingDeprecatedApi(Boolean::class.java, variantDslInfo.isPseudoLocalesEnabled)
 
