@@ -100,11 +100,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
     @get:InputFiles
     abstract val microApkManifest: RegularFileProperty
 
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    @get:Optional
-    @get:InputFiles
-    abstract val privacySandboxSdkManifestSnippets: ConfigurableFileCollection
-
     @get:Optional
     @get:Input
     abstract val baseModuleDebuggable: Property<Boolean>
@@ -231,9 +226,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         )
                 )
             }
-        }
-        privacySandboxSdkManifestSnippets.forEach {
-            providers.add(ManifestProviderImpl(it, it.name))
         }
 
         if (featureManifests != null) {
@@ -383,17 +375,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                         InternalArtifactType.MICRO_APK_MANIFEST_FILE,
                         task.microApkManifest
                 )
-            }
-            if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
-                task.privacySandboxSdkManifestSnippets.fromDisallowChanges(
-                    creationConfig.variantDependencies.getArtifactFileCollection(
-                        ConsumedConfigType.RUNTIME_CLASSPATH,
-                        ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET
-                    )
-                )
-            } else {
-                task.privacySandboxSdkManifestSnippets.disallowChanges()
             }
 
             task.applicationId.set(creationConfig.applicationId)

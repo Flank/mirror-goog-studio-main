@@ -298,11 +298,9 @@ class PrivacySandboxSdkTest {
             assertThat(it).exists()
             assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
             assertThat(it).doesNotContainClass(ANDROID_LIB1_CLASS)
-            // TODO(b/240128152): Snippet injection should ideally only happen when deploying
-            // through Studio. Re-enable the following check when that's done.
-            // val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
-            // assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
-            // assertThat(manifestContent).doesNotContain(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
+            val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
+            assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)
+            assertThat(manifestContent).doesNotContain(MY_PRIVACY_SANDBOX_SDK_MANIFEST_REFERENCE)
         }
         Apk(baseMaster2Apk).use {
             assertThat(it).doesNotExist()

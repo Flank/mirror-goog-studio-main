@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants
+import com.android.SdkConstants.PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.utils.toSystemLineSeparator
 import com.google.common.truth.Truth.assertThat
@@ -145,7 +146,7 @@ class ProcessPackagedManifestTaskTest {
                         </intent-filter>
                     </activity>
                 </application>
-            
+
             </manifest>
         """.trimIndent()
             )
@@ -160,6 +161,7 @@ class ProcessPackagedManifestTaskTest {
                 SdkConstants.ANDROID_MANIFEST_XML
             )
         )
+        workItemParameters.privacySandboxSdkManifestSnippets.set(emptyList())
         workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
         workItemParameters.taskPath.set("taskPath")
         workItemParameters.workerKey.set("workerKey")
@@ -171,5 +173,161 @@ class ProcessPackagedManifestTaskTest {
         val outputXml = workItemParameters.outputXmlFile.get().asFile.readText(Charsets.UTF_8)
         assertThat(outputXml.toSystemLineSeparator()).isEqualTo(
             inputXmlFile.readText(Charsets.UTF_8).toSystemLineSeparator())
+    }
+
+    @Test
+    fun testManifestSnippetInjection() {
+        val sourceFolder = temporaryFolder.newFolder("source_folder")
+        val inputXmlFile = File(sourceFolder, SdkConstants.ANDROID_MANIFEST_XML).also {
+            it.writeText("""
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.app"
+                    android:versionCode="11">
+                    <application android:name="android.support.multidex.MultiDexApplication">
+                    </application>
+                </manifest>
+            """.trimIndent())
+        }
+
+        val packageName = "com.package"
+        val certDigest = "CERT_DIGEST"
+        val version = "10000"
+        val snippetFile =  File(sourceFolder, "test$PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX")
+
+        snippetFile.writeText("""
+                    <manifest
+                        xmlns:android="http://schemas.android.com/apk/res/android">
+                        <application>
+                            <uses-sdk-library
+                                android:name="$packageName"
+                                android:certDigest="$certDigest"
+                                android:versionMajor="$version"/>
+                        </application>
+                    </manifest>
+            """.trimIndent())
+
+        val workItemParameters =
+            project.objects.newInstance(ProcessPackagedManifestTask.WorkItemParameters::class.java)
+        workItemParameters.inputXmlFile.set(inputXmlFile)
+        val outputFolder = temporaryFolder.newFolder("target_folder")
+        workItemParameters.outputXmlFile.set(File(outputFolder, SdkConstants.ANDROID_MANIFEST_XML))
+        workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
+        workItemParameters.taskPath.set("taskPath")
+        workItemParameters.workerKey.set("workerKey")
+        workItemParameters.privacySandboxSdkManifestSnippets.set(listOf(snippetFile))
+
+        project.objects.newInstance(
+            ProcessPackagedManifestTask.WorkItem::class.java,
+            workItemParameters).execute()
+        val outputXml = workItemParameters.outputXmlFile.get().asFile.readText(Charsets.UTF_8)
+        assertThat(outputXml.toSystemLineSeparator()).isEqualTo("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.example.app"
+                android:versionCode="11" >
+
+                <application android:name="android.support.multidex.MultiDexApplication" >
+                    <uses-sdk-library
+                        android:name="$packageName"
+                        android:certDigest="$certDigest"
+                        android:versionMajor="$version" />
+                </application>
+
+            </manifest>
+        """.trimIndent().toSystemLineSeparator())
+    }
+
+    @Test
+    fun testMultipleManifestSnippetInjection() {
+        val sourceFolder = temporaryFolder.newFolder("source_folder")
+        val inputXmlFile = File(sourceFolder, SdkConstants.ANDROID_MANIFEST_XML).also {
+            it.writeText(
+                """
+                <?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.app"
+                    android:versionCode="11">
+                    <application android:name="android.support.multidex.MultiDexApplication">
+                    </application>
+                </manifest>
+            """.trimIndent()
+            )
+        }
+
+        val packageName1 = "com.package1"
+        val certDigest1 = "CERT_DIGEST1"
+        val version1 = "10000"
+        val snippetFile1 =
+            File(sourceFolder, "test1$PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX")
+        snippetFile1.writeText(
+            """
+                    <manifest
+                        xmlns:android="http://schemas.android.com/apk/res/android">
+                        <application>
+                            <uses-sdk-library
+                                android:name="$packageName1"
+                                android:certDigest="$certDigest1"
+                                android:versionMajor="$version1"/>
+                        </application>
+                    </manifest>
+            """.trimIndent()
+        )
+
+        val packageName2 = "com.package2"
+        val certDigest2 = "CERT_DIGEST2"
+        val version2 = "20000"
+        val snippetFile2 =
+            File(sourceFolder, "test2$PRIVACY_SANDBOX_SDK_DEPENDENCY_MANIFEST_SNIPPET_NAME_SUFFIX")
+        snippetFile2.writeText(
+            """
+                    <manifest
+                        xmlns:android="http://schemas.android.com/apk/res/android">
+                        <application>
+                            <uses-sdk-library
+                                android:name="$packageName2"
+                                android:certDigest="$certDigest2"
+                                android:versionMajor="$version2"/>
+                        </application>
+                    </manifest>
+            """.trimIndent()
+        )
+
+        val workItemParameters =
+            project.objects.newInstance(ProcessPackagedManifestTask.WorkItemParameters::class.java)
+        workItemParameters.inputXmlFile.set(inputXmlFile)
+        val outputFolder = temporaryFolder.newFolder("target_folder")
+        workItemParameters.outputXmlFile.set(File(outputFolder, SdkConstants.ANDROID_MANIFEST_XML))
+        workItemParameters.analyticsService.set(FakeNoOpAnalyticsService())
+        workItemParameters.taskPath.set("taskPath")
+        workItemParameters.workerKey.set("workerKey")
+        workItemParameters.privacySandboxSdkManifestSnippets.set(listOf(snippetFile1, snippetFile2))
+
+        project.objects.newInstance(
+            ProcessPackagedManifestTask.WorkItem::class.java,
+            workItemParameters
+        ).execute()
+        val outputXml = workItemParameters.outputXmlFile.get().asFile.readText(Charsets.UTF_8)
+        assertThat(outputXml.toSystemLineSeparator()).isEqualTo(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.example.app"
+                android:versionCode="11" >
+
+                <application android:name="android.support.multidex.MultiDexApplication" >
+                    <uses-sdk-library
+                        android:name="$packageName1"
+                        android:certDigest="$certDigest1"
+                        android:versionMajor="$version1" />
+                    <uses-sdk-library
+                        android:name="$packageName2"
+                        android:certDigest="$certDigest2"
+                        android:versionMajor="$version2" />
+                </application>
+
+            </manifest>
+        """.trimIndent().toSystemLineSeparator()
+        )
     }
 }
