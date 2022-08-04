@@ -195,7 +195,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
         val listOfValues= mutableListOf<Provider<T>>()
         val initialProducerConfigured = AtomicBoolean(false)
 
-        val producer= allocateCombiningProducers(
+        val producer = allocateCombiningProducers(
             multipleProducerAllocator,
             "initialProducer",
             initialProducerConfigured,
@@ -220,7 +220,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
 
         val artifact = MultipleArtifactContainer { allocateProperty() }
 
-        val initialProducerConfigured= AtomicBoolean(false)
+        val initialProducerConfigured = AtomicBoolean(false)
         val initialProviders = mutableListOf<Provider<T>>()
         val producer = allocateCombiningProducers(
             multipleProducerAllocator,
@@ -250,7 +250,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
         assertThat(currentArtifactValues.get()[3].asFile.name).isEqualTo("secondProduced")
 
         // and now replace all these values in by one combining task.
-        val replacingProducer= multipleProducerAllocator(project.tasks, "secondProducer")
+        val replacingProducer = multipleProducerAllocator(project.tasks, "secondProducer")
         val replacingValue = allocateValue("replacement")
         replacingProducer.configure {
             it.getOutputFiles().add(replacingValue)
@@ -274,7 +274,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
 
         val artifact = MultipleArtifactContainer { allocateProperty() }
         val initialProducersInitialized = AtomicBoolean(false)
-
+        val producers = mutableListOf<TaskProvider<*>>()
         for (i in 1..3) {
             val value = allocateValue("firstProduced$i")
             val producer = taskAllocator(project.tasks, "firstProducer$i")
@@ -282,6 +282,7 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
                 it.getOutputFile().set(value)
                 initialProducersInitialized.set(true)
             }
+            producers.add(producer)
             artifact.addInitialProvider(producer, producer.flatMap { it.getOutputFile() })
         }
 
@@ -290,8 +291,9 @@ abstract class AbstractMultipleArtifactTest<T: FileSystemLocation>(
         transformer.configure {
             it.getOutputFiles().add(value)
         }
+        producers.add(transformer)
         artifact.transform(transformer, transformer.flatMap { it.getOutputFiles() })
-
+        assertThat(artifact.getTaskProviders()).isEqualTo(producers)
         assertValues(artifact.get(), listOf(value))
         // none of the initial providers should be involved.
         assertThat(initialProducersInitialized.get()).isFalse()

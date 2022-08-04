@@ -34,7 +34,7 @@ import java.util.Locale
  *
  * @param parentFile the parent directory.
  */
-fun Artifact<*>.getOutputDir(parentDir: File)=
+fun Artifact<*>.getOutputDir(parentDir: File): File =
     FileUtils.join(parentDir, category.name.lowercase(Locale.US), getFolderName())
 
 fun Artifact<*>.getIntermediateOutputDir(parentDir: File): File =
@@ -53,22 +53,27 @@ fun Artifact<*>.getOutputPath(
     buildDirectory: DirectoryProperty,
     variantIdentifier: String,
     vararg paths: String,
-    forceFilename:String = "") = FileUtils.join(
-        getOutputDir(buildDirectory.get().asFile),
-        variantIdentifier,
-        *paths,
-        if(forceFilename.isNullOrEmpty()) getFileSystemLocationName() else forceFilename
-    )
+    forceFilename: String = ""
+) = FileUtils.join(
+    getOutputDir(buildDirectory.get().asFile),
+    variantIdentifier,
+    *paths,
+    forceFilename.ifEmpty { getFileSystemLocationName() }
+)
 
+/**
+ * Force intermediate directory
+ */
 fun Artifact<*>.getIntermediateOutputPath(
     buildDirectory: DirectoryProperty,
     variantIdentifier: String,
     vararg paths: String,
-    forceFilename:String = "") = FileUtils.join(
+    forceFilename: String = ""
+): File = FileUtils.join(
     getIntermediateOutputDir(buildDirectory.get().asFile),
     variantIdentifier,
     *paths,
-    if(forceFilename.isNullOrEmpty()) getFileSystemLocationName() else forceFilename
+    forceFilename.ifEmpty { getFileSystemLocationName() }
 )
 
 /**

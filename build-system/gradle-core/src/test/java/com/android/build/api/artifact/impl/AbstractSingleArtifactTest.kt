@@ -25,7 +25,6 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskProvider
@@ -35,7 +34,6 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.lang.RuntimeException
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Ignore
@@ -57,12 +55,14 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
     private fun allocateProperty() = SinglePropertyAdapter(propertyAllocator(project.objects))
     private fun allocateValue(name: String) = valueAllocator(project.layout.buildDirectory, name)
     private fun allocateTask(name: String) = taskAllocator(project.tasks, name)
+    private fun allocateNamingContext() =
+        ArtifactNamingContext(project.objects.property(String::class.java), null, null)
 
     @Test
     fun testSet() {
         val artifact = SingleArtifactContainer { allocateProperty() }
 
-        val initialized= AtomicBoolean(false)
+        val initialized = AtomicBoolean(false)
         val value = allocateValue("firstProduced")
         val producer = taskAllocator(project.tasks, "firstProducer")
         producer.configure {
@@ -82,8 +82,8 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
     fun testFileReset() {
         val artifact = SingleArtifactContainer { allocateProperty() }
 
-        val firstInitialized= AtomicBoolean(false)
-        val secondInitialized= AtomicBoolean(false)
+        val firstInitialized = AtomicBoolean(false)
+        val secondInitialized = AtomicBoolean(false)
         val outputFile = allocateValue("firstProduced")
         val firstProducer = allocateTask("firstProducer")
         firstProducer.configure {
@@ -94,7 +94,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         assertThat(firstInitialized.get()).isFalse()
 
         val outputFile2 = allocateValue("secondProduced")
-        val secondProducer= allocateTask("secondProducer")
+        val secondProducer = allocateTask("secondProducer")
         secondProducer.configure {
             secondInitialized.set(true)
             it.getOutputFile().set(outputFile2)
@@ -113,8 +113,8 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
     fun testGetCurrent() {
         val artifact = SingleArtifactContainer { allocateProperty() }
 
-        val firstInitialized= AtomicBoolean(false)
-        val secondInitialized= AtomicBoolean(false)
+        val firstInitialized = AtomicBoolean(false)
+        val secondInitialized = AtomicBoolean(false)
         val outputFile = allocateValue("firstProducer")
         val firstProducer = allocateTask("firstProducer")
         firstProducer.configure {
@@ -125,6 +125,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         artifact.replace(firstProducer, firstProducer.flatMap { it.getOutputFile() })
         val currentProducer = artifact.getCurrent()
         assertThat(firstInitialized.get()).isFalse()
+        assertThat(currentProducer.get().asFile.name).isEqualTo("firstProducer")
 
         val outputFile2 = allocateValue("secondProducer")
         val secondProducer = allocateTask("secondProducer")
@@ -134,7 +135,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         }
 
         artifact.replace(secondProducer, secondProducer.flatMap { it.getOutputFile() })
-        val finalProducer= artifact.get()
+        val finalProducer = artifact.get()
 
         assertThat(currentProducer.get().asFile.name).isEqualTo("firstProducer")
         assertThat(finalProducer.get().asFile.name).isEqualTo("secondProducer")
@@ -178,15 +179,19 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
 
         // now sets the initial provider which will happen after we run the variant API hooks.
         val outputFile2 = allocateValue("agpProducer")
-        val otherProducer= allocateTask("agpProducer")
+        val otherProducer = allocateTask("agpProducer")
         otherProducer.configure {
             it.getOutputFile().set(outputFile2)
         }
-        artifact.setInitialProvider(otherProducer, otherProducer.flatMap { it.getOutputFile() })
+        artifact.initArtifactContainer(
+            otherProducer,
+            otherProducer.flatMap { it.getOutputFile() },
+            allocateNamingContext()
+        )
 
         // verify the chaining is correct.
         assertThat(artifact.get().isPresent).isTrue()
-        assertThat(artifact.get().get()).isEqualTo(artifact.current.get().get())
+        assertThat(artifact.get().get()).isEqualTo(artifact.getCurrent().get())
     }
 
     @Test
@@ -205,7 +210,7 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         }
 
         // now replace the "current" provider which is meant to replace the agp provider.
-        val firstInitialized= AtomicBoolean(false)
+        val firstInitialized = AtomicBoolean(false)
         val outputFile = allocateValue("firstProduced")
         val firstProducer = allocateTask("firstProducer")
         firstProducer.configure {
@@ -218,15 +223,21 @@ abstract class AbstractSingleArtifactTest<T: FileSystemLocation>(
         // obviously, in AGP, we might not even do that if we realize that the artifact is being
         // provided by another task.
         val outputFile2 = allocateValue("agpProducer")
-        val otherProducer= allocateTask("agpProducer")
+        val otherProducer = allocateTask("agpProducer")
         otherProducer.configure {
             it.getOutputFile().set(outputFile2)
         }
-        artifact.setInitialProvider(otherProducer, otherProducer.flatMap { it.getOutputFile() })
+
+        artifact.initArtifactContainer(
+            otherProducer,
+            otherProducer.flatMap { it.getOutputFile() },
+            allocateNamingContext()
+        )
+
 
         // verify the chaining is correct.
         assertThat(artifact.get().isPresent).isTrue()
-        assertThat(artifact.get().get()).isNotEqualTo(artifact.current.get())
+        assertThat(artifact.get().get()).isNotEqualTo(artifact.getCurrent())
         assertThat(artifact.get().get().asFile.name).isEqualTo("firstProduced")
     }
 

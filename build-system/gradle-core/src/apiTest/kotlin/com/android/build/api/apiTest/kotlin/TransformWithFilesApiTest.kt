@@ -28,7 +28,7 @@ import org.junit.runners.Parameterized
 
 
 @RunWith(Parameterized::class)
-class TransformApiTest(private val artifact: String, private val plugin: String):
+class TransformWithFilesApiTest(private val artifact: String, private val plugin: String):
     VariantApiBaseTest(TestType.Script) {
     companion object {
 

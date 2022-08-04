@@ -104,11 +104,10 @@ abstract class PackageApplication : PackageAndroidArtifact() {
             transformationRequest?.let {
                 task?.let { t -> t.transformationRequest = it }
             }
-
             creationConfig
                 .artifacts
                 .setInitialProvider(taskProvider, PackageApplication::getIdeModelOutputFile)
-                .atLocation { obj: PackageApplication -> obj.outputDirectory }
+                .atLocation(outputDirectory)
                 .withName(BuiltArtifactsImpl.METADATA_FILE_NAME)
                 .on(APK_IDE_MODEL)
         }

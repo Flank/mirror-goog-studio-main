@@ -99,7 +99,7 @@ class CombiningOperationRequestImpl<TaskT: Task, FileTypeT: FileSystemLocation>(
         closeRequest()
         val artifactContainer = artifacts.getArtifactContainer(type)
         val newList = objects.listProperty(type.kind.dataType().java)
-        val currentProviders= artifactContainer.transform(taskProvider, taskProvider.flatMap { newList })
+        val currentProviders = artifactContainer.transform(taskProvider, taskProvider.flatMap { newList })
         taskProvider.configure {
             newList.add(into(it))
             into(it).set(artifacts.getOutputPath(type, taskProvider.name))
@@ -140,8 +140,8 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         initializeInput(
             taskProvider,
             from,
-            into,
             currentProvider,
+            artifactContainer.get(),
             builtArtifactsReference
         )
 
@@ -202,8 +202,9 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
 
         val builtArtifactsReference = AtomicReference<BuiltArtifactsImpl>()
         val inputProvider = artifacts.get(sourceType)
+        val targetProvider = artifacts.get(targetType)
 
-        initializeInput(taskProvider, inputLocation, outputLocation, inputProvider, builtArtifactsReference)
+        initializeInput(taskProvider, inputLocation, inputProvider, targetProvider, builtArtifactsReference)
 
         return ArtifactTransformationRequestImpl(
             builtArtifactsReference,
@@ -236,14 +237,14 @@ class InAndOutDirectoryOperationRequestImpl<TaskT: Task>(
         fun <T : Task> initializeInput(
             taskProvider: TaskProvider<T>,
             inputLocation: (T) -> FileSystemLocationProperty<Directory>,
-            outputLocation: (T) -> FileSystemLocationProperty<Directory>,
             inputProvider: Provider<Directory>,
+            targetProvider: Provider<Directory>,
             builtArtifactsReference: AtomicReference<BuiltArtifactsImpl>
         ) {
             taskProvider.configure { task: T ->
                 inputLocation(task).set(inputProvider)
                 task.doLast {
-                    builtArtifactsReference.get().save(outputLocation(task).get())
+                    builtArtifactsReference.get().save(targetProvider.get())
                 }
             }
         }

@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.artifact.ArtifactTransformationRequest
+import com.android.build.api.artifact.impl.ArtifactNamingContext
 import com.android.build.api.artifact.impl.ArtifactTransformationRequestImpl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.variant.BuiltArtifact
@@ -99,7 +100,11 @@ class TaskBasedOperationsImplTest {
         ).save(inputFolderProperty.get())
 
         artifacts.getArtifactContainer(InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST)
-            .setInitialProvider(Mockito.mock(TaskProvider::class.java), inputFolderProperty)
+            .initArtifactContainer(
+                Mockito.mock(TaskProvider::class.java),
+                inputFolderProperty,
+                Mockito.mock(ArtifactNamingContext::class.java)
+            )
         Mockito.`when`(component.artifacts).thenReturn(artifacts)
         profileDir = tmpDir.newFolder("profile_proto")
     }

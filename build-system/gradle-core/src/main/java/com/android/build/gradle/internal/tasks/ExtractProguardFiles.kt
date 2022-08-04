@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
@@ -78,10 +77,10 @@ abstract class ExtractProguardFiles : NonIncrementalGlobalTask() {
 
             creationConfig.globalArtifacts
                 .setInitialProvider(taskProvider, ExtractProguardFiles::proguardFilesDir)
-                .atLocation {
+                .atLocation (
                     ProguardFiles
                         .getDefaultProguardFileDirectory(creationConfig.services.projectInfo.buildDirectory)
-                }
+                )
                 .on(InternalArtifactType.DEFAULT_PROGUARD_FILES)
         }
     }

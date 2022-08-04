@@ -234,7 +234,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
                 creationConfig.artifacts.setInitialProvider(
                                 taskProvider,
                                 GenerateBuildConfig::sourceOutputDir
-                        ).atLocation { creationConfig.paths.buildConfigSourceOutputDir }
+                        ).atLocation(creationConfig.paths.buildConfigSourceOutputDir)
                         .on(InternalArtifactType.GENERATED_BUILD_CONFIG_JAVA)
             }
         }
