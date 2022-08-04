@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.prefab
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -35,7 +36,8 @@ import java.io.File
  ************************************************************************************/
 
 data class PrefabPublication(
-    @get:OutputDirectory
+    // Internal: The individual tasks should define their unique output.
+    @get:Internal
     val installationFolder : File,
     @get:Input
     val gradlePath : String,
