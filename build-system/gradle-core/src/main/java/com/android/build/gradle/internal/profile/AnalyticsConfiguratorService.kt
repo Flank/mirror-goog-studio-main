@@ -121,7 +121,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
                 resourcesManager.configureAnalyticsService(serviceRegistration.parameters)
                 instantiateAnalyticsService(project)
                 registry.onTaskCompletion(
-                    getBuildService<AnalyticsService>(project.gradle.sharedServices))
+                    getBuildService(project.gradle.sharedServices, AnalyticsService::class.java))
             }
         }
     }
@@ -130,7 +130,8 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         if (state == State.ANALYTICS_SERVICE_CREATED) {
             return
         }
-        val analyticsService = getBuildService<AnalyticsService>(project.gradle.sharedServices)
+        val analyticsService =
+            getBuildService(project.gradle.sharedServices, AnalyticsService::class.java)
         analyticsService.get()
             .setInitialMemorySampleForConfiguration(resourcesManager.initialMemorySample)
         analyticsService.get().setConfigurationSpans(resourcesManager.configurationSpans)

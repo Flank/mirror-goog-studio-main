@@ -350,7 +350,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             getBuildService(project.gradle.sharedServices)
         createCxxTasks(
             androidLocationBuildService.get(),
-            getBuildService<SdkComponentsBuildService>(globalConfig.services.buildServiceRegistry).get(),
+            getBuildService(
+                globalConfig.services.buildServiceRegistry,
+                SdkComponentsBuildService::class.java
+            ).get(),
             globalConfig.services.issueReporter,
             taskFactory,
             globalConfig.services.projectOptions,
@@ -3002,7 +3005,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             task.nestedComponents.setDisallowChanges(nestedComponents)
             task.group = ANDROID_GROUP
             task.mavenCoordinateCache.setDisallowChanges(
-                getBuildService<MavenCoordinatesCacheBuildService>(project.gradle.sharedServices).get()
+                getBuildService(
+                    project.gradle.sharedServices,
+                    MavenCoordinatesCacheBuildService::class.java
+                ).get()
             )
             task.notCompatibleWithConfigurationCache(
                 "DependencyReportTask not compatible with config caching"

@@ -281,9 +281,9 @@ class AnalyticsResourceManager constructor(
     }
 
     fun recordGlobalProperties(project: Project) {
-        val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
-            .get().projectOptions
-        val providers = project.providers
+        val projectOptions =
+            getBuildService(project.gradle.sharedServices, ProjectOptionService::class.java)
+                .get().projectOptions
 
         val projectIsolation = project.gradle.startParameter.isProjectIsolation == true
         if (!projectIsolation) {

@@ -325,7 +325,8 @@ class TaskBasedOperationsImplTest {
         task.workers = workers
         task.taskAction()
 
-        val analyticsService = getBuildService<AnalyticsService>(project.gradle.sharedServices)
+        val analyticsService =
+            getBuildService(project.gradle.sharedServices, AnalyticsService::class.java)
         analyticsService.get().onFinish(finishEvent)
         // force wrap up
         @Suppress("UNCHECKED_CAST")

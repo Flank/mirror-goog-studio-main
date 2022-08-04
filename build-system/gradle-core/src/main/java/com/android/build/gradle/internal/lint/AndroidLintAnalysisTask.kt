@@ -37,7 +37,6 @@ import com.android.ide.common.repository.GradleVersion
 import com.android.tools.lint.model.LintModelSerialization
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -324,7 +323,7 @@ abstract class AndroidLintAnalysisTask : NonIncrementalTask() {
         val buildServiceRegistry = services.buildServiceRegistry
         this.androidGradlePluginVersion.setDisallowChanges(Version.ANDROID_GRADLE_PLUGIN_VERSION)
         val sdkComponentsBuildService =
-            getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
+            getBuildService(buildServiceRegistry, SdkComponentsBuildService::class.java)
 
         this.android.setDisallowChanges(isAndroid)
         if(isAndroid) {

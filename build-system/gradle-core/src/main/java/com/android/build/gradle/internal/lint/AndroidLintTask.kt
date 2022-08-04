@@ -805,7 +805,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.android.setDisallowChanges(isAndroid)
         if(isAndroid){
             val sdkComponentsBuildService =
-                getBuildService<SdkComponentsBuildService>(buildServiceRegistry)
+                getBuildService(buildServiceRegistry, SdkComponentsBuildService::class.java)
             this.androidSdkHome.set(sdkComponentsBuildService.flatMap { it.sdkDirectoryProvider }.map { it.asFile.absolutePath })
         }
         this.androidSdkHome.disallowChanges()

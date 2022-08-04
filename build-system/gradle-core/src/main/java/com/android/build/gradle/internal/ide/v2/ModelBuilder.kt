@@ -213,8 +213,9 @@ class ModelBuilder<
     private fun buildBasicAndroidProjectModel(project: Project): BasicAndroidProject {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
-        val projectOptions = getBuildService<ProjectOptionService>(project.gradle.sharedServices)
-            .get().projectOptions
+        val projectOptions =
+            getBuildService(project.gradle.sharedServices, ProjectOptionService::class.java)
+                .get().projectOptions
 
         // FIXME: remove?
         verifyIDEIsNotOld(projectOptions)

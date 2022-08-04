@@ -231,8 +231,11 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
         override fun configure(task: JavaDocGenerationTask) {
             super.configure(task)
 
-            val dokkaParallelBuildService = getBuildService<DokkaParallelBuildService>(
-                creationConfig.services.buildServiceRegistry)
+            val dokkaParallelBuildService =
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    DokkaParallelBuildService::class.java
+                )
             task.usesService(dokkaParallelBuildService)
 
             task.moduleVersion.setDisallowChanges(task.project.version.toString())

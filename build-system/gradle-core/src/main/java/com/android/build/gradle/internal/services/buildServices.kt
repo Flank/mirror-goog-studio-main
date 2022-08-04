@@ -22,7 +22,6 @@ import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.api.services.BuildServiceRegistry
 import java.util.UUID
 
@@ -46,18 +45,25 @@ abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
 }
 
 /** Returns the build service with the specified type. Prefer reified [getBuildService] to this method. */
-fun <ServiceT : BuildService<out BuildServiceParameters>> getBuildService(
+fun <ServiceT : BuildService<ParamsT>, ParamsT: BuildServiceParameters> getBuildService(
     buildServiceRegistry: BuildServiceRegistry,
     buildServiceClass: Class<ServiceT>
 ): Provider<ServiceT> {
-    @Suppress("UNCHECKED_CAST")
-    return (buildServiceRegistry.registrations.getByName(getBuildServiceName(buildServiceClass)) as BuildServiceRegistration<ServiceT, *>).getService()
+    val serviceName = getBuildServiceName(buildServiceClass)
+    /**
+     * We use registerIfAbsent in order to ensure locking when accessing build services. Because of
+     * https://github.com/gradle/gradle/issues/18587, Gradle ensures thread safety only for
+     * service registration. Using [BuildServiceRegistry.getRegistrations] to access build services
+     * may cause problems such as http://b/238336467.
+     */
+    return buildServiceRegistry.registerIfAbsent(serviceName, buildServiceClass) {
+        throw IllegalStateException("Service $serviceName is not registered.")
+    }
 }
 
 /** Returns the build service of [ServiceT] type. */
-inline fun <reified ServiceT : BuildService<out BuildServiceParameters>> getBuildService(buildServiceRegistry: BuildServiceRegistry): Provider<ServiceT> {
-    @Suppress("UNCHECKED_CAST")
-    return (buildServiceRegistry.registrations.getByName(getBuildServiceName(ServiceT::class.java)) as BuildServiceRegistration<ServiceT, *>).getService()
+inline fun <reified ServiceT : BuildService<ParamsT>, ParamsT: BuildServiceParameters> getBuildService(buildServiceRegistry: BuildServiceRegistry): Provider<ServiceT> {
+    return getBuildService(buildServiceRegistry, ServiceT::class.java)
 }
 
 /**

@@ -81,7 +81,7 @@ class NativeModelBuilder(
     fun createGenerator(abi: CxxAbiModel) : CxxMetadataGenerator {
         return generators.computeIfAbsent(abi) { model ->
             val analyticsService =
-                getBuildService<AnalyticsService>(project.gradle.sharedServices).get()
+                getBuildService(project.gradle.sharedServices, AnalyticsService::class.java).get()
             IssueReporterLoggingEnvironment(issueReporter, analyticsService, abi.variant).use {
                 createCxxMetadataGenerator(
                     abi,
@@ -114,8 +114,9 @@ class NativeModelBuilder(
             null).use {
             val outcome = NativeModelBuilderOutcome.newBuilder().setGradlePath(project.path)
             try {
-                val analyticsService =
-                    getBuildService<AnalyticsService>(project.gradle.sharedServices).get()
+                val analyticsService = getBuildService(
+                    project.gradle.sharedServices, AnalyticsService::class.java
+                ).get()
                 if (configurationModels.isEmpty()) {
                     outcome.outcome = NO_CONFIGURATION_MODELS
                     return null
