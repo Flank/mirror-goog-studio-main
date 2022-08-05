@@ -10,10 +10,10 @@ register_toolchains(
     "@native_toolchain//:cc-toolchain-x64_windows-clang-cl",
     "//tools/base/bazel/toolchains/darwin:python_toolchain",
     "//tools/base/bazel/toolchains/darwin:python_toolchain_10.13",
-    "//prebuilts/studio/jdk:runtime_toolchain_definition",
-    "//prebuilts/studio/jdk:jdk11_toolchain_java8_definition",
-    "//prebuilts/studio/jdk:jdk11_toolchain_java11_definition",
-    "//prebuilts/studio/jdk:jdk17_toolchain_java11_definition",
+    "//prebuilts/studio/jdk/jdk11:runtime_toolchain_definition",
+    "//prebuilts/studio/jdk/jdk11:jdk11_toolchain_java8_definition",
+    "//prebuilts/studio/jdk/jdk11:jdk11_toolchain_java11_definition",
+    "//prebuilts/studio/jdk/jdk17:runtime_toolchain_definition",
 )
 
 new_local_repository(
