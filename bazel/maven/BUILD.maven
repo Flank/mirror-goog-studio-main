@@ -4167,50 +4167,50 @@ maven_import(
 )
 
 maven_artifact(
-    name = "net.bytebuddy.byte-buddy-agent_1.10.13",
-    pom = "repository/net/bytebuddy/byte-buddy-agent/1.10.13/byte-buddy-agent-1.10.13.pom",
+    name = "net.bytebuddy.byte-buddy-agent_1.11.13",
+    pom = "repository/net/bytebuddy/byte-buddy-agent/1.11.13/byte-buddy-agent-1.11.13.pom",
     repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy-agent/1.10.13",
-    parent = "net.bytebuddy.byte-buddy-parent_1.10.13",
+    repo_path = "net/bytebuddy/byte-buddy-agent/1.11.13",
+    parent = "net.bytebuddy.byte-buddy-parent_1.11.13",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "net.bytebuddy.byte-buddy-agent",
     classifiers = [],
-    parent = "net.bytebuddy.byte-buddy-parent_1.10.13",
+    parent = "net.bytebuddy.byte-buddy-parent_1.11.13",
     jars = [
-        "repository/net/bytebuddy/byte-buddy-agent/1.10.13/byte-buddy-agent-1.10.13.jar"
+        "repository/net/bytebuddy/byte-buddy-agent/1.11.13/byte-buddy-agent-1.11.13.jar"
     ],
     original_deps = [],
-    pom = "repository/net/bytebuddy/byte-buddy-agent/1.10.13/byte-buddy-agent-1.10.13.pom",
+    pom = "repository/net/bytebuddy/byte-buddy-agent/1.11.13/byte-buddy-agent-1.11.13.pom",
     repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy-agent/1.10.13",
-    srcjar = "repository/net/bytebuddy/byte-buddy-agent/1.10.13/byte-buddy-agent-1.10.13-sources.jar",
+    repo_path = "net/bytebuddy/byte-buddy-agent/1.11.13",
+    srcjar = "repository/net/bytebuddy/byte-buddy-agent/1.11.13/byte-buddy-agent-1.11.13-sources.jar",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "net.bytebuddy.byte-buddy_1.10.13",
-    pom = "repository/net/bytebuddy/byte-buddy/1.10.13/byte-buddy-1.10.13.pom",
+    name = "net.bytebuddy.byte-buddy_1.11.13",
+    pom = "repository/net/bytebuddy/byte-buddy/1.11.13/byte-buddy-1.11.13.pom",
     repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy/1.10.13",
-    parent = "net.bytebuddy.byte-buddy-parent_1.10.13",
+    repo_path = "net/bytebuddy/byte-buddy/1.11.13",
+    parent = "net.bytebuddy.byte-buddy-parent_1.11.13",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "net.bytebuddy.byte-buddy",
     classifiers = [],
-    parent = "net.bytebuddy.byte-buddy-parent_1.10.13",
+    parent = "net.bytebuddy.byte-buddy-parent_1.11.13",
     jars = [
-        "repository/net/bytebuddy/byte-buddy/1.10.13/byte-buddy-1.10.13.jar"
+        "repository/net/bytebuddy/byte-buddy/1.11.13/byte-buddy-1.11.13.jar"
     ],
     original_deps = [],
-    pom = "repository/net/bytebuddy/byte-buddy/1.10.13/byte-buddy-1.10.13.pom",
+    pom = "repository/net/bytebuddy/byte-buddy/1.11.13/byte-buddy-1.11.13.pom",
     repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy/1.10.13",
-    srcjar = "repository/net/bytebuddy/byte-buddy/1.10.13/byte-buddy-1.10.13-sources.jar",
+    repo_path = "net/bytebuddy/byte-buddy/1.11.13",
+    srcjar = "repository/net/bytebuddy/byte-buddy/1.11.13/byte-buddy-1.11.13-sources.jar",
     visibility = ["//visibility:public"],
 )
 
@@ -8155,36 +8155,14 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.mockito.mockito-all_1.9.5",
-    pom = "repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.pom",
+    name = "org.mockito.mockito-core_3.12.4",
+    pom = "repository/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4.pom",
     repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-all/1.9.5",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "org.mockito.mockito-all",
-    classifiers = [],
-    jars = [
-        "repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.jar"
-    ],
-    original_deps = [],
-    pom = "repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-all/1.9.5",
-    srcjar = "repository/org/mockito/mockito-all/1.9.5/mockito-all-1.9.5-sources.jar",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.mockito.mockito-core_3.4.6",
-    pom = "repository/org/mockito/mockito-core/3.4.6/mockito-core-3.4.6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/3.4.6",
+    repo_path = "org/mockito/mockito-core/3.12.4",
     deps = [
-        "net.bytebuddy.byte-buddy_1.10.13",
-        "net.bytebuddy.byte-buddy-agent_1.10.13",
-        "org.objenesis.objenesis_2.6",
+        "net.bytebuddy.byte-buddy_1.11.13",
+        "net.bytebuddy.byte-buddy-agent_1.11.13",
+        "org.objenesis.objenesis_3.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -8193,7 +8171,7 @@ maven_import(
     name = "org.mockito.mockito-core",
     classifiers = [],
     jars = [
-        "repository/org/mockito/mockito-core/3.4.6/mockito-core-3.4.6.jar"
+        "repository/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4.jar"
     ],
     exports = [
         "net.bytebuddy.byte-buddy",
@@ -8201,38 +8179,38 @@ maven_import(
         "org.objenesis.objenesis",
     ],
     original_deps = [
-        "net.bytebuddy.byte-buddy_1.10.13",
-        "net.bytebuddy.byte-buddy-agent_1.10.13",
-        "org.objenesis.objenesis_2.6",
+        "net.bytebuddy.byte-buddy_1.11.13",
+        "net.bytebuddy.byte-buddy-agent_1.11.13",
+        "org.objenesis.objenesis_3.2",
     ],
-    pom = "repository/org/mockito/mockito-core/3.4.6/mockito-core-3.4.6.pom",
+    pom = "repository/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4.pom",
     repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/3.4.6",
-    srcjar = "repository/org/mockito/mockito-core/3.4.6/mockito-core-3.4.6-sources.jar",
+    repo_path = "org/mockito/mockito-core/3.12.4",
+    srcjar = "repository/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4-sources.jar",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.objenesis.objenesis_2.6",
-    pom = "repository/org/objenesis/objenesis/2.6/objenesis-2.6.pom",
+    name = "org.objenesis.objenesis_3.2",
+    pom = "repository/org/objenesis/objenesis/3.2/objenesis-3.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/objenesis/objenesis/2.6",
-    parent = "org.objenesis.objenesis-parent_2.6",
+    repo_path = "org/objenesis/objenesis/3.2",
+    parent = "org.objenesis.objenesis-parent_3.2",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.objenesis.objenesis",
     classifiers = [],
-    parent = "org.objenesis.objenesis-parent_2.6",
+    parent = "org.objenesis.objenesis-parent_3.2",
     jars = [
-        "repository/org/objenesis/objenesis/2.6/objenesis-2.6.jar"
+        "repository/org/objenesis/objenesis/3.2/objenesis-3.2.jar"
     ],
     original_deps = [],
-    pom = "repository/org/objenesis/objenesis/2.6/objenesis-2.6.pom",
+    pom = "repository/org/objenesis/objenesis/3.2/objenesis-3.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/objenesis/objenesis/2.6",
-    srcjar = "repository/org/objenesis/objenesis/2.6/objenesis-2.6-sources.jar",
+    repo_path = "org/objenesis/objenesis/3.2",
+    srcjar = "repository/org/objenesis/objenesis/3.2/objenesis-3.2-sources.jar",
     visibility = ["//visibility:public"],
 )
 
@@ -24929,20 +24907,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.facebook.testing.screenshot.core_0.2.3",
-    pom = "repository/com/facebook/testing/screenshot/core/0.2.3/core-0.2.3.pom",
-    repo_root_path = "repository",
-    repo_path = "com/facebook/testing/screenshot/core/0.2.3",
-    deps = [
-        "com.google.dexmaker.dexmaker_1.0",
-        "org.mockito.mockito-core_1.10.19",
-        "com.google.dexmaker.dexmaker-mockito_1.0",
-        "junit.junit_4.12",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.fasterxml.jackson.core.jackson-core_2.1.3",
     pom = "repository/com/fasterxml/jackson/core/jackson-core/2.1.3/jackson-core-2.1.3.pom",
     repo_root_path = "repository",
@@ -26271,50 +26235,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.dexmaker.dexmaker-mockito_1.0",
-    pom = "repository/com/google/dexmaker/dexmaker-mockito/1.0/dexmaker-mockito-1.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker-mockito/1.0",
-    parent = "com.google.dexmaker.dexmaker-parent_1.0",
-    deps = [
-        "com.google.dexmaker.dexmaker_1.0",
-        "org.mockito.mockito-core_1.9.5",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.dexmaker.dexmaker-mockito_1.2",
-    pom = "repository/com/google/dexmaker/dexmaker-mockito/1.2/dexmaker-mockito-1.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker-mockito/1.2",
-    parent = "com.google.dexmaker.dexmaker-parent_1.2",
-    deps = [
-        "com.google.dexmaker.dexmaker_1.2",
-        "org.mockito.mockito-core_1.9.5",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.dexmaker.dexmaker_1.0",
-    pom = "repository/com/google/dexmaker/dexmaker/1.0/dexmaker-1.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker/1.0",
-    parent = "com.google.dexmaker.dexmaker-parent_1.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.dexmaker.dexmaker_1.2",
-    pom = "repository/com/google/dexmaker/dexmaker/1.2/dexmaker-1.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker/1.2",
-    parent = "com.google.dexmaker.dexmaker-parent_1.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.errorprone.error_prone_annotations_2.0.18",
     pom = "repository/com/google/errorprone/error_prone_annotations/2.0.18/error_prone_annotations-2.0.18.pom",
     repo_root_path = "repository",
@@ -27044,27 +26964,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.jakewharton.android.repackaged.dalvik-dx_7.1.0_r7",
-    pom = "repository/com/jakewharton/android/repackaged/dalvik-dx/7.1.0_r7/dalvik-dx-7.1.0_r7.pom",
-    repo_root_path = "repository",
-    repo_path = "com/jakewharton/android/repackaged/dalvik-dx/7.1.0_r7",
-    parent = "org.sonatype.oss.oss-parent_7",
-    deps = [
-        "com.jakewharton.android.repackaged.libcore-dex_7.1.0_r7",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.jakewharton.android.repackaged.libcore-dex_7.1.0_r7",
-    pom = "repository/com/jakewharton/android/repackaged/libcore-dex/7.1.0_r7/libcore-dex-7.1.0_r7.pom",
-    repo_root_path = "repository",
-    repo_path = "com/jakewharton/android/repackaged/libcore-dex/7.1.0_r7",
-    parent = "org.sonatype.oss.oss-parent_7",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.jakewharton.auto.value.auto-value-annotations_1.2-update1",
     pom = "repository/com/jakewharton/auto/value/auto-value-annotations/1.2-update1/auto-value-annotations-1.2-update1.pom",
     repo_root_path = "repository",
@@ -27106,29 +27005,6 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "com/jakewharton/butterknife/7.0.1",
     parent = "com.jakewharton.butterknife-parent_7.0.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.linkedin.dexmaker.dexmaker-mockito_2.19.0",
-    pom = "repository/com/linkedin/dexmaker/dexmaker-mockito/2.19.0/dexmaker-mockito-2.19.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/linkedin/dexmaker/dexmaker-mockito/2.19.0",
-    deps = [
-        "com.linkedin.dexmaker.dexmaker_2.19.0",
-        "org.mockito.mockito-core_2.19.0",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.linkedin.dexmaker.dexmaker_2.19.0",
-    pom = "repository/com/linkedin/dexmaker/dexmaker/2.19.0/dexmaker-2.19.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/linkedin/dexmaker/dexmaker/2.19.0",
-    deps = [
-        "com.jakewharton.android.repackaged.dalvik-dx_7.1.0_r7",
-    ],
     visibility = ["//visibility:public"],
 )
 
@@ -27942,24 +27818,6 @@ maven_artifact(
     pom = "repository/nekohtml/xercesMinimal/1.9.6.2/xercesMinimal-1.9.6.2.pom",
     repo_root_path = "repository",
     repo_path = "nekohtml/xercesMinimal/1.9.6.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "net.bytebuddy.byte-buddy-agent_1.9.10",
-    pom = "repository/net/bytebuddy/byte-buddy-agent/1.9.10/byte-buddy-agent-1.9.10.pom",
-    repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy-agent/1.9.10",
-    parent = "net.bytebuddy.byte-buddy-parent_1.9.10",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "net.bytebuddy.byte-buddy_1.9.10",
-    pom = "repository/net/bytebuddy/byte-buddy/1.9.10/byte-buddy-1.9.10.pom",
-    repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy/1.9.10",
-    parent = "net.bytebuddy.byte-buddy-parent_1.9.10",
     visibility = ["//visibility:public"],
 )
 
@@ -29533,15 +29391,6 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "org/glassfish/jaxb/txw2/2.3.1",
     parent = "com.sun.xml.bind.mvn.jaxb-txw-parent_2.3.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.hamcrest.hamcrest-core_1.1",
-    pom = "repository/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/hamcrest/hamcrest-core/1.1",
-    parent = "org.hamcrest.hamcrest-parent_1.1",
     visibility = ["//visibility:public"],
 )
 
@@ -33707,62 +33556,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.mockito.mockito-core_1.10.19",
-    pom = "repository/org/mockito/mockito-core/1.10.19/mockito-core-1.10.19.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/1.10.19",
-    deps = [
-        "org.hamcrest.hamcrest-core_1.1",
-        "org.objenesis.objenesis_2.1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.mockito.mockito-core_1.9.5",
-    pom = "repository/org/mockito/mockito-core/1.9.5/mockito-core-1.9.5.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/1.9.5",
-    deps = [
-        "org.hamcrest.hamcrest-core_1.1",
-        "org.objenesis.objenesis_1.0",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.mockito.mockito-core_2.19.0",
-    pom = "repository/org/mockito/mockito-core/2.19.0/mockito-core-2.19.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/2.19.0",
-    deps = [
-        "org.objenesis.objenesis_2.6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.mockito.mockito-core_3.0.0",
-    pom = "repository/org/mockito/mockito-core/3.0.0/mockito-core-3.0.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/mockito/mockito-core/3.0.0",
-    deps = [
-        "net.bytebuddy.byte-buddy_1.9.10",
-        "net.bytebuddy.byte-buddy-agent_1.9.10",
-        "org.objenesis.objenesis_2.6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.objenesis.objenesis_1.0",
-    pom = "repository/org/objenesis/objenesis/1.0/objenesis-1.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/objenesis/objenesis/1.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "org.objenesis.objenesis_2.1",
     pom = "repository/org/objenesis/objenesis/2.1/objenesis-2.1.pom",
     repo_root_path = "repository",
@@ -34772,22 +34565,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.dexmaker.dexmaker-parent_1.0",
-    pom = "repository/com/google/dexmaker/dexmaker-parent/1.0/dexmaker-parent-1.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker-parent/1.0",
-    parent = "org.sonatype.oss.oss-parent_7",
-)
-
-maven_artifact(
-    name = "com.google.dexmaker.dexmaker-parent_1.2",
-    pom = "repository/com/google/dexmaker/dexmaker-parent/1.2/dexmaker-parent-1.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/dexmaker/dexmaker-parent/1.2",
-    parent = "org.sonatype.oss.oss-parent_7",
-)
-
-maven_artifact(
     name = "com.google.errorprone.error_prone_parent_2.0.18",
     pom = "repository/com/google/errorprone/error_prone_parent/2.0.18/error_prone_parent-2.0.18.pom",
     repo_root_path = "repository",
@@ -35454,17 +35231,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "net.bytebuddy.byte-buddy-parent_1.10.13",
-    pom = "repository/net/bytebuddy/byte-buddy-parent/1.10.13/byte-buddy-parent-1.10.13.pom",
+    name = "net.bytebuddy.byte-buddy-parent_1.11.13",
+    pom = "repository/net/bytebuddy/byte-buddy-parent/1.11.13/byte-buddy-parent-1.11.13.pom",
     repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy-parent/1.10.13",
-)
-
-maven_artifact(
-    name = "net.bytebuddy.byte-buddy-parent_1.9.10",
-    pom = "repository/net/bytebuddy/byte-buddy-parent/1.9.10/byte-buddy-parent-1.9.10.pom",
-    repo_root_path = "repository",
-    repo_path = "net/bytebuddy/byte-buddy-parent/1.9.10",
+    repo_path = "net/bytebuddy/byte-buddy-parent/1.11.13",
 )
 
 maven_artifact(
@@ -36185,13 +35955,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.hamcrest.hamcrest-parent_1.1",
-    pom = "repository/org/hamcrest/hamcrest-parent/1.1/hamcrest-parent-1.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/hamcrest/hamcrest-parent/1.1",
-)
-
-maven_artifact(
     name = "org.hamcrest.hamcrest-parent_1.3",
     pom = "repository/org/hamcrest/hamcrest-parent/1.3/hamcrest-parent-1.3.pom",
     repo_root_path = "repository",
@@ -36266,10 +36029,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.objenesis.objenesis-parent_2.6",
-    pom = "repository/org/objenesis/objenesis-parent/2.6/objenesis-parent-2.6.pom",
+    name = "org.objenesis.objenesis-parent_3.2",
+    pom = "repository/org/objenesis/objenesis-parent/3.2/objenesis-parent-3.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/objenesis/objenesis-parent/2.6",
+    repo_path = "org/objenesis/objenesis-parent/3.2",
 )
 
 maven_artifact(
