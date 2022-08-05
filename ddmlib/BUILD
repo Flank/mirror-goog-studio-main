@@ -15,6 +15,7 @@ iml_module(
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
+    test_tags = ["very_flaky"],  # b/192559588, b/240467082
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
