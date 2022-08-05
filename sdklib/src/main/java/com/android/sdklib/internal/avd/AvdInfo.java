@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 
 /** An immutable structure describing an Android Virtual Device. */
 public final class AvdInfo {
@@ -58,12 +59,12 @@ public final class AvdInfo {
         ERROR_CORRUPTED_INI
     }
 
-    private final String mName;
-    private final Path mIniFile;
-    private final Path mFolderPath;
+    @NonNull private final String mName;
+    @NonNull private final Path mIniFile;
+    @NonNull private final Path mFolderPath;
     @NonNull private final ImmutableMap<String, String> mProperties;
-    private final AvdStatus mStatus;
-    private final ISystemImage mSystemImage;
+    @NonNull private final AvdStatus mStatus;
+    @Nullable private final ISystemImage mSystemImage;
     private final boolean mHasPlayStore;
 
     /**
@@ -344,6 +345,34 @@ public final class AvdInfo {
         }
 
         return null;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AvdInfo avdInfo = (AvdInfo) o;
+        return mHasPlayStore == avdInfo.mHasPlayStore
+                && mName.equals(avdInfo.mName)
+                && mIniFile.equals(avdInfo.mIniFile)
+                && mFolderPath.equals(avdInfo.mFolderPath)
+                && mProperties.equals(avdInfo.mProperties)
+                && mStatus == avdInfo.mStatus
+                && Objects.equals(mSystemImage, avdInfo.mSystemImage);
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = mName.hashCode();
+
+        hashCode = 31 * hashCode + mIniFile.hashCode();
+        hashCode = 31 * hashCode + mFolderPath.hashCode();
+        hashCode = 31 * hashCode + mProperties.hashCode();
+        hashCode = 31 * hashCode + mStatus.hashCode();
+        hashCode = 31 * hashCode + Objects.hashCode(mSystemImage);
+        hashCode = 31 * hashCode + Objects.hashCode(mHasPlayStore);
+
+        return hashCode;
     }
 
     @NonNull
