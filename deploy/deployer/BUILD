@@ -75,6 +75,7 @@ coverage_java_library(
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/deploy/sites:java_sites",
         "//tools/base/manifest-parser:tools.manifest-parser",
         "//tools/base/tracer:tools.tracer",
         "//tools/base/zipflinger",

@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-#include "tools/base/deploy/installer/self.h"
+package com.android.tools;
 
-#include "tools/base/deploy/common/event.h"
-#include "tools/base/deploy/common/io.h"
-#include "tools/base/deploy/common/log.h"
-#include "tools/base/deploy/sites/sites.h"
+public class Function {
 
-#include <unistd.h>
+    final String name;
 
-namespace deploy {
-Self::Self() { binary_full_path = Sites::InstallerPath(); }
+    final String code;
 
-bool Self::gone() {
-  bool there = IO::access(binary_full_path.c_str(), F_OK) == 0;
-  if (!there) {
-    std::string msg = "Self-Checking '" + binary_full_path + "' NOT FOUND!";
-    WarnEvent(msg.c_str());
-  }
-  return !there;
+    final String javaSignature;
+
+    final String cppSignature;
+
+    public Function(String name, String code) {
+        this(name, code, "", "");
+    }
+
+    public Function(String name, String code, String javaSignature, String cppSignature) {
+        this.name = name;
+        this.code = code;
+        this.javaSignature = javaSignature;
+        this.cppSignature = cppSignature;
+    }
 }
-
-}  // namespace deploy

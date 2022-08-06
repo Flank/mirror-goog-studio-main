@@ -25,7 +25,10 @@ java_library(
 
 java_binary(
     name = "generator",
-    srcs = ["src/com/android/tools/SitesGenerator.java"],
+    srcs = [
+        "src/com/android/tools/Function.java",
+        "src/com/android/tools/SitesGenerator.java",
+    ],
     main_class = "com.android.tools.SitesGenerator",
 )
 

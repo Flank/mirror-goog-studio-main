@@ -18,7 +18,9 @@ package com.android.tools;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 public class SitesGenerator {
@@ -27,16 +29,64 @@ public class SitesGenerator {
     private static final String LOC_C = "loc_c";
     private static final String LOC_H = "loc_h";
 
-    private static final String[][] functions = {
-        {"AppData", "\"/data/data/\" + pkg + \"/\""},
-        {"AppCodeCache", "AppData(pkg) + \"code_cache/\""},
-        {"AppStudio", "AppCodeCache(pkg) + \".studio/\""},
-        {"AppLog", "AppData(pkg) + \".agent-logs/\""},
-        {"AppStartupAgent", "AppCodeCache(pkg) + \"startup_agents/\""},
+    private static final List<Function> functions = new ArrayList<>();
+
+    static {
+        functions.add(
+                new Function(
+                        "AppData",
+                        "\"/data/data/\" + pkg + \"/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+        functions.add(
+                new Function(
+                        "AppCodeCache",
+                        "AppData(pkg) + \"code_cache/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+        functions.add(
+                new Function(
+                        "AppStudio",
+                        "AppCodeCache(pkg) + \".studio/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+        functions.add(
+                new Function(
+                        "AppLog",
+                        "AppData(pkg) + \".agent-logs/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+        functions.add(
+                new Function(
+                        "AppStartupAgent",
+                        "AppCodeCache(pkg) + \"startup_agents/\"",
+                        "String pkg",
+                        "const std::string pkg"));
         // TODO: Change name to AppOverlay (no 's' at the end).
-        {"AppOverlays", "AppCodeCache(pkg) + \".overlay/\""},
-        {"AppLiveLiteral", "AppCodeCache(pkg) + \".ll/\""}
-    };
+        functions.add(
+                new Function(
+                        "AppOverlays",
+                        "AppCodeCache(pkg) + \".overlay/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+        functions.add(
+                new Function(
+                        "AppLiveLiteral",
+                        "AppCodeCache(pkg) + \".ll/\"",
+                        "String pkg",
+                        "const std::string pkg"));
+
+        functions.add(new Function("DeviceStudioFolder", qString("/data/local/tmp/.studio/")));
+        functions.add(new Function("InstallerExecutableFolder", "DeviceStudioFolder() + \"bin/\""));
+        functions.add(new Function("InstallerTmpFolder", "DeviceStudioFolder() + \"tmp/\""));
+        functions.add(new Function("InstallerBinary", qString("installer")));
+        functions.add(
+                new Function("InstallerPath", "InstallerExecutableFolder() + InstallerBinary()"));
+    }
+
+    private static String qString(String string) {
+        return '"' + string + '"';
+    }
 
     private static void print(String path, String code) throws FileNotFoundException {
         try (PrintWriter writer = new PrintWriter(path)) {
@@ -60,10 +110,10 @@ public class SitesGenerator {
         code.append("package com.android.tools.deployer;\n");
         code.append("public class Sites {\n");
 
-        for (String[] func : functions) {
-            code.append("public static String " + func[0] + "(String pkg) {\n");
+        for (Function func : functions) {
+            code.append("public static String " + func.name + "(" + func.javaSignature + ") {\n");
             code.append(" return ");
-            code.append(func[1]);
+            code.append(func.code);
             code.append(";}\n");
         }
 
@@ -71,8 +121,8 @@ public class SitesGenerator {
 
         String src = code.toString();
         // Fix function names and callsites
-        for (String[] func : functions) {
-            String funcName = func[0];
+        for (Function func : functions) {
+            String funcName = func.name;
             src = src.replace(funcName + "(", jFunc(funcName) + "(");
         }
         return src;
@@ -88,8 +138,8 @@ public class SitesGenerator {
         code.append("namespace deploy {\n");
         code.append("namespace Sites {\n");
 
-        for (String[] func : functions) {
-            code.append("std::string " + func[0] + "(const std::string pkg);\n");
+        for (Function func : functions) {
+            code.append("std::string " + func.name + "(" + func.cppSignature + ");\n");
         }
 
         code.append("} // namespace Sites\n");
@@ -105,10 +155,10 @@ public class SitesGenerator {
         code.append("namespace deploy {\n");
         code.append("namespace Sites {\n");
 
-        for (String[] func : functions) {
-            code.append("std::string " + func[0] + "(const std::string pkg){\n");
+        for (Function func : functions) {
+            code.append("std::string " + func.name + "(" + func.cppSignature + "){\n");
             code.append(" return ");
-            code.append(func[1]);
+            code.append(func.code);
             code.append(";}\n");
         }
 
