@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.profile
 
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.builder.profile.Recorder
 import com.google.wireless.android.sdk.stats.GradleBuildProfile
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
@@ -27,7 +26,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.build.event.BuildEventsListenerRegistry
 import java.util.concurrent.ConcurrentHashMap
 
@@ -85,19 +83,13 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         resourcesManager.recordBlockAtConfiguration(executionType, projectPath, variant, block)
     }
 
-    @Synchronized
-    open fun createAnalyticsService(project: Project, registry: BuildEventsListenerRegistry) {
+    open fun createAnalyticsService(
+        project: Project, registry: BuildEventsListenerRegistry, parameters: AnalyticsService.Params
+    ) {
         if (state == State.CALLBACK_REGISTERED) {
             return
         }
         state = State.CALLBACK_REGISTERED
-
-        val serviceRegistration = project.gradle
-            .sharedServices
-            .registrations
-            .getByName(
-                getBuildServiceName(AnalyticsService::class.java)
-            ) as BuildServiceRegistration<AnalyticsService, AnalyticsService.Params>
 
         // In composite build, in order to tell if it is a model query or not, we need to check
         // the existence of task requests from the main build, not from included build. The
@@ -110,7 +102,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         if (rootBuild.startParameter.taskNames.isEmpty()) {
             project.gradle.projectsEvaluated {
                 resourcesManager.recordGlobalProperties(project)
-                resourcesManager.configureAnalyticsService(serviceRegistration.parameters)
+                resourcesManager.configureAnalyticsService(parameters)
                 instantiateAnalyticsService(project)
             }
         } else {
@@ -118,7 +110,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
                 resourcesManager.recordGlobalProperties(project)
                 resourcesManager.collectTaskMetadata(it)
                 resourcesManager.recordTaskNames(it)
-                resourcesManager.configureAnalyticsService(serviceRegistration.parameters)
+                resourcesManager.configureAnalyticsService(parameters)
                 instantiateAnalyticsService(project)
                 registry.onTaskCompletion(
                     getBuildService(project.gradle.sharedServices, AnalyticsService::class.java))

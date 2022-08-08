@@ -29,11 +29,12 @@ import java.util.UUID
 abstract class ServiceRegistrationAction<ServiceT, ParamsT>(
     protected val project: Project,
     private val buildServiceClass: Class<ServiceT>,
-    private val maxParallelUsages: Int? = null
+    private val maxParallelUsages: Int? = null,
+    private val name: String = getBuildServiceName(buildServiceClass),
 ) where ServiceT : BuildService<ParamsT>, ParamsT : BuildServiceParameters {
     open fun execute(): Provider<ServiceT> {
         return project.gradle.sharedServices.registerIfAbsent(
-            getBuildServiceName(buildServiceClass),
+            name,
             buildServiceClass
         ) { buildServiceSpec ->
             buildServiceSpec.parameters?.let { params -> configure(params) }

@@ -37,6 +37,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
 import java.io.File
@@ -183,12 +184,18 @@ abstract class AnalyticsService :
         resourceManager.recordApplicationId(metadataFile)
     }
 
-    class RegistrationAction(project: Project)
-        : ServiceRegistrationAction<AnalyticsService, Params>(
+    class RegistrationAction(
+        project: Project,
+        private val configuratorService: AnalyticsConfiguratorService,
+        @Suppress("UnstableApiUsage") val listenerRegistry: BuildEventsListenerRegistry
+    ) : ServiceRegistrationAction<AnalyticsService, Params>(
         project,
         AnalyticsService::class.java
     ) {
-        override fun configure(parameters: Params) {}
+
+        override fun configure(parameters: Params) {
+            configuratorService.createAnalyticsService(project, listenerRegistry, parameters)
+        }
     }
 
     private fun getWorkerRecord(taskPath: String, worker: String): WorkerProfilingRecord? {

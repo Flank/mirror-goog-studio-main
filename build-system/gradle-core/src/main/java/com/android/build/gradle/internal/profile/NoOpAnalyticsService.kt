@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.builder.profile.Recorder
 import com.google.wireless.android.sdk.stats.AndroidStudioEvent
 import com.google.wireless.android.sdk.stats.GradleBuildMemorySample
@@ -24,6 +26,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleTransformExecution
+import org.gradle.api.Project
 import org.gradle.tooling.events.FinishEvent
 import java.util.concurrent.ConcurrentHashMap
 import java.io.File
@@ -87,4 +90,17 @@ abstract class NoOpAnalyticsService : AnalyticsService() {
     override fun workerStarted(taskPath: String, workerKey: String) {}
 
     override fun recordApplicationId(metadataFile: File) {}
+
+    /**
+     * Registers [NoOpAnalyticsService] service. The name of the service needs to match the
+     * [AnalyticsService] ones, as we fetch them by name, and they should be interchangeable.
+     */
+    class RegistrationAction(project: Project)
+        : ServiceRegistrationAction<NoOpAnalyticsService, Params>(
+        project,
+        NoOpAnalyticsService::class.java,
+        name = getBuildServiceName(AnalyticsService::class.java),
+    ) {
+        override fun configure(parameters: Params) {}
+    }
 }

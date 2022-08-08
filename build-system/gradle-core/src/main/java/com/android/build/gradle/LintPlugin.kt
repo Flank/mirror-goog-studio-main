@@ -398,10 +398,9 @@ abstract class LintPlugin : Plugin<Project> {
     }
 
     private fun registerBuildServices(project: Project) {
-        AnalyticsService.RegistrationAction(project).execute()
         val configuratorService =
             AnalyticsConfiguratorService.RegistrationAction(project).execute().get()
-        configuratorService.createAnalyticsService(project, listenerRegistry)
+        AnalyticsService.RegistrationAction(project, configuratorService, listenerRegistry).execute()
         configuratorService.getProjectBuilder(project.path)?.let {
             it
                 .setAndroidPluginVersion(ANDROID_GRADLE_PLUGIN_VERSION)

@@ -160,14 +160,9 @@ abstract class FusedLibraryClassesRewriteTask : NonIncrementalTask() {
             task.mergedClasses.setFrom(
                 creationConfig.artifacts.get(FusedLibraryInternalArtifactType.MERGED_CLASSES)
             )
-            task.symbolTableBuildService
-                .setDisallowChanges(
-                    task.project.gradle.sharedServices
-                        .registerIfAbsent(
-                            "fusedLibraryClassesRewriteTask-symbolTableBuildService",
-                            SymbolTableBuildService::class.java
-                        ) {}
-                )
+            task.symbolTableBuildService.setDisallowChanges(
+                SymbolTableBuildService.RegistrationAction(task.project).execute()
+            )
         }
     }
 }
