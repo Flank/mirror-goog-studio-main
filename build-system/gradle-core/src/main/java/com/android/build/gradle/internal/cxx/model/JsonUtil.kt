@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
+import com.android.build.gradle.internal.cxx.json.jsonStringOf
 import com.android.repository.Revision
 import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
@@ -83,6 +85,8 @@ fun createCxxAbiModelFromJson(json: String): CxxAbiModel {
 fun CxxAbiModel.writeJsonToFile() {
     modelOutputFile.parentFile.mkdirs()
     modelOutputFile.writeText(toJsonString())
+    cxxBuildHashKeyFile.parentFile.mkdirs()
+    cxxBuildHashKeyFile.writeTextIfDifferent(fullConfigurationHashKey)
 }
 
 /**

@@ -99,6 +99,11 @@ data class CxxAbiModel(
     val fullConfigurationHash: String,
 
     /**
+     * The string value used to calculate [fullConfigurationHash]
+     */
+    val fullConfigurationHashKey: String,
+
+    /**
      * The inputs used to compute [fullConfigurationHash]
      */
     val configurationArguments: List<String>,
@@ -438,6 +443,13 @@ val CxxAbiModel.platformCode
                 .minByOrNull { (alias, _) -> alias.length }
                 ?.first
     } ?: ""
+
+/**
+ * File that holds the key for the hashed subfolder.
+ *   ex, $moduleRootFolder/.cxx/Debug/{hashcode}/hash_key.txt
+ */
+val CxxAbiModel.cxxBuildHashKeyFile : File get() =
+    cxxBuildFolder.parentFile.resolve("hash_key.txt")
 
 /**
  * Construct a ninja command-line with [args] at the end.
