@@ -31,9 +31,11 @@ import com.android.build.gradle.integration.ndk.ModuleToModuleDepsTest.BuildSyst
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
+import com.android.build.gradle.internal.cxx.json.readJsonFile
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.decodeLoggingMessage
 import com.android.build.gradle.internal.cxx.logging.text
+import com.android.build.gradle.internal.cxx.prefab.ModuleMetadataV1
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
@@ -109,11 +111,18 @@ class ModuleToModuleDepsTest(
         .dependency(app, lib)
         .build()
 
+    private val appOutputRoot : File get() =
+        if (outputStructureType == OutputStructureType.Normal) project.getSubproject("app").buildDir.parentFile
+        else {
+            // The output folder for lib is at $PROJECT_ROOT/out/lib
+            project.getSubproject("app").buildDir.parentFile.parentFile.resolve("out/app")
+        }
+
     private val libOutputRoot : File get() =
         if (outputStructureType == OutputStructureType.Normal) project.getSubproject("lib").buildDir.parentFile
         else {
             // The output folder for lib is at $PROJECT_ROOT/out/lib
-            project.getSubproject("lib").buildDir.parentFile.parentFile.parentFile.resolve("out/lib")
+            project.getSubproject("lib").buildDir.parentFile.parentFile.resolve("out/lib")
         }
 
     @get:Rule
@@ -172,7 +181,6 @@ class ModuleToModuleDepsTest(
             .buildFile
             .parentFile
             .parentFile
-            .parentFile
             .absolutePath.replace("\\", "/")
         val appStructureStanza = if (outputStructureType == OutputStructureType.Normal) "" else when(appBuildSystem) {
             is CMake -> """
@@ -196,6 +204,8 @@ class ModuleToModuleDepsTest(
                 """.trimIndent()
             else -> error("$appBuildSystem")
         }
+        val libExportLibrariesStanza =
+            "android.externalNativeBuild.experimentalProperties[\"prefab.foo.exportLibraries\"] = [\"-llog\"]"
 
         project.getSubproject(":app").buildFile.appendText(
             """
@@ -263,6 +273,7 @@ class ModuleToModuleDepsTest(
             $libStanza
             $libStlStanza
             $libStructureStanza
+            $libExportLibrariesStanza
             """)
         val header =
             project.getSubproject(":lib").buildFile.resolveSibling("src/main/cpp/include/foo.h")
@@ -354,7 +365,6 @@ class ModuleToModuleDepsTest(
                 int callFoo() { return foo(); }
                 """.trimIndent())
         }
-
         enableCxxStructuredLogging(project)
     }
 
@@ -470,6 +480,19 @@ class ModuleToModuleDepsTest(
         assertThat(libOutput.isFile)
             .named("$libOutput")
             .isFalse()
+
+        // Check that export libraries informations winds up in the final prefab structure
+        var sawAtleastOneModule = false
+        appOutputRoot.walkTopDown().forEach { file ->
+            if (file.name == "module.json") {
+                val module = readJsonFile<ModuleMetadataV1>(file)
+                assertThat(module.exportLibraries).containsExactly("-llog")
+                sawAtleastOneModule = true
+            }
+        }
+        assertThat(sawAtleastOneModule)
+            .named("Expected at least one Prefab module")
+            .isTrue()
     }
 
     @Test
