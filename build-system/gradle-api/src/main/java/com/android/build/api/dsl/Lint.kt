@@ -35,7 +35,7 @@ import java.io.File
  *          // if true, only report errors
  *          ignoreWarnings = true
  *          // if true, emit full/absolute paths to files with errors (true by default)
- *          //absolutePaths = true
+ *          absolutePaths = true
  *          // if true, check all issues, including those that are off by default
  *          checkAllWarnings = true
  *          // if true, treat all warnings as errors
@@ -95,12 +95,9 @@ import java.io.File
  *          ignoreTestSources true
  *          // Normally lint will skip generated sources, but you can turn it on with this flag
  *          checkGeneratedSources true
- *          // Normally lint will analyze all dependencies along with each module; this ensures
- *          // that lint can correctly (for example) determine if a resource declared in a library
- *          // is unused; checking only the library in isolation would not be able to identify this
- *          // problem. However, this leads to quite a bit of extra computation; a library is
- *          // analyzed repeatedly, for each module that it is used in.
- *          checkDependencies false
+ *          // Whether lint should check all dependencies too as part of its analysis.
+ *          // Default is false.
+ *          checkDependencies true
  *     }
  * }
  * ```
