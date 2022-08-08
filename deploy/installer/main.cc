@@ -237,6 +237,11 @@ int main(int argc, char** argv) {
     // idea to process the request.  Close the connection and let the Host
     // re-create the installer env and then retry the request instead.
     if (self.gone()) {
+      // Write to the output to let Studio know we self-ended. Studio reads
+      // eight bytes (the message marker) so anything beyond this will not
+      // be received.
+      workspace.GetOutput().WriteBlocking("Self-End");
+
       WarnEvent("installer binary is gone. Closing connection");
       break;
     }
