@@ -96,7 +96,7 @@ kotlin_test(
         "@maven//:org.jetbrains.intellij.deps.trove4j",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib",
-        "@maven//:org.mockito.mockito-all",
+        "@maven//:org.mockito.mockito-core",
         "@maven//:org.ow2.asm.asm-tree",
     ],
 )
