@@ -20,8 +20,8 @@ package com.android.tools.lint.detector.api
 
 fun minSdkAtLeast(minSdkVersion: Int): Constraint = MinSdkAtLeast(minSdkVersion)
 fun minSdkLessThan(minSdkVersion: Int): Constraint = MinSdkLessThan(minSdkVersion)
-fun targetSdkAtLeast(minSdkVersion: Int): Constraint = TargetSdkAtLeast(minSdkVersion)
-fun targetSdkLessThan(minSdkVersion: Int): Constraint = TargetSdkLessThan(minSdkVersion)
+fun targetSdkAtLeast(targetSdkVersion: Int): Constraint = TargetSdkAtLeast(targetSdkVersion)
+fun targetSdkLessThan(targetSdkVersion: Int): Constraint = TargetSdkLessThan(targetSdkVersion)
 fun isLibraryProject(): Constraint = IsLibraryProject()
 fun isAndroidProject(): Constraint = IsAndroidProject()
 fun notLibraryProject(): Constraint = NotLibraryProject()
