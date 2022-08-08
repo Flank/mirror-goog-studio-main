@@ -124,6 +124,13 @@ message GetProcessesResponse {
 message AgentStatusRequest {
   int64 device_id = 1;
   int32 pid = 2;
+  // Device ID and PID combined can sufficiently solicit the agent status.
+  // However, the request message is expected to include the |package_name| if
+  // the gRPC call is talking to the device. The reason is that on the device,
+  // the package name is required to determine the status, and it is hard to
+  // infer from the PID.
+  // Note: /proc/<PID>/cmdline gives the process name, which may differ.
+  string package_name = 3;
 }
 
 message ExecuteRequest {
@@ -177,8 +184,7 @@ message DeleteEventsRequest {
   int64 to_timestamp = 6;
 }
 
-message DeleteEventsResponse {
-}
+message DeleteEventsResponse {}
 
 // An event group is a collection of events that share the same group_id.
 // The events in a group should have the same |session_id| and |kind|.

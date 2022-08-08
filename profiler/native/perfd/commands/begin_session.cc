@@ -46,17 +46,20 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
   auto session = SessionsManager::Instance()->GetLastSession();
   session->StartSamplers();
   if (data_.jvmti_config().attach_agent()) {
-    switch (daemon->GetAgentStatus(pid)) {
+    string package_name = data_.jvmti_config().package_name();
+    switch (daemon->GetAgentStatus(pid, package_name)) {
       case AgentData::UNSPECIFIED:
         // Agent has not been attached yet.
         if (daemon->TryAttachAppAgent(
-                pid, app_name, data_.jvmti_config().agent_lib_file_name(),
+                pid, app_name, package_name,
+                data_.jvmti_config().agent_lib_file_name(),
                 data_.jvmti_config().agent_config_path())) {
           // Wait for agent to be attached so the command can be forwarded to
           // agent.
           int32_t count = 0;
           while (count < kAgentStatusRetries &&
-                 daemon->GetAgentStatus(pid) != AgentData::ATTACHED) {
+                 daemon->GetAgentStatus(pid, package_name) !=
+                     AgentData::ATTACHED) {
             usleep(kAgentStatusRateUs);
             ++count;
           }

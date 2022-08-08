@@ -109,7 +109,10 @@ class Daemon {
   // Interrupts the WriteEventsTo.
   void InterruptWriteEvents() { buffer_->InterruptWriteEvents(); }
 
-  proto::AgentData::Status GetAgentStatus(int32_t pid);
+  // |package_name| is used to check the status. It should be non-empty
+  // for debuggable processes.
+  proto::AgentData::Status GetAgentStatus(int32_t pid,
+                                          const std::string& package_name);
 
   // Attaches an JVMTI agent to an app. Returns true if |agent_lib_file_name| is
   // attached successfully (either an agent already exists or a new one
@@ -118,6 +121,7 @@ class Daemon {
   // located within the perfd directory, and it needs to be compatible with the
   // app's CPU architecture.
   bool TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
+                         const std::string& package_name,
                          const std::string& agent_lib_file_name,
                          const std::string& agent_config_path);
 

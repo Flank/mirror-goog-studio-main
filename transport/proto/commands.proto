@@ -124,6 +124,9 @@ message BeginSession {
     string agent_lib_file_name = 2;
     // Path to the agent config file
     string agent_config_path = 3;
+    // Package name may not easily be found for a given PID by the daemon.
+    // It's easier to for the command issuer (host) to supply it.
+    string package_name = 4;
   }
 
   JvmtiConfig jvmti_config = 1;
@@ -140,6 +143,9 @@ message EndSession {
 message AttachAgent {
   string agent_lib_file_name = 1;
   string agent_config_path = 2;
+  // Package name may not easily be found for a given PID by the daemon.
+  // It's easier to for the command issuer (host) to supply it.
+  string package_name = 3;
 }
 
 message GetCpuCoreConfig {

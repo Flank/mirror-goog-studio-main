@@ -240,12 +240,12 @@ void Daemon::RunServer(const string& server_address) {
   server->Wait();  // Block until the server shuts down.
 }
 
-bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
+bool Daemon::TryAttachAppAgent(int32_t app_pid, const string& app_name,
+                               const string& package_name,
                                const string& agent_lib_file_name,
-                               const std::string& agent_config_path) {
+                               const string& agent_config_path) {
   assert(profiler::DeviceInfo::feature_level() >= profiler::DeviceInfo::O);
 
-  string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
   string user = ActivityManager::Instance()->GetCurrentUser();
   PackageManager package_manager;
   string data_path;
@@ -255,7 +255,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
     return false;
   }
 
-  auto agent_status = GetAgentStatus(app_pid);
+  auto agent_status = GetAgentStatus(app_pid, package_name);
   // Only attempt to connect if our status is not unattachable
   if (agent_status == AgentData::UNATTACHABLE) {
     return false;
@@ -356,7 +356,8 @@ bool Daemon::IsAppAgentAlive(int app_pid, const string& app_name,
   return ping.RunAs(args.str(), app_name, user, nullptr);
 }
 
-AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
+AgentData::Status Daemon::GetAgentStatus(int32_t pid,
+                                         const string& package_name) {
   if (CheckAppHeartBeat(pid)) {
     return AgentData::ATTACHED;
   }
@@ -384,13 +385,15 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
   }
   // In O+, we can attach an jvmti agent as long as the app is debuggable
   // and the app's data folder is available to us.
-  string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+  const string& package =
+      package_name.empty() ? ProcessManager::GetPackageNameFromAppName(app_name)
+                           : package_name;
   string user = ActivityManager::Instance()->GetCurrentUser();
   PackageManager package_manager;
   string data_path;
   string error;
   bool has_data_path =
-      package_manager.GetAppDataPath(package_name, user, &data_path, &error);
+      package_manager.GetAppDataPath(package, user, &data_path, &error);
   agent_attachable_map_[pid] = has_data_path;
   return has_data_path ? AgentData::UNSPECIFIED : AgentData::UNATTACHABLE;
 }

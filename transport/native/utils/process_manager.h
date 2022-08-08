@@ -52,6 +52,14 @@ class ProcessManager {
   // app_name can be of the format PACKAGE_NAME:SERVICE_NAME. We need
   // to extract the package name for operations like run-as and data folder path
   // retrieval, which works on the package instead of the app.
+  //
+  // Warning: Use with caution. This is a best-effort implementation and doesn't
+  // cover all scenarios. The format of "PACKAGE_NAME:PROCESS_NAME" is commonly
+  // seen, but in theory the package name and process name doesn't necessarily
+  // follow the ":" pattern. DDMLIB is in a better position to discover the
+  // package name for a given debuggable process. For example,
+  // "com.google.android.gms.ui" is a process name while its package name is
+  // "com.google.android.gms".
   static std::string GetPackageNameFromAppName(const std::string& app_name);
 
   static std::string GetAttachAgentCommand();

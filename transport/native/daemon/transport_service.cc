@@ -79,7 +79,8 @@ Status TransportServiceImpl::GetBytes(ServerContext* context,
 Status TransportServiceImpl::GetAgentStatus(
     ServerContext* context, const proto::AgentStatusRequest* request,
     proto::AgentData* response) {
-  response->set_status(daemon_->GetAgentStatus(request->pid()));
+  response->set_status(
+      daemon_->GetAgentStatus(request->pid(), request->package_name()));
   return Status::OK;
 }
 

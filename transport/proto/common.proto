@@ -307,6 +307,8 @@ message Process {
   // Also see SdkConstans.CPU_ARCH_*
   string abi_cpu_arch = 6;
   ExposureLevel exposure_level = 7;
+  // Package name known only for debuggable processes in Transport Pipeline.
+  string package_name = 8;
 }
 
 // A Session represents a range of profiling data for an app running on a
