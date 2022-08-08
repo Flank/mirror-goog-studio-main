@@ -493,10 +493,11 @@ class DeviceClientMonitorTask implements Runnable {
             // Append the incoming byte to the Processor local stream.
             mStream.append(buffer);
 
-            // Check if the processor has received a full message. In which case, request it to
-            // be processed and discard the used bytes.
-            Optional<ByteBuffer> message = parseMessage();
-            if (message.isPresent()) {
+            // Check if the processor has received one or more full messages. In which case,
+            // request it to be processed and discard the used bytes.
+            for (Optional<ByteBuffer> message = parseMessage();
+                    message.isPresent();
+                    message = parseMessage()) {
                 onMessage(message.get());
                 mStream.consume(message.get().limit());
             }
