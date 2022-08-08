@@ -152,7 +152,7 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertSame(device, client.device)
         Assert.assertNotNull(client.clientData)
         Assert.assertEquals(10, client.clientData.pid)
-        assertThrows { client.isDdmAware }
+        Assert.assertTrue(client.isDdmAware)
         assertThrows { client.kill() }
         Assert.assertTrue(client.isValid)
         Assert.assertTrue(client.debuggerListenPort > 0)
