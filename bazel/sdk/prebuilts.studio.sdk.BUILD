@@ -84,7 +84,7 @@ filegroup(
     srcs = sdk_glob(
         include = ["build-tools/30.0.3/**"],
     ),
-    visibility = ["//visibility:private"],
+    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
 )
 
 filegroup(
