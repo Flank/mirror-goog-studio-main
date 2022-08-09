@@ -744,7 +744,7 @@ public class VariantDependenciesBuilder {
             @NonNull Category category,
             @Nullable DocsType docsType,
             @Nullable String buildType,
-            @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap) {
+            @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap) {
         Configuration config = configurations.maybeCreate(configName);
         config.setDescription(configDesc);
         config.setCanBeResolved(false);
@@ -765,10 +765,8 @@ public class VariantDependenciesBuilder {
             attrContainer.attribute(LIBRARY_ELEMENTS_ATTRIBUTE, libraryElements);
         }
 
-        if (buildType != null) {
-            Preconditions.checkNotNull(publicationFlavorMap);
-            applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
-        }
+        Preconditions.checkNotNull(publicationFlavorMap);
+        applyVariantAttributes(attrContainer, buildType, publicationFlavorMap);
 
         return config;
     }
@@ -846,11 +844,13 @@ public class VariantDependenciesBuilder {
 
     private void applyVariantAttributes(
             @NonNull AttributeContainer attributeContainer,
-            @NonNull String buildType,
+            @Nullable String buildType,
             @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
-        attributeContainer.attribute(
-                BuildTypeAttr.ATTRIBUTE,
-                project.getObjects().named(BuildTypeAttr.class, buildType));
+        if (buildType != null) {
+            attributeContainer.attribute(
+                    BuildTypeAttr.ATTRIBUTE,
+                    project.getObjects().named(BuildTypeAttr.class, buildType));
+        }
         for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry :
                 flavorMap.entrySet()) {
             attributeContainer.attribute(entry.getKey(), entry.getValue());
