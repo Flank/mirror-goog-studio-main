@@ -463,7 +463,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         try {
             Files.createDirectories(installPath);
         } catch (IOException e) {
-            progress.logWarning("Failed to create output directory: " + installPath);
+            progress.logWarning("Failed to create output directory: " + installPath, e);
             return null;
         }
 
