@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Manager for multiple {@link JdwpProxyClient}'s connected to a single device and client.
@@ -61,6 +62,7 @@ public class JdwpClientManager implements JdwpSocketHandler {
     private final List<ShutdownListener> mShutdownListeners = new ArrayList<>();
     private JdwpConnectionReader mReader;
     private boolean isHandshakeComplete = false;
+    private AtomicBoolean isShutdown = new AtomicBoolean();
 
     public JdwpClientManager(@NonNull JdwpClientManagerId id, @NonNull Selector selector)
             throws TimeoutException, AdbCommandRejectedException, IOException {
@@ -109,6 +111,9 @@ public class JdwpClientManager implements JdwpSocketHandler {
 
     @Override
     public void shutdown() throws IOException {
+        if (!isShutdown.compareAndSet(false, true)) {
+            return;
+        }
         for (ShutdownListener listener : mShutdownListeners) {
             listener.shutdown();
         }
