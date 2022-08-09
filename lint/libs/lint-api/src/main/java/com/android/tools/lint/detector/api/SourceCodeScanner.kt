@@ -505,10 +505,11 @@ interface SourceCodeScanner : FileScanner {
     fun visitClass(context: JavaContext, lambda: ULambdaExpression)
 
     /**
-     * Returns a list of fully qualified names for annotations that
-     * this detector cares about. Lint looks for elements that are
-     * **associated** with an annotated element, and will invoke
-     * [visitAnnotationUsage] for each usage.
+     * Returns a list of names for annotations that this detector
+     * cares about. Names may be either simple or fully-qualified; simple
+     * names will match *all* annotations of the same name. Lint looks for
+     * elements that are **associated** with an annotated element, and will
+     * invoke [visitAnnotationUsage] for each usage.
      *
      * **Note**: This doesn't visit the annotations themselves; this
      * visits *usages* of the annotation. For example, let's say
@@ -520,7 +521,7 @@ interface SourceCodeScanner : FileScanner {
      * and return a [UElementHandler] from [createUastHandler]
      * where you override [UElementHandler.visitAnnotation].
      *
-     * @return a list of fully qualified annotation names
+     * @return a list of annotation names
      */
     fun applicableAnnotations(): List<String>?
 
