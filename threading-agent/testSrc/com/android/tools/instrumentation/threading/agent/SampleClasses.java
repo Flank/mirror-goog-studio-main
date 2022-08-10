@@ -114,12 +114,6 @@ public class SampleClasses {
     public static class AnnotatedClassWithInnerClass {
         private int a = 5;
 
-        @Slow
-        public void createAndCallInnerClassMethod() {
-            InnerClass innerClass = new InnerClass();
-            innerClass.method1();
-        }
-
         public class InnerClass {
             public void method1() {
                 ++a;
@@ -127,6 +121,8 @@ public class SampleClasses {
                 --a;
                 a--;
             }
+
+            public void method2() {}
         }
     }
 }

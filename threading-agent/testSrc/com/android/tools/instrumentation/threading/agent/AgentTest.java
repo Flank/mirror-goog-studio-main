@@ -16,6 +16,7 @@
 package com.android.tools.instrumentation.threading.agent;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -157,7 +158,7 @@ public class AgentTest {
         Class<?> transformedClass =
                 loadAndTransform(SampleClasses.ClassWithAnnotatedConstructor.class);
 
-        Object instance = transformedClass.getDeclaredConstructor().newInstance();
+        transformedClass.getDeclaredConstructor().newInstance();
 
         verify(mockThreadingCheckerHook).verifyOnUiThread();
     }
@@ -238,29 +239,57 @@ public class AgentTest {
     }
 
     @Test
+    public void testClassAnnotation_doesNotExtendToInnerClass()
+            throws IOException, IllegalAccessException, InstantiationException,
+                    NoSuchMethodException, InvocationTargetException {
+
+        ArrayList<Class<?>> transformedClasses =
+                loadAndTransformMultiple(
+                        SampleClasses.AnnotatedClassWithInnerClass.class,
+                        SampleClasses.AnnotatedClassWithInnerClass.InnerClass.class);
+        Class<?> transformedParentClass = transformedClasses.get(0);
+        Class<?> transformedChildClass = transformedClasses.get(1);
+        Object parentClassInstance = transformedParentClass.getDeclaredConstructor().newInstance();
+        // Reset mock after AnnotatedClassWithInnerClass's constructor has called it
+        reset(mockThreadingCheckerHook);
+        Object childClassInstance =
+                transformedChildClass
+                        .getDeclaredConstructor(transformedParentClass)
+                        .newInstance(parentClassInstance);
+
+        callMethod(transformedChildClass, childClassInstance, "method2", false);
+
+        // Verifies that InnerClass's unannotated method didn't inherit annotation from the outer
+        // AnnotatedClassWithInnerClass class.
+        verifyNoInteractions(mockThreadingCheckerHook);
+    }
+
+    @Test
     public void testClassAnnotation_doesNotExtendToSyntheticAccessors()
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException, InvocationTargetException {
 
-        Class<?> transformedParentClass =
+        ArrayList<Class<?>> transformedClasses =
                 loadAndTransformMultiple(
-                                SampleClasses.AnnotatedClassWithInnerClass.class,
-                                SampleClasses.AnnotatedClassWithInnerClass.InnerClass.class)
-                        .get(0);
+                        SampleClasses.AnnotatedClassWithInnerClass.class,
+                        SampleClasses.AnnotatedClassWithInnerClass.InnerClass.class);
+        Class<?> transformedParentClass = transformedClasses.get(0);
+        Class<?> transformedChildClass = transformedClasses.get(1);
         Object parentClassInstance = transformedParentClass.getDeclaredConstructor().newInstance();
+        // Reset mock after AnnotatedClassWithInnerClass's constructor has called it
+        reset(mockThreadingCheckerHook);
+        Object childClassInstance =
+                transformedChildClass
+                        .getDeclaredConstructor(transformedParentClass)
+                        .newInstance(parentClassInstance);
 
-        callMethod(
-                transformedParentClass,
-                parentClassInstance,
-                "createAndCallInnerClassMethod",
-                false);
+        callMethod(transformedChildClass, childClassInstance, "method1", false);
 
         // Inner class method that increments/decrements parent class's  field does it through
         // synthetic
         // methods like "SampleClasses$AnnotatedClassWithInnerClass#access$004". This test verifies
         // that these methods do not use threading annotations from the containing class.
-        // One and only UiThread check is the result of invoking a constructor.
-        verify(mockThreadingCheckerHook, times(1)).verifyOnUiThread();
+        verifyNoInteractions(mockThreadingCheckerHook);
     }
 
     private static Class<?> loadAndTransform(Class<?> clazz) throws IOException {
