@@ -19,6 +19,8 @@ package com.android.ide.common.attribution
 import com.android.SdkConstants
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskInfo
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskCategoryInfo
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -52,6 +54,16 @@ class AndroidGradlePluginAttributionDataTest {
         buildInfo = BuildInfo(
                 agpVersion = "7.0.0",
                 configurationCacheIsOn = true
+        ),
+        taskNameToTaskInfoMap = mapOf("k" to TaskInfo(
+            className = "l",
+            taskCategoryInfo = TaskCategoryInfo(
+                primaryTaskCategory = TaskCategory.ANDROID_RESOURCES,
+                secondaryTaskCategories = listOf(
+                    TaskCategory.COMPILATION,
+                    TaskCategory.SOURCE_PROCESSING
+                ))),
+            "m" to TaskInfo(className = "n", taskCategoryInfo = TaskCategoryInfo(primaryTaskCategory = TaskCategory.UNKNOWN))
         )
     )
 
@@ -95,9 +107,13 @@ class AndroidGradlePluginAttributionDataTest {
 |"buildInfo":{
     |"agpVersion":"7.0.0",
     |"configurationCacheIsOn":true
-|}
+|},
+|"taskNameToTaskInfoMap":[{"taskName":"k","className":"l","primaryTaskCategory":"ANDROID_RESOURCES",
+                |"secondaryTaskCategories":["COMPILATION","SOURCE_PROCESSING"]},
+                |{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}]
 |}
 """.trimMargin().replace("\n", "")
+
         )
     }
 
@@ -165,7 +181,10 @@ class AndroidGradlePluginAttributionDataTest {
 |"buildInfo":{
     |"agpVersion":"7.0.0",
     |"configurationCacheIsOn":true
-|}
+|},
+|"taskNameToTaskInfoMap":[{"taskName":"k","className":"l","primaryTaskCategory":"ANDROID_RESOURCES",
+|"secondaryTaskCategories":["COMPILATION","SOURCE_PROCESSING"]},
+|{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}]
 |}
 """.trimMargin().replace("\n", "")
         )

@@ -18,6 +18,7 @@ package com.android.ide.common.attribution
 
 import com.android.SdkConstants
 import com.android.utils.FileUtils
+import com.android.ide.common.attribution.TaskCategory
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
@@ -27,10 +28,12 @@ import java.io.FileReader
 import java.io.Serializable
 
 data class AndroidGradlePluginAttributionData(
+
     /**
      * A map that maps a task name to its class name
      * ex: mergeDevelopmentDebugResources -> com.android.build.gradle.tasks.MergeResources
      */
+    @Deprecated("Use taskNameToTaskInfoMap")
     val taskNameToClassNameMap: Map<String, String> = emptyMap(),
 
     /**
@@ -70,7 +73,14 @@ data class AndroidGradlePluginAttributionData(
     /**
      * Contains information about this build.
      */
-    val buildInfo: BuildInfo? = null
+    val buildInfo: BuildInfo? = null,
+
+    /**
+     * A map of task names to its class name, and primary and secondary task categories.
+     * Only sends task categories if flag BUILD_ANALYZER_TASK_LABELS is enabled
+     */
+    val taskNameToTaskInfoMap: Map<String, TaskInfo> = emptyMap()
+
 ) : Serializable {
 
     /**
@@ -87,6 +97,16 @@ data class AndroidGradlePluginAttributionData(
     data class BuildInfo(
         val agpVersion: String?,
         val configurationCacheIsOn: Boolean?
+    ) : Serializable
+
+    data class TaskInfo(
+        val className: String,
+        val taskCategoryInfo: TaskCategoryInfo
+    ) : Serializable
+
+    data class TaskCategoryInfo(
+        val primaryTaskCategory: TaskCategory,
+        val secondaryTaskCategories: List<TaskCategory> = emptyList()
     ) : Serializable
 
     companion object {
@@ -256,6 +276,49 @@ data class AndroidGradlePluginAttributionData(
             return BuildInfo(agpVersion, configurationCacheIsOn)
         }
 
+        private fun JsonWriter.writeTaskToTaskInfoEntry(taskName:String, taskInfo: TaskInfo) {
+            beginObject()
+            name("taskName").value(taskName)
+            taskInfo.className.let { name("className").value(it) }
+            taskInfo.taskCategoryInfo.let {
+                name("primaryTaskCategory").value(it.primaryTaskCategory.toString())
+                name("secondaryTaskCategories").beginArray()
+                it.secondaryTaskCategories.forEach { category ->
+                    value(category.toString())
+                }
+                endArray()
+            }
+            endObject()
+        }
+
+        private fun JsonReader.readTaskToTaskInfoEntry(): Pair<String, TaskInfo> {
+            beginObject()
+            var taskName: String? = null
+            var className: String? = null
+            var primaryTaskCategory: TaskCategory? = null
+            val secondaryTaskCategories = mutableListOf<TaskCategory>()
+            while (hasNext()) {
+                when (nextName()) {
+                    "taskName" -> taskName = nextString()
+                    "className" -> className = nextString()
+                    "primaryTaskCategory" -> primaryTaskCategory = TaskCategory.valueOf(nextString())
+                    "secondaryTaskCategories" -> {
+                        beginArray()
+                        while(hasNext()) {
+                            secondaryTaskCategories.add(TaskCategory.valueOf(nextString()))
+                        }
+                        endArray()
+                    }
+                }
+            }
+            endObject()
+            val taskCategoryInfo = TaskCategoryInfo(
+                    primaryTaskCategory = primaryTaskCategory!!,
+                    secondaryTaskCategories = secondaryTaskCategories
+            )
+            return taskName!! to TaskInfo(className!!, taskCategoryInfo)
+        }
+
         override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
             writer.beginObject()
 
@@ -283,6 +346,10 @@ data class AndroidGradlePluginAttributionData(
 
             writer.writeBuildInfo(data.buildInfo)
 
+            writer.writeList("taskNameToTaskInfoMap", data.taskNameToTaskInfoMap.entries) {
+                writer.writeTaskToTaskInfoEntry(it.key, it.value)
+            }
+
             writer.endObject()
         }
 
@@ -294,6 +361,7 @@ data class AndroidGradlePluginAttributionData(
             var javaInfo = JavaInfo()
             val buildscriptDependenciesInfo = HashSet<String>()
             var buildInfo: BuildInfo? = null
+            val taskNameToTaskInfoMap = HashMap<String, TaskInfo>()
 
             reader.beginObject()
 
@@ -321,6 +389,10 @@ data class AndroidGradlePluginAttributionData(
 
                     "buildInfo" -> buildInfo = reader.readBuildInfo()
 
+                    "taskNameToTaskInfoMap" -> taskNameToTaskInfoMap.putAll(
+                            reader.readList { reader.readTaskToTaskInfoEntry() }
+                    )
+
                     else -> {
                         reader.skipValue()
                     }
@@ -336,7 +408,8 @@ data class AndroidGradlePluginAttributionData(
                 buildSrcPlugins = buildSrcPlugins,
                 javaInfo = javaInfo,
                 buildscriptDependenciesInfo = buildscriptDependenciesInfo,
-                buildInfo = buildInfo
+                buildInfo = buildInfo,
+                taskNameToTaskInfoMap = taskNameToTaskInfoMap
             )
         }
     }

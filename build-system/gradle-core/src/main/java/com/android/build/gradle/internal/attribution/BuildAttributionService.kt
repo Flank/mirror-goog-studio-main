@@ -26,7 +26,10 @@ import com.android.builder.utils.SynchronizedFile
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskInfo
+import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskCategoryInfo
+import com.android.ide.common.attribution.TaskCategory
+import com.android.utils.HelpfulEnumConverter
 import com.android.tools.analytics.HostData
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
@@ -57,17 +60,20 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
         private var initialized = false
 
-        private fun init(project: Project, attributionFileLocation: String, parameters: Parameters) {
+        private fun init(project: Project,
+                        attributionFileLocation: String,
+                        parameters: Parameters,
+                        sendTaskCategoryInfo: Boolean) {
             if (initialized) {
                 return
             }
 
             initialized = true
-
+            val taskCategoryConverter = HelpfulEnumConverter(TaskCategory::class.java)
             project.gradle.taskGraph.whenReady { taskGraph ->
                 val outputFileToTasksMap = mutableMapOf<String, MutableList<String>>()
                 val taskNameToClassNameMap = mutableMapOf<String, String>()
-                val taskNameToTaskCategoryMap = mutableMapOf<String, List<TaskCategory>>()
+                val taskNameToTaskInfoMap = mutableMapOf<String, TaskInfo>()
                 taskGraph.allTasks.forEach { task ->
                     taskNameToClassNameMap[task.name] = getTaskClassName(task.javaClass.name)
 
@@ -76,6 +82,23 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                             ArrayList()
                         }.add(task.path)
                     }
+
+                    val taskCategoryInfo = if (sendTaskCategoryInfo && task::class.java.isAnnotationPresent(BuildAnalyzer::class.java)) {
+                        val annotation = task::class.java.getAnnotation(BuildAnalyzer::class.java)
+                        val primaryTaskCategory =
+                                taskCategoryConverter.convert(annotation.primaryTaskCategory.toString())!!
+                        val secondaryTaskCategories =
+                                annotation.secondaryTaskCategories.map { taskCategoryConverter.convert(it.toString())!! }
+                        TaskCategoryInfo(
+                                primaryTaskCategory = primaryTaskCategory,
+                                secondaryTaskCategories = secondaryTaskCategories
+                        )
+                    } else TaskCategoryInfo(primaryTaskCategory = TaskCategory.UNKNOWN)
+
+                    taskNameToTaskInfoMap[task.name] = TaskInfo(
+                            className = getTaskClassName(task.javaClass.name),
+                            taskCategoryInfo = taskCategoryInfo
+                    )
                 }
 
                 val buildscriptDependenciesInfo = getBuildscriptDependencies(project.rootProject)
@@ -101,6 +124,7 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                         configurationCacheIsOn = project.gradle.startParameter.isConfigurationCache
                     )
                 )
+                parameters.taskNameToTaskInfoMap.set(taskNameToTaskInfoMap)
             }
         }
 
@@ -166,7 +190,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 buildSrcPlugins = getBuildSrcPlugins(this.javaClass.classLoader),
                 javaInfo = parameters.javaInfo.get(),
                 buildscriptDependenciesInfo = parameters.buildscriptDependenciesInfo.get(),
-                buildInfo = parameters.buildInfo.get()
+                buildInfo = parameters.buildInfo.get(),
+                taskNameToTaskInfoMap = parameters.taskNameToTaskInfoMap.get()
             )
         )
     }
@@ -190,6 +215,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         val buildscriptDependenciesInfo: SetProperty<String>
 
         val buildInfo: Property<BuildInfo>
+
+        val taskNameToTaskInfoMap: MapProperty<String, TaskInfo>
     }
 
     @Suppress("UnstableApiUsage")
@@ -197,13 +224,14 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         project: Project,
         private val attributionFileLocation: String,
         private val listenersRegistry: BuildEventsListenerRegistry,
+        private val sendTaskCategoryInfo: Boolean
     ) : ServiceRegistrationAction<BuildAttributionService, Parameters>(
         project,
         BuildAttributionService::class.java
     ) {
 
         override fun configure(parameters: Parameters) {
-            init(project, attributionFileLocation, parameters)
+            init(project, attributionFileLocation, parameters, sendTaskCategoryInfo)
         }
 
         override fun execute(): Provider<BuildAttributionService> {
