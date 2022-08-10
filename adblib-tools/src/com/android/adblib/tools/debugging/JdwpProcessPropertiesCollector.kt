@@ -17,8 +17,8 @@ package com.android.adblib.tools.debugging
 
 import com.android.adblib.AdbSession
 import com.android.adblib.ByteBufferAdbOutputChannel
-import com.android.adblib.DeviceSelector
 import com.android.adblib.thisLogger
+import com.android.adblib.tools.debugging.impl.SharedJdwpSession
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_HEADER_LENGTH
 import com.android.adblib.tools.debugging.packets.JdwpPacketView
@@ -37,9 +37,13 @@ import com.android.adblib.tools.debugging.packets.ddms.chunks.DdmsWaitChunk
 import com.android.adblib.tools.debugging.packets.ddms.clone
 import com.android.adblib.tools.debugging.packets.ddms.ddmsChunks
 import com.android.adblib.tools.debugging.packets.ddms.writeToChannel
+import com.android.adblib.tools.debugging.utils.ReferenceCountedResource
+import com.android.adblib.tools.debugging.utils.retained
 import com.android.adblib.utils.ResizableBuffer
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.io.EOFException
 import java.nio.ByteBuffer
 
@@ -54,9 +58,9 @@ private val EARLY_PROCESS_NAMES = arrayOf("<pre-initialized>", "")
  * Reads [JdwpProcessProperties] from a JDWP connection.
  */
 internal class JdwpProcessPropertiesCollector(
-  val session: AdbSession,
-  val device: DeviceSelector,
-  val pid: Int
+    session: AdbSession,
+    private val pid: Int,
+    private val jdwpSessionRef: ReferenceCountedResource<SharedJdwpSession>
 ) {
 
     private val logger = thisLogger(session)
@@ -65,27 +69,32 @@ internal class JdwpProcessPropertiesCollector(
      * Collects [JdwpProcessProperties] from a new JDWP session to the process [pid]
      * and emits them to [stateFlow].
      *
-     * Throws EOFException if not enough information about the process could be collected, e.g.
+     * Throws [EOFException] if not enough information about the process could be collected, e.g.
      * if there is already another JDWP session open for the process.
      */
     suspend fun collect(stateFlow: AtomicStateFlow<JdwpProcessProperties>) {
-        val jdwpSession = JdwpSessionHandler.openJdwpSession(session, device, pid)
-        jdwpSession.use {
-            collectProcessPropertiesImpl(jdwpSession, stateFlow)
+        jdwpSessionRef.retained().use {
+            collectProcessPropertiesImpl(it.value, stateFlow)
         }
     }
 
     private suspend fun collectProcessPropertiesImpl(
-        jdwpSession: JdwpSessionHandler,
+        jdwpSession: SharedJdwpSession,
         stateFlow: AtomicStateFlow<JdwpProcessProperties>
     ) {
-        // Send a few ddms commands to collect process information
-        val commands = IntroCommands(
-            heloCommand = sendHeloPacket(jdwpSession),
-            reaqCommand = sendReaqPacket(jdwpSession),
-            featCommand = sendFeatPacket(jdwpSession)
-        )
-        collectDdmsReplyChunks(jdwpSession, stateFlow, commands)
+        coroutineScope {
+            // Send a few ddms commands to collect process information
+            val commands = IntroCommands()
+            launch {
+                with(commands) {
+                    heloCommand = sendHeloPacket(jdwpSession)
+                    reaqCommand = sendReaqPacket(jdwpSession)
+                    featCommand = sendFeatPacket(jdwpSession)
+                }
+            }
+
+            collectDdmsReplyChunks(jdwpSession, stateFlow, commands)
+        }
     }
 
     /**
@@ -95,82 +104,90 @@ internal class JdwpProcessPropertiesCollector(
      * * `WAIT` is a notification the process is waiting for a debugger to attach
      */
     private suspend fun collectDdmsReplyChunks(
-        jdwpSession: JdwpSessionHandler,
+        jdwpSession: SharedJdwpSession,
         stateFlow: AtomicStateFlow<JdwpProcessProperties>,
         commands: IntroCommands
     ) {
-
         val workBuffer = ResizableBuffer()
-        while (true) {
 
-            // This will throw an exception if EOF was reached
-            val jdwpPacket = try {
-                jdwpSession.receivePacket()
-            } catch (e: EOFException) {
-                // EOF happens in at least 2 common cases:
-                // 1. On Android 27 and earlier, Android VM terminates a JDWP connection
-                //    right away if there is already an active JDWP connection. On API 28 and later,
-                //    Android VM queues JDWP connections if there is already an active one.
-                // 2. If the process terminates before the timeout expires. This is sort of a race
-                //    condition between us trying to retrieve data about a process, and the process
-                //    terminating.
-                logger.info { "pid=$pid: EOF while reading JDWP packet ($e)" }
-                throw e
+        jdwpSession.receivePacketFlow.collect { packet ->
+            logger.debug { "pid=$pid: Processing JDWP packet: $packet" }
+            // Any DDMS command is a packet sent from the Android VM that we should
+            // replay in case we connect later on again (e.g. for a retry)
+            if (packet.isCommand(DDMS_CMD_SET, DDMS_CMD)) {
+                jdwpSession.addReplayPacket(packet)
             }
+            processReceivedPacket(packet, stateFlow, commands, workBuffer)
+        }
+        // If the flow ends, we reached EOF, which can happen for at least 2 common cases:
+        // 1. On Android 27 and earlier, Android VM terminates a JDWP connection
+        //    right away if there is already an active JDWP connection. On API 28 and later,
+        //    Android VM queues JDWP connections if there is already an active one.
+        // 2. If the process terminates before the timeout expires. This is sort of a race
+        //    condition between us trying to retrieve data about a process, and the process
+        //    terminating.
+        logger.info { "pid=$pid: EOF while receiving JDWP packet" }
+        throw EOFException("JDWP session ended prematurely")
+    }
 
-            // Here is the situation of DDMS packets we receive from an Android VM:
-            // * Sometimes (i.e. depending on the Android API level) we receive both "HELO"
-            //   and "APNM", where "HELO" *or* "APNM" contain a "fake" process name, i.e. the
-            //   "<pre-initialized>" string or the "" string. The order is non-deterministic,
-            //   i.e. it looks like there is a race condition somewhere in the Android VM.
-            //   So, basically, we need to ignore any instance of this "fake" name and hope we
-            //   get a valid one at some point.
-            // * Sometimes we consistently receive "HELO" with all the data correct. This seems
-            //   to happen when re-attaching to the same process a 2nd time, for example.
-            // * We have seen case where both "HELO" and "APNM" messages contain no data at all.
-            //   This seems to be how the Android VM signals that the corresponding command
-            //   packet were invalid. This should only happen if there is a bug in the code
-            //   sending DDMS packet, i.e. if the code in this source file sends malformed
-            //   packets (e.g. incorrect length).
-            // * Wrt to the "WAIT" packet, we only receive it if the Android VM is waiting for
-            //   a debugger to attach. The definition of "attaching a debugger" according to the
-            //   "Android VM" is "receiving any valid JDWP command packet". Unfortunately, there
-            //   is no "negative" version of the "WAIT" packet, meaning if the process is not
-            //   in the "waiting for a debugger" state, there is no packet sent.
+    private suspend fun processReceivedPacket(
+        jdwpPacket: JdwpPacketView,
+        stateFlow: AtomicStateFlow<JdwpProcessProperties>,
+        commands: IntroCommands,
+        workBuffer: ResizableBuffer
+    ) {
+        // Here is the situation of DDMS packets we receive from an Android VM:
+        // * Sometimes (i.e. depending on the Android API level) we receive both "HELO"
+        //   and "APNM", where "HELO" *or* "APNM" contain a "fake" process name, i.e. the
+        //   "<pre-initialized>" string or the "" string. The order is non-deterministic,
+        //   i.e. it looks like there is a race condition somewhere in the Android VM.
+        //   So, basically, we need to ignore any instance of this "fake" name and hope we
+        //   get a valid one at some point.
+        // * Sometimes we consistently receive "HELO" with all the data correct. This seems
+        //   to happen when re-attaching to the same process a 2nd time, for example.
+        // * We have seen case where both "HELO" and "APNM" messages contain no data at all.
+        //   This seems to be how the Android VM signals that the corresponding command
+        //   packet were invalid. This should only happen if there is a bug in the code
+        //   sending DDMS packet, i.e. if the code in this source file sends malformed
+        //   packets (e.g. incorrect length).
+        // * Wrt to the "WAIT" packet, we only receive it if the Android VM is waiting for
+        //   a debugger to attach. The definition of "attaching a debugger" according to the
+        //   "Android VM" is "receiving any valid JDWP command packet". Unfortunately, there
+        //   is no "negative" version of the "WAIT" packet, meaning if the process is not
+        //   in the "waiting for a debugger" state, there is no packet sent.
 
-            // `HELO` packet is a reply to the `HELO` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.id == commands.heloCommand.id) {
-                processHeloReply(stateFlow, jdwpPacket, workBuffer)
-            }
+        // `HELO` packet is a reply to the `HELO` command we sent to the VM
+        if (jdwpPacket.isReply && jdwpPacket.id == commands.heloCommand?.id) {
+            processHeloReply(stateFlow, jdwpPacket, workBuffer)
+        }
 
-            // `FEAT` packet is a reply to the `FEAT` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.id == commands.featCommand.id) {
-                processFeatReply(stateFlow, jdwpPacket, workBuffer)
-            }
+        // `FEAT` packet is a reply to the `FEAT` command we sent to the VM
+        if (jdwpPacket.isReply && jdwpPacket.id == commands.featCommand?.id) {
+            processFeatReply(stateFlow, jdwpPacket, workBuffer)
+        }
 
-            // `REAQ` packet is a reply to the `REAQ` command we sent to the VM
-            if (jdwpPacket.isReply && jdwpPacket.id == commands.reaqCommand.id) {
-                processReaqReply(stateFlow, jdwpPacket, workBuffer)
-            }
+        // `REAQ` packet is a reply to the `REAQ` command we sent to the VM
+        if (jdwpPacket.isReply && jdwpPacket.id == commands.reaqCommand?.id) {
+            processReaqReply(stateFlow, jdwpPacket, workBuffer)
+        }
 
-            // `WAIT` and `APNM` are DDMS chunks embedded in a JDWP command packet sent from
-            // the VM to us
-            if (jdwpPacket.isCommand(DDMS_CMD_SET, DDMS_CMD)) {
-                // For completeness, we process all chunks embedded in a JDWP packet, even
-                // though in practice there is always one and only one DDMS chunk per JDWP
-                // packet.
-                jdwpPacket.ddmsChunks().collect { chunk ->
-                    val chunkCopy = chunk.clone()
-                    when (chunkCopy.type) {
-                        DdmsChunkTypes.WAIT -> {
-                            processWaitCommand(stateFlow, chunkCopy, workBuffer)
-                        }
-                        DdmsChunkTypes.APNM -> {
-                            processApnmCommand(stateFlow, chunkCopy, workBuffer)
-                        }
-                        else -> {
-                            logger.debug { "pid=$pid: Skipping unexpected chunk: $chunkCopy" }
-                        }
+        // `WAIT` and `APNM` are DDMS chunks embedded in a JDWP command packet sent from
+        // the VM to us
+        if (jdwpPacket.isCommand(DDMS_CMD_SET, DDMS_CMD)) {
+            // For completeness, we process all chunks embedded in a JDWP packet, even
+            // though in practice there is always one and only one DDMS chunk per JDWP
+            // packet.
+            jdwpPacket.ddmsChunks().collect { chunk ->
+                val chunkCopy = chunk.clone()
+                when (chunkCopy.type) {
+                    DdmsChunkTypes.WAIT -> {
+                        processWaitCommand(stateFlow, chunkCopy, workBuffer)
+                    }
+                    DdmsChunkTypes.APNM -> {
+                        processApnmCommand(stateFlow, chunkCopy, workBuffer)
+                    }
+                    else -> {
+                        logger.debug { "pid=$pid: Skipping unexpected chunk: $chunkCopy" }
                     }
                 }
             }
@@ -265,7 +282,7 @@ internal class JdwpProcessPropertiesCollector(
         }
     }
 
-    private suspend fun sendReaqPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
+    private suspend fun sendReaqPacket(jdwpSession: SharedJdwpSession): JdwpPacketView {
         // Prepare chunk payload buffer
         val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
 
@@ -280,7 +297,7 @@ internal class JdwpProcessPropertiesCollector(
         return packet
     }
 
-    private suspend fun sendHeloPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
+    private suspend fun sendHeloPacket(jdwpSession: SharedJdwpSession): JdwpPacketView {
         // Prepare chunk payload buffer
         val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
         payload.appendInt(DdmsHeloChunk.SERVER_PROTOCOL_VERSION)
@@ -296,7 +313,7 @@ internal class JdwpProcessPropertiesCollector(
         return packet
     }
 
-    private suspend fun sendFeatPacket(jdwpSession: JdwpSessionHandler): JdwpPacketView {
+    private suspend fun sendFeatPacket(jdwpSession: SharedJdwpSession): JdwpPacketView {
         // Prepare chunk payload buffer
         val payload = ResizableBuffer().order(DdmsPacketConstants.DDMS_CHUNK_BYTE_ORDER)
 
@@ -344,11 +361,16 @@ internal class JdwpProcessPropertiesCollector(
         }
     }
 
+    /**
+     * List of DDMS requests made to the Android VM.
+     *
+     * Each field initially `null`, then set once (and only once), when the corresponding
+     * DDMS requesrt is sent to the Android VM.
+     */
     @Suppress("SpellCheckingInspection")
     data class IntroCommands(
-        val heloCommand: JdwpPacketView,
-        val reaqCommand: JdwpPacketView,
-        val featCommand: JdwpPacketView
+        var heloCommand: JdwpPacketView? = null,
+        var reaqCommand: JdwpPacketView? = null,
+        var featCommand: JdwpPacketView? = null,
     )
 }
-

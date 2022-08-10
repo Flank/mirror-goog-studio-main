@@ -85,6 +85,23 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
             return;
         }
 
+        // Make sure there is only one JDWP session for this process
+        while (!client.startJdwpSession(socket)) {
+            // There is one active JDWP session.
+            // On API < 28, we return EOF right away.
+            // On API >= 28, we wait until the previous session is released
+            if (device.getApiLevel() < 28) {
+                writeFailResponse(oStream, "JDWP Session already opened for pid: " + pid);
+                return;
+            } else {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
         try {
             writeOkay(oStream);
         } catch (IOException ignored) {
