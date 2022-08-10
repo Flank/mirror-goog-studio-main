@@ -67,9 +67,3 @@ val ConnectedDevice.serialNumber: String
  */
 val ConnectedDevice.deviceInfo: DeviceInfo
     get() = deviceInfoFlow.value
-
-/**
- * Shortcut to the [DeviceProperties] of this device.
- */
-suspend fun ConnectedDevice.deviceProperties(): DeviceProperties =
-    session.deviceServices.deviceProperties(DeviceSelector.fromSerialNumber(serialNumber))
