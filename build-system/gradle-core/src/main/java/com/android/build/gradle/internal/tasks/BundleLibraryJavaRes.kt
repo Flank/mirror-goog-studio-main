@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -48,7 +48,7 @@ import java.util.zip.Deflater
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES, TaskCategoryLabel.ZIPPING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.JAVA_RESOURCES, secondaryTaskCategories = [TaskCategory.ZIPPING])
 abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     @get:OutputFile

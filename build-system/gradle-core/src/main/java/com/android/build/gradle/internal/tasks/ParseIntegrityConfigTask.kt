@@ -17,18 +17,15 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.google.common.annotations.VisibleForTesting
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
@@ -48,7 +45,7 @@ private const val CONFIG_FILE_NAME = "IntegrityConfig.xml"
  * Task that parses app_integrity_config.proto from an XML file.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.METADATA)
 abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
 
     @get:InputDirectory

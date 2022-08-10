@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -71,7 +71,7 @@ import kotlin.math.max
  * that jar will be dex'ed.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.DEXING)
 abstract class DexArchiveBuilderTask : NewIncrementalTask() {
 
     @get:Incremental

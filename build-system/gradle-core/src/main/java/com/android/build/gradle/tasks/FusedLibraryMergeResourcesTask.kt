@@ -16,30 +16,19 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
-import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
-import com.android.ide.common.blame.MergingLog
-import com.android.ide.common.rendering.api.ResourceNamespace
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService
-import com.android.ide.common.resources.MergedResourceWriter
-import com.android.ide.common.resources.MergedResourceWriterRequest
-import com.android.ide.common.resources.ResourceMerger
-import com.android.ide.common.resources.ResourceSet
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.utils.FileUtils
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -53,7 +42,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
  * Manages Android resource merging for libraries dependencies of the fused library.
@@ -63,7 +51,7 @@ import java.io.File
  * handled by the AGP MergeResources task.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.FUSING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.MERGING, TaskCategory.FUSING])
 abstract class FusedLibraryMergeResourcesTask : NonIncrementalGlobalTask() {
 
     @get:OutputDirectory

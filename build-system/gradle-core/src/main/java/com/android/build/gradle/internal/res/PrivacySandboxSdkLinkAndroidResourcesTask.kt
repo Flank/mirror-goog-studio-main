@@ -37,7 +37,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -61,7 +61,7 @@ import java.io.File
  * Invokes AAPT2 link on the merged resources of all library dependencies into the .ap_ format.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.LINKING])
 abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() {
 
     @get:Input

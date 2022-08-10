@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import com.android.builder.signing.DefaultSigningConfig
 import com.android.builder.utils.SynchronizedFile
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Preconditions.checkState
@@ -62,7 +62,7 @@ import java.util.concurrent.ExecutionException
  * disabled by default.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.VERIFICATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.VERIFICATION)
 abstract class ValidateSigningTask : NonIncrementalTask() {
 
     /**

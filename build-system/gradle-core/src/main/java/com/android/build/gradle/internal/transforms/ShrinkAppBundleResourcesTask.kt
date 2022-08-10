@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
@@ -61,7 +61,7 @@ import javax.inject.Inject
  * Enabled when android.experimental.enableNewResourceShrinker=true.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION, secondaryTaskCategories = [TaskCategory.ANDROID_RESOURCES])
 abstract class ShrinkAppBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile

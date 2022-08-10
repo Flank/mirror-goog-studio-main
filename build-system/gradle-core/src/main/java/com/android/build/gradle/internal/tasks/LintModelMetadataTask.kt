@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import java.io.File
@@ -45,7 +45,7 @@ import org.gradle.work.DisableCachingByDefault
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT, TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.LINT, secondaryTaskCategories = [TaskCategory.METADATA])
 abstract class LintModelMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile

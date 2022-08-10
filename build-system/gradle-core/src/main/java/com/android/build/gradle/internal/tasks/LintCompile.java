@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.android.utils.FileUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.OutputDirectory;
@@ -31,7 +31,7 @@ import org.gradle.work.DisableCachingByDefault;
  * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.COMPILATION, TaskCategoryLabel.LINT})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.LINT, secondaryTaskCategories = {TaskCategory.COMPILATION})
 public abstract class LintCompile extends NonIncrementalGlobalTask {
 
     @OutputDirectory

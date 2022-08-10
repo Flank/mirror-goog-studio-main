@@ -45,7 +45,7 @@ import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.getR8Version
 import com.android.builder.dexing.runR8
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
@@ -86,7 +86,7 @@ import javax.inject.Inject
  */
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION)
 abstract class R8Task @Inject constructor(
     projectLayout: ProjectLayout
 ): ProguardConfigurableTask(projectLayout) {

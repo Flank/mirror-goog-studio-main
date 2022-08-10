@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.lint.typedefs.TypedefRemover
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
@@ -65,7 +65,7 @@ import java.util.zip.Deflater
 
 // TODO(b/132975663): add workers
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ZIPPING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.AAR_PACKAGING, secondaryTaskCategories = [TaskCategory.ZIPPING])
 abstract class LibraryAarJarsTask : NonIncrementalTask() {
     @get:Nested
     @get:Optional

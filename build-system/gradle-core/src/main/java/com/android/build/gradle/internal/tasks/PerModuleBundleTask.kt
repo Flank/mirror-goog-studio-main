@@ -46,7 +46,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -66,7 +66,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import org.jetbrains.kotlin.gradle.utils.`is`
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
@@ -81,7 +80,7 @@ import javax.inject.Inject
  *
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.BUNDLE_PACKAGING)
 abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 

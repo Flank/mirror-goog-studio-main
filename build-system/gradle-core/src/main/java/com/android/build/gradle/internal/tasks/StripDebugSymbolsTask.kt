@@ -29,11 +29,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIV
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableInputChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.resources.FileStatus.CHANGED
@@ -41,7 +40,6 @@ import com.android.ide.common.resources.FileStatus.NEW
 import com.android.ide.common.resources.FileStatus.REMOVED
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
@@ -50,7 +48,6 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.IgnoreEmptyDirectories
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputDirectory
@@ -60,7 +57,6 @@ import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
 import org.gradle.work.DisableCachingByDefault
-import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -73,7 +69,7 @@ import javax.inject.Inject
  * Task to remove debug symbols from native libraries.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.SOURCE_PROCESSING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.NATIVE, secondaryTaskCategories = [TaskCategory.SOURCE_PROCESSING])
 abstract class StripDebugSymbolsTask : NewIncrementalTask() {
 
     @get:InputDirectory

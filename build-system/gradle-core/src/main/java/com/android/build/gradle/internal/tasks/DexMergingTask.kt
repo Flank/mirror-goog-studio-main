@@ -54,7 +54,7 @@ import com.android.builder.dexing.getSortedFilesInDir
 import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
@@ -108,7 +108,7 @@ import kotlin.math.min
  *      the impacted buckets (those containing changed input dex files).
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING, TaskCategoryLabel.MERGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.DEXING, secondaryTaskCategories = [TaskCategory.MERGING])
 abstract class DexMergingTask : NewIncrementalTask() {
 
     /**

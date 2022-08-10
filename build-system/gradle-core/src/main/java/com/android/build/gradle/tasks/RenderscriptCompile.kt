@@ -38,7 +38,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.Version
 import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.RenderScriptProcessor
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.repository.Revision
@@ -76,7 +76,7 @@ import kotlin.math.min
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.RENDERSCRIPT])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.RENDERSCRIPT, secondaryTaskCategories = [TaskCategory.COMPILATION])
 abstract class RenderscriptCompile : NdkTask() {
 
     // ----- PUBLIC TASK API -----

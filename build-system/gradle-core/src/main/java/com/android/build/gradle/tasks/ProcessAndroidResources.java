@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig;
 import com.android.build.gradle.internal.component.ConsumableCreationConfig;
 import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -40,7 +40,7 @@ import org.gradle.work.Incremental;
 
 /** Base class for process resources / create R class task, to satisfy existing variants API. */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.ANDROID_RESOURCES})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES)
 public abstract class ProcessAndroidResources extends NewIncrementalTask {
 
     protected VariantOutputImpl mainSplit;

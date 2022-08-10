@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.tasks.BaseTask
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.work.DisableCachingByDefault
 
@@ -30,7 +30,7 @@ import org.gradle.work.DisableCachingByDefault
  * Eventually will do report aggregation, but for now, just depends on the variant-specific task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.LINT)
 abstract class AndroidLintGlobalTask: BaseTask() {
 
     class GlobalCreationAction(creationConfig: GlobalTaskCreationConfig) : BaseGlobalCreationAction(

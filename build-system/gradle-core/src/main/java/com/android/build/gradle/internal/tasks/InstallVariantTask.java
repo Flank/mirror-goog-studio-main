@@ -34,7 +34,7 @@ import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
@@ -65,7 +65,7 @@ import org.gradle.work.DisableCachingByDefault;
  * variant output on each device.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.DEPLOYMENT})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.DEPLOYMENT)
 public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private int timeOutInMs = 0;

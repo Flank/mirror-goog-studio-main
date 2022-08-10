@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -36,7 +36,7 @@ import org.gradle.work.DisableCachingByDefault
  * could outweigh its benefit.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.SYNC)
 abstract class BundleIdeModelProducerTask : NonIncrementalTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NAME_ONLY)

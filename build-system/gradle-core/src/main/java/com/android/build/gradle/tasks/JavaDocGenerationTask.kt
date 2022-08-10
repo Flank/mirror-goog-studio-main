@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
@@ -60,7 +60,7 @@ import java.util.function.BiConsumer
  * Generate Java docs for java & kotlin sources using dokka.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_DOC])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.JAVA_DOC)
 abstract class JavaDocGenerationTask : NonIncrementalTask() {
 
     @get:Input

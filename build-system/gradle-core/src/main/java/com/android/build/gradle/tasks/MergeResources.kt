@@ -51,7 +51,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode
 import com.android.builder.png.VectorDrawableRenderer
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.resources.ANDROID_AAPT_IGNORE
 import com.android.ide.common.resources.CopyToOutputDirectoryResourceCompilationService
@@ -103,7 +103,7 @@ import javax.xml.bind.JAXBException
 import javax.xml.parsers.DocumentBuilderFactory
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.MERGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.MERGING])
 abstract class MergeResources : NewIncrementalTask() {
     // ----- PUBLIC TASK API -----
     /** Directory to write the merged resources to  */

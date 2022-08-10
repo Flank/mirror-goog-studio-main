@@ -36,7 +36,7 @@ import com.android.builder.internal.compiler.AidlProcessor
 import com.android.builder.internal.compiler.DirectoryWalker
 import com.android.builder.internal.compiler.DirectoryWalker.FileAction
 import com.android.builder.internal.incremental.DependencyData
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
@@ -75,7 +75,7 @@ import javax.inject.Inject
  * Task to compile aidl files. Supports incremental update.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.COMPILATION, TaskCategoryLabel.AIDL])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.AIDL, secondaryTaskCategories = [TaskCategory.COMPILATION])
 abstract class AidlCompile : NonIncrementalTask() {
     @get:Input
     @get:Optional

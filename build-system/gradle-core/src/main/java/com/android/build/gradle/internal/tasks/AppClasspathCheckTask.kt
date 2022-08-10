@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
@@ -32,7 +32,7 @@ import org.gradle.work.DisableCachingByDefault
  * Caching disabled by default for this task in line with behavior of parent: [ClasspathComparisonTask]
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.VERIFICATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.VERIFICATION)
 abstract class AppClasspathCheckTask : ClasspathComparisonTask() {
 
     @get:Internal("only for task execution")

@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -31,7 +31,7 @@ import org.gradle.work.DisableCachingByDefault
 
 // Disable caching since we only create a small text file.
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_GENERATION, TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST, secondaryTaskCategories = [TaskCategory.SOURCE_GENERATION])
 abstract class PrivacySandboxSdkManifestGeneratorTask: NonIncrementalTask() {
 
     @get:OutputFile

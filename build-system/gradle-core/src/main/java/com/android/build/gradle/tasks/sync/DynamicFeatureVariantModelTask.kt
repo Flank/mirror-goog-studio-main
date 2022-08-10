@@ -19,12 +19,12 @@ package com.android.build.gradle.tasks.sync
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.SYNC)
 abstract class DynamicFeatureVariantModelTask: ModuleVariantModelTask() {
 
     override fun addVariantContent(variant: VariantProperties.Builder) {

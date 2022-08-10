@@ -19,14 +19,13 @@ package com.android.build.gradle.tasks
 import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.cxx.prefab.PREFAB_PUBLICATION_FILE
 import com.android.build.gradle.internal.cxx.prefab.PrefabPublication
-import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType
 import com.android.build.gradle.internal.cxx.prefab.PrefabPublicationType.Configuration
 import com.android.build.gradle.internal.cxx.prefab.writePublicationFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -37,7 +36,7 @@ import org.gradle.work.DisableCachingByDefault
  * Task write a [PrefabPublication] with library information added to it to disk.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.NATIVE)
 abstract class PrefabPackageConfigurationTask : NonIncrementalTask() {
 
     @get:Nested

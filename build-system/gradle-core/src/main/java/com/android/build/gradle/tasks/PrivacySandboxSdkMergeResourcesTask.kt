@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService
-import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.profile.AnalyticsService
@@ -31,7 +30,7 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -56,7 +55,7 @@ import org.gradle.api.tasks.TaskProvider
  * handled by the AGP MergeResources task.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.MERGING])
 abstract class PrivacySandboxSdkMergeResourcesTask : NonIncrementalTask() {
 
     @get:OutputDirectory

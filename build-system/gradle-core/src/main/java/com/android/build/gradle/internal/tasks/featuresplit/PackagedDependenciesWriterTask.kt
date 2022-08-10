@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.Action
@@ -54,7 +54,7 @@ private val aarOrJarType = Action { container: AttributeContainer ->
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.METADATA)
 abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
     @get:OutputFile

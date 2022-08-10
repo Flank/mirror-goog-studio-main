@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AndroidResources
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
@@ -63,7 +63,7 @@ import java.io.File
  * as well as the generated R classes for this app that can be compiled against.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES)
 abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var aaptFriendlyManifestFileDirectory: Provider<Directory> private set

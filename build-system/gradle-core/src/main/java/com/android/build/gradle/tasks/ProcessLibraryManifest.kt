@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.utils.FileUtils
@@ -61,7 +61,7 @@ import java.io.UncheckedIOException
 
 /** a Task that only merge a single manifest with its overlays.  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST)
 abstract class ProcessLibraryManifest : ManifestProcessorTask() {
 
     @get:OutputFile

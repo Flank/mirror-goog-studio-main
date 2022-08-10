@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.ProguardFiles
 import com.android.build.gradle.internal.InternalScope
@@ -39,7 +38,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentType
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
@@ -71,7 +70,7 @@ import java.io.File
  * code.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION)
 abstract class ProguardConfigurableTask(
     private val projectLayout: ProjectLayout
 ) : NonIncrementalTask() {

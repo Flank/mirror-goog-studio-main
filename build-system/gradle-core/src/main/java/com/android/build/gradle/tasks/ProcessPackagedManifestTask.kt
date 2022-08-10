@@ -33,8 +33,8 @@ import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
+import com.android.ide.common.attribution.TaskCategory
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.android.manifmerger.XmlDocument
@@ -65,7 +65,7 @@ import java.io.FileInputStream
 import javax.inject.Inject
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST)
 abstract class ProcessPackagedManifestTask @Inject constructor(
     objects: ObjectFactory,
     workers: WorkerExecutor

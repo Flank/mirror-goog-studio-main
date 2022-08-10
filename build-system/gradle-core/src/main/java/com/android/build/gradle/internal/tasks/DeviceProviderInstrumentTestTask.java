@@ -72,7 +72,7 @@ import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -123,7 +123,7 @@ import org.gradle.workers.WorkerExecutor;
 
 /** Run instrumentation tests for a given variant */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.TEST)
 public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTask
         implements AndroidTestTask {
 

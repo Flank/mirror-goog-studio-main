@@ -10,7 +10,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AndroidResources
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.resources.writeIdentifiedSourceSetsFile
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
@@ -35,7 +35,7 @@ import java.io.File
  * Produces a file which lists project resource source set directories with an identifier.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES)
 abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input

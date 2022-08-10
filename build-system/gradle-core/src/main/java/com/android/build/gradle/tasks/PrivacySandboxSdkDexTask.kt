@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.DEFAULT_NUM_BUCKETS
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask
@@ -32,7 +31,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.sdklib.AndroidVersion
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.ConfigurableFileCollection
@@ -49,7 +48,7 @@ import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.DEXING)
 abstract class PrivacySandboxSdkDexTask: NewIncrementalTask() {
 
     @get:Incremental

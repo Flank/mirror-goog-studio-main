@@ -41,7 +41,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.dexing.DexingType
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.Invoker
 import com.android.manifmerger.ManifestMerger2.WEAR_APP_SUB_MANIFEST
@@ -79,7 +79,7 @@ import java.util.EnumSet
 
 /** A task that processes the manifest  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST)
 abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     private var manifests: ArtifactCollection? = null

@@ -28,7 +28,7 @@ import com.android.bundle.Config
 import com.android.bundle.SdkBundleConfigProto
 import com.android.bundle.SdkModulesConfigOuterClass
 import com.android.bundle.SdkModulesConfigOuterClass.SdkModulesConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.build.bundletool.commands.BuildSdkBundleCommand
 import com.android.tools.build.bundletool.model.version.BundleToolVersion
 import com.google.common.collect.ImmutableList
@@ -44,7 +44,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
-import java.util.Objects
 
 /**
  * Task to invoke the bundle tool command to create the final ASB bundle for privacy sandbox sdk
@@ -54,7 +53,7 @@ import java.util.Objects
  * should just package already compiled and packaged stuff.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.BUNDLE_PACKAGING)
 abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
 
     @get:OutputFile

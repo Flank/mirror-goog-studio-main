@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -41,7 +41,7 @@ import java.io.IOException
  * FeatureDeclarationWriterTask would create a circular dependency.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.METADATA)
 abstract class FeatureNameWriterTask : NonIncrementalTask() {
 
     @get:Input

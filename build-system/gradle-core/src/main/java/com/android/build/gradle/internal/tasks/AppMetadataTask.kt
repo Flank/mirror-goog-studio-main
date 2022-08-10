@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_FILE_NAME
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import java.io.File
@@ -51,7 +51,7 @@ import org.gradle.work.DisableCachingByDefault
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.METADATA)
 abstract class AppMetadataTask : NonIncrementalTask() {
 
     @get:OutputFile abstract val outputFile: RegularFileProperty

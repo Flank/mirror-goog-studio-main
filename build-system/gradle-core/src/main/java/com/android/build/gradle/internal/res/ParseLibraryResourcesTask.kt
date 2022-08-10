@@ -28,7 +28,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableChange
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.ResourceDirectoryParseException
@@ -75,7 +75,7 @@ import javax.xml.parsers.ParserConfigurationException
  * TODO(imorlowska): Refactor the parsers to work with workers, so we can parse files in parallel.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES)
 abstract class ParseLibraryResourcesTask : NewIncrementalTask() {
 
     @get:InputFiles

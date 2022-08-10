@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.merge.DuplicateRelativeFileException
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -69,7 +69,7 @@ import org.gradle.work.DisableCachingByDefault
  * Task to merge native libs from a project and possibly its dependencies
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.MERGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.NATIVE, secondaryTaskCategories = [TaskCategory.MERGING])
 abstract class MergeNativeLibsTask : NonIncrementalTask() {
 
     @get:InputFiles

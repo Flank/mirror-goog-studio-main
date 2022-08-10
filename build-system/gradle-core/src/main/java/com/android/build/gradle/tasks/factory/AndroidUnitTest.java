@@ -43,7 +43,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.ComponentType;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -70,7 +70,7 @@ import org.jetbrains.annotations.NotNull;
 
 /** Patched version of {@link Test} that we need to use for local unit tests support. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.TEST})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.TEST)
 public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
 
     private String variantName;

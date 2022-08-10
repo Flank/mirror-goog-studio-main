@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.profile.AnalyticsService;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.builder.profile.Recorder;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +52,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.SOURCE_PROCESSING})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = {TaskCategory.SOURCE_PROCESSING})
 public abstract class IncrementalTransformTask extends TransformTask {
     @TaskAction
     void transform(final IncrementalTaskInputs incrementalTaskInputs)

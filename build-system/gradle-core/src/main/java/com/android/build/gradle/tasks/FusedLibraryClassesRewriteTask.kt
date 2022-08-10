@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
 import org.gradle.api.attributes.Usage
@@ -57,7 +57,7 @@ import java.io.File
    the fused library R class rather than the library's local R class.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = [TaskCategory.SOURCE_PROCESSING])
 abstract class FusedLibraryClassesRewriteTask : NonIncrementalTask() {
 
     @get:OutputDirectory

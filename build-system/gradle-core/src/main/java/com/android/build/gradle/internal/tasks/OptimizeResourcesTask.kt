@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AndroidResources
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.internal.workeractions.DecoratedWorkParameters
 import com.android.build.gradle.internal.workeractions.WorkActionAdapter
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.DefaultProcessExecutor
@@ -63,7 +63,7 @@ import javax.inject.Inject
  * the optimized resources content is made identical to [InternalArtifactType.PROCESSED_RES].
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION, secondaryTaskCategories = [TaskCategory.ANDROID_RESOURCES])
 abstract class OptimizeResourcesTask : NonIncrementalTask() {
 
     @get:InputDirectory

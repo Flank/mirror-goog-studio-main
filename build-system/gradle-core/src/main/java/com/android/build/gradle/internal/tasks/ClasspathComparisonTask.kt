@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
@@ -37,7 +36,7 @@ import java.io.File
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.HELP])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.HELP)
 abstract class ClasspathComparisonTask : NonIncrementalTask() {
 
     @get:Input

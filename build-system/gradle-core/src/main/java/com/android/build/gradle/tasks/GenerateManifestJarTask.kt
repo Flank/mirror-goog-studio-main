@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarFlinger
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -43,7 +43,7 @@ import org.gradle.api.tasks.TaskProvider
  * This manifest class is used for accessing Android Manifest custom permission names.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.ZIPPING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST, secondaryTaskCategories = [TaskCategory.ZIPPING])
 abstract class GenerateManifestJarTask : NonIncrementalTask() {
 
     @get:InputFile

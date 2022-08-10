@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.tasks.ProcessApplicationManifest.Companion.getArtifactName
 import com.android.builder.internal.InstrumentedTestManifestGenerator
 import com.android.builder.internal.UnitTestManifestGenerator
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestMerger2.MergeFailureException
 import com.android.manifmerger.ManifestProvider
@@ -84,7 +84,7 @@ import java.io.IOException
  * [AndroidArtifacts.TYPE_METADATA] of the tested app.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST)
 abstract class ProcessTestManifest : ManifestProcessorTask() {
 
     @get:OutputDirectory

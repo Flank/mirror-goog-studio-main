@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.provider.Property
@@ -52,7 +52,7 @@ import java.io.File
  * up-to-date.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.LINT)
 abstract class AndroidLintTextOutputTask : NonIncrementalTask() {
 
     @get:InputFile

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.lint.model.LintModelModule
 import com.android.tools.lint.model.LintModelSerialization
 import org.gradle.api.file.DirectoryProperty
@@ -49,7 +49,7 @@ import java.io.File
  * read by Lint in consuming projects to get all the information about this variant in project.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.LINT])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.LINT)
 abstract class LintModelWriterTask : NonIncrementalTask() {
 
     @get:Nested

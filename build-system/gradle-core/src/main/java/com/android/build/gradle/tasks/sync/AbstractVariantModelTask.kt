@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.OutputFile
@@ -31,7 +31,7 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SYNC])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.SYNC)
 abstract class AbstractVariantModelTask: NonIncrementalTask() {
 
     companion object {

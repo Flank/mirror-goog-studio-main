@@ -38,7 +38,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -137,7 +137,7 @@ private fun BundleLibraryClassesInputs.configureWorkerActionParams(
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ZIPPING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = [TaskCategory.ZIPPING])
 abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputDirectory
@@ -202,7 +202,7 @@ abstract class BundleLibraryClassesDir: NewIncrementalTask(), BundleLibraryClass
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ZIPPING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = [TaskCategory.ZIPPING])
 abstract class BundleLibraryClassesJar : NonIncrementalTask(), BundleLibraryClassesInputs {
 
     @get:OutputFile

@@ -16,13 +16,22 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 
 /***
  * Annotation class that is used for Category-Based Task Analyzer for Build Analyzer.
- * All AGP tasks that is an instance of Task::class.java will and should have this annotation.
- * taskCategoryLabels: Contains shared task attributes.
+ * All AGP tasks that is an instance of Task::class.java should have this annotation.
+ * Exceptions should be declared in the allow-list in [BuildAnalyzerTest]
  */
 @Retention(value = AnnotationRetention.RUNTIME)
 @Target(allowedTargets = [AnnotationTarget.CLASS])
-annotation class BuildAnalyzer(val taskCategoryLabels: Array<TaskCategoryLabel>)
+annotation class BuildAnalyzer(
+        /***
+         * Main execution category of the task
+         */
+        val primaryTaskCategory: TaskCategory,
+        /***
+         * Other possible groupings for the task, does not have to be set
+         */
+        val secondaryTaskCategories: Array<TaskCategory> = []
+)

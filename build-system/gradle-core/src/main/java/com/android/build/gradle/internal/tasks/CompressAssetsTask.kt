@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AssetsTaskCreati
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.packaging.PackagingUtils
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.annotations.VisibleForTesting
@@ -66,7 +66,7 @@ import javax.inject.Inject
  * corresponding asset's relative path in the input directory + ".jar".
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.APK_PACKAGING)
 abstract class CompressAssetsTask: NewIncrementalTask() {
 
     @get:Incremental

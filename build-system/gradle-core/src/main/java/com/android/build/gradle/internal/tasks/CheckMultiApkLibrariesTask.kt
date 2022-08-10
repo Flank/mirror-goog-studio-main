@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.removeVariantNameFromId
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.apache.commons.io.Charsets
@@ -39,7 +39,7 @@ import java.io.File
  * Task to check that no two APKs in a multi-APK project package the same library
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.VERIFICATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.VERIFICATION)
 abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
 
     private lateinit var featureTransitiveDeps : ArtifactCollection

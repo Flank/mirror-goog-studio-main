@@ -34,7 +34,7 @@ import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
@@ -50,7 +50,7 @@ import java.io.File
  * producing a linked manifest file suitable for packaging in the Android App Bundle.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.LINKING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.MANIFEST, secondaryTaskCategories = [TaskCategory.LINKING])
 abstract class LinkManifestForAssetPackTask : NonIncrementalTask() {
 
     /**

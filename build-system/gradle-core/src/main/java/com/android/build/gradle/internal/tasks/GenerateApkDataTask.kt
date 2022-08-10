@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ApkInfoParser
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
@@ -60,7 +60,7 @@ import javax.inject.Inject
 
 /** Task to generate micro app data res file.  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.METADATA, TaskCategoryLabel.SOURCE_GENERATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.APK_PACKAGING, secondaryTaskCategories = [TaskCategory.VERIFICATION, TaskCategory.SOURCE_GENERATION])
 abstract class GenerateApkDataTask : NonIncrementalTask() {
 
     // Tells us if the apk file collection received from task manager exists

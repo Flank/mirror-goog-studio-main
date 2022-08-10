@@ -29,8 +29,7 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.core.ComponentTypeImpl
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -70,7 +69,7 @@ import javax.inject.Inject
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST, TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.TEST, secondaryTaskCategories = [TaskCategory.METADATA])
 abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 

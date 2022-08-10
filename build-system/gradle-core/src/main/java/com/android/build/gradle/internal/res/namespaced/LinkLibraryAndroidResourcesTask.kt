@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.ConfigurableFileCollection
@@ -56,7 +56,7 @@ import java.io.File
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.LINKING])
 abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles

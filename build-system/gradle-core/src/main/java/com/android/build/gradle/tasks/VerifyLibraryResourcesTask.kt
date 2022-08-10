@@ -41,7 +41,7 @@ import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.ResourceCompilationService
@@ -73,7 +73,7 @@ import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.VERIFICATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.VERIFICATION, secondaryTaskCategories = [TaskCategory.ANDROID_RESOURCES])
 abstract class VerifyLibraryResourcesTask : NewIncrementalTask() {
 
     @get:OutputDirectory

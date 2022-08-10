@@ -35,7 +35,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.internal.packaging.IncrementalPackager.APP_METADATA_FILE_NAME
 import com.android.builder.packaging.PackagingUtils
 import com.android.bundle.Config
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.build.bundletool.commands.BuildBundleCommand
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -66,7 +66,7 @@ import java.nio.file.Path
  * Task that generates the bundle (.aab) with all the modules.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.BUNDLE_PACKAGING)
 abstract class PackageBundleTask : NonIncrementalTask() {
 
     // Android Gradle plugin supports two kinds of bundle:

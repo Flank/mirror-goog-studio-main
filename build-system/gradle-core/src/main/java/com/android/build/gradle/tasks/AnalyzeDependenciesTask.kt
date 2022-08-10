@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.model.SourceProvider
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
@@ -51,7 +51,7 @@ import java.util.function.Function
 
 // TODO: Make incremental
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.HELP])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.HELP)
 abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     @get:InputFiles

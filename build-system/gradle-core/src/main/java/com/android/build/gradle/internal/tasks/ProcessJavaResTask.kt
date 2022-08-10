@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.Internal
@@ -29,7 +29,7 @@ import org.gradle.work.DisableCachingByDefault
 import java.io.File
 
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.JAVA_RESOURCES)
 abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
 
     @get:OutputDirectory

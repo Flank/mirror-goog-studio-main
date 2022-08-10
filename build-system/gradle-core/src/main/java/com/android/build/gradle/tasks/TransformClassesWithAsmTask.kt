@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.tasks.factory.features.InstrumentationT
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.SerializableFileChanges
 import com.android.builder.utils.isValidZipEntryName
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import com.google.common.io.ByteStreams
@@ -80,7 +80,7 @@ import java.util.zip.ZipInputStream
  * A task that instruments the project classes with the asm visitors registered via the DSL.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = [TaskCategory.SOURCE_PROCESSING])
 abstract class TransformClassesWithAsmTask : NewIncrementalTask() {
 
     @get:Input

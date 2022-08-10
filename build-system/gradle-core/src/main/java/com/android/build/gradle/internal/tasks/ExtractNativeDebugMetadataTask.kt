@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.NATIVE_SYMBO
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.process.LoggedProcessOutputHandler
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
@@ -67,7 +67,7 @@ import javax.inject.Inject
  * Task to produce native debug metadata files to be included in the app bundle.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.NATIVE, TaskCategoryLabel.METADATA])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.NATIVE, secondaryTaskCategories = [TaskCategory.METADATA])
 abstract class ExtractNativeDebugMetadataTask : NonIncrementalTask() {
 
     @get:InputFiles

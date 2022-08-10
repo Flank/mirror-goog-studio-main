@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.AndroidDependenciesRenderer
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.ide.dependencies.MavenCoordinatesCacheBuildService
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -31,7 +31,7 @@ import org.gradle.work.DisableCachingByDefault
 import java.io.IOException
 
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.HELP])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.HELP)
 abstract class DependencyReportTask : DefaultTask() {
 
     @get:Internal

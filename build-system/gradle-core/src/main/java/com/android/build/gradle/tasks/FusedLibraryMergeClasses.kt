@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage
@@ -45,7 +45,7 @@ import java.util.jar.JarFile
  * merge classes.jar coming from included libraries in fused libraries  plugin.
  */
 @DisableCachingByDefault(because = "No calculation is made, merging classes. ")
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.FUSING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = [TaskCategory.MERGING, TaskCategory.FUSING])
 abstract class FusedLibraryMergeClasses: DefaultTask() {
 
     @get:OutputDirectory

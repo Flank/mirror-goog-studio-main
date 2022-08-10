@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.build.libraries.metadata.AppDependencies
 import com.android.tools.build.libraries.metadata.Library
 import com.android.tools.build.libraries.metadata.LibraryDependencies
@@ -45,7 +45,7 @@ import java.util.LinkedList
  * Task that generates the final bundle dependencies, combining all the module dependencies.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.BUNDLE_PACKAGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.BUNDLE_PACKAGING)
 abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
     @get:InputFile

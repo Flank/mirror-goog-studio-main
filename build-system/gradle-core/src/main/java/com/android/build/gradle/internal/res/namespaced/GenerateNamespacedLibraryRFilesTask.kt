@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.builder.symbols.writeSymbolListWithPackageName
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.google.common.collect.ImmutableList
@@ -56,7 +56,7 @@ import javax.inject.Inject
  * Class generating the R.jar and resource text files for a resource namespace aware library.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.SOURCE_GENERATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.ANDROID_RESOURCES, secondaryTaskCategories = [TaskCategory.SOURCE_GENERATION])
 abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) :
     NonIncrementalTask() {
 

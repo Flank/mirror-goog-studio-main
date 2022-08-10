@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.services.BuildServicesKt;
 import com.android.build.gradle.internal.tasks.BuildAnalyzer;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.profile.Recorder;
-import com.android.ide.common.attribution.TaskCategoryLabel;
+import com.android.ide.common.attribution.TaskCategory;
 import com.google.common.collect.ImmutableMap;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
@@ -61,7 +61,7 @@ import org.gradle.workers.WorkerExecutor;
 
 /** A task running a transform. */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = {TaskCategoryLabel.SOURCE_PROCESSING})
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.COMPILED_CLASSES, secondaryTaskCategories = {TaskCategory.SOURCE_PROCESSING})
 public abstract class TransformTask extends StreamBasedTask {
 
     private Transform transform;

@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.utils.toImmutableSet
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.bundle.Devices.DeviceSpec
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
 import com.android.utils.FileUtils
 import com.google.gson.stream.JsonReader
@@ -56,7 +56,7 @@ import java.nio.file.Files
  * info file indicate which APKs to extract. Only APKs for that particular device are extracted.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.APK_PACKAGING])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.APK_PACKAGING)
 abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {

@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.BuilderConstants
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.usLocaleCapitalize
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
@@ -76,7 +76,7 @@ import java.util.Locale
  * generating unit test and connected test reports.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.TEST])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.TEST)
 abstract class JacocoReportTask : NonIncrementalTask() {
 
     // PathSensitivity.NONE since only the contents of the files under the directory matter as input

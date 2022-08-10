@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.EvalIssueException
-import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.ide.common.attribution.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
@@ -57,7 +57,7 @@ import java.util.function.Consumer
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.OPTIMIZATION])
+@BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION)
 abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
 
     @get:Input
