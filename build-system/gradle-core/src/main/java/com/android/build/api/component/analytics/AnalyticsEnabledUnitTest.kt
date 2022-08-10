@@ -17,12 +17,21 @@
 package com.android.build.api.component.analytics
 
 import com.android.build.api.variant.UnitTest
+import com.android.tools.build.gradle.internal.profile.VariantPropertiesMethodType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.MapProperty
 import javax.inject.Inject
 
 open class AnalyticsEnabledUnitTest @Inject constructor(
     override val delegate: UnitTest,
     stats: GradleBuildVariant.Builder,
     objectFactory: ObjectFactory
-) : AnalyticsEnabledTestComponent(delegate, stats, objectFactory), UnitTest
+) : AnalyticsEnabledTestComponent(delegate, stats, objectFactory), UnitTest {
+    override val manifestPlaceholders: MapProperty<String, String>
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.MANIFEST_PLACEHOLDERS_VALUE
+            return delegate.manifestPlaceholders
+        }
+}

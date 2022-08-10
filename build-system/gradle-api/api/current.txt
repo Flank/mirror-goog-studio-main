@@ -2024,13 +2024,11 @@ package com.android.build.api.variant {
   public interface AndroidTest extends com.android.build.api.variant.GeneratesTestApk com.android.build.api.variant.HasAndroidResources com.android.build.api.variant.TestComponent {
     method public org.gradle.api.provider.Property<java.lang.String> getApplicationId();
     method public org.gradle.api.provider.MapProperty<java.lang.String,? extends com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> getBuildConfigFields();
-    method public org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getManifestPlaceholders();
     method public org.gradle.api.provider.Provider<java.lang.String> getNamespace();
     method public org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> getProguardFiles();
     method public com.android.build.api.variant.SigningConfig? getSigningConfig();
     property public abstract org.gradle.api.provider.Property<java.lang.String> applicationId;
     property public abstract org.gradle.api.provider.MapProperty<java.lang.String,? extends com.android.build.api.variant.BuildConfigField<? extends java.io.Serializable>> buildConfigFields;
-    property public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> manifestPlaceholders;
     property public abstract org.gradle.api.provider.Provider<java.lang.String> namespace;
     property public abstract org.gradle.api.provider.ListProperty<org.gradle.api.file.RegularFile> proguardFiles;
     property public abstract com.android.build.api.variant.SigningConfig? signingConfig;
@@ -2509,6 +2507,8 @@ package com.android.build.api.variant {
   }
 
   public interface TestComponent extends com.android.build.api.variant.Component {
+    method public org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> getManifestPlaceholders();
+    property public abstract org.gradle.api.provider.MapProperty<java.lang.String,java.lang.String> manifestPlaceholders;
   }
 
   @org.gradle.api.Incubating public interface TestFixtures extends com.android.build.api.variant.GeneratesAar com.android.build.api.variant.Component com.android.build.api.variant.HasAndroidResources {

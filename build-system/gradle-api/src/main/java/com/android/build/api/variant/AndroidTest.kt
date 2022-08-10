@@ -45,16 +45,6 @@ interface AndroidTest : GeneratesTestApk, TestComponent, HasAndroidResources {
     val buildConfigFields: MapProperty<String, out BuildConfigField<out Serializable>>
 
     /**
-     * [MapProperty] of the variant's manifest placeholders.
-     *
-     * Placeholders are organized with a key and a value. The value is a [String] that will be
-     * used as is in the merged manifest.
-     *
-     * @return The [MapProperty] with keys as [String].
-     */
-    val manifestPlaceholders: MapProperty<String, String>
-
-    /**
      * Variant's signingConfig, initialized by the corresponding DSL element.
      * @return Variant's config or null if the variant is not configured for signing.
      */
