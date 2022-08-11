@@ -54,9 +54,8 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
         val relevant = internal.startsWith("com/android/") ||
             // Imported APIs
             internal.startsWith("org/jetbrains/uast") ||
-            internal.startsWith("org/jetbrains/kotlin/psi") ||
-            internal.startsWith("org/jetbrains/kotlin/asJava") ||
-            internal.startsWith("com/intellij/psi")
+            internal.startsWith("org/jetbrains/kotlin") ||
+            internal.startsWith("com/intellij")
         // Libraries unlikely to change: org.w3c.dom, org.objectweb.asm, org.xmlpull, etc.
 
         return relevant && !bundledClasses.contains(internal)
