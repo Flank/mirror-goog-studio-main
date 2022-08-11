@@ -37,9 +37,6 @@ import java.util.HashSet
 /**
  * Registry which provides a list of checks to be performed on an
  * Android project
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 abstract class IssueRegistry
 protected constructor() {
@@ -162,9 +159,9 @@ protected constructor() {
      * @param client the client to report errors to
      * @param configuration the configuration to look up which issues
      *     are enabled etc from
-     * @param platforms the platforms applying to this analysis
      * @param scope the scope for the analysis, to filter out detectors
      *     that require wider analysis than is currently being performed
+     * @param platforms the platforms applying to this analysis
      * @param scopeToDetectors an optional map which (if not null) will
      *     be filled by this method to contain mappings from
      *     each scope to the applicable detectors for that scope

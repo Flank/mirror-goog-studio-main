@@ -123,7 +123,7 @@ public class TestReport {
                             deviceName, projectName, flavorName);
                 }
                 if (testCase.getElementsByTagName("skipped").getLength() > 0) {
-                    testResult.ignored();
+                    testResult.ignored(deviceName, projectName, flavorName);
                 }
             }
             NodeList ignoredTestCases = document.getElementsByTagName("ignored-testcase");
@@ -131,7 +131,8 @@ public class TestReport {
                 Element testCase = (Element) ignoredTestCases.item(i);
                 String className = testCase.getAttribute("classname");
                 String testName = testCase.getAttribute("name");
-                model.addTest(className, testName, 0, deviceName, projectName, flavorName).ignored();
+                model.addTest(className, testName, 0, deviceName, projectName, flavorName)
+                        .ignored(deviceName, projectName, flavorName);
             }
             String suiteClassName = document.getDocumentElement().getAttribute("name");
             if (!StringsKt.isBlank(suiteClassName)) {

@@ -287,6 +287,13 @@ public class LiveUpdateDeployer {
         }
 
         List<Integer> pids = adb.getPids(packageName);
+        if (pids.isEmpty()) {
+            System.out.println("Cancelling LiveEdit request(No target pids)");
+            List<UpdateLiveEditError> error = new LinkedList<>();
+            error.add(new UpdateLiveEditError("No target pids to Live Edit"));
+            return error;
+        }
+
         Deploy.Arch arch = adb.getArch(pids);
 
         Deploy.LiveEditRequest.Builder requestBuilder = Deploy.LiveEditRequest.newBuilder();

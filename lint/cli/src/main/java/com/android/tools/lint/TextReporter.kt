@@ -29,12 +29,7 @@ import java.io.File
 import java.io.IOException
 import java.io.Writer
 
-/**
- * A reporter which emits lint warnings as plain text strings
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A reporter which emits lint warnings as plain text strings */
 class TextReporter(
     client: LintCliClient,
     private val flags: LintCliFlags,

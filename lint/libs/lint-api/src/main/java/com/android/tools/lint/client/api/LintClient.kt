@@ -98,9 +98,6 @@ import kotlin.math.max
  * Information about the tool embedding the lint analyzer. IDEs and
  * other tools implementing lint support will extend this to integrate
  * logging, displaying errors, etc.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 abstract class LintClient {
 
@@ -1692,7 +1689,8 @@ abstract class LintClient {
      * @param includeModuleDependencies if true, include merged view of
      *     all module dependencies
      * @param includeLibraries if true, include merged view of all
-     *     library dependencies (this also requires all module dependencies)
+     *     library dependencies (this also requires all module
+     *     dependencies)
      * @return the project resources, or null if not available
      */
     @Deprecated(

@@ -33,9 +33,6 @@ import java.io.File
  * Lint configuration for an Android project such as which specific
  * rules to include, which specific rules to exclude, and which specific
  * errors to ignore.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 abstract class Configuration(
     val configurations: ConfigurationHierarchy

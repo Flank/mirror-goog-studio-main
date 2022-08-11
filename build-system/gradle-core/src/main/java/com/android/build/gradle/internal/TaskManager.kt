@@ -176,7 +176,7 @@ import com.android.build.gradle.internal.transforms.ShrinkAppBundleResourcesTask
 import com.android.build.gradle.internal.transforms.ShrinkResourcesNewShrinkerTask
 import com.android.build.gradle.internal.utils.KOTLIN_KAPT_PLUGIN_ID
 import com.android.build.gradle.internal.utils.addComposeArgsToKotlinCompile
-import com.android.build.gradle.internal.utils.getKotlinCompile
+import com.android.build.gradle.internal.utils.configureKotlinCompileForProject
 import com.android.build.gradle.internal.utils.getProjectKotlinPluginKotlinVersion
 import com.android.build.gradle.internal.utils.isKotlinKaptPluginApplied
 import com.android.build.gradle.internal.utils.isKotlinPluginApplied
@@ -350,7 +350,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             getBuildService(project.gradle.sharedServices)
         createCxxTasks(
             androidLocationBuildService.get(),
-            getBuildService<SdkComponentsBuildService>(globalConfig.services.buildServiceRegistry).get(),
+            getBuildService(
+                globalConfig.services.buildServiceRegistry,
+                SdkComponentsBuildService::class.java
+            ).get(),
             globalConfig.services.issueReporter,
             taskFactory,
             globalConfig.services.projectOptions,
@@ -749,11 +752,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // add compose args to all kotlin compile tasks
         for (creationConfig in allPropertiesList) {
             try {
-                val compileKotlin = getKotlinCompile(project, creationConfig)
-
-                compileKotlin.configure {
+                configureKotlinCompileForProject(project, creationConfig) {
                     addComposeArgsToKotlinCompile(
-                            it, creationConfig, project.files(kotlinExtension), useLiveLiterals)
+                        it, creationConfig, project.files(kotlinExtension), useLiveLiterals
+                    )
                 }
             } catch (e: UnknownTaskException) {
                 // ignore
@@ -3003,7 +3005,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             task.nestedComponents.setDisallowChanges(nestedComponents)
             task.group = ANDROID_GROUP
             task.mavenCoordinateCache.setDisallowChanges(
-                getBuildService<MavenCoordinatesCacheBuildService>(project.gradle.sharedServices).get()
+                getBuildService(
+                    project.gradle.sharedServices,
+                    MavenCoordinatesCacheBuildService::class.java
+                ).get()
             )
             task.notCompatibleWithConfigurationCache(
                 "DependencyReportTask not compatible with config caching"
@@ -3482,7 +3487,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Temporary static variables for Kotlin+Compose configuration
         const val KOTLIN_COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
-        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.2.0-alpha05"
+        const val COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION = "1.2.0"
         const val CREATE_MOCKABLE_JAR_TASK_NAME = "createMockableJar"
 
         /**

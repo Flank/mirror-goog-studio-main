@@ -19,20 +19,19 @@
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/io.h"
 #include "tools/base/deploy/common/log.h"
+#include "tools/base/deploy/sites/sites.h"
 
 #include <unistd.h>
 
 namespace deploy {
-Self::Self() {
-  char buffer[BUFSIZ];
-  readlink("/proc/self/exe", buffer, BUFSIZ);
-  binary_full_path = std::string(buffer);
-}
+Self::Self() { binary_full_path = Sites::InstallerPath(); }
 
 bool Self::gone() {
   bool there = IO::access(binary_full_path.c_str(), F_OK) == 0;
-  std::string msg = "Self-Checking '" + binary_full_path +
-                    "' is there = " + std::to_string(there);
+  if (!there) {
+    std::string msg = "Self-Checking '" + binary_full_path + "' NOT FOUND!";
+    WarnEvent(msg.c_str());
+  }
   return !there;
 }
 

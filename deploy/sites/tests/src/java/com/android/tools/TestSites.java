@@ -17,6 +17,7 @@
 package com.android.tools;
 
 import com.android.tools.deployer.Sites;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TestSites {
@@ -24,12 +25,40 @@ public class TestSites {
     public void testSites() {
         String pkg = "foo";
 
-        String appDate = Sites.appData(pkg);
+        String appData = Sites.appData(pkg);
+        Assert.assertEquals("/data/data/foo/", appData);
+
         String codeCache = Sites.appCodeCache(pkg);
+        Assert.assertEquals("/data/data/foo/code_cache/", codeCache);
+
         String studio = Sites.appStudio(pkg);
+        Assert.assertEquals("/data/data/foo/code_cache/.studio/", studio);
+
         String logs = Sites.appLog(pkg);
+        Assert.assertEquals("/data/data/foo/.agent-logs/", logs);
+
         String startup = Sites.appStartupAgent(pkg);
+        Assert.assertEquals("/data/data/foo/code_cache/startup_agents/", startup);
+
         String overlays = Sites.appOverlays(pkg);
+        Assert.assertEquals("/data/data/foo/code_cache/.overlay/", overlays);
+
         String liveLiteral = Sites.appLiveLiteral(pkg);
+        Assert.assertEquals("/data/data/foo/code_cache/.ll/", liveLiteral);
+
+        String deviceStudioFolder = Sites.deviceStudioFolder();
+        Assert.assertEquals("/data/local/tmp/.studio/", deviceStudioFolder);
+
+        String installerExecutableFolder = Sites.installerExecutableFolder();
+        Assert.assertEquals("/data/local/tmp/.studio/bin/", installerExecutableFolder);
+
+        String installerTmpFolder = Sites.installerTmpFolder();
+        Assert.assertEquals("/data/local/tmp/.studio/tmp/", installerTmpFolder);
+
+        String installerBinary = Sites.installerBinary();
+        Assert.assertEquals("installer", installerBinary);
+
+        String installerPath = Sites.installerPath();
+        Assert.assertEquals("/data/local/tmp/.studio/bin/installer", installerPath);
     }
 }

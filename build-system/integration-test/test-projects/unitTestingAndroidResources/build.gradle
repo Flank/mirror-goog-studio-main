@@ -27,7 +27,6 @@ repositories {
 
 android {
     namespace "com.android.tests"
-    testNamespace "com.android.tests"
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 

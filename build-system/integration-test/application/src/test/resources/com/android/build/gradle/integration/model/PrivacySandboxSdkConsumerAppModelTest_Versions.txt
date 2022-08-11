@@ -1,0 +1,20 @@
+> Versions:
+   > versions:
+      - android_dsl:
+         - major = 0
+         - minor = 1
+      - android_project:
+         - major = 0
+         - minor = 1
+      - basic_android_project:
+         - major = 0
+         - minor = 1
+      - native_module:
+         - major = 0
+         - minor = 1
+      - variant_dependencies:
+         - major = 0
+         - minor = 1
+   < versions
+   - agp = DEFAULT_AGP_REVISION
+< Versions

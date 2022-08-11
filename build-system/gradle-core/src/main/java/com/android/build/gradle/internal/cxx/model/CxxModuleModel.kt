@@ -307,4 +307,17 @@ val CxxModuleModel.intermediatesParentDirSuffix : String get() = when(buildSyste
     else -> "obj"
 }
 
+/**
+ * A predictable location to republish files like compile_commands.json.
+ *   ex, $moduleRootFolder/.cxx/tools
+ */
+val CxxModuleModel.predictableRepublishFolder : File
+    get() = cxxFolder.resolve("tools")
+
+/**
+ * Location of reference metadata from other modules in this project.
+ *   ex, $moduleRootFolder/build/intermediates/cxx/refs
+ */
+val CxxModuleModel.refsFolder: File
+    get() = join(intermediatesFolder, "refs")
 

@@ -153,6 +153,7 @@ abstract class PageRenderer<T extends CompositeTestResults> extends TabbedPageRe
         htmlWriter.startElement("th").characters(name).endElement();
         htmlWriter.startElement("th").characters("Tests").endElement();
         htmlWriter.startElement("th").characters("Failures").endElement();
+        htmlWriter.startElement("th").characters("Skipped").endElement();
         htmlWriter.startElement("th").characters("Duration").endElement();
         htmlWriter.startElement("th").characters("Success rate").endElement();
         htmlWriter.endElement(); //tr
@@ -163,6 +164,10 @@ abstract class PageRenderer<T extends CompositeTestResults> extends TabbedPageRe
             htmlWriter.startElement("td").attribute("class", results.getStatusClass()).characters(results.getName()).endElement();
             htmlWriter.startElement("td").characters(Integer.toString(results.getTestCount())).endElement();
             htmlWriter.startElement("td").characters(Integer.toString(results.getFailureCount())).endElement();
+            htmlWriter
+                    .startElement("td")
+                    .characters(Integer.toString(results.getSkipCount()))
+                    .endElement();
             htmlWriter.startElement("td").characters(results.getFormattedDuration()).endElement();
             htmlWriter.startElement("td").characters(results.getFormattedSuccessRate()).endElement();
             htmlWriter.endElement(); //tr
@@ -198,20 +203,54 @@ abstract class PageRenderer<T extends CompositeTestResults> extends TabbedPageRe
                 htmlWriter.startElement("table");
                 htmlWriter.startElement("tr");
                 htmlWriter.startElement("td");
-                htmlWriter.startElement("div").attribute("class", "infoBox").attribute("id", "tests");
-                htmlWriter.startElement("div").attribute("class", "counter").characters(Integer.toString(results.getTestCount())).endElement();
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "infoBox")
+                        .attribute("id", "tests");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "counter")
+                        .characters(Integer.toString(results.getTestCount()))
+                        .endElement();
                 htmlWriter.startElement("p").characters("tests").endElement();
                 htmlWriter.endElement();
                 htmlWriter.endElement();
                 htmlWriter.startElement("td");
-                htmlWriter.startElement("div").attribute("class", "infoBox").attribute("id", "failures");
-                htmlWriter.startElement("div").attribute("class", "counter").characters(Integer.toString(results.getFailureCount())).endElement();
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "infoBox")
+                        .attribute("id", "failures");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "counter")
+                        .characters(Integer.toString(results.getFailureCount()))
+                        .endElement();
                 htmlWriter.startElement("p").characters("failures").endElement();
                 htmlWriter.endElement();
                 htmlWriter.endElement();
                 htmlWriter.startElement("td");
-                htmlWriter.startElement("div").attribute("class", "infoBox").attribute("id", "duration");
-                htmlWriter.startElement("div").attribute("class", "counter").characters(results.getFormattedDuration()).endElement();
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "infoBox")
+                        .attribute("id", "skipped");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "counter")
+                        .characters(Integer.toString(results.getSkipCount()))
+                        .endElement();
+                htmlWriter.startElement("p").characters("skipped").endElement();
+                htmlWriter.endElement();
+                htmlWriter.endElement();
+                htmlWriter.startElement("td");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "infoBox")
+                        .attribute("id", "duration");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "counter")
+                        .characters(results.getFormattedDuration())
+                        .endElement();
                 htmlWriter.startElement("p").characters("duration").endElement();
                 htmlWriter.endElement();
                 htmlWriter.endElement();
@@ -220,9 +259,19 @@ abstract class PageRenderer<T extends CompositeTestResults> extends TabbedPageRe
                 htmlWriter.endElement();
                 htmlWriter.endElement();
                 htmlWriter.startElement("td");
-                htmlWriter.startElement("div").attribute("class", String.format("infoBox %s", results.getStatusClass())).attribute("id", "successRate");
-                htmlWriter.startElement("div").attribute("class", "percent").characters(results.getFormattedSuccessRate()).endElement();
-                htmlWriter.startElement("p").characters("successful").endElement();
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", String.format("infoBox %s", results.getStatusClass()))
+                        .attribute("id", "successRate");
+                htmlWriter
+                        .startElement("div")
+                        .attribute("class", "percent")
+                        .characters(results.getFormattedSuccessRate())
+                        .endElement();
+                htmlWriter
+                        .startElement("p")
+                        .characters(results.getSuccessRate() != null ? "successful" : "N/A")
+                        .endElement();
                 htmlWriter.endElement();
                 htmlWriter.endElement();
                 htmlWriter.endElement();

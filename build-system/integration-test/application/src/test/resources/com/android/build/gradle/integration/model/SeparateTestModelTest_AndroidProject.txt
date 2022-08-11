@@ -43,6 +43,7 @@
                - instrumentedTestTaskName = "connectedDebugAndroidTest"
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          - androidTestArtifact    = (null)
          - unitTestArtifact       = (null)

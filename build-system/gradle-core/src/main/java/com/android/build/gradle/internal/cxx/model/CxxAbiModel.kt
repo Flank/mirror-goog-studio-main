@@ -148,6 +148,14 @@ private val CxxAbiModel.modelMetadataFolder: File
 val CxxAbiModel.logsFolder: File
     get() = join(intermediatesParentFolder, "logs", abi.tag)
 
+
+/**
+ * A predictable location to republish files like compile_commands.json.
+ *   ex, $moduleRootFolder/.cxx/tools/debug/x86
+ */
+val CxxAbiModel.predictableRepublishFolder : File
+    get() = join(variant.predictableRepublishFolder, abi.tag)
+
 /**
  * Pull up the app's minSdkVersion to be within the bounds for the ABI and NDK.
  */

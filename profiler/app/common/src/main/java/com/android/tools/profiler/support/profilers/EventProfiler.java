@@ -54,10 +54,17 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
     private Set<Activity> myActivities = new HashSet<Activity>();
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
+    private final boolean myKeyboardEventEnabled;
 
-    public EventProfiler() {
+    public EventProfiler(boolean keyboardEventEnabled) {
+        myKeyboardEventEnabled = keyboardEventEnabled;
         initialize();
-        initalizeInputConnection();
+        // TODO(b/211154220): Pending user's feedback, either completely remove the keyboard event
+        // functionality in Event Timeline or find a proper way to support it for Android S and
+        // newer.
+        if (keyboardEventEnabled && Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            initializeInputConnection();
+        }
     }
 
     // Native activity functions to send activity events to perfd.
@@ -91,7 +98,8 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // after?
         Window window = activity.getWindow();
         if (!WindowProfilerCallback.class.isInstance(window.getCallback())) {
-            window.setCallback(new WindowProfilerCallback(window.getCallback()));
+            window.setCallback(
+                    new WindowProfilerCallback(window.getCallback(), myKeyboardEventEnabled));
         }
     }
 
@@ -134,7 +142,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         captureCurrentActivityState();
     }
 
-    private void initalizeInputConnection() {
+    private void initializeInputConnection() {
         // This setups a thread to poll for an active InputConnection, once we have one
         // We replace it with an override that acts as a passthorugh. This override allows us
         // to intercept strings / keys sent from the softkeybaord to the application.

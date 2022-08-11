@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_PARSE_ERROR
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -43,7 +44,7 @@ fun createSettingsFromJsonString(
             .read(reader)
     } catch (e: Throwable) {
         // Parse errors are "recoverable" by issuing an error and returning an empty result
-        errorln(e.message ?: e.cause?.message ?: e.javaClass.name)
+        errorln(BUILD_SETTINGS_PARSE_ERROR, e.message ?: e.cause?.message ?: e.javaClass.name)
         Settings()
     }
     return Settings(

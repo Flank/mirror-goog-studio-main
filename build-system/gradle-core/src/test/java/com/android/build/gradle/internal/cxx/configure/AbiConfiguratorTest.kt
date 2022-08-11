@@ -18,7 +18,11 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
+import com.android.build.gradle.internal.cxx.codeText
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_UNSUPPORTED
+import com.android.utils.cxx.CxxDiagnosticCode.RESERVED_FOR_TESTS
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -116,7 +120,7 @@ class AbiConfiguratorTest {
         val configurator = configure(
             externalNativeBuildAbiFilters = setOf("x87"))
         assertThat(logger.errors.first().toString()).isEqualTo(
-                "[CXX1201] ABIs [x87] are not supported for platform. Supported ABIs " +
+                "${ABI_IS_UNSUPPORTED.codeText} ABIs [x87] are not supported for platform. Supported ABIs " +
                 "are [$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).containsExactlyElementsIn(Sets.newHashSet("x87"))
@@ -137,7 +141,7 @@ class AbiConfiguratorTest {
         val configurator = configure(
             splitsFilterAbis = setOf("x87"))
         assertThat(logger.errors).containsExactly(
-                "[CXX1201] ABIs [x87] are not supported for platform. Supported ABIs are "
+                "${ABI_IS_UNSUPPORTED.codeText} ABIs [x87] are not supported for platform. Supported ABIs are "
                 + "[$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
         assertThat(configurator.allAbis).containsExactly("x87")
@@ -150,7 +154,7 @@ class AbiConfiguratorTest {
             externalNativeBuildAbiFilters = setOf("x86"),
             splitsFilterAbis = setOf())
         assertThat(logger.errors).containsExactly(
-                "[CXX1201] ABIs [x86] are not supported for platform. " +
+                "${ABI_IS_UNSUPPORTED.codeText} ABIs [x86] are not supported for platform. " +
                 "Supported ABIs are [x86_64].")
         assertThat(configurator.validAbis).containsExactly(Abi.X86)
         assertThat(configurator.allAbis).containsExactly("x86")
@@ -207,7 +211,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = "bogus")
         assertThat(logger.errors).containsExactly(
-                "[CXX1201] ABIs [bogus] set by 'android.injected.build.abi' gradle " +
+                "${ABI_IS_UNSUPPORTED.codeText} ABIs [bogus] set by 'android.injected.build.abi' gradle " +
                 "flag is not supported. Supported ABIs are " +
                 "[$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
@@ -263,7 +267,7 @@ class AbiConfiguratorTest {
             ideBuildOnlyTargetAbi = true,
             ideBuildTargetAbi = null)
         assertThat(logger.errors).containsExactly(
-            "[CXX1201] ABIs [misp] are not supported for platform. Supported ABIs are [arm64-v8a, " +
+            "${ABI_IS_UNSUPPORTED.codeText} ABIs [misp] are not supported for platform. Supported ABIs are [arm64-v8a, " +
                     "armeabi-v7a, x86, x86_64].")
         assertThat(logger.warnings).isEmpty()
         assertThat(configurator.validAbis).isEmpty()

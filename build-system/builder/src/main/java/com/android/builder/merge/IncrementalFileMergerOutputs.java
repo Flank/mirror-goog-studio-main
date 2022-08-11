@@ -67,7 +67,7 @@ public final class IncrementalFileMergerOutputs {
             }
 
             @Override
-            public void close() {
+            public void close() throws IOException {
                 writer.close();
             }
 

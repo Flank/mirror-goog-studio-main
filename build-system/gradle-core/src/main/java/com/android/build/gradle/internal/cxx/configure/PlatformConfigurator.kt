@@ -24,6 +24,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.cxx.CxxDiagnosticCode.NDK_CORRUPTED
 import com.android.utils.cxx.CxxDiagnosticCode.ABI_IS_INVALID
+import com.android.utils.cxx.CxxDiagnosticCode.NDK_DOES_NOT_SUPPORT_API_LEVEL
 import java.io.File
 import java.io.FileFilter
 import java.io.FileReader
@@ -179,6 +180,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
                         // version number which will then be lowered to the maximum version
                         // actually installed in the referenced NDK.
                         errorln(
+                            NDK_DOES_NOT_SUPPORT_API_LEVEL,
                             "API codeName '$codeNameOrNull' is not supported by NDK '$ndkRoot'."
                         )
                         veryHighPlatformApiVersion

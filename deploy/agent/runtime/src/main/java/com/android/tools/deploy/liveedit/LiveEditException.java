@@ -28,6 +28,6 @@ class LiveEditException extends RuntimeException {
 
     @Override
     public String toString() {
-        return "LiveEdit: " + getCause();
+        return "LiveEdit: " + getMessage() + "\n" + getCause();
     }
 }

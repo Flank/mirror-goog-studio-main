@@ -47,8 +47,12 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
         }
         out.beginObject()
         writeSpecificAttributes(out, value)
-        out.name("versionCode").value(value.versionCode)
-        out.name("versionName").value(value.versionName)
+        value.versionCode?.let {
+            out.name("versionCode").value(it)
+        }
+        value.versionName?.let {
+            out.name("versionName").value(it)
+        }
         out.name("outputFile").value(value.outputFile)
         out.endObject()
     }
@@ -125,7 +129,7 @@ abstract class CommonBuiltArtifactTypeAdapter<T: CommonBuiltArtifact>: TypeAdapt
     }
 }
 
-internal class GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<GenericBuiltArtifact>() {
+internal object GenericBuiltArtifactTypeAdapter: CommonBuiltArtifactTypeAdapter<GenericBuiltArtifact>() {
 
     override fun writeSpecificAttributes(out: JsonWriter, value: GenericBuiltArtifact) {
         out.name("type").value(value.outputType)

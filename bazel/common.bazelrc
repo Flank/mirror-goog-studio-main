@@ -17,7 +17,7 @@ test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
 test --jvmopt='-Xmx4G'
-test --jvmopt='-XX:+UseConcMarkSweepGC'
+test --jvmopt='-XX:+UseG1GC'
 test --jvmopt='-XX:ErrorFile=$TEST_UNDECLARED_OUTPUTS_DIR/jvm_crash.log'
 test --verbose_failures
 

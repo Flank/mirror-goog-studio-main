@@ -132,9 +132,6 @@ import kotlin.math.max
  *
  * @sample
  *     com.android.tools.lint.client.api.LintXmlConfigurationTest.sampleFile
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 open class LintXmlConfiguration protected constructor(
     configurations: ConfigurationHierarchy,

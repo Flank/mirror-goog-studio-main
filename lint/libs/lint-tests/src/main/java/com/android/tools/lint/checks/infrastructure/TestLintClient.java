@@ -149,12 +149,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
- * A {@link LintClient} class for use in lint unit tests.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** A {@link LintClient} class for use in lint unit tests. */
 public class TestLintClient extends LintCliClient {
     protected final StringWriter writer = new StringWriter();
     protected File incrementalCheck;

@@ -45,6 +45,7 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.win.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/studio/android-studio.mac_arm.zip ${artifacts_dir}
+  cp -a ${bin_dir}/tools/adt/idea/studio/android-studio_build_manifest.textproto ${artifacts_dir}/android-studio_build_manifest.textproto
   cp -a ${bin_dir}/tools/adt/idea/studio/updater_deploy.jar ${artifacts_dir}/android-studio-updater.jar
   cp -a ${bin_dir}/tools/adt/idea/updater-ui/sdk-patcher.zip ${artifacts_dir}
   cp -a ${bin_dir}/tools/adt/idea/native/installer/android-studio-bundle-data.zip ${artifacts_dir}
@@ -62,23 +63,6 @@ function copy_bazel_artifacts() {(
   cp -a ${bin_dir}/tools/base/gmaven/gmaven.zip ${artifacts_dir}/gmaven_repo.zip
   cp -a ${bin_dir}/tools/base/build-system/documentation.zip ${artifacts_dir}/android_gradle_plugin_reference_docs.zip
 )}
-
-####################################
-# Download a flake retry bazelrc file from GCS.
-# Arguments:
-#   1. File basename on GCS
-#   2. Destination directory
-# Echoes:
-#   If successful, the local path; Otherwise, nothing
-####################################
-function download_flake_retry_rc() {
-  local -r gcs_path="gs://adt-byob/known-flakes/studio-linux/${1}"
-  mkdir -p $2
-  gsutil cp $gcs_path "${2}/${1}"
-  if [[ $? -eq 0 ]]; then
-    echo "${2}/${1}"
-  fi
-}
 
 ####################################
 # Generates flag values and runs bazel test.
@@ -141,17 +125,10 @@ function run_bazel_test() {
   # iml_to_build_consistency_test see https://github.com/bazelbuild/bazel/issues/6038
   # This has the side effect of running it twice, but as it only takes a few seconds that seems ok.
   local -r extra_test_flags=(--runs_per_test=//tools/base/bazel:iml_to_build_consistency_test@2)
-  declare -a bazelrc_flags
-  # For presubmit builds, try download bazelrc to deflake builds
-  if [[ $BUILD_TYPE == "PRESUBMIT" && -d "${DIST_DIR}" ]]; then
-    local bazelrc=$(download_flake_retry_rc "auto-retry.bazelrc" "${DIST_DIR}/flake-retry")
-    if [[ $bazelrc ]]; then bazelrc_flags+=("--bazelrc=${bazelrc}"); fi
-  fi
 
   # Run Bazel
   "${SCRIPT_DIR}/bazel" \
     --max_idle_secs=60 \
-    "${bazelrc_flags[@]}" \
     test \
     ${CONFIG_OPTIONS} --config=ants \
     --worker_max_instances=${worker_instances} \

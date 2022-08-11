@@ -94,12 +94,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-/**
- * A project contains information about an Android project being scanned for Lint errors.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
- */
+/** A project contains information about an Android project being scanned for Lint errors. */
 public class Project {
     protected final LintClient client;
     protected final File dir;

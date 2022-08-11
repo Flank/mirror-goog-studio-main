@@ -24,9 +24,6 @@ import com.android.tools.lint.detector.api.Project;
 /**
  * Exception thrown when there is a circular dependency, such as a circular dependency of library
  * project references
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
  */
 public class CircularDependencyException extends RuntimeException {
     @Nullable private Project project;

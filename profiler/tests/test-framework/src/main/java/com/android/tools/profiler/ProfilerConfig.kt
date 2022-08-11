@@ -31,6 +31,10 @@ open class ProfilerConfig : TransportRule.Config() {
     final override fun initDaemonConfig(daemonConfig: Common.CommonConfig.Builder) {
         daemonConfig.profilerUnifiedPipeline = usesUnifiedPipeline()
         daemonConfig.energyProfilerEnabled = true
+        // The production is disabling keyboard events by default, which can be
+        // overridden by the server flag. But we still test the functionality as it's
+        // enabled to avoid accidental breakage. See b/211154220.
+        daemonConfig.profilerKeyboardEvent = true
     }
 
     final override fun initAgentConfig(agentConfig: AgentConfig.Builder) {

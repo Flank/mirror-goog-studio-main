@@ -288,7 +288,7 @@ InternalArtifactType<T : FileSystemLocation>(
     object MERGED_NATIVE_DEBUG_METADATA: InternalArtifactType<RegularFile>(FILE, Category.OUTPUTS, "native-debug-symbols"), Replaceable
 
     // Partial prefab directory without libraries built yet.
-    object PREFAB_PACKAGE_CONFIGURATION: InternalArtifactType<Directory>(DIRECTORY), Replaceable
+    object PREFAB_PACKAGE_CONFIGURATION: InternalArtifactType<RegularFile>(FILE), Replaceable
     // Assembled prefab directory to be packaged in the AAR.
     object PREFAB_PACKAGE: InternalArtifactType<Directory>(DIRECTORY), Replaceable
 
@@ -442,6 +442,8 @@ InternalArtifactType<T : FileSystemLocation>(
     object BUNDLE_MANIFEST: InternalArtifactType<RegularFile>(FILE), Replaceable
 
     object EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs: InternalArtifactType<Directory>(DIRECTORY), ContainsMany
+    object EXTRACTED_APKS_FROM_PRIVACY_SANDBOX_SDKs_IDE_MODEL: InternalArtifactType<RegularFile>(FILE)
+
     // The proto passed to bundle tool to instruct which privacy sandbox SDKs are used
     object PRIVACY_SANDBOX_SDK_RUNTIME_CONFIG_FILE: InternalArtifactType<RegularFile>(FILE)
 

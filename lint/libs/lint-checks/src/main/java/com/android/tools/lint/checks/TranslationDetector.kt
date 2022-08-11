@@ -82,7 +82,8 @@ import kotlin.collections.set
 /**
  * Checks for incomplete translations - e.g. keys that are only present
  * in some locales but not all.
- * <p>TODO <ul> <li> Port to Kotlin before the following changes: <li>
+ *
+ * TODO <ul> <li> Port to Kotlin before the following changes: <li>
  * Remove all the batch mode handling here; instead of accumulating all
  * strings we can now limit the analysis directly to references from the
  * current strings file being analyzed -- as long as we don't duplicate

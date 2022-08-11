@@ -43,7 +43,9 @@ internal class AdblibClientWrapper(
         // Note: This should return `true` when there has been DDMS packet seen
         //  on the JDWP connection to the process. This is a signal the process
         //  is a process running on an Android VM.
-        TODO("Not yet implemented")
+        // We use vmIdentifier as a proxy for checking a DDM HELO packet has
+        // been received.
+        return jdwpProcess.properties.vmIdentifier != null
     }
 
     override fun getClientData(): ClientData {

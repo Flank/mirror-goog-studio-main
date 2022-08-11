@@ -202,6 +202,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         RootsDetector(connection, ::onRootsChanged) { checkpoint = it }
 
     private var previousConfig = Configuration.getDefaultInstance()
+    private var previousContext = LayoutInspectorViewProtocol.AppContext.getDefaultInstance()
 
     override fun onReceiveCommand(data: ByteArray, callback: CommandCallback) {
         val command = Command.parseFrom(data)
@@ -620,10 +621,11 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         screenshot: ByteString?
     ) = LayoutEvent.newBuilder().apply {
         addAllStrings(stringTable.toStringEntries())
-        this.appContext = appContext
-        if (configuration != previousConfig) {
+        if (appContext != previousContext || configuration != previousConfig) {
             previousConfig = configuration
+            previousContext = appContext
             this.configuration = configuration
+            this.appContext = appContext
         }
         this.rootView = rootView
         this.rootOffset = Point.newBuilder().apply {

@@ -62,12 +62,7 @@ import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * A reporter which emits lint results into an XML report.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A reporter which emits lint results into an XML report. */
 open class XmlWriter constructor(
     /** Client handling IO, path normalization and error reporting. */
     private val client: LintCliClient,

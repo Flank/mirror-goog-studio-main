@@ -21,6 +21,7 @@ import com.android.builder.model.v2.ide.AndroidArtifact
 import com.android.builder.model.v2.ide.ApiVersion
 import com.android.builder.model.v2.ide.BundleInfo
 import com.android.builder.model.v2.ide.CodeShrinker
+import com.android.builder.model.v2.ide.PrivacySandboxSdkInfo
 import com.android.builder.model.v2.ide.TestInfo
 import java.io.File
 import java.io.Serializable
@@ -53,7 +54,8 @@ data class AndroidArtifactImpl(
     override val generatedResourceFolders: Collection<File>,
     override val classesFolders: Set<File>,
     override val assembleTaskOutputListingFile: File?,
-    override val modelSyncFiles: Collection<ModelSyncFile>
+    override val modelSyncFiles: Collection<ModelSyncFile>,
+    override val privacySandboxSdkInfo: PrivacySandboxSdkInfo?,
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic

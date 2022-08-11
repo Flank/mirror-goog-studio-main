@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.ANDROID_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PACKAGE
@@ -45,18 +46,17 @@ import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
 import com.google.common.annotations.VisibleForTesting
 import org.w3c.dom.Attr
-import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.util.Arrays
 
 /**
- * looks for errors related to:
- * Declaring permissions in a `<permission ... />` element
- * Declaring permission usage in a `<uses-permission ... />` element
- * Declaring components restricted by permissions in an `android:permission="..."` attribute
+ * looks for errors related to: Declaring permissions in a `<permission
+ * ... />` element Declaring permission usage in a `<uses-permission
+ * ... />` element Declaring components restricted by permissions in an
+ * `android:permission="..."` attribute
  */
 class PermissionErrorDetector : Detector(), XmlScanner {
-    override fun getApplicableElements(): Collection<String>? {
+    override fun getApplicableElements(): Collection<String> {
         return listOf(
             TAG_PERMISSION,
             TAG_USES_PERMISSION,
@@ -83,11 +83,11 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Collect *all* custom permissions (and their usages)
-     * across manifests.  Then report on any typos.
-     * Many custom permissions may be included
-     * from libraries, etc., and we want to catch those typos as well
-     * as typos on custom permissions defined in the same manifest.
+     * Collect *all* custom permissions (and their usages) across
+     * manifests. Then report on any typos. Many custom permissions may
+     * be included from libraries, etc., and we want to catch those
+     * typos as well as typos on custom permissions defined in the same
+     * manifest.
      */
     private fun walkDocument(context: Context, root: Element) {
         var customPermissions: MutableList<String>? = null
@@ -152,8 +152,8 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Report incidents related to permission definitions that are
-     * NOT related to custom permission typos.
+     * Report incidents related to permission definitions that are NOT
+     * related to custom permission typos.
      */
     private fun reportPermissionDefinitionIncidents(context: Context, attr: Attr) {
         val packageName =
@@ -171,6 +171,15 @@ class PermissionErrorDetector : Detector(), XmlScanner {
                     "`${attr.value}` is a reserved permission"
                 )
             )
+        } else if (attr.value.startsWith(ANDROID_PKG_PREFIX)) {
+            context.report(
+                Incident(
+                    RESERVED_SYSTEM_PERMISSION,
+                    attr.ownerElement,
+                    context.getLocation(attr, LocationType.VALUE),
+                    "`${attr.value}` is using the reserved system prefix `$ANDROID_PKG_PREFIX`"
+                )
+            )
         }
 
         if (!followsCustomPermissionNamingConvention(packageName, attr.value)) {
@@ -186,8 +195,8 @@ class PermissionErrorDetector : Detector(), XmlScanner {
     }
 
     /**
-     * Report incidents related to permission usages that are
-     * NOT related to custom permission typos.
+     * Report incidents related to permission usages that are NOT
+     * related to custom permission typos.
      */
     private fun reportPermissionUsageIncidents(context: Context, attr: Attr) {
         if (KNOWN_PERMISSION_ERROR_VALUES.any { it.equals(attr.value, ignoreCase = true) }) {
@@ -279,10 +288,11 @@ class PermissionErrorDetector : Detector(), XmlScanner {
             briefDescription = "Permission name is a reserved Android permission",
             explanation = """
                 This check looks for custom permission declarations whose names are reserved values \
-                for system or Android SDK permissions.
+                for system or Android SDK permissions, or begin with the reserved string `android.`
 
                 Please double check the permission name you have supplied. Attempting to redeclare a system \
-                or Android SDK permission will be ignored.
+                or Android SDK permission will be ignored.  Using the prefix `android.` is a violation of the \
+                Android Compatibility Definition Document.
                 """,
             category = Category.SECURITY,
             priority = 5,

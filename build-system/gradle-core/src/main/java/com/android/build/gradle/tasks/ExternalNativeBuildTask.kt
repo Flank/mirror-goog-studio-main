@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.errors.DefaultIssueReporter
 import com.android.ide.common.attribution.TaskCategoryLabel
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.CONFIGURE_MORE_THAN_ONE_SO_FOLDER
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.process.ExecOperations
@@ -102,7 +104,7 @@ fun createRepublishCxxBuildTask(
             .map { it.soRepublishFolder.parentFile }
             .distinct()
         if (soParentFolders.size != 1) {
-            errorln("More than one SO folder: ${soParentFolders.joinToString { it.path }}")
+            errorln(CONFIGURE_MORE_THAN_ONE_SO_FOLDER, "More than one SO folder: ${soParentFolders.joinToString { it.path }}")
         }
         val objFolders = allAbis
             .map { it.intermediatesParentFolder }

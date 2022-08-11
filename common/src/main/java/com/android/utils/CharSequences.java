@@ -28,13 +28,9 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 /**
- * A number of utility methods around {@link CharSequence} handling, which
- * adds methods that are available on Strings (such as {@code indexOf},
- * {@code startsWith} and {@code regionMatches} and provides equivalent methods
- * for character sequences.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ * A number of utility methods around {@link CharSequence} handling, which adds methods that are
+ * available on Strings (such as {@code indexOf}, {@code startsWith} and {@code regionMatches} and
+ * provides equivalent methods for character sequences.
  */
 public class CharSequences {
 

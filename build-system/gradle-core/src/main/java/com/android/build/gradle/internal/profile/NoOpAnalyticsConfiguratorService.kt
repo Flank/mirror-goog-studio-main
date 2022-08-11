@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.build.gradle.internal.services.ServiceRegistrationAction
+import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.builder.profile.Recorder
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import com.google.wireless.android.sdk.stats.GradleBuildProject
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.Project
+import org.gradle.api.services.BuildServiceParameters
 import org.gradle.build.event.BuildEventsListenerRegistry
 
 /**
@@ -37,7 +40,9 @@ abstract class NoOpAnalyticsConfiguratorService : AnalyticsConfiguratorService()
         return null
     }
 
-    override fun createAnalyticsService(project: Project, registry: BuildEventsListenerRegistry) {}
+    override fun createAnalyticsService(
+        project: Project, registry: BuildEventsListenerRegistry, parameters: AnalyticsService.Params
+    ) {}
 
     override fun recordBlock(
         executionType: GradleBuildProfileSpan.ExecutionType,
@@ -46,5 +51,22 @@ abstract class NoOpAnalyticsConfiguratorService : AnalyticsConfiguratorService()
         block: Recorder.VoidBlock
     ) {
         block.call()
+    }
+
+    /**
+     * Registers [NoOpAnalyticsConfiguratorService] service. The name of the service needs to match
+     * the [AnalyticsConfiguratorService] ones, as we fetch them by name, and they should be
+     * interchangeable.
+     */
+    class RegistrationAction(project: Project)
+        : ServiceRegistrationAction<NoOpAnalyticsConfiguratorService, BuildServiceParameters.None>(
+        project,
+        NoOpAnalyticsConfiguratorService::class.java,
+        name = getBuildServiceName(AnalyticsConfiguratorService::class.java)
+    ) {
+
+        override fun configure(parameters: BuildServiceParameters.None) {
+            // do nothing
+        }
     }
 }

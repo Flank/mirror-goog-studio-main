@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.scope.TaskContainer;
 import com.android.build.gradle.internal.services.DslServices;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.builder.errors.IssueReporter;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -196,9 +197,21 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     }
 
     public void setOutputFileName(String outputFileName) {
-        if (new File(outputFileName).isAbsolute()) {
+        File testOutputFile = new File(outputFileName);
+        if (testOutputFile.isAbsolute()) {
             throw new GradleException("Absolute path are not supported when setting " +
                     "an output file name");
+        }
+        if (!testOutputFile.getName().equals(outputFileName)) {
+            services.getIssueReporter()
+                    .reportWarning(
+                            IssueReporter.Type.GENERIC,
+                            "Setting outputFileName to '"
+                                    + outputFileName
+                                    + "' can result in incorrect behavior. Relative paths are not "
+                                    + "supported when setting an output file name. The "
+                                    + "outputFileName API supports changing the output file's "
+                                    + "name, but not its location.");
         }
         variantOutput.getOutputFileName().set(outputFileName);
     }

@@ -182,8 +182,7 @@ class SourceSetsMixedApiUseTest {
         project.executor().run(":api-use:assembleDebug")
         project.getSubproject(":api-use").getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             assertThat(apk).containsFile("lib/armeabi-v7a/main-sourceset-generated.so")
-            // TODO(b/237783279): Re-enable this assertion
-            //  assertThat(apk).containsFile("lib/armeabi-v7a/debug-sourceset-generated.so")
+            assertThat(apk).containsFile("lib/armeabi-v7a/debug-sourceset-generated.so")
         }
     }
 }

@@ -36,9 +36,8 @@ import java.util.Stack;
 import java.util.concurrent.TimeoutException;
 
 public class AdbInstaller extends Installer {
-    public static final String INSTALLER_BINARY_NAME = "installer";
-    public static final String INSTALLER_PATH =
-            Deployer.INSTALLER_DIRECTORY + "/" + INSTALLER_BINARY_NAME;
+    public static final String INSTALLER_BINARY_NAME = Sites.installerBinary();
+    public static final String INSTALLER_PATH = Sites.installerPath();
     public static final String ANDROID_EXECUTABLE_PATH =
             "/tools/base/deploy/installer/android-installer";
     private final AdbClient adb;

@@ -16,12 +16,7 @@
 
 package com.android.tools.lint.detector.api
 
-/**
- * A category is a container for related issues.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A category is a container for related issues. */
 data class Category
 /**
  * Creates a new [Category].

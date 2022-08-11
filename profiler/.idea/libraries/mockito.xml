@@ -1,6 +1,6 @@
 <component name="libraryTable">
   <library name="mockito" type="repository">
-    <properties maven-id="org.mockito:mockito-core:3.0.0">
+    <properties maven-id="org.mockito:mockito-core:3.12.4">
       <exclude>
         <dependency maven-id="org.objenesis:objenesis" />
       </exclude>

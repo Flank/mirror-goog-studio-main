@@ -36,7 +36,7 @@ fun RecipeExecutor.addMaterialDependency(useAndroidX: Boolean) {
 }
 
 fun RecipeExecutor.addMaterial3Dependency() {
-    addDependency("com.google.android.material:material:1.5.0-alpha04")
+    addDependency("com.google.android.material:material:1.5.0")
 }
 
 fun RecipeExecutor.addSupportWearableDependency() {

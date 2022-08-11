@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator
 import com.android.utils.cxx.CxxDiagnosticCode.BUILD_NINJA_NOT_GENERATED
 import com.android.utils.cxx.CxxDiagnosticCode.NINJA_CONFIGURE_INVALID_ARGUMENTS
+import com.android.utils.cxx.CxxDiagnosticCode.NINJA_GENERIC_ERROR
 import com.google.common.annotations.VisibleForTesting
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule.NativeBuildSystemType.NINJA
@@ -140,7 +141,7 @@ internal class NinjaMetadataGenerator(
 
     private fun reportErrors(file : File) {
         file.forEachLine { line ->
-            if (isError(line)) errorln(line)
+            if (isError(line)) errorln(NINJA_GENERIC_ERROR, line)
         }
     }
 }

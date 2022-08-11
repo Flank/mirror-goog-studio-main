@@ -141,7 +141,7 @@ class IssueReporterLoggingEnvironment private constructor(
     override fun close() {
         try {
             if (structuredLogEncoder != null) {
-                lifecycleln("Closing '${structuredLogEncoder.file}'")
+                infoln("Closing '${structuredLogEncoder.file}'")
                 structuredLogEncoder.close()
             }
             if (internals != null) {

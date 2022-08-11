@@ -242,11 +242,20 @@ private fun ModelBuilderV2.FetchResult<ModelContainerV2>.hashEquivalents() : Lis
  * No new configures should be done.
  */
 fun GradleTestProject.recoverExistingCxxAbiModels(): List<CxxAbiModel> {
-    val modelFiles = buildDir.parentFile.walk().filter { file -> file.name == "build_model.json" }.toList()
+    return recoverExistingCxxAbiModels(buildDir.parentFile)
+}
+
+/**
+ * Search from [rootSearchFolder] level for build_model.json to reconstitute into CxxAbiModels.
+ */
+fun recoverExistingCxxAbiModels(rootSearchFolder : File): List<CxxAbiModel> {
+    val modelFiles = rootSearchFolder.walk().filter { file -> file.name == "build_model.json" }.toList()
     val models = modelFiles.filter { it.isFile }
-            .map { createCxxAbiModelFromJson(it.readText()) }
-            .distinct()
-    if (models.isEmpty()) error("Could not recover any CxxAbiModels, did configure run?")
+        .map { createCxxAbiModelFromJson(it.readText()) }
+        .distinct()
+    if (models.isEmpty()) {
+        error("Could not recover any CxxAbiModels from ${rootSearchFolder}, did configure run?")
+    }
     return models
 }
 

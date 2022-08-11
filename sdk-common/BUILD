@@ -109,6 +109,7 @@ kotlin_test(
         "src/test/java/**/*.java",
     ]),
     data = ["//prebuilts/studio/sdk:platform-tools"],
+    friends = [":tools.sdk-common"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",

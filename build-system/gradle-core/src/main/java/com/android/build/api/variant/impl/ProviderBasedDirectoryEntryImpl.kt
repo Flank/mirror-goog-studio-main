@@ -26,6 +26,7 @@ import org.gradle.api.tasks.util.PatternFilterable
 class ProviderBasedDirectoryEntryImpl(
     override val name: String,
     val elements: Provider<Set<FileSystemLocation>>,
+    override val filter: PatternFilterable? = null
 ): DirectoryEntry  {
 
     override val isGenerated: Boolean = true
@@ -35,7 +36,8 @@ class ProviderBasedDirectoryEntryImpl(
     override fun asFiles(directoryPropertyCreator: () -> DirectoryProperty): Provider<Directory> {
         return elements.flatMap {
             if (it.size > 1) {
-                throw RuntimeException("There are more than one element in $name")
+                throw RuntimeException("There are more than one element in $name\n" +
+                        "${it.map { it.asFile.absolutePath }}")
             }
             directoryPropertyCreator().also { directoryProperty ->
                 directoryProperty.set(it.single().asFile)
@@ -47,5 +49,4 @@ class ProviderBasedDirectoryEntryImpl(
         fileTreeCreator().from(elements).builtBy(elements)
 
 
-    override val filter: PatternFilterable? = null
 }

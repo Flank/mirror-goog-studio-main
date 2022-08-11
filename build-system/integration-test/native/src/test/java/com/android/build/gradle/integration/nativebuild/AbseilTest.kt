@@ -17,16 +17,15 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.build.gradle.integration.common.fixture.model.NativeBuildBenchmarkProject
-import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
-import com.android.build.gradle.internal.cxx.process.decodeExecuteProcess
-import com.google.common.truth.Truth
+import com.android.build.gradle.internal.cxx.configure.ConfigureType
+import com.android.build.gradle.internal.cxx.configure.decodeConfigureInvalidationState
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import java.io.File
 
 /**
  * Tests that probe abseil build benchmark so that issues might be caught earlier
@@ -61,8 +60,21 @@ class AbseilTest(
     }
 
     @Test
-    fun `simulate Abseil_cleanBuild`() = with(project) {
+    fun `simulate Abseil_cleanBuild`() : Unit = with(project) {
         addArgument("-Pandroid.injected.build.abi=arm64-v8a")
+
+        // Warm up
         run("assembleDebug")
+        run("clean")
+
+        // Actual test
+        enableCxxStructuredLogging()
+        run("assembleDebug")
+
+        // Expect no C/C++ configure
+        val configure = readStructuredLogs(::decodeConfigureInvalidationState).single()
+        assertThat(configure.configureType)
+            .named("$configure")
+            .isEqualTo(ConfigureType.NO_CONFIGURE)
     }
 }

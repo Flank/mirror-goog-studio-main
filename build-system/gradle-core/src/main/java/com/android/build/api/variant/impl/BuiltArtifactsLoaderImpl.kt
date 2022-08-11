@@ -16,16 +16,16 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.Artifact
 import com.android.build.api.variant.BuiltArtifactsLoader
 import com.android.ide.common.build.ListingFileRedirect
-import com.google.gson.GsonBuilder
+import com.google.gson.stream.JsonReader
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.io.FileReader
+import java.io.IOException
 import java.io.StringReader
 import java.nio.file.Paths
 
@@ -60,18 +60,6 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
             if (inputFile == null || !inputFile.exists()) {
                 return null
             }
-            val gsonBuilder = GsonBuilder()
-
-            gsonBuilder.registerTypeAdapter(
-                BuiltArtifactImpl::class.java,
-                BuiltArtifactTypeAdapter()
-            )
-            gsonBuilder.registerTypeHierarchyAdapter(
-                Artifact::class.java,
-                ArtifactTypeTypeAdapter()
-            )
-
-            val gson = gsonBuilder.create()
             val redirectFileContent = inputFile.readText()
             val redirectedFile =
                 ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
@@ -82,8 +70,12 @@ class BuiltArtifactsLoaderImpl: BuiltArtifactsLoader {
             }
 
             val reader = redirectedFile?.let { FileReader(it) } ?: StringReader(redirectFileContent)
-            val buildOutputs = reader.use {
-                gson.fromJson(it, BuiltArtifactsImpl::class.java)
+            val buildOutputs = try {
+                JsonReader(reader).use {
+                    BuiltArtifactsTypeAdapter.read(it)
+                }
+            } catch (e: Exception) {
+                throw IOException("Error parsing build artifacts from ${if (redirectedFile!=null) "$redirectedFile redirected from $inputFile" else inputFile}", e)
             }
             // resolve the file path to the current project location.
             return BuiltArtifactsImpl(

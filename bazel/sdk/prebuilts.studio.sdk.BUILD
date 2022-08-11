@@ -216,6 +216,7 @@ java_import(
         "//tools/base/profiler/app:__pkg__",
         "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
+        "//tools/vendor/google/directaccess-client/reverse-daemon:__pkg__",
     ],
 )
 

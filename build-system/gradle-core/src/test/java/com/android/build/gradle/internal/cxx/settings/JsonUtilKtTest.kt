@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.codeText
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.android.utils.cxx.CxxDiagnosticCode
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_PARSE_ERROR
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -141,7 +144,8 @@ class JsonUtilKtTest {
     fun `check parse error becomes errorln`() {
         PassThroughDeduplicatingLoggingEnvironment().apply {
             createSettingsFromJsonString("{")
-            assertThat(errors.single()).isEqualTo("C/C++: End of input at line 1 column 2 path \$.")
+            assertThat(errors.single()).isEqualTo("${BUILD_SETTINGS_PARSE_ERROR.codeText} End of input at line 1 column 2 path \$.")
         }
     }
+
 }

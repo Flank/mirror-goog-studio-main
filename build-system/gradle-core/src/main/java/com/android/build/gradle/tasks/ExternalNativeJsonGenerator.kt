@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.cxx.configure.recordConfigurationFinger
 import com.android.build.gradle.internal.cxx.configure.softConfigureOkay
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxMetadataGenerator
 import com.android.build.gradle.internal.cxx.io.writeTextIfDifferent
+import com.android.build.gradle.internal.cxx.io.synchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
@@ -49,8 +50,11 @@ import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildLocationFile
+import com.android.build.gradle.internal.cxx.model.predictableRepublishFolder
 import com.android.build.gradle.internal.cxx.model.prefabClassPath
 import com.android.build.gradle.internal.cxx.model.prefabConfigFile
+import com.android.build.gradle.internal.cxx.model.prefabPackageConfigurationDirectoryList
+import com.android.build.gradle.internal.cxx.model.prefabPackageDirectoryList
 import com.android.build.gradle.internal.cxx.model.shouldGeneratePrefabPackages
 import com.android.build.gradle.internal.cxx.model.symbolFolderIndexFile
 import com.android.build.gradle.internal.cxx.model.writeJsonToFile
@@ -61,7 +65,10 @@ import com.android.build.gradle.internal.cxx.timing.time
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
+import com.android.utils.cxx.CxxDiagnosticCode
 import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_FAILURE
+import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_GRADLE_EXCEPTION
+import com.android.utils.cxx.CxxDiagnosticCode.METADATA_GENERATION_PROCESS_FAILURE
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -85,28 +92,28 @@ abstract class ExternalNativeJsonGenerator internal constructor(
     val abi: CxxAbiModel,
     @get:Internal override val variantBuilder: GradleBuildVariant.Builder?
 ) : CxxMetadataGenerator {
-
     override fun configure(ops: ExecOperations, forceConfigure: Boolean) {
         requireExplicitLogger()
         // These are lazily initialized values that can only be computed from a Gradle managed
         // thread. Compute now so that we don't in the worker threads that we'll be running as.
-        abi.variant.prefabConfigurationPackages
+        abi.variant.prefabPackageConfigurationDirectoryList
+        abi.variant.prefabPackageDirectoryList
         abi.variant.prefabClassPath
         try {
             configureOneAbi(ops, forceConfigure, abi)
         } catch (e: GradleException) {
             errorln(
-                    METADATA_GENERATION_FAILURE,
-                    "exception while building Json %s",
-                    e.message!!
+                METADATA_GENERATION_GRADLE_EXCEPTION,
+                "exception while building Json %s",
+                e.message!!
             )
         } catch (e: ProcessException) {
             errorln(
-                    METADATA_GENERATION_FAILURE,
-                    "error when building with %s using %s: %s",
-                    abi.variant.module.buildSystemTag,
-                    abi.variant.module.makeFile,
-                    e.message!!
+                METADATA_GENERATION_PROCESS_FAILURE,
+                "error when building with %s using %s: %s",
+                abi.variant.module.buildSystemTag,
+                abi.variant.module.makeFile,
+                e.message!!
             )
         }
     }
@@ -153,7 +160,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                     val prefabConfigurationState = PrefabConfigurationState(
                             abi.variant.module.project.isPrefabEnabled,
                             abi.variant.prefabClassPath,
-                            abi.variant.prefabConfigurationPackages
+                            abi.variant.prefabPackageDirectoryList
                         ).toJsonString()
                     abi.prefabConfigFile.writeTextIfDifferent(prefabConfigurationState)
 
@@ -164,15 +171,22 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                             configureInputFiles = getConfigureInputFiles(abi),
                             requiredOutputFiles = listOf(abi.jsonFile),
                             optionalOutputFiles = listOf(
-                                abi.miniConfigFile,
                                 abi.ninjaBuildFile,
                                 abi.ninjaBuildLocationFile,
-                                abi.symbolFolderIndexFile,
-                                abi.buildFileIndexFile,
-                                abi.additionalProjectFilesIndexFile,
                                 abi.compileCommandsJsonFile,
-                                abi.compileCommandsJsonBinFile,
-                                abi.prefabConfigFile),
+                                abi.prefabConfigFile,
+                                // -------------------------------------------------------------
+                                // Don't include files written to build/ folder since clean will
+                                // remove them and we don't want to trigger a C/C++ configure.
+                                // See b/240718091
+                                // -------------------------------------------------------------
+                                // abi.miniConfigFile,
+                                // abi.symbolFolderIndexFile,
+                                // abi.buildFileIndexFile,
+                                // abi.additionalProjectFilesIndexFile,
+                                // abi.compileCommandsJsonBinFile
+                                // -------------------------------------------------------------
+                            ),
                             hardConfigureFiles = listOf(abi.metadataGenerationCommandFile)
                         )
                     }
@@ -194,7 +208,7 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         if (abi.shouldGeneratePrefabPackages()) {
                             time("generate-prefab-packages") {
                                 checkPrefabConfig()
-                                generatePrefabPackages(
+                                createPrefabBuildSystemGlue(
                                     ops,
                                     abi
                                 )
@@ -273,6 +287,14 @@ abstract class ExternalNativeJsonGenerator internal constructor(
                         abi.symbolFolderIndexFile.writeTextIfDifferent(abi.soFolder.absolutePath)
                         abi.buildFileIndexFile.writeTextIfDifferent(miniconfig.buildFiles.joinToString(System.lineSeparator()))
 
+                        // Republish compile_commands.json to a predictable location.
+                        if (abi.compileCommandsJsonFile.isFile) {
+                            synchronizeFile(
+                                abi.compileCommandsJsonFile,
+                                abi.predictableRepublishFolder.resolve(abi.compileCommandsJsonFile.name)
+                            )
+                        }
+
                         // Record the outcome. JSON was built.
                         variantStats.outcome = GenerationOutcome.SUCCESS_BUILT
                     } else {
@@ -341,11 +363,13 @@ abstract class ExternalNativeJsonGenerator internal constructor(
 
         // If anything in the prefab package changes, re-run. Note that this also depends on the
         // directories, so added/removed files will also trigger a re-run.
-        for (pkgDir in abi.variant.prefabConfigurationPackages) {
-            Files.walk(pkgDir.toPath())
-                .forEach {
-                    result.add(it.toFile())
-                }
+        for (pkgDir in abi.variant.prefabPackageDirectoryList + abi.variant.prefabPackageConfigurationDirectoryList) {
+            if (pkgDir.isDirectory) {
+                Files.walk(pkgDir.toPath())
+                    .forEach {
+                        result.add(it.toFile())
+                    }
+            }
         }
 
         // We're going to read the mini-config json file to get the list of input files. The

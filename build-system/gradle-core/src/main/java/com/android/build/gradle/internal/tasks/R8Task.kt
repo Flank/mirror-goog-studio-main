@@ -17,10 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.MultipleArtifact
-import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.transform.Format
-import com.android.build.api.variant.ScopedArtifacts
-import com.android.build.api.variant.ScopedArtifacts.Scope
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -28,7 +25,6 @@ import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.core.ToolExecutionOptions
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
-import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
@@ -40,7 +36,6 @@ import com.android.build.gradle.internal.utils.getDesugarLibConfig
 import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
@@ -58,7 +53,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -317,9 +311,12 @@ abstract class R8Task @Inject constructor(
 
             val artifacts = creationConfig.artifacts
 
-            val r8Service = getBuildService<R8ParallelBuildService>(creationConfig.services.buildServiceRegistry)
-
-            task.usesService(r8Service)
+            task.usesService(
+                getBuildService(
+                    creationConfig.services.buildServiceRegistry,
+                    R8ParallelBuildService::class.java
+                )
+            )
 
             task.enableDesugaring.set(
                 creationConfig.getJava8LangSupportType() == Java8LangSupport.R8

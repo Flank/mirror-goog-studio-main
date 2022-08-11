@@ -17,6 +17,7 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -47,7 +48,7 @@ public class DelegateIncrementalFileMergerOutput implements IncrementalFileMerge
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         delegate.close();
     }
 

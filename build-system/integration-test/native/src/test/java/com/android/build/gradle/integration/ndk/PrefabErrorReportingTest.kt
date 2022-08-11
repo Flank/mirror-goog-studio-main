@@ -17,16 +17,15 @@
 package com.android.build.gradle.integration.ndk
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.json.jsonStringOf
 import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.text
 import com.android.build.gradle.internal.cxx.prefab.AndroidAbiMetadata
-import com.android.build.gradle.internal.cxx.prefab.JsonSerializer
 import com.android.build.gradle.internal.cxx.prefab.ModuleMetadataV1
 import com.android.build.gradle.internal.cxx.prefab.PackageMetadataV1
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.DEFAULT_PREFAB_VERSION
 import com.android.build.gradle.tasks.reportErrors
-import com.android.testutils.TestUtils
 import com.android.testutils.TestUtils.getPrebuiltOfflineMavenRepo
 import com.android.testutils.TestUtils.runningFromBazel
 import com.google.common.truth.Truth.assertThat
@@ -486,7 +485,7 @@ class PrefabErrorReportingTest {
         if (hasLibrary) {
             abiJson.parentFile.mkdirs()
             prefabJson.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     PackageMetadataV1(
                         name = prefabPackageName,
                         schemaVersion = prefabSchemaVersion,
@@ -496,7 +495,7 @@ class PrefabErrorReportingTest {
                 )
             )
             moduleJson.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     ModuleMetadataV1(
                         exportLibraries = emptyList(),
                         libraryName = moduleLibraryName
@@ -505,7 +504,7 @@ class PrefabErrorReportingTest {
             )
 
             abiJson.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     AndroidAbiMetadata(
                         abi = moduleLibraryAbi,
                         api = moduleLibraryAbiMinSdkVersion,
@@ -520,7 +519,7 @@ class PrefabErrorReportingTest {
         if (hasLibrary2) {
             abiJson2.parentFile.mkdirs()
             prefabJson2.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     PackageMetadataV1(
                         name = prefabPackageName2,
                         schemaVersion = prefabSchemaVersion2,
@@ -530,7 +529,7 @@ class PrefabErrorReportingTest {
                 )
             )
             moduleJson2.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     ModuleMetadataV1(
                         exportLibraries = emptyList(),
                         libraryName = moduleLibraryName2
@@ -538,7 +537,7 @@ class PrefabErrorReportingTest {
                 )
             )
             abiJson2.writeText(
-                JsonSerializer().toJson(
+                jsonStringOf(
                     AndroidAbiMetadata(
                         abi = moduleLibraryAbi2,
                         api = moduleLibraryAbiMinSdkVersion2,
@@ -550,8 +549,6 @@ class PrefabErrorReportingTest {
             )
         }
     }
-
-
 
     private fun Permutation.assertNoError() {
         writePrefabPackage()

@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.event;
 
+import android.os.Build;
 import android.view.*;
 import android.view.accessibility.AccessibilityEvent;
 
@@ -25,9 +26,11 @@ import android.view.accessibility.AccessibilityEvent;
  */
 public final class WindowProfilerCallback implements Window.Callback {
     private final Window.Callback myRedirectCallback;
+    private final boolean myKeyboardEventEnabled;
 
-    public WindowProfilerCallback(Window.Callback redirectCallback) {
+    public WindowProfilerCallback(Window.Callback redirectCallback, boolean keyboardEventEnabled) {
         myRedirectCallback = redirectCallback;
+        myKeyboardEventEnabled = keyboardEventEnabled;
     }
 
     // Native function to send touch event states via RPC to perfd.
@@ -37,8 +40,13 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
-        String keyString = KeyEvent.keyCodeToString(keyEvent.getKeyCode());
-        sendKeyEvent(keyString, keyEvent.getDownTime());
+        // TODO(b/211154220): Pending user's feedback, either completely remove the keyboard event
+        // functionality in Event Timeline or find a proper way to support it for Android S and
+        // newer.
+        if (myKeyboardEventEnabled && Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            String keyString = KeyEvent.keyCodeToString(keyEvent.getKeyCode());
+            sendKeyEvent(keyString, keyEvent.getDownTime());
+        }
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchKeyEvent(keyEvent);
         }

@@ -59,26 +59,26 @@ data class Permission(
     private var signature: Long = 0
 
     /**
-     * API level this permission was made a signature permission in, or
-     * 0.
+     * API level this permission was made a signature permission in,
+     * or 0.
      */
     val signatureIn: Int get() = signatureFrom()
 
     /**
-     * Last API level this permission was a signature permission in, or
-     * 0.
+     * Last API level this permission was a signature permission in,
+     * or 0.
      */
     val signatureOut: Int get() = signatureUntil()
 
     /**
-     * API level this permission was made a dangerous permission in, or
-     * 0.
+     * API level this permission was made a dangerous permission in,
+     * or 0.
      */
     val dangerousIn: Int get() = dangerousFrom()
 
     /**
-     * Last API level this permission was a dangerous permission in, or
-     * 0.
+     * Last API level this permission was a dangerous permission in,
+     * or 0.
      */
     val dangerousOut: Int get() = dangerousUntil()
 

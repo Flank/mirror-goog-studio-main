@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.json;
 
+import static com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonsKtKt.readMiniConfigCreateIfNecessary;
 import static com.android.build.gradle.internal.cxx.json.LintKt.lint;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getMiniConfigFile;
@@ -23,7 +24,6 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getMiniC
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
-import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
@@ -31,7 +31,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,7 +76,7 @@ public class AndroidBuildGradleJsons {
      * @throws IOException if there was an IO problem reading the Json.
      */
     @NonNull
-    private static NativeBuildConfigValueMini parseToMiniConfig(@NonNull JsonReader reader)
+    static NativeBuildConfigValueMini parseToMiniConfig(@NonNull JsonReader reader)
             throws IOException {
         MiniConfigBuildingVisitor miniConfigVisitor = new MiniConfigBuildingVisitor();
         try (AndroidBuildGradleJsonStreamingParser parser =
@@ -116,40 +115,27 @@ public class AndroidBuildGradleJsons {
      */
     @NonNull
     public static NativeBuildConfigValueMini getNativeBuildMiniConfig(
-            @NonNull CxxAbiModel abi, @Nullable GradleBuildVariant.Builder stats)
-            throws IOException {
-        File persistedMiniConfig = getMiniConfigFile(abi);
-        File json = getJsonFile(abi);
-        NativeBuildConfigValueMini result;
-        if (ExternalNativeBuildTaskUtils.fileIsUpToDate(json, persistedMiniConfig)
-                || !json.isFile()) {
-            // The mini json has already been created for us. Just read it instead of parsing again.
-            try (JsonReader reader = new JsonReader(new FileReader(persistedMiniConfig))) {
-                result = parseToMiniConfig(reader);
-            }
-        } else {
-            try (JsonReader reader = new JsonReader(new FileReader(json))) {
-                result =
-                        stats == null
-                                ? parseToMiniConfig(reader)
-                                : parseToMiniConfigAndGatherStatistics(reader, stats);
-            }
-            writeNativeBuildMiniConfigValueToJsonFile(persistedMiniConfig, result);
-        }
+            @NonNull CxxAbiModel abi, @Nullable GradleBuildVariant.Builder stats) {
+        File androidGradleBuildJsonFile = getJsonFile(abi);
+        NativeBuildConfigValueMini result =
+                readMiniConfigCreateIfNecessary(androidGradleBuildJsonFile, stats);
+        // Check the resulting mini config for problems. We have the right context here to attribute
+        // issues to a specific JSON or mini config JSON file name.
 
         // Check the resulting mini config for problems. We have the right context here to attribute
         // issues to a specific JSON or mini config JSON file name.
-        if (json.isFile()) {
+        if (androidGradleBuildJsonFile.isFile()) {
             // Report any lint-check errors against the original full JSON file rather than the mini
             // config file that is derived from it.
-            lint(result, json);
+            lint(result, androidGradleBuildJsonFile);
         } else {
             // A metadata provider may choose to only supply the mini config (with the rest of the
             // relevant information provided by compile_commands.json). In this case, lint checks
             // should report errors against the mini config file rather than the non-existent full
             // JSON.
-            lint(result, persistedMiniConfig);
+            lint(result, getMiniConfigFile(abi));
         }
+
         return result;
     }
 

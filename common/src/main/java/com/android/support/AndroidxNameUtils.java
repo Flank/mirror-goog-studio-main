@@ -21,17 +21,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
-import java.util.Collection;
+
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class AndroidxNameUtils {
     private static final Logger LOG = Logger.getLogger(AndroidxName.class.getName());
-
-    static final String ANDROID_SUPPORT_PKG = "android.support.";
-    static final String ANDROID_ARCH_PKG = "android.arch.";
-    static final String ANDROID_DATABINDING_PKG = "android.databinding.";
 
     /** Package mappings for package that have been just renamed */
     static final ImmutableMap<String, String> ANDROIDX_PKG_MAPPING;
@@ -111,12 +107,6 @@ public class AndroidxNameUtils {
             LOG.fine("support library package not found: " + oldPkgName);
         }
         return oldPkgName;
-    }
-
-    /** Returns a {@link Collection} of all the possible {@code androidx} maven coordinates */
-    @NonNull
-    public static Collection<String> getAllAndroidxCoordinates() {
-        return ANDROIDX_COORDINATES_MAPPING.values();
     }
 
     /**

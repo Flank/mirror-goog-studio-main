@@ -56,6 +56,7 @@ import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_OUTPUT_LEVEL_NOT_SUPPORTED
 import com.android.utils.cxx.CxxDiagnosticCode.CMAKE_IS_MISSING
 import com.android.utils.cxx.CxxDiagnosticCode.INVALID_EXTERNAL_NATIVE_BUILD_CONFIG
 import org.gradle.api.file.FileCollection
@@ -264,7 +265,9 @@ fun tryCreateConfigurationParameters(
         .mapNotNull { level ->
             val result = NativeBuildOutputOptions.values().firstOrNull { "$it" == level }
             if (result == null) {
-                errorln("$NATIVE_BUILD_OUTPUT_LEVEL contains unrecognized $level")
+                errorln(
+                    BUILD_OUTPUT_LEVEL_NOT_SUPPORTED,
+                    "$NATIVE_BUILD_OUTPUT_LEVEL contains unrecognized $level")
             }
             result
         }

@@ -90,3 +90,41 @@ message EncodedChangedFile {
     int32 file_name = 1;
     ChangedFile.Type type = 2;
 }
+
+// Records the request and outcome for Native V2 sync model
+message NativeModelBuilderOutcome {
+    enum Outcome {
+        UNKNOWN = 0;
+        SUCCESS = 1;
+        FAILED_DURING_GENERATE = 2;
+        NO_CONFIGURATION_MODELS = 3;
+    }
+    // Outcome code
+    NativeModelBuilderOutcome.Outcome outcome = 1;
+    // The gradle project path (like :lib)
+    string gradle_path = 2;
+    // The ABIs that Android Studio requested
+    repeated string requested_abis = 3;
+    // The variants that Android Studio requested
+    repeated string requested_variants = 4;
+    // The variant-abis separated by colons that were available to configure (ex debug:x86)
+    repeated string available_variant_abis = 5;
+    // The variant-abis separated by colons that were successfully configured (ex debug:x86)
+    repeated string successfully_configured_variant_abis = 6;
+    // The variant-abis separated by colons that failed to configure  (ex debug:x86)
+    repeated string failed_configure_variant_abis = 7;
+    // For each element of [failed_configure_variant_abis], the failure error message
+    repeated string failed_configure_messages = 8;
+}
+
+message EncodedNativeModelBuilderOutcome {
+    NativeModelBuilderOutcome.Outcome outcome = 1;
+    int32 gradle_path = 2;
+    int32 requested_abis = 3;
+    int32 requested_variants = 4;
+    int32 available_variant_abis = 5;
+    int32 successfully_configured_variant_abis = 6;
+    int32 failed_configure_variant_abis = 7;
+    int32 failed_configure_messages = 8;
+}
+

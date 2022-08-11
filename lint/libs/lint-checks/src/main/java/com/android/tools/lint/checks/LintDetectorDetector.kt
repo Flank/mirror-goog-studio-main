@@ -92,9 +92,10 @@ import kotlin.math.max
  * capitalization on
  *
  *       issue registration (and maximum word length for the summary)
- * Creating a visitor and only overriding visitCallExpression -- should probably
- *       just use getApplicableMethods and visitMethodCall.
- * Calling accept on a UElement with a PSI visitor
+ *
+ * Creating a visitor and only overriding visitCallExpression -- should
+ * probably just use getApplicableMethods and visitMethodCall. Calling
+ * accept on a UElement with a PSI visitor
  *
  * Try running TextFormat on all messages to see if there are any
  * problems? Warn about unit test files which do not have any Kotlin

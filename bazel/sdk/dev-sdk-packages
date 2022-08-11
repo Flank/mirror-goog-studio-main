@@ -44,8 +44,12 @@ platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 # Emulator is required for managed devices in AGP
 emulator
 
+# Latest version which has our custom communication API.
 cmake;3.6.4111459:**:docs/**
+# Latest version that uses the CMake server API.
 cmake;3.10.2.4988404
+# Latest version that uses the CMake file API.
+cmake;3.22.1
 
 # Instant apps sdk used in integration tests
 extras;google;instantapps

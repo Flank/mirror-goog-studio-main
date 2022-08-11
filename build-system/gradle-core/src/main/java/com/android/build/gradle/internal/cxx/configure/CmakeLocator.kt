@@ -129,7 +129,7 @@ enum class CMakeVersion(val version: String, val sdkFolderName: String) {
     /**
      * The latest version of CMake that uses the CMake file API.
      */
-    LATEST_WITH_FILE_API("3.18.1", "3.18.1");
+    LATEST_WITH_FILE_API("3.22.1", "3.22.1");
 
     companion object {
         /**

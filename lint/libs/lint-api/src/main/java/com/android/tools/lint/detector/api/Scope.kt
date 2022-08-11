@@ -36,9 +36,6 @@ import java.util.EnumSet
  * when performing its analysis. This can be used to determine when
  * issues are potentially obsolete, whether a detector should re-run on
  * a file save, etc.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
  */
 enum class Scope {
     /**

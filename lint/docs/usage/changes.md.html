@@ -14,7 +14,7 @@ lint check authors, see the API Guide.
   `KnownPermissionError`      | Well-known permission errors, e.g. `android:permission="true"`
   `SystemPermissionTypo`      | Usage of permissions that look like system permissions, but have typos
   `CustomPermissionTypo`      | Usage of permissions that look like custom permissions from the same project, but have typos
-  `ReservedSystemPermission`  | Accidental redefining of a framework permission
+  `ReservedSystemPermission`  | Accidental redefining of a framework permission, or usage of the `andriod.` prefix
   `GestureBackNavigation`     | Usage of KeyEvent.KEYCODE_BACK
   `UnusedTranslation`         | Unused translation, not declared in localeConfig
   `NotificationPermission`    | Notifications Without android.permission.POST_NOTIFICATIONS
@@ -23,6 +23,10 @@ lint check authors, see the API Guide.
   `TileProviderPermissions`   | TileProvider does not set permission
   `SquareAndRoundTilePreviews`| TileProvider does not have round and square previews
   `InternalInsetResource`     | Using internal inset dimension resource
+
+* Lint now respects the `--offline` flag passed to Gradle, and will refrain
+  from making network calls for checks that normally do (such as
+  `AppLinksAutoVerify`).
 
 **7.3**
 

@@ -214,4 +214,8 @@ class LiveEditClass {
     private Class<?> classForName(String internalName) throws ClassNotFoundException {
         return Class.forName(internalName.replace('/', '.'), true, context.getClassLoader());
     }
+
+    public String getClassInternalName() {
+        return bytecode.getInternalName();
+    }
 }

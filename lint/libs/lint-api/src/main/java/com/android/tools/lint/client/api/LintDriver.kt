@@ -147,12 +147,7 @@ import java.util.function.Predicate
 import java.util.regex.Pattern
 import kotlin.system.measureTimeMillis
 
-/**
- * Analyzes Android projects and files
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** Analyzes Android projects and files */
 class LintDriver(
     /** The [registry] containing issues to be checked. */
     var registry: IssueRegistry,
@@ -408,8 +403,8 @@ class LintDriver(
     /**
      * Sets whether lint has encountered files with fatal parser errors.
      *
-     * @see .hasParserErrors
      * @param hasErrors whether parser errors have been encountered
+     * @see .hasParserErrors
      */
     fun setHasParserErrors(hasErrors: Boolean) {
         parserErrors = hasErrors
@@ -3969,10 +3964,10 @@ class LintDriver(
          * annotation for the given issue (which can be null to check
          * for the "all" annotation)
          *
-         * @param issue the issue to be checked
-         * @param modifierListOwner the annotated element to check
          * @param context [JavaContext] for checking external
          *     annotations
+         * @param issue the issue to be checked
+         * @param modifierListOwner the annotated element to check
          * @return true if the issue or all issues should be suppressed
          *     for this modifier
          */

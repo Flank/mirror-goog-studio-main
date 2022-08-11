@@ -45,6 +45,7 @@
                - apkFromBundleTaskName              = "extractApksForDebug"
                - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/debug/redirect.txt{!}
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          > androidTestArtifact:
             - compileTaskName               = "compileDebugAndroidTestSources"
@@ -82,6 +83,7 @@
                - instrumentedTestTaskName = "connectedDebugAndroidTest"
             - bundleInfo                    = (null)
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < androidTestArtifact
          > unitTestArtifact:
             - compileTaskName       = "compileDebugUnitTestSources"
@@ -139,6 +141,7 @@
                - apkFromBundleTaskName              = "extractApksForRelease"
                - apkFromBundleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_from_bundle_ide_redirect_file/release/redirect.txt{!}
             - codeShrinker                  = (null)
+            - privacySandboxSdkInfo         = (null)
          < mainArtifact
          - androidTestArtifact    = (null)
          > unitTestArtifact:

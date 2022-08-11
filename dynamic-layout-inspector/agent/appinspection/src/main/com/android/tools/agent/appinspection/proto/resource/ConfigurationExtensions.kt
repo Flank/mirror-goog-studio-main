@@ -21,30 +21,33 @@ import com.android.tools.agent.appinspection.proto.convert
 import com.android.tools.idea.layoutinspector.view.inspection.LayoutInspectorViewProtocol.Configuration
 import android.content.res.Configuration as AndroidResConfiguration
 
-fun AndroidResConfiguration.convert(stringTable: StringTable): Configuration {
-    val self = this
-    val mainLocale = if (!locales.isEmpty) locales[0] else null
-    return Configuration.newBuilder().apply {
-        fontScale = self.fontScale
-        countryCode = self.mcc
-        networkCode = self.mnc
-        screenLayout = self.screenLayout
-        colorMode = self.colorMode
-        touchScreen = self.touchscreen
-        keyboard = self.keyboard
-        keyboardHidden = self.keyboardHidden
-        hardKeyboardHidden = self.hardKeyboardHidden
-        navigation = self.navigation
-        navigationHidden = self.navigationHidden
-        uiMode = self.uiMode
-        smallestScreenWidth = self.smallestScreenWidthDp
-        density = self.densityDpi
-        orientation = self.orientation
-        screenWidth = self.screenWidthDp
-        screenHeight = self.screenHeightDp
+fun AndroidResConfiguration.convert(stringTable: StringTable): Configuration =
+    Configuration.newBuilder().apply(this, stringTable).build()
 
-        if (mainLocale != null) {
-            locale = mainLocale.convert(stringTable)
-        }
-    }.build()
+private fun Configuration.Builder.apply(
+    config: AndroidResConfiguration,
+    stringTable: StringTable
+): Configuration.Builder {
+    fontScale = config.fontScale
+    countryCode = config.mcc
+    networkCode = config.mnc
+    screenLayout = config.screenLayout
+    colorMode = config.colorMode
+    touchScreen = config.touchscreen
+    keyboard = config.keyboard
+    keyboardHidden = config.keyboardHidden
+    hardKeyboardHidden = config.hardKeyboardHidden
+    navigation = config.navigation
+    navigationHidden = config.navigationHidden
+    uiMode = config.uiMode
+    smallestScreenWidthDp = config.smallestScreenWidthDp
+    density = config.densityDpi
+    orientation = config.orientation
+    screenWidthDp = config.screenWidthDp
+    screenHeightDp = config.screenHeightDp
+
+    if (!config.locales.isEmpty) {
+        locale = config.locales[0].convert(stringTable)
+    }
+    return this
 }

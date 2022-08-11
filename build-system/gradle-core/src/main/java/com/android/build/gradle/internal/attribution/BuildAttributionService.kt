@@ -20,7 +20,6 @@ import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.Version
 import com.android.build.gradle.internal.isConfigurationCache
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
-import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.build.gradle.internal.utils.getBuildscriptDependencies
@@ -32,10 +31,10 @@ import com.android.tools.analytics.HostData
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
-import org.gradle.api.services.BuildServiceRegistration
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
@@ -44,6 +43,12 @@ import java.io.File
 import java.io.FileWriter
 import java.lang.management.ManagementFactory
 
+/**
+ * Collects information for Build Analyzer in the IDE.
+ *
+ * DO NOT instantiate eagerly, this build service relies on
+ * [org.gradle.api.execution.TaskExecutionGraph.whenReady] to configure itself.
+ */
 abstract class BuildAttributionService : BuildService<BuildAttributionService.Parameters>,
         OperationCompletionListener,
         AutoCloseable {
@@ -52,19 +57,10 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
         private var initialized = false
 
-        @Synchronized
-        fun init(project: Project,
-                attributionFileLocation: String,
-                listenersRegistry: BuildEventsListenerRegistry) {
+        private fun init(project: Project, attributionFileLocation: String, parameters: Parameters) {
             if (initialized) {
                 return
             }
-            val serviceRegistration = project.gradle
-                    .sharedServices
-                    .registrations
-                    .getByName(
-                            getBuildServiceName(BuildAttributionService::class.java)
-                    ) as BuildServiceRegistration<BuildAttributionService, Parameters>
 
             initialized = true
 
@@ -89,14 +85,14 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 val buildscriptDependenciesInfo = getBuildscriptDependencies(project.rootProject)
                         .map { "${it.group}:${it.module}:${it.version}" }
 
-                serviceRegistration.parameters.attributionFileLocation.set(attributionFileLocation)
-                serviceRegistration.parameters.taskNameToClassNameMap.set(taskNameToClassNameMap)
-                serviceRegistration.parameters.taskNameToTaskCategoryLabelMap.set(
+                parameters.attributionFileLocation.set(attributionFileLocation)
+                parameters.taskNameToClassNameMap.set(taskNameToClassNameMap)
+                parameters.taskNameToTaskCategoryLabelMap.set(
                         taskNameToTaskCategoryLabelMap)
-                serviceRegistration.parameters.tasksSharingOutputs.set(
+                parameters.tasksSharingOutputs.set(
                         outputFileToTasksMap.filter { it.value.size > 1 }
                 )
-                serviceRegistration.parameters.javaInfo.set(
+                parameters.javaInfo.set(
                     JavaInfo(
                         version = System.getProperty("java.version") ?: "",
                         vendor = System.getProperty("java.vendor") ?: "",
@@ -104,14 +100,13 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                         vmArguments = HostData.runtimeBean?.inputArguments ?: emptyList()
                     )
                 )
-                serviceRegistration.parameters.buildscriptDependenciesInfo.set(buildscriptDependenciesInfo)
-                serviceRegistration.parameters.buildInfo.set(
+                parameters.buildscriptDependenciesInfo.set(buildscriptDependenciesInfo)
+                parameters.buildInfo.set(
                     BuildInfo(
                         agpVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
                         configurationCacheIsOn = project.gradle.startParameter.isConfigurationCache
                     )
                 )
-                listenersRegistry.onTaskCompletion(serviceRegistration.service)
             }
         }
 
@@ -154,6 +149,11 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
     override fun close() {
         initialized = false
+
+        if (!parameters.attributionFileLocation.isPresent) {
+            // There were no tasks in this build, so avoid recording info
+            return
+        }
 
         val gcData =
                 ManagementFactory.getGarbageCollectorMXBeans().map {
@@ -200,12 +200,24 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         val taskNameToTaskCategoryLabelMap: MapProperty<String, List<TaskCategoryLabel>>
     }
 
-    class RegistrationAction(project: Project)
-        : ServiceRegistrationAction<BuildAttributionService, Parameters>(
-            project,
-            BuildAttributionService::class.java
+    @Suppress("UnstableApiUsage")
+    class RegistrationAction(
+        project: Project,
+        private val attributionFileLocation: String,
+        private val listenersRegistry: BuildEventsListenerRegistry
+    ) : ServiceRegistrationAction<BuildAttributionService, Parameters>(
+        project,
+        BuildAttributionService::class.java
     ) {
 
-        override fun configure(parameters: Parameters) {}
+        override fun configure(parameters: Parameters) {
+            init(project, attributionFileLocation, parameters)
+        }
+
+        override fun execute(): Provider<BuildAttributionService> {
+            return super.execute().also {
+                listenersRegistry.onTaskCompletion(it)
+            }
+        }
     }
 }

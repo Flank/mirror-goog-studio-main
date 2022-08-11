@@ -12,22 +12,6 @@ fi
 
 readonly script_dir="$(dirname "$0")"
 
-####################################
-# Download a flake retry bazelrc file from GCS.
-# Arguments:
-#   Destination directory
-# Outputs:
-#   If successful, the local path; Otherwise, nothing
-####################################
-function download_flake_retry_rc() {
-  local -r gcs_path="gs://adt-byob/known-flakes/studio-coverage/auto-retry.bazelrc"
-  mkdir -p $1
-  gsutil cp $gcs_path "${1}/auto-retry.bazelrc"
-  if [[ $? -eq 0 ]]; then
-    echo "${1}/auto-retry.bazelrc"
-  fi
-}
-
 collect_and_exit() {
   local -r exit_code=$1
 
@@ -64,13 +48,6 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<head><meta http-equiv=\"refresh\" content=\"0; URL='https://fusion2.corp.google.com/invocations/${invocation_id}'\" /></head>" > "${dist_dir}"/upsalite_test_results.html
 fi
 
-declare -a bazelrc_flags
-# For presubmit builds, try download bazelrc to deflake builds
-if [[ -z "$postsubmit" && -d "${dist_dir}" ]]; then
-  bazelrc=$(download_flake_retry_rc "${dist_dir}/flake-retry")
-  if [[ $bazelrc ]]; then bazelrc_flags+=("--bazelrc=${bazelrc}"); fi
-fi
-
 declare -a extra_test_flags
 if [[ $postsubmit ]]; then
     extra_test_flags+=(--bes_keywords=ab-postsubmit)
@@ -89,7 +66,6 @@ fi
 
 # Run Bazel with coverage instrumentation
 "${script_dir}/bazel" \
-  "${bazelrc_flags[@]}" \
   test \
   --config=ci --config=ants \
   --invocation_id=${invocation_id} \

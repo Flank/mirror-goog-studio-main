@@ -22,9 +22,6 @@ import com.android.resources.ResourceFolderType;
 /**
  * Abstract class specifically intended for layout detectors which provides some common utility
  * methods shared by layout detectors.
- *
- * <p><b>NOTE: This is not a public or final API; if you rely on this be prepared to adjust your
- * code for the next tools release.</b>
  */
 public abstract class LayoutDetector extends ResourceXmlDetector {
     @Override

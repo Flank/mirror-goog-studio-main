@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.ndk
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.DEFAULT_COMPILE_SDK_VERSION
+import com.android.build.gradle.integration.common.fixture.ModelBuilderV2
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.fixture.model.cartesianOf
@@ -33,6 +34,7 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage
 import com.android.build.gradle.internal.cxx.logging.decodeLoggingMessage
 import com.android.build.gradle.internal.cxx.logging.text
+import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assume
 import org.junit.Before
@@ -40,6 +42,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.io.File
 
 /**
  * CMake lib<-app project where lib is published as Prefab
@@ -52,7 +55,9 @@ class ModuleToModuleDepsTest(
     libUsesPrefabPublishTag: String,
     private val libExtension: String,
     appStlTag: String,
-    libStlTag: String
+    libStlTag: String,
+    private val outputStructureType: OutputStructureType,
+    private val headerType: HeaderType
 ) {
     private val appUsesPrefab = appUsesPrefabTag == ""
     private val libUsesPrefabPublish = libUsesPrefabPublishTag == ""
@@ -74,6 +79,28 @@ class ModuleToModuleDepsTest(
             override fun toString() = "ndk-build"
         }
     }
+    sealed class OutputStructureType {
+        object Normal : OutputStructureType() {
+            override fun toString() = ""
+        }
+        object OutOfTreeBuild : OutputStructureType() {
+            override fun toString() = " [out-of-tree]"
+        }
+    }
+    sealed class HeaderType(
+        val createHeaderDir : Boolean,
+        val createHeaderFile : Boolean
+    ) {
+        object Normal : HeaderType(true, true) {
+            override fun toString() = ""
+        }
+        object DirectoryButNoFile : HeaderType(true, false) {
+            override fun toString() = " [header-dir-only]"
+        }
+        object None : HeaderType(false, false) {
+            override fun toString() = " [no-header]"
+        }
+    }
     private val app = MinimalSubProject.app()
     private val lib = MinimalSubProject.lib()
     private val multiModule = MultiModuleTestProject.builder()
@@ -81,6 +108,13 @@ class ModuleToModuleDepsTest(
         .subproject(":lib", lib)
         .dependency(app, lib)
         .build()
+
+    private val libOutputRoot : File get() =
+        if (outputStructureType == OutputStructureType.Normal) project.getSubproject("lib").buildDir.parentFile
+        else {
+            // The output folder for lib is at $PROJECT_ROOT/out/lib
+            project.getSubproject("lib").buildDir.parentFile.parentFile.parentFile.resolve("out/lib")
+        }
 
     @get:Rule
     val project =
@@ -91,19 +125,24 @@ class ModuleToModuleDepsTest(
 
     companion object {
         @Parameterized.Parameters(
-            name = "app.so={0}{2}{5} lib{4}={1}{3}{6}")
+            name = "app.so={0}{2}{5} lib{4}={1}{3}{6}{7}{8}")
         @JvmStatic
-        fun data() =
-            cartesianOf(
+        fun data() : Array<Array<Any?>> {
+            val tests = cartesianOf(
                     arrayOf<BuildSystemConfig>(NdkBuild) + CMakeVersion.FOR_TESTING.map { CMake(it.version) }.toTypedArray(),
                     arrayOf<BuildSystemConfig>(NdkBuild) + CMakeVersion.FOR_TESTING.map { CMake(it.version) }.toTypedArray(),
                     arrayOf("", ":no-prefab"),
                     arrayOf("", ":no-prefab-publish"),
                     arrayOf(".a", ".so"),
                     arrayOf("", ":c++_static", ":c++_shared"),
-                    arrayOf("", ":c++_static", ":c++_shared")
+                    arrayOf("", ":c++_static", ":c++_shared"),
+                    arrayOf(OutputStructureType.Normal, OutputStructureType.OutOfTreeBuild),
+                    arrayOf(HeaderType.Normal, HeaderType.DirectoryButNoFile, HeaderType.None)
                 )
                 .minimizeUsingTupleCoverage(4)
+            println("Test configuration count: ${tests.size}")
+            return tests
+        }
     }
 
     @Before
@@ -128,6 +167,34 @@ class ModuleToModuleDepsTest(
                 android.defaultConfig.externalNativeBuild.ndkBuild.arguments.add("APP_STL=$appStl")
                 """.trimIndent()
             else -> error(appStl)
+        }
+        val testRoot = project.getSubproject(":app")
+            .buildFile
+            .parentFile
+            .parentFile
+            .parentFile
+            .absolutePath.replace("\\", "/")
+        val appStructureStanza = if (outputStructureType == OutputStructureType.Normal) "" else when(appBuildSystem) {
+            is CMake -> """
+                android.externalNativeBuild.cmake.buildStagingDirectory="$testRoot/out/${'$'}{project.path.replace(":", "/")}/nativeConfigure"
+                project.buildDir = new File("$testRoot/out/${'$'}{project.path.replace(":", "/")}/build")
+                """.trimIndent()
+            NdkBuild -> """
+                android.externalNativeBuild.cmake.buildStagingDirectory="$testRoot/out/${'$'}{project.path.replace(":", "/")}/nativeConfigure"
+                project.buildDir = new File("$testRoot/out/${'$'}{project.path.replace(":", "/")}/build")
+                """.trimIndent()
+            else -> error("$appBuildSystem")
+        }
+        val libStructureStanza = if (outputStructureType== OutputStructureType.Normal) "" else when(libBuildSystem) {
+            is CMake -> """
+                android.externalNativeBuild.cmake.buildStagingDirectory="$testRoot/out/${'$'}{project.path.replace(":", "/")}/nativeConfigure"
+                project.buildDir = new File("$testRoot/out/${'$'}{project.path.replace(":", "/")}/build")
+                """.trimIndent()
+            NdkBuild -> """
+                android.externalNativeBuild.cmake.buildStagingDirectory="$testRoot/out/${'$'}{project.path.replace(":", "/")}/nativeConfigure"
+                project.buildDir = new File("$testRoot/out/${'$'}{project.path.replace(":", "/")}/build")
+                """.trimIndent()
+            else -> error("$appBuildSystem")
         }
 
         project.getSubproject(":app").buildFile.appendText(
@@ -154,6 +221,8 @@ class ModuleToModuleDepsTest(
 
             $appStanza
             $appStlStanza
+            $appStructureStanza
+
             """.trimIndent())
 
         val libStanza = when(libBuildSystem) {
@@ -176,6 +245,7 @@ class ModuleToModuleDepsTest(
                 """.trimIndent()
             else -> error(libStl)
         }
+        val headerStanza = if (headerType.createHeaderDir) "headers \"src/main/cpp/include\"\n" else ""
 
         project.getSubproject(":lib").buildFile.appendText(
             """
@@ -185,18 +255,19 @@ class ModuleToModuleDepsTest(
                 }
                 prefab {
                     foo {
-                        headers "src/main/cpp/include"
+                        $headerStanza
                         libraryName "libfoo"
                     }
                 }
             }
             $libStanza
             $libStlStanza
+            $libStructureStanza
             """)
-
-        val header = project.getSubproject(":lib").buildFile.resolveSibling("src/main/cpp/include/foo.h")
-        header.parentFile.mkdirs()
-        header.writeText("int foo();")
+        val header =
+            project.getSubproject(":lib").buildFile.resolveSibling("src/main/cpp/include/foo.h")
+        if (headerType.createHeaderDir) header.parentFile.mkdirs()
+        if (headerType.createHeaderFile) header.writeText("int foo();")
 
         val libSource = project.getSubproject(":lib").buildFile.resolveSibling("src/main/cpp/foo.cpp")
         libSource.parentFile.mkdirs()
@@ -270,10 +341,19 @@ class ModuleToModuleDepsTest(
 
         val appSource = project.getSubproject(":app").buildFile.resolveSibling("src/main/cpp/call_foo.cpp")
         appSource.parentFile.mkdirs()
-        appSource.writeText("""
-            #include <foo.h>
-            int callFoo() { return foo(); }
-        """.trimIndent())
+        if (headerType.createHeaderFile) {
+            appSource.writeText(
+                """
+                #include <foo.h>
+                int callFoo() { return foo(); }
+                """.trimIndent())
+        } else {
+            appSource.writeText(
+                """
+                int foo();
+                int callFoo() { return foo(); }
+                """.trimIndent())
+        }
 
         enableCxxStructuredLogging(project)
     }
@@ -284,16 +364,6 @@ class ModuleToModuleDepsTest(
     private fun expectGradleConfigureError() : Boolean {
         if (expectSingleStlViolationError()) return true
         if (!prefabConfiguredCorrectly) return true
-
-        if (expectNdkBuildProducesNoLibrary()) {
-            if (effectiveAppStl == "c++_static" && effectiveLibStl == "c++_shared") {
-                // In this situation AGP will have generated an incorrect abi.json that identifies
-                // the library as a shared library rather than a static library. These
-                // configurations should be compatible but will not be because of the
-                // misidentification.
-                return true
-            }
-        }
 
         // ndk-build can't consume configuration-only packages until a future NDK
         // update and corresponding prefab update.
@@ -387,8 +457,7 @@ class ModuleToModuleDepsTest(
         }
 
         // Check that the output is known but does not yet exist on disk.
-        val libAbi = project.getSubproject("lib")
-            .recoverExistingCxxAbiModels().single { it.abi == Abi.X86 }
+        val libAbi = recoverExistingCxxAbiModels(libOutputRoot).single { it.abi == Abi.X86 }
         val libConfig = AndroidBuildGradleJsons.getNativeBuildMiniConfig(libAbi, null)
         if (expectNdkBuildProducesNoLibrary()) {
             assertThat(libConfig.libraries.values).isEmpty()
@@ -444,10 +513,19 @@ class ModuleToModuleDepsTest(
         executor.expectFailure()
         executor.run(":app:configure${appBuildSystem.build}Debug[arm64-v8a]")
         val errors = project.readStructuredLogs(::decodeLoggingMessage)
-            .filter { it.level == LoggingMessage.LoggingLevel.ERROR}
+            .filter { it.level == LoggingMessage.LoggingLevel.ERROR }
         val error = errors.map { it.diagnosticCode }.single()
         assertThat(error)
             .named(errors.map { it.text() }.single())
             .isEqualTo(1212)
+    }
+
+    @Test
+    fun `test sync`() {
+        Assume.assumeFalse(expectGradleConfigureError())
+        // Simulate an IDE sync
+        project.modelV2()
+            .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // CMake cannot detect compiler attributes
+            .fetchNativeModules(ModelBuilderV2.NativeModuleParams())
     }
 }

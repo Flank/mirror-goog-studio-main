@@ -99,6 +99,26 @@ class TestReportTest {
         """.trimIndent())
     }
 
+    private fun createAllSkippedTestReportXmlFile() {
+        val reportXml = File(resultsOutDir, "TEST-valid.xml")
+        Files.asCharSink(reportXml, Charsets.UTF_8).write("""
+            <?xml version='1.0' encoding='UTF-8' ?>
+            <testsuite name="com.example.myapplication.ExampleInstrumentedTest" tests="2" failures="0" errors="0" skipped="2" time="0.04" timestamp="2021-08-10T21:09:43" hostname="localhost">
+              <properties>
+                <property name="device" value="Pixel_4_XL_API_30(AVD) - 11" />
+                <property name="flavor" value="" />
+                <property name="project" value="app" />
+              </properties>
+              <testcase name="thisTestCaseShouldBeIgnored" classname="com.example.myapplication.ExampleInstrumentedTest" time="0.035">
+                <skipped />
+              </testcase>
+              <testcase name="assumptionFailure" classname="com.example.myapplication.ExampleInstrumentedTest" time="0.005">
+                <skipped />
+              </testcase>
+            </testsuite>
+        """.trimIndent())
+    }
+
     @Test
     fun generateReport() {
         createTestReportXmlFile()
@@ -107,16 +127,20 @@ class TestReportTest {
 
         val indexHtml = File(reportOutDir, "index.html")
         assertThat(indexHtml).exists()
-        assertThat(indexHtml).contains("""<div class="percent">87%</div>""")
+        assertThat(indexHtml).contains("""<div class="percent">83%</div>""")
+        assertThat(indexHtml).contains("""<p>skipped</p>""")
+        assertThat(indexHtml).contains("""<p>successful</p>""")
 
         val moduleHtml = File(reportOutDir, "com.example.myapplication.html")
         assertThat(moduleHtml).exists()
+        assertThat(moduleHtml).contains("""<p>skipped</p>""")
 
         val classHtml = File(reportOutDir, "com.example.myapplication.ExampleInstrumentedTest.html")
         assertThat(classHtml).exists()
         assertThat(classHtml).contains("""<td class="success">passed (0.004s)</td>""")
         assertThat(classHtml).contains("""<td class="failures">failed (0s)</td>""")
         assertThat(classHtml).contains("""<td class="skipped">ignored (-)</td>""")
+        assertThat(classHtml).contains("""<p>skipped</p>""")
     }
 
     @Test
@@ -142,5 +166,17 @@ class TestReportTest {
         assertThat(indexHtml).exists()
         assertThat(indexHtml).contains("<h2>Tool failures</h2>")
         assertThat(indexHtml).contains("PLATFORM ERROR")
+    }
+
+    @Test
+    fun generateReportWithAllSkippedTests() {
+        createAllSkippedTestReportXmlFile()
+
+        TestReport(ReportType.SINGLE_FLAVOR, resultsOutDir, reportOutDir).generateReport()
+
+        val indexHtml = File(reportOutDir, "index.html")
+        assertThat(indexHtml).exists()
+        assertThat(indexHtml).contains("<div class=\"percent\">-</div>")
+        assertThat(indexHtml).contains("<p>N/A</p>")
     }
 }

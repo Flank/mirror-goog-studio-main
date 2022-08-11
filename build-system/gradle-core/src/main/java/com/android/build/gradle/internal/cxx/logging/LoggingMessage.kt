@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.BUG
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.INFO
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.LIFECYCLE
-import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.UNRECOGNIZED
 import com.android.build.gradle.internal.cxx.logging.LoggingMessage.LoggingLevel.WARN
 import com.android.build.gradle.internal.cxx.string.StringDecoder
 import com.android.build.gradle.internal.cxx.string.StringEncoder
@@ -99,8 +98,8 @@ fun LoggingMessage.text() : String {
 fun bugRecordOf(message: String, diagnosticCode: CxxBugDiagnosticCode) =
     createLoggingMessage(BUG, message, diagnosticCode = diagnosticCode.bugNumber)
 
-fun errorRecordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
-    createLoggingMessage(ERROR, message, diagnosticCode = diagnosticCode?.errorCode?:0)
+fun errorRecordOf(message: String, diagnosticCode: CxxDiagnosticCode) =
+    createLoggingMessage(ERROR, message, diagnosticCode = diagnosticCode.errorCode)
 
 fun warnRecordOf(message: String, diagnosticCode: CxxDiagnosticCode?) =
     createLoggingMessage(WARN, message, diagnosticCode = diagnosticCode?.warningCode?:0)

@@ -79,6 +79,8 @@ def main():
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
+    env['SSH_AUTH_SOCK'] = os.environ.get('SSH_AUTH_SOCK', '')
+    env['USER'] = os.environ.get('USER', '')
 
   bazelrc_arg = '--bazelrc=%s' % os.path.join(workspace, 'tools',
                                               'base', 'bazel',

@@ -148,6 +148,7 @@ import org.jetbrains.uast.UReferenceExpression
  *     <tr><td>PsiTryStatement</td><td>UTryExpression</td></tr>
  *     <tr><td>PsiTypeCastExpression</td><td>UBinaryExpressionWithType</td></tr>
  *     <tr><td>PsiWhileStatement</td><td>UWhileExpression</td></tr>
+ *
  * </table>
  *
  * Note however that UAST isn't just a "renaming of classes"; there are
@@ -273,6 +274,7 @@ import org.jetbrains.uast.UReferenceExpression
  *     <tr><td>getType</td><td>getExpressionType</td></tr>
  *     <tr><td>getTypeParameters</td><td>getTypeArguments</td></tr>
  *     <tr><td>resolveMethod</td><td>resolve</td></tr>
+ *
  * </table>
  *
  * ### Handlers versus visitors
@@ -503,10 +505,11 @@ interface SourceCodeScanner : FileScanner {
     fun visitClass(context: JavaContext, lambda: ULambdaExpression)
 
     /**
-     * Returns a list of fully qualified names for annotations that
-     * this detector cares about. Lint looks for elements that are
-     * **associated** with an annotated element, and will invoke
-     * [visitAnnotationUsage] for each usage.
+     * Returns a list of names for annotations that this detector
+     * cares about. Names may be either simple or fully-qualified; simple
+     * names will match *all* annotations of the same name. Lint looks for
+     * elements that are **associated** with an annotated element, and will
+     * invoke [visitAnnotationUsage] for each usage.
      *
      * **Note**: This doesn't visit the annotations themselves; this
      * visits *usages* of the annotation. For example, let's say
@@ -518,7 +521,7 @@ interface SourceCodeScanner : FileScanner {
      * and return a [UElementHandler] from [createUastHandler]
      * where you override [UElementHandler.visitAnnotation].
      *
-     * @return a list of fully qualified annotation names
+     * @return a list of annotation names
      */
     fun applicableAnnotations(): List<String>?
 
@@ -557,13 +560,13 @@ interface SourceCodeScanner : FileScanner {
      * be used to handle scoping when there are multiple related
      * annotations. For example, let's say you have two annotations,
      * `@Mutable` and `@Immutable`. When you're visiting an `@Immutable`
-     * annotation, that annotation could be coming from an outer class
-     * where a closer class or immediate method annotation is marked
-     * @Mutable. In this case, you'll want to visit the [usageInfo]
-     * and make sure that none of the annotations leading up to the
-     * [AnnotationUsageInfo.index] are the `@Mutable` annotation which
-     * would override the `@Immutable` annotation on the class. You
-     * don't need to do this for repeated occurrences of the same
+     * annotation, that annotation could be coming from an outer
+     * class where a closer class or immediate method annotation
+     * is marked @Mutable. In this case, you'll want to visit the
+     * [usageInfo] and make sure that none of the annotations leading up
+     * to the [AnnotationUsageInfo.index] are the `@Mutable` annotation
+     * which would override the `@Immutable` annotation on the class.
+     * You don't need to do this for repeated occurrences of the same
      * annotation; lint will already skip any later or outer scope
      * usages of the same annotation since it's almost always the case
      * that the closer annotation is a redefinition which overrides the

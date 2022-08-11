@@ -45,7 +45,7 @@ class BuildDirRelocationTest {
             android.testOptions.unitTests.includeAndroidResources = true
             dependencies {
                 testImplementation 'junit:junit:4.12'
-                testImplementation 'androidx.test:core:1.2.0'
+                testImplementation 'androidx.test:core:1.3.0'
             }
             """.trimIndent()
         )

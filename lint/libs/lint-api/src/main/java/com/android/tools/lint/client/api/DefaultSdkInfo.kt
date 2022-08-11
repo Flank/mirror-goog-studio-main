@@ -62,12 +62,7 @@ import com.android.SdkConstants.VIEW_SWITCHER
 import com.android.SdkConstants.WEB_VIEW
 import com.android.SdkConstants.WIDGET_PKG_PREFIX
 
-/**
- * Default simple implementation of an [SdkInfo]
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** Default simple implementation of an [SdkInfo] */
 internal class DefaultSdkInfo : SdkInfo() {
     override fun getParentViewName(name: String): String? {
         val rawType = getRawType(name) ?: return null

@@ -273,6 +273,44 @@ class LibraryPublishingTest {
         }
     }
 
+    // Regression test for b/241076233
+    @Test
+    fun testMultipleVariantPublishingWithNoBuildTypeAttribute() {
+        addPublication(CUSTOM)
+        TestFileUtils.appendToFile(
+            app.buildFile,
+            """
+                android {
+                    flavorDimensions 'version'
+                    productFlavors {
+                        free {}
+                        paid {}
+                    }
+                }
+            """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            library.buildFile,
+            """
+
+                android {
+                    flavorDimensions 'version'
+                    productFlavors {
+                        free {}
+                        paid {}
+                    }
+                    publishing {
+                        multipleVariants("$CUSTOM") {
+                            includeBuildTypeValues("debug")
+                            includeFlavorDimensionAndValues("version", "free", "paid")
+                        }
+                    }
+                }
+            """.trimIndent()
+        )
+        library.execute("clean", "publish")
+    }
+
     @Test
     fun testMultipleVariantPublishingShortCut() {
         addPublication(CUSTOM)

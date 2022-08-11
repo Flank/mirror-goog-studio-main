@@ -33,7 +33,8 @@ class VersionedSdkLoaderService(
     private val buildToolsRevision: () -> Revision
 ) {
     val versionedSdkLoader: Provider<SdkComponentsBuildService.VersionedSdkLoader> by lazy {
-        val buildService = getBuildService<SdkComponentsBuildService>(services.buildServiceRegistry)
+        val buildService =
+            getBuildService(services.buildServiceRegistry, SdkComponentsBuildService::class.java)
         buildService
             .map { sdkComponentsBuildService ->
                 sdkComponentsBuildService.sdkLoader(

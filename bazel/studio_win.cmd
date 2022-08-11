@@ -71,17 +71,10 @@ setlocal
   set TARGETS=
   for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
-  @rem For presubmit builds, try download bazelrc to deflake builds
-  if %BUILD_TYPE%==PRESUBMIT (
-    call :download_flake_retry_rc auto-retry.bazelrc %DISTDIR%\flake-retry BAZELRC
-    if defined BAZELRC set BAZELRC_FLAGS=--bazelrc=!BAZELRC!
-  )
-
   @echo studio_win.cmd time: %time%
   @rem Run Bazel
   call %SCRIPTDIR%bazel.cmd ^
   --max_idle_secs=60 ^
-  %BAZELRC_FLAGS% ^
   test ^
   --config=ci ^
   --config=ants ^
@@ -172,15 +165,3 @@ exit /b %EXITCODE%
   set %2=%~dpfn1
   exit /b
 
-@rem Downloads a file (Arg 1) from the known-flakes directory on GCS, store it to a directory (Arg 2)
-@rem and save the full path to a variable (Arg 3) if successful.
-:download_flake_retry_rc
-  setlocal
-  set GCS_PATH=gs://adt-byob/known-flakes/studio-win/%1
-  mkdir %2
-  call gsutil cp %GCS_PATH% %2\%1
-  if %ERRORLEVEL% neq 0 (
-    endlocal & exit /b
-  )
-  endlocal & set %3=%2\%1
-  exit /b

@@ -66,8 +66,9 @@ public class DeployerRunner {
     public static void main(String[] args) {
         Trace.start();
         Trace.begin("main");
+        // Disable this for now: b/240616844
         // Only use adblib when DeployerRunner is invoked from CLI
-        System.setProperty(AdbClient.ALLOW_ADBLIB_PROP_KEY, AdbClient.ALLOW_ADBLIB_PROP_VALUE);
+        // System.setProperty(AdbClient.ALLOW_ADBLIB_PROP_KEY, AdbClient.ALLOW_ADBLIB_PROP_VALUE);
         int errorCode = tracedMain(args, new StdLogger(StdLogger.Level.VERBOSE));
         Trace.end();
         Trace.flush();

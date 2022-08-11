@@ -38,12 +38,7 @@ import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
 import java.io.File
 
-/**
- * A [Context] used when checking .class files.
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** A [Context] used when checking .class files. */
 class ClassContext(
     /** the driver running through the checks */
     driver: LintDriver,

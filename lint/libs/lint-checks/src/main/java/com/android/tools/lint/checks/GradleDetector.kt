@@ -2854,8 +2854,8 @@ open class GradleDetector : Detector(), GradleScanner {
          * Threshold to consider a versionCode
          * very high and issue a warning.
          * https://developer.android.com/studio/publish/versioning.html
-         * indicates that the highest value accepted by Google Play is
-         * 2100000000.
+         * indicates that the highest value accepted by Google Play
+         * is 2100000000.
          */
         private const val VERSION_CODE_HIGH_THRESHOLD = 2000000000
 

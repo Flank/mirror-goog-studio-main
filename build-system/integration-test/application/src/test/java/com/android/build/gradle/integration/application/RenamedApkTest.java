@@ -19,8 +19,11 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VariantBuildInformation;
@@ -74,5 +77,20 @@ public class RenamedApkTest {
     public void checkRenamedApk() {
         File debugApk = project.file("build/outputs/apk/debug/debug.apk");
         assertTrue("Check output file: " + debugApk, debugApk.isFile());
+    }
+
+    /** Regression test for b/148641149. */
+    @Test
+    public void checkWarningForRelativePath() throws Exception {
+        GradleBuildResult result;
+        result = project.executor().run("clean", "assembleDebug");
+        ScannerSubject.assertThat(result.getStdout())
+                .doesNotContain(
+                        "Relative paths are not supported when setting an output file name.");
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "outputFileName = \"", "outputFileName = \"../");
+        result = project.executor().run("clean", "assembleDebug");
+        ScannerSubject.assertThat(result.getStdout())
+                .contains("Relative paths are not supported when setting an output file name.");
     }
 }

@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.settings.Macro.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_FULL_CONFIGURATION_HASH
 import com.android.build.gradle.internal.cxx.settings.Macro.NDK_PLATFORM_SYSTEM_VERSION
+import com.android.utils.cxx.CxxDiagnosticCode.BUILD_SETTINGS_MACRO_EXPANSION_DEPTH_LIMIT
 
 /**
  * Expand ${ndk.abi} and ${abi.systemVersion} in environment names.
@@ -93,7 +94,9 @@ fun reifyString(value : String?, reifier : (String) -> String?) : String {
                 is Token.MacroToken -> {
                     val tokenMacro = token.macro
                     if (seen.contains(tokenMacro)) {
-                        errorln("Settings.json value '$value' has recursive macro expansion \${$tokenMacro}")
+                        errorln(
+                            BUILD_SETTINGS_MACRO_EXPANSION_DEPTH_LIMIT,
+                            "Settings.json value '$value' has recursive macro expansion \${$tokenMacro}")
                         recursionError = true
                     } else {
                         val resolved = reifier(tokenMacro)

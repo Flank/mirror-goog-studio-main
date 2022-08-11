@@ -18,9 +18,13 @@ package com.android.ide.common.build
 
 import com.android.utils.ILogger
 import com.google.gson.GsonBuilder
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
 import java.io.File
 import java.io.FileReader
+import java.io.Reader
 import java.io.StringReader
+import java.nio.file.Path
 import java.util.Properties
 
 /**
@@ -48,17 +52,23 @@ object GenericBuiltArtifactsLoader {
      */
     @JvmStatic
     fun loadFromFile(inputFile: File?, logger: ILogger): GenericBuiltArtifacts? {
-        if (inputFile == null || !inputFile.exists()) {
-            return null
+        val artifactsList = loadListFromFile(inputFile, logger)
+        return when (artifactsList.size) {
+            0 -> null
+            1 -> artifactsList.single()
+            else -> {
+                logger.quiet("Expected a single artifact, got ${artifactsList.size}")
+                null
+            }
         }
-        val gsonBuilder = GsonBuilder()
+    }
 
-        gsonBuilder.registerTypeAdapter(
-            GenericBuiltArtifact::class.java,
-            GenericBuiltArtifactTypeAdapter()
-        )
+    @JvmStatic
+    fun loadListFromFile(inputFile: File?, logger: ILogger): List<GenericBuiltArtifacts> {
+        if (inputFile == null || !inputFile.exists()) {
+            return emptyList()
+        }
 
-        val gson = gsonBuilder.create()
         val redirectFileContent = inputFile.readText()
         val redirectedFile =
             ListingFileRedirect.maybeExtractRedirectedFile(inputFile, redirectFileContent)
@@ -69,33 +79,47 @@ object GenericBuiltArtifactsLoader {
         }
 
         val reader = redirectedFile?.let { FileReader(it) } ?: StringReader(redirectFileContent)
-        val buildOutputs = reader.use {
+        val buildOutputs = ArrayList<GenericBuiltArtifacts>()
+        JsonReader(reader).use {
             try {
-                gson.fromJson(it, GenericBuiltArtifacts::class.java)
+                if (it.peek() == JsonToken.BEGIN_ARRAY) {
+                    it.beginArray()
+                    while (it.hasNext()) {
+                        buildOutputs.add(GenericBuiltArtifactsTypeAdapter.read(it))
+                    }
+                    it.endArray()
+                } else {
+                    buildOutputs.add(GenericBuiltArtifactsTypeAdapter.read(it))
+                }
+
             } catch (e: Exception) {
-                logger.quiet("Cannot parse build output metadata file, please run a clean build")
-                return null
+                val outputFilePath= if (redirectedFile!=null) {
+                    "$redirectedFile redirected from $inputFile"
+                } else {
+                    inputFile
+                }
+                logger.quiet(
+                    "Cannot parse build output metadata file ($outputFilePath). " +
+                            "Please run a clean build")
+                return emptyList()
             }
         }
         // resolve the file path to the current project location.
-        return GenericBuiltArtifacts(
-            artifactType = buildOutputs.artifactType,
-            version = buildOutputs.version,
-            applicationId = buildOutputs.applicationId,
-            variantName = buildOutputs.variantName,
-            elements = buildOutputs.elements
-                .asSequence()
-                .map { builtArtifact ->
-                    GenericBuiltArtifact(
-                        outputFile = relativePathToUse.resolve(builtArtifact.outputFile).normalize().toString(),
-                        versionCode = builtArtifact.versionCode,
-                        versionName = builtArtifact.versionName,
-                        outputType = builtArtifact.outputType,
-                        filters = builtArtifact.filters,
-                        attributes = builtArtifact.attributes
-                    )
-                }
-                .toList(),
-            elementType = buildOutputs.elementType)
+        return buildOutputs.map {
+            convertToRelativePath(it, relativePathToUse)
+        }
     }
+
+    private fun convertToRelativePath(
+        buildOutputs: GenericBuiltArtifacts,
+        relativePathToUse: Path
+    ) = buildOutputs.copy(
+        elements = buildOutputs.elements
+            .map { builtArtifact ->
+                builtArtifact.copy(
+                    outputFile = relativePathToUse.resolve(builtArtifact.outputFile)
+                        .normalize()
+                        .toString()
+                )
+            })
 }

@@ -19,12 +19,7 @@ package com.android.tools.lint.detector.api
 import com.android.tools.lint.model.LintModelSeverity
 import java.util.Locale
 
-/**
- * Severity of an issue found by lint
- *
- * **NOTE: This is not a public or final API; if you rely on this be
- * prepared to adjust your code for the next tools release.**
- */
+/** Severity of an issue found by lint */
 enum class Severity constructor(
     /**
      * A description of this severity suitable for display to the user.
@@ -50,8 +45,25 @@ enum class Severity constructor(
     ERROR("Error"),
 
     /**
-     * Fatal: Use sparingly because a warning marked as fatal will be
-     * considered critical and will abort Export APK etc in ADT.
+     * Like [ERROR], but considered so critical that it should be
+     * enforced whether the user ran analysis or not.
+     *
+     * For example, all lint checks are run when you run the "lint"
+     * target from the Android Gradle plugin. But, if you run a "build
+     * release" target (which creates an APK to be published), the
+     * Gradle plugin will *also* invoke lint, analyzing just the subset
+     * of issues that have severity [FATAL].
+     *
+     * The intention behind this is to add a facility which solves the
+     * old problem where people have static analysis tools at their
+     * disposal, but forget to run them. Lint is expensive, but so are
+     * building release binaries, so we choose to automatically run lint
+     * at release time. However, we don't want to make it impossible to
+     * release your app without addressing all the potential errors,
+     * so [FATAL] allows us to configure a set of issues that are
+     * "hard enforced"; they're suppressible, but when reported we're
+     * confident that they are real and significant issues, so we want
+     * to force the developer to look into these.
      */
     FATAL("Fatal");
 
@@ -61,10 +73,10 @@ enum class Severity constructor(
 
     /**
      * The persistent name of this enum, which can be matched with
-     * [fromName]
+     * [fromName].
      */
     fun toName(): String {
-        return name.toLowerCase(Locale.ROOT)
+        return name.lowercase(Locale.ROOT)
     }
 
     override fun toString(): String = toName()
@@ -100,8 +112,6 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun min(severity1: Severity, severity2: Severity): Severity =
-            // Using ">" instead of "<" here because compareTo is inherited from
-            // enum and the severity constants are in descending order of severity
             if (severity1 < severity2) severity1 else severity2
 
         /**
@@ -113,8 +123,6 @@ enum class Severity constructor(
          */
         @JvmStatic
         fun max(severity1: Severity, severity2: Severity): Severity =
-            // Using "<" instead of ">" here because compareTo is inherited from
-            // enum and the severity constants are in descending order of severity
             if (severity1 > severity2) severity1 else severity2
     }
 }

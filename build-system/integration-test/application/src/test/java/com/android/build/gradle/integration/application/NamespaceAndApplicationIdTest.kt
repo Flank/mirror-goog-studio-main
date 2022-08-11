@@ -435,4 +435,21 @@ class NamespaceAndApplicationIdTest {
                 .resolve("debugAndroidTest/classes/com/example/testNamespace/BuildConfig.class")
         ).isFile()
     }
+
+    @Test
+    fun testErrorWhenTestNamespaceEqualsNamespace() {
+        project.getSubproject(":app").buildFile.appendText(
+            """
+                android.namespace "com.example.app"
+                android.testNamespace "com.example.app"
+            """)
+        // We don't expect an error if not building a test component
+        project.execute(":app:assembleDebug")
+        val result = project.executor().expectFailure().run(":app:assembleAndroidTest")
+        ScannerSubject.assertThat(result.stderr).contains(
+            "namespace and testNamespace have the same value (\"com.example.app\"), which is not allowed."
+        )
+
+    }
+
 }

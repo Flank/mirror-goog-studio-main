@@ -16,9 +16,17 @@
 
 package android.view;
 
-public final class WindowManager {
-    public static class LayoutParams extends ViewGroup.LayoutParams {
+import androidx.annotation.NonNull;
+
+public interface WindowManager {
+    class LayoutParams extends ViewGroup.LayoutParams {
         public int flags = 0;
         public static final int FLAG_HARDWARE_ACCELERATED = 0x01000000;
     }
+
+    @NonNull
+    WindowMetrics getCurrentWindowMetrics();
+
+    @NonNull
+    Display getDefaultDisplay();
 }

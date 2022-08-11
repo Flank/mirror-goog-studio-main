@@ -501,6 +501,8 @@ abstract class ViewLayoutInspectorTestBase {
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.type).isEqualTo(Screenshot.Type.SKP)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture1.bytes)
+                assertThat(layoutEvent.appContext.screenHeight).isEqualTo(3120)
+                assertThat(layoutEvent.appContext.screenWidth).isEqualTo(1440)
             }
         }
 
@@ -511,6 +513,7 @@ abstract class ViewLayoutInspectorTestBase {
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree2.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree2FakePicture.bytes)
+                assertThat(layoutEvent.appContext).isEqualTo(LayoutInspectorViewProtocol.AppContext.getDefaultInstance())
             }
         }
 
@@ -532,6 +535,7 @@ abstract class ViewLayoutInspectorTestBase {
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture2.bytes)
+                assertThat(layoutEvent.appContext).isEqualTo(LayoutInspectorViewProtocol.AppContext.getDefaultInstance())
             }
         }
 
@@ -552,6 +556,7 @@ abstract class ViewLayoutInspectorTestBase {
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture3.bytes)
+                assertThat(layoutEvent.appContext).isEqualTo(LayoutInspectorViewProtocol.AppContext.getDefaultInstance())
             }
         }
 
@@ -573,7 +578,7 @@ abstract class ViewLayoutInspectorTestBase {
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree1.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree1FakePicture4.bytes)
-
+                assertThat(layoutEvent.appContext).isEqualTo(LayoutInspectorViewProtocol.AppContext.getDefaultInstance())
             }
         }
         checkNonProgressEvent(eventQueue) { event ->
@@ -587,7 +592,7 @@ abstract class ViewLayoutInspectorTestBase {
             event.layoutEvent.let { layoutEvent ->
                 assertThat(layoutEvent.rootView.id).isEqualTo(tree3.uniqueDrawingId)
                 assertThat(layoutEvent.screenshot.bytes.toByteArray()).isEqualTo(tree3FakePicture.bytes)
-
+                assertThat(layoutEvent.appContext).isEqualTo(LayoutInspectorViewProtocol.AppContext.getDefaultInstance())
             }
         }
         checkNonProgressEvent(eventQueue) { event ->
@@ -768,7 +773,6 @@ abstract class ViewLayoutInspectorTestBase {
             )
         }
     }
-
 
     @Test
     fun noEmptyRootsEventOnStopContinuousCapturing() = createViewInspector { viewInspector ->
