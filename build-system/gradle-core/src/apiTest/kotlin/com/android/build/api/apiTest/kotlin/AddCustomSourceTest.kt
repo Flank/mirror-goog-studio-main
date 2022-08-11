@@ -318,7 +318,7 @@ where source files will be generated and added to the compilation task.
             Truth.assertThat(output).contains("addCustomSourceTypeInDslAndVariantTest/app/src/main/toml")
             Truth.assertThat(output).contains("addCustomSourceTypeInDslAndVariantTest/app/src/debug/toml")
             Truth.assertThat(output).contains("addCustomSourceTypeInDslAndVariantTest/app/third_party/debug/toml")
-            Truth.assertThat(output).contains("addCustomSourceTypeInDslAndVariantTest/app/build/toml/debugAddCustomSources")
+            Truth.assertThat(output).contains("addCustomSourceTypeInDslAndVariantTest/app/build/generated/toml/debugAddCustomSources")
             Truth.assertThat(output).contains("BUILD SUCCESSFUL")
             super.onVariantStats {
                 super.onVariantStats {

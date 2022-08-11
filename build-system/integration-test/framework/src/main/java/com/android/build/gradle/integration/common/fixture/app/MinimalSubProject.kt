@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.app
 
+import com.android.build.gradle.integration.common.fixture.BuildSrcProject
 import com.android.build.gradle.integration.common.fixture.GradleProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_MIN_SDK
@@ -78,6 +79,10 @@ class MinimalSubProject private constructor(
     }
 
     companion object {
+
+        fun buildSrc(): BuildSrcProject {
+            return BuildSrcProject()
+        }
 
         @JvmOverloads
         fun app(namespace: String = "com.example.app", projectPath: String = "app"): MinimalSubProject {

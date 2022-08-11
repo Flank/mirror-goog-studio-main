@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.BuildSrcProject;
 import com.android.build.gradle.integration.common.fixture.GradleProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.BiMap;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class MultiModuleTestProject implements TestProject {
 
     private final ImmutableMap<String, TestProject> subprojects;
+    @Nullable private final BuildSrcProject buildSrcProject;
 
     /**
      * Creates a MultiModuleTestProject.
@@ -27,7 +29,14 @@ public class MultiModuleTestProject implements TestProject {
      *     value.
      */
     public MultiModuleTestProject(@NonNull Map<String, ? extends TestProject> subprojects) {
+        this(subprojects, null);
+    }
+
+    public MultiModuleTestProject(
+            @NonNull Map<String, ? extends TestProject> subprojects,
+            @Nullable BuildSrcProject buildSrcProject) {
         this.subprojects = ImmutableMap.copyOf(subprojects);
+        this.buildSrcProject = buildSrcProject;
     }
 
     /**
@@ -44,6 +53,7 @@ public class MultiModuleTestProject implements TestProject {
             builder.put(baseName + i, subproject);
         }
         subprojects = builder.build();
+        buildSrcProject = null;
     }
 
     /** Return the test project with the given project path. */
@@ -68,6 +78,19 @@ public class MultiModuleTestProject implements TestProject {
             subproject.write(subprojectDir, null, projectRepoScript);
         }
 
+        if (buildSrcProject != null) {
+            File subprojectDir = new File(projectDir, "buildSrc");
+            if (!subprojectDir.exists()) {
+                subprojectDir.mkdirs();
+            }
+            // buildSrc requires the repo declaration.
+            buildSrcProject.write(
+                    subprojectDir,
+                    "dependencies { implementation \"com.android.tools.build:gradle-api:"
+                            + com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+                            + "\" }\n",
+                    projectRepoScript);
+        }
         StringBuilder builder = new StringBuilder();
         for (String subprojectName : subprojects.keySet()) {
             builder.append("include '").append(subprojectName).append("'\n");
@@ -96,6 +119,22 @@ public class MultiModuleTestProject implements TestProject {
     public static class Builder {
 
         private BiMap<String, GradleProject> projects = HashBiMap.create();
+        private BuildSrcProject buildSrcProject = null;
+
+        /**
+         * Adds a buildSrc project to the current test project. Can only be called once.
+         *
+         * @param buildSrcProject the [BuildSrcProject] to use as buildSrc
+         * @return itself.
+         */
+        @NonNull
+        public Builder buildSrcProject(@NonNull BuildSrcProject buildSrcProject) {
+            if (this.buildSrcProject != null) {
+                throw new IllegalStateException("Test project can only have one buildSrc project");
+            }
+            this.buildSrcProject = buildSrcProject;
+            return this;
+        }
 
         @NonNull
         public Builder subproject(@NonNull GradleProject testProject) {
@@ -165,7 +204,7 @@ public class MultiModuleTestProject implements TestProject {
 
         @NonNull
         public MultiModuleTestProject build() {
-            return new MultiModuleTestProject(projects);
+            return new MultiModuleTestProject(projects, buildSrcProject);
         }
     }
 }
