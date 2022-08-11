@@ -277,7 +277,7 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
     private fun getClass(internal: String): Class<*> {
         apiCount++
         val className = Type.getObjectType(internal).className
-        return Class.forName(className)
+        return Class.forName(className, false, javaClass.classLoader)
     }
 
     /**
@@ -376,7 +376,7 @@ private fun Type.toTypeClass(): Class<out Any> {
         "V" -> Void.TYPE
         else -> {
             when {
-                descriptor.startsWith("L") -> Class.forName(className)
+                descriptor.startsWith("L") -> Class.forName(className, false, javaClass.classLoader)
                 descriptor.startsWith("[") ->
                     java.lang.reflect.Array.newInstance(elementType.toTypeClass(), 0)::class.java
                 else -> error("Unexpected internal type $descriptor")
