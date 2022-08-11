@@ -199,8 +199,8 @@ class DeviceProvisionerTest {
 
 /**
  * Receives messages on this channel until one is received that does not cause an [AssertionError]
- * in the supplied block. This should be used within a withTimeout() block. If timeout occurs, throws
- * a new AssertionError with the last received error as a cause, if one was received.
+ * in the supplied block. This should be used within a withTimeout() block. If timeout occurs,
+ * throws a new AssertionError with the last received error as a cause, if one was received.
  */
 suspend fun <T, R> Channel<T>.receiveUntilPassing(block: (T) -> R): R {
   var lastError: AssertionError? = null

@@ -16,14 +16,14 @@
 package com.android.sdklib.deviceprovisioner
 
 /**
- * A DeviceTemplate contains the information necessary to activate / lease a device
- * from a provisioner. In contrast to a DeviceHandle, it does not refer to a specific device:
- * each activation produces a different device.
+ * A DeviceTemplate contains the information necessary to activate / lease a device from a
+ * provisioner. In contrast to a DeviceHandle, it does not refer to a specific device: each
+ * activation produces a different device.
  */
 interface DeviceTemplate {
-    val displayName: String
+  val displayName: String
 
-    val activationAction: ActivationAction
+  val activationAction: ActivationAction
 
-    val editAction: EditTemplateAction
+  val editAction: EditTemplateAction
 }

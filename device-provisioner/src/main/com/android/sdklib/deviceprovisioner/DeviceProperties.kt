@@ -26,56 +26,51 @@ import com.android.sdklib.devices.Abi
  */
 interface DeviceProperties {
 
-    val model: String?
-    val manufacturer: String?
-    val apiLevel: AndroidVersion
-    val abi: Abi?
+  val model: String?
+  val manufacturer: String?
+  val apiLevel: AndroidVersion
+  val abi: Abi?
 
-    open class Builder {
+  open class Builder {
 
-        var manufacturer: String? = null
-        var model: String? = null
-        var apiLevel = AndroidVersion.DEFAULT
-        var abi: Abi? = null
+    var manufacturer: String? = null
+    var model: String? = null
+    var apiLevel = AndroidVersion.DEFAULT
+    var abi: Abi? = null
 
-        fun readCommonProperties(properties: Map<String, String>) {
-            manufacturer =
-                properties["ro.product.manufacturer"]
-                    ?: properties["ro.manufacturer"]
-            model =
-                properties["ro.product.model"]
-                    ?: properties["ro.model"]
-            apiLevel =
-                properties["ro.build.version.sdk"]?.let {
-                    try {
-                        AndroidVersion(it)
-                    } catch (e: AndroidVersionException) {
-                        null
-                    }
-                } ?: AndroidVersion.DEFAULT
-            abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
+    fun readCommonProperties(properties: Map<String, String>) {
+      manufacturer = properties["ro.product.manufacturer"] ?: properties["ro.manufacturer"]
+      model = properties["ro.product.model"] ?: properties["ro.model"]
+      apiLevel =
+        properties["ro.build.version.sdk"]?.let {
+          try {
+            AndroidVersion(it)
+          } catch (e: AndroidVersionException) {
+            null
+          }
         }
-
-        fun buildBase(): DeviceProperties = Impl(manufacturer, model, apiLevel, abi)
+          ?: AndroidVersion.DEFAULT
+      abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
     }
 
-    class Impl(
-        override val manufacturer: String?,
-        override val model: String?,
-        override val apiLevel: AndroidVersion,
-        override val abi: Abi?
-    ) : DeviceProperties
+    fun buildBase(): DeviceProperties = Impl(manufacturer, model, apiLevel, abi)
+  }
 
-    /**
-     * Default implementation of device title; may be overridden.
-     */
-    fun title(): String =
+  class Impl(
+    override val manufacturer: String?,
+    override val model: String?,
+    override val apiLevel: AndroidVersion,
+    override val abi: Abi?
+  ) : DeviceProperties
+
+  /** Default implementation of device title; may be overridden. */
+  fun title(): String =
+    when {
+      manufacturer.isNullOrBlank() -> model ?: "Unknown"
+      else ->
         when {
-            manufacturer.isNullOrBlank() ->
-                model ?: "Unknown"
-            else -> when {
-                model.isNullOrBlank() -> "$manufacturer Device"
-                else -> "$manufacturer $model"
-            }
+          model.isNullOrBlank() -> "$manufacturer Device"
+          else -> "$manufacturer $model"
         }
+    }
 }
