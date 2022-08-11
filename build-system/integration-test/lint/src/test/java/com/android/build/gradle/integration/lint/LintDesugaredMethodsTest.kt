@@ -92,6 +92,14 @@ class LintDesugaredMethodsTest {
                         disallowChanges.set(fileCollection, false)
                         fileCollection.setFrom("abridgedDesugaredMethods.txt")
                         disallowChanges.set(fileCollection, true)
+
+                        fileCollection = it.variantInputs.mainArtifact.desugaredMethodsFiles
+                        disallowChanges =
+                            fileCollection.getClass().getDeclaredField("disallowChanges")
+                        disallowChanges.setAccessible(true)
+                        disallowChanges.set(fileCollection, false)
+                        fileCollection.setFrom("abridgedDesugaredMethods.txt")
+                        disallowChanges.set(fileCollection, true)
                     }
                 }
             """.trimIndent()

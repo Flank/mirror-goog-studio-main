@@ -932,6 +932,7 @@ private class LintModelVariantWriter(
                 artifact.generatedResourceFolders,
                 indent
             )
+            printer.printFiles("desugaredMethodsFiles", artifact.desugaredMethodsFiles, indent)
         }
         printer.println(">")
 
@@ -1647,14 +1648,18 @@ private class LintModelVariantReader(
         val applicationId: String
         val generatedSourceFolders: Collection<File>
         val generatedResourceFolders: Collection<File>
+        val desugaredMethodsFiles: Collection<File>
+
         if (android) {
             applicationId = getRequiredAttribute("applicationId")
             generatedSourceFolders = getFiles("generatedSourceFolders")
             generatedResourceFolders = getFiles("generatedResourceFolders")
+            desugaredMethodsFiles = getFiles("desugaredMethodsFiles")
         } else {
             applicationId = ""
             generatedSourceFolders = emptyList()
             generatedResourceFolders = emptyList()
+            desugaredMethodsFiles = emptyList()
         }
         finishTag(tag)
 
@@ -1680,6 +1685,7 @@ private class LintModelVariantReader(
                 applicationId = applicationId,
                 generatedResourceFolders = generatedResourceFolders,
                 generatedSourceFolders = generatedSourceFolders,
+                desugaredMethodsFiles = desugaredMethodsFiles,
                 classOutputs = classOutputs,
                 dependencies = dependencies
             )

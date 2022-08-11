@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
@@ -333,6 +334,13 @@ open class AndroidTestImpl @Inject constructor(
             else -> mainVariant.componentType.isBaseModule && needsShrinkDesugarLibrary
         }
 
+    override val isCoreLibraryDesugaringEnabled: Boolean
+        get() = libraryTestDesugarEnabled() || delegate.isCoreLibraryDesugaringEnabled
+
+    private fun libraryTestDesugarEnabled(): Boolean {
+        return services.projectOptions.get(BooleanOption.ENABLE_INSTRUMENTATION_TEST_DESUGARING)
+    }
+
     override val minSdkVersionForDexing: AndroidVersion =
         mainVariant.minSdkVersionForDexing
 
@@ -341,9 +349,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
-
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override val dexingType: DexingType
         get() = delegate.dexingType

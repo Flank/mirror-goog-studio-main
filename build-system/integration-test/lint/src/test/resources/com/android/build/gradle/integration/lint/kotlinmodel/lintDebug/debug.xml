@@ -54,11 +54,13 @@
       classOutputs="build/intermediates/javac/debug/classes:build/tmp/kotlin-classes/debug:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar"
       applicationId="com.example.android.lint.kotlin"
       generatedSourceFolders="build/generated/ap_generated_sources/debug/out:build/generated/aidl_source_output_dir/debug/out:build/generated/source/buildConfig/debug:build/generated/renderscript_source_output_dir/debug/out"
-      generatedResourceFolders="build/generated/res/rs/debug:build/generated/res/resValues/debug">
+      generatedResourceFolders="build/generated/res/rs/debug:build/generated/res/resValues/debug"
+      desugaredMethodsFiles="${gradleCacheDir}/<digest>/transformed/D8BackportedDesugaredMethods.txt">
   </mainArtifact>
   <androidTestArtifact
       applicationId="com.example.android.lint.kotlin.test"
-      generatedResourceFolders="build/generated/res/rs/androidTest/debug:build/generated/res/resValues/androidTest/debug">
+      generatedResourceFolders="build/generated/res/rs/androidTest/debug:build/generated/res/resValues/androidTest/debug"
+      desugaredMethodsFiles="${gradleCacheDir}/<digest>/transformed/D8BackportedDesugaredMethods.txt">
   </androidTestArtifact>
   <testArtifact>
   </testArtifact>

@@ -56,6 +56,7 @@ data class AndroidArtifactImpl(
     override val assembleTaskOutputListingFile: File?,
     override val modelSyncFiles: Collection<ModelSyncFile>,
     override val privacySandboxSdkInfo: PrivacySandboxSdkInfo?,
+    override val desugaredMethodsFiles: Collection<File>
 ) : AndroidArtifact, Serializable {
     companion object {
         @JvmStatic

@@ -378,6 +378,7 @@ class GradleModelMocker @JvmOverloads constructor(
                             File(projectDir, "build/intermediates/javac/$variantName/classes"),
                             File(projectDir, "build/tmp/kotlin-classes/$variantName")
                         ),
+                        desugaredMethodsFiles = emptySet(),
                     ),
                     testArtifact = TestLintModelJavaArtifact(
                         dependencies = testDependencies,
@@ -389,6 +390,7 @@ class GradleModelMocker @JvmOverloads constructor(
                         generatedSourceFolders = emptyList(),
                         generatedResourceFolders = emptyList(),
                         classOutputs = listOf(File(projectDir, "instrumentation-classes")),
+                        desugaredMethodsFiles = emptySet(),
                     ),
                     testFixturesArtifact = TestLintModelAndroidArtifact(
                         applicationId = mergedFlavorsAndBuildType.applicationId.orEmpty(),
@@ -399,6 +401,7 @@ class GradleModelMocker @JvmOverloads constructor(
                             File(projectDir, "build/intermediates/javac/${variantName}TestFixtures/classes"),
                             File(projectDir, "build/tmp/kotlin-classes/${variantName}TestFixtures")
                         ),
+                        desugaredMethodsFiles = emptySet(),
                     ),
                     mergedManifest = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
                     manifestMergeReport = null, // Injected elsewhere by the legacy Android Gradle Plugin lint runner
@@ -2285,7 +2288,8 @@ private data class TestLintModelAndroidArtifact(
     override val classOutputs: List<File>,
     override val applicationId: String,
     override val generatedResourceFolders: Collection<File>,
-    override val generatedSourceFolders: Collection<File>
+    override val generatedSourceFolders: Collection<File>,
+    override val desugaredMethodsFiles: Collection<File>
 ) : LintModelAndroidArtifact
 
 private data class TestLintModelJavaArtifact(

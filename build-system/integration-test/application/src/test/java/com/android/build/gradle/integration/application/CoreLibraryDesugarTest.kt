@@ -161,6 +161,109 @@ class CoreLibraryDesugarTest {
         addSourceWithDesugarApiToLibraryModule()
     }
 
+    @Test
+    fun testLintFailsForMainSourceSetOnlyIfTestDesugaringEnabledAndGlobalDesugaringDisabled() {
+        TestFileUtils.appendToFile(
+                project.gradlePropertiesFile,
+                "${BooleanOption.ENABLE_INSTRUMENTATION_TEST_DESUGARING.propertyName}=true"
+        )
+        app.buildFile.appendText("""
+
+            android.compileOptions.coreLibraryDesugaringEnabled = false
+            android.lintOptions.abortOnError = true
+            android.lint.checkTestSources = true
+        """.trimIndent())
+
+        TestFileUtils.addMethod(
+                FileUtils.join(app.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+                """
+                @Test
+                public void testLocalDate() {
+                    java.util.Collection<String> collection
+                    = java.util.Arrays.asList("first", "second", "third");
+                    java.util.stream.Stream<String> streamOfCollection = collection.stream();
+
+                    java.time.LocalDate date = java.time.LocalDate.now();
+                    String month = date.getMonth().name();
+                    Assert.assertEquals("first", HelloWorld.getText());
+                }
+            """.trimIndent()
+        )
+        executor().expectFailure().run("app:lintDebug")
+        val reportXml = app.file("build/reports/lint-results-debug.html").readText()
+        // main
+        assertThat(reportXml).contains("Call requires API level 24 (current min is 21): <code>java.util.Collection#stream</code>")
+        // android test - regex ??
+        assertThat(reportXml).doesNotContain("Call requires API level 26 (current min is 21): <code>java.time.LocalDate#now</code>")
+        assertThat(reportXml).doesNotContain("Call requires API level 26 (current min is 21): <code>java.time.LocalDate#getMonth</code>")
+        assertThat(reportXml).doesNotContain(
+                """
+                   <span class="location"><a href="../../src/androidTest/java/com/example/helloworld/HelloWorldTest.java">
+                   ../../src/androidTest/java/com/example/helloworld/HelloWorldTest.java</a>:41</span>:
+                   <span class="message">Call requires API level 24 (current min is 21): <code>java.util.Collection#stream
+                """.trimIndent()
+        )
+    }
+
+    @Test
+    fun testLintPassesWhenDesugaringEnabled() {
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            "${BooleanOption.ENABLE_INSTRUMENTATION_TEST_DESUGARING.propertyName}=false"
+        )
+        app.buildFile.appendText("""
+
+            android.compileOptions.coreLibraryDesugaringEnabled = true
+            android.lintOptions.abortOnError = true
+            android.lint.checkTestSources = true
+        """.trimIndent())
+
+        TestFileUtils.addMethod(
+            FileUtils.join(app.projectDir, "src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
+            """
+                @Test
+                public void testLocalDate() {
+                    java.util.Collection<String> collection
+                    = java.util.Arrays.asList("first", "second", "third");
+                    java.util.stream.Stream<String> streamOfCollection = collection.stream();
+
+                    java.time.LocalDate date = java.time.LocalDate.now();
+                    String month = date.getMonth().name();
+                    Assert.assertEquals("first", HelloWorld.getText());
+                }
+            """.trimIndent()
+        )
+        executor().run("app:lintDebug")
+        // Run it twice as a regression test for http://b/218289804.
+        executor().run("app:lintDebug")
+    }
+
+    @Test
+    fun testModelFetchingWhenDesugaringTestIsEnabled() {
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            "${BooleanOption.ENABLE_INSTRUMENTATION_TEST_DESUGARING.propertyName}=true"
+        )
+        app.buildFile.appendText("""
+
+            android.compileOptions.coreLibraryDesugaringEnabled = false
+        """.trimIndent())
+
+        val model = app.modelV2().ignoreSyncIssues().fetchModels().container.getProject(":app").androidProject!!
+        val mainArtifact = model.variants.find { it.name == "debug" }?.mainArtifact
+        val testArtifact = model.variants.find { it.name == "debug" }?.androidTestArtifact
+
+        val desugarMethodsFileTestArtifact = testArtifact
+            ?.desugaredMethodsFiles
+            ?.find { it.name.contains("desugar_jdk_libs_configuration") }
+        val desugarMethodsFileMainArtifact = mainArtifact
+            ?.desugaredMethodsFiles
+            ?.find { it.name.contains("desugar_jdk_libs_configuration") }
+
+        Truth.assertThat(desugarMethodsFileTestArtifact).isNotNull()
+        Truth.assertThat(desugarMethodsFileMainArtifact).isNull()
+    }
+
     /**
      * Check if Java 8 API(e.g. Stream) is rewritten properly by D8
      */

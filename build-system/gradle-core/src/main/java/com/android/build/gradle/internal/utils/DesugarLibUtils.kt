@@ -20,6 +20,7 @@ package com.android.build.gradle.internal.utils
 
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.impl.getFeatureLevel
+import com.android.build.gradle.internal.dependency.ATTR_ENABLE_DESUGARING
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.VariantDependencies.Companion.CONFIG_NAME_CORE_LIBRARY_DESUGARING
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -69,6 +70,8 @@ private const val DESUGAR_LIB_LINT = "_internal-desugar-lib-lint"
 private const val D8_DESUGAR_METHODS = "_internal-d8-desugar-methods"
 private val ATTR_LINT_MIN_SDK: Attribute<String> = Attribute.of("lint-min-sdk", String::class.java)
 private val ATTR_LINT_COMPILE_SDK: Attribute<String> = Attribute.of("lint-compile-sdk", String::class.java)
+private val ATTR_ENABLE_CORE_LIBRARY_DESUGARING: Attribute<String> =
+        Attribute.of("enable-core-library-desugaring", String::class.java)
 
 /**
  * Returns a file collection which contains desugar lib jars
@@ -153,11 +156,10 @@ fun getDesugaredMethods(
             Version.getVersionString()
         )
         desugaredMethodsFiles.fromDisallowChanges(
-            getD8DesugarMethodFileFromTransform(adhocConfiguration)
+            getD8DesugarMethodFileFromTransform(adhocConfiguration, coreLibDesugar)
         )
         return@write desugaredMethodsFiles
     }
-
 }
 
 /**
@@ -235,7 +237,9 @@ private fun registerD8BackportedMethodsTransform(
             }
         }
         spec.from.attribute(ArtifactAttributes.ARTIFACT_FORMAT, ArtifactTypeDefinition.JAR_TYPE)
+        spec.from.attribute(ATTR_ENABLE_CORE_LIBRARY_DESUGARING, coreLibDesugar.toString())
         spec.to.attribute(ArtifactAttributes.ARTIFACT_FORMAT, D8_DESUGAR_METHODS)
+        spec.to.attribute(ATTR_ENABLE_CORE_LIBRARY_DESUGARING, coreLibDesugar.toString())
     }
 }
 
@@ -256,10 +260,11 @@ private fun getDesugarLibLintFromTransform(
     }.artifacts.artifactFiles
 }
 
-private fun getD8DesugarMethodFileFromTransform(configuration: Configuration): FileCollection {
+private fun getD8DesugarMethodFileFromTransform(configuration: Configuration, coreLibDesugar: Boolean): FileCollection {
     return configuration.incoming.artifactView { configuration ->
         configuration.attributes {
             it.attribute(ArtifactAttributes.ARTIFACT_FORMAT, D8_DESUGAR_METHODS)
+            it.attribute(ATTR_ENABLE_CORE_LIBRARY_DESUGARING, coreLibDesugar.toString())
         }
     }.artifacts.artifactFiles
 }

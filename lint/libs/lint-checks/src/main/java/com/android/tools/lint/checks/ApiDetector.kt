@@ -848,7 +848,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // See if library desugaring is turned on in the main project
             if (desugaring == Desugaring.JAVA_8_LIBRARY) {
                 val owner = map.getString(KEY_OWNER, null)
-                if (owner != null) {
+                owner?.let {
                     val name = map.getString(KEY_NAME)
                     if (isLibraryDesugared(context, owner, name)) {
                         return false
@@ -1787,7 +1787,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             // Builtin R8 desugaring, such as rewriting compare calls (see b/36390874)
-            if (DesugaredMethodLookup.isDesugared(owner, name, desc, context.project)) {
+            if (DesugaredMethodLookup.isDesugared(owner, name, desc, context.sourceSetType, context.project)) {
                 return
             }
 

@@ -46,6 +46,7 @@ import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
+import com.android.tools.lint.detector.api.SourceSetType
 import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
@@ -1893,8 +1894,11 @@ class LintDriver(
 
     private fun findUastSources(project: Project, main: Project?): UastSourceList {
         val sourceFolders = project.javaSourceFolders
-        val testFolders = if (!ignoreTestSources)
-            project.testSourceFolders
+        val unitTestFolders = if (!ignoreTestSources) project.unitTestSourceFolders else emptyList<File>()
+        val instrumentationTestFolders = if (!ignoreTestSources) project.instrumentationTestSourceFolders else emptyList<File>()
+
+        val otherTestFolders = if (!ignoreTestSources)
+            project.testSourceFolders.minus((unitTestFolders + instrumentationTestFolders).toSet())
         else
             emptyList<File>()
 
@@ -1907,6 +1911,7 @@ class LintDriver(
         val contexts = ArrayList<JavaContext>(2 * sources.size)
         for (file in sources) {
             val context = JavaContext(this, project, main, file)
+            context.sourceSetType = SourceSetType.MAIN
             contexts.add(context)
         }
 
@@ -1923,23 +1928,52 @@ class LintDriver(
             generatedContexts.add(context)
         }
 
-        // Test sources
-        val testContexts: List<JavaContext>
-        if (ignoreTestSources) {
-            testContexts = emptyList()
+        // Android Test sources
+        val instrumentationTestContexts: List<JavaContext> = if (ignoreTestSources) {
+            emptyList()
         } else {
             sources.clear()
-            for (folder in testFolders) {
-                gatherJavaFiles(folder, sources)
-            }
-            testContexts = ArrayList(sources.size)
+            instrumentationTestFolders.forEach { gatherJavaFiles(it, sources) }
             if (!ignoreTestSources) {
-                for (file in sources) {
-                    val context = JavaContext(this, project, main, file)
-                    context.isTestSource = true
-                    testContexts.add(context)
+                sources.map {
+                    JavaContext(this, project, main, it).apply {
+                        sourceSetType = SourceSetType.INSTRUMENTATION_TESTS
+                        isTestSource = true
+                    }
                 }
-            }
+            } else emptyList()
+        }
+
+        // Unit Test sources
+        val unitTestContexts: List<JavaContext> = if (ignoreTestSources) {
+            emptyList()
+        } else {
+            sources.clear()
+            unitTestFolders.forEach { gatherJavaFiles(it, sources) }
+            if (!ignoreTestSources) {
+                sources.map {
+                    JavaContext(this, project, main, it).apply {
+                        sourceSetType = SourceSetType.UNIT_TESTS
+                        isTestSource = true
+                    }
+                }
+            } else emptyList()
+        }
+
+        // Test source which are neither unit nor instrumentation tests
+        val otherTestContexts: List<JavaContext> = if (ignoreTestSources) {
+            emptyList()
+        } else {
+            sources.clear()
+            otherTestFolders.forEach { gatherJavaFiles(it, sources) }
+            if (!ignoreTestSources) {
+                sources.map {
+                    JavaContext(this, project, main, it).apply {
+                        sourceSetType = SourceSetType.UNKNOWN_TEST
+                        isTestSource = true
+                    }
+                }
+            } else emptyList()
         }
 
         // TestFixtures sources
@@ -1952,6 +1986,7 @@ class LintDriver(
             }
             sources.map {
                 JavaContext(this, project, main, it).apply {
+                    sourceSetType = SourceSetType.TEST_FIXTURES
                     isTestSource = true
                 }
             }
@@ -1963,7 +1998,13 @@ class LintDriver(
             .map { JavaContext(this, project, main, it) }
             .toList()
 
-        return findUastSources(contexts, testContexts, testFixturesContexts, generatedContexts, gradleKtsContexts)
+        return findUastSources(
+            contexts,
+            instrumentationTestContexts + unitTestContexts + otherTestContexts,
+            testFixturesContexts,
+            generatedContexts,
+            gradleKtsContexts
+        )
     }
 
     private fun findUastSources(
@@ -2107,8 +2148,11 @@ class LintDriver(
         val testFixturesContexts = ArrayList<JavaContext>(files.size)
         val generatedContexts = ArrayList<JavaContext>(files.size)
         val gradleKtsContexts = ArrayList<JavaContext>(files.size)
-        val testFolders = project.testSourceFolders
+        val unitTestFolders = project.unitTestSourceFolders
+        val instrumentationTestFolders = project.instrumentationTestSourceFolders
+        val otherTestFolders = project.testSourceFolders.minus((unitTestFolders + instrumentationTestFolders).toSet())
         val testFixturesFolders = project.testSourceFolders
+
         val generatedFolders = project.generatedSourceFolders
         for (file in files) {
             val path = file.path
@@ -2120,8 +2164,21 @@ class LintDriver(
                     path.endsWith(DOT_KTS) -> {
                         gradleKtsContexts.add(context)
                     }
-                    // or a test context
-                    testFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                    // instrumented test context
+                    instrumentationTestFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.sourceSetType = SourceSetType.INSTRUMENTATION_TESTS
+                        context.isTestSource = true
+                        testContexts.add(context)
+                    }
+                    // unit text context
+                    unitTestFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.sourceSetType = SourceSetType.UNIT_TESTS
+                        context.isTestSource = true
+                        testContexts.add(context)
+                    }
+                    // or a test context which is not unit test or instrumented test
+                    otherTestFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.sourceSetType = SourceSetType.UNKNOWN_TEST
                         context.isTestSource = true
                         testContexts.add(context)
                     }
@@ -2129,15 +2186,18 @@ class LintDriver(
                     testFixturesFolders.any { FileUtil.isAncestor(it, file, false) } -> {
                         // while testFixtures sources are not test sources, they will be eventually consumed by test sources, and so we set
                         // isTestSource flag to true to run test-related checks on them.
+                        context.sourceSetType = SourceSetType.TEST_FIXTURES
                         context.isTestSource = true
                         testFixturesContexts.add(context)
                     }
                     // or a generated context
                     generatedFolders.any { FileUtil.isAncestor(it, file, false) } -> {
+                        context.sourceSetType = SourceSetType.MAIN
                         context.isGeneratedSource = true
                         generatedContexts.add(context)
                     }
                     else -> {
+                        context.sourceSetType = SourceSetType.MAIN
                         contexts.add(context)
                     }
                 }

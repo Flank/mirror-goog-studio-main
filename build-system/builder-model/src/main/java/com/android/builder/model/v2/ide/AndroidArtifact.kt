@@ -146,4 +146,9 @@ interface AndroidArtifact : AbstractArtifact, AndroidModel {
      * no privacy sandbox SDKs that need to be deployed.
      */
     val privacySandboxSdkInfo: PrivacySandboxSdkInfo?
+
+    /**
+     * Files listing any D8 backported desugared methods or core library desugared methods for this artifact
+     */
+    val desugaredMethodsFiles: Collection<File>
 }

@@ -136,6 +136,8 @@ public class Project {
     protected List<File> nonProvidedJavaLibraries;
     protected List<File> javaLibraries;
     protected List<File> testSourceFolders;
+    protected List<File> instrumentationTestSourceFolders;
+    protected List<File> unitTestSourceFolders;
     protected List<File> testLibraries;
     protected List<File> testFixturesSourceFolders;
     protected List<File> testFixturesLibraries;
@@ -585,6 +587,16 @@ public class Project {
         }
 
         return testSourceFolders;
+    }
+
+    @NonNull
+    public List<File> getUnitTestSourceFolders() {
+        return Collections.emptyList();
+    }
+
+    @NonNull
+    public List<File> getInstrumentationTestSourceFolders() {
+        return Collections.emptyList();
     }
 
     /**
@@ -1469,34 +1481,6 @@ public class Project {
         return client;
     }
 
-    /**
-     * Merge in source folders from the given project. This is only intended to be used by the lint
-     * infrastructure.
-     */
-    public void mergeFolders(@NonNull Project p) {
-        javaSourceFolders = merge(getJavaSourceFolders(), p.getJavaSourceFolders());
-        resourceFolders = merge(getResourceFolders(), p.getResourceFolders());
-        generatedResourceFolders =
-                merge(getGeneratedResourceFolders(), p.getGeneratedResourceFolders());
-        testSourceFolders = merge(getTestSourceFolders(), p.getTestSourceFolders());
-        testLibraries = merge(getTestLibraries(), p.getTestLibraries());
-        testFixturesSourceFolders =
-                merge(getTestFixturesSourceFolders(), p.getTestFixturesSourceFolders());
-        testFixturesLibraries = merge(getTestFixturesLibraries(), p.getTestFixturesLibraries());
-        nonProvidedJavaLibraries = merge(getJavaLibraries(false), p.getJavaLibraries(false));
-        javaLibraries = merge(getJavaLibraries(true), p.getJavaLibraries(true));
-    }
 
-    private static List<File> merge(List<File> existing, List<File> additional) {
-        if (additional.isEmpty()) {
-            return existing;
-        } else if (existing.isEmpty()) {
-            return additional;
-        } else {
-            List<File> newList = new ArrayList<>(existing.size() + additional.size());
-            newList.addAll(existing);
-            newList.addAll(additional);
-            return newList;
-        }
-    }
+
 }

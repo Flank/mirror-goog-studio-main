@@ -16,9 +16,11 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.SourceSetType
 import com.android.utils.SdkUtils.urlToFile
 import com.google.common.annotations.VisibleForTesting
 import org.jetbrains.annotations.TestOnly
+import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
 import java.io.IOException
 import java.net.JarURLConnection
@@ -90,8 +92,8 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
          * like which version of d8/r8 is used and the corresponding
          * desugaring list.)
          */
-        fun isDesugared(owner: String, name: String, desc: String, project: Project? = null): Boolean {
-            return getLookup(project).isDesugared(owner, name, desc)
+        fun isDesugared(owner: String, name: String, desc: String, sourceSetType: SourceSetType, project: Project? = null): Boolean {
+            return getLookup(project, sourceSetType).isDesugared(owner, name, desc)
         }
 
         /**
@@ -100,18 +102,25 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
          * an older project definition not specifying desugaring files),
          * falls back to the default.
          */
-        private fun getLookup(project: Project?): DesugaredMethodLookup {
+        private fun getLookup(project: Project?, sourceSetType: SourceSetType): DesugaredMethodLookup {
             if (project != null) {
                 val model = project.buildVariant
                 if (model != null) {
-                    val desugaredMethodsFiles = model.desugaredMethodsFiles
+                    val modelArtifact = when (sourceSetType) {
+                        SourceSetType.MAIN -> model.mainArtifact
+                        SourceSetType.INSTRUMENTATION_TESTS -> model.androidTestArtifact
+                        SourceSetType.TEST_FIXTURES -> model.testFixturesArtifact
+                        else -> null
+                    }
+                    val desugaredMethodsFiles = modelArtifact?.desugaredMethodsFiles
+                        ?: model.desugaredMethodsFiles // fallback to non source specific desugared method files
                     if (desugaredMethodsFiles.isNotEmpty()) { // otherwise talking to older version of AGP
-                        val lookup = project.getClientProperty<DesugaredMethodLookup>(DesugaredMethodLookup::class.java)
+                        val lookup = project.getClientProperty<DesugaredMethodLookup>(sourceSetType)
                         if (lookup != null) {
                             return lookup
                         }
                         val newLookup = createDesugaredMethodLookup(desugaredMethodsFiles)
-                        project.putClientProperty(DesugaredMethodLookup::class.java, newLookup)
+                        project.putClientProperty(sourceSetType, newLookup)
                         return newLookup
                     }
                 }

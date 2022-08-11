@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-4e77e2f7c7c33319937a604a40e3ebb9b271f3880845965d0e55c65daf95b8a1
+dc9c8ee53f5dfde101a6ffe98d63311a50993272ed3b68ff07c0342ac9d68ff2
 -------------------------------------------------------------------------
 com.android.builder.model.AaptOptions
 com.android.builder.model.AaptOptions$Namespacing extends java.lang.Enum
@@ -586,6 +586,7 @@ com.android.builder.model.v2.ide.AndroidArtifact.getApplicationId: java.lang.Str
 com.android.builder.model.v2.ide.AndroidArtifact.getAssembleTaskOutputListingFile: java.io.File ()
 com.android.builder.model.v2.ide.AndroidArtifact.getBundleInfo: com.android.builder.model.v2.ide.BundleInfo ()
 com.android.builder.model.v2.ide.AndroidArtifact.getCodeShrinker: com.android.builder.model.v2.ide.CodeShrinker ()
+com.android.builder.model.v2.ide.AndroidArtifact.getDesugaredMethodsFiles: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.AndroidArtifact.getGeneratedResourceFolders: java.util.Collection<java.io.File> ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMaxSdkVersion: java.lang.Integer ()
 com.android.builder.model.v2.ide.AndroidArtifact.getMinSdkVersion: com.android.builder.model.v2.ide.ApiVersion ()

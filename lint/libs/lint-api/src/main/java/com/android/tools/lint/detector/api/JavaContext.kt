@@ -48,6 +48,15 @@ import org.jetbrains.uast.UastContext
 import org.jetbrains.uast.getUastContext
 import java.io.File
 
+enum class SourceSetType {
+    MAIN,
+    INSTRUMENTATION_TESTS,
+    UNIT_TESTS,
+    UNKNOWN_TEST,
+    TEST_FIXTURES,
+    INVALID
+}
+
 /**
  * A [Context] used when checking Java files.
  *
@@ -89,6 +98,9 @@ open class JavaContext(
 
     /** Whether this context is in a generated source folder. */
     var isGeneratedSource: Boolean = false
+
+    /** The type of the source set related to this context */
+    var sourceSetType: SourceSetType = SourceSetType.INVALID
 
     /**
      * Returns a location for the given node range (from the starting

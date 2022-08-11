@@ -186,8 +186,9 @@ open class LintModelModuleProject(
 
     override fun getTestSourceFolders(): List<File> {
         if (testSourceFolders == null) {
-            testSourceFolders = Lists.newArrayList()
-            testSourceProviders.forEach { provider ->
+            testSourceFolders = getInstrumentationTestSourceFolders() + getUnitTestSourceFolders()
+            // add test sources which are neither instrumentation nor unit tests
+            testSourceProviders.filter { !it.isInstrumentationTest() && !it.isUnitTest() }.forEach { provider ->
                 // model returns path whether or not it exists
                 provider.javaDirectories.asSequence().filter { it.exists() }.forEach {
                     testSourceFolders.add(it)
@@ -195,6 +196,32 @@ open class LintModelModuleProject(
             }
         }
         return testSourceFolders
+    }
+
+    override fun getInstrumentationTestSourceFolders(): List<File> {
+        if(instrumentationTestSourceFolders == null) {
+            instrumentationTestSourceFolders = mutableListOf()
+            testSourceProviders.filter { it.isInstrumentationTest() }.forEach { provider ->
+                // model returns path whether or not it exists
+                provider.javaDirectories.asSequence().filter { it.exists() }.forEach {
+                    instrumentationTestSourceFolders.add(it)
+                }
+            }
+        }
+        return instrumentationTestSourceFolders
+    }
+
+    override fun getUnitTestSourceFolders(): List<File> {
+        if(unitTestSourceFolders == null) {
+            unitTestSourceFolders = mutableListOf()
+            testSourceProviders.filter { it.isUnitTest() }.forEach { provider ->
+                // model returns path whether or not it exists
+                provider.javaDirectories.asSequence().filter { it.exists() }.forEach {
+                    unitTestSourceFolders.add(it)
+                }
+            }
+        }
+        return unitTestSourceFolders
     }
 
     override fun getJavaClassFolders(): List<File> {

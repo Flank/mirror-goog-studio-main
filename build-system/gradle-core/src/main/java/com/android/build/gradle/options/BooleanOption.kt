@@ -134,7 +134,7 @@ enum class BooleanOption(
     ENABLE_NEW_RESOURCE_SHRINKER_PRECISE("android.experimental.enableNewResourceShrinker.preciseShrinking", false, FeatureStage.Experimental),
     ENABLE_LOCAL_TESTING("android.bundletool.enableLocalTesting", false, FeatureStage.Experimental),
     DISABLE_MINSDKLIBRARY_CHECK("android.unsafe.disable.minSdkLibraryCheck", false, FeatureStage.Experimental),
-
+    ENABLE_INSTRUMENTATION_TEST_DESUGARING("android.experimental.library.desugarAndroidTest", false, FeatureStage.Experimental),
     /**
      * When enabled, incompatible APKs installed on a testing device will be uninstalled automatically
      * during an instrumentation test run (e.g. When INSTALL_FAILED_UPDATE_INCOMPATIBLE error happens

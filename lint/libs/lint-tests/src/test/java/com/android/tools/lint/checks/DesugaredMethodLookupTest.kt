@@ -18,6 +18,8 @@ package com.android.tools.lint.checks
 import com.android.testutils.MockitoKt.whenever
 import com.android.tools.lint.checks.infrastructure.TestFiles
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.SourceSetType
+import com.android.tools.lint.model.LintModelAndroidArtifact
 import com.android.tools.lint.model.LintModelVariant
 import com.android.utils.SdkUtils.fileToUrl
 import org.junit.Assert.assertEquals
@@ -31,7 +33,7 @@ import kotlin.test.assertNotEquals
 
 class DesugaredMethodLookupTest {
     @Test
-    fun testInnerClasses() {
+    fun `test desugaring works with inner classes`() {
         val desc1 =
             "" +
                     "java/util/Map\$Entry#comparingByKey()Ljava/util/Comparator;\n" +
@@ -43,37 +45,37 @@ class DesugaredMethodLookupTest {
         file1.writeText(desc1)
         try {
             DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
-            assertTrue(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "(Ljava/util/Comparator;)"))
-            assertTrue(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "()"))
-            assertFalse(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "", ""))
-            assertFalse(DesugaredMethodLookup.isDesugared("java/util/Map", "comparingByValue", "()"))
+            assertTrue(
+                DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "(Ljava/util/Comparator;)", SourceSetType.INSTRUMENTATION_TESTS)
+            )
+            assertTrue(
+                DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "()", SourceSetType.INSTRUMENTATION_TESTS)
+            )
+            assertFalse(
+                DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "", "", SourceSetType.INSTRUMENTATION_TESTS)
+            )
+            assertFalse(
+                DesugaredMethodLookup.isDesugared("java/util/Map", "comparingByValue", "()", SourceSetType.INSTRUMENTATION_TESTS)
+            )
         } finally {
             DesugaredMethodLookup.reset()
         }
     }
 
     @Test
-    fun testCollectionStreamSimple() {
+    fun `test simple use case with CollectionStream`() {
         val desc1 =
             "" +
                     "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
                     "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
                     "java/util/Collection#stream()Ljava/util/stream/Stream;\n"
 
-        val owner = "java.util.Collection"
-        val name = "stream"
-        val desc = "()"
-
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
         try {
             DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
-            assertTrue(
-                DesugaredMethodLookup.isDesugared(
-                    owner = owner,
-                    name = name,
-                    desc = desc
-                )
+            DesugaredMethodLookup.isDesugared(
+                "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
             )
 
         } finally {
@@ -82,7 +84,7 @@ class DesugaredMethodLookupTest {
     }
 
     @Test
-    fun testCollectionStreamRightOfMidPoint() {
+    fun `test complex use case with CollectionStream - right of pivot`() {
         val desc1 =
             "" +
                     "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
@@ -98,20 +100,12 @@ class DesugaredMethodLookupTest {
                     "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
                     "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
 
-        val owner = "java.util.Collection"
-        val name = "stream"
-        val desc = "()"
-
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
         try {
             DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
-            assertTrue(
-                DesugaredMethodLookup.isDesugared(
-                    owner = owner,
-                    name = name,
-                    desc = desc
-                )
+            DesugaredMethodLookup.isDesugared(
+                "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
             )
 
         } finally {
@@ -120,7 +114,7 @@ class DesugaredMethodLookupTest {
     }
 
     @Test
-    fun testCollectionStreamLeftOfMidpoint() {
+    fun `test complex use case with CollectionStream - left of pivot`() {
         val desc1 =
             "" +
                     "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
@@ -140,19 +134,13 @@ class DesugaredMethodLookupTest {
                     "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
                     "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
 
-        val owner = "java.util.Collection"
-        val name = "stream"
-        val desc = "()"
-
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
         try {
             DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
             assertTrue(
                 DesugaredMethodLookup.isDesugared(
-                    owner = owner,
-                    name = name,
-                    desc = desc
+                    "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
                 )
             )
 
@@ -162,8 +150,8 @@ class DesugaredMethodLookupTest {
     }
 
     @Test
-    fun testFindAll() {
-        assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)"))
+    fun `test find all`() {
+        assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", SourceSetType.INSTRUMENTATION_TESTS))
 
         for (entry in DesugaredMethodLookup.defaultDesugaredMethods) {
             val sharp = entry.indexOf("#")
@@ -174,20 +162,20 @@ class DesugaredMethodLookupTest {
             val owner = entry.substring(0, sharp).replace("/", ".").replace("\$", ".")
             val name = entry.substring(sharp + 1, paren)
             val desc = entry.substring(paren, entry.indexOf(")") + 1)
-            assertTrue(entry, DesugaredMethodLookup.isDesugared(owner, name, desc))
+            assertTrue(entry, DesugaredMethodLookup.isDesugared(owner, name, desc, SourceSetType.INSTRUMENTATION_TESTS))
         }
     }
 
     @Test
-    fun testNotDesugared() {
-        assertFalse(DesugaredMethodLookup.isDesugared("foo.bar.Baz", "foo", "(I)"))
-        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "wrongmethod", "(I)"))
-        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(JJJJ)"))
-        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "()"))
+    fun `test not desugared methods`() {
+        assertFalse(DesugaredMethodLookup.isDesugared("foo.bar.Baz", "foo", "(I)", SourceSetType.INSTRUMENTATION_TESTS))
+        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "wrongmethod", "(I)", SourceSetType.INSTRUMENTATION_TESTS))
+        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(JJJJ)", SourceSetType.INSTRUMENTATION_TESTS))
+        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "()", SourceSetType.INSTRUMENTATION_TESTS))
     }
 
     @Test
-    fun testFile() {
+    fun `test file`() {
         val desc1 =
             "" +
                     "abc/def/GHI\$JKL#abc(III)Z\n" +
@@ -198,19 +186,19 @@ class DesugaredMethodLookupTest {
                     "hij/kl/mn/O#pQr()Z\n"
 
         fun check() {
-            assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()"))
-            assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)"))
-            assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI", "abc", "(III)"))
-            assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)"))
-            assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()"))
+            assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.INSTRUMENTATION_TESTS))
+            assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", SourceSetType.INSTRUMENTATION_TESTS))
+            assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI", "abc", "(III)", SourceSetType.INSTRUMENTATION_TESTS))
+            assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", SourceSetType.INSTRUMENTATION_TESTS))
+            assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()", SourceSetType.INSTRUMENTATION_TESTS))
 
             // Match methods where the descriptor just lists the class name
-            assertTrue(DesugaredMethodLookup.isDesugared("def/gh/IJ", "name", "()"))
+            assertTrue(DesugaredMethodLookup.isDesugared("def/gh/IJ", "name", "()", SourceSetType.INSTRUMENTATION_TESTS))
             // Match inner classes where the descriptor just lists the top level class name
-            assertTrue(DesugaredMethodLookup.isDesugared("def/gh/IJ\$Inner", "name", "()"))
+            assertTrue(DesugaredMethodLookup.isDesugared("def/gh/IJ\$Inner", "name", "()", SourceSetType.INSTRUMENTATION_TESTS))
             // Match methods where the descriptor just lists the class and method names
-            assertTrue(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "op", "()"))
-            assertFalse(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "wrongname", "()"))
+            assertTrue(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "op", "()", SourceSetType.INSTRUMENTATION_TESTS))
+            assertFalse(DesugaredMethodLookup.isDesugared("g/hijk/l/MN", "wrongname", "()", SourceSetType.INSTRUMENTATION_TESTS))
         }
 
         // Test single plain file
@@ -265,7 +253,7 @@ class DesugaredMethodLookupTest {
     }
 
     @Test
-    fun testDesugaringFromModel() {
+    fun `test desugaring from model - fallback desugaredMethodsFiles`() {
         val desc1 =
             "" +
                     "abc/def/GHI\$JKL#abc(III)Z\n" +
@@ -279,14 +267,18 @@ class DesugaredMethodLookupTest {
         val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
         val project = mock(Project::class.java)
         val variant = mock(LintModelVariant::class.java)
+        val mainArtifact = mock(LintModelAndroidArtifact::class.java)
         whenever(project.buildVariant).thenReturn(variant)
-        whenever(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
-        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project))
-        assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project))
-        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", project))
-        assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()", project))
+        whenever(variant.mainArtifact).thenReturn(mainArtifact)
+        whenever(mainArtifact.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+        //whenever(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+
+        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.MAIN, project))
+        assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", SourceSetType.MAIN, project))
+        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", SourceSetType.MAIN, project))
+        assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()", SourceSetType.MAIN, project))
         // Make sure we're *NOT* picking up metadata from the fallback list
-        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", project))
+        assertFalse(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", SourceSetType.MAIN, project))
 
         // Make sure we handle missing desugared-metadata gracefully
         whenever(variant.desugaredMethodsFiles).thenReturn(null)
@@ -294,9 +286,36 @@ class DesugaredMethodLookupTest {
         val variant2 = mock(LintModelVariant::class.java)
         whenever(project2.buildVariant).thenReturn(variant2)
         whenever(variant2.desugaredMethodsFiles).thenReturn(emptyList())
-        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", project2))
-        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", project2))
+        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.MAIN, project2))
+        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", SourceSetType.MAIN, project2))
         // make sure we're picking up the defaults in that case
-        assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", project2))
+        assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)", SourceSetType.MAIN, project2))
+    }
+
+    @Test
+    fun `test desugaring from model when source set desugaredMethodsFiles is not null`() {
+        val desc1 =
+            "" +
+                    "abc/def/GHI\$JKL#abc(III)Z\n" +
+                    "def/gh/IJ\n"
+        val desc2 =
+            "" +
+                    "g/hijk/l/MN#op\n" +
+                    "hij/kl/mn/O#pQr()Z\n"
+
+        val file1 = File.createTempFile("desc1", ".txt").apply { writeText(desc1) }
+        val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
+        val project = mock(Project::class.java)
+        val variant = mock(LintModelVariant::class.java)
+        val mainArtifact = mock(LintModelAndroidArtifact::class.java)
+        whenever(project.buildVariant).thenReturn(variant)
+        whenever(variant.mainArtifact).thenReturn(mainArtifact)
+        whenever(mainArtifact.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+        whenever(variant.desugaredMethodsFiles).thenReturn(null)
+
+        assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.MAIN, project))
+        assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", SourceSetType.MAIN, project))
+        assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)", SourceSetType.MAIN, project))
+        assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()", SourceSetType.MAIN, project))
     }
 }
