@@ -203,9 +203,9 @@ class ManagedDeviceInstrumentationTestTaskTest {
         doReturn(MockitoKt.mock<Logger>()).`when`(task).logger
 
         doReturn(runnerFactory).`when`(task).testRunnerFactory
+        doReturn(FakeGradleProperty(avdService)).`when`(runnerFactory).avdComponents
         doReturn(FakeGradleProperty(testData)).`when`(task).testData
         doReturn(mock(ListProperty::class.java)).`when`(task).installOptions
-        doReturn(FakeGradleProperty(avdService)).`when`(task).avdComponents
         doReturn(FakeGradleProperty("testDevice1")).`when`(task).deviceName
         doReturn(FakeGradleProperty("avd_for_test_device")).`when`(task).avdName
         doReturn(FakeGradleProperty(29)).`when`(task).apiLevel
@@ -251,6 +251,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
             .thenReturn(FakeGradleProperty(mock(Revision::class.java)))
         `when`(factory.testShardsSize).thenReturn(FakeGradleProperty(null))
         `when`(factory.sdkBuildService).thenReturn(FakeGradleProperty(sdkService))
+        `when`(factory.avdComponents).thenReturn(FakeGradleProperty(avdService))
         `when`(factory.utpDependencies).thenReturn(mock(UtpDependencies::class.java))
         `when`(factory.utpLoggingLevel)
             .thenReturn(FakeGradleProperty(Level.OFF))
@@ -333,6 +334,8 @@ class ManagedDeviceInstrumentationTestTaskTest {
                 `when`(task.testRunnerFactory.executionEnum).thenReturn(executionEnum)
                 val sdkBuildService = mockEmptyProperty<SdkComponentsBuildService>()
                 `when`(task.testRunnerFactory.sdkBuildService).thenReturn(sdkBuildService)
+                val avdComponents = mockEmptyProperty<AvdComponentsBuildService>()
+                `when`(task.testRunnerFactory.avdComponents).thenReturn(avdComponents)
 
                 val deviceName = mockEmptyProperty<String>()
                 `when`(task.deviceName).thenReturn(deviceName)
@@ -342,8 +345,6 @@ class ManagedDeviceInstrumentationTestTaskTest {
                 `when`(task.apiLevel).thenReturn(apiLevel)
                 val abi = mockEmptyProperty<String>()
                 `when`(task.abi).thenReturn(abi)
-                val avdComponents = mockEmptyProperty<AvdComponentsBuildService>()
-                `when`(task.avdComponents).thenReturn(avdComponents)
 
                 config.configure(task)
 

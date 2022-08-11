@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.testing.AdbHelper
 import com.android.builder.utils.SynchronizedFile
 import com.android.prefs.AndroidLocationsProvider
 import com.android.sdklib.PathFileWrapper
@@ -53,7 +54,8 @@ class AvdManager(
     private val sdkHandler: AndroidSdkHandler,
     private val androidLocationsProvider: AndroidLocationsProvider,
     private val snapshotHandler: AvdSnapshotHandler,
-    val deviceLockManager: ManagedVirtualDeviceLockManager
+    val deviceLockManager: ManagedVirtualDeviceLockManager,
+    private val adbHelper: AdbHelper
 ) {
 
     private val sdkDirectory: File
@@ -276,6 +278,15 @@ class AvdManager(
                 logger.warning("Failed to delete avd: $avdName.")
             }
             isDeleted
+        }
+    }
+
+    /**
+     * Closes all active emulators having the given idPrefix.
+     */
+    fun closeOpenEmulators(idPrefix: String) {
+        adbHelper.findAllDeviceSerialsWithIdPrefix(idPrefix).forEach { serial ->
+            adbHelper.killDevice(serial)
         }
     }
 

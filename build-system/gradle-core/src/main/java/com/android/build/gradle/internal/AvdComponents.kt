@@ -68,6 +68,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
         val versionedSdkLoader = parameters.sdkService.map {
             it.sdkLoader(parameters.compileSdkVersion, parameters.buildToolsRevision)
         }
+        val adbHelper = AdbHelper(versionedSdkLoader)
         AvdManager(
             parameters.avdLocation.get().asFile,
             versionedSdkLoader,
@@ -79,12 +80,13 @@ abstract class AvdComponentsBuildService @Inject constructor(
             AvdSnapshotHandler(
                 parameters.showEmulatorKernelLogging.get(),
                 parameters.deviceSetupTimeoutMinutes.getOrNull(),
-                AdbHelper(versionedSdkLoader)
+                adbHelper
             ),
             ManagedVirtualDeviceLockManager(
                 locationsService,
                 parameters.maxConcurrentDevices.getOrElse(DEFAULT_MAX_GMDS)
-            )
+            ),
+            adbHelper
         )
     }
 
@@ -154,6 +156,16 @@ abstract class AvdComponentsBuildService @Inject constructor(
      */
     fun ensureLoadableSnapshot(deviceName: String, emulatorGpuMode: String) {
         avdManager.loadSnapshotIfNeeded(deviceName, emulatorGpuMode)
+    }
+
+    /** Closes all active emulators having an id with the given prefix. This should be used to close
+     * emulators that may remain after a crashed UTP test run.
+     *
+     * @param idPrefix the prefix that is looke for to close the active emulators. All emulators
+     * that have an id not starting with this prefix are ignored.
+     */
+    fun closeOpenEmulators(idPrefix: String) {
+        avdManager.closeOpenEmulators(idPrefix)
     }
 
     class RegistrationAction(

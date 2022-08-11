@@ -113,6 +113,9 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         @get: Internal
         abstract val sdkBuildService: Property<SdkComponentsBuildService>
 
+        @get: Internal
+        abstract val avdComponents: Property<AvdComponentsBuildService>
+
         @get: Nested
         abstract val utpDependencies: UtpDependencies
 
@@ -147,6 +150,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 numShards,
                 emulatorGpuFlag.get(),
                 showEmulatorKernelLoggingFlag.get(),
+                avdComponents.get(),
                 utpLoggingLevel.get()
             )
         }
@@ -186,9 +190,6 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
 
     @get: Input
     abstract val abi: Property<String>
-
-    @get: Internal
-    abstract val avdComponents: Property<AvdComponentsBuildService>
 
     @Internal
     override fun getTestFailed(): Boolean {
@@ -241,7 +242,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
     abstract fun getAdditionalTestOutputDir(): DirectoryProperty
 
     public override fun doTaskAction() {
-        val emulatorProvider = avdComponents.get().emulatorDirectory
+        val emulatorProvider = testRunnerFactory.avdComponents.get().emulatorDirectory
         Preconditions.checkArgument(
                 emulatorProvider.isPresent(),
                 "The emulator is missing. Download the emulator in order to use managed devices.")
@@ -250,7 +251,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 avdName.get(),
                 apiLevel.get(),
                 abi.get(),
-                avdComponents.get().avdFolder.get().asFile.absolutePath,
+                testRunnerFactory.avdComponents.get().avdFolder.get().asFile.absolutePath,
                 path,
                 emulatorProvider.get().asFile.resolve(FN_EMULATOR).absolutePath,
                 enableEmulatorDisplay.get())
@@ -280,7 +281,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         } else {
             try {
                 val numShardsRequested = testRunnerFactory.testShardsSize.getOrNull()
-                avdComponents.get().lockManager.lock(numShardsRequested ?: 1).use { lock ->
+                testRunnerFactory.avdComponents.get().lockManager.lock(numShardsRequested ?: 1).use { lock ->
                     val devicesAcquired = lock.lockCount
                     if (devicesAcquired != (numShardsRequested ?: 1) ) {
                         logger.warn("Unable to retrieve $numShardsRequested devices, only " +
@@ -426,7 +427,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
             task.apiLevel.setDisallowChanges(device.apiLevel)
             task.abi.setDisallowChanges(computeAbiFromArchitecture(device))
 
-            task.avdComponents.setDisallowChanges(
+            task.testRunnerFactory.avdComponents.setDisallowChanges(
                 getBuildService(creationConfig.services.buildServiceRegistry)
             )
             task.group = JavaBasePlugin.VERIFICATION_GROUP

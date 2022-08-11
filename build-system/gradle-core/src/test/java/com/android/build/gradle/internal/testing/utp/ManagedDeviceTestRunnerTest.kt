@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.build.api.variant.impl.AndroidVersionImpl
+import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.testutils.MockitoKt.any
@@ -55,6 +56,7 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockWorkerExecutor: WorkerExecutor
     @Mock lateinit var mockWorkQueue: WorkQueue
     @Mock lateinit var mockVersionedSdkLoader: SdkComponentsBuildService.VersionedSdkLoader
+    @Mock lateinit var mockAvdComponents: AvdComponentsBuildService
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
     @Mock lateinit var mockHelperApk: File
@@ -135,6 +137,7 @@ class ManagedDeviceTestRunnerTest {
             numShards,
             "auto-no-window",
             showEmulatorKernelLogging = false,
+            mockAvdComponents,
             Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, resultsDir, _ ->
             utpInvocationCount++

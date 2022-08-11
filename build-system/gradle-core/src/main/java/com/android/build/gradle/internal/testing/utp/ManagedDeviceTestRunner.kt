@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
@@ -35,6 +36,7 @@ class ManagedDeviceTestRunner(
     private val numShards: Int?,
     private val emulatorGpuFlag: String,
     private val showEmulatorKernelLogging: Boolean,
+    private val avdComponents: AvdComponentsBuildService,
     private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
@@ -63,28 +65,29 @@ class ManagedDeviceTestRunner(
     ): Boolean {
         val testedApks = getTestedApks(testData, managedDevice, logger)
         val runnerConfigs = mutableListOf<UtpRunnerConfig>()
-        repeat(numShards ?: 1) { currentShard ->
-            val shardConfig = numShards?.let {
-                ShardConfig(totalCount = it, index = currentShard)
-            }
-            val utpOutputDir = if (shardConfig == null) {
-                outputDirectory
-            } else {
-                File(outputDirectory, "shard_$currentShard")
-            }.apply {
-                if (!exists()) {
-                    mkdirs()
+        try {
+            repeat(numShards ?: 1) { currentShard ->
+                val shardConfig = numShards?.let {
+                    ShardConfig(totalCount = it, index = currentShard)
                 }
-            }
-            val shardedManagedDevice = if (numShards == null) {
-                managedDevice
-            } else {
-                managedDevice.forShard(currentShard)
-            }
-            val runnerConfigProto: (
-                UtpTestResultListenerServerMetadata,
-                File
-            ) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata, utpTmpDir ->
+                val utpOutputDir = if (shardConfig == null) {
+                    outputDirectory
+                } else {
+                    File(outputDirectory, "shard_$currentShard")
+                }.apply {
+                    if (!exists()) {
+                        mkdirs()
+                    }
+                }
+                val shardedManagedDevice = if (numShards == null) {
+                    managedDevice
+                } else {
+                    managedDevice.forShard(currentShard)
+                }
+                val runnerConfigProto: (
+                    UtpTestResultListenerServerMetadata,
+                    File
+                ) -> RunnerConfigProto.RunnerConfig = { resultListenerServerMetadata, utpTmpDir ->
                     configFactory.createRunnerConfigProtoForManagedDevice(
                         shardedManagedDevice,
                         testData,
@@ -105,54 +108,59 @@ class ManagedDeviceTestRunner(
                         shardConfig
                     )
                 }
-            runnerConfigs.add(UtpRunnerConfig(
-                shardedManagedDevice.deviceName,
-                shardedManagedDevice.id,
-                utpOutputDir,
-                runnerConfigProto,
-                configFactory.createServerConfigProto(),
-                shardConfig,
-                utpLoggingLevel
-            ))
-        }
-
-        val results = runUtpWithRetryForEmulatorTimeoutException(
-            runnerConfigs,
-            projectPath,
-            variantName,
-            outputDirectory,
-            logger
-        )
-
-        results.forEach { result ->
-            if (result.resultsProto?.hasPlatformError() == true) {
-                logger.error(null, getPlatformErrorMessage(result.resultsProto))
+                runnerConfigs.add(
+                    UtpRunnerConfig(
+                        shardedManagedDevice.deviceName,
+                        shardedManagedDevice.id,
+                        utpOutputDir,
+                        runnerConfigProto,
+                        configFactory.createServerConfigProto(),
+                        shardConfig,
+                        utpLoggingLevel
+                    )
+                )
             }
-            result.resultsProto?.issueList?.forEach { issue ->
-                logger.error(null, issue.message)
-            }
-        }
 
-        val resultProtos = results
-            .map(UtpTestRunResult::resultsProto)
-            .filterNotNull()
-        if (resultProtos.isNotEmpty()) {
-            // Create a merged result pb file in the outputDirectory. If it's a sharded
-            // test, a result pb file is generated in a subdirectory per shard. If it's a
-            // non-sharded test, a result pb is generated in the outputDirectory so we
-            // don't need to create a merged result here.
-            if (numShards != null) {
-                val resultsMerger = UtpTestSuiteResultMerger()
-                resultProtos.forEach(resultsMerger::merge)
+            val results = runUtpWithRetryForEmulatorTimeoutException(
+                runnerConfigs,
+                projectPath,
+                variantName,
+                outputDirectory,
+                logger
+            )
 
-                val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
-                mergedTestResultPbFile.outputStream().use {
-                    resultsMerger.result.writeTo(it)
+            results.forEach { result ->
+                if (result.resultsProto?.hasPlatformError() == true) {
+                    logger.error(null, getPlatformErrorMessage(result.resultsProto))
+                }
+                result.resultsProto?.issueList?.forEach { issue ->
+                    logger.error(null, issue.message)
                 }
             }
-        }
 
-        return results.all(UtpTestRunResult::testPassed)
+            val resultProtos = results
+                .map(UtpTestRunResult::resultsProto)
+                .filterNotNull()
+            if (resultProtos.isNotEmpty()) {
+                // Create a merged result pb file in the outputDirectory. If it's a sharded
+                // test, a result pb file is generated in a subdirectory per shard. If it's a
+                // non-sharded test, a result pb is generated in the outputDirectory so we
+                // don't need to create a merged result here.
+                if (numShards != null) {
+                    val resultsMerger = UtpTestSuiteResultMerger()
+                    resultProtos.forEach(resultsMerger::merge)
+
+                    val mergedTestResultPbFile = File(outputDirectory, TEST_RESULT_PB_FILE_NAME)
+                    mergedTestResultPbFile.outputStream().use {
+                        resultsMerger.result.writeTo(it)
+                    }
+                }
+            }
+
+            return results.all(UtpTestRunResult::testPassed)
+        } finally {
+            avdComponents.closeOpenEmulators(managedDevice.id)
+        }
     }
 
     private fun runUtpWithRetryForEmulatorTimeoutException(

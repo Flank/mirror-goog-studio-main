@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
+import com.android.build.gradle.internal.testing.AdbHelper
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.io.FileOpUtils
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -71,6 +72,9 @@ class AvdManagerTest {
     @Mock(answer = RETURNS_DEEP_STUBS)
     lateinit var lockManager: ManagedVirtualDeviceLockManager
 
+    @Mock
+    lateinit var adbHelper: AdbHelper
+
     @Before
     fun setup() {
         sdkFolder = Files.createDirectories(rootDir.resolve("sdk"))
@@ -99,7 +103,8 @@ class AvdManagerTest {
             sdkHandler,
             AndroidLocationsSingleton,
             snapshotHandler,
-            lockManager
+            lockManager,
+            adbHelper
         )
     }
 
