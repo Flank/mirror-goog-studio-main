@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.utils.fromDisallowChanges
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.Action
 import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.ConfigurableFileCollection

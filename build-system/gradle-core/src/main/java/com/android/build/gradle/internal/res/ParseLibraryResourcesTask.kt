@@ -28,7 +28,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.getChangesInSerializableForm
 import com.android.builder.files.SerializableChange
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.ResourceDirectoryParseException

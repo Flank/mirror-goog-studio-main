@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.StringOption
 import com.android.builder.internal.packaging.AabFlinger
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.tools.build.bundletool.commands.AddTransparencyCommand
 import com.android.utils.FileUtils

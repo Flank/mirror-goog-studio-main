@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.mlkit.codegen.TfliteModelGenerator
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.tools.mlkit.MlConstants
 import com.android.tools.mlkit.MlNames
 import org.gradle.api.file.DirectoryProperty

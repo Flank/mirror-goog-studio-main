@@ -34,7 +34,7 @@ import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;

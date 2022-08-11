@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.tasks.factory.features.AssetsTaskCreati
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.files.KeyedFileCache
 import com.android.builder.packaging.PackagingUtils
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.zipflinger.BytesSource
 import com.android.zipflinger.ZipArchive
 import com.google.common.annotations.VisibleForTesting

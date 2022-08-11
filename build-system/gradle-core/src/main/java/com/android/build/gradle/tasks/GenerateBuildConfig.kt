@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.generators.BuildConfigGenerator
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.BuildConfigTaskCreationActionImpl
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.utils.FileUtils
 import com.google.common.collect.Lists
 import org.gradle.api.file.DirectoryProperty

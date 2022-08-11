@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.build.filebasedproperties.variant.ArtifactOutputProperties
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.tasks.Input

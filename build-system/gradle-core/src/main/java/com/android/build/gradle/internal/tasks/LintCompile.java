@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.utils.FileUtils;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.OutputDirectory;

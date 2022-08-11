@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.utils.ILogger;
 import java.util.List;
 import java.util.concurrent.ExecutionException;

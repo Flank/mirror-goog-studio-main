@@ -52,7 +52,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.builder.model.TestOptions
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.repository.Revision
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting

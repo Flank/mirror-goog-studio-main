@@ -28,7 +28,7 @@ import com.android.builder.internal.InstallUtils
 import com.android.builder.testing.api.DeviceConfigProviderImpl
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.ILogger

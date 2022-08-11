@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.repository.GradleVersion
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty

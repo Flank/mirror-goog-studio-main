@@ -28,7 +28,7 @@ import com.android.bundle.Config
 import com.android.bundle.SdkBundleConfigProto
 import com.android.bundle.SdkModulesConfigOuterClass
 import com.android.bundle.SdkModulesConfigOuterClass.SdkModulesConfig
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.tools.build.bundletool.commands.BuildSdkBundleCommand
 import com.android.tools.build.bundletool.model.version.BundleToolVersion
 import com.google.common.collect.ImmutableList

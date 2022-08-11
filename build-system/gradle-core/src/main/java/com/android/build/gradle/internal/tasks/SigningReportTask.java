@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.api.variant.SigningConfig;
 import com.android.build.api.variant.impl.SigningConfigImpl;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;

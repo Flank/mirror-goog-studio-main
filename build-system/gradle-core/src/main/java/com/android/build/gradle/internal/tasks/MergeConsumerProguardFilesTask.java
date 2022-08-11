@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.errors.EvalIssueException;
 import java.io.IOException;
 
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Input;

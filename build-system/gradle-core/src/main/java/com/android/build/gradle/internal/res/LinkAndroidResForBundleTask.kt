@@ -42,7 +42,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.resources.mergeIdentifiedSourceSetFiles
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils

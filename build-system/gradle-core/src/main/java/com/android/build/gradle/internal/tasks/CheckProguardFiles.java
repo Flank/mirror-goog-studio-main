@@ -27,7 +27,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.android.ide.common.attribution.TaskCategory;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;

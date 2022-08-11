@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.parseTargetHash
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.repository.GradleVersion.parseAndroidGradlePluginVersion
 import com.android.ide.common.repository.GradleVersion.tryParseStableAndroidGradlePluginVersion
 import org.gradle.api.file.RegularFileProperty

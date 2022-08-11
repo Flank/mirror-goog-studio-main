@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalGlobalTask
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TestPreBuildTask
 import com.android.build.gradle.tasks.sync.AppIdListTask
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.Task
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken

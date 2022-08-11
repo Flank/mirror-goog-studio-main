@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.getOutputPath
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.attributes.DocsType
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.tasks.Internal

@@ -20,7 +20,7 @@ import android.databinding.tool.util.Preconditions
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.MergingReport
 import com.google.common.base.Supplier

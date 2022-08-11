@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.builder.dexing.ClassFileInput.CLASS_MATCHER
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.DefaultTask
 import org.gradle.api.attributes.Usage

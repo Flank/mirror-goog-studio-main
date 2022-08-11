@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.core.ApkInfoParser
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR
 import com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.ide.common.process.ProcessException
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets

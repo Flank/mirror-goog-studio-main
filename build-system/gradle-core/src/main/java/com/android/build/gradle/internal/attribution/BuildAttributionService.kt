@@ -26,7 +26,7 @@ import com.android.builder.utils.SynchronizedFile
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.JavaInfo
-import com.android.ide.common.attribution.TaskCategory
+import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.tools.analytics.HostData
 import org.gradle.api.Project
 import org.gradle.api.provider.MapProperty
