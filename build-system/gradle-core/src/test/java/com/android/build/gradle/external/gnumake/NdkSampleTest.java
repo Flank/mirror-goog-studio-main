@@ -16,7 +16,8 @@
 package com.android.build.gradle.external.gnumake;
 
 import static com.android.build.gradle.external.gnumake.NdkSampleTestUtilKt.checkAllCommandsRecognized;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.android.build.gradle.external.gnumake.NdkSampleTestUtilKt.checkOutputsHaveAllowedAbis;
+import static com.android.build.gradle.external.gnumake.NdkSampleTestUtilKt.checkOutputsHaveAllowedExtensions;
 import static com.google.common.truth.Truth.assertAbout;
 import static com.google.common.truth.Truth.assertThat;
 
@@ -24,7 +25,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
-import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.android.testutils.TestUtils;
@@ -94,6 +94,7 @@ public class NdkSampleTest {
                     new NoOpBuildTool("copy"),
                     new NoOpBuildTool("install"),
                     new NoOpBuildTool("androideabi-strip"),
+                    new NoOpBuildTool("llvm-strip"),
                     new NoOpBuildTool("android-strip"));
 
     /**
@@ -258,7 +259,8 @@ public class NdkSampleTest {
                 .setPrettyPrinting()
                 .create()
                 .toJson(actualConfig);
-        checkOutputsHaveAllowedExtensions(actualConfig);
+        checkOutputsHaveAllowedExtensions(actualConfig.configs);
+        checkOutputsHaveAllowedAbis(actualConfig.configs);
 
         String testPathString = androidMkPath.toString();
         // actualResults contains JSon as text. JSon escapes back slash with a second backslash.
@@ -382,29 +384,6 @@ public class NdkSampleTest {
 
     private static int getLastIndexOfAnyFilenameSeparator(String filename) {
         return Math.max(filename.lastIndexOf('\\'), filename.lastIndexOf('/'));
-    }
-
-    private static void checkOutputsHaveAllowedExtensions(
-            @NonNull NativeBuildConfigValues configs) {
-        for (NativeBuildConfigValue config : configs.configs) {
-            checkNotNull(config.libraries);
-            for (NativeLibraryValue library : config.libraries.values()) {
-                // These are the three extensions that should occur. These align with what CMake does.
-                checkNotNull(library.output);
-                if (library.output.toString().endsWith(".so")) {
-                    continue;
-                }
-                if (library.output.toString().endsWith(".a")) {
-                    continue;
-                }
-                if (!library.output.toString().contains(".")) {
-                    continue;
-                }
-                throw new RuntimeException(
-                        String.format(
-                                "Library output %s had an unexpected extension", library.output));
-            }
-        }
     }
 
     // Find the compiler commands and check their parse against expected parse.
@@ -760,5 +739,10 @@ public class NdkSampleTest {
     @Test
     public void moduleExports() throws IOException {
         checkJson("samples/module-exports");
+    }
+
+    @Test
+    public void pch() throws IOException {
+        checkJson("samples/pch");
     }
 }

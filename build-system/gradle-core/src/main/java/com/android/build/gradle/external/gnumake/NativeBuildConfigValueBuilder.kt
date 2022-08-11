@@ -235,6 +235,8 @@ class NativeBuildConfigValueBuilder internal constructor(
     private fun generateLibraries(): Map<String?, NativeLibraryValue> {
         val librariesMap: MutableMap<String?, NativeLibraryValue> = HashMap()
         for (output in outputs) {
+            // Don't record precompiled headers as output libraries.
+            if (output.outputFileName.endsWith(".gch")) continue
             val value = NativeLibraryValue()
             librariesMap[output.libraryName] = value
             value.buildCommandComponents = output.buildCommand + listOf(output.outputFileName)

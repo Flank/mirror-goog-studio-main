@@ -62,8 +62,9 @@ public class CompilerParser {
                     "U", // Undefine macro
                     "include", // Includes a .h file
                     "macros",
-                    "mllvm" // Options to pass to llvm backend (see
+                    "mllvm", // Options to pass to llvm backend (see
                     // https://issuetracker.google.com/189966589)
+                    "x" // Treat subsequent input files as having type <language>
                     );
 
     @NonNull

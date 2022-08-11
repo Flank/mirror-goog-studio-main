@@ -1,0 +1,116 @@
+{
+  "configs": [
+    {
+      "buildFiles": [
+        {
+          "path": "{testPath}"
+        }
+      ],
+      "cleanCommandsComponents": [
+        [
+          "echo",
+          "clean",
+          "command"
+        ]
+      ],
+      "buildTargetsCommandComponents": [
+        "echo",
+        "build",
+        "command",
+        "{LIST_OF_TARGETS_TO_BUILD}"
+      ],
+      "libraries": {
+        "GradlePlugin721-debug-arm64-v8a": {
+          "buildCommandComponents": [
+            "echo",
+            "build",
+            "command",
+            "/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/libGradlePlugin721.so"
+          ],
+          "toolchain": "toolchain-arm64-v8a",
+          "abi": "arm64-v8a",
+          "artifactName": "GradlePlugin721",
+          "files": [
+            {
+              "src": {
+                "path": "/Users/jomof/projects/b240060697/GradlePlugin721/app/src/main/cpp/file.cpp"
+              },
+              "flags": "-target aarch64-none-linux-android22 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /Users/jomof/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fno-exceptions -fno-rtti -fpic -O0 -UNDEBUG -fno-limit-debug-info -Winvalid-pch -include /Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/objs-debug/GradlePlugin721/src/main/cpp/stdafx.precompiled.h -I/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/objs-debug/GradlePlugin721 -I/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/sources/cxx-stl/llvm-libc++/include -I/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/sources/cxx-stl/llvm-libc++/../llvm-libc++abi/include -I/Users/jomof/projects/b240060697/GradlePlugin721/app -DANDROID -nostdinc++ -Wformat -Werror\u003dformat-security -fno-strict-aliasing -DPCH"
+            }
+          ],
+          "output": {
+            "path": "/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/libGradlePlugin721.so"
+          }
+        }
+      },
+      "toolchains": {
+        "toolchain-arm64-v8a": {
+          "cppCompilerExecutable": {
+            "path": "/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+          }
+        },
+        "toolchain-cpp": {}
+      },
+      "cFileExtensions": [],
+      "cppFileExtensions": [
+        "cpp"
+      ]
+    },
+    {
+      "buildFiles": [
+        {
+          "path": "{testPath}"
+        }
+      ],
+      "cleanCommandsComponents": [
+        [
+          "echo",
+          "clean",
+          "command"
+        ]
+      ],
+      "buildTargetsCommandComponents": [
+        "echo",
+        "build",
+        "command",
+        "{LIST_OF_TARGETS_TO_BUILD}"
+      ],
+      "libraries": {
+        "GradlePlugin721-release-arm64-v8a": {
+          "buildCommandComponents": [
+            "echo",
+            "build",
+            "command",
+            "/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/libGradlePlugin721.so"
+          ],
+          "toolchain": "toolchain-arm64-v8a",
+          "abi": "arm64-v8a",
+          "artifactName": "GradlePlugin721",
+          "files": [
+            {
+              "src": {
+                "path": "/Users/jomof/projects/b240060697/GradlePlugin721/app/src/main/cpp/file.cpp"
+              },
+              "flags": "-target aarch64-none-linux-android22 -fdata-sections -ffunction-sections -fstack-protector-strong -funwind-tables -no-canonical-prefixes --sysroot /Users/jomof/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/sysroot -g -Wno-invalid-command-line-argument -Wno-unused-command-line-argument -D_FORTIFY_SOURCE\u003d2 -fno-exceptions -fno-rtti -fpic -O0 -UNDEBUG -fno-limit-debug-info -Winvalid-pch -include /Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/objs-debug/GradlePlugin721/src/main/cpp/stdafx.precompiled.h -I/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/objs-debug/GradlePlugin721 -I/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/sources/cxx-stl/llvm-libc++/include -I/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/sources/cxx-stl/llvm-libc++/../llvm-libc++abi/include -I/Users/jomof/projects/b240060697/GradlePlugin721/app -DANDROID -nostdinc++ -Wformat -Werror\u003dformat-security -fno-strict-aliasing -DPCH"
+            }
+          ],
+          "output": {
+            "path": "/Users/jomof/projects/b240060697/GradlePlugin721/app/build/intermediates/cxx/Debug/51862l4l/obj/local/arm64-v8a/libGradlePlugin721.so"
+          }
+        }
+      },
+      "toolchains": {
+        "toolchain-arm64-v8a": {
+          "cppCompilerExecutable": {
+            "path": "/Users/jomof/Library/Android/sdk/ndk/25.0.8775105/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++"
+          }
+        },
+        "toolchain-cpp": {}
+      },
+      "cFileExtensions": [],
+      "cppFileExtensions": [
+        "cpp"
+      ]
+    }
+  ]
+}

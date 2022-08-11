@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.external.gnumake
 
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue
 import com.google.common.collect.Maps
 import com.google.common.truth.Truth
 
@@ -50,5 +51,44 @@ internal fun checkAllCommandsRecognized(
             .toSet()
 
         error("Could not classify $unclassifiedExecutables")
+    }
+}
+
+/**
+ * Check whether the ABIs found match recognized ABIs. Even very old ABIs like "mips" are
+ * recognized here because we have test samples that reference them.
+ */
+fun checkOutputsHaveAllowedAbis(configs: List<NativeBuildConfigValue>) {
+    val abis = listOf("x86", "x86_64", "arm64-v8a", "mips", "mips64", "armeabi-v7a", "armeabi")
+    for (config in configs) {
+        for (library in config.libraries!!.values) {
+            if (!abis.contains(library.abi)) {
+                error("Library ABI ${library.abi} is unexpected")
+            }
+        }
+    }
+}
+
+/**
+ * Check that all output files have recognized extensions.
+ */
+fun checkOutputsHaveAllowedExtensions(configs: List<NativeBuildConfigValue>) {
+    for (config in configs) {
+        for (library in config.libraries!!.values) {
+            // These are the three extensions that should occur:
+            // .so -- shared object
+            // .a -- archive
+            // <none> -- executable
+            if (library.output.toString().endsWith(".so")) {
+                continue
+            }
+            if (library.output.toString().endsWith(".a")) {
+                continue
+            }
+            if (!library.output.toString().contains(".")) {
+                continue
+            }
+            error("Library output ${library.output} had an unexpected extension")
+        }
     }
 }
