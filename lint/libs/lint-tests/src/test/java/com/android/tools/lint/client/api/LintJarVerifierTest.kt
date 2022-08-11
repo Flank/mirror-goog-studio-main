@@ -138,48 +138,6 @@ class LintJarVerifierTest {
     }
 
     @Test
-    fun testPackagedDeps() {
-        val projects = lint().files(
-            compiled(
-                "lint.jar",
-                kotlin(
-                    """
-                    package com.android.lint.mycheck
-
-                    // Not implementing real lint APIs here, just
-                    // including data in a suspicious package
-                    class MyDetector
-                    """
-                ).indented(),
-                0x6db3a5a1,
-                """
-                META-INF/main.kotlin_module:
-                H4sIAAAAAAAAAGNgYGBmYGBgBGJWKM2gxKDFAABNj30wGAAAAA==
-                """,
-                """
-                com/android/lint/mycheck/MyDetector.class:
-                H4sIAAAAAAAAAI1Ru0oDQRQ9d2I2ukYT3/GBjQhq4arYKYIPhEBUUEmTarI7
-                mEmyM7A7Ee3yLf6BlWAhwdKPEu/GgK1THM5juI+Zr+/3DwCHWCNshDYOpIkS
-                q6Ogq40L4uewpcJOcPV8oZwKnU0KIEK5LR9l0JXmIbhpttkvIEfwjrXR7oSQ
-                29quF5GH52MMBcKYa+mUsFn7R/0jwkytYx3HwZVyMpJOsifixxyPSRnkCdRh
-                60lnao9ZtE9YH/R9X1SEL8rMBv3KoH8g9ugs//niibLIbh0QV8DUX7PdjuPp
-                zm2kCKWaNuq6FzdVci+bXXZmazaU3bpMdKZHpn9ne0moLnUmlm97xulY1XWq
-                OT01xjrptDUp9iF4+ezwtNlbMC6xCoaal9h5w/grE4EKo/drYpmxOOIT8If5
-                yhAXsTr8J8IkZ8UGclVMVTHNiFIG5SpmMNsApZjDPOcp/BQLKbwfJ1hjDeQB
-                AAA=
-                """
-            )
-        ).createProjects(temporaryFolder.newFolder())
-
-        assertEquals(1, projects.size)
-        val jar = File(projects[0], "lint.jar")
-        assertTrue(jar.isFile)
-        val verifier = LintJarVerifier(jar)
-        assertTrue(verifier.hasPackageConflict())
-        assertEquals("com.android.lint.mycheck", verifier.describeFirstPackagedDependency())
-    }
-
-    @Test
     fun checkMavenJars() {
         // This test downloads ALL the AAR files on maven.google.com and verifies
         // any lint.jar files found within!

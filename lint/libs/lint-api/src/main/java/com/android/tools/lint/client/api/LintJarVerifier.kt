@@ -51,23 +51,15 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
      * we want to check for validity?
      */
     private fun isRelevantApi(internal: String): Boolean {
-        // Libraries unlikely to change: org.w3c.dom, org.objectweb.asm, org.xmlpull, etc.
-        if (internal.startsWith("com/android/") &&
-            // Reserved for various Android-internal checks such as CallingIdentityTokenDetector in AOSP
-            !internal.startsWith("com/android/internal/") &&
-            // We have a few clashes with this namespace which are not part of
-            // the API surface; remove these
-            !internal.startsWith("com/android/tools/lint/checks/studio/") &&
-            !internal.startsWith("com/android/tools/lint/checks/infrastructure/")
-        ) {
-            return true
-        }
-
-        // Imported APIs
-        return internal.startsWith("org/jetbrains/uast") ||
+        val relevant = internal.startsWith("com/android/") ||
+            // Imported APIs
+            internal.startsWith("org/jetbrains/uast") ||
             internal.startsWith("org/jetbrains/kotlin/psi") ||
             internal.startsWith("org/jetbrains/kotlin/asJava") ||
             internal.startsWith("com/intellij/psi")
+        // Libraries unlikely to change: org.w3c.dom, org.objectweb.asm, org.xmlpull, etc.
+
+        return relevant && !bundledClasses.contains(internal)
     }
 
     /**
@@ -77,14 +69,6 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
      */
     fun isCompatible(): Boolean {
         return incompatibleReference == null
-    }
-
-    /**
-     * Returns true if the lint jar contains classes that conflict with
-     * (or are repackaging) lint's own API surface.
-     */
-    fun hasPackageConflict(): Boolean {
-        return packageConflict != null
     }
 
     fun getVerificationThrowable(): Throwable? = verifyProblem
@@ -97,37 +81,36 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
         // Scans through the bytecode for all the classes in lint.jar, and
         // checks any class, method or field reference accessing the Lint API
         // and makes sure that API is found in the bytecode
+        val classes = mutableMapOf<String, ByteArray>()
         JarFile(lintJar).use { jar ->
             jar.entries().also { entries ->
-                var firstInDir = true
                 while (entries.hasMoreElements()) {
                     (entries.nextElement() as java.util.jar.JarEntry).also { entry ->
                         val directory = entry.isDirectory
                         val name = entry.name
-                        if (directory) {
-                            firstInDir = true
-                        } else if (name.endsWith(DOT_CLASS)) {
-                            if (firstInDir) {
-                                if (packageConflict == null) {
-                                    val packageOwner = name.substring(0, name.lastIndexOf('/') + 1)
-                                    if (isRelevantApi(packageOwner)) {
-                                        packageConflict = packageOwner
-                                    }
-                                }
-                                firstInDir = false
-                            }
-                            currentClassFile = name
+                        if (!directory && name.endsWith(DOT_CLASS)) {
                             jar.getInputStream(entry).use { stream ->
                                 val bytes = ByteStreams.toByteArray(stream)
-                                val reader = ClassReader(bytes)
-                                reader.accept(this, SKIP_DEBUG or SKIP_FRAMES)
-                                if (incompatibleReference != null) {
-                                    return
-                                }
+                                classes[name] = bytes
                             }
                         }
                     }
                 }
+            }
+        }
+
+        classes.forEach { (name, _) ->
+            // Note that jar file internal names always use forward slash, not File.separator
+            // so we can compute the internal name by just dropping the .class suffix
+            bundledClasses.add(name.removeSuffix(DOT_CLASS))
+        }
+
+        for ((name, bytes) in classes) {
+            currentClassFile = name
+            val reader = ClassReader(bytes)
+            reader.accept(this, SKIP_DEBUG or SKIP_FRAMES)
+            if (incompatibleReference != null) {
+                return
             }
         }
     }
@@ -170,9 +153,6 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
         return incompatibleReferencer!! // should only be called if incompatibleReference is non null
     }
 
-    fun describeFirstPackagedDependency(): String =
-        packageConflict?.replace('/', '.')?.removeSuffix(".") ?: "None"
-
     /**
      * An exception thrown if there is some other verification problem
      * (invalid class file etc)
@@ -182,14 +162,14 @@ class LintJarVerifier(jarFile: File) : ClassVisitor(ASM9) {
     /** The internal name of the invalid reference. */
     private var incompatibleReference: String? = null
 
+    /** The internal names of the classes in the Jar file */
+    private val bundledClasses: MutableSet<String> = mutableSetOf()
+
     /**
      * The class file containing the reference to
      * [incompatibleReference]
      */
     private var incompatibleReferencer: String? = null
-
-    /** The first conflicting package found */
-    private var packageConflict: String? = null
 
     private val methodVisitor = object : MethodVisitor(ASM9) {
         override fun visitMethodInsn(

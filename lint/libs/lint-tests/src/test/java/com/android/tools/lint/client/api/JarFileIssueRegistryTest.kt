@@ -441,32 +441,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
             .allowObsoleteLintChecks(false)
             .issueIds("MyIssueId")
             .run()
-            .expectContains(
-                """
-                lint.jar: Warning: Lint found an issue registry (test.pkg.MyIssueRegistry)
-                which contains code in some of lint's reserved packages.
-
-                This is usually because the lint jar has accidentally
-                packed in libraries that are part of lint's API surface,
-                such as the Kotlin standard library (kotlin.*), or
-                some of the Android tooling libraries (com.android.*)
-                including lint's own API jars, or some of the third party
-                libraries that lint depends on, such as UAST.
-                If you need these and cannot rely on the ones provided
-                in lint's runtime environment, consider `jarjar`ing your
-                own versions.
-
-                A second reason is one where you've accidentally placed
-                your own detector code into one of these package
-                namespaces, since they are pretty broad (com.android.*).
-                For Android specifically, you can place them under
-                com.android.internal.* which is explicitly allowed.
-
-                The first bundled package that is part of lint's API
-                surface namespace is:
-                com.android.something [ObsoleteLintCustomCheck]
-                0 errors, 1 warnings"""
-            )
+            .expectClean()
     }
 
     fun testNewerLintBroken() {
