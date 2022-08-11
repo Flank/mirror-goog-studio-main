@@ -21,6 +21,35 @@ test --jvmopt='-XX:+UseG1GC'
 test --jvmopt='-XX:ErrorFile=$TEST_UNDECLARED_OUTPUTS_DIR/jvm_crash.log'
 test --verbose_failures
 
+# TODO(b/242203555) cleanup opens/exports that was added for JDK17 migration
+test:jdk17 --jvmopt='--add-opens=java.base/java.io=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.base/java.lang=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.base/java.nio.charset=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.base/java.util=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.base/java.util.concurrent=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/java.awt=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/java.awt.event=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/javax.swing=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/sun.awt=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/sun.font=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports java.base/jdk.internal.vm=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=java.desktop/sun.java2d=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=java.desktop/sun.swing=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=jdk.attach/sun.tools.attach=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED'
+
+build:jdk17 --jvmopt='--add-exports java.base/jdk.internal.vm=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=java.desktop/sun.java2d=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=java.desktop/sun.swing=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=jdk.attach/sun.tools.attach=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED'
+build:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED'
+
 # Local runs require longer timeouts.
 test:local --test_timeout=120,600,1800,7200
 
