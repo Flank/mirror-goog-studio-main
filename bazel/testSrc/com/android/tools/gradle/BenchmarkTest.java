@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.diff.UnifiedDiff;
+import com.android.testutils.TestUtils;
 import com.android.tools.gradle.benchmarkassertions.BenchmarkProjectAssertion;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.PerfData;
@@ -29,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -76,6 +78,7 @@ public class BenchmarkTest {
     private String yourKitAgentPath = null;
     private String yourKitLibraryPath = null;
     private String yourKitSettingsPath = null;
+    private boolean useJdk11 = false;
 
     @Before
     public void setUp() throws Exception {
@@ -175,6 +178,10 @@ public class BenchmarkTest {
         value = System.getProperty("enable_yourkit");
         if (value != null && !value.isEmpty()) {
             enableYourKit = Boolean.parseBoolean(value);
+        }
+        value = System.getProperty("use_jdk11");
+        if (value != null && !value.isEmpty()) {
+            useJdk11 = Boolean.parseBoolean(value);
         }
         yourKitAgentPath = getStringProperty("yourkit_agent_path");
         yourKitLibraryPath = getStringProperty("yourkit_library_path");
@@ -314,8 +321,11 @@ public class BenchmarkTest {
         }
 
         File projectRoot = new File(src, testProjectGradleRootFromSourceRoot);
-        addJvmArgs(
-                new File(projectRoot, "gradle.properties"), enableYourKit, src, yourKitAgentPath);
+        File gradleProperties = new File(projectRoot, "gradle.properties");
+        addJvmArgs(gradleProperties, enableYourKit, src, yourKitAgentPath);
+        if (useJdk11) {
+            useJdk11ForGradle(gradleProperties);
+        }
         try (Gradle gradle = new Gradle(projectRoot, out, distribution)) {
             for (File repo : repos) {
                 gradle.addRepo(repo);
@@ -450,6 +460,28 @@ public class BenchmarkTest {
 
         p.put("org.gradle.jvmargs", jvmArgs);
 
+        try (FileWriter fw = new FileWriter(gradleProperties)) {
+            p.store(fw, "");
+        }
+    }
+
+    /**
+     * Sets java.home to point to JDK11 if Gradle versions is less than 7.3
+     *
+     * Gradle supports JDK17 satrting from version 7.3 Also Gradle prior to 6.9 don't works well
+     * with symlinks, so path from bazel runfiles is resolved to real one.
+     */
+    private void useJdk11ForGradle(File gradleProperties) throws IOException {
+        Path javaPath = TestUtils.getJava11Jdk().resolve("release").toRealPath();
+        Path javaHome = javaPath.getParent();
+
+        Properties p = new Properties();
+        if (gradleProperties.exists()) {
+            try (FileInputStream fis = new FileInputStream(gradleProperties)) {
+                p.load(fis);
+            }
+        }
+        p.put("org.gradle.java.home", javaHome.toString());
         try (FileWriter fw = new FileWriter(gradleProperties)) {
             p.store(fw, "");
         }
