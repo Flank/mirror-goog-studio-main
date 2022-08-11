@@ -84,6 +84,7 @@ setlocal
   --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^
   --test_tag_filters=%TESTTAGFILTERS% ^
   --build_metadata=ANDROID_BUILD_ID=%BUILDNUMBER% ^
+  --build_metadata=ANDROID_TEST_INVESTIGATE="http://ab/tests/bazel/%INVOCATIONID%" ^
   --build_metadata=ab_build_id=%BUILDNUMBER% ^
   --build_metadata=ab_target=studio-win ^
   --profile=%DISTDIR%\winprof%BUILDNUMBER%.json.gz ^

@@ -137,6 +137,7 @@ function run_bazel_test() {
     --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
     --define=meta_android_build_number="${BUILD_NUMBER}" \
     --build_metadata=ANDROID_BUILD_ID="${BUILD_NUMBER}" \
+    --build_metadata=ANDROID_TEST_INVESTIGATE="http://ab/tests/bazel/${invocation_id}" \
     --build_metadata=ab_build_id="${BUILD_NUMBER}" \
     --build_metadata=ab_target="${target_name}" \
     --test_tag_filters=${test_tag_filters} \
