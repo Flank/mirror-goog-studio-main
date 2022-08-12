@@ -234,7 +234,10 @@ java_import(
 
 platform_filegroup(
     name = "platforms/android-TiramisuPrivacySandbox",
-    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
+    visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
 )
 
 platform_filegroup(
