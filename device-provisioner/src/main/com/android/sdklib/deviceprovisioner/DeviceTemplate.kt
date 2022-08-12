@@ -25,5 +25,5 @@ interface DeviceTemplate {
 
   val activationAction: ActivationAction
 
-  val editAction: EditTemplateAction
+  val editAction: EditTemplateAction?
 }
