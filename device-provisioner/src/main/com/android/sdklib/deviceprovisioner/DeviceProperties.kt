@@ -16,7 +16,6 @@
 package com.android.sdklib.deviceprovisioner
 
 import com.android.sdklib.AndroidVersion
-import com.android.sdklib.AndroidVersion.AndroidVersionException
 import com.android.sdklib.devices.Abi
 
 /**
@@ -28,39 +27,50 @@ interface DeviceProperties {
 
   val model: String?
   val manufacturer: String?
-  val apiLevel: AndroidVersion
   val abi: Abi?
+  /** The Android API level. May include a codename if not a release version. */
+  val androidVersion: AndroidVersion
+  /** The user-visible version of Android, like "7.1" or "11". */
+  val androidRelease: String?
+
+  /**
+   * A string ideally unique to the device instance (e.g. serial number or emulator console port),
+   * used for disambiguating this device from others with similar properties.
+   */
+  val disambiguator: String?
 
   open class Builder {
 
     var manufacturer: String? = null
     var model: String? = null
-    var apiLevel = AndroidVersion.DEFAULT
     var abi: Abi? = null
+    var androidVersion = AndroidVersion.DEFAULT
+    var androidRelease: String? = null
+    var disambiguator: String? = null
 
     fun readCommonProperties(properties: Map<String, String>) {
       manufacturer = properties["ro.product.manufacturer"] ?: properties["ro.manufacturer"]
       model = properties["ro.product.model"] ?: properties["ro.model"]
-      apiLevel =
-        properties["ro.build.version.sdk"]?.let {
-          try {
-            AndroidVersion(it)
-          } catch (e: AndroidVersionException) {
-            null
-          }
+      androidVersion =
+        properties["ro.build.version.sdk"]?.let { it.toIntOrNull() }?.let { sdk ->
+          AndroidVersion(sdk, properties["ro.build.version.codename"])
         }
           ?: AndroidVersion.DEFAULT
       abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
+      androidRelease = properties["ro.build.version.release"]
     }
 
-    fun buildBase(): DeviceProperties = Impl(manufacturer, model, apiLevel, abi)
+    fun buildBase(): DeviceProperties =
+      Impl(manufacturer, model, androidVersion, abi, androidRelease, disambiguator)
   }
 
   class Impl(
     override val manufacturer: String?,
     override val model: String?,
-    override val apiLevel: AndroidVersion,
-    override val abi: Abi?
+    override val androidVersion: AndroidVersion,
+    override val abi: Abi?,
+    override val androidRelease: String?,
+    override val disambiguator: String?
   ) : DeviceProperties
 
   /** Default implementation of device title; may be overridden. */
