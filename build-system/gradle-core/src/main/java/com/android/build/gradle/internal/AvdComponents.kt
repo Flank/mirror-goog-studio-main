@@ -19,7 +19,6 @@ package com.android.build.gradle.internal
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
-import com.android.build.gradle.internal.testing.AdbHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
@@ -65,12 +64,11 @@ abstract class AvdComponentsBuildService @Inject constructor(
 
     private val avdManager: AvdManager by lazy {
         val locationsService = parameters.androidLocationsService.get()
-        val versionedSdkLoader = parameters.sdkService.map {
-            it.sdkLoader(parameters.compileSdkVersion, parameters.buildToolsRevision)
-        }
         AvdManager(
             parameters.avdLocation.get().asFile,
-            versionedSdkLoader,
+            parameters.sdkService.map {
+                it.sdkLoader(parameters.compileSdkVersion, parameters.buildToolsRevision)
+            },
             AndroidSdkHandler.getInstance(
                 locationsService,
                 parameters.sdkService.get().sdkDirectoryProvider.get().asFile.toPath()
@@ -78,8 +76,7 @@ abstract class AvdComponentsBuildService @Inject constructor(
             locationsService,
             AvdSnapshotHandler(
                 parameters.showEmulatorKernelLogging.get(),
-                parameters.deviceSetupTimeoutMinutes.getOrNull(),
-                AdbHelper(versionedSdkLoader)
+                parameters.deviceSetupTimeoutMinutes.getOrNull()
             ),
             ManagedVirtualDeviceLockManager(
                 locationsService,

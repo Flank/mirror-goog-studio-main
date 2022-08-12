@@ -1,5 +1,0 @@
-list of devices attached
-testDevice1 device
-testDevice2 offline
-testDevice3 device
-testDevice4 device
