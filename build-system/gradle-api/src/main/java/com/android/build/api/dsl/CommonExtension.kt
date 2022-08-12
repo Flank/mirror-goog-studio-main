@@ -498,7 +498,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    @get:Incubating
     val splits: Splits
 
     /**
@@ -508,7 +507,6 @@ interface CommonExtension<
      *
      * For more information about the properties you can configure in this block, see [Splits].
      */
-    @Incubating
     fun splits(action: Splits.() -> Unit)
 
     val composeOptions: ComposeOptions

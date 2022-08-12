@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * Options to configure Multiple APKs.
  *
@@ -45,7 +43,6 @@ import org.gradle.api.Incubating
  * Previously the Android Gradle plugin also supported building 'Configuration APKs' for Instant
  * Apps using this `splits` block, but that has been superseded by the Android App Bundle format.
  */
-@Incubating
 interface Splits {
 
     /**

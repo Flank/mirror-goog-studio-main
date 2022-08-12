@@ -765,7 +765,7 @@ package com.android.build.api.dsl {
     method @Deprecated @org.gradle.api.Incubating public com.android.build.api.dsl.SdkComponents getSdkComponents();
     method public org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> getSigningConfigs();
     method @org.gradle.api.Incubating public org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet> getSourceSets();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.Splits getSplits();
+    method public com.android.build.api.dsl.Splits getSplits();
     method public com.android.build.api.dsl.TestCoverage getTestCoverage();
     method @org.gradle.api.Incubating public com.android.build.api.dsl.TestOptions getTestOptions();
     method public com.android.build.api.dsl.ViewBinding getViewBinding();
@@ -786,7 +786,7 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public void setResourcePrefix(String? resourcePrefix);
     method public void signingConfigs(kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig>,kotlin.Unit> action);
     method @org.gradle.api.Incubating public void sourceSets(kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet>,kotlin.Unit> action);
-    method @org.gradle.api.Incubating public void splits(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits,kotlin.Unit> action);
+    method public void splits(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits,kotlin.Unit> action);
     method public void testCoverage(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage,kotlin.Unit> action);
     method @org.gradle.api.Incubating public void testOptions(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestOptions,kotlin.Unit> action);
     method @org.gradle.api.Incubating public void useLibrary(String name);
@@ -821,7 +821,7 @@ package com.android.build.api.dsl {
     property @Deprecated @org.gradle.api.Incubating public abstract com.android.build.api.dsl.SdkComponents sdkComponents;
     property public abstract org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> signingConfigs;
     property @org.gradle.api.Incubating public abstract org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet> sourceSets;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.Splits splits;
+    property public abstract com.android.build.api.dsl.Splits splits;
     property public abstract com.android.build.api.dsl.TestCoverage testCoverage;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.TestOptions testOptions;
     property public abstract com.android.build.api.dsl.ViewBinding viewBinding;
@@ -1614,7 +1614,7 @@ package com.android.build.api.dsl {
     property @org.gradle.api.Incubating public abstract boolean isEnable;
   }
 
-  @org.gradle.api.Incubating public interface Splits {
+  public interface Splits {
     method public void abi(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.AbiSplit,kotlin.Unit> action);
     method public void density(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DensitySplit,kotlin.Unit> action);
     method public com.android.build.api.dsl.AbiSplit getAbi();
