@@ -1,23 +1,11 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply from: "../commonHeader.gradle"
+
 buildscript {
+    apply from: "../commonHeader.gradle"  // for $kotlinVersion
+    apply from: "../commonBuildScript.gradle"
 
-  ext.kotlin_version = 'to-be-replaced-by-AndroidGradleTests'
-
-  repositories {
-    // This will be populated by AndroidGradleTestCase
-    google()
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:0.0.0' // The version will be populated by AndroidGradleTestCase
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-  }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
+    }
 }
-
-allprojects {
-  repositories {
-    // This will be populated by AndroidGradleTestCase
-    google()
-    mavenCentral()
-  }
-}
-
