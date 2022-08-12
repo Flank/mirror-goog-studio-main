@@ -731,17 +731,6 @@ class DeviceClientMonitorTask implements Runnable {
 
     private class CmdlineFileProcessor extends Processor {
 
-        // CmdlineFileProcessor is peculiar since contrary to TrackServiceProcessor it tap into a
-        // source that does not prefix its message with their size (it runs a bash command). Also
-        // the source does not send several messages, it returns a single message made fo the whole
-        // update of the bash command.
-        //
-        // To be compliant with the parseMessage/onMessage system, it always return false on
-        // parseMessage() until the Processor is closed. After that parseMessage returns true once
-        // and then false each subsequent calls.
-
-        private boolean messageReceived = false;
-
         private final int mPid;
 
         private int mRetryCount; // The number of attempts left to read the cmdline file.
@@ -763,11 +752,10 @@ class DeviceClientMonitorTask implements Runnable {
 
         @Override
         protected Optional<ByteBuffer> parseMessage() {
-            if (mSocketConnected || messageReceived) {
+            if (mSocketConnected) {
                 return Optional.empty();
             }
 
-            messageReceived = true;
             return Optional.of(ByteBuffer.wrap(mStream.buf(), 0, mStream.size()));
         }
 
@@ -809,7 +797,6 @@ class DeviceClientMonitorTask implements Runnable {
                             message.remaining(),
                             AdbHelper.DEFAULT_CHARSET);
 
-            message.position(message.remaining());
             name = name.trim();
             if (name.isEmpty()) {
                 return;
