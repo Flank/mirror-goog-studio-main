@@ -42,10 +42,10 @@ public class PluralsDetectorTest extends AbstractCheckTest {
     public void test2() {
         String expected =
                 ""
-                        + "res/values-fr/plurals.xml:3: Error: For locale \"fr\" (French) the following quantity should also be defined: many (e.g. \"1000000 de jours\") [MissingQuantity]\n"
+                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few (e.g. \"2 dny\"), many (e.g. \"10.0 dne\") [MissingQuantity]\n"
                         + "  <plurals name=\"draft\">\n"
                         + "  ^\n"
-                        + "res/values-cs/plurals3.xml:3: Error: For locale \"cs\" (Czech) the following quantities should also be defined: few (e.g. \"2 dny\"), many (e.g. \"10.0 dne\") [MissingQuantity]\n"
+                        + "res/values-fr/plurals.xml:3: Warning: For locale \"fr\" (French) the following quantity should also be defined: many (e.g. \"1000000 de jours\") [MissingQuantity]\n"
                         + "  <plurals name=\"draft\">\n"
                         + "  ^\n"
                         + "res/values-zh-rCN/plurals3.xml:3: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
@@ -54,7 +54,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         + "res/values-zh-rCN/plurals3.xml:7: Warning: For language \"zh\" (Chinese) the following quantities are not relevant: one [UnusedQuantity]\n"
                         + "  <plurals name=\"title_day_dialog_content\">\n"
                         + "  ^\n"
-                        + "2 errors, 2 warnings\n";
+                        + "1 errors, 3 warnings";
         lint().files(
                         xml(
                                 "res/values-zh-rCN/plurals3.xml",
@@ -174,6 +174,47 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                         + "</plurals>"))
                 .run()
                 .expectClean();
+    }
+
+    public void testFrenchMany() {
+        lint().files(
+                        xml(
+                                "res/values-fr/plurals.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "  <plurals name=\"draft\">\n"
+                                        + "    <item quantity=\"one\">\"brouillon\"</item>\n"
+                                        + "    <item quantity=\"other\">\"brouillons\"</item>\n"
+                                        + "  </plurals>\n"
+                                        + "</resources>\n"))
+                .issues(PluralsDetector.MISSING)
+                .run()
+                .expect(
+                        "res/values-fr/plurals.xml:3: Warning: For locale \"fr\" (French) the following quantity should also be defined: many (e.g. \"1000000 de jours\") [MissingQuantity]\n"
+                                + "  <plurals name=\"draft\">\n"
+                                + "  ^\n"
+                                + "0 errors, 1 warnings");
+    }
+
+    public void testFrenchOtherAndMany() {
+        lint().files(
+                        xml(
+                                "res/values-fr/plurals.xml",
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                                        + "<resources>\n"
+                                        + "  <plurals name=\"draft\">\n"
+                                        + "    <item quantity=\"one\">\"brouillon\"</item>\n"
+                                        + "  </plurals>\n"
+                                        + "</resources>\n"))
+                .issues(PluralsDetector.MISSING)
+                .run()
+                .expect(
+                        "res/values-fr/plurals.xml:3: Warning: For locale \"fr\" (French) the following quantity should also be defined: many (e.g. \"1000000 de jours\") [MissingQuantity]\n"
+                                + "  <plurals name=\"draft\">\n"
+                                + "  ^\n"
+                                + "0 errors, 1 warnings");
     }
 
     public void testImpliedQuantity() {
