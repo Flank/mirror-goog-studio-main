@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.UImplicitCallExpression
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getAnnotationStringValue
 import com.android.tools.lint.detector.api.findSelector
+import com.android.tools.lint.detector.api.isBelow
 import com.android.tools.lint.detector.api.isJava
 import com.android.tools.lint.detector.api.isKotlin
 import com.android.tools.lint.detector.api.nextStatement
@@ -313,11 +314,15 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 curr = curr.uastParent ?: return true
             }
 
-            @Suppress("RedundantIf")
             if (curr is UBlockExpression) {
-                if (curr.sourcePsi is PsiSynchronizedStatement) {
-                    return false
+                val sourcePsi = curr.sourcePsi
+                if (sourcePsi is PsiSynchronizedStatement) {
+                    val lock = sourcePsi.lockExpression
+                    if (lock != null && element.sourcePsi.isBelow(lock)) {
+                        return false
+                    }
                 }
+
                 // In Java, it's apparent when an expression is unused:
                 // the parent is a block expression. However, in Kotlin it's
                 // much trickier: values can flow through blocks and up through
@@ -342,7 +347,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 // It's the last child: see if the parent is unused
                 val parent = skipParenthesizedExprUp(curr.uastParent)
-                if (parent is ULambdaExpression && isKotlin(curr.sourcePsi)) {
+                if (parent is ULambdaExpression && isKotlin(sourcePsi)) {
                     val expressionType = parent.getExpressionType()?.canonicalText
                     if (expressionType != null &&
                         expressionType.startsWith("kotlin.jvm.functions.Function") &&
@@ -357,7 +362,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     return false
                 }
 
-                if (isJava(curr.sourcePsi)) {
+                if (isJava(sourcePsi)) {
                     // In Java there's no implicit passing to the parent
                     return true
                 }

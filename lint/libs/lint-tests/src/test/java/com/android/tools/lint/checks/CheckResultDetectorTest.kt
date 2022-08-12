@@ -1656,7 +1656,7 @@ class CheckResultDetectorTest : AbstractCheckTest() {
                     public Object getLock() { return Api.class; }
                     public void test() {
                         synchronized (getLock()) {
-                            println("Test");
+                            System.out.println("Test");
                         }
                     }
                 }
@@ -1673,6 +1673,47 @@ class CheckResultDetectorTest : AbstractCheckTest() {
             ).indented(),
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
+    }
+
+    fun testSynchronizedUnused() {
+        // 242305422: CheckResultDetector allows unused results in Java synchronized expressions.
+        lint().files(
+            java(
+                """
+                import androidx.annotation.CheckResult;
+                public class Api {
+                    @CheckResult
+                    public Object getLock() { return Api.class; }
+                    public void test() {
+                        synchronized (getLock()) {
+                            getLock(); // ERROR
+                            System.out.println("test");
+                        }
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                class Api2 : Api() {
+                    fun test2() {
+                        synchronized(getLock()) { getLock(); println("test") } // ERROR
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/Api.java:7: Warning: The result of getLock is not used [CheckResult]
+                        getLock(); // ERROR
+                        ~~~~~~~~~
+            src/Api2.kt:3: Warning: The result of getLock is not used [CheckResult]
+                    synchronized(getLock()) { getLock(); println("test") } // ERROR
+                                              ~~~~~~~~~
+            0 errors, 2 warnings
+            """
+        )
     }
 
     fun testKotlinTest() {
