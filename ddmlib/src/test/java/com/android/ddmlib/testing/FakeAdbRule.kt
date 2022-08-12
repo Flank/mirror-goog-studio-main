@@ -101,6 +101,7 @@ class FakeAdbRule : ExternalResource() {
       release: String,
       sdk: String,
       abi: String = "x86_64",
+      properties: Map<String, String> = emptyMap(),
       hostConnectionType: DeviceState.HostConnectionType = DeviceState.HostConnectionType.USB,
       avdName: String? = null,
       avdPath: String? = null
@@ -110,7 +111,16 @@ class FakeAdbRule : ExternalResource() {
     if (avdName != null && avdPath != null) {
       EmulatorConsole.registerConsoleForTest(deviceId, consoleFactory(avdName, avdPath))
     }
-    val device = fakeAdbServer.connectDevice(deviceId, manufacturer, model, release, sdk, abi, hostConnectionType).get()
+    val deviceFuture = fakeAdbServer.connectDevice(
+            deviceId,
+            manufacturer,
+            model,
+            release,
+            sdk,
+            abi,
+            properties,
+            hostConnectionType)
+    val device = deviceFuture.get()
     device.deviceStatus = DeviceState.DeviceStatus.ONLINE
     assertThat(startLatch.await(30, TimeUnit.SECONDS)).isTrue()
     return device

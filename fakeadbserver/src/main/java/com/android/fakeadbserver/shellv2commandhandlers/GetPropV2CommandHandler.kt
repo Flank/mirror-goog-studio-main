@@ -34,17 +34,14 @@ class GetPropV2CommandHandler : SimpleShellV2Handler("getprop") {
     ) {
         protocol.writeOkay()
 
-        val builder = """
-            # This is some build info
-            # This is more build info
-
-            [ro.product.manufacturer]: [${device.manufacturer}]
-            [ro.product.model]: [${device.model}]
-            [ro.build.version.release]: [${device.buildVersionRelease}]
-            [ro.build.version.sdk]: [${device.buildVersionSdk}]
-
-            """.trimIndent()
-        protocol.writeStdout(builder.toByteArray(Charsets.UTF_8))
+        val buf = StringBuilder()
+        buf.append("# This is some build info\n")
+        buf.append("# This is more build info\n")
+        buf.append("\n")
+        for (entry in device.properties) {
+            buf.append("[${entry.key}]: [${entry.value}]\n")
+        }
+        protocol.writeStdout(buf.toString().toByteArray(Charsets.UTF_8))
         protocol.writeExitCode(0)
     }
 }

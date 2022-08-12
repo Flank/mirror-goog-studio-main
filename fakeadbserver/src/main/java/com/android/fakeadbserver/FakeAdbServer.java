@@ -249,7 +249,7 @@ public final class FakeAdbServer implements AutoCloseable {
      * for handlers that inherit from {@link CommandHandler}. The purpose of the hub is to propagate
      * server events to existing connections with the server.
      *
-     * <p>For example, if {@link #connectDevice(String, String, String, String, String,
+     * <p>For example, if {@link #connectDevice(String, String, String, String, String, Map,
      * DeviceState.HostConnectionType)} is called, an event will be sent through the {@link
      * DeviceStateChangeHub} to all open connections waiting on host:track-devices messages.
      */
@@ -267,6 +267,7 @@ public final class FakeAdbServer implements AutoCloseable {
      * @param release            is the Android OS version of the device
      * @param sdk                is the SDK version of the device
      * @param cpuAbi             is the ABI of the device CPU
+     * @param properties         is the device properties
      * @param hostConnectionType is the simulated connection type to the device @return the future
      * @return a future to allow synchronization of the side effects of the call
      */
@@ -277,6 +278,7 @@ public final class FakeAdbServer implements AutoCloseable {
             @NonNull String release,
             @NonNull String sdk,
             @NonNull String cpuAbi,
+            @NonNull Map<String, String> properties,
             @NonNull DeviceState.HostConnectionType hostConnectionType) {
         DeviceState device =
                 new DeviceState(
@@ -287,6 +289,7 @@ public final class FakeAdbServer implements AutoCloseable {
                         release,
                         sdk,
                         cpuAbi,
+                        properties,
                         hostConnectionType,
                         newTransportId());
         if (mConnectionHandlerTask == null) {
@@ -318,6 +321,7 @@ public final class FakeAdbServer implements AutoCloseable {
                 release,
                 sdk,
                 "x86_64",
+                Collections.emptyMap(),
                 hostConnectionType);
     }
 

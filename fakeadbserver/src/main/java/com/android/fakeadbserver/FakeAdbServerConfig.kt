@@ -50,5 +50,6 @@ class DeviceStateConfig(
     val buildVersionRelease: String,
     val buildVersionSdk: String,
     val cpuAbi: String,
+    val properties: Map<String, String>,
     var deviceStatus: DeviceState.DeviceStatus,
 )
