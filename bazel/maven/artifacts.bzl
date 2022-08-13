@@ -25,7 +25,7 @@ ARTIFACTS = [
     "com.fasterxml.jackson.core:jackson-databind:2.11.1",
     "com.google.flatbuffers:flatbuffers-java:1.12.0",
     "com.google.guava:guava:23.0",  # TODO to be removed, needed by gradlew of agp
-    "com.google.guava:guava:31.0.1-jre",
+    "com.google.guava:guava:30.1-jre",
     "com.google.guava:guava-testlib:25.1-jre",
     "com.google.jimfs:jimfs:1.1",
     "com.google.protobuf:protobuf-gradle-plugin:0.8.15",

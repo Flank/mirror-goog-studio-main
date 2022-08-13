@@ -203,11 +203,13 @@ maven_import(
     jars = [
         "repository/com/android/tools/build/bundletool/1.11.0/bundletool-1.11.0.jar"
     ],
+    exports = [
+        "com.google.guava.guava",
+    ],
     deps = [
         "com.android.tools.build.aapt2-proto",
         "com.google.auto.value.auto-value-annotations",
         "com.google.errorprone.error_prone_annotations",
-        "com.google.guava.guava",
         "com.google.protobuf.protobuf-java",
         "com.google.protobuf.protobuf-java-util",
         "com.google.dagger.dagger",
@@ -1047,25 +1049,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_annotations_2.7.1",
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
+    name = "com.google.errorprone.error_prone_annotations_2.4.0",
+    pom = "repository/com/google/errorprone/error_prone_annotations/2.4.0/error_prone_annotations-2.4.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.7.1",
-    parent = "com.google.errorprone.error_prone_parent_2.7.1",
+    repo_path = "com/google/errorprone/error_prone_annotations/2.4.0",
+    parent = "com.google.errorprone.error_prone_parent_2.4.0",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.errorprone.error_prone_annotations",
     classifiers = [],
-    parent = "com.google.errorprone.error_prone_parent_2.7.1",
+    parent = "com.google.errorprone.error_prone_parent_2.4.0",
     jars = [
-        "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.jar"
+        "repository/com/google/errorprone/error_prone_annotations/2.4.0/error_prone_annotations-2.4.0.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
+    pom = "repository/com/google/errorprone/error_prone_annotations/2.4.0/error_prone_annotations-2.4.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.7.1",
+    repo_path = "com/google/errorprone/error_prone_annotations/2.4.0",
     visibility = ["//visibility:public"],
 )
 
@@ -1213,17 +1215,17 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.guava.guava_31.0.1-jre",
-    pom = "repository/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.pom",
+    name = "com.google.guava.guava_30.1-jre",
+    pom = "repository/com/google/guava/guava/30.1-jre/guava-30.1-jre.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/31.0.1-jre",
-    parent = "com.google.guava.guava-parent_31.0.1-jre",
+    repo_path = "com/google/guava/guava/30.1-jre",
+    parent = "com.google.guava.guava-parent_30.1-jre",
     deps = [
         "com.google.guava.failureaccess_1.0.1",
         "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-qual_3.12.0",
-        "com.google.errorprone.error_prone_annotations_2.7.1",
+        "org.checkerframework.checker-qual_3.5.0",
+        "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.j2objc.j2objc-annotations_1.3",
     ],
     visibility = ["//visibility:public"],
@@ -1232,9 +1234,9 @@ maven_artifact(
 maven_import(
     name = "com.google.guava.guava",
     classifiers = [],
-    parent = "com.google.guava.guava-parent_31.0.1-jre",
+    parent = "com.google.guava.guava-parent_30.1-jre",
     jars = [
-        "repository/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.jar"
+        "repository/com/google/guava/guava/30.1-jre/guava-30.1-jre.jar"
     ],
     exports = [
         "com.google.guava.failureaccess",
@@ -1248,13 +1250,13 @@ maven_import(
         "com.google.guava.failureaccess_1.0.1",
         "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-qual_3.12.0",
-        "com.google.errorprone.error_prone_annotations_2.7.1",
+        "org.checkerframework.checker-qual_3.5.0",
+        "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.j2objc.j2objc-annotations_1.3",
     ],
-    pom = "repository/com/google/guava/guava/31.0.1-jre/guava-31.0.1-jre.pom",
+    pom = "repository/com/google/guava/guava/30.1-jre/guava-30.1-jre.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/31.0.1-jre",
+    repo_path = "com/google/guava/guava/30.1-jre",
     visibility = ["//visibility:public"],
 )
 
@@ -2652,10 +2654,10 @@ maven_import(
     exports = [
         "io.grpc.grpc-context",
         "com.google.code.findbugs.jsr305",
+        "com.google.errorprone.error_prone_annotations",
     ],
     deps = [
         "com.google.guava.guava",
-        "com.google.errorprone.error_prone_annotations",
     ],
     original_deps = [
         "io.grpc.grpc-context_1.39.0",
@@ -5027,10 +5029,10 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.checkerframework.checker-qual_3.12.0",
-    pom = "repository/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.pom",
+    name = "org.checkerframework.checker-qual_3.5.0",
+    pom = "repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.pom",
     repo_root_path = "repository",
-    repo_path = "org/checkerframework/checker-qual/3.12.0",
+    repo_path = "org/checkerframework/checker-qual/3.5.0",
     visibility = ["//visibility:public"],
 )
 
@@ -5038,12 +5040,12 @@ maven_import(
     name = "org.checkerframework.checker-qual",
     classifiers = [],
     jars = [
-        "repository/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.jar"
+        "repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.jar"
     ],
     original_deps = [],
-    pom = "repository/org/checkerframework/checker-qual/3.12.0/checker-qual-3.12.0.pom",
+    pom = "repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.pom",
     repo_root_path = "repository",
-    repo_path = "org/checkerframework/checker-qual/3.12.0",
+    repo_path = "org/checkerframework/checker-qual/3.5.0",
     visibility = ["//visibility:public"],
 )
 
@@ -26305,15 +26307,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_annotations_2.4.0",
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.4.0/error_prone_annotations-2.4.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.4.0",
-    parent = "com.google.errorprone.error_prone_parent_2.4.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.errorprone.javac-shaded_9-dev-r4023-3",
     pom = "repository/com/google/errorprone/javac-shaded/9-dev-r4023-3/javac-shaded-9-dev-r4023-3.pom",
     repo_root_path = "repository",
@@ -26683,23 +26676,6 @@ maven_artifact(
         "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
         "com.google.code.findbugs.jsr305_3.0.2",
         "org.checkerframework.checker-compat-qual_2.5.5",
-        "com.google.errorprone.error_prone_annotations_2.3.4",
-        "com.google.j2objc.j2objc-annotations_1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.guava.guava_30.1-jre",
-    pom = "repository/com/google/guava/guava/30.1-jre/guava-30.1-jre.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/30.1-jre",
-    parent = "com.google.guava.guava-parent_30.1-jre",
-    deps = [
-        "com.google.guava.failureaccess_1.0.1",
-        "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-qual_3.5.0",
         "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.j2objc.j2objc-annotations_1.3",
     ],
@@ -28645,14 +28621,6 @@ maven_artifact(
     pom = "repository/org/checkerframework/checker-qual/2.8.1/checker-qual-2.8.1.pom",
     repo_root_path = "repository",
     repo_path = "org/checkerframework/checker-qual/2.8.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.checkerframework.checker-qual_3.5.0",
-    pom = "repository/org/checkerframework/checker-qual/3.5.0/checker-qual-3.5.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/checkerframework/checker-qual/3.5.0",
     visibility = ["//visibility:public"],
 )
 
@@ -34669,14 +34637,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_parent_2.7.1",
-    pom = "repository/com/google/errorprone/error_prone_parent/2.7.1/error_prone_parent-2.7.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_parent/2.7.1",
-    parent = "org.sonatype.oss.oss-parent_7",
-)
-
-maven_artifact(
     name = "com.google.googlejavaformat.google-java-format-parent_1.5",
     pom = "repository/com/google/googlejavaformat/google-java-format-parent/1.5/google-java-format-parent-1.5.pom",
     repo_root_path = "repository",
@@ -34866,13 +34826,6 @@ maven_artifact(
     pom = "repository/com/google/guava/guava-parent/30.1-jre/guava-parent-30.1-jre.pom",
     repo_root_path = "repository",
     repo_path = "com/google/guava/guava-parent/30.1-jre",
-)
-
-maven_artifact(
-    name = "com.google.guava.guava-parent_31.0.1-jre",
-    pom = "repository/com/google/guava/guava-parent/31.0.1-jre/guava-parent-31.0.1-jre.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava-parent/31.0.1-jre",
 )
 
 maven_artifact(
