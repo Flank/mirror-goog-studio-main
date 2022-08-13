@@ -349,25 +349,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.fasterxml.jackson.core.jackson-core_2.11.1",
-    pom = "repository/com/fasterxml/jackson/core/jackson-core/2.11.1/jackson-core-2.11.1.pom",
+    name = "com.fasterxml.jackson.core.jackson-core_2.11.3",
+    pom = "repository/com/fasterxml/jackson/core/jackson-core/2.11.3/jackson-core-2.11.3.pom",
     repo_root_path = "repository",
-    repo_path = "com/fasterxml/jackson/core/jackson-core/2.11.1",
-    parent = "com.fasterxml.jackson.jackson-base_2.11.1",
+    repo_path = "com/fasterxml/jackson/core/jackson-core/2.11.3",
+    parent = "com.fasterxml.jackson.jackson-base_2.11.3",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.fasterxml.jackson.core.jackson-core",
     classifiers = [],
-    parent = "com.fasterxml.jackson.jackson-base_2.11.1",
+    parent = "com.fasterxml.jackson.jackson-base_2.11.3",
     jars = [
-        "repository/com/fasterxml/jackson/core/jackson-core/2.11.1/jackson-core-2.11.1.jar"
+        "repository/com/fasterxml/jackson/core/jackson-core/2.11.3/jackson-core-2.11.3.jar"
     ],
     original_deps = [],
-    pom = "repository/com/fasterxml/jackson/core/jackson-core/2.11.1/jackson-core-2.11.1.pom",
+    pom = "repository/com/fasterxml/jackson/core/jackson-core/2.11.3/jackson-core-2.11.3.pom",
     repo_root_path = "repository",
-    repo_path = "com/fasterxml/jackson/core/jackson-core/2.11.1",
+    repo_path = "com/fasterxml/jackson/core/jackson-core/2.11.3",
     visibility = ["//visibility:public"],
 )
 
@@ -792,41 +792,41 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.auth.google-auth-library-credentials_1.4.0",
-    pom = "repository/com/google/auth/google-auth-library-credentials/1.4.0/google-auth-library-credentials-1.4.0.pom",
+    name = "com.google.auth.google-auth-library-credentials_0.22.2",
+    pom = "repository/com/google/auth/google-auth-library-credentials/0.22.2/google-auth-library-credentials-0.22.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auth/google-auth-library-credentials/1.4.0",
-    parent = "com.google.auth.google-auth-library-parent_1.4.0",
+    repo_path = "com/google/auth/google-auth-library-credentials/0.22.2",
+    parent = "com.google.auth.google-auth-library-parent_0.22.2",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.auth.google-auth-library-credentials",
     classifiers = [],
-    parent = "com.google.auth.google-auth-library-parent_1.4.0",
+    parent = "com.google.auth.google-auth-library-parent_0.22.2",
     jars = [
-        "repository/com/google/auth/google-auth-library-credentials/1.4.0/google-auth-library-credentials-1.4.0.jar"
+        "repository/com/google/auth/google-auth-library-credentials/0.22.2/google-auth-library-credentials-0.22.2.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/auth/google-auth-library-credentials/1.4.0/google-auth-library-credentials-1.4.0.pom",
+    pom = "repository/com/google/auth/google-auth-library-credentials/0.22.2/google-auth-library-credentials-0.22.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auth/google-auth-library-credentials/1.4.0",
+    repo_path = "com/google/auth/google-auth-library-credentials/0.22.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.auth.google-auth-library-oauth2-http_1.4.0",
-    pom = "repository/com/google/auth/google-auth-library-oauth2-http/1.4.0/google-auth-library-oauth2-http-1.4.0.pom",
+    name = "com.google.auth.google-auth-library-oauth2-http_0.22.2",
+    pom = "repository/com/google/auth/google-auth-library-oauth2-http/0.22.2/google-auth-library-oauth2-http-0.22.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auth/google-auth-library-oauth2-http/1.4.0",
-    parent = "com.google.auth.google-auth-library-parent_1.4.0",
+    repo_path = "com/google/auth/google-auth-library-oauth2-http/0.22.2",
+    parent = "com.google.auth.google-auth-library-parent_0.22.2",
     deps = [
-        "com.google.auto.value.auto-value-annotations_1.8.2",
+        "com.google.auto.value.auto-value-annotations_1.7.4",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.auth.google-auth-library-credentials_1.4.0",
-        "com.google.http-client.google-http-client_1.41.0",
-        "com.google.http-client.google-http-client-gson_1.41.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.auth.google-auth-library-credentials_0.22.2",
+        "com.google.http-client.google-http-client_1.38.0",
+        "com.google.http-client.google-http-client-jackson2_1.38.0",
+        "com.google.guava.guava_30.0-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -834,52 +834,52 @@ maven_artifact(
 maven_import(
     name = "com.google.auth.google-auth-library-oauth2-http",
     classifiers = [],
-    parent = "com.google.auth.google-auth-library-parent_1.4.0",
+    parent = "com.google.auth.google-auth-library-parent_0.22.2",
     jars = [
-        "repository/com/google/auth/google-auth-library-oauth2-http/1.4.0/google-auth-library-oauth2-http-1.4.0.jar"
+        "repository/com/google/auth/google-auth-library-oauth2-http/0.22.2/google-auth-library-oauth2-http-0.22.2.jar"
     ],
     exports = [
         "com.google.auto.value.auto-value-annotations",
         "com.google.code.findbugs.jsr305",
         "com.google.auth.google-auth-library-credentials",
         "com.google.http-client.google-http-client",
-        "com.google.http-client.google-http-client-gson",
+        "com.google.http-client.google-http-client-jackson2",
         "com.google.guava.guava",
     ],
     original_deps = [
-        "com.google.auto.value.auto-value-annotations_1.8.2",
+        "com.google.auto.value.auto-value-annotations_1.7.4",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.auth.google-auth-library-credentials_1.4.0",
-        "com.google.http-client.google-http-client_1.41.0",
-        "com.google.http-client.google-http-client-gson_1.41.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.auth.google-auth-library-credentials_0.22.2",
+        "com.google.http-client.google-http-client_1.38.0",
+        "com.google.http-client.google-http-client-jackson2_1.38.0",
+        "com.google.guava.guava_30.0-android",
     ],
-    pom = "repository/com/google/auth/google-auth-library-oauth2-http/1.4.0/google-auth-library-oauth2-http-1.4.0.pom",
+    pom = "repository/com/google/auth/google-auth-library-oauth2-http/0.22.2/google-auth-library-oauth2-http-0.22.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auth/google-auth-library-oauth2-http/1.4.0",
+    repo_path = "com/google/auth/google-auth-library-oauth2-http/0.22.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.auto.value.auto-value-annotations_1.9",
-    pom = "repository/com/google/auto/value/auto-value-annotations/1.9/auto-value-annotations-1.9.pom",
+    name = "com.google.auto.value.auto-value-annotations_1.7.4",
+    pom = "repository/com/google/auto/value/auto-value-annotations/1.7.4/auto-value-annotations-1.7.4.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auto/value/auto-value-annotations/1.9",
-    parent = "com.google.auto.value.auto-value-parent_1.9",
+    repo_path = "com/google/auto/value/auto-value-annotations/1.7.4",
+    parent = "com.google.auto.value.auto-value-parent_1.7.4",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.auto.value.auto-value-annotations",
     classifiers = [],
-    parent = "com.google.auto.value.auto-value-parent_1.9",
+    parent = "com.google.auto.value.auto-value-parent_1.7.4",
     jars = [
-        "repository/com/google/auto/value/auto-value-annotations/1.9/auto-value-annotations-1.9.jar"
+        "repository/com/google/auto/value/auto-value-annotations/1.7.4/auto-value-annotations-1.7.4.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/auto/value/auto-value-annotations/1.9/auto-value-annotations-1.9.pom",
+    pom = "repository/com/google/auto/value/auto-value-annotations/1.7.4/auto-value-annotations-1.7.4.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auto/value/auto-value-annotations/1.9",
+    repo_path = "com/google/auto/value/auto-value-annotations/1.7.4",
     visibility = ["//visibility:public"],
 )
 
@@ -1047,25 +1047,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_annotations_2.10.0",
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0.pom",
+    name = "com.google.errorprone.error_prone_annotations_2.7.1",
+    pom = "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.10.0",
-    parent = "com.google.errorprone.error_prone_parent_2.10.0",
+    repo_path = "com/google/errorprone/error_prone_annotations/2.7.1",
+    parent = "com.google.errorprone.error_prone_parent_2.7.1",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.errorprone.error_prone_annotations",
     classifiers = [],
-    parent = "com.google.errorprone.error_prone_parent_2.10.0",
+    parent = "com.google.errorprone.error_prone_parent_2.7.1",
     jars = [
-        "repository/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0.jar"
+        "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.10.0/error_prone_annotations-2.10.0.pom",
+    pom = "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.10.0",
+    repo_path = "com/google/errorprone/error_prone_annotations/2.7.1",
     visibility = ["//visibility:public"],
 )
 
@@ -1282,48 +1282,14 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.http-client.google-http-client-gson_1.41.0",
-    pom = "repository/com/google/http-client/google-http-client-gson/1.41.0/google-http-client-gson-1.41.0.pom",
+    name = "com.google.http-client.google-http-client-jackson2_1.38.0",
+    pom = "repository/com/google/http-client/google-http-client-jackson2/1.38.0/google-http-client-jackson2-1.38.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client-gson/1.41.0",
-    parent = "com.google.http-client.google-http-client-parent_1.41.0",
+    repo_path = "com/google/http-client/google-http-client-jackson2/1.38.0",
+    parent = "com.google.http-client.google-http-client-parent_1.38.0",
     deps = [
-        "com.google.http-client.google-http-client_1.41.0",
-        "com.google.code.gson.gson_2.8.9",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "com.google.http-client.google-http-client-gson",
-    classifiers = [],
-    parent = "com.google.http-client.google-http-client-parent_1.41.0",
-    jars = [
-        "repository/com/google/http-client/google-http-client-gson/1.41.0/google-http-client-gson-1.41.0.jar"
-    ],
-    exports = [
-        "com.google.http-client.google-http-client",
-        "com.google.code.gson.gson",
-    ],
-    original_deps = [
-        "com.google.http-client.google-http-client_1.41.0",
-        "com.google.code.gson.gson_2.8.9",
-    ],
-    pom = "repository/com/google/http-client/google-http-client-gson/1.41.0/google-http-client-gson-1.41.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client-gson/1.41.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.http-client.google-http-client-jackson2_1.22.0",
-    pom = "repository/com/google/http-client/google-http-client-jackson2/1.22.0/google-http-client-jackson2-1.22.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client-jackson2/1.22.0",
-    parent = "com.google.http-client.google-http-client-parent_1.22.0",
-    deps = [
-        "com.google.http-client.google-http-client_1.22.0",
-        "com.fasterxml.jackson.core.jackson-core_2.1.3",
+        "com.google.http-client.google-http-client_1.38.0",
+        "com.fasterxml.jackson.core.jackson-core_2.11.3",
     ],
     visibility = ["//visibility:public"],
 )
@@ -1331,38 +1297,38 @@ maven_artifact(
 maven_import(
     name = "com.google.http-client.google-http-client-jackson2",
     classifiers = [],
-    parent = "com.google.http-client.google-http-client-parent_1.22.0",
+    parent = "com.google.http-client.google-http-client-parent_1.38.0",
     jars = [
-        "repository/com/google/http-client/google-http-client-jackson2/1.22.0/google-http-client-jackson2-1.22.0.jar"
+        "repository/com/google/http-client/google-http-client-jackson2/1.38.0/google-http-client-jackson2-1.38.0.jar"
     ],
     exports = [
         "com.google.http-client.google-http-client",
         "com.fasterxml.jackson.core.jackson-core",
     ],
     original_deps = [
-        "com.google.http-client.google-http-client_1.22.0",
-        "com.fasterxml.jackson.core.jackson-core_2.1.3",
+        "com.google.http-client.google-http-client_1.38.0",
+        "com.fasterxml.jackson.core.jackson-core_2.11.3",
     ],
-    pom = "repository/com/google/http-client/google-http-client-jackson2/1.22.0/google-http-client-jackson2-1.22.0.pom",
+    pom = "repository/com/google/http-client/google-http-client-jackson2/1.38.0/google-http-client-jackson2-1.38.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client-jackson2/1.22.0",
+    repo_path = "com/google/http-client/google-http-client-jackson2/1.38.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.http-client.google-http-client_1.41.0",
-    pom = "repository/com/google/http-client/google-http-client/1.41.0/google-http-client-1.41.0.pom",
+    name = "com.google.http-client.google-http-client_1.38.0",
+    pom = "repository/com/google/http-client/google-http-client/1.38.0/google-http-client-1.38.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client/1.41.0",
-    parent = "com.google.http-client.google-http-client-parent_1.41.0",
+    repo_path = "com/google/http-client/google-http-client/1.38.0",
+    parent = "com.google.http-client.google-http-client-parent_1.38.0",
     deps = [
         "org.apache.httpcomponents.httpclient_4.5.13",
-        "org.apache.httpcomponents.httpcore_4.4.15",
+        "org.apache.httpcomponents.httpcore_4.4.13",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_30.1.1-android",
+        "com.google.guava.guava_30.0-android",
         "com.google.j2objc.j2objc-annotations_1.3",
-        "io.opencensus.opencensus-api_0.28.0",
-        "io.opencensus.opencensus-contrib-http-util_0.28.0",
+        "io.opencensus.opencensus-api_0.24.0",
+        "io.opencensus.opencensus-contrib-http-util_0.24.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -1370,9 +1336,9 @@ maven_artifact(
 maven_import(
     name = "com.google.http-client.google-http-client",
     classifiers = [],
-    parent = "com.google.http-client.google-http-client-parent_1.41.0",
+    parent = "com.google.http-client.google-http-client-parent_1.38.0",
     jars = [
-        "repository/com/google/http-client/google-http-client/1.41.0/google-http-client-1.41.0.jar"
+        "repository/com/google/http-client/google-http-client/1.38.0/google-http-client-1.38.0.jar"
     ],
     exports = [
         "org.apache.httpcomponents.httpclient",
@@ -1385,16 +1351,16 @@ maven_import(
     ],
     original_deps = [
         "org.apache.httpcomponents.httpclient_4.5.13",
-        "org.apache.httpcomponents.httpcore_4.4.15",
+        "org.apache.httpcomponents.httpcore_4.4.13",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_30.1.1-android",
+        "com.google.guava.guava_30.0-android",
         "com.google.j2objc.j2objc-annotations_1.3",
-        "io.opencensus.opencensus-api_0.28.0",
-        "io.opencensus.opencensus-contrib-http-util_0.28.0",
+        "io.opencensus.opencensus-api_0.24.0",
+        "io.opencensus.opencensus-contrib-http-util_0.24.0",
     ],
-    pom = "repository/com/google/http-client/google-http-client/1.41.0/google-http-client-1.41.0.pom",
+    pom = "repository/com/google/http-client/google-http-client/1.38.0/google-http-client-1.38.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client/1.41.0",
+    repo_path = "com/google/http-client/google-http-client/1.38.0",
     visibility = ["//visibility:public"],
 )
 
@@ -1488,10 +1454,10 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-bom_3.19.2",
-    pom = "repository/com/google/protobuf/protobuf-bom/3.19.2/protobuf-bom-3.19.2.pom",
+    name = "com.google.protobuf.protobuf-bom_3.17.2",
+    pom = "repository/com/google/protobuf/protobuf-bom/3.17.2/protobuf-bom-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-bom/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-bom/3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -1501,9 +1467,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protobuf-bom/3.19.2/protobuf-bom-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protobuf-bom/3.17.2/protobuf-bom-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-bom/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-bom/3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -1543,17 +1509,15 @@ maven_import(
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-java-util_3.19.2",
-    pom = "repository/com/google/protobuf/protobuf-java-util/3.19.2/protobuf-java-util-3.19.2.pom",
+    name = "com.google.protobuf.protobuf-java-util_3.17.2",
+    pom = "repository/com/google/protobuf/protobuf-java-util/3.17.2/protobuf-java-util-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java-util/3.19.2",
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    repo_path = "com/google/protobuf/protobuf-java-util/3.17.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     deps = [
-        "com.google.protobuf.protobuf-java_3.19.2",
-        "com.google.guava.guava_30.1.1-android",
-        "com.google.errorprone.error_prone_annotations_2.5.1",
-        "com.google.j2objc.j2objc-annotations_1.3",
-        "com.google.code.findbugs.jsr305_3.0.2",
+        "com.google.protobuf.protobuf-java_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.code.gson.gson_2.8.6",
     ],
     visibility = ["//visibility:public"],
@@ -1562,85 +1526,81 @@ maven_artifact(
 maven_import(
     name = "com.google.protobuf.protobuf-java-util",
     classifiers = [],
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     jars = [
-        "repository/com/google/protobuf/protobuf-java-util/3.19.2/protobuf-java-util-3.19.2.jar"
+        "repository/com/google/protobuf/protobuf-java-util/3.17.2/protobuf-java-util-3.17.2.jar"
     ],
     exports = [
         "com.google.protobuf.protobuf-java",
         "com.google.guava.guava",
         "com.google.errorprone.error_prone_annotations",
-        "com.google.j2objc.j2objc-annotations",
-        "com.google.code.findbugs.jsr305",
         "com.google.code.gson.gson",
     ],
     original_deps = [
-        "com.google.protobuf.protobuf-java_3.19.2",
-        "com.google.guava.guava_30.1.1-android",
-        "com.google.errorprone.error_prone_annotations_2.5.1",
-        "com.google.j2objc.j2objc-annotations_1.3",
-        "com.google.code.findbugs.jsr305_3.0.2",
+        "com.google.protobuf.protobuf-java_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.code.gson.gson_2.8.6",
     ],
-    pom = "repository/com/google/protobuf/protobuf-java-util/3.19.2/protobuf-java-util-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protobuf-java-util/3.17.2/protobuf-java-util-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java-util/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-java-util/3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-java_3.19.2",
-    pom = "repository/com/google/protobuf/protobuf-java/3.19.2/protobuf-java-3.19.2.pom",
+    name = "com.google.protobuf.protobuf-java_3.17.2",
+    pom = "repository/com/google/protobuf/protobuf-java/3.17.2/protobuf-java-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java/3.19.2",
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    repo_path = "com/google/protobuf/protobuf-java/3.17.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.protobuf.protobuf-java",
     classifiers = [],
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     jars = [
-        "repository/com/google/protobuf/protobuf-java/3.19.2/protobuf-java-3.19.2.jar"
+        "repository/com/google/protobuf/protobuf-java/3.17.2/protobuf-java-3.17.2.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protobuf-java/3.19.2/protobuf-java-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protobuf-java/3.17.2/protobuf-java-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-java/3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-javalite_3.19.2",
-    pom = "repository/com/google/protobuf/protobuf-javalite/3.19.2/protobuf-javalite-3.19.2.pom",
+    name = "com.google.protobuf.protobuf-javalite_3.17.2",
+    pom = "repository/com/google/protobuf/protobuf-javalite/3.17.2/protobuf-javalite-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-javalite/3.19.2",
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    repo_path = "com/google/protobuf/protobuf-javalite/3.17.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "com.google.protobuf.protobuf-javalite",
     classifiers = [],
-    parent = "com.google.protobuf.protobuf-parent_3.19.2",
+    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     jars = [
-        "repository/com/google/protobuf/protobuf-javalite/3.19.2/protobuf-javalite-3.19.2.jar"
+        "repository/com/google/protobuf/protobuf-javalite/3.17.2/protobuf-javalite-3.17.2.jar"
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protobuf-javalite/3.19.2/protobuf-javalite-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protobuf-javalite/3.17.2/protobuf-javalite-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-javalite/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-javalite/3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-parent_3.19.2",
-    pom = "repository/com/google/protobuf/protobuf-parent/3.19.2/protobuf-parent-3.19.2.pom",
+    name = "com.google.protobuf.protobuf-parent_3.17.2",
+    pom = "repository/com/google/protobuf/protobuf-parent/3.17.2/protobuf-parent-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-parent/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-parent/3.17.2",
     deps = [
-        "com.google.protobuf.protobuf-bom_3.19.2",
+        "com.google.protobuf.protobuf-bom_3.17.2",
     ],
     visibility = ["//visibility:public"],
 )
@@ -1651,19 +1611,19 @@ maven_import(
     jars = [
     ],
     original_deps = [
-        "com.google.protobuf.protobuf-bom_3.19.2",
+        "com.google.protobuf.protobuf-bom_3.17.2",
     ],
-    pom = "repository/com/google/protobuf/protobuf-parent/3.19.2/protobuf-parent-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protobuf-parent/3.17.2/protobuf-parent-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-parent/3.19.2",
+    repo_path = "com/google/protobuf/protobuf-parent/3.17.2",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protoc_3.19.2",
-    pom = "repository/com/google/protobuf/protoc/3.19.2/protoc-3.19.2.pom",
+    name = "com.google.protobuf.protoc_3.17.2",
+    pom = "repository/com/google/protobuf/protoc/3.17.2/protoc-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protoc/3.19.2",
+    repo_path = "com/google/protobuf/protoc/3.17.2",
     parent = "com.google.google_1",
     visibility = ["//visibility:public"],
 )
@@ -1675,22 +1635,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protoc/3.19.2/protoc-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protoc/3.17.2/protoc-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protoc/3.19.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "com.google.protobuf.protoc.osx-aarch_64",
-    classifiers = [],
-    parent = "com.google.google_1",
-    jars = [
-    ],
-    original_deps = [],
-    pom = "repository/com/google/protobuf/protoc/3.19.2/protoc-3.19.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protoc/3.19.2",
+    repo_path = "com/google/protobuf/protoc/3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -1701,9 +1648,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protoc/3.19.2/protoc-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protoc/3.17.2/protoc-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protoc/3.19.2",
+    repo_path = "com/google/protobuf/protoc/3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -1714,9 +1661,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/com/google/protobuf/protoc/3.19.2/protoc-3.19.2.pom",
+    pom = "repository/com/google/protobuf/protoc/3.17.2/protoc-3.17.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protoc/3.19.2",
+    repo_path = "com/google/protobuf/protoc/3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -2565,24 +2512,24 @@ maven_import(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-all_1.45.1",
-    pom = "repository/io/grpc/grpc-all/1.45.1/grpc-all-1.45.1.pom",
+    name = "io.grpc.grpc-all_1.39.0",
+    pom = "repository/io/grpc/grpc-all/1.39.0/grpc-all-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-all/1.45.1",
+    repo_path = "io/grpc/grpc-all/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-context_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-grpclb_1.45.1",
-        "io.grpc.grpc-netty_1.45.1",
-        "io.grpc.grpc-okhttp_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-rls_1.45.1",
-        "io.grpc.grpc-services_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-testing_1.45.1",
-        "io.grpc.grpc-xds_1.45.1",
+        "io.grpc.grpc-api_1.39.0",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-context_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-grpclb_1.39.0",
+        "io.grpc.grpc-netty_1.39.0",
+        "io.grpc.grpc-okhttp_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-rls_1.39.0",
+        "io.grpc.grpc-services_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-testing_1.39.0",
+        "io.grpc.grpc-xds_1.39.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2591,7 +2538,7 @@ maven_import(
     name = "io.grpc.grpc-all",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-all/1.45.1/grpc-all-1.45.1.jar"
+        "repository/io/grpc/grpc-all/1.39.0/grpc-all-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
@@ -2609,41 +2556,41 @@ maven_import(
         "io.grpc.grpc-xds",
     ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-context_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-grpclb_1.45.1",
-        "io.grpc.grpc-netty_1.45.1",
-        "io.grpc.grpc-okhttp_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-rls_1.45.1",
-        "io.grpc.grpc-services_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-testing_1.45.1",
-        "io.grpc.grpc-xds_1.45.1",
+        "io.grpc.grpc-api_1.39.0",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-context_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-grpclb_1.39.0",
+        "io.grpc.grpc-netty_1.39.0",
+        "io.grpc.grpc-okhttp_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-rls_1.39.0",
+        "io.grpc.grpc-services_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-testing_1.39.0",
+        "io.grpc.grpc-xds_1.39.0",
     ],
-    pom = "repository/io/grpc/grpc-all/1.45.1/grpc-all-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-all/1.39.0/grpc-all-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-all/1.45.1",
+    repo_path = "io/grpc/grpc-all/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-alts_1.45.1",
-    pom = "repository/io/grpc/grpc-alts/1.45.1/grpc-alts-1.45.1.pom",
+    name = "io.grpc.grpc-alts_1.39.0",
+    pom = "repository/io/grpc/grpc-alts/1.39.0/grpc-alts-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-alts/1.45.1",
+    repo_path = "io/grpc/grpc-alts/1.39.0",
     deps = [
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-grpclb_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.protobuf.protobuf-java_3.19.2",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-grpclb_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.protobuf.protobuf-java_3.17.2",
         "org.conscrypt.conscrypt-openjdk-uber_2.5.1",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.auth.google-auth-library-oauth2-http_1.4.0",
-        "io.grpc.grpc-netty-shaded_1.45.1",
+        "com.google.guava.guava_30.1-android",
+        "com.google.auth.google-auth-library-oauth2-http_0.22.2",
+        "io.grpc.grpc-netty-shaded_1.39.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2652,7 +2599,7 @@ maven_import(
     name = "io.grpc.grpc-alts",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-alts/1.45.1/grpc-alts-1.45.1.jar"
+        "repository/io/grpc/grpc-alts/1.39.0/grpc-alts-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-auth",
@@ -2666,32 +2613,32 @@ maven_import(
         "io.grpc.grpc-netty-shaded",
     ],
     original_deps = [
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-grpclb_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.protobuf.protobuf-java_3.19.2",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-grpclb_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.protobuf.protobuf-java_3.17.2",
         "org.conscrypt.conscrypt-openjdk-uber_2.5.1",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.auth.google-auth-library-oauth2-http_1.4.0",
-        "io.grpc.grpc-netty-shaded_1.45.1",
+        "com.google.guava.guava_30.1-android",
+        "com.google.auth.google-auth-library-oauth2-http_0.22.2",
+        "io.grpc.grpc-netty-shaded_1.39.0",
     ],
-    pom = "repository/io/grpc/grpc-alts/1.45.1/grpc-alts-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-alts/1.39.0/grpc-alts-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-alts/1.45.1",
+    repo_path = "io/grpc/grpc-alts/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-api_1.45.1",
-    pom = "repository/io/grpc/grpc-api/1.45.1/grpc-api-1.45.1.pom",
+    name = "io.grpc.grpc-api_1.39.0",
+    pom = "repository/io/grpc/grpc-api/1.39.0/grpc-api-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-api/1.45.1",
+    repo_path = "io/grpc/grpc-api/1.39.0",
     deps = [
-        "io.grpc.grpc-context_1.45.1",
+        "io.grpc.grpc-context_1.39.0",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2700,37 +2647,37 @@ maven_import(
     name = "io.grpc.grpc-api",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-api/1.45.1/grpc-api-1.45.1.jar"
+        "repository/io/grpc/grpc-api/1.39.0/grpc-api-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-context",
         "com.google.code.findbugs.jsr305",
-        "com.google.errorprone.error_prone_annotations",
     ],
     deps = [
         "com.google.guava.guava",
+        "com.google.errorprone.error_prone_annotations",
     ],
     original_deps = [
-        "io.grpc.grpc-context_1.45.1",
+        "io.grpc.grpc-context_1.39.0",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
-    pom = "repository/io/grpc/grpc-api/1.45.1/grpc-api-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-api/1.39.0/grpc-api-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-api/1.45.1",
+    repo_path = "io/grpc/grpc-api/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-auth_1.45.1",
-    pom = "repository/io/grpc/grpc-auth/1.45.1/grpc-auth-1.45.1.pom",
+    name = "io.grpc.grpc-auth_1.39.0",
+    pom = "repository/io/grpc/grpc-auth/1.39.0/grpc-auth-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-auth/1.45.1",
+    repo_path = "io/grpc/grpc-auth/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.auth.google-auth-library-credentials_1.4.0",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.auth.google-auth-library-credentials_0.22.2",
+        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2739,7 +2686,7 @@ maven_import(
     name = "io.grpc.grpc-auth",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-auth/1.45.1/grpc-auth-1.45.1.jar"
+        "repository/io/grpc/grpc-auth/1.39.0/grpc-auth-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
@@ -2749,21 +2696,21 @@ maven_import(
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.auth.google-auth-library-credentials_1.4.0",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.auth.google-auth-library-credentials_0.22.2",
+        "com.google.guava.guava_30.1-android",
     ],
-    pom = "repository/io/grpc/grpc-auth/1.45.1/grpc-auth-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-auth/1.39.0/grpc-auth-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-auth/1.45.1",
+    repo_path = "io/grpc/grpc-auth/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-context_1.45.1",
-    pom = "repository/io/grpc/grpc-context/1.45.1/grpc-context-1.45.1.pom",
+    name = "io.grpc.grpc-context_1.39.0",
+    pom = "repository/io/grpc/grpc-context/1.39.0/grpc-context-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-context/1.45.1",
+    repo_path = "io/grpc/grpc-context/1.39.0",
     visibility = ["//visibility:public"],
 )
 
@@ -2771,27 +2718,27 @@ maven_import(
     name = "io.grpc.grpc-context",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-context/1.45.1/grpc-context-1.45.1.jar"
+        "repository/io/grpc/grpc-context/1.39.0/grpc-context-1.39.0.jar"
     ],
     original_deps = [],
-    pom = "repository/io/grpc/grpc-context/1.45.1/grpc-context-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-context/1.39.0/grpc-context-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-context/1.45.1",
+    repo_path = "io/grpc/grpc-context/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-core_1.45.1",
-    pom = "repository/io/grpc/grpc-core/1.45.1/grpc-core-1.45.1.pom",
+    name = "io.grpc.grpc-core_1.39.0",
+    pom = "repository/io/grpc/grpc-core/1.39.0/grpc-core-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-core/1.45.1",
+    repo_path = "io/grpc/grpc-core/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.code.gson.gson_2.8.9",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.code.gson.gson_2.8.6",
         "com.google.android.annotations_4.1.1.4",
         "org.codehaus.mojo.animal-sniffer-annotations_1.19",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
+        "com.google.guava.guava_30.1-android",
         "io.perfmark.perfmark-api_0.23.0",
     ],
     visibility = ["//visibility:public"],
@@ -2801,47 +2748,47 @@ maven_import(
     name = "io.grpc.grpc-core",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-core/1.45.1/grpc-core-1.45.1.jar"
+        "repository/io/grpc/grpc-core/1.39.0/grpc-core-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
-        "com.google.code.gson.gson",
         "io.perfmark.perfmark-api",
     ],
     deps = [
+        "com.google.code.gson.gson",
         "com.google.android.annotations",
         "org.codehaus.mojo.animal-sniffer-annotations",
         "com.google.errorprone.error_prone_annotations",
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.code.gson.gson_2.8.9",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.code.gson.gson_2.8.6",
         "com.google.android.annotations_4.1.1.4",
         "org.codehaus.mojo.animal-sniffer-annotations_1.19",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
+        "com.google.guava.guava_30.1-android",
         "io.perfmark.perfmark-api_0.23.0",
     ],
-    pom = "repository/io/grpc/grpc-core/1.45.1/grpc-core-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-core/1.39.0/grpc-core-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-core/1.45.1",
+    repo_path = "io/grpc/grpc-core/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-grpclb_1.45.1",
-    pom = "repository/io/grpc/grpc-grpclb/1.45.1/grpc-grpclb-1.45.1.pom",
+    name = "io.grpc.grpc-grpclb_1.39.0",
+    pom = "repository/io/grpc/grpc-grpclb/1.39.0/grpc-grpclb-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-grpclb/1.45.1",
+    repo_path = "io/grpc/grpc-grpclb/1.39.0",
     deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.protobuf.protobuf-java_3.19.2",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.protobuf.protobuf-java_3.17.2",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2850,7 +2797,7 @@ maven_import(
     name = "io.grpc.grpc-grpclb",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-grpclb/1.45.1/grpc-grpclb-1.45.1.jar"
+        "repository/io/grpc/grpc-grpclb/1.39.0/grpc-grpclb-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-protobuf",
@@ -2864,30 +2811,30 @@ maven_import(
         "com.google.errorprone.error_prone_annotations",
     ],
     original_deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.protobuf.protobuf-java_3.19.2",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.protobuf.protobuf-java_3.17.2",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
-    pom = "repository/io/grpc/grpc-grpclb/1.45.1/grpc-grpclb-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-grpclb/1.39.0/grpc-grpclb-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-grpclb/1.45.1",
+    repo_path = "io/grpc/grpc-grpclb/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-netty-shaded_1.45.1",
-    pom = "repository/io/grpc/grpc-netty-shaded/1.45.1/grpc-netty-shaded-1.45.1.pom",
+    name = "io.grpc.grpc-netty-shaded_1.39.0",
+    pom = "repository/io/grpc/grpc-netty-shaded/1.39.0/grpc-netty-shaded-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-netty-shaded/1.45.1",
+    repo_path = "io/grpc/grpc-netty-shaded/1.39.0",
     deps = [
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
         "io.perfmark.perfmark-api_0.23.0",
-        "io.grpc.grpc-core_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -2896,7 +2843,7 @@ maven_import(
     name = "io.grpc.grpc-netty-shaded",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-netty-shaded/1.45.1/grpc-netty-shaded-1.45.1.jar"
+        "repository/io/grpc/grpc-netty-shaded/1.39.0/grpc-netty-shaded-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-core",
@@ -2907,28 +2854,28 @@ maven_import(
         "io.perfmark.perfmark-api",
     ],
     original_deps = [
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
         "io.perfmark.perfmark-api_0.23.0",
-        "io.grpc.grpc-core_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
     ],
-    pom = "repository/io/grpc/grpc-netty-shaded/1.45.1/grpc-netty-shaded-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-netty-shaded/1.39.0/grpc-netty-shaded-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-netty-shaded/1.45.1",
+    repo_path = "io/grpc/grpc-netty-shaded/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-netty_1.45.1",
-    pom = "repository/io/grpc/grpc-netty/1.45.1/grpc-netty-1.45.1.pom",
+    name = "io.grpc.grpc-netty_1.39.0",
+    pom = "repository/io/grpc/grpc-netty/1.39.0/grpc-netty-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-netty/1.45.1",
+    repo_path = "io/grpc/grpc-netty/1.39.0",
     deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.netty.netty-codec-http2_4.1.72.Final",
-        "io.netty.netty-handler-proxy_4.1.72.Final",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.netty.netty-codec-http2_4.1.52.Final",
+        "io.netty.netty-handler-proxy_4.1.52.Final",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
         "io.perfmark.perfmark-api_0.23.0",
     ],
     visibility = ["//visibility:public"],
@@ -2938,7 +2885,7 @@ maven_import(
     name = "io.grpc.grpc-netty",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-netty/1.45.1/grpc-netty-1.45.1.jar"
+        "repository/io/grpc/grpc-netty/1.39.0/grpc-netty-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-core",
@@ -2951,29 +2898,29 @@ maven_import(
         "io.perfmark.perfmark-api",
     ],
     original_deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.netty.netty-codec-http2_4.1.72.Final",
-        "io.netty.netty-handler-proxy_4.1.72.Final",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.netty.netty-codec-http2_4.1.52.Final",
+        "io.netty.netty-handler-proxy_4.1.52.Final",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
         "io.perfmark.perfmark-api_0.23.0",
     ],
-    pom = "repository/io/grpc/grpc-netty/1.45.1/grpc-netty-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-netty/1.39.0/grpc-netty-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-netty/1.45.1",
+    repo_path = "io/grpc/grpc-netty/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-okhttp_1.45.1",
-    pom = "repository/io/grpc/grpc-okhttp/1.45.1/grpc-okhttp-1.45.1.pom",
+    name = "io.grpc.grpc-okhttp_1.39.0",
+    pom = "repository/io/grpc/grpc-okhttp/1.39.0/grpc-okhttp-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-okhttp/1.45.1",
+    repo_path = "io/grpc/grpc-okhttp/1.39.0",
     deps = [
-        "io.grpc.grpc-core_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
         "com.squareup.okhttp.okhttp_2.7.4",
         "com.squareup.okio.okio_1.17.5",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
         "io.perfmark.perfmark-api_0.23.0",
     ],
     visibility = ["//visibility:public"],
@@ -2983,7 +2930,7 @@ maven_import(
     name = "io.grpc.grpc-okhttp",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-okhttp/1.45.1/grpc-okhttp-1.45.1.jar"
+        "repository/io/grpc/grpc-okhttp/1.39.0/grpc-okhttp-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-core",
@@ -2995,28 +2942,28 @@ maven_import(
         "io.perfmark.perfmark-api",
     ],
     original_deps = [
-        "io.grpc.grpc-core_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
         "com.squareup.okhttp.okhttp_2.7.4",
         "com.squareup.okio.okio_1.17.5",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
         "io.perfmark.perfmark-api_0.23.0",
     ],
-    pom = "repository/io/grpc/grpc-okhttp/1.45.1/grpc-okhttp-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-okhttp/1.39.0/grpc-okhttp-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-okhttp/1.45.1",
+    repo_path = "io/grpc/grpc-okhttp/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-protobuf-lite_1.45.1",
-    pom = "repository/io/grpc/grpc-protobuf-lite/1.45.1/grpc-protobuf-lite-1.45.1.pom",
+    name = "io.grpc.grpc-protobuf-lite_1.39.0",
+    pom = "repository/io/grpc/grpc-protobuf-lite/1.39.0/grpc-protobuf-lite-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf-lite/1.45.1",
+    repo_path = "io/grpc/grpc-protobuf-lite/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.protobuf.protobuf-javalite_3.19.2",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.protobuf.protobuf-javalite_3.17.2",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3025,7 +2972,7 @@ maven_import(
     name = "io.grpc.grpc-protobuf-lite",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-protobuf-lite/1.45.1/grpc-protobuf-lite-1.45.1.jar"
+        "repository/io/grpc/grpc-protobuf-lite/1.39.0/grpc-protobuf-lite-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
@@ -3036,29 +2983,29 @@ maven_import(
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.protobuf.protobuf-javalite_3.19.2",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.protobuf.protobuf-javalite_3.17.2",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_31.0.1-android",
+        "com.google.guava.guava_30.1-android",
     ],
-    pom = "repository/io/grpc/grpc-protobuf-lite/1.45.1/grpc-protobuf-lite-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-protobuf-lite/1.39.0/grpc-protobuf-lite-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf-lite/1.45.1",
+    repo_path = "io/grpc/grpc-protobuf-lite/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-protobuf_1.45.1",
-    pom = "repository/io/grpc/grpc-protobuf/1.45.1/grpc-protobuf-1.45.1.pom",
+    name = "io.grpc.grpc-protobuf_1.39.0",
+    pom = "repository/io/grpc/grpc-protobuf/1.39.0/grpc-protobuf-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf/1.45.1",
+    repo_path = "io/grpc/grpc-protobuf/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
+        "io.grpc.grpc-api_1.39.0",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.protobuf.protobuf-java_3.19.2",
+        "com.google.protobuf.protobuf-java_3.17.2",
         "com.google.api.grpc.proto-google-common-protos_2.0.1",
-        "io.grpc.grpc-protobuf-lite_1.45.1",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-protobuf-lite_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3067,7 +3014,7 @@ maven_import(
     name = "io.grpc.grpc-protobuf",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-protobuf/1.45.1/grpc-protobuf-1.45.1.jar"
+        "repository/io/grpc/grpc-protobuf/1.39.0/grpc-protobuf-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
@@ -3080,30 +3027,29 @@ maven_import(
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
+        "io.grpc.grpc-api_1.39.0",
         "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.protobuf.protobuf-java_3.19.2",
+        "com.google.protobuf.protobuf-java_3.17.2",
         "com.google.api.grpc.proto-google-common-protos_2.0.1",
-        "io.grpc.grpc-protobuf-lite_1.45.1",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-protobuf-lite_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
-    pom = "repository/io/grpc/grpc-protobuf/1.45.1/grpc-protobuf-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-protobuf/1.39.0/grpc-protobuf-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf/1.45.1",
+    repo_path = "io/grpc/grpc-protobuf/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-rls_1.45.1",
-    pom = "repository/io/grpc/grpc-rls/1.45.1/grpc-rls-1.45.1.pom",
+    name = "io.grpc.grpc-rls_1.39.0",
+    pom = "repository/io/grpc/grpc-rls/1.39.0/grpc-rls-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-rls/1.45.1",
+    repo_path = "io/grpc/grpc-rls/1.39.0",
     deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.auto.value.auto-value-annotations_1.9",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3112,10 +3058,7 @@ maven_import(
     name = "io.grpc.grpc-rls",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-rls/1.45.1/grpc-rls-1.45.1.jar"
-    ],
-    exports = [
-        "com.google.auto.value.auto-value-annotations",
+        "repository/io/grpc/grpc-rls/1.39.0/grpc-rls-1.39.0.jar"
     ],
     deps = [
         "io.grpc.grpc-core",
@@ -3124,30 +3067,29 @@ maven_import(
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "com.google.auto.value.auto-value-annotations_1.9",
-        "com.google.guava.guava_31.0.1-android",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
-    pom = "repository/io/grpc/grpc-rls/1.45.1/grpc-rls-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-rls/1.39.0/grpc-rls-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-rls/1.45.1",
+    repo_path = "io/grpc/grpc-rls/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-services_1.45.1",
-    pom = "repository/io/grpc/grpc-services/1.45.1/grpc-services-1.45.1.pom",
+    name = "io.grpc.grpc-services_1.39.0",
+    pom = "repository/io/grpc/grpc-services/1.39.0/grpc-services-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-services/1.45.1",
+    repo_path = "io/grpc/grpc-services/1.39.0",
     deps = [
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3156,7 +3098,7 @@ maven_import(
     name = "io.grpc.grpc-services",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-services/1.45.1/grpc-services-1.45.1.jar"
+        "repository/io/grpc/grpc-services/1.39.0/grpc-services-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-protobuf",
@@ -3169,28 +3111,27 @@ maven_import(
         "com.google.errorprone.error_prone_annotations",
     ],
     original_deps = [
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "com.google.guava.guava_30.1-android",
+        "com.google.errorprone.error_prone_annotations_2.4.0",
     ],
-    pom = "repository/io/grpc/grpc-services/1.45.1/grpc-services-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-services/1.39.0/grpc-services-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-services/1.45.1",
+    repo_path = "io/grpc/grpc-services/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-stub_1.45.1",
-    pom = "repository/io/grpc/grpc-stub/1.45.1/grpc-stub-1.45.1.pom",
+    name = "io.grpc.grpc-stub_1.39.0",
+    pom = "repository/io/grpc/grpc-stub/1.39.0/grpc-stub-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-stub/1.45.1",
+    repo_path = "io/grpc/grpc-stub/1.39.0",
     deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3199,36 +3140,33 @@ maven_import(
     name = "io.grpc.grpc-stub",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-stub/1.45.1/grpc-stub-1.45.1.jar"
+        "repository/io/grpc/grpc-stub/1.39.0/grpc-stub-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-api",
         "com.google.guava.guava",
     ],
-    deps = [
-        "com.google.errorprone.error_prone_annotations",
-    ],
     original_deps = [
-        "io.grpc.grpc-api_1.45.1",
-        "com.google.guava.guava_31.0.1-android",
-        "com.google.errorprone.error_prone_annotations_2.10.0",
+        "io.grpc.grpc-api_1.39.0",
+        "com.google.guava.guava_30.1-android",
     ],
-    pom = "repository/io/grpc/grpc-stub/1.45.1/grpc-stub-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-stub/1.39.0/grpc-stub-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-stub/1.45.1",
+    repo_path = "io/grpc/grpc-stub/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-testing_1.45.1",
-    pom = "repository/io/grpc/grpc-testing/1.45.1/grpc-testing-1.45.1.pom",
+    name = "io.grpc.grpc-testing_1.39.0",
+    pom = "repository/io/grpc/grpc-testing/1.39.0/grpc-testing-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-testing/1.45.1",
+    repo_path = "io/grpc/grpc-testing/1.39.0",
     deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
         "junit.junit_4.12",
-        "io.grpc.grpc-context_1.45.1",
+        "io.opencensus.opencensus-api_0.28.0",
+        "io.grpc.grpc-context_1.39.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3237,47 +3175,49 @@ maven_import(
     name = "io.grpc.grpc-testing",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-testing/1.45.1/grpc-testing-1.45.1.jar"
+        "repository/io/grpc/grpc-testing/1.39.0/grpc-testing-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-core",
         "io.grpc.grpc-stub",
         "junit.junit",
+        "io.opencensus.opencensus-api",
     ],
     deps = [
         "io.grpc.grpc-context",
     ],
     original_deps = [
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
         "junit.junit_4.12",
-        "io.grpc.grpc-context_1.45.1",
+        "io.opencensus.opencensus-api_0.28.0",
+        "io.grpc.grpc-context_1.39.0",
     ],
-    pom = "repository/io/grpc/grpc-testing/1.45.1/grpc-testing-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-testing/1.39.0/grpc-testing-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-testing/1.45.1",
+    repo_path = "io/grpc/grpc-testing/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-xds_1.45.1",
-    pom = "repository/io/grpc/grpc-xds/1.45.1/grpc-xds-1.45.1.pom",
+    name = "io.grpc.grpc-xds_1.39.0",
+    pom = "repository/io/grpc/grpc-xds/1.39.0/grpc-xds-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-xds/1.45.1",
+    repo_path = "io/grpc/grpc-xds/1.39.0",
     deps = [
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-services_1.45.1",
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-alts_1.45.1",
-        "com.google.code.gson.gson_2.8.9",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-services_1.39.0",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-alts_1.39.0",
+        "com.google.code.gson.gson_2.8.6",
         "com.google.re2j.re2j_1.5",
         "org.bouncycastle.bcpkix-jdk15on_1.67",
-        "com.google.auto.value.auto-value-annotations_1.9",
+        "com.google.auto.value.auto-value-annotations_1.7.4",
         "io.opencensus.opencensus-proto_0.2.0",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "io.grpc.grpc-netty-shaded_1.45.1",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "io.grpc.grpc-netty-shaded_1.39.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3286,7 +3226,7 @@ maven_import(
     name = "io.grpc.grpc-xds",
     classifiers = [],
     jars = [
-        "repository/io/grpc/grpc-xds/1.45.1/grpc-xds-1.45.1.jar"
+        "repository/io/grpc/grpc-xds/1.39.0/grpc-xds-1.39.0.jar"
     ],
     exports = [
         "io.grpc.grpc-protobuf",
@@ -3304,31 +3244,31 @@ maven_import(
         "io.grpc.grpc-netty-shaded",
     ],
     original_deps = [
-        "io.grpc.grpc-protobuf_1.45.1",
-        "io.grpc.grpc-stub_1.45.1",
-        "io.grpc.grpc-core_1.45.1",
-        "io.grpc.grpc-services_1.45.1",
-        "io.grpc.grpc-auth_1.45.1",
-        "io.grpc.grpc-alts_1.45.1",
-        "com.google.code.gson.gson_2.8.9",
+        "io.grpc.grpc-protobuf_1.39.0",
+        "io.grpc.grpc-stub_1.39.0",
+        "io.grpc.grpc-core_1.39.0",
+        "io.grpc.grpc-services_1.39.0",
+        "io.grpc.grpc-auth_1.39.0",
+        "io.grpc.grpc-alts_1.39.0",
+        "com.google.code.gson.gson_2.8.6",
         "com.google.re2j.re2j_1.5",
         "org.bouncycastle.bcpkix-jdk15on_1.67",
-        "com.google.auto.value.auto-value-annotations_1.9",
+        "com.google.auto.value.auto-value-annotations_1.7.4",
         "io.opencensus.opencensus-proto_0.2.0",
-        "com.google.protobuf.protobuf-java-util_3.19.2",
-        "io.grpc.grpc-netty-shaded_1.45.1",
+        "com.google.protobuf.protobuf-java-util_3.17.2",
+        "io.grpc.grpc-netty-shaded_1.39.0",
     ],
-    pom = "repository/io/grpc/grpc-xds/1.45.1/grpc-xds-1.45.1.pom",
+    pom = "repository/io/grpc/grpc-xds/1.39.0/grpc-xds-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-xds/1.45.1",
+    repo_path = "io/grpc/grpc-xds/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.protoc-gen-grpc-java_1.45.1",
-    pom = "repository/io/grpc/protoc-gen-grpc-java/1.45.1/protoc-gen-grpc-java-1.45.1.pom",
+    name = "io.grpc.protoc-gen-grpc-java_1.39.0",
+    pom = "repository/io/grpc/protoc-gen-grpc-java/1.39.0/protoc-gen-grpc-java-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/protoc-gen-grpc-java/1.45.1",
+    repo_path = "io/grpc/protoc-gen-grpc-java/1.39.0",
     visibility = ["//visibility:public"],
 )
 
@@ -3338,21 +3278,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/io/grpc/protoc-gen-grpc-java/1.45.1/protoc-gen-grpc-java-1.45.1.pom",
+    pom = "repository/io/grpc/protoc-gen-grpc-java/1.39.0/protoc-gen-grpc-java-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/protoc-gen-grpc-java/1.45.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.grpc.protoc-gen-grpc-java.osx-aarch_64",
-    classifiers = [],
-    jars = [
-    ],
-    original_deps = [],
-    pom = "repository/io/grpc/protoc-gen-grpc-java/1.45.1/protoc-gen-grpc-java-1.45.1.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/protoc-gen-grpc-java/1.45.1",
+    repo_path = "io/grpc/protoc-gen-grpc-java/1.39.0",
     visibility = ["//visibility:public"],
 )
 
@@ -3362,9 +3290,9 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/io/grpc/protoc-gen-grpc-java/1.45.1/protoc-gen-grpc-java-1.45.1.pom",
+    pom = "repository/io/grpc/protoc-gen-grpc-java/1.39.0/protoc-gen-grpc-java-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/protoc-gen-grpc-java/1.45.1",
+    repo_path = "io/grpc/protoc-gen-grpc-java/1.39.0",
     visibility = ["//visibility:public"],
 )
 
@@ -3374,48 +3302,20 @@ maven_import(
     jars = [
     ],
     original_deps = [],
-    pom = "repository/io/grpc/protoc-gen-grpc-java/1.45.1/protoc-gen-grpc-java-1.45.1.pom",
+    pom = "repository/io/grpc/protoc-gen-grpc-java/1.39.0/protoc-gen-grpc-java-1.39.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/protoc-gen-grpc-java/1.45.1",
+    repo_path = "io/grpc/protoc-gen-grpc-java/1.39.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-all_4.1.72.Final",
-    pom = "repository/io/netty/netty-all/4.1.72.Final/netty-all-4.1.72.Final.pom",
+    name = "io.netty.netty-all_4.1.52.Final",
+    pom = "repository/io/netty/netty-all/4.1.52.Final/netty-all-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-all/4.1.72.Final",
+    repo_path = "io/netty/netty-all/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-dns_4.1.72.Final",
-        "io.netty.netty-codec-haproxy_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
-        "io.netty.netty-codec-http2_4.1.72.Final",
-        "io.netty.netty-codec-memcache_4.1.72.Final",
-        "io.netty.netty-codec-mqtt_4.1.72.Final",
-        "io.netty.netty-codec-redis_4.1.72.Final",
-        "io.netty.netty-codec-smtp_4.1.72.Final",
-        "io.netty.netty-codec-socks_4.1.72.Final",
-        "io.netty.netty-codec-stomp_4.1.72.Final",
-        "io.netty.netty-codec-xml_4.1.72.Final",
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-        "io.netty.netty-tcnative-classes_2.0.46.Final",
-        "io.netty.netty-handler-proxy_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-resolver-dns_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-rxtx_4.1.72.Final",
-        "io.netty.netty-transport-sctp_4.1.72.Final",
-        "io.netty.netty-transport-udt_4.1.72.Final",
-        "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-        "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-        "io.netty.netty-transport-native-epoll_4.1.72.Final",
-        "io.netty.netty-transport-native-kqueue_4.1.72.Final",
-        "io.netty.netty-resolver-dns-native-macos_4.1.72.Final",
+        "io.netty.netty-bom_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3423,92 +3323,49 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-all",
     classifiers = [],
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-all/4.1.72.Final/netty-all-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-buffer",
-        "io.netty.netty-codec",
-        "io.netty.netty-codec-dns",
-        "io.netty.netty-codec-haproxy",
-        "io.netty.netty-codec-http",
-        "io.netty.netty-codec-http2",
-        "io.netty.netty-codec-memcache",
-        "io.netty.netty-codec-mqtt",
-        "io.netty.netty-codec-redis",
-        "io.netty.netty-codec-smtp",
-        "io.netty.netty-codec-socks",
-        "io.netty.netty-codec-stomp",
-        "io.netty.netty-codec-xml",
-        "io.netty.netty-common",
-        "io.netty.netty-handler",
-        "io.netty.netty-tcnative-classes",
-        "io.netty.netty-handler-proxy",
-        "io.netty.netty-resolver",
-        "io.netty.netty-resolver-dns",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-rxtx",
-        "io.netty.netty-transport-sctp",
-        "io.netty.netty-transport-udt",
-        "io.netty.netty-transport-classes-epoll",
-        "io.netty.netty-transport-native-unix-common",
-        "io.netty.netty-transport-classes-kqueue",
-        "io.netty.netty-resolver-dns-classes-macos",
-    ],
-    deps = [
-        "io.netty.netty-transport-native-epoll.linux-x86_64",
-        "io.netty.netty-transport-native-epoll.linux-aarch_64",
-        "io.netty.netty-transport-native-kqueue.osx-x86_64",
-        "io.netty.netty-transport-native-kqueue.osx-aarch_64",
-        "io.netty.netty-resolver-dns-native-macos.osx-x86_64",
-        "io.netty.netty-resolver-dns-native-macos.osx-aarch_64",
+        "repository/io/netty/netty-all/4.1.52.Final/netty-all-4.1.52.Final.jar"
     ],
     original_deps = [
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-dns_4.1.72.Final",
-        "io.netty.netty-codec-haproxy_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
-        "io.netty.netty-codec-http2_4.1.72.Final",
-        "io.netty.netty-codec-memcache_4.1.72.Final",
-        "io.netty.netty-codec-mqtt_4.1.72.Final",
-        "io.netty.netty-codec-redis_4.1.72.Final",
-        "io.netty.netty-codec-smtp_4.1.72.Final",
-        "io.netty.netty-codec-socks_4.1.72.Final",
-        "io.netty.netty-codec-stomp_4.1.72.Final",
-        "io.netty.netty-codec-xml_4.1.72.Final",
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-        "io.netty.netty-tcnative-classes_2.0.46.Final",
-        "io.netty.netty-handler-proxy_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-resolver-dns_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-rxtx_4.1.72.Final",
-        "io.netty.netty-transport-sctp_4.1.72.Final",
-        "io.netty.netty-transport-udt_4.1.72.Final",
-        "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-        "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-        "io.netty.netty-transport-native-epoll_4.1.72.Final",
-        "io.netty.netty-transport-native-kqueue_4.1.72.Final",
-        "io.netty.netty-resolver-dns-native-macos_4.1.72.Final",
+        "io.netty.netty-bom_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-all/4.1.72.Final/netty-all-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-all/4.1.52.Final/netty-all-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-all/4.1.72.Final",
+    repo_path = "io/netty/netty-all/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-buffer_4.1.72.Final",
-    pom = "repository/io/netty/netty-buffer/4.1.72.Final/netty-buffer-4.1.72.Final.pom",
+    name = "io.netty.netty-bom_4.1.52.Final",
+    pom = "repository/io/netty/netty-bom/4.1.52.Final/netty-bom-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-buffer/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-bom/4.1.52.Final",
+    parent = "org.sonatype.oss.oss-parent_7",
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "io.netty.netty-bom",
+    classifiers = [],
+    parent = "org.sonatype.oss.oss-parent_7",
+    jars = [
+    ],
+    original_deps = [],
+    pom = "repository/io/netty/netty-bom/4.1.52.Final/netty-bom-4.1.52.Final.pom",
+    repo_root_path = "repository",
+    repo_path = "io/netty/netty-bom/4.1.52.Final",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "io.netty.netty-buffer_4.1.52.Final",
+    pom = "repository/io/netty/netty-buffer/4.1.52.Final/netty-buffer-4.1.52.Final.pom",
+    repo_root_path = "repository",
+    repo_path = "io/netty/netty-buffer/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3516,98 +3373,35 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-buffer",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-buffer/4.1.72.Final/netty-buffer-4.1.72.Final.jar"
+        "repository/io/netty/netty-buffer/4.1.52.Final/netty-buffer-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-buffer/4.1.72.Final/netty-buffer-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-buffer/4.1.52.Final/netty-buffer-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-buffer/4.1.72.Final",
+    repo_path = "io/netty/netty-buffer/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-dns_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-dns/4.1.72.Final/netty-codec-dns-4.1.72.Final.pom",
+    name = "io.netty.netty-codec-http2_4.1.52.Final",
+    pom = "repository/io/netty/netty-codec-http2/4.1.52.Final/netty-codec-http2-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-dns/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-codec-http2/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-dns",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-dns/4.1.72.Final/netty-codec-dns-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-codec",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-codec-dns/4.1.72.Final/netty-codec-dns-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-dns/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-haproxy_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-haproxy/4.1.72.Final/netty-codec-haproxy-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-haproxy/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-haproxy",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-haproxy/4.1.72.Final/netty-codec-haproxy-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-haproxy/4.1.72.Final/netty-codec-haproxy-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-haproxy/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-http2_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-http2/4.1.72.Final/netty-codec-http2-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http2/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-handler_4.1.52.Final",
+        "io.netty.netty-codec-http_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3615,9 +3409,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-codec-http2",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-codec-http2/4.1.72.Final/netty-codec-http2-4.1.72.Final.jar"
+        "repository/io/netty/netty-codec-http2/4.1.52.Final/netty-codec-http2-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3628,31 +3422,31 @@ maven_import(
         "io.netty.netty-codec-http",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-handler_4.1.52.Final",
+        "io.netty.netty-codec-http_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-codec-http2/4.1.72.Final/netty-codec-http2-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-codec-http2/4.1.52.Final/netty-codec-http2-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http2/4.1.72.Final",
+    repo_path = "io/netty/netty-codec-http2/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-http_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-http/4.1.72.Final/netty-codec-http-4.1.72.Final.pom",
+    name = "io.netty.netty-codec-http_4.1.52.Final",
+    pom = "repository/io/netty/netty-codec-http/4.1.52.Final/netty-codec-http-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-codec-http/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-handler_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3660,9 +3454,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-codec-http",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-codec-http/4.1.72.Final/netty-codec-http-4.1.72.Final.jar"
+        "repository/io/netty/netty-codec-http/4.1.52.Final/netty-codec-http-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3672,121 +3466,29 @@ maven_import(
         "io.netty.netty-handler",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-handler_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-codec-http/4.1.72.Final/netty-codec-http-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-codec-http/4.1.52.Final/netty-codec-http-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http/4.1.72.Final",
+    repo_path = "io/netty/netty-codec-http/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-memcache_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-memcache/4.1.72.Final/netty-codec-memcache-4.1.72.Final.pom",
+    name = "io.netty.netty-codec-socks_4.1.52.Final",
+    pom = "repository/io/netty/netty-codec-socks/4.1.52.Final/netty-codec-socks-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-memcache/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-memcache",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-memcache/4.1.72.Final/netty-codec-memcache-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-memcache/4.1.72.Final/netty-codec-memcache-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-memcache/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-mqtt_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-mqtt/4.1.72.Final/netty-codec-mqtt-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-mqtt/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-mqtt",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-mqtt/4.1.72.Final/netty-codec-mqtt-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-mqtt/4.1.72.Final/netty-codec-mqtt-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-mqtt/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-redis_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-redis/4.1.72.Final/netty-codec-redis-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-redis/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-redis",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-redis/4.1.72.Final/netty-codec-redis-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-redis/4.1.72.Final/netty-codec-redis-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-redis/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-smtp_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-smtp/4.1.72.Final/netty-codec-smtp-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-smtp/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-smtp",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-smtp/4.1.72.Final/netty-codec-smtp-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-smtp/4.1.72.Final/netty-codec-smtp-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-smtp/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-socks_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-socks/4.1.72.Final/netty-codec-socks-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-socks/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-codec-socks/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3794,9 +3496,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-codec-socks",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-codec-socks/4.1.72.Final/netty-codec-socks-4.1.72.Final.jar"
+        "repository/io/netty/netty-codec-socks/4.1.52.Final/netty-codec-socks-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3805,73 +3507,27 @@ maven_import(
         "io.netty.netty-codec",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-codec-socks/4.1.72.Final/netty-codec-socks-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-codec-socks/4.1.52.Final/netty-codec-socks-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-socks/4.1.72.Final",
+    repo_path = "io/netty/netty-codec-socks/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-stomp_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-stomp/4.1.72.Final/netty-codec-stomp-4.1.72.Final.pom",
+    name = "io.netty.netty-codec_4.1.52.Final",
+    pom = "repository/io/netty/netty-codec/4.1.52.Final/netty-codec-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-stomp/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-stomp",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-stomp/4.1.72.Final/netty-codec-stomp-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-stomp/4.1.72.Final/netty-codec-stomp-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-stomp/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-xml_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec-xml/4.1.72.Final/netty-codec-xml-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-xml/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-codec-xml",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-codec-xml/4.1.72.Final/netty-codec-xml-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-codec-xml/4.1.72.Final/netty-codec-xml-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-xml/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec_4.1.72.Final",
-    pom = "repository/io/netty/netty-codec/4.1.72.Final/netty-codec-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-codec/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3879,9 +3535,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-codec",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-codec/4.1.72.Final/netty-codec-4.1.72.Final.jar"
+        "repository/io/netty/netty-codec/4.1.52.Final/netty-codec-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3889,52 +3545,52 @@ maven_import(
         "io.netty.netty-transport",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-codec/4.1.72.Final/netty-codec-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-codec/4.1.52.Final/netty-codec-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec/4.1.72.Final",
+    repo_path = "io/netty/netty-codec/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-common_4.1.72.Final",
-    pom = "repository/io/netty/netty-common/4.1.72.Final/netty-common-4.1.72.Final.pom",
+    name = "io.netty.netty-common_4.1.52.Final",
+    pom = "repository/io/netty/netty-common/4.1.52.Final/netty-common-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-common/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-common/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "io.netty.netty-common",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-common/4.1.72.Final/netty-common-4.1.72.Final.jar"
+        "repository/io/netty/netty-common/4.1.52.Final/netty-common-4.1.52.Final.jar"
     ],
     original_deps = [],
-    pom = "repository/io/netty/netty-common/4.1.72.Final/netty-common-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-common/4.1.52.Final/netty-common-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-common/4.1.72.Final",
+    repo_path = "io/netty/netty-common/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-handler-proxy_4.1.72.Final",
-    pom = "repository/io/netty/netty-handler-proxy/4.1.72.Final/netty-handler-proxy-4.1.72.Final.pom",
+    name = "io.netty.netty-handler-proxy_4.1.52.Final",
+    pom = "repository/io/netty/netty-handler-proxy/4.1.52.Final/netty-handler-proxy-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler-proxy/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-handler-proxy/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-socks_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-codec-socks_4.1.52.Final",
+        "io.netty.netty-codec-http_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3942,9 +3598,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-handler-proxy",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-handler-proxy/4.1.72.Final/netty-handler-proxy-4.1.72.Final.jar"
+        "repository/io/netty/netty-handler-proxy/4.1.52.Final/netty-handler-proxy-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3955,32 +3611,31 @@ maven_import(
         "io.netty.netty-codec-http",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-socks_4.1.72.Final",
-        "io.netty.netty-codec-http_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
+        "io.netty.netty-codec-socks_4.1.52.Final",
+        "io.netty.netty-codec-http_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-handler-proxy/4.1.72.Final/netty-handler-proxy-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-handler-proxy/4.1.52.Final/netty-handler-proxy-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler-proxy/4.1.72.Final",
+    repo_path = "io/netty/netty-handler-proxy/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-handler_4.1.72.Final",
-    pom = "repository/io/netty/netty-handler/4.1.72.Final/netty-handler-4.1.72.Final.pom",
+    name = "io.netty.netty-handler_4.1.52.Final",
+    pom = "repository/io/netty/netty-handler/4.1.52.Final/netty-handler-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-handler/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-tcnative-classes_2.0.46.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-resolver_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -3988,9 +3643,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-handler",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-handler/4.1.72.Final/netty-handler-4.1.72.Final.jar"
+        "repository/io/netty/netty-handler/4.1.52.Final/netty-handler-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -3998,166 +3653,28 @@ maven_import(
         "io.netty.netty-buffer",
         "io.netty.netty-transport",
         "io.netty.netty-codec",
-        "io.netty.netty-tcnative-classes",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-tcnative-classes_2.0.46.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-resolver_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-transport_4.1.52.Final",
+        "io.netty.netty-codec_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-handler/4.1.72.Final/netty-handler-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-handler/4.1.52.Final/netty-handler-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler/4.1.72.Final",
+    repo_path = "io/netty/netty-handler/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-    pom = "repository/io/netty/netty-resolver-dns-classes-macos/4.1.72.Final/netty-resolver-dns-classes-macos-4.1.72.Final.pom",
+    name = "io.netty.netty-resolver_4.1.52.Final",
+    pom = "repository/io/netty/netty-resolver/4.1.52.Final/netty-resolver-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns-classes-macos/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-resolver/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-resolver-dns_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-resolver-dns-classes-macos",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-resolver-dns-classes-macos/4.1.72.Final/netty-resolver-dns-classes-macos-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-resolver-dns",
-        "io.netty.netty-transport-native-unix-common",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-resolver-dns_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-resolver-dns-classes-macos/4.1.72.Final/netty-resolver-dns-classes-macos-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns-classes-macos/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-resolver-dns-native-macos_4.1.72.Final",
-    pom = "repository/io/netty/netty-resolver-dns-native-macos/4.1.72.Final/netty-resolver-dns-native-macos-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns-native-macos/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-resolver-dns-native-macos.osx-aarch_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-resolver-dns-native-macos/4.1.72.Final/netty-resolver-dns-native-macos-4.1.72.Final-osx-aarch_64.jar"
-    ],
-    deps = [
-        "io.netty.netty-resolver-dns-classes-macos",
-    ],
-    original_deps = [
-        "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-resolver-dns-native-macos/4.1.72.Final/netty-resolver-dns-native-macos-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns-native-macos/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-resolver-dns-native-macos.osx-x86_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-resolver-dns-native-macos/4.1.72.Final/netty-resolver-dns-native-macos-4.1.72.Final-osx-x86_64.jar"
-    ],
-    exports = [
-        "io.netty.netty-resolver-dns-classes-macos",
-    ],
-    original_deps = [
-        "io.netty.netty-resolver-dns-classes-macos_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-resolver-dns-native-macos/4.1.72.Final/netty-resolver-dns-native-macos-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns-native-macos/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-resolver-dns_4.1.72.Final",
-    pom = "repository/io/netty/netty-resolver-dns/4.1.72.Final/netty-resolver-dns-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-dns_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-resolver-dns",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-resolver-dns/4.1.72.Final/netty-resolver-dns-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-resolver",
-        "io.netty.netty-transport",
-        "io.netty.netty-codec",
-        "io.netty.netty-codec-dns",
-        "io.netty.netty-handler",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-codec_4.1.72.Final",
-        "io.netty.netty-codec-dns_4.1.72.Final",
-        "io.netty.netty-handler_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-resolver-dns/4.1.72.Final/netty-resolver-dns-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver-dns/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-resolver_4.1.72.Final",
-    pom = "repository/io/netty/netty-resolver/4.1.72.Final/netty-resolver-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4165,385 +3682,32 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-resolver",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-resolver/4.1.72.Final/netty-resolver-4.1.72.Final.jar"
+        "repository/io/netty/netty-resolver/4.1.52.Final/netty-resolver-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-resolver/4.1.72.Final/netty-resolver-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-resolver/4.1.52.Final/netty-resolver-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver/4.1.72.Final",
+    repo_path = "io/netty/netty-resolver/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.netty.netty-tcnative-classes_2.0.46.Final",
-    pom = "repository/io/netty/netty-tcnative-classes/2.0.46.Final/netty-tcnative-classes-2.0.46.Final.pom",
+    name = "io.netty.netty-transport_4.1.52.Final",
+    pom = "repository/io/netty/netty-transport/4.1.52.Final/netty-transport-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-tcnative-classes/2.0.46.Final",
-    parent = "io.netty.netty-tcnative-parent_2.0.46.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-tcnative-classes",
-    classifiers = [],
-    parent = "io.netty.netty-tcnative-parent_2.0.46.Final",
-    jars = [
-        "repository/io/netty/netty-tcnative-classes/2.0.46.Final/netty-tcnative-classes-2.0.46.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-tcnative-classes/2.0.46.Final/netty-tcnative-classes-2.0.46.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-tcnative-classes/2.0.46.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-classes-epoll/4.1.72.Final/netty-transport-classes-epoll-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-classes-epoll/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    repo_path = "io/netty/netty-transport/4.1.52.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-classes-epoll",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-classes-epoll/4.1.72.Final/netty-transport-classes-epoll-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-native-unix-common",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-classes-epoll/4.1.72.Final/netty-transport-classes-epoll-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-classes-epoll/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-classes-kqueue/4.1.72.Final/netty-transport-classes-kqueue-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-classes-kqueue/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-classes-kqueue",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-classes-kqueue/4.1.72.Final/netty-transport-classes-kqueue-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-native-unix-common",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-classes-kqueue/4.1.72.Final/netty-transport-classes-kqueue-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-classes-kqueue/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-native-epoll_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-native-epoll/4.1.72.Final/netty-transport-native-epoll-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-epoll/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-native-epoll.linux-aarch_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-native-epoll/4.1.72.Final/netty-transport-native-epoll-4.1.72.Final-linux-aarch_64.jar"
-    ],
-    deps = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-native-unix-common",
-        "io.netty.netty-transport-classes-epoll",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-native-epoll/4.1.72.Final/netty-transport-native-epoll-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-epoll/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-native-epoll.linux-x86_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-native-epoll/4.1.72.Final/netty-transport-native-epoll-4.1.72.Final-linux-x86_64.jar"
-    ],
-    exports = [
-        "io.netty.netty-transport-native-unix-common",
-        "io.netty.netty-transport-classes-epoll",
-    ],
-    deps = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-epoll_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-native-epoll/4.1.72.Final/netty-transport-native-epoll-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-epoll/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-native-kqueue_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-native-kqueue/4.1.72.Final/netty-transport-native-kqueue-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-kqueue/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-native-kqueue.osx-aarch_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-native-kqueue/4.1.72.Final/netty-transport-native-kqueue-4.1.72.Final-osx-aarch_64.jar"
-    ],
-    deps = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-native-unix-common",
-        "io.netty.netty-transport-classes-kqueue",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-native-kqueue/4.1.72.Final/netty-transport-native-kqueue-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-kqueue/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-native-kqueue.osx-x86_64",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-native-kqueue/4.1.72.Final/netty-transport-native-kqueue-4.1.72.Final-osx-x86_64.jar"
-    ],
-    exports = [
-        "io.netty.netty-transport-classes-kqueue",
-    ],
-    deps = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-        "io.netty.netty-transport-native-unix-common",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-        "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-        "io.netty.netty-transport-classes-kqueue_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-native-kqueue/4.1.72.Final/netty-transport-native-kqueue-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-kqueue/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-native-unix-common_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-native-unix-common/4.1.72.Final/netty-transport-native-unix-common-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-unix-common/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-native-unix-common",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-native-unix-common/4.1.72.Final/netty-transport-native-unix-common-4.1.72.Final.jar"
-    ],
-    exports = [
-        "io.netty.netty-common",
-        "io.netty.netty-buffer",
-        "io.netty.netty-transport",
-    ],
-    original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-transport_4.1.72.Final",
-    ],
-    pom = "repository/io/netty/netty-transport-native-unix-common/4.1.72.Final/netty-transport-native-unix-common-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-native-unix-common/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-rxtx_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-rxtx/4.1.72.Final/netty-transport-rxtx-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-rxtx/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-rxtx",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-rxtx/4.1.72.Final/netty-transport-rxtx-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-transport-rxtx/4.1.72.Final/netty-transport-rxtx-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-rxtx/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-sctp_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-sctp/4.1.72.Final/netty-transport-sctp-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-sctp/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-sctp",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-sctp/4.1.72.Final/netty-transport-sctp-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-transport-sctp/4.1.72.Final/netty-transport-sctp-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-sctp/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport-udt_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport-udt/4.1.72.Final/netty-transport-udt-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-udt/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_import(
-    name = "io.netty.netty-transport-udt",
-    classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    jars = [
-        "repository/io/netty/netty-transport-udt/4.1.72.Final/netty-transport-udt-4.1.72.Final.jar"
-    ],
-    original_deps = [],
-    pom = "repository/io/netty/netty-transport-udt/4.1.72.Final/netty-transport-udt-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport-udt/4.1.72.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-transport_4.1.72.Final",
-    pom = "repository/io/netty/netty-transport/4.1.72.Final/netty-transport-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport/4.1.72.Final",
-    parent = "io.netty.netty-parent_4.1.72.Final",
-    deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-resolver_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4551,9 +3715,9 @@ maven_artifact(
 maven_import(
     name = "io.netty.netty-transport",
     classifiers = [],
-    parent = "io.netty.netty-parent_4.1.72.Final",
+    parent = "io.netty.netty-parent_4.1.52.Final",
     jars = [
-        "repository/io/netty/netty-transport/4.1.72.Final/netty-transport-4.1.72.Final.jar"
+        "repository/io/netty/netty-transport/4.1.52.Final/netty-transport-4.1.52.Final.jar"
     ],
     exports = [
         "io.netty.netty-common",
@@ -4561,13 +3725,13 @@ maven_import(
         "io.netty.netty-resolver",
     ],
     original_deps = [
-        "io.netty.netty-common_4.1.72.Final",
-        "io.netty.netty-buffer_4.1.72.Final",
-        "io.netty.netty-resolver_4.1.72.Final",
+        "io.netty.netty-common_4.1.52.Final",
+        "io.netty.netty-buffer_4.1.52.Final",
+        "io.netty.netty-resolver_4.1.52.Final",
     ],
-    pom = "repository/io/netty/netty-transport/4.1.72.Final/netty-transport-4.1.72.Final.pom",
+    pom = "repository/io/netty/netty-transport/4.1.52.Final/netty-transport-4.1.52.Final.pom",
     repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport/4.1.72.Final",
+    repo_path = "io/netty/netty-transport/4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
@@ -4633,13 +3797,13 @@ maven_import(
 )
 
 maven_artifact(
-    name = "io.opencensus.opencensus-contrib-http-util_0.28.0",
-    pom = "repository/io/opencensus/opencensus-contrib-http-util/0.28.0/opencensus-contrib-http-util-0.28.0.pom",
+    name = "io.opencensus.opencensus-contrib-http-util_0.24.0",
+    pom = "repository/io/opencensus/opencensus-contrib-http-util/0.24.0/opencensus-contrib-http-util-0.24.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/opencensus/opencensus-contrib-http-util/0.28.0",
+    repo_path = "io/opencensus/opencensus-contrib-http-util/0.24.0",
     deps = [
-        "io.opencensus.opencensus-api_0.28.0",
-        "com.google.guava.guava_29.0-android",
+        "io.opencensus.opencensus-api_0.24.0",
+        "com.google.guava.guava_26.0-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -4648,19 +3812,19 @@ maven_import(
     name = "io.opencensus.opencensus-contrib-http-util",
     classifiers = [],
     jars = [
-        "repository/io/opencensus/opencensus-contrib-http-util/0.28.0/opencensus-contrib-http-util-0.28.0.jar"
+        "repository/io/opencensus/opencensus-contrib-http-util/0.24.0/opencensus-contrib-http-util-0.24.0.jar"
     ],
     exports = [
         "io.opencensus.opencensus-api",
         "com.google.guava.guava",
     ],
     original_deps = [
-        "io.opencensus.opencensus-api_0.28.0",
-        "com.google.guava.guava_29.0-android",
+        "io.opencensus.opencensus-api_0.24.0",
+        "com.google.guava.guava_26.0-android",
     ],
-    pom = "repository/io/opencensus/opencensus-contrib-http-util/0.28.0/opencensus-contrib-http-util-0.28.0.pom",
+    pom = "repository/io/opencensus/opencensus-contrib-http-util/0.24.0/opencensus-contrib-http-util-0.24.0.pom",
     repo_root_path = "repository",
-    repo_path = "io/opencensus/opencensus-contrib-http-util/0.28.0",
+    repo_path = "io/opencensus/opencensus-contrib-http-util/0.24.0",
     visibility = ["//visibility:public"],
 )
 
@@ -5416,25 +4580,25 @@ maven_import(
 )
 
 maven_artifact(
-    name = "org.apache.httpcomponents.httpcore_4.4.15",
-    pom = "repository/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.pom",
+    name = "org.apache.httpcomponents.httpcore_4.4.13",
+    pom = "repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/httpcomponents/httpcore/4.4.15",
-    parent = "org.apache.httpcomponents.httpcomponents-core_4.4.15",
+    repo_path = "org/apache/httpcomponents/httpcore/4.4.13",
+    parent = "org.apache.httpcomponents.httpcomponents-core_4.4.13",
     visibility = ["//visibility:public"],
 )
 
 maven_import(
     name = "org.apache.httpcomponents.httpcore",
     classifiers = [],
-    parent = "org.apache.httpcomponents.httpcomponents-core_4.4.15",
+    parent = "org.apache.httpcomponents.httpcomponents-core_4.4.13",
     jars = [
-        "repository/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.jar"
+        "repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar"
     ],
     original_deps = [],
-    pom = "repository/org/apache/httpcomponents/httpcore/4.4.15/httpcore-4.4.15.pom",
+    pom = "repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.pom",
     repo_root_path = "repository",
-    repo_path = "org/apache/httpcomponents/httpcore/4.4.15",
+    repo_path = "org/apache/httpcomponents/httpcore/4.4.13",
     visibility = ["//visibility:public"],
 )
 
@@ -8496,7 +7660,7 @@ maven_import(
     jars = [
         "repository/org/jetbrains/kotlin/kotlin-tooling-metadata/1.7.10/kotlin-tooling-metadata-1.7.10.jar"
     ],
-    deps = [
+    exports = [
         "com.google.code.gson.gson",
     ],
     original_deps = [
@@ -25750,6 +24914,15 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.fasterxml.jackson.core.jackson-core_2.11.1",
+    pom = "repository/com/fasterxml/jackson/core/jackson-core/2.11.1/jackson-core-2.11.1.pom",
+    repo_root_path = "repository",
+    repo_path = "com/fasterxml/jackson/core/jackson-core/2.11.1",
+    parent = "com.fasterxml.jackson.jackson-base_2.11.1",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.fasterxml.jackson.core.jackson-core_2.9.9",
     pom = "repository/com/fasterxml/jackson/core/jackson-core/2.9.9/jackson-core-2.9.9.pom",
     repo_root_path = "repository",
@@ -26648,15 +25821,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.auto.value.auto-value-annotations_1.8.2",
-    pom = "repository/com/google/auto/value/auto-value-annotations/1.8.2/auto-value-annotations-1.8.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/auto/value/auto-value-annotations/1.8.2",
-    parent = "com.google.auto.value.auto-value-parent_1.8.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.auto.value.auto-value_1.4-rc1",
     pom = "repository/com/google/auto/value/auto-value/1.4-rc1/auto-value-1.4-rc1.pom",
     repo_root_path = "repository",
@@ -27150,24 +26314,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_annotations_2.5.1",
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.5.1/error_prone_annotations-2.5.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.5.1",
-    parent = "com.google.errorprone.error_prone_parent_2.5.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.errorprone.error_prone_annotations_2.7.1",
-    pom = "repository/com/google/errorprone/error_prone_annotations/2.7.1/error_prone_annotations-2.7.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_annotations/2.7.1",
-    parent = "com.google.errorprone.error_prone_parent_2.7.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.errorprone.javac-shaded_9-dev-r4023-3",
     pom = "repository/com/google/errorprone/javac-shaded/9-dev-r4023-3/javac-shaded-9-dev-r4023-3.pom",
     repo_root_path = "repository",
@@ -27493,23 +26639,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.guava.guava_29.0-android",
-    pom = "repository/com/google/guava/guava/29.0-android/guava-29.0-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/29.0-android",
-    parent = "com.google.guava.guava-parent_29.0-android",
-    deps = [
-        "com.google.guava.failureaccess_1.0.1",
-        "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-compat-qual_2.5.5",
-        "com.google.errorprone.error_prone_annotations_2.3.4",
-        "com.google.j2objc.j2objc-annotations_1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.guava.guava_29.0-jre",
     pom = "repository/com/google/guava/guava/29.0-jre/guava-29.0-jre.pom",
     repo_root_path = "repository",
@@ -27520,6 +26649,23 @@ maven_artifact(
         "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
         "com.google.code.findbugs.jsr305_3.0.2",
         "org.checkerframework.checker-qual_2.11.1",
+        "com.google.errorprone.error_prone_annotations_2.3.4",
+        "com.google.j2objc.j2objc-annotations_1.3",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.google.guava.guava_30.0-android",
+    pom = "repository/com/google/guava/guava/30.0-android/guava-30.0-android.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/guava/guava/30.0-android",
+    parent = "com.google.guava.guava-parent_30.0-android",
+    deps = [
+        "com.google.guava.failureaccess_1.0.1",
+        "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
+        "com.google.code.findbugs.jsr305_3.0.2",
+        "org.checkerframework.checker-compat-qual_2.5.5",
         "com.google.errorprone.error_prone_annotations_2.3.4",
         "com.google.j2objc.j2objc-annotations_1.3",
     ],
@@ -27561,46 +26707,24 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.guava.guava_30.1.1-android",
-    pom = "repository/com/google/guava/guava/30.1.1-android/guava-30.1.1-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/30.1.1-android",
-    parent = "com.google.guava.guava-parent_30.1.1-android",
-    deps = [
-        "com.google.guava.failureaccess_1.0.1",
-        "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-compat-qual_2.5.5",
-        "com.google.errorprone.error_prone_annotations_2.5.1",
-        "com.google.j2objc.j2objc-annotations_1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.guava.guava_31.0.1-android",
-    pom = "repository/com/google/guava/guava/31.0.1-android/guava-31.0.1-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava/31.0.1-android",
-    parent = "com.google.guava.guava-parent_31.0.1-android",
-    deps = [
-        "com.google.guava.failureaccess_1.0.1",
-        "com.google.guava.listenablefuture_9999.0-empty-to-avoid-conflict-with-guava",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "org.checkerframework.checker-qual_3.12.0",
-        "org.checkerframework.checker-compat-qual_2.5.5",
-        "com.google.errorprone.error_prone_annotations_2.7.1",
-        "com.google.j2objc.j2objc-annotations_1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.guava.listenablefuture_1.0",
     pom = "repository/com/google/guava/listenablefuture/1.0/listenablefuture-1.0.pom",
     repo_root_path = "repository",
     repo_path = "com/google/guava/listenablefuture/1.0",
     parent = "com.google.guava.guava-parent_26.0-android",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.google.http-client.google-http-client-jackson2_1.22.0",
+    pom = "repository/com/google/http-client/google-http-client-jackson2/1.22.0/google-http-client-jackson2-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/http-client/google-http-client-jackson2/1.22.0",
+    parent = "com.google.http-client.google-http-client-parent_1.22.0",
+    deps = [
+        "com.google.http-client.google-http-client_1.22.0",
+        "com.fasterxml.jackson.core.jackson-core_2.1.3",
+    ],
     visibility = ["//visibility:public"],
 )
 
@@ -27681,21 +26805,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-java-util_3.17.2",
-    pom = "repository/com/google/protobuf/protobuf-java-util/3.17.2/protobuf-java-util-3.17.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java-util/3.17.2",
-    parent = "com.google.protobuf.protobuf-parent_3.17.2",
-    deps = [
-        "com.google.protobuf.protobuf-java_3.17.2",
-        "com.google.guava.guava_30.1-android",
-        "com.google.errorprone.error_prone_annotations_2.3.4",
-        "com.google.code.gson.gson_2.8.6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.protobuf.protobuf-java-util_3.4.0",
     pom = "repository/com/google/protobuf/protobuf-java-util/3.4.0/protobuf-java-util-3.4.0.pom",
     repo_root_path = "repository",
@@ -27751,15 +26860,6 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "com/google/protobuf/protobuf-java/3.13.0",
     parent = "com.google.protobuf.protobuf-parent_3.13.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.google.protobuf.protobuf-java_3.17.2",
-    pom = "repository/com/google/protobuf/protobuf-java/3.17.2/protobuf-java-3.17.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java/3.17.2",
-    parent = "com.google.protobuf.protobuf-parent_3.17.2",
     visibility = ["//visibility:public"],
 )
 
@@ -28251,20 +27351,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-api_1.39.0",
-    pom = "repository/io/grpc/grpc-api/1.39.0/grpc-api-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-api/1.39.0",
-    deps = [
-        "io.grpc.grpc-context_1.39.0",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_30.1-android",
-        "com.google.errorprone.error_prone_annotations_2.4.0",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.grpc.grpc-context_1.14.0",
     pom = "repository/io/grpc/grpc-context/1.14.0/grpc-context-1.14.0.pom",
     repo_root_path = "repository",
@@ -28289,18 +27375,18 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-context_1.27.2",
-    pom = "repository/io/grpc/grpc-context/1.27.2/grpc-context-1.27.2.pom",
+    name = "io.grpc.grpc-context_1.22.1",
+    pom = "repository/io/grpc/grpc-context/1.22.1/grpc-context-1.22.1.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-context/1.27.2",
+    repo_path = "io/grpc/grpc-context/1.22.1",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-context_1.39.0",
-    pom = "repository/io/grpc/grpc-context/1.39.0/grpc-context-1.39.0.pom",
+    name = "io.grpc.grpc-context_1.27.2",
+    pom = "repository/io/grpc/grpc-context/1.27.2/grpc-context-1.27.2.pom",
     repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-context/1.39.0",
+    repo_path = "io/grpc/grpc-context/1.27.2",
     visibility = ["//visibility:public"],
 )
 
@@ -28337,23 +27423,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-core_1.39.0",
-    pom = "repository/io/grpc/grpc-core/1.39.0/grpc-core-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-core/1.39.0",
-    deps = [
-        "io.grpc.grpc-api_1.39.0",
-        "com.google.code.gson.gson_2.8.6",
-        "com.google.android.annotations_4.1.1.4",
-        "org.codehaus.mojo.animal-sniffer-annotations_1.19",
-        "com.google.errorprone.error_prone_annotations_2.4.0",
-        "com.google.guava.guava_30.1-android",
-        "io.perfmark.perfmark-api_0.23.0",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.grpc.grpc-netty_1.21.1",
     pom = "repository/io/grpc/grpc-netty/1.21.1/grpc-netty-1.21.1.pom",
     repo_root_path = "repository",
@@ -28362,22 +27431,6 @@ maven_artifact(
         "io.grpc.grpc-core_1.21.1",
         "io.netty.netty-codec-http2_4.1.34.Final",
         "io.netty.netty-handler-proxy_4.1.34.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.grpc.grpc-netty_1.39.0",
-    pom = "repository/io/grpc/grpc-netty/1.39.0/grpc-netty-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-netty/1.39.0",
-    deps = [
-        "io.grpc.grpc-core_1.39.0",
-        "io.netty.netty-codec-http2_4.1.52.Final",
-        "io.netty.netty-handler-proxy_4.1.52.Final",
-        "com.google.guava.guava_30.1-android",
-        "com.google.errorprone.error_prone_annotations_2.4.0",
-        "io.perfmark.perfmark-api_0.23.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28402,19 +27455,6 @@ maven_artifact(
     deps = [
         "io.grpc.grpc-api_1.21.1",
         "com.google.guava.guava_26.0-android",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.grpc.grpc-protobuf-lite_1.39.0",
-    pom = "repository/io/grpc/grpc-protobuf-lite/1.39.0/grpc-protobuf-lite-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf-lite/1.39.0",
-    deps = [
-        "io.grpc.grpc-api_1.39.0",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.guava.guava_30.1-android",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28450,22 +27490,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-protobuf_1.39.0",
-    pom = "repository/io/grpc/grpc-protobuf/1.39.0/grpc-protobuf-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-protobuf/1.39.0",
-    deps = [
-        "io.grpc.grpc-api_1.39.0",
-        "com.google.code.findbugs.jsr305_3.0.2",
-        "com.google.protobuf.protobuf-java_3.17.2",
-        "com.google.api.grpc.proto-google-common-protos_2.0.1",
-        "io.grpc.grpc-protobuf-lite_1.39.0",
-        "com.google.guava.guava_30.1-android",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.grpc.grpc-stub_1.14.0",
     pom = "repository/io/grpc/grpc-stub/1.14.0/grpc-stub-1.14.0.pom",
     repo_root_path = "repository",
@@ -28488,18 +27512,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.grpc.grpc-stub_1.39.0",
-    pom = "repository/io/grpc/grpc-stub/1.39.0/grpc-stub-1.39.0.pom",
-    repo_root_path = "repository",
-    repo_path = "io/grpc/grpc-stub/1.39.0",
-    deps = [
-        "io.grpc.grpc-api_1.39.0",
-        "com.google.guava.guava_30.1-android",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-buffer_4.1.34.Final",
     pom = "repository/io/netty/netty-buffer/4.1.34.Final/netty-buffer-4.1.34.Final.pom",
     repo_root_path = "repository",
@@ -28507,18 +27519,6 @@ maven_artifact(
     parent = "io.netty.netty-parent_4.1.34.Final",
     deps = [
         "io.netty.netty-common_4.1.34.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-buffer_4.1.52.Final",
-    pom = "repository/io/netty/netty-buffer/4.1.52.Final/netty-buffer-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-buffer/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28541,23 +27541,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-http2_4.1.52.Final",
-    pom = "repository/io/netty/netty-codec-http2/4.1.52.Final/netty-codec-http2-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http2/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-        "io.netty.netty-codec_4.1.52.Final",
-        "io.netty.netty-handler_4.1.52.Final",
-        "io.netty.netty-codec-http_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-codec-http_4.1.34.Final",
     pom = "repository/io/netty/netty-codec-http/4.1.34.Final/netty-codec-http-4.1.34.Final.pom",
     repo_root_path = "repository",
@@ -28569,22 +27552,6 @@ maven_artifact(
         "io.netty.netty-transport_4.1.34.Final",
         "io.netty.netty-codec_4.1.34.Final",
         "io.netty.netty-handler_4.1.34.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-codec-http_4.1.52.Final",
-    pom = "repository/io/netty/netty-codec-http/4.1.52.Final/netty-codec-http-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-http/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-        "io.netty.netty-codec_4.1.52.Final",
-        "io.netty.netty-handler_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28605,21 +27572,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec-socks_4.1.52.Final",
-    pom = "repository/io/netty/netty-codec-socks/4.1.52.Final/netty-codec-socks-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec-socks/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-        "io.netty.netty-codec_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-codec_4.1.34.Final",
     pom = "repository/io/netty/netty-codec/4.1.34.Final/netty-codec-4.1.34.Final.pom",
     repo_root_path = "repository",
@@ -28634,34 +27586,11 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-codec_4.1.52.Final",
-    pom = "repository/io/netty/netty-codec/4.1.52.Final/netty-codec-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-codec/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-common_4.1.34.Final",
     pom = "repository/io/netty/netty-common/4.1.34.Final/netty-common-4.1.34.Final.pom",
     repo_root_path = "repository",
     repo_path = "io/netty/netty-common/4.1.34.Final",
     parent = "io.netty.netty-parent_4.1.34.Final",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-common_4.1.52.Final",
-    pom = "repository/io/netty/netty-common/4.1.52.Final/netty-common-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-common/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
     visibility = ["//visibility:public"],
 )
 
@@ -28683,23 +27612,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-handler-proxy_4.1.52.Final",
-    pom = "repository/io/netty/netty-handler-proxy/4.1.52.Final/netty-handler-proxy-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler-proxy/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-        "io.netty.netty-codec_4.1.52.Final",
-        "io.netty.netty-codec-socks_4.1.52.Final",
-        "io.netty.netty-codec-http_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-handler_4.1.34.Final",
     pom = "repository/io/netty/netty-handler/4.1.34.Final/netty-handler-4.1.34.Final.pom",
     repo_root_path = "repository",
@@ -28715,22 +27627,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-handler_4.1.52.Final",
-    pom = "repository/io/netty/netty-handler/4.1.52.Final/netty-handler-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-handler/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-resolver_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-transport_4.1.52.Final",
-        "io.netty.netty-codec_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.netty.netty-resolver_4.1.34.Final",
     pom = "repository/io/netty/netty-resolver/4.1.34.Final/netty-resolver-4.1.34.Final.pom",
     repo_root_path = "repository",
@@ -28738,18 +27634,6 @@ maven_artifact(
     parent = "io.netty.netty-parent_4.1.34.Final",
     deps = [
         "io.netty.netty-common_4.1.34.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "io.netty.netty-resolver_4.1.52.Final",
-    pom = "repository/io/netty/netty-resolver/4.1.52.Final/netty-resolver-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-resolver/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
     ],
     visibility = ["//visibility:public"],
 )
@@ -28769,20 +27653,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "io.netty.netty-transport_4.1.52.Final",
-    pom = "repository/io/netty/netty-transport/4.1.52.Final/netty-transport-4.1.52.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-transport/4.1.52.Final",
-    parent = "io.netty.netty-parent_4.1.52.Final",
-    deps = [
-        "io.netty.netty-common_4.1.52.Final",
-        "io.netty.netty-buffer_4.1.52.Final",
-        "io.netty.netty-resolver_4.1.52.Final",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "io.opencensus.opencensus-api_0.12.3",
     pom = "repository/io/opencensus/opencensus-api/0.12.3/opencensus-api-0.12.3.pom",
     repo_root_path = "repository",
@@ -28797,6 +27667,17 @@ maven_artifact(
     repo_path = "io/opencensus/opencensus-api/0.21.0",
     deps = [
         "io.grpc.grpc-context_1.19.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "io.opencensus.opencensus-api_0.24.0",
+    pom = "repository/io/opencensus/opencensus-api/0.24.0/opencensus-api-0.24.0.pom",
+    repo_root_path = "repository",
+    repo_path = "io/opencensus/opencensus-api/0.24.0",
+    deps = [
+        "io.grpc.grpc-context_1.22.1",
     ],
     visibility = ["//visibility:public"],
 )
@@ -29366,15 +28247,6 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "org/apache/httpcomponents/httpcore/4.4.11",
     parent = "org.apache.httpcomponents.httpcomponents-core_4.4.11",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.httpcomponents.httpcore_4.4.13",
-    pom = "repository/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/httpcomponents/httpcore/4.4.13",
-    parent = "org.apache.httpcomponents.httpcomponents-core_4.4.13",
     visibility = ["//visibility:public"],
 )
 
@@ -35463,6 +34335,14 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.fasterxml.jackson.jackson-base_2.11.3",
+    pom = "repository/com/fasterxml/jackson/jackson-base/2.11.3/jackson-base-2.11.3.pom",
+    repo_root_path = "repository",
+    repo_path = "com/fasterxml/jackson/jackson-base/2.11.3",
+    parent = "com.fasterxml.jackson.jackson-bom_2.11.3",
+)
+
+maven_artifact(
     name = "com.fasterxml.jackson.jackson-base_2.9.9",
     pom = "repository/com/fasterxml/jackson/jackson-base/2.9.9/jackson-base-2.9.9.pom",
     repo_root_path = "repository",
@@ -35475,6 +34355,14 @@ maven_artifact(
     pom = "repository/com/fasterxml/jackson/jackson-bom/2.11.1/jackson-bom-2.11.1.pom",
     repo_root_path = "repository",
     repo_path = "com/fasterxml/jackson/jackson-bom/2.11.1",
+    parent = "com.fasterxml.jackson.jackson-parent_2.11",
+)
+
+maven_artifact(
+    name = "com.fasterxml.jackson.jackson-bom_2.11.3",
+    pom = "repository/com/fasterxml/jackson/jackson-bom/2.11.3/jackson-bom-2.11.3.pom",
+    repo_root_path = "repository",
+    repo_path = "com/fasterxml/jackson/jackson-bom/2.11.3",
     parent = "com.fasterxml.jackson.jackson-parent_2.11",
 )
 
@@ -35574,10 +34462,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.auth.google-auth-library-parent_1.4.0",
-    pom = "repository/com/google/auth/google-auth-library-parent/1.4.0/google-auth-library-parent-1.4.0.pom",
+    name = "com.google.auth.google-auth-library-parent_0.22.2",
+    pom = "repository/com/google/auth/google-auth-library-parent/0.22.2/google-auth-library-parent-0.22.2.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auth/google-auth-library-parent/1.4.0",
+    repo_path = "com/google/auth/google-auth-library-parent/0.22.2",
 )
 
 maven_artifact(
@@ -35605,18 +34493,11 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.auto.value.auto-value-parent_1.8.2",
-    pom = "repository/com/google/auto/value/auto-value-parent/1.8.2/auto-value-parent-1.8.2.pom",
+    name = "com.google.auto.value.auto-value-parent_1.7.4",
+    pom = "repository/com/google/auto/value/auto-value-parent/1.7.4/auto-value-parent-1.7.4.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/auto/value/auto-value-parent/1.8.2",
+    repo_path = "com/google/auto/value/auto-value-parent/1.7.4",
     parent = "org.sonatype.oss.oss-parent_7",
-)
-
-maven_artifact(
-    name = "com.google.auto.value.auto-value-parent_1.9",
-    pom = "repository/com/google/auto/value/auto-value-parent/1.9/auto-value-parent-1.9.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/auto/value/auto-value-parent/1.9",
 )
 
 maven_artifact(
@@ -35740,13 +34621,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.errorprone.error_prone_parent_2.10.0",
-    pom = "repository/com/google/errorprone/error_prone_parent/2.10.0/error_prone_parent-2.10.0.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_parent/2.10.0",
-)
-
-maven_artifact(
     name = "com.google.errorprone.error_prone_parent_2.2.0",
     pom = "repository/com/google/errorprone/error_prone_parent/2.2.0/error_prone_parent-2.2.0.pom",
     repo_root_path = "repository",
@@ -35791,14 +34665,6 @@ maven_artifact(
     pom = "repository/com/google/errorprone/error_prone_parent/2.4.0/error_prone_parent-2.4.0.pom",
     repo_root_path = "repository",
     repo_path = "com/google/errorprone/error_prone_parent/2.4.0",
-    parent = "org.sonatype.oss.oss-parent_7",
-)
-
-maven_artifact(
-    name = "com.google.errorprone.error_prone_parent_2.5.1",
-    pom = "repository/com/google/errorprone/error_prone_parent/2.5.1/error_prone_parent-2.5.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/errorprone/error_prone_parent/2.5.1",
     parent = "org.sonatype.oss.oss-parent_7",
 )
 
@@ -35975,17 +34841,17 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.guava.guava-parent_29.0-android",
-    pom = "repository/com/google/guava/guava-parent/29.0-android/guava-parent-29.0-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava-parent/29.0-android",
-)
-
-maven_artifact(
     name = "com.google.guava.guava-parent_29.0-jre",
     pom = "repository/com/google/guava/guava-parent/29.0-jre/guava-parent-29.0-jre.pom",
     repo_root_path = "repository",
     repo_path = "com/google/guava/guava-parent/29.0-jre",
+)
+
+maven_artifact(
+    name = "com.google.guava.guava-parent_30.0-android",
+    pom = "repository/com/google/guava/guava-parent/30.0-android/guava-parent-30.0-android.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/guava/guava-parent/30.0-android",
 )
 
 maven_artifact(
@@ -36000,20 +34866,6 @@ maven_artifact(
     pom = "repository/com/google/guava/guava-parent/30.1-jre/guava-parent-30.1-jre.pom",
     repo_root_path = "repository",
     repo_path = "com/google/guava/guava-parent/30.1-jre",
-)
-
-maven_artifact(
-    name = "com.google.guava.guava-parent_30.1.1-android",
-    pom = "repository/com/google/guava/guava-parent/30.1.1-android/guava-parent-30.1.1-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava-parent/30.1.1-android",
-)
-
-maven_artifact(
-    name = "com.google.guava.guava-parent_31.0.1-android",
-    pom = "repository/com/google/guava/guava-parent/31.0.1-android/guava-parent-31.0.1-android.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/guava/guava-parent/31.0.1-android",
 )
 
 maven_artifact(
@@ -36040,10 +34892,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.http-client.google-http-client-parent_1.41.0",
-    pom = "repository/com/google/http-client/google-http-client-parent/1.41.0/google-http-client-parent-1.41.0.pom",
+    name = "com.google.http-client.google-http-client-parent_1.38.0",
+    pom = "repository/com/google/http-client/google-http-client-parent/1.38.0/google-http-client-parent-1.38.0.pom",
     repo_root_path = "repository",
-    repo_path = "com/google/http-client/google-http-client-parent/1.41.0",
+    repo_path = "com/google/http-client/google-http-client-parent/1.38.0",
 )
 
 maven_artifact(
@@ -36082,13 +34934,6 @@ maven_artifact(
     pom = "repository/com/google/protobuf/protobuf-parent/3.13.0/protobuf-parent-3.13.0.pom",
     repo_root_path = "repository",
     repo_path = "com/google/protobuf/protobuf-parent/3.13.0",
-)
-
-maven_artifact(
-    name = "com.google.protobuf.protobuf-parent_3.17.2",
-    pom = "repository/com/google/protobuf/protobuf-parent/3.17.2/protobuf-parent-3.17.2.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-parent/3.17.2",
 )
 
 maven_artifact(
@@ -36406,22 +35251,6 @@ maven_artifact(
     pom = "repository/io/netty/netty-parent/4.1.52.Final/netty-parent-4.1.52.Final.pom",
     repo_root_path = "repository",
     repo_path = "io/netty/netty-parent/4.1.52.Final",
-    parent = "org.sonatype.oss.oss-parent_9",
-)
-
-maven_artifact(
-    name = "io.netty.netty-parent_4.1.72.Final",
-    pom = "repository/io/netty/netty-parent/4.1.72.Final/netty-parent-4.1.72.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-parent/4.1.72.Final",
-    parent = "org.sonatype.oss.oss-parent_9",
-)
-
-maven_artifact(
-    name = "io.netty.netty-tcnative-parent_2.0.46.Final",
-    pom = "repository/io/netty/netty-tcnative-parent/2.0.46.Final/netty-tcnative-parent-2.0.46.Final.pom",
-    repo_root_path = "repository",
-    repo_path = "io/netty/netty-tcnative-parent/2.0.46.Final",
     parent = "org.sonatype.oss.oss-parent_9",
 )
 
@@ -36792,14 +35621,6 @@ maven_artifact(
     pom = "repository/org/apache/httpcomponents/httpcomponents-core/4.4.13/httpcomponents-core-4.4.13.pom",
     repo_root_path = "repository",
     repo_path = "org/apache/httpcomponents/httpcomponents-core/4.4.13",
-    parent = "org.apache.httpcomponents.httpcomponents-parent_11",
-)
-
-maven_artifact(
-    name = "org.apache.httpcomponents.httpcomponents-core_4.4.15",
-    pom = "repository/org/apache/httpcomponents/httpcomponents-core/4.4.15/httpcomponents-core-4.4.15.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/httpcomponents/httpcomponents-core/4.4.15",
     parent = "org.apache.httpcomponents.httpcomponents-parent_11",
 )
 
