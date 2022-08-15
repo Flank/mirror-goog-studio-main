@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * A list of build features that can be disabled or enabled in an Android Application project.
  */
@@ -35,8 +33,6 @@ interface ApplicationBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
-    @get:Incubating
-    @set:Incubating
     var dataBinding: Boolean?
 
     /**
@@ -51,7 +47,5 @@ interface ApplicationBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
-    @get:Incubating
-    @set:Incubating
     var mlModelBinding: Boolean?
 }

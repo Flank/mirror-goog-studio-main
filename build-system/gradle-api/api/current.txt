@@ -396,12 +396,12 @@ package com.android.build.api.dsl {
   }
 
   public interface ApplicationBuildFeatures extends com.android.build.api.dsl.BuildFeatures {
-    method @org.gradle.api.Incubating public Boolean? getDataBinding();
-    method @org.gradle.api.Incubating public Boolean? getMlModelBinding();
-    method @org.gradle.api.Incubating public void setDataBinding(Boolean? dataBinding);
-    method @org.gradle.api.Incubating public void setMlModelBinding(Boolean? mlModelBinding);
-    property @org.gradle.api.Incubating public abstract Boolean? dataBinding;
-    property @org.gradle.api.Incubating public abstract Boolean? mlModelBinding;
+    method public Boolean? getDataBinding();
+    method public Boolean? getMlModelBinding();
+    method public void setDataBinding(Boolean? dataBinding);
+    method public void setMlModelBinding(Boolean? mlModelBinding);
+    property public abstract Boolean? dataBinding;
+    property public abstract Boolean? mlModelBinding;
   }
 
   public interface ApplicationBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.ApplicationVariantDimension {
