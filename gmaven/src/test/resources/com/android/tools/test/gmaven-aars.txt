@@ -17,7 +17,6 @@ androidx/databinding/databinding-adapters
   res/
   res/values/
   res/values/values.xml
-  values/
 
 androidx/databinding/databinding-ktx
   AndroidManifest.xml
@@ -44,7 +43,6 @@ androidx/databinding/databinding-runtime
   res/
   res/values/
   res/values/values.xml
-  values/
 
 androidx/databinding/viewbinding
   AndroidManifest.xml
@@ -77,7 +75,6 @@ com/android/databinding/adapters
   res/
   res/values/
   res/values/values.xml
-  values/
 
 com/android/databinding/library
   AndroidManifest.xml
@@ -95,7 +92,6 @@ com/android/databinding/library
   res/
   res/values/
   res/values/values.xml
-  values/
 
 com/android/databinding/viewbinding
   AndroidManifest.xml

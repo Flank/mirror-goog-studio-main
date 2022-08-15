@@ -16,11 +16,15 @@
 
 package com.android.build.gradle.integration.application
 
+import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.fixture.testprojects.PluginType
+import com.android.build.gradle.integration.common.fixture.testprojects.createGradleProject
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import com.google.wireless.android.sdk.stats.GradleBuildProject
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -30,18 +34,30 @@ import java.util.zip.ZipFile
 
 /*
 * Tests to verify that AARs produced from library modules in build/output/aar are in a state
-* which can be published e.g to public repository like Maven.
+* which can be published
+* e.g. to a public repository like Maven, AAR contains expected file structure.
 */
 class AarPublishTest {
 
     @get:Rule
-    val project = GradleTestProject.builder().fromTestApp(
-        MultiModuleTestProject.builder()
-            .subproject(
-                ":library", MinimalSubProject.lib("com.example.library")
-                    .appendToBuild("android.buildTypes.debug.testCoverageEnabled true")
-            ).build()
-    ).create()
+    val project = createGradleProject {
+        subProject(":library") {
+            plugins.add(PluginType.ANDROID_LIB)
+            android {
+                defaultCompileSdk()
+                namespace = "com.example.library"
+                buildTypes {
+                    named("debug") {
+                        testCoverageEnabled = true
+                    }
+                }
+                addFile("src/main/res/values/strings.xml",
+                        "<resources>\n" +
+                                "<string name=\"one\">Some string</string>\n" +
+                                "</resources>")
+            }
+        }
+    }
 
     @get:Rule
     val temporaryDirectory = TemporaryFolder()
@@ -55,7 +71,6 @@ class AarPublishTest {
         val libraryPublishedAar =
             FileUtils.join(librarySubproject.outputDir, "aar", "library-debug.aar")
         val tempTestData = temporaryDirectory.newFolder("testData")
-        val buildConfigClasspath = "com/example/library/BuildConfig.class"
         val extractedJar = File(tempTestData, "classes.jar")
         // Extracts the zipped BuildConfig.class in library-debug.aar/classes.jar to
         // the extractedBuildConfigClass temporary file, so it can be later loaded
@@ -79,6 +94,20 @@ class AarPublishTest {
                     "This AAR is not publishable as it contains a dependency on Jacoco.", e
                 )
             }
+        }
+    }
+
+    @Test
+    fun aarContainsAllowedRootDirectories() {
+        project.execute("library:assembleDebug")
+        project.getSubproject(":library").assertThatAar(GradleTestProject.ApkType.DEBUG.buildType) {
+            containsFile("/AndroidManifest.xml")
+            containsFile("/R.txt")
+            containsFile("/classes.jar")
+            containsFile("/res/values/values.xml")
+            containsFile("META-INF/com/android/build/gradle/aar-metadata.properties")
+            // Regression test for b/232117952
+            doesNotContain("/values/")
         }
     }
 }
