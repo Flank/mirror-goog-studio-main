@@ -2321,15 +2321,57 @@ class VersionChecksTest : AbstractCheckTest() {
                 import android.os.Build.VERSION_CODES.N
                 import android.text.Html
 
-                fun String.fromHtm() : String
+                fun String.fromHtml() : String
                 {
                     return when {
-                        false, SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                        SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
                         else -> Html.fromHtml(this)
                     }.toString()
                 }"""
             ).indented()
         ).run().expectClean()
+    }
+
+    fun testKotlinWhenStatement_logicalOperatorsWithConstants() {
+        // Regression test for
+        //   242479753: false positives when logical operators and constants are combined
+        lint().files(
+            manifest().minSdk(4),
+            kotlin(
+                """
+                import android.os.Build.VERSION.SDK_INT
+                import android.os.Build.VERSION_CODES.N
+                import android.text.Html
+
+                fun String.fromHtml() : String
+                {
+                    return when {
+                        false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                        true || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                        false && SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                        true && SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                        else -> Html.fromHtml(this)
+                    }.toString()
+                }"""
+            ).indented()
+        ).run().expect(
+           """
+           src/test.kt:8: Warning: Field requires API level 24 (current min is 4): android.text.Html#FROM_HTML_MODE_LEGACY [InlinedApi]
+                   false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+           src/test.kt:9: Warning: Field requires API level 24 (current min is 4): android.text.Html#FROM_HTML_MODE_LEGACY [InlinedApi]
+                   true || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~
+           src/test.kt:8: Error: Call requires API level 24 (current min is 4): android.text.Html#fromHtml [NewApi]
+                   false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                                                 ~~~~~~~~
+           src/test.kt:9: Error: Call requires API level 24 (current min is 4): android.text.Html#fromHtml [NewApi]
+                   true || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
+                                                ~~~~~~~~
+           2 errors, 2 warnings
+           """
+        )
+            //.expectClean() // Should be same as [testKotlinWhenStatement]
     }
 
     fun testKotlinWhenStatement2() {
