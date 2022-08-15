@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * A list of build features that can be disabled or enabled in an Android Library project.
  */
@@ -39,8 +37,6 @@ interface LibraryBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
-    @get:Incubating
-    @set:Incubating
     var androidResources: Boolean?
 
     /**
@@ -55,8 +51,6 @@ interface LibraryBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
-    @get:Incubating
-    @set:Incubating
     var dataBinding: Boolean?
 
     /**
@@ -71,8 +65,6 @@ interface LibraryBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: TBD
      */
-    @get:Incubating
-    @set:Incubating
     var mlModelBinding: Boolean?
 
     /**
@@ -87,7 +79,5 @@ interface LibraryBuildFeatures : BuildFeatures {
      *
      * More information about this feature at: https://developer.android.com/studio/build/native-dependencies
      */
-    @get:Incubating
-    @set:Incubating
     var prefabPublishing: Boolean?
 }

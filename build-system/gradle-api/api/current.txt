@@ -1098,18 +1098,18 @@ package com.android.build.api.dsl {
   }
 
   public interface LibraryBuildFeatures extends com.android.build.api.dsl.BuildFeatures {
-    method @org.gradle.api.Incubating public Boolean? getAndroidResources();
-    method @org.gradle.api.Incubating public Boolean? getDataBinding();
-    method @org.gradle.api.Incubating public Boolean? getMlModelBinding();
-    method @org.gradle.api.Incubating public Boolean? getPrefabPublishing();
-    method @org.gradle.api.Incubating public void setAndroidResources(Boolean? androidResources);
-    method @org.gradle.api.Incubating public void setDataBinding(Boolean? dataBinding);
-    method @org.gradle.api.Incubating public void setMlModelBinding(Boolean? mlModelBinding);
-    method @org.gradle.api.Incubating public void setPrefabPublishing(Boolean? prefabPublishing);
-    property @org.gradle.api.Incubating public abstract Boolean? androidResources;
-    property @org.gradle.api.Incubating public abstract Boolean? dataBinding;
-    property @org.gradle.api.Incubating public abstract Boolean? mlModelBinding;
-    property @org.gradle.api.Incubating public abstract Boolean? prefabPublishing;
+    method public Boolean? getAndroidResources();
+    method public Boolean? getDataBinding();
+    method public Boolean? getMlModelBinding();
+    method public Boolean? getPrefabPublishing();
+    method public void setAndroidResources(Boolean? androidResources);
+    method public void setDataBinding(Boolean? dataBinding);
+    method public void setMlModelBinding(Boolean? mlModelBinding);
+    method public void setPrefabPublishing(Boolean? prefabPublishing);
+    property public abstract Boolean? androidResources;
+    property public abstract Boolean? dataBinding;
+    property public abstract Boolean? mlModelBinding;
+    property public abstract Boolean? prefabPublishing;
   }
 
   public interface LibraryBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.LibraryVariantDimension {
