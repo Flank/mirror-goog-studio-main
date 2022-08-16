@@ -424,7 +424,6 @@ interface CommonExtension<
      *
      * @see [ApkSigningConfig]
      */
-    @get:Incubating
     val signingConfigs: NamedDomainObjectContainer<out ApkSigningConfig>
 
     /**
@@ -434,7 +433,6 @@ interface CommonExtension<
      * For more information about the properties you can configure in this block,
      * see [ApkSigningConfig].
      */
-    @Incubating
     fun signingConfigs(action: NamedDomainObjectContainer<out ApkSigningConfig>.() -> Unit)
 
     /**

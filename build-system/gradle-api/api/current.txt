@@ -354,20 +354,20 @@ package com.android.build.api.dsl {
     method public Boolean? getEnableV2Signing();
     method public Boolean? getEnableV3Signing();
     method public Boolean? getEnableV4Signing();
-    method @Deprecated @org.gradle.api.Incubating public boolean isV1SigningEnabled();
-    method @Deprecated @org.gradle.api.Incubating public boolean isV2SigningEnabled();
+    method @Deprecated public boolean isV1SigningEnabled();
+    method @Deprecated public boolean isV2SigningEnabled();
     method public void setEnableV1Signing(Boolean? enableV1Signing);
     method public void setEnableV2Signing(Boolean? enableV2Signing);
     method public void setEnableV3Signing(Boolean? enableV3Signing);
     method public void setEnableV4Signing(Boolean? enableV4Signing);
-    method @Deprecated @org.gradle.api.Incubating public void setV1SigningEnabled(boolean isV1SigningEnabled);
-    method @Deprecated @org.gradle.api.Incubating public void setV2SigningEnabled(boolean isV2SigningEnabled);
+    method @Deprecated public void setV1SigningEnabled(boolean isV1SigningEnabled);
+    method @Deprecated public void setV2SigningEnabled(boolean isV2SigningEnabled);
     property public abstract Boolean? enableV1Signing;
     property public abstract Boolean? enableV2Signing;
     property public abstract Boolean? enableV3Signing;
     property public abstract Boolean? enableV4Signing;
-    property @Deprecated @org.gradle.api.Incubating public abstract boolean isV1SigningEnabled;
-    property @Deprecated @org.gradle.api.Incubating public abstract boolean isV2SigningEnabled;
+    property @Deprecated public abstract boolean isV1SigningEnabled;
+    property @Deprecated public abstract boolean isV2SigningEnabled;
   }
 
   public interface ApplicationBaseFlavor extends com.android.build.api.dsl.BaseFlavor com.android.build.api.dsl.ApplicationVariantDimension {
@@ -763,7 +763,7 @@ package com.android.build.api.dsl {
     method public org.gradle.api.NamedDomainObjectContainer<? extends ProductFlavorT> getProductFlavors();
     method @org.gradle.api.Incubating public String? getResourcePrefix();
     method @Deprecated @org.gradle.api.Incubating public com.android.build.api.dsl.SdkComponents getSdkComponents();
-    method @org.gradle.api.Incubating public org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> getSigningConfigs();
+    method public org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> getSigningConfigs();
     method @org.gradle.api.Incubating public org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet> getSourceSets();
     method @org.gradle.api.Incubating public com.android.build.api.dsl.Splits getSplits();
     method public com.android.build.api.dsl.TestCoverage getTestCoverage();
@@ -784,7 +784,7 @@ package com.android.build.api.dsl {
     method @org.gradle.api.Incubating public void setNdkPath(String? ndkPath);
     method @org.gradle.api.Incubating public void setNdkVersion(String? ndkVersion);
     method @org.gradle.api.Incubating public void setResourcePrefix(String? resourcePrefix);
-    method @org.gradle.api.Incubating public void signingConfigs(kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig>,kotlin.Unit> action);
+    method public void signingConfigs(kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig>,kotlin.Unit> action);
     method @org.gradle.api.Incubating public void sourceSets(kotlin.jvm.functions.Function1<? super org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet>,kotlin.Unit> action);
     method @org.gradle.api.Incubating public void splits(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Splits,kotlin.Unit> action);
     method public void testCoverage(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.TestCoverage,kotlin.Unit> action);
@@ -819,7 +819,7 @@ package com.android.build.api.dsl {
     property public abstract org.gradle.api.NamedDomainObjectContainer<? extends ProductFlavorT> productFlavors;
     property @org.gradle.api.Incubating public abstract String? resourcePrefix;
     property @Deprecated @org.gradle.api.Incubating public abstract com.android.build.api.dsl.SdkComponents sdkComponents;
-    property @org.gradle.api.Incubating public abstract org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> signingConfigs;
+    property public abstract org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.ApkSigningConfig> signingConfigs;
     property @org.gradle.api.Incubating public abstract org.gradle.api.NamedDomainObjectContainer<? extends com.android.build.api.dsl.AndroidSourceSet> sourceSets;
     property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.Splits splits;
     property public abstract com.android.build.api.dsl.TestCoverage testCoverage;

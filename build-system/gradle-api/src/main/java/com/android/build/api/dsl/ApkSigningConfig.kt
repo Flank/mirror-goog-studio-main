@@ -16,7 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import org.gradle.api.Named
 
 /** DSL object to configure signing configs. */
@@ -27,8 +26,6 @@ interface ApkSigningConfig: SigningConfig, Named {
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
     @Deprecated("This property is deprecated", ReplaceWith("enableV1Signing"))
-    @get:Incubating
-    @set:Incubating
     var isV1SigningEnabled: Boolean
 
     /**
@@ -37,8 +34,6 @@ interface ApkSigningConfig: SigningConfig, Named {
      * See [Signing Your Applications](http://developer.android.com/tools/publishing/app-signing.html)
      */
     @Deprecated("This property is deprecated", ReplaceWith("enableV2Signing"))
-    @get:Incubating
-    @set:Incubating
     var isV2SigningEnabled: Boolean
 
     /**
