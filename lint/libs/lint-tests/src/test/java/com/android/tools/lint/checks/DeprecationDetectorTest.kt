@@ -460,4 +460,42 @@ class DeprecationDetectorTest : AbstractCheckTest() {
             """
         )
     }
+
+    fun testSharedUserId() {
+        // Regression test for issue 233388117
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg"
+                    android:sharedUserId="0"
+                    android:sharedUserMaxSdkVersion="32">
+                </manifest>
+                """
+            ).indented(),
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg"
+                    android:sharedUserId="0">
+                </manifest>
+                """
+            ).to("../app/AndroidManifest.xml")
+        ).run().expect(
+            """
+            AndroidManifest.xml:4: Warning: Consider removing sharedUserId for new users by adding android:sharedUserMaxSdkVersion="32" to your manifest. See https://developer.android.com/guide/topics/manifest/manifest-element for details. [Deprecated]
+                                android:sharedUserId="0">
+                                ~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        ).expectFixDiffs(
+            """
+            Fix for AndroidManifest.xml line 4: Set sharedUserMaxSdkVersion="32":
+            @@ -4 +4
+            -     android:sharedUserId="0" >
+            +     android:sharedUserId="0"
+            +     android:sharedUserMaxSdkVersion="32" >
+            """
+        )
+    }
 }
