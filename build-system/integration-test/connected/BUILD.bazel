@@ -52,6 +52,12 @@ TEST_DEPS = [
 
 avd(name = "avd")
 
+avd(
+    name = "avd_TiramisuPrivacySandbox",
+    image = "@system_image_android-TiramisuPrivacySandbox_default_x86_64//:x86_64-android-TiramisuPrivacySandbox-images",
+    platform = "//prebuilts/studio/sdk:platforms/android-TiramisuPrivacySandbox",
+)
+
 #keep sorted
 TEST_DATA = [
     "//prebuilts/studio/sdk:build-tools/latest",

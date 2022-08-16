@@ -39,3 +39,29 @@ filegroup(
     ],
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "x86_64-android-TiramisuPrivacySandbox-images",
+    srcs = [
+        "advancedFeatures.ini",
+        "build.prop",
+        "data/local.prop",
+        "data/misc/apns/apns-conf.xml",
+        "data/misc/gceconfigs/gpu.config",
+        "data/misc/emulator/version.txt",
+        "data/misc/emulator/config/radioconfig.xml",
+        "data/misc/modem_simulator/iccprofile_for_sim0.xml",
+        "data/misc/modem_simulator/iccprofile_for_carrierapitests.xml",
+        "data/misc/modem_simulator/etc/modem_simulator/files/numeric_operator.xml",
+        "encryptionkey.img",
+        "kernel-ranchu",
+        "NOTICE.txt",
+        "ramdisk.img",
+        "source.properties",
+        "system.img",
+        "userdata.img",
+        "vendor.img",
+        "VerifiedBootParams.textproto",
+    ],
+    visibility = ["//visibility:public"],
+)
