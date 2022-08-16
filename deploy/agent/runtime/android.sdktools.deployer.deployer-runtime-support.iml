@@ -6,27 +6,21 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/kotlin" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/src/main/java/com/android/tools/deploy/liveedit/superclasses" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/kotlin-eval4j.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/deploy_asm4.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/kotlin-stdlib.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -77,7 +71,20 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="mockito" level="project" />
+    <orderEntry type="module-library" scope="TEST">
+      <library name="mockito-junit-jupiter" type="repository">
+        <properties maven-id="org.mockito:mockito-junit-jupiter:3.12.4" />
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-junit-jupiter/3.12.4/mockito-junit-jupiter-3.12.4.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-junit-jupiter/3.12.4/mockito-junit-jupiter-3.12.4-javadoc.jar!/" />
+          <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-core/3.12.4/mockito-core-3.12.4-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" scope="TEST" name="studio-sdk" level="project" />
   </component>
 </module>
