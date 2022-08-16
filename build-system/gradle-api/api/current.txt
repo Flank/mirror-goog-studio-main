@@ -332,12 +332,12 @@ package com.android.build.api.dsl {
   }
 
   public interface AnnotationProcessorOptions {
-    method @org.gradle.api.Incubating public void argument(String key, String value);
-    method @org.gradle.api.Incubating public void arguments(java.util.Map<java.lang.String,java.lang.String> arguments);
-    method @org.gradle.api.Incubating public void className(String className);
-    method @org.gradle.api.Incubating public void classNames(java.lang.String... classNames);
-    method @org.gradle.api.Incubating public void compilerArgumentProvider(org.gradle.process.CommandLineArgumentProvider compilerArgumentProvider);
-    method @org.gradle.api.Incubating public void compilerArgumentProviders(org.gradle.process.CommandLineArgumentProvider... compilerArgumentProviders);
+    method public void argument(String key, String value);
+    method public void arguments(java.util.Map<java.lang.String,java.lang.String> arguments);
+    method public void className(String className);
+    method public void classNames(java.lang.String... classNames);
+    method public void compilerArgumentProvider(org.gradle.process.CommandLineArgumentProvider compilerArgumentProvider);
+    method public void compilerArgumentProviders(org.gradle.process.CommandLineArgumentProvider... compilerArgumentProviders);
     method public java.util.Map<java.lang.String,java.lang.String> getArguments();
     method public java.util.List<java.lang.String> getClassNames();
     method public java.util.List<org.gradle.process.CommandLineArgumentProvider> getCompilerArgumentProviders();

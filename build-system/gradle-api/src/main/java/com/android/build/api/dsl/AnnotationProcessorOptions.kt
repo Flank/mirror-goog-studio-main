@@ -16,7 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
 import org.gradle.process.CommandLineArgumentProvider
 
 /** Options for configuring Java annotation processor. */
@@ -39,7 +38,6 @@ interface AnnotationProcessorOptions {
      * annotation processor dependencies to your project, read
      * [Add annotation processors](https://d.android.com/studio/build/dependencies#annotation_processor).
      */
-    @Incubating
     fun className(className: String)
 
     /**
@@ -50,7 +48,6 @@ interface AnnotationProcessorOptions {
      * annotation processor dependencies to your project, read
      * [Add annotation processors](https://d.android.com/studio/build/dependencies#annotation_processor).
      */
-    @Incubating
     fun classNames(vararg classNames: String)
 
     /**
@@ -71,7 +68,6 @@ interface AnnotationProcessorOptions {
      *
      * @see [compilerArgumentProviders]
      */
-    @Incubating
     fun argument(key: String, value: String)
 
     /**
@@ -82,7 +78,6 @@ interface AnnotationProcessorOptions {
      *
      * @see [compilerArgumentProviders]
      */
-    @Incubating
     fun arguments(arguments: Map<String, String>)
 
     /**
@@ -111,7 +106,6 @@ interface AnnotationProcessorOptions {
      * pass them to the Android plugin, read
      * [Pass arguments to annotation processors](https://developer.android.com/studio/build/dependencies#processor-arguments).
      */
-    @Incubating
     fun compilerArgumentProvider(compilerArgumentProvider: CommandLineArgumentProvider)
 
     /**
@@ -126,6 +120,5 @@ interface AnnotationProcessorOptions {
      * pass them to the Android plugin, read
      * [Pass arguments to annotation processors](https://developer.android.com/studio/build/dependencies#processor-arguments).
      */
-    @Incubating
     fun compilerArgumentProviders(vararg compilerArgumentProviders: CommandLineArgumentProvider)
 }
