@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
 import org.objectweb.asm.tree.AnnotationNode;
 
@@ -86,6 +87,11 @@ public abstract class PermissionRequirement {
                 @Override
                 public IElementType getOperator() {
                     return null;
+                }
+
+                @Override
+                public boolean contains(@NotNull String permission) {
+                    return false;
                 }
 
                 @NonNull
@@ -336,6 +342,9 @@ public abstract class PermissionRequirement {
     @Nullable
     public abstract IElementType getOperator();
 
+    /** Returns true if this permission requirement involves the given permission name */
+    public abstract boolean contains(@NonNull String permission);
+
     /** Returns nested requirements, combined via {@link #getOperator()} */
     @NonNull
     public abstract Iterable<PermissionRequirement> getChildren();
@@ -358,6 +367,11 @@ public abstract class PermissionRequirement {
         @Override
         public IElementType getOperator() {
             return null;
+        }
+
+        @Override
+        public boolean contains(@NotNull String permission) {
+            return name.equals(permission);
         }
 
         @NonNull
@@ -532,6 +546,16 @@ public abstract class PermissionRequirement {
             return operator;
         }
 
+        @Override
+        public boolean contains(@NotNull String permission) {
+            for (PermissionRequirement requirement : permissions) {
+                if (requirement.contains(permission)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         @NonNull
         @Override
         public Iterable<PermissionRequirement> getChildren() {
@@ -658,6 +682,9 @@ public abstract class PermissionRequirement {
         List<String> names = new ArrayList<>();
         while (true) {
             int end = s.indexOf(',', start);
+            if (s.charAt(start) == '?') {
+                start++;
+            }
             if (end == -1) {
                 names.add(s.substring(start));
                 break;

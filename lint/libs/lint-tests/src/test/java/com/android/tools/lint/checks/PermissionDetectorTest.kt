@@ -1559,5 +1559,107 @@ class PermissionDetectorTest : AbstractCheckTest() {
         )
     }
 
+    /**
+     * Stub file for android.Manifest; we use this here to get access
+     * to the new permissions in Android T which aren't part of the
+     * prebuilts yet. Once those are in the prebuilts, this stub can be
+     * deleted.
+     */
+    private val androidPermissionsStub: TestFile = java(
+        """
+        package android;
+        public class Manifest {
+            public static class permission {
+                    public static final String NEARBY_WIFI_DEVICES = "android.permission.NEARBY_WIFI_DEVICES";
+                    public static final String ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
+                    public static final String BODY_SENSORS_BACKGROUND = "android.permission.BODY_SENSORS_BACKGROUND";
+            }
+        }
+        """
+    ).indented()
+
+    private val nearbyPermissionExample: TestFile = java(
+        """
+        package test.pkg;
+
+        import androidx.annotation.RequiresPermission;
+
+        public class MyApi {
+            @RequiresPermission(allOf = {
+                    android.Manifest.permission.NEARBY_WIFI_DEVICES,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+            }, conditional = true)
+            public void addLocalService(Object service) {
+            }
+
+            public void test() throws SecurityException {
+                addLocalService(this);
+            }
+        }
+        """
+    ).indented()
+
+    fun testNearby() {
+        // Regression test for 235963893: Handling for NEARBY_WIFI_DEVICES
+        lint().files(
+            getManifestWithPermissions(33, "android.permission.ACCESS_FINE_LOCATION"),
+            nearbyPermissionExample,
+            androidPermissionsStub,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/MyApi.java:14: Error: Missing permissions required by MyApi.addLocalService: android.permission.NEARBY_WIFI_DEVICES [MissingPermission]
+                    addLocalService(this);
+                    ~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
+    fun testNearbyOk() {
+        // Regression test for 235963893: Handling for NEARBY_WIFI_DEVICES
+        lint().files(
+            getManifestWithPermissions(33, "android.permission.ACCESS_FINE_LOCATION", "android.permission.NEARBY_WIFI_DEVICES"),
+            nearbyPermissionExample,
+            androidPermissionsStub,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testNearbyMissingLocation() {
+        // Arguably, we should flag your missing location permission here. However, the permission is marked
+        // conditional, and we *only* enforce a conditional permission if it's missing the specific targetSdkVersion=33 sensitive
+        // permissions. That's the cautiousness this test is checking.
+        lint().files(
+            getManifestWithPermissions(33, "android.permission.NEARBY_WIFI_DEVICES"),
+            nearbyPermissionExample,
+            androidPermissionsStub,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testNearbyTargetSdkLessThan33() {
+        // Regression test for 235963893: Handling for NEARBY_WIFI_DEVICES
+        // When target < 33, don't flag these
+        lint().files(
+            getManifestWithPermissions(32, "android.permission.ACCESS_FINE_LOCATION"),
+            nearbyPermissionExample,
+            androidPermissionsStub,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
+    fun testNearbyMissingBothPermissions() {
+        // Like testNearby, but missing more than *just* the nearby permission; in that case, we don't
+        // flag anything because we have less confidence that the conditional permission is only
+        // conditional on the special nearby permission.
+        lint().files(
+            manifest().minSdk(33),
+            nearbyPermissionExample,
+            androidPermissionsStub,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     // TODO: Add revocable tests
 }

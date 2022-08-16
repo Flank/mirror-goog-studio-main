@@ -147,6 +147,12 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             return true
         }
 
+        for (permission in TARGET_33_CONDITIONAL_PERMISSIONS) {
+            if (requirement.contains(permission)) {
+                return true
+            }
+        }
+
         // Not a known case: leave uncertain
         return false
     }
@@ -251,6 +257,15 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                         "power exemption from user; it is intended for applications where the user knowingly " +
                         "schedules actions to happen at a precise time such as alarms, clocks, calendars, etc. " +
                         "Check out the javadoc on this permission to make sure your use case is valid."
+                } else if (requirement.isConditional) {
+                    // Normally we skip conditional permissions, but there are a handful of special permissions
+                    // recently added (listed in TARGET_33_CONDITIONAL_PERMISSIONS) where we make the assumption
+                    // that the specific condition is "targetSdkVersion >= 33", which we can check.
+                    if (missingPermissions.size == 1 && TARGET_33_CONDITIONAL_PERMISSIONS.contains(missingPermissions.first())) {
+                        constraint = targetSdkAtLeast(33)
+                    } else {
+                        return
+                    }
                 }
 
                 if (context.isGlobalAnalysis()) {
@@ -592,6 +607,16 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
         private const val THINGS_LIBRARY = "com.google.android.things"
         const val AOSP_PERMISSION_ANNOTATION = "android.annotation.RequiresPermission"
+
+        /**
+         * These permissions are required if (1) the `targetSdkVersion` is >= 33,
+         * and (2) the permission requirement is marked conditional and includes
+         * one of these permissions as one of its terms.
+         */
+        private val TARGET_33_CONDITIONAL_PERMISSIONS = listOf(
+            "android.permission.NEARBY_WIFI_DEVICES",
+            "android.permission.BODY_SENSORS_BACKGROUND"
+        )
 
         /** Method result should be used. */
         @JvmField
