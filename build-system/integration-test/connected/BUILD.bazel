@@ -50,6 +50,11 @@ TEST_DEPS = [
     "@maven//:org.jetbrains.kotlin.kotlin-test",
 ]
 
+avd(
+    name = "avd_old_emulator_binary",
+    emulator = "//prebuilts/android-emulator:emulator",
+)
+
 avd(name = "avd")
 
 avd(
@@ -777,8 +782,9 @@ gradle_connected_test(
 gradle_connected_test(
     name = "FailureRetentionConnectedTest",
     srcs = "src/test/java/com/android/build/gradle/integration/connected/application/",
-    avd = ":avd",
+    avd = ":avd_old_emulator_binary",
     data = TEST_DATA + ["//tools/base/build-system/integration-test:test-projects/failureRetention"],
+    emulator_binary_path = "prebuilts/android-emulator/linux-x86_64/emulator",
     flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = TEST_MAVEN_REPOS,

@@ -24,7 +24,7 @@ def _avd_impl(ctx):
     )
 
     runfiles = ctx.runfiles(files = [executable] +
-                                    ctx.files._emulator +
+                                    ctx.files.emulator +
                                     ctx.files.platform +
                                     ctx.files._platform_tools +
                                     ctx.files.image)
@@ -37,8 +37,8 @@ avd = rule(
             default = "//tools/base/bazel/avd:emulator_launcher.sh.template",
             allow_single_file = True,
         ),
-        "_emulator": attr.label(
-            default = "//prebuilts/android-emulator:emulator",
+        "emulator": attr.label(
+            default = "//prebuilts/studio/sdk:emulator",
         ),
         "_platform_tools": attr.label(
             default = "//prebuilts/studio/sdk:platform-tools",

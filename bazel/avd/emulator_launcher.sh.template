@@ -26,20 +26,21 @@ export ANDROID_EMULATOR_HOME=$HOME/.android
 export ANDROID_AVD_HOME=$ANDROID_EMULATOR_HOME/avd
 
 # Relevant binaries.
-emulator=prebuilts/android-emulator/linux-x86_64/emulator
+emulator=$1
 adb=prebuilts/studio/sdk/linux/platform-tools/adb
 
 # Kill the emulator if requested. This is needed to kill the emulator for
 # local development.
-if [ "$1" = "kill" ]; then
-  echo "Killing emulator-$2"
-  $adb -s emulator-$2 emu kill 2> /dev/null
+if [ "$2" = "kill" ]; then
+  port=$3
+  echo "Killing emulator-$port"
+  $adb -s emulator-$port emu kill 2> /dev/null
 
   # Wait for the emulator to disconnect.
   while true; do
     # Update adb to make sure it knows the emulator is killed.
     $adb reconnect 2>&1
-    output=$($adb -s emulator-$2 get-state 2> /dev/null)
+    output=$($adb -s emulator-$port get-state 2> /dev/null)
     if [ -z "$output" ]; then
       break
     fi
@@ -48,6 +49,7 @@ if [ "$1" = "kill" ]; then
   done
   exit $?
 fi
+port=$2
 
 # Clear emulator files.
 rm -rf .android 2> /dev/null
@@ -100,20 +102,20 @@ image.sysdir.1=$system_image_dir
 EOF
 
 # Launch the emulator.
-echo "Launching emulator-$1"
+echo "Launching emulator-$port"
 boot_complete=false
 # Try to launch the emulator. Keep relaunching if it takes too long.
 for i in 1 2 3
 do
   start_time=$SECONDS
 
-  $emulator @emu -no-window -port $1 -grpc $emulator_grpc_port -delay-adb -no-snapshot 2>&1 &
+  $emulator @emu -no-window -port $port -grpc $emulator_grpc_port -delay-adb -no-snapshot 2>&1 &
   emu_pid=$!
 
   # Wait for the emulator to boot.
   echo "Waiting for emulator to boot"
   while true; do
-    output=$($adb -s emulator-$1 shell getprop sys.boot_completed 2>&1)
+    output=$($adb -s emulator-$port shell getprop sys.boot_completed 2>&1)
     if [ "$output" = "1" ]; then
       boot_complete=true
       break
