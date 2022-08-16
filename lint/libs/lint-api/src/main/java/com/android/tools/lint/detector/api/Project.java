@@ -99,6 +99,7 @@ public class Project {
     protected final LintClient client;
     protected final File dir;
     protected File referenceDir;
+    protected final File partialResultsDir;
     protected Configuration configuration;
     protected String pkg;
     protected Document dom;
@@ -324,11 +325,21 @@ public class Project {
     }
 
     /** Creates a new Project. Use one of the factory methods to create. */
-    protected Project(@NonNull LintClient client, @NonNull File dir, @NonNull File referenceDir) {
+    protected Project(
+            @NonNull LintClient client,
+            @NonNull File dir,
+            @NonNull File referenceDir,
+            File partialResultsDir) {
         this.client = client;
         this.dir = dir;
         this.referenceDir = referenceDir;
+        this.partialResultsDir = partialResultsDir;
         initialize();
+    }
+
+    /** Creates a new Project. Use one of the factory methods to create. */
+    protected Project(@NonNull LintClient client, @NonNull File dir, @NonNull File referenceDir) {
+        this(client, dir, referenceDir, null);
     }
 
     protected void initialize() {
@@ -710,6 +721,18 @@ public class Project {
     @NonNull
     public File getReferenceDir() {
         return referenceDir;
+    }
+
+    /**
+     * Returns the partial results directory for the project, or null if unset. All per-project
+     * serialized files will be written to this directory, if set (not just the partial results
+     * file). Note that Gradle build variants for a project may provide a more specific partial
+     * results directory.
+     *
+     * @return the partial results directory for the project, or null if unset
+     */
+    public File getPartialResultsDir() {
+        return partialResultsDir;
     }
 
     /**

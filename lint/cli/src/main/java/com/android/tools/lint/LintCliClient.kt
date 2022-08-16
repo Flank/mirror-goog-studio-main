@@ -474,7 +474,7 @@ open class LintCliClient : LintClient {
         partialResults?.let { map: MutableMap<Issue, PartialResult> ->
             partialFile.parentFile?.mkdirs()
             val resultMap = map.mapValues { it.value.map() }
-            XmlWriter(this, partialFile, type).writePartialResults(resultMap)
+            XmlWriter(this, partialFile, type).writePartialResults(resultMap, project)
         } ?: partialFile.delete()
     }
 
@@ -585,8 +585,13 @@ open class LintCliClient : LintClient {
             try {
                 for (main in dependents) {
                     val mainConfig = main.getConfiguration(driver)
+                    // The two configurations could be the same object, such
+                    // as if the two projects share the same root directory;
+                    // we avoid creating a self-loop in this case.
+                    if (mainConfig !== libraryConfigLeaf) {
+                        libraryConfigLeaf.setParent(mainConfig)
+                    }
                     val mainContext = Context(driver, main, main, main.dir)
-                    libraryConfigLeaf.setParent(mainConfig)
                     mergeIncidents(library, main, mainContext, definiteMap, provisionalMap)
                     val libraryIssues = issueMap[library] ?: emptyMap()
                     checkConfigured(library, libraryIssues, main, mainContext)
@@ -699,6 +704,7 @@ open class LintCliClient : LintClient {
         val variant = project.buildVariant
         val dir = variant?.partialResultsDir
             ?: variant?.module?.buildFolder
+            ?: project.partialResultsDir
             ?: File(project.dir, "build")
         val variantName = variant?.name ?: "all"
         return File(dir, xmlType.getDefaultFileName(variantName))

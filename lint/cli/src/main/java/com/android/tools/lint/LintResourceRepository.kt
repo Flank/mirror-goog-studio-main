@@ -494,7 +494,11 @@ open class LintResourceRepository constructor(
 
             // Write for future usage
             serializedFile.parentFile?.mkdirs()
-            val serialized = LintResourcePersistence.serialize(repository, client.pathVariables)
+            val serialized = LintResourcePersistence.serialize(
+                repository,
+                client.pathVariables,
+                project?.dir
+            )
             serializedFile.writeText(serialized)
             return repository
         }

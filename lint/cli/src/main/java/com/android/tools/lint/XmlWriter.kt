@@ -295,7 +295,7 @@ open class XmlWriter constructor(
                     writer.write(">\n")
                     hasChildren = true
                 }
-                writeLintMap(map)
+                writeLintMap(map, project = incident.project)
             }
         }
 
@@ -309,7 +309,12 @@ open class XmlWriter constructor(
         }
     }
 
-    private fun writeLintMap(map: LintMap, indent: Int = 2, name: String? = null) {
+    private fun writeLintMap(
+        map: LintMap,
+        indent: Int = 2,
+        name: String? = null,
+        project: Project? = null
+    ) {
         val entries = LintMap.getInternalMap(map).entries
         if (entries.isEmpty()) {
             return
@@ -332,11 +337,11 @@ open class XmlWriter constructor(
                 is Boolean -> ATTR_BOOLEAN
                 is Severity -> ATTR_SEVERITY
                 is Location -> {
-                    writeLocation(null, value, TAG_LOCATION, indent + 1, key)
+                    writeLocation(project, value, TAG_LOCATION, indent + 1, key)
                     continue@loop
                 }
                 is LintMap -> {
-                    writeLintMap(value, indent + 2, key)
+                    writeLintMap(value, indent + 2, key, project)
                     continue@loop
                 }
                 is Incident -> {
@@ -773,7 +778,7 @@ open class XmlWriter constructor(
     }
 
     /** Writes the given list. */
-    fun writePartialResults(resultMap: Map<Issue, LintMap>) {
+    fun writePartialResults(resultMap: Map<Issue, LintMap>, project: Project) {
         writeProlog()
         // TODO: Switch root tags
         writeOpenTag(TAG_INCIDENTS, getDefaultRootAttributes().toMap())
@@ -781,7 +786,7 @@ open class XmlWriter constructor(
             for ((issue, map) in resultMap.entries) {
                 val id = issue.id
                 if (map.isNotEmpty()) {
-                    writeLintMap(map, 1, id)
+                    writeLintMap(map, 1, id, project)
                 }
             }
         }

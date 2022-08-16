@@ -47,10 +47,14 @@ import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.readText
+import kotlin.streams.toList
 
 class ProjectInitializerTest {
     @Test
@@ -1741,6 +1745,585 @@ class ProjectInitializerTest {
             "com.google.common.util",
             findPackage(source, File("package-info.java"))
         )
+    }
+
+    @Test
+    fun testIsolatedPartialAnalysisWithSingleProjectRoot() {
+        // We simulate integration of partial analysis with a build system like Bazel. As such, this
+        // test also acts as a guide for integrating lint with partial analysis support with a build
+        // system like Bazel. The integration code would need to generate `project.xml` files and
+        // invoke lint in a similar way to what is done below.
+        //
+        // We create 4 projects: `a`, `b`, `c`, and `onlyres`. We analyze each project in isolation,
+        // propagating partial results to dependent targets. We use `--analyze-only` mode, then
+        // `--report-only` mode on every project. We want to report definite issues for a target
+        // immediately, while partial and provisional issues propagate to dependent targets. We use
+        // `UnusedResources` to check that partial issues are reported correctly. We use
+        // `LongLogTag` and `MissingSuperCall` to check that provisional and definite issues are
+        // reported correctly. Each project has an unused resource, as well as one resource that is
+        // used in each dependent project. Project `c` is the app/binary project.
+        //
+        // Depends-on: `a` <- `b` <- `c` -> `onlyres`
+        //              ^____________/
+
+        val tempDir = temp.newFolder().canonicalFile.absoluteFile
+
+        // We will check that various output files do NOT contain "buildRoot". In other words, there
+        // should be no absolute paths in output files.
+        val root = File(tempDir, "buildRoot")
+
+        fun checkFilesDoNotContainBuildRoot(dir: File) {
+            val badFiles =
+                java.nio.file.Files.list(dir.toPath())
+                    .filter {
+                        it.isRegularFile()
+                                && it.readText(Charsets.UTF_8).contains("buildRoot")
+                    }
+                    .toList()
+            assertTrue(
+                "The following files contain the buildRoot directory, " +
+                        "which should not happen: ${badFiles.joinToString()}",
+                badFiles.isEmpty()
+            )
+        }
+
+        fun createFile(path: String, content: String): File {
+            val trimmedContent = content.trimIndent()
+            val file = File(root, path)
+            file.parentFile?.mkdirs()
+            Files.asCharSink(file, Charsets.UTF_8).write(trimmedContent)
+            return file
+        }
+
+        fun createXmlFile(path: String, @Language("XML") content: String): File =
+            createFile(path, content)
+
+        fun createJavaFile(path: String, @Language("JAVA") content: String): File =
+            createFile(path, content)
+
+        val configFile = createXmlFile(
+            "configs/config.xml",
+            """
+            <lint>
+                <issue id="all" severity="ignore" />
+                <issue id="MissingClass" severity="error" />
+                <issue id="UnusedResources" severity="error" />
+                <issue id="LongLogTag" severity="error" />
+                <issue id="MissingSuperCall" severity="error" />
+            </lint>"""
+        )
+
+        // Project a:
+        createJavaFile(
+            "java/com/google/a/Activity.java",
+            """
+            package com.google.a;
+
+            import android.util.Log;
+
+            public class Activity extends android.app.Activity {
+
+                private static final String TAG = "SuperSuperLongLogTagThatExceedsMax";
+
+                @Override
+                protected void onStart() {
+                    // Missing super call.
+                    this.setTitle(R.string.a_string_used_in_a);
+                    Log.d(TAG, "message");
+                }
+            }"""
+        )
+        createXmlFile(
+            "java/com/google/a/AndroidManifest.xml",
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.google.a">
+
+                <uses-sdk
+                    android:minSdkVersion="14"
+                    android:targetSdkVersion="28" />
+
+                <application>
+                    <activity
+                        android:name="com.google.a.Activity"
+                        android:exported="false" />
+                </application>
+
+            </manifest>"""
+        )
+        createXmlFile(
+            "java/com/google/a/res/values/strings.xml",
+            """
+            <resources>
+                <string name="a_string_used_in_a">a string used in a</string>
+                <string name="a_string_used_in_b">a string used in b</string>
+                <string name="a_string_used_in_c">a string used in c</string>
+                <string name="a_string_unused">a string unused</string>
+            </resources>"""
+        )
+        val projectA = createXmlFile(
+            "out/java/com/google/a/project.xml",
+            """
+            <project>
+            <root dir="$root" />
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/a:a"
+                partial-results-dir="out/java/com/google/a/lint_partial_results"
+                desugar="full">
+            <manifest file="java/com/google/a/AndroidManifest.xml" />
+            <merged-manifest file="java/com/google/a/AndroidManifest.xml" />
+            <src file="java/com/google/a/Activity.java" />
+            <resource file="java/com/google/a/res/values/strings.xml" />
+            </module>
+            </project>
+            """
+        )
+        File(root, "out/java/com/google/a/lint_partial_results").mkdirs()
+
+        // Project b:
+        createJavaFile(
+            "java/com/google/b/Activity.java",
+            """
+            package com.google.b;
+
+            import android.util.Log;
+
+            public class Activity extends android.app.Activity {
+
+                private static final String TAG = "SuperSuperLongLogTagThatExceedsMax";
+
+                @Override
+                protected void onStart() {
+                    // Missing super call.
+                    this.setTitle(com.google.a.R.string.a_string_used_in_b);
+                    this.setTitle(R.string.b_string_used_in_b);
+                    Log.d(TAG, "message");
+                }
+            }"""
+        )
+        createXmlFile(
+            "java/com/google/b/AndroidManifest.xml",
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.google.b">
+
+                <uses-sdk
+                    android:minSdkVersion="14"
+                    android:targetSdkVersion="28" />
+
+                <application>
+                    <activity
+                        android:name="com.google.b.Activity"
+                        android:exported="false" />
+                </application>
+
+            </manifest>"""
+        )
+        createXmlFile(
+            "java/com/google/b/res/values/strings.xml",
+            """
+            <resources>
+                <string name="b_string_used_in_b">b string used in b</string>
+                <string name="b_string_used_in_c">b string used in c</string>
+                <string name="b_string_unused">b string unused</string>
+            </resources>"""
+        )
+        val projectB = createXmlFile(
+            "out/java/com/google/b/project.xml",
+            """
+            <project>
+            <root dir="$root" />
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/b:b"
+                partial-results-dir="out/java/com/google/b/lint_partial_results"
+                desugar="full">
+            <manifest file="java/com/google/b/AndroidManifest.xml" />
+            <merged-manifest file="java/com/google/b/AndroidManifest.xml" />
+            <src file="java/com/google/b/Activity.java" />
+            <resource file="java/com/google/b/res/values/strings.xml" />
+            <dep module="//java/com/google/a:a" />
+            </module>
+            <module android="true"
+                library="true"
+                name="//java/com/google/a:a"
+                desugar="full"
+                partial-results-dir="out/java/com/google/a/lint_partial_results" />
+            </project>
+            """
+        )
+        File(root, "out/java/com/google/b/lint_partial_results").mkdirs()
+
+        // Project onlyres:
+        createXmlFile(
+            "java/com/google/onlyres/AndroidManifest.xml",
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.google.onlyres">
+
+                <uses-sdk
+                    android:minSdkVersion="14"
+                    android:targetSdkVersion="28" />
+
+            </manifest>"""
+        )
+        createXmlFile(
+            "java/com/google/onlyres/res/values/strings.xml",
+            """
+            <resources>
+                <string name="onlyres_string_used_in_c">onlyres string used in c</string>
+                <string name="onlyres_string_unused">onlyres string unused</string>
+            </resources>"""
+        )
+        val projectOnlyRes = createXmlFile(
+            "out/java/com/google/onlyres/project.xml",
+            """
+            <project>
+            <root dir="$root" />
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/onlyres:onlyres"
+                partial-results-dir="out/java/com/google/onlyres/lint_partial_results"
+                desugar="full">
+            <manifest file="java/com/google/onlyres/AndroidManifest.xml" />
+            <merged-manifest file="java/com/google/onlyres/AndroidManifest.xml" />
+            <resource file="java/com/google/onlyres/res/values/strings.xml" />
+            </module>
+            </project>
+            """
+        )
+        File(root, "out/java/com/google/onlyres/lint_partial_results").mkdirs()
+
+        // Project c (the app):
+        createJavaFile(
+            "java/com/google/c/Activity.java",
+            """
+            package com.google.c;
+
+            import android.util.Log;
+
+            public class Activity extends android.app.Activity {
+
+                private static final String TAG = "SuperSuperLongLogTagThatExceedsMax";
+
+                @Override
+                protected void onStart() {
+                    // Missing super call.
+                    this.setTitle(com.google.a.R.string.a_string_used_in_c);
+                    this.setTitle(com.google.b.R.string.b_string_used_in_c);
+                    this.setTitle(com.google.onlyres.R.string.onlyres_string_used_in_c);
+                    this.setTitle(R.string.c_string_used_in_c);
+                    Log.d(TAG, "message");
+                }
+            }"""
+        )
+        createXmlFile(
+            "java/com/google/c/AndroidManifest.xml",
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.google.c">
+
+                <uses-sdk
+                    android:minSdkVersion="14"
+                    android:targetSdkVersion="28" />
+
+                <application>
+                    <activity
+                        android:name="com.google.c.Activity"
+                        android:exported="true" />
+                    <action android:name="android.intent.action.MAIN" />
+                    <category android:name="android.intent.category.LAUNCHER" />
+                </application>
+
+            </manifest>"""
+        )
+        createXmlFile(
+            "java/com/google/c/res/values/strings.xml",
+            """
+            <resources>
+                <string name="c_string_used_in_c">c string used in c</string>
+                <string name="c_string_unused">c string unused</string>
+            </resources>"""
+        )
+        createXmlFile(
+            "out/java/com/google/c/AndroidManifestMerged.xml",
+            """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.google.c">
+
+                <uses-sdk
+                    android:minSdkVersion="14"
+                    android:targetSdkVersion="28" />
+
+                <application>
+                    <activity
+                        android:name="com.google.a.Activity"
+                        android:exported="false" />
+                    <activity
+                        android:name="com.google.b.Activity"
+                        android:exported="false" />
+                    <activity
+                        android:name="com.google.c.Activity"
+                        android:exported="true" />
+                    <action android:name="android.intent.action.MAIN" />
+                    <category android:name="android.intent.category.LAUNCHER" />
+                </application>
+
+            </manifest>"""
+        )
+        val projectC = createXmlFile(
+            "out/java/com/google/c/project.xml",
+            """
+            <project>
+            <root dir="$root" />
+            <module
+                android="true"
+                library="false"
+                name="//java/com/google/c:c"
+                partial-results-dir="out/java/com/google/c/lint_partial_results"
+                desugar="full">
+            <manifest file="java/com/google/c/AndroidManifest.xml" />
+            <merged-manifest file="out/java/com/google/c/AndroidManifestMerged.xml" />
+            <src file="java/com/google/c/Activity.java" />
+            <resource file="java/com/google/c/res/values/strings.xml" />
+            <dep module="//java/com/google/a:a" />
+            <dep module="//java/com/google/b:b" />
+            <dep module="//java/com/google/onlyres:onlyres" />
+            </module>
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/a:a"
+                desugar="full"
+                partial-results-dir="out/java/com/google/a/lint_partial_results" />
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/b:b"
+                desugar="full"
+                partial-results-dir="out/java/com/google/b/lint_partial_results" />
+            <module
+                android="true"
+                library="true"
+                name="//java/com/google/onlyres:onlyres"
+                desugar="full"
+                partial-results-dir="out/java/com/google/onlyres/lint_partial_results" />
+            </project>
+            """
+        )
+        File(root, "out/java/com/google/c/lint_partial_results").mkdirs()
+
+
+        // Analyze project a.
+        MainTest.checkDriver(
+            "",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectA.toString(),
+                "--analyze-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+
+        MainTest.checkDriver(
+            """
+                java/com/google/a/Activity.java:10: Error: Overriding method should call super.onStart [MissingSuperCall]
+                    protected void onStart() {
+                                   ~~~~~~~
+                java/com/google/a/Activity.java:13: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                2 errors, 0 warnings""",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectA.toString(),
+                "--report-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+        checkFilesDoNotContainBuildRoot(
+            File(root, "out/java/com/google/a/lint_partial_results")
+        )
+
+        // Delete definite issues, as these have definitely already been reported.
+        File(root, "out/java/com/google/a/lint_partial_results/lint-definite-all.xml").delete()
+
+        // Analyze project b.
+        MainTest.checkDriver(
+            "",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectB.toString(),
+                "--analyze-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+
+        MainTest.checkDriver(
+            """
+                java/com/google/b/Activity.java:10: Error: Overriding method should call super.onStart [MissingSuperCall]
+                    protected void onStart() {
+                                   ~~~~~~~
+                java/com/google/a/Activity.java:13: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                java/com/google/b/Activity.java:14: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                3 errors, 0 warnings""",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectB.toString(),
+                "--report-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+        checkFilesDoNotContainBuildRoot(File(root, "out/java/com/google/b/lint_partial_results"))
+        // Delete definite issues.
+        File(root, "out/java/com/google/b/lint_partial_results/lint-definite-all.xml").delete()
+
+        // Analyze project onlyres.
+        MainTest.checkDriver(
+            "",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectOnlyRes.toString(),
+                "--analyze-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+
+        MainTest.checkDriver(
+            "No issues found.",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectOnlyRes.toString(),
+                "--report-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+        checkFilesDoNotContainBuildRoot(
+            File(root, "out/java/com/google/onlyres/lint_partial_results")
+        )
+        // Delete definite issues.
+        File(
+            root, "out/java/com/google/onlyres/lint_partial_results/lint-definite-all.xml"
+        ).delete()
+
+        // Analyze project c.
+        MainTest.checkDriver(
+            "",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectC.toString(),
+                "--analyze-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+
+        MainTest.checkDriver(
+            """
+                java/com/google/c/Activity.java:10: Error: Overriding method should call super.onStart [MissingSuperCall]
+                    protected void onStart() {
+                                   ~~~~~~~
+                java/com/google/a/Activity.java:13: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                java/com/google/b/Activity.java:14: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                java/com/google/c/Activity.java:16: Error: The logging tag can be at most 23 characters, was 34 (SuperSuperLongLogTagThatExceedsMax) [LongLogTag]
+                        Log.d(TAG, "message");
+                              ~~~
+                java/com/google/c/res/values/strings.xml:3: Error: The resource R.string.c_string_unused appears to be unused [UnusedResources]
+                    <string name="c_string_unused">c string unused</string>
+                            ~~~~~~~~~~~~~~~~~~~~~~
+                java/com/google/onlyres/res/values/strings.xml:3: Error: The resource R.string.onlyres_string_unused appears to be unused [UnusedResources]
+                    <string name="onlyres_string_unused">onlyres string unused</string>
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                java/com/google/b/res/values/strings.xml:4: Error: The resource R.string.b_string_unused appears to be unused [UnusedResources]
+                    <string name="b_string_unused">b string unused</string>
+                            ~~~~~~~~~~~~~~~~~~~~~~
+                java/com/google/a/res/values/strings.xml:5: Error: The resource R.string.a_string_unused appears to be unused [UnusedResources]
+                    <string name="a_string_unused">a string unused</string>
+                            ~~~~~~~~~~~~~~~~~~~~~~
+                8 errors, 0 warnings""",
+            "",
+            // Expected exit code
+            ERRNO_SUCCESS,
+            // Args
+            arrayOf(
+                "--config",
+                configFile.toString(),
+                "--project",
+                projectC.toString(),
+                "--report-only",
+                "--sdk-home",
+                TestUtils.getSdk().toString()
+            ),
+            null, null
+        )
+        checkFilesDoNotContainBuildRoot(File(root, "out/java/com/google/c/lint_partial_results"))
     }
 
     companion object {

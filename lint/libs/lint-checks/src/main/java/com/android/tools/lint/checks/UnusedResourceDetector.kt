@@ -133,6 +133,11 @@ class UnusedResourceDetector : ResourceXmlDetector(), SourceCodeScanner, BinaryR
     }
 
     override fun checkPartialResults(context: Context, partialResults: PartialResult) {
+        // Only report unused resources when checking an app project.
+        if (context.project.isLibrary) {
+            return;
+        }
+
         // We need to pull the resource graph along because a reference in
         // main could then result in a bunch of other resources being
         // references

@@ -106,6 +106,7 @@ private const val ATTR_DESUGAR = "desugar"
 private const val ATTR_JAVA_LEVEL = "javaLanguage"
 private const val ATTR_KOTLIN_LEVEL = "kotlinLanguage"
 private const val ATTR_MODEL = "model"
+private const val ATTR_PARTIAL_RESULTS_DIR = "partial-results-dir"
 private const val DOT_SRCJAR = ".srcjar"
 
 /**
@@ -559,7 +560,14 @@ private class ProjectInitializer(
         }
 
         val dir = pickDirectory(name).let { if (it.isDirectory) it else root }
-        val module = ManualProject(client, dir, name, library, android)
+
+        val partialResultsDir: File? = if (moduleElement.hasAttribute(ATTR_PARTIAL_RESULTS_DIR)) {
+            getFile(moduleElement.getAttribute(ATTR_PARTIAL_RESULTS_DIR), moduleElement, dir)
+        } else {
+            null
+        }
+
+        val module = ManualProject(client, dir, name, library, android, partialResultsDir)
         modules[name] = module
 
         val model = if (moduleElement.hasAttribute(ATTR_MODEL)) {
@@ -794,8 +802,14 @@ private class ProjectInitializer(
             }
         }
 
+        val partialResultsDir: File? = if (element.hasAttribute(ATTR_PARTIAL_RESULTS_DIR)) {
+            getFile(element.getAttribute(ATTR_PARTIAL_RESULTS_DIR), element, dir)
+        } else {
+            null
+        }
+
         // Create module wrapper
-        val project = ManualProject(client, expanded, name, true, true)
+        val project = ManualProject(client, expanded, name, true, true, partialResultsDir)
         project.reportIssues = false
         val manifest = File(expanded, ANDROID_MANIFEST_XML)
         if (manifest.isFile) {
@@ -842,8 +856,14 @@ private class ProjectInitializer(
 
         val name = jarFile.name
 
+        val partialResultsDir: File? = if (element.hasAttribute(ATTR_PARTIAL_RESULTS_DIR)) {
+            getFile(element.getAttribute(ATTR_PARTIAL_RESULTS_DIR), element, dir)
+        } else {
+            null
+        }
+
         // Create module wrapper
-        val project = ManualProject(client, jarFile, name, true, false)
+        val project = ManualProject(client, jarFile, name, true, false, partialResultsDir)
         project.reportIssues = false
         project.setClasspath(listOf(jarFile), false)
         jarAarMap[jarFile] = name
@@ -1155,8 +1175,9 @@ constructor(
     dir: File,
     name: String,
     library: Boolean,
-    private var android: Boolean
-) : Project(client, dir, dir) {
+    private var android: Boolean,
+    partialResultsDir: File?
+) : Project(client, dir, dir, partialResultsDir) {
 
     var variant: LintModelVariant? = null
 

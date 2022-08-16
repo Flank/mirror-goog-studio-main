@@ -897,12 +897,22 @@ abstract class LintClient {
     }
 
     /**
-     * A map from directory to existing projects, or null. Used to
-     * ensure that projects are unique for a directory (in case we
-     * process a library project before its including project for
-     * example)
+     * A map from directory to existing projects. Usually, each directory will
+     * map to exactly one project. However, in some build systems (e.g. Bazel),
+     * multiple projects can have the same root directory. In this case, the
+     * directory will map to the _first_ registered project with this directory.
+     * While this may not seem particularly useful, this map is generally only
+     * used when the build system is known to have one project per directory
+     * (e.g. Gradle) or as a heuristic to associate source files with the
+     * nearest project.
      */
     protected val dirToProject: MutableMap<File, Project> = HashMap()
+
+    /**
+     * Used for [knownProjects]. We cannot use [dirToProject] because
+     * there can be multiple projects per dir.
+     */
+    private val projects: MutableList<Project> = ArrayList()
 
     /**
      * Returns a project for the given directory. This should return the
@@ -932,6 +942,7 @@ abstract class LintClient {
 
         val project = createProject(dir, referenceDir)
         dirToProject[canonicalDir] = project
+        projects.add(project)
         return project
     }
 
@@ -949,12 +960,13 @@ abstract class LintClient {
 
     /**
      * Returns the list of known projects (projects registered via
-     * [getProject]).
+     * [getProject] or [registerProject]).
      *
      * @return a collection of projects in any order
      */
-    val knownProjects: Collection<Project>
-        get() = dirToProject.values
+    val knownProjects: Collection<Project> get() {
+        return projects
+    }
 
     /** Path variables to use when reading and writing paths */
     open val pathVariables: PathVariables
@@ -968,9 +980,9 @@ abstract class LintClient {
 
     /**
      * Registers the given project for the given directory. This can be
-     * used when projects are initialized outside of the client itself.
+     * used when projects are initialized outside the client itself.
      *
-     * @param dir the directory of the project, which must be unique
+     * @param dir the directory of the project, which might not be unique
      * @param project the project
      */
     open fun registerProject(dir: File, project: Project) {
@@ -985,8 +997,10 @@ abstract class LintClient {
             } catch (ioe: IOException) {
                 dir
             }
-        assert(!dirToProject.containsKey(dir)) { dir }
-        dirToProject[canonicalDir] = project
+        if (!dirToProject.containsKey(canonicalDir)) {
+            dirToProject[canonicalDir] = project
+        }
+        projects.add(project)
     }
 
     protected val projectDirs: MutableSet<File> = Sets.newHashSet<File>()

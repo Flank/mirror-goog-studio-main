@@ -251,6 +251,10 @@ open class DefaultJavaEvaluator(
     }
 
     fun getProject(file: File): Project? {
+        // TODO: We could change the filter below to consider source files instead of just
+        //  Project.dir (which is not always useful in some build systems). However, this function
+        //  appears to be used for finding the Gradle group id, where filtering based on Project.dir
+        //  is probably fine.
         val projects = myLintProject?.client?.knownProjects ?: return null
         if (projects.isEmpty()) {
             return null
