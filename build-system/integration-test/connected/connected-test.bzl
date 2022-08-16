@@ -20,6 +20,7 @@ def gradle_connected_test(
         deps,
         data,
         maven_repos,
+        maven_artifacts = [],
         runtime_deps = [],
         tags = [],
         timeout = "long",
@@ -28,7 +29,14 @@ def gradle_connected_test(
     if avd:
         emulator_path = "%s/%s" % (native.package_name(), avd[1:])
         jvm_flags = jvm_flags + ["-DEMULATOR_PATH=%s" % emulator_path]
-
+    if maven_artifacts:
+        repo_name = name + ".mavenRepo"
+        maven_repository(
+            name = repo_name,
+            artifacts = maven_artifacts,
+        )
+        absolute_path = "//%s:%s" % (native.package_name(), repo_name)
+        maven_repos += [absolute_path]
     single_gradle_integration_test(
         name = name,
         srcs = srcs,
