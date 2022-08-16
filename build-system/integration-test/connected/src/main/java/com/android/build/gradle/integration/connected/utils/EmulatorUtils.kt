@@ -27,7 +27,7 @@ import org.junit.rules.ExternalResource
  * <p>The executable is the script that starts and stops emulators and must be used to launch
  * the emulator.
  */
-private const val DEVICE = "tools/base/build-system/integration-test/connected/avd"
+private val DEVICE = System.getProperty("EMULATOR_PATH")
 
 /**
  * Port at which to open the emulator.
