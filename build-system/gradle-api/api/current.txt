@@ -729,7 +729,7 @@ package com.android.build.api.dsl {
     method public void compileSdkAddon(String vendor, String name, int version);
     method @Deprecated @org.gradle.api.Incubating public void compileSdkVersion(int apiLevel);
     method @Deprecated @org.gradle.api.Incubating public void compileSdkVersion(String version);
-    method @org.gradle.api.Incubating public void composeOptions(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ComposeOptions,kotlin.Unit> action);
+    method public void composeOptions(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ComposeOptions,kotlin.Unit> action);
     method public void dataBinding(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DataBinding,kotlin.Unit> action);
     method public void debug(org.gradle.api.NamedDomainObjectContainer<BuildTypeT>, kotlin.jvm.functions.Function1<? super BuildTypeT,kotlin.Unit> action);
     method public void defaultConfig(kotlin.jvm.functions.Function1<? super DefaultConfigT,kotlin.Unit> action);
@@ -745,7 +745,7 @@ package com.android.build.api.dsl {
     method public Integer? getCompileSdk();
     method public Integer? getCompileSdkExtension();
     method public String? getCompileSdkPreview();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.ComposeOptions getComposeOptions();
+    method public com.android.build.api.dsl.ComposeOptions getComposeOptions();
     method public com.android.build.api.dsl.DataBinding getDataBinding();
     method public DefaultConfigT getDefaultConfig();
     method @org.gradle.api.Incubating public java.io.File getDefaultProguardFile(String name);
@@ -802,7 +802,7 @@ package com.android.build.api.dsl {
     property public abstract Integer? compileSdk;
     property public abstract Integer? compileSdkExtension;
     property public abstract String? compileSdkPreview;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.ComposeOptions composeOptions;
+    property public abstract com.android.build.api.dsl.ComposeOptions composeOptions;
     property public abstract com.android.build.api.dsl.DataBinding dataBinding;
     property public abstract DefaultConfigT defaultConfig;
     property @org.gradle.api.Incubating public abstract java.util.Map<java.lang.String,java.lang.Object> experimentalProperties;
@@ -844,7 +844,7 @@ package com.android.build.api.dsl {
     property public abstract org.gradle.api.JavaVersion targetCompatibility;
   }
 
-  @org.gradle.api.Incubating public interface ComposeOptions {
+  public interface ComposeOptions {
     method public String? getKotlinCompilerExtensionVersion();
     method @Deprecated public String? getKotlinCompilerVersion();
     method public boolean getUseLiveLiterals();

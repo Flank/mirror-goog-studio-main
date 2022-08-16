@@ -511,10 +511,8 @@ interface CommonExtension<
     @Incubating
     fun splits(action: Splits.() -> Unit)
 
-    @get:Incubating
     val composeOptions: ComposeOptions
 
-    @Incubating
     fun composeOptions(action: ComposeOptions.() -> Unit)
 
     /**

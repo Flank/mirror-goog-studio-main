@@ -16,18 +16,15 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * Optional settings for the Compose feature.
  */
-@Incubating
 interface ComposeOptions {
     /**
      * Sets the version of the Kotlin Compiler used to compile the project or null if using
      * the default one.
      */
-    @Deprecated("")
+    @Deprecated("Android Gradle Plugin will ignore this option and use the kotlin compiler version that is set in the build script.")
     var kotlinCompilerVersion: String?
 
     /**
