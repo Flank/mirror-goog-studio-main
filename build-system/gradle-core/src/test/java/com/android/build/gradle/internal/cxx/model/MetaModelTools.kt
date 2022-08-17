@@ -188,7 +188,7 @@ private fun String.toFirstLower() : String {
     var isFirst = true
     for(c in this) {
         if (isFirst) {
-            result.append(c.toLowerCase())
+            result.append(c.lowercase())
             isFirst = false
         } else {
             result.append(c)

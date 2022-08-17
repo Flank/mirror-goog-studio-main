@@ -10,38 +10,6 @@
     </issue>
 
     <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="155"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="161"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="198"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `toLowerCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/FusedLibraryMergeArtifactTask.kt"
-            line="204"/>
-    </issue>
-
-    <issue
         id="SuspiciousIndentation"
         message="Suspicious indentation: This is indented but is not nested under the previous expression (`if (configurationPar`...)">
         <location
@@ -1185,7 +1153,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="61"/>
+            line="60"/>
     </issue>
 
     <issue
@@ -1193,7 +1161,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/tasks/PrivacySandboxSdkMergeDexTask.kt"
-            line="63"/>
+            line="62"/>
     </issue>
 
     <issue
@@ -1210,54 +1178,6 @@
         <location
             file="src/main/java/com/android/build/gradle/internal/profile/WorkerProfilingRecord.kt"
             line="63"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(index)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="81"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(libraryList.size)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="104"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(origIndex)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="114"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(libraryDep.libraryIndex)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="119"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(depIndex)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="122"/>
-    </issue>
-
-    <issue
-        id="UseValueOf"
-        message="Use `Integer.valueOf(depIndex)` instead">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
-            line="135"/>
     </issue>
 
     <issue

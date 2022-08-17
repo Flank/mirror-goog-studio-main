@@ -100,7 +100,7 @@ class LibraryManifestTest: VariantApiBaseTest(TestType.Script, ScriptingLanguage
         // the manually added permission made to the final merged manifest.
         val apkFolder = File(super.testProjectDir.root,
             "libraryManifestTransformerTest/app/build/"
-                    + Artifact.Category.OUTPUTS.name.toLowerCase(Locale.US)
+                    + Artifact.Category.OUTPUTS.name.lowercase(Locale.US)
                     + "/"
                     + SingleArtifact.APK.getFolderName()
                     + "/debug")

@@ -86,7 +86,7 @@ fun createCxxVariantModel(
                      * -DCMAKE_RELEASE_TYPE=Release in build.gradle to override the default chosen
                      * here.
                      */
-                    val lower = variantName.toLowerCase(Locale.ROOT)
+                    val lower = variantName.lowercase(Locale.ROOT)
                     when {
                         lower.endsWith("release") -> "RelWithDebInfo"
                         lower.endsWith("debug") -> "Debug"

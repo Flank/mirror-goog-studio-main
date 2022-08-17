@@ -109,7 +109,7 @@ The added field is used in the MainActivity.kt file.
         }
         val apkFolder = File(super.testProjectDir.root,
             "addCustomAsset/app/build/"
-                    + Artifact.Category.OUTPUTS.name.toLowerCase(Locale.US)
+                    + Artifact.Category.OUTPUTS.name.lowercase(Locale.US)
                     + "/"
                     + SingleArtifact.APK.getFolderName()
                     + "/debug")

@@ -27,6 +27,6 @@ private val cmakeHeaderFileExtensions = setOf("h", "hh", "h++", "hm", "hpp")
  */
 fun hasCmakeHeaderFileExtensions(file : File) : Boolean {
     return cmakeHeaderFileExtensions.contains(
-        file.path.substringAfterLast(".").toLowerCase(Locale.US)
+        file.path.substringAfterLast(".").lowercase(Locale.US)
     )
 }

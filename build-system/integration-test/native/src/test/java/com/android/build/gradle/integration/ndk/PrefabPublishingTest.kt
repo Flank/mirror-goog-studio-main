@@ -233,7 +233,7 @@ class PrefabPublishingTest(
 
     @Test
     fun `adding a new header causes a rebuild`() {
-        project.execute("assemble${variant.toLowerCase()}")
+        project.execute("assemble${variant.lowercase()}")
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
         val moduleDir = packageDir.resolve("modules/$gradleModuleName")

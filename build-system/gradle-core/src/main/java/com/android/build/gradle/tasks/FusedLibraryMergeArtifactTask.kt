@@ -152,13 +152,13 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                     creationConfig.artifacts.setInitialProvider(
                             taskProvider,
                             FusedLibraryMergeArtifactTask::outputDir
-                    ).withName(androidArtifactType.name.toLowerCase())
+                    ).withName(androidArtifactType.name.lowercase())
                             .on(internalArtifactType as Artifact.Single<Directory>)
                 ArtifactKind.FILE ->
                     creationConfig.artifacts.setInitialProvider(
                             taskProvider,
                             FusedLibraryMergeArtifactTask::outputFile
-                    ).withName(androidArtifactType.name.toLowerCase())
+                    ).withName(androidArtifactType.name.lowercase())
                             .on(internalArtifactType as Artifact.Single<RegularFile>)
             }
         }
@@ -195,13 +195,13 @@ abstract class FusedLibraryMergeArtifactTask : NonIncrementalTask() {
                     creationConfig.artifacts.setInitialProvider(
                             taskProvider,
                             FusedLibraryMergeArtifactTask::outputDir
-                    ).withName(androidArtifactType.name.toLowerCase())
+                    ).withName(androidArtifactType.name.lowercase())
                             .on(internalArtifactType as Artifact.Single<Directory>)
                 ArtifactKind.FILE ->
                     creationConfig.artifacts.setInitialProvider(
                             taskProvider,
                             FusedLibraryMergeArtifactTask::outputFile
-                    ).withName(androidArtifactType.name.toLowerCase())
+                    ).withName(androidArtifactType.name.lowercase())
                             .on(internalArtifactType as Artifact.Single<RegularFile>)
             }
         }

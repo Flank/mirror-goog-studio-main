@@ -75,16 +75,16 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         val repoToIndexMap = mutableMapOf<Repository, Int>()
         val repoList = baseAppDeps.repositoriesList.toMutableList()
 
-        val libraryToIndexMap = HashMap<Library, Integer>()
+        val libraryToIndexMap = HashMap<Library, Int>()
         val libraryList = LinkedList(baseAppDeps.libraryList)
         for ((index, lib) in libraryList.withIndex()) {
-            libraryToIndexMap.put(lib, Integer(index))
+            libraryToIndexMap.put(lib, index)
         }
         val libraryDeps = LinkedList(baseAppDeps.libraryDependenciesList)
         val moduleDeps = LinkedList(baseAppDeps.moduleDependenciesList)
 
         for (featureAppDep in featureAppDeps) {
-            val libIndexDict = HashMap<Integer, Integer>()
+            val libIndexDict = HashMap<Int, Int>()
             val repoIndexDict = mutableMapOf<Int,Int>()
             val featureLibraryDeps = featureAppDep.libraryList
 
@@ -99,10 +99,10 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
             // update the library list indices
             for ((origIndex, lib) in featureLibraryDeps.withIndex()) {
-                var newIndex = libraryToIndexMap.get(lib)
+                var newIndex = libraryToIndexMap[lib]
                 if (newIndex == null) {
-                    newIndex = Integer(libraryList.size)
-                    libraryToIndexMap.put(lib, newIndex)
+                    newIndex = libraryList.size
+                    libraryToIndexMap[lib] = newIndex
                     // If lib has a repo_index, build a copy with corrected value of repo_index
                     if (lib.hasRepoIndex())
                         libraryList.add(lib.toBuilder().also { libCopy ->
@@ -111,15 +111,15 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
                     else
                         libraryList.add(lib)
                 }
-                libIndexDict.put(Integer(origIndex), newIndex)
+                libIndexDict[origIndex] = newIndex
             }
             // update the library dependencies list
             for(libraryDep in featureAppDep.libraryDependenciesList) {
                 val transformedDepBuilder = LibraryDependencies.newBuilder()
-                    .setLibraryIndex(libIndexDict[Integer(libraryDep.libraryIndex)]!!.toInt())
+                    .setLibraryIndex(libIndexDict[libraryDep.libraryIndex]!!.toInt())
                 for(depIndex in libraryDep.libraryDepIndexList) {
                     transformedDepBuilder
-                        .addLibraryDepIndex(libIndexDict[Integer(depIndex)]!!.toInt())
+                        .addLibraryDepIndex(libIndexDict[depIndex]!!.toInt())
                 }
                 val transformedDep = transformedDepBuilder.build()
                 if (!libraryDeps.contains(transformedDep)) {
@@ -132,7 +132,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
                     .setModuleName(moduleDep.moduleName)
                 for(depIndex in moduleDep.dependencyIndexList) {
                     moduleDepBuilder
-                        .addDependencyIndex(libIndexDict[Integer(depIndex)]!!.toInt())
+                        .addDependencyIndex(libIndexDict[depIndex]!!.toInt())
                 }
                 moduleDeps.add(moduleDepBuilder.build())
             }
