@@ -708,6 +708,87 @@ def iml_test(
         name,
         module,
         runtime_deps = [],
+        tags = [],
+        tags_linux = [],
+        tags_mac = [],
+        tags_windows = [],
+        **kwargs):
+    """Potentially generates separate _iml_test rules for each OS.
+
+    Args:
+        name: base name of the test.
+        module: name of the module.
+        runtime_deps: optional libraries to make available to the final
+            test at runtime only.
+        tags: optional list of tags to categorize the tests. These are
+            applied to each operating system (so adding "manual" here
+            will prevent the test from running on all operating
+            systems).
+        tags_linux: tags specific to Linux.
+        tags_mac: tags specific to macOS.
+        tags_windows: tags specific to Windows.
+        **kwargs: all other arguments.
+    """
+
+    # If nothing OS-specific was provided, then produce only one rule
+    if len(tags_linux) == 0 and len(tags_mac) == 0 and len(tags_windows) == 0:
+        _iml_test(
+            name = name,
+            module = module,
+            runtime_deps = runtime_deps,
+            tags = tags,
+            **kwargs
+        )
+        return
+
+    all_platform_info = [
+        struct(
+            suffix = "_linux",
+            tags = tags_linux,
+            target_condition = "@platforms//os:linux",
+        ),
+        struct(
+            suffix = "_mac",
+            tags = tags_mac,
+            target_condition = "@platforms//os:osx",
+        ),
+        struct(
+            suffix = "_windows",
+            tags = tags_windows,
+            target_condition = "@platforms//os:windows",
+        ),
+    ]
+    test_names = []
+    for platform_info in all_platform_info:
+        test_name = name + platform_info.suffix
+        test_names.append(test_name)
+        all_tags = list(platform_info.tags) + tags
+
+        # Tests tagged with "manual" will still run when triggered
+        # through a test_suite, which is why the test target itself
+        # needs to be tagged with a proper target_compatible_with field.
+        compatibility = ["@platforms//:incompatible"] if "manual" in all_tags else []
+        _iml_test(
+            name = test_name,
+            module = module,
+            runtime_deps = runtime_deps,
+            tags = all_tags,
+            target_compatible_with = select({
+                platform_info.target_condition: compatibility,
+                "//conditions:default": ["@platforms//:incompatible"],
+            }),
+            **kwargs
+        )
+    native.test_suite(
+        name = name,
+        tags = tags,
+        tests = test_names,
+    )
+
+def _iml_test(
+        name,
+        module,
+        runtime_deps = [],
         **kwargs):
     native.java_test(
         name = name,
