@@ -23,6 +23,7 @@ lint check authors, see the API Guide.
   `TileProviderPermissions`   | TileProvider does not set permission
   `SquareAndRoundTilePreviews`| TileProvider does not have round and square previews
   `InternalInsetResource`     | Using internal inset dimension resource
+  `BinderGetCallingInMainThread`| Incorrect usage of getCallingUid() or getCallingPid()
 
 * Lint now respects the `--offline` flag passed to Gradle, and will refrain
   from making network calls for checks that normally do (such as

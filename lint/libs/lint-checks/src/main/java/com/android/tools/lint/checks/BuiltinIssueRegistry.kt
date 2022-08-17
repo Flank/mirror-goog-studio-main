@@ -90,6 +90,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 BadHostnameVerifierDetector.ISSUE,
                 BatteryDetector.ISSUE,
                 BidirectionalTextDetector.BIDI_SPOOFING,
+                BinderGetCallingInMainThreadDetector.ISSUE,
                 BottomAppBarDetector.ISSUE,
                 ButtonDetector.BACK_BUTTON,
                 ButtonDetector.CASE,
