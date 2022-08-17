@@ -131,6 +131,9 @@ class ModelBuilderV2 internal constructor(
         )
     }
 
+    /** Java interop friendly signature, as default parameters are not respected. */
+    fun fetchModels() = fetchModels(null, null)
+
     /**
      * Fetches the [AndroidProject], [VariantDependencies] and [ProjectSyncIssues] for each project
      * and return them as a [ModelContainer]

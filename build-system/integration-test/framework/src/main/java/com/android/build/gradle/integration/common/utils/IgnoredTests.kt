@@ -26,6 +26,8 @@ class IgnoredTests {
     companion object {
         // b/236828934: Fused Libraries do not yet support external dependencies."
         const val BUG_23682893 = "236828934"
+        // b/236828934: Custom signing not working with model v2"
+        const val BUG_243127865 = "243127865"
     }
 }
 

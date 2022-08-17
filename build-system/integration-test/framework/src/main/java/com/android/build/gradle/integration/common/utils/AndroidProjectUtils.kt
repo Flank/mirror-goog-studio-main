@@ -50,12 +50,6 @@ fun AndroidProject.getVariantBuildInformationByName(name: String): VariantBuildI
 
 fun AndroidProject.getDebugVariant() = getVariantByName("debug")
 
-fun AndroidProject.getSigningConfig(
-        name: String): SigningConfig {
-    return searchForExistingItem(
-            signingConfigs, name, SigningConfig::getName, "SigningConfig")
-}
-
 fun AndroidProject.getArtifactMetaData(name: String): ArtifactMetaData {
     return searchForExistingItem(
             extraArtifacts, name, ArtifactMetaData::getName, "ArtifactMetaData")

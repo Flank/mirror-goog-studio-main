@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import com.android.annotations.NonNull;
-import com.android.builder.model.SigningConfig;
+
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyStore;
 import java.util.Locale;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public final class SigningConfigHelper {
 
@@ -32,7 +32,7 @@ public final class SigningConfigHelper {
     public static final String DEFAULT_ALIAS = "AndroidDebugKey";
 
     @NonNull
-    private final SigningConfig signingConfig;
+    private final com.android.builder.model.v2.dsl.SigningConfig signingConfig;
     @NonNull private final String name;
     private File storeFile = null;
     private String storePassword = null;
@@ -42,7 +42,9 @@ public final class SigningConfigHelper {
     private boolean isSigningReady = false;
 
     public SigningConfigHelper(
-            @NonNull SigningConfig signingConfig, @NonNull String name, @NonNull File storeFile) {
+            @NonNull com.android.builder.model.v2.dsl.SigningConfig signingConfig,
+            @NonNull String name,
+            @NonNull File storeFile) {
         assertNotNull(String.format("SigningConfig '%s' null-check", name), signingConfig);
         this.signingConfig = signingConfig;
         this.name = name;
@@ -89,9 +91,6 @@ public final class SigningConfigHelper {
 
         assertEquals(String.format("SigningConfig '%s' keyPassword", name),
                 keyPassword, signingConfig.getKeyPassword());
-
-        assertEquals(String.format("SigningConfig '%s' storeType", name),
-                storeType, signingConfig.getStoreType());
 
         assertEquals(String.format("SigningConfig '%s' isSigningReady", name),
                 isSigningReady, signingConfig.isSigningReady());
