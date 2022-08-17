@@ -23,9 +23,14 @@ import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.impl.AndroidTestComponentDslInfoImpl
 import com.android.build.gradle.internal.core.dsl.impl.ApplicationVariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.impl.DynamicFeatureVariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.impl.LibraryVariantDslInfoImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension
+import com.android.build.gradle.internal.dsl.InternalDynamicFeatureExtension
+import com.android.build.gradle.internal.dsl.InternalLibraryExtension
+import com.android.build.gradle.internal.dsl.InternalTestedExtension
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.manifest.ManifestData
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
@@ -38,23 +43,40 @@ import com.android.build.gradle.internal.services.createVariantPropertiesApiServ
 import com.android.build.gradle.internal.variant.Container
 import com.android.build.gradle.internal.variant.ContainerImpl
 import com.android.builder.core.BuilderConstants
+import com.android.builder.core.ComponentType
 import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import org.mockito.Mockito
 
-class VariantDslInfoTest2 :
-    AbstractBuildGivenBuildExpectTest<
+@RunWith(Parameterized::class)
+class VariantDslInfoTest2(
+    private val componentType: ComponentType
+): AbstractBuildGivenBuildExpectTest<
             VariantDslInfoTest2.GivenData,
             VariantDslInfoTest2.ResultData>() {
 
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "Component type: {0}")
+        fun parameters() = listOf(
+            ComponentTypeImpl.BASE_APK,
+            ComponentTypeImpl.OPTIONAL_APK,
+            ComponentTypeImpl.LIBRARY
+        )
+    }
+
     @Test
     fun `versionCode from defaultConfig`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             // no specific manifest info
             manifestData {  }
@@ -71,6 +93,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionCode from manifest`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionCode = 12
@@ -84,6 +107,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionCode defaultConfig overrides manifest`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionCode = 12
@@ -101,6 +125,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionCode from flavor overrides all`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionCode = 12
@@ -126,6 +151,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName from defaultConfig`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             // no specific manifest info
             manifestData { }
@@ -142,6 +168,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName from manifest`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionName = "foo"
@@ -155,6 +182,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName defaultConfig overrides manifest`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionName = "foo"
@@ -172,6 +200,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName from flavor overrides all`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionName = "foo"
@@ -197,6 +226,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName from manifest with suffix from defaultConfig`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionName = "foo"
@@ -214,6 +244,7 @@ class VariantDslInfoTest2 :
 
     @Test
     fun `versionName from manifest with full suffix`() {
+        assumeTrue(componentType == ComponentTypeImpl.BASE_APK)
         given {
             manifestData {
                 versionName = "foo"
@@ -796,19 +827,22 @@ class VariantDslInfoTest2 :
     private val dslServices: DslServices = createDslServices(projectServices)
     private val buildDirectory: DirectoryProperty = Mockito.mock(DirectoryProperty::class.java)
 
-    override fun instantiateGiven() = GivenData(dslServices)
+    override fun instantiateGiven() = GivenData(componentType, dslServices)
     override fun instantiateResult() = ResultData()
+
+    private fun configureExtension(
+        extension: InternalTestedExtension<*, *, *, *>,
+        given: GivenData
+    ) {
+        Mockito.`when`(extension.namespace).thenReturn(given.namespace)
+        if (given.componentType.isTestComponent) {
+            Mockito.`when`(extension.testNamespace).thenReturn(given.testNamespace)
+        }
+    }
 
     override fun defaultWhen(given: GivenData): ResultData {
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
-
-        val extension = Mockito.mock(InternalApplicationExtension::class.java).also {
-            Mockito.`when`(it.namespace).thenReturn(given.namespace)
-            if (given.componentType.isTestComponent) {
-                Mockito.`when`(it.testNamespace).thenReturn(given.testNamespace)
-            }
-        }
 
         // this does not quite test what VariantManager does because this only checks
         // for the product flavors of that one variant, while VariantManager looks
@@ -817,26 +851,80 @@ class VariantDslInfoTest2 :
             given.flavors
         )
 
-        val mainVariant = ApplicationVariantDslInfoImpl(
-            componentIdentity = componentIdentity,
-            componentType = given.testedcomponentType,
-            defaultConfig = given.defaultConfig,
-            buildTypeObj = given.buildType,
-            productFlavorList = given.flavors,
-            dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
-            services = services,
-            buildDirectory = buildDirectory,
-            publishInfo = VariantPublishingInfo(emptyList()),
-            extension = extension,
-            oldExtension = null,
-            signingConfigOverride = null,
-        )
+        val extension = when (given.testedComponentType) {
+            ComponentTypeImpl.BASE_APK ->
+                Mockito.mock(InternalApplicationExtension::class.java).also {
+                    configureExtension(it, given)
+                }
+            ComponentTypeImpl.LIBRARY ->
+                Mockito.mock(InternalLibraryExtension::class.java).also {
+                    configureExtension(it, given)
+                }
+            ComponentTypeImpl.OPTIONAL_APK ->
+                Mockito.mock(InternalDynamicFeatureExtension::class.java).also {
+                    configureExtension(it, given)
+                }
+            else -> {
+                throw RuntimeException("Unexpected type")
+            }
+        } as InternalTestedExtension<*, *, *, *>
+
+        val mainVariant = when (given.testedComponentType) {
+            ComponentTypeImpl.BASE_APK -> {
+                ApplicationVariantDslInfoImpl(
+                    componentIdentity = componentIdentity,
+                    componentType = given.testedComponentType,
+                    defaultConfig = given.defaultConfig,
+                    buildTypeObj = given.buildType,
+                    productFlavorList = given.flavors,
+                    dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+                    services = services,
+                    buildDirectory = buildDirectory,
+                    publishInfo = VariantPublishingInfo(emptyList()),
+                    extension = extension as InternalApplicationExtension,
+                    oldExtension = null,
+                    signingConfigOverride = null,
+                )
+            }
+            ComponentTypeImpl.LIBRARY -> {
+                LibraryVariantDslInfoImpl(
+                    componentIdentity = componentIdentity,
+                    componentType = given.testedComponentType,
+                    defaultConfig = given.defaultConfig,
+                    buildTypeObj = given.buildType,
+                    productFlavorList = given.flavors,
+                    dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+                    services = services,
+                    buildDirectory = buildDirectory,
+                    publishInfo = VariantPublishingInfo(emptyList()),
+                    extension = extension as InternalLibraryExtension,
+                    oldExtension = null,
+                )
+            }
+            ComponentTypeImpl.OPTIONAL_APK -> {
+                DynamicFeatureVariantDslInfoImpl(
+                    componentIdentity = componentIdentity,
+                    componentType = given.testedComponentType,
+                    defaultConfig = given.defaultConfig,
+                    buildTypeObj = given.buildType,
+                    productFlavorList = given.flavors,
+                    dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+                    services = services,
+                    buildDirectory = buildDirectory,
+                    extension = extension as InternalDynamicFeatureExtension,
+                    oldExtension = null,
+                )
+            }
+            else -> {
+                throw RuntimeException("Unexpected type")
+            }
+        }
 
         val dslInfo = when (given.componentType) {
             ComponentTypeImpl.ANDROID_TEST -> {
                 AndroidTestComponentDslInfoImpl(
                     componentIdentity = componentIdentity,
-                    componentType = given.testedcomponentType,
+                    componentType = given.testedComponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
@@ -908,7 +996,10 @@ class VariantDslInfoTest2 :
         convertAction = action
     }
 
-    class GivenData(private val dslServices: DslServices) {
+    class GivenData(
+        val testedComponentType: ComponentType,
+        private val dslServices: DslServices
+    ) {
         /** the manifest data that represents values coming from the manifest file */
         val manifestData = ManifestData()
 
@@ -927,8 +1018,6 @@ class VariantDslInfoTest2 :
 
         /** Variant type for the test */
         var componentType = ComponentTypeImpl.BASE_APK
-        /** Variant type for the tested component */
-        var testedcomponentType = ComponentTypeImpl.BASE_APK
 
         var dexingType = DexingType.NATIVE_MULTIDEX
 

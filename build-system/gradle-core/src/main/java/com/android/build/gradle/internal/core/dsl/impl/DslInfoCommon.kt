@@ -72,9 +72,9 @@ internal fun ComponentDslInfo.initTestApplicationId(
     return if (testAppIdFromFlavors != null) {
         services.provider { testAppIdFromFlavors }
     } else if (this is TestComponentDslInfo) {
-        (this.testedVariantDslInfo as? ApkProducingComponentDslInfo)?.applicationId?.map {
+        this.testedVariantDslInfo.applicationId.map {
             "$it.test"
-        } ?: namespace
+        }
     } else {
         namespace
     }
