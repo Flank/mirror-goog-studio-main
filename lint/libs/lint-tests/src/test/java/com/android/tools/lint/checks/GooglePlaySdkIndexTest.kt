@@ -237,6 +237,21 @@ class GooglePlaySdkIndexTest {
         }
     }
 
+    @Test
+    fun `offline snapshot can be used correctly`() {
+        val offlineIndex = object : GooglePlaySdkIndex() {
+            override fun readUrlData(url: String, timeout: Int): ByteArray? {
+                return null
+            }
+
+            override fun error(throwable: Throwable, message: String?) {
+            }
+        }
+        offlineIndex.initialize()
+        assertThat(offlineIndex.isReady()).isTrue()
+        assertThat(offlineIndex.getLastReadSource()).isEqualTo(NetworkCache.DataSourceType.DEFAULT_DATA)
+    }
+
     private fun hasOutdatedIssues(): Boolean {
         for (sdk in proto.sdksList) {
             for (library in sdk.librariesList) {
