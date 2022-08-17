@@ -434,6 +434,8 @@ public class BenchmarkTest {
 
         String jvmArgs = p.getProperty("org.gradle.jvmargs", "");
         jvmArgs += " -XX:+UseParallelGC";
+        jvmArgs += " --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED";
+        jvmArgs += " --add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED";
         // See https://www.yourkit.com/docs/java/help/startup_options.jsp for a comprehensive list
         // of all agent options.
         if (enableYourKit) {
