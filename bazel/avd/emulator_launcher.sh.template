@@ -10,8 +10,10 @@
 source_properties_path="%source_properties_path%"
 
 # Boot time might vary depending on API level. The value below was tested
-# with API level 30 (rvc).
-emulator_boot_timeout=70
+# with API level 33 (TiramisuPrivacySandbox). 200 is default unless the
+# variable is set.
+emulator_boot_timeout=${EMULATOR_BOOT_TIMEOUT:-200}
+echo "timeout is $emulator_boot_timeout"
 
 # Emulator gRPC port. This is used when setting up emulator gRPC connection.
 # Emulator gRPC connection is required by embedded emulator and Android Test
@@ -54,6 +56,9 @@ port=$2
 # Clear emulator files.
 rm -rf .android 2> /dev/null
 mkdir .android 2> /dev/null
+
+# Generate keys to be injected into emulator to allow authorization for user builds.
+$adb keygen $ANDROID_EMULATOR_HOME/adbkey
 
 # Read system image properties.
 api_level="$(cat $source_properties_path | sed -rn 's/AndroidVersion.ApiLevel=(.*)/\1/p')"
@@ -108,15 +113,29 @@ boot_complete=false
 for i in 1 2 3
 do
   start_time=$SECONDS
-
-  $emulator @emu -no-window -port $port -grpc $emulator_grpc_port -delay-adb -no-snapshot 2>&1 &
+  # ModemSimulator doesn't work in bazel sandbox due to not available ports
+  # MultiDisplay is not used, generates some red herring error messages
+  $emulator @emu\
+    -port $port\
+    -grpc $emulator_grpc_port\
+    -delay-adb\
+    -no-snapshot\
+    -no-window\
+    -verbose\
+    -feature -ModemSimulator\
+    -feature -MultiDisplay 2>&1 &
   emu_pid=$!
 
   # Wait for the emulator to boot.
   echo "Waiting for emulator to boot"
   while true; do
     output=$($adb -s emulator-$port shell getprop sys.boot_completed 2>&1)
+    if [[ $output == *"unauthorized"* ]]; then
+        echo "Emulator requires authentication"
+        exit 1
+    fi
     if [ "$output" = "1" ]; then
+      echo "Emulator booted in $elapsed_time seconds"
       boot_complete=true
       break
     fi
