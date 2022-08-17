@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject.Com
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.utils.getOutputByName
+import com.android.build.gradle.integration.common.utils.getBundleLocation
 import com.android.build.gradle.integration.common.utils.getVariantByName
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.FULL
@@ -32,8 +32,6 @@ import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.NONE
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel.SYMBOL_TABLE
 import com.android.build.gradle.internal.tasks.ExtractNativeDebugMetadataTask
 import com.android.build.gradle.internal.tasks.PackageBundleTask
-import com.android.builder.model.AppBundleProjectBuildOutput
-import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
@@ -136,7 +134,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleTaskName = getBundleTaskName("release")
         project.executor().run("app:$bundleTaskName")
 
-        val bundleFile = getApkFolderOutput("release").bundleFile
+        val bundleFile = getApkFolderOutput("release")
         assertThat(bundleFile).exists()
 
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
@@ -236,7 +234,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleTaskName = getBundleTaskName("release")
         project.executor().run("app:$bundleTaskName")
 
-        val bundleFile = getApkFolderOutput("release").bundleFile
+        val bundleFile = getApkFolderOutput("release")
         assertThat(bundleFile).exists()
 
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
@@ -327,7 +325,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleTaskName = getBundleTaskName("release")
         project.executor().run("app:$bundleTaskName")
 
-        val bundleFile = getApkFolderOutput("release").bundleFile
+        val bundleFile = getApkFolderOutput("release")
         assertThat(bundleFile).exists()
 
         val bundleEntryPrefix = "BUNDLE-METADATA/com.android.tools.build.debugsymbols"
@@ -462,7 +460,7 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
         val bundleTaskName = getBundleTaskName("debug")
         createUnstrippedAbiFile(project.getSubproject(":feature"), ABI_ARMEABI_V7A, "feature.so")
         val result = project.executor().run("app:$bundleTaskName")
-        val bundleFile = getApkFolderOutput("debug").bundleFile
+        val bundleFile = getApkFolderOutput("debug")
         assertThat(bundleFile).exists()
         val bundleEntryPrefix = "/BUNDLE-METADATA/com.android.tools.build.debugsymbols"
         Zip(bundleFile).use { zip ->
@@ -480,22 +478,25 @@ class ExtractNativeDebugMetadataTaskTest(private val debugSymbolLevel: DebugSymb
 
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
-        val syncModels = project.model().fetchAndroidProjectsAllowSyncIssues()
-        val appModel =
-            syncModels.rootBuildModelMap[":app"] ?: fail("Failed to get sync model for :app module")
+        val syncModelContainer = project.modelV2().fetchModels(null, null).container
+        val appModel = syncModelContainer.getProject(":app").androidProject
+                ?: fail("Failed to get sync model for :app module")
 
         val debugArtifact = appModel.getVariantByName(name).mainArtifact
-        return debugArtifact.bundleTaskName ?: fail("Module App does not have bundle task name")
+        return debugArtifact.bundleInfo?.bundleTaskName ?: fail("Module App does not have bundle task name")
     }
 
-    private fun getApkFolderOutput(variantName: String): AppBundleVariantBuildOutput {
-        val outputModels = project.model()
-            .fetchContainer(AppBundleProjectBuildOutput::class.java)
+    private fun getApkFolderOutput(variantName: String): File {
+        val outputModelsV2 = project.modelV2()
+                .fetchModels(null, null)
+                .container
+                .getProject(":app")
+                .androidProject
 
-        val outputAppModel = outputModels.rootBuildModelMap[":app"]
-                ?: fail("Failed to get output model for :app module")
+        val outputAppModel = outputModelsV2?.getVariantByName(variantName)
+                ?: fail("Failed to get output model for :app module with variant '$variantName'.")
 
-        return outputAppModel.getOutputByName(variantName)
+        return outputAppModel.getBundleLocation()
     }
 
     private fun createUnstrippedAbiFile(

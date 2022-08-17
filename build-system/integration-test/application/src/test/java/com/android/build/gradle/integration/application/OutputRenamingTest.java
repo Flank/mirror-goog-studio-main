@@ -16,31 +16,33 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.builder.core.BuilderConstants.DEBUG;
-import static com.android.builder.core.BuilderConstants.RELEASE;
-import static com.android.testutils.truth.PathSubject.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtilsV2;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
+import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtilsV2;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
-import com.android.builder.model.VariantBuildInformation;
+import com.android.builder.model.v2.ide.SyncIssue;
+import com.android.builder.model.v2.ide.Variant;
+import com.android.builder.model.v2.models.AndroidProject;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.core.BuilderConstants.RELEASE;
+import static com.android.testutils.truth.PathSubject.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /** Assemble tests for class densitySplitInL */
 public class OutputRenamingTest {
@@ -67,15 +69,20 @@ public class OutputRenamingTest {
                         + "}");
         project.executor().run("clean", "assemble");
         model =
-                project.model()
+                project.modelV2()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .fetchModels(null, null)
+                        .getContainer()
+                        .getProject(null, ":")
+                        .getAndroidProject();
         Collection<SyncIssue> syncIssues =
-                project.model()
+                project.modelV2()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .fetchAndroidProjects()
-                        .getOnlyModelSyncIssues();
+                        .fetchModels(null, null)
+                        .getContainer()
+                        .getProject(null, ":")
+                        .getIssues()
+                        .getSyncIssues();
         assertThat(syncIssues).hasSize(0);
     }
 
@@ -95,14 +102,14 @@ public class OutputRenamingTest {
     }
 
     private static void assertFileRenaming(String buildType) {
-        Collection<VariantBuildInformation> variantBuildOutputs =
-                model.getVariantsBuildInformation();
+        Collection<Variant> variantBuildOutputs =
+                model.getVariants();
         assertThat(variantBuildOutputs).hasSize(2);
-        VariantBuildInformation buildOutput =
-                ProjectBuildOutputUtils.getVariantBuildInformation(model, buildType);
+        Variant buildOutput =
+                AndroidProjectUtilsV2.getVariantByName(model, buildType);
 
         // get the outputs.
-        Collection<String> outputs = ProjectBuildOutputUtils.getOutputFiles(buildOutput);
+        Collection<String> outputs = ProjectBuildOutputUtilsV2.getOutputFiles(buildOutput);
         assertNotNull(outputs);
         assertThat(outputs).hasSize(5);
 
@@ -115,8 +122,10 @@ public class OutputRenamingTest {
                         "project--512-" + buildType + "-xxhdpi-signed.apk");
 
         List<String> actualFileNames = new ArrayList<>();
+        File assembleTaskOutputListingFile =
+                buildOutput.getMainArtifact().getAssembleTaskOutputListingFile();
         for (BuiltArtifact builtArtifact :
-                ProjectBuildOutputUtils.getBuiltArtifacts(buildOutput).getElements()) {
+                ProjectBuildOutputUtils.getBuiltArtifacts(assembleTaskOutputListingFile).getElements()) {
             File outputFile = new File(builtArtifact.getOutputFile());
             actualFileNames.add(outputFile.getName());
             assertThat(outputFile).exists();

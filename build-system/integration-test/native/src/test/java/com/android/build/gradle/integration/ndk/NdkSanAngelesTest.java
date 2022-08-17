@@ -16,25 +16,27 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import com.android.build.api.variant.BuiltArtifact;
 import com.android.build.api.variant.FilterConfiguration;
 import com.android.build.api.variant.impl.BuiltArtifactsImpl;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtilsV2;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.VariantBuildInformation;
+import com.android.builder.model.v2.models.AndroidProject;
 import com.google.common.collect.Maps;
 import com.google.common.truth.Truth;
-import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.io.File;
+import java.util.Map;
+
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Assemble tests for ndkSanAngeles.
@@ -52,7 +54,12 @@ public class NdkSanAngelesTest {
     @BeforeClass
     public static void setUp() throws Exception {
         project.executor().run("clean", "assembleDebug");
-        model = project.model().fetchAndroidProjectsAllowSyncIssues().getOnlyModel();
+        model = project.modelV2()
+                .ignoreSyncIssues()
+                .fetchModels(null, null)
+                .getContainer()
+                .getProject(null, ":")
+                .getAndroidProject();
     }
 
     @AfterClass
@@ -68,8 +75,9 @@ public class NdkSanAngelesTest {
 
     @Test
     public void checkVersionCodeInModel() {
-        VariantBuildInformation debugOutput =
-                ProjectBuildOutputUtils.getDebugVariantBuildOutput(model);
+        File debugOutput =
+                AndroidProjectUtilsV2.getDebugVariant(model).getMainArtifact()
+                        .getAssembleTaskOutputListingFile();
 
         // get the outputs.
         BuiltArtifactsImpl builtArtifacts = ProjectBuildOutputUtils.getBuiltArtifacts(debugOutput);

@@ -18,11 +18,14 @@
 package com.android.build.gradle.integration.common.utils
 
 import com.android.build.api.variant.impl.BuiltArtifactImpl
+import com.android.build.api.variant.impl.BuiltArtifactsImpl
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.builder.core.BuilderConstants
+import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.VariantBuildInformation
+import com.android.builder.model.v2.ide.Variant
 import org.junit.Assert
 import java.io.File
 import java.lang.RuntimeException
@@ -53,13 +56,12 @@ fun AndroidProject.findOutputFileByVariantName(variantName: String): File {
 
     return File(output)
 }
-
-fun VariantBuildInformation.getBuiltArtifacts() =
-    (BuiltArtifactsLoaderImpl.loadFromFile(File(assembleTaskOutputListingFile!!))
-        ?: throw RuntimeException("Cannot load built artifacts from $assembleTaskOutputListingFile"))
+fun getBuiltArtifacts(assembleTaskOutputListingFile: File): BuiltArtifactsImpl =
+        (BuiltArtifactsLoaderImpl.loadFromFile(assembleTaskOutputListingFile)
+                ?: throw RuntimeException("Cannot load built artifacts from $assembleTaskOutputListingFile"))
 
 fun VariantBuildInformation.getOutputFiles() =
-    getBuiltArtifacts()
+    getBuiltArtifacts(File(assembleTaskOutputListingFile!!))
         .elements
         .map(BuiltArtifactImpl::outputFile)
 

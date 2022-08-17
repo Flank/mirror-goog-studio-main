@@ -16,26 +16,28 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
-
 import com.android.SdkConstants;
 import com.android.Version;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
+import com.android.build.gradle.integration.common.utils.AndroidProjectUtilsV2;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.CodeShrinker;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.model.v2.ide.CodeShrinker;
+import com.android.builder.model.v2.ide.SyncIssue;
+import com.android.builder.model.v2.models.AndroidProject;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.collect.Sets;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,10 +45,9 @@ import java.nio.file.Path;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.PathSubject.assertThat;
 
 /** Assemble tests for minify. */
 public class MinifyTest {
@@ -60,19 +61,21 @@ public class MinifyTest {
     @Test
     public void model() throws Exception {
         AndroidProject model =
-                project.model()
+                project.modelV2()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .fetchModels(null, null)
+                        .getContainer()
+                        .getProject(null, ":")
+                        .getAndroidProject();
 
         CodeShrinker minifiedShrinker =
-                AndroidProjectUtils.getVariantByName(model, "minified")
+                AndroidProjectUtilsV2.getVariantByName(model, "minified")
                         .getMainArtifact()
                         .getCodeShrinker();
         assertThat(minifiedShrinker).isEqualTo(CodeShrinker.R8);
 
         CodeShrinker debugShrinker =
-                AndroidProjectUtils.getDebugVariant(model).getMainArtifact().getCodeShrinker();
+                AndroidProjectUtilsV2.getDebugVariant(model).getMainArtifact().getCodeShrinker();
         assertThat(debugShrinker).isNull();
     }
 
