@@ -56,16 +56,17 @@ class ScopedStorageDetector : Detector(), XmlScanner {
 
     override fun visitElement(context: XmlContext, element: Element) {
         val permission = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
+        val value = permission.value
 
-        // WRITE_EXTERNAL_STORAGE.
-        if (permission.value == "android.permission.WRITE_EXTERNAL_STORAGE") {
+        // READ_EXTERNAL_STORAGE or WRITE_EXTERNAL_STORAGE: report conditionally on targetSdkVersion
+        if (value == WRITE_STORAGE || value == READ_STORAGE) {
             val maxSdk = getMaxSdk(element)
             val incident = Incident(ISSUE, context.getValueLocation(permission), "")
-            context.report(incident, map().put(ATTR_MAX_SDK, maxSdk))
+            context.report(incident, map().put(ATTR_MAX_SDK_VERSION, maxSdk).put(ATTR_READ, value == READ_STORAGE))
         }
 
         // MANAGE_EXTERNAL_STORAGE.
-        if (permission.value == "android.permission.MANAGE_EXTERNAL_STORAGE") {
+        if (value == MANAGE_STORAGE) {
             val incident = Incident(
                 ISSUE,
                 context.getValueLocation(permission),
@@ -76,7 +77,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
     }
 
     override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
-        val maxSdk = map.getInt(ATTR_MAX_SDK, Integer.MAX_VALUE) ?: return false
+        val maxSdk = map.getInt(ATTR_MAX_SDK_VERSION, Integer.MAX_VALUE) ?: return false
         val sdk = minOf(context.mainProject.targetSdk, maxSdk)
         if (sdk < VersionCodes.Q) {
             return false
@@ -88,6 +89,24 @@ class ScopedStorageDetector : Detector(), XmlScanner {
         if (sdk == VersionCodes.Q && permissions.requestedLegacyStorage) {
             return false
         }
+
+        val isRead = map.getBoolean(ATTR_READ) ?: false
+        if (sdk >= VersionCodes.TIRAMISU) {
+            val name = if (isRead) READ_STORAGE else WRITE_STORAGE
+            incident.message = "" +
+                "${name.substringAfterLast('.')} is deprecated (and is not granted) when targeting Android 13+. " +
+                if (isRead)
+                    "If you need to query or interact with MediaStore or media files on the " +
+                        "shared storage, you should instead use one or more new storage permissions: " +
+                        "`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO` or `READ_MEDIA_AUDIO`."
+                else
+                    "If you need to write to shared storage, use the `MediaStore.createWriteRequest` intent."
+            incident.fix = fix().set(ANDROID_URI, ATTR_MAX_SDK_VERSION, VersionCodes.S_V2.toString()).build()
+            return true
+        } else if (isRead) {
+            return false
+        }
+
         var msg = "WRITE_EXTERNAL_STORAGE no longer provides write access when targeting "
         msg += when {
             permissions.requestedLegacyStorage -> "Android 11+, even when using `requestLegacyExternalStorage`"
@@ -100,7 +119,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
 
     // See https://developer.android.com/guide/topics/manifest/uses-permission-element#maxSdk.
     private fun getMaxSdk(element: Element): Int {
-        val maxSdkAttr = element.getAttributeNodeNS(ANDROID_URI, "maxSdkVersion")
+        val maxSdkAttr = element.getAttributeNodeNS(ANDROID_URI, ATTR_MAX_SDK_VERSION)
         return maxSdkAttr?.value?.toIntOrNull() ?: Integer.MAX_VALUE
     }
 
@@ -121,7 +140,7 @@ class ScopedStorageDetector : Detector(), XmlScanner {
                 }
                 TAG_USES_PERMISSION -> {
                     val permission = tag.getAttributeNS(ANDROID_URI, ATTR_NAME)
-                    if (permission == "android.permission.MANAGE_EXTERNAL_STORAGE") {
+                    if (permission == MANAGE_STORAGE) {
                         canManageStorage = true
                     }
                 }
@@ -133,7 +152,11 @@ class ScopedStorageDetector : Detector(), XmlScanner {
     }
 
     companion object {
-        private const val ATTR_MAX_SDK = "maxSdk"
+        private const val ATTR_MAX_SDK_VERSION = "maxSdkVersion"
+        private const val ATTR_READ = "read"
+        private const val READ_STORAGE = "android.permission.READ_EXTERNAL_STORAGE"
+        private const val WRITE_STORAGE = "android.permission.WRITE_EXTERNAL_STORAGE"
+        private const val MANAGE_STORAGE = "android.permission.MANAGE_EXTERNAL_STORAGE"
 
         @JvmField
         val ISSUE = Issue.create(
@@ -144,6 +167,16 @@ class ScopedStorageDetector : Detector(), XmlScanner {
                 `requestLegacyExternalStorage`). In particular, `WRITE_EXTERNAL_STORAGE` \
                 will no longer provide write access to all files; it will provide the \
                 equivalent of `READ_EXTERNAL_STORAGE` instead.
+
+                As of Android 13, if you need to query or interact with MediaStore or media \
+                files on the shared storage, you should be using instead one or more new \
+                storage permissions:
+                * `android.permission.READ_MEDIA_IMAGES`
+                * `android.permission.READ_MEDIA_VIDEO`
+                * `android.permission.READ_MEDIA_AUDIO`
+
+                and then add `maxSdkVersion="33"` to the older permission. \
+                See the developer guide for how to do this: https://developer.android.com/about/versions/13/behavior-changes-13#granular-media-permissions
 
                 The `MANAGE_EXTERNAL_STORAGE` permission can be used to manage all files, but \
                 it is rarely necessary and most apps on Google Play are not allowed to use it. \

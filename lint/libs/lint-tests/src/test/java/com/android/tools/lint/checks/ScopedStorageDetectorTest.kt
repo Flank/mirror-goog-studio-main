@@ -30,6 +30,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                     <uses-sdk android:targetSdkVersion="29"/>
                     <uses-permission/><!-- Test for NPEs -->
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()
@@ -53,6 +54,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                     <uses-sdk android:targetSdkVersion="29"/>
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- OK; permission below takes priority. -->
                     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()
@@ -75,6 +77,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
                     <uses-sdk android:targetSdkVersion="30"/>
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()
@@ -90,6 +93,47 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testAndroid13() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
+                    <uses-sdk android:targetSdkVersion="33"/>
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- ERROR -->
+                    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                </manifest>
+                """
+            ).indented()
+        )
+            .run()
+            .expect(
+                """
+                AndroidManifest.xml:3: Warning: READ_EXTERNAL_STORAGE is deprecated (and is not granted) when targeting Android 13+. If you need to query or interact with MediaStore or media files on the shared storage, you should instead use one or more new storage permissions: READ_MEDIA_IMAGES, READ_MEDIA_VIDEO or READ_MEDIA_AUDIO. [ScopedStorage]
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- ERROR -->
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                AndroidManifest.xml:4: Warning: WRITE_EXTERNAL_STORAGE is deprecated (and is not granted) when targeting Android 13+. If you need to write to shared storage, use the MediaStore.createWriteRequest intent. [ScopedStorage]
+                    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                0 errors, 2 warnings
+                """
+            ).expectFixDiffs(
+                """
+                Fix for AndroidManifest.xml line 3: Set maxSdkVersion="32":
+                @@ -7 +7
+                -     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- ERROR -->
+                +     <uses-permission
+                +         android:name="android.permission.READ_EXTERNAL_STORAGE"
+                +         android:maxSdkVersion="32" /> <!-- ERROR -->
+                Fix for AndroidManifest.xml line 4: Set maxSdkVersion="32":
+                @@ -8 +8
+                -     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- ERROR -->
+                +     <uses-permission
+                +         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+                +         android:maxSdkVersion="32" /> <!-- ERROR -->
+                """
+            )
+    }
+
     fun testAndroid11Legacy() {
         lint().files(
             manifest(
@@ -98,6 +142,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                     <uses-sdk android:targetSdkVersion="30"/>
                     <application android:requestLegacyExternalStorage="true"/>
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- ERROR -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()
@@ -121,6 +166,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                     <uses-sdk android:targetSdkVersion="29"/>
                     <application android:requestLegacyExternalStorage="true"/>
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- OK -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()
@@ -136,6 +182,7 @@ class ScopedStorageDetectorTest : AbstractCheckTest() {
                 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="test.pkg">
                     <uses-sdk android:targetSdkVersion="28"/>
                     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- OK -->
+                    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/><!-- OK -->
                 </manifest>
                 """
             ).indented()

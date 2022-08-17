@@ -84,6 +84,8 @@ public final class AndroidVersion implements Comparable<AndroidVersion>, Seriali
         public static final int Q = 29;
         public static final int R = 30;
         public static final int S = 31;
+        public static final int S_V2 = 32;
+        public static final int TIRAMISU = 33;
     }
 
     public static final Pattern PREVIEW_PATTERN = Pattern.compile("^[A-Z][0-9A-Za-z_]*$");
