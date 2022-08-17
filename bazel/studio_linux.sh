@@ -202,6 +202,7 @@ function collect_logs() {
     ${CONFIG_OPTIONS} \
     -- \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
+    -module_info "${DIST_DIR}" \
     ${perfgate_arg}
 }
 
