@@ -30,6 +30,7 @@ import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -40,10 +41,14 @@ import java.util.concurrent.TimeUnit
  */
 class AnalyticsProfileWriter {
 
+    // Append a random value to avoid collision on output file name. The consumer of those files
+    // only care about the directory not the exact file name.
+    private val random = UUID.randomUUID().toString()
+
     private val profileFileName = DateTimeFormatter.ofPattern(
-        "'profile-'yyyy-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US)
+        "'profile-'yyyy-MM-dd-HH-mm-ss-SSS'-$random.rawproto'", Locale.US)
     private val studioEventFileName = DateTimeFormatter.ofPattern(
-        "'studioEvent-'yyyy-MM-dd-HH-mm-ss-SSS'.trk'", Locale.US)
+        "'studioEvent-'yyyy-MM-dd-HH-mm-ss-SSS'-$random.trk'", Locale.US)
     private val scheduledExecutorService: ScheduledExecutorService
             = Executors.newScheduledThreadPool(1)
 
