@@ -91,15 +91,7 @@ abstract class AnalyticsConfiguratorService : BuildService<BuildServiceParameter
         }
         state = State.CALLBACK_REGISTERED
 
-        // In composite build, in order to tell if it is a model query or not, we need to check
-        // the existence of task requests from the main build, not from included build. The
-        // reason is that the existence of task requests from the included build is not
-        // finalized at this point can could change when the main build gets evaluated.
-        var rootBuild = project.gradle
-        while (rootBuild.parent != null) {
-            rootBuild = rootBuild.parent!!
-        }
-        if (rootBuild.startParameter.taskNames.isEmpty()) {
+        if (project.gradle.startParameter.taskNames.isEmpty()) {
             project.gradle.projectsEvaluated {
                 resourcesManager.recordGlobalProperties(project)
                 resourcesManager.configureAnalyticsService(parameters)
