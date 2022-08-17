@@ -254,6 +254,7 @@ if [[ -d "${DIST_DIR}" ]]; then
       echo "Failed to copy artifacts!"
       exit 1
     fi
+    cp ${SCRIPT_DIR}/../../vendor/adt_infra_internal/owners.zip "${DIST_DIR}/owners.zip"
   fi
 fi
 
