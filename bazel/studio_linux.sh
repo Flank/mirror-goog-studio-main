@@ -202,7 +202,6 @@ function collect_logs() {
     ${CONFIG_OPTIONS} \
     -- \
     -bes "${DIST_DIR}/bazel-${BUILD_NUMBER}.bes" \
-    -testlogs "${DIST_DIR}/logs/junit" \
     ${perfgate_arg}
 }
 

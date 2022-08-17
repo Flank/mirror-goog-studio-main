@@ -20,8 +20,7 @@ collect_and_exit() {
     run //tools/vendor/adt_infra_internal/rbe/logscollector:logs-collector \
     --config=rcache \
     -- \
-    -bes "${dist_dir}/bazel-${build_number}.bes" \
-    -testlogs "${dist_dir}/logs/junit"
+    -bes "${dist_dir}/bazel-${build_number}.bes"
   fi
 
   if [[ $? -ne 0 ]]; then

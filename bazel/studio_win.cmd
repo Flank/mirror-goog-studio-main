@@ -134,7 +134,6 @@ setlocal
   --config=ci ^
   -- ^
   -bes %DISTDIR%\bazel-%BUILDNUMBER%.bes ^
-  -testlogs %DISTDIR%\logs\junit ^
   %PERFGATE_ARG%
 endlocal
 
