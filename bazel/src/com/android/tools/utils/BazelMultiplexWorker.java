@@ -18,7 +18,6 @@ package com.android.tools.utils;
 
 import com.google.devtools.build.lib.worker.WorkerProtocol.WorkRequest;
 import com.google.devtools.build.lib.worker.WorkerProtocol.WorkResponse;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -48,10 +47,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public final class BazelMultiplexWorker {
 
     /**
-     * A program which can be invoked repeatedly and in parallel.
-     * Program output should be written to {@code out} instead of stdout/stderr.
-     * Any output written to stdout/stderr will be directed to a shared worker
-     * log, which is generally not presented to the user (unless the worker crashes).
+     * A program which can be invoked repeatedly and in parallel. Program output should be written
+     * to {@code out} instead of stdout/stderr. Any output written to stdout/stderr will be directed
+     * to a shared worker log, which is generally not presented to the user.
      */
     @FunctionalInterface
     public interface Program {
@@ -68,9 +66,7 @@ public final class BazelMultiplexWorker {
      * jobs, {@code program} should be thread safe and should not leak state between invocations.
      *
      * <p>This method does not return: it either loops indefinitely as a persistent worker, or runs
-     * {@code program} and exits. If {@code program} detects an internal error that might taint
-     * subsequent invocations, then it should throw an exception to ensure that the persistent
-     * worker gets shut down.
+     * {@code program} and exits.
      */
     public static void run(String[] rawArgs, Program program) throws Exception {
         // The last argument is either '--persistent_worker' or '@argfile', depending on
@@ -136,14 +132,20 @@ public final class BazelMultiplexWorker {
              PrintStream out = new PrintStream(outBuffer)
         ) {
             List<String> args = request.getArgumentsList();
-            int exitCode = program.run(args, out);
+            int exitCode;
+            try {
+                exitCode = program.run(args, out);
+            } catch (Throwable e) {
+                e.printStackTrace(out);
+                exitCode = 1;
+            }
             return WorkResponse.newBuilder()
                     .setRequestId(request.getRequestId())
                     .setOutput(outBuffer.toString(Charset.defaultCharset()))
                     .setExitCode(exitCode)
                     .build();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

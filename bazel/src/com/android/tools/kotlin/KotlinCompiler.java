@@ -50,11 +50,6 @@ public class KotlinCompiler {
 
     private static int compile(List<String> args, PrintStream out) {
         ExitCode exit = new K2JVMCompiler().exec(out, args.toArray(new String[0]));
-        if (exit.equals(ExitCode.INTERNAL_ERROR)) {
-            // The Kotlin compiler could be in a bad state, e.g. out of memory.
-            // Throw an exception to kill the Bazel persistent worker.
-            throw new RuntimeException("the Kotlin compiler encountered an internal error");
-        }
         clearJarCache();
         return exit.getCode();
     }
