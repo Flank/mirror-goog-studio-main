@@ -22,7 +22,7 @@ package com.android.resources;
  * <p>This is used in the resource folder names.
  */
 public enum HighDynamicRange implements ResourceEnum {
-    HIGHDR("highdr", "High Dynamic Range", "High Dynamic Rage"),
+    HIGHDR("highdr", "High Dynamic Range", "High Dynamic Range"),
     LOWDR("lowdr", "Low Dynamic Range", "Low Dynamic Range");
 
     private final String mValue;
