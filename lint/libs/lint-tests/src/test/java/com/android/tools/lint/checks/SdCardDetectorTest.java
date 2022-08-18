@@ -16,7 +16,9 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.tools.lint.checks.infrastructure.TestMode;
 import com.android.tools.lint.detector.api.Detector;
+import com.intellij.openapi.util.io.FileUtilRt;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
@@ -545,8 +547,10 @@ public class SdCardDetectorTest extends AbstractCheckTest {
 
     // We've recently removed the large file limit (look for PersistentFSConstants)
     public void testLargeFiles() {
-        int max = 2600 * 1024;
-        StringBuilder large = new StringBuilder(max + 100); // default is 2500
+        // default user file size limit = 2500 KiB
+        // default user content load limit = 20000 KiB
+        int max = Math.max(FileUtilRt.getUserFileSizeLimit(), FileUtilRt.getUserContentLoadLimit());
+        StringBuilder large = new StringBuilder(max + 100);
         large.append("package test.pkg;\nclass VeryLarge {\n");
         for (int i = 0; i < max; i++) {
             large.append(' ');
@@ -559,24 +563,23 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         lint().files(java("src/test/pkg/VeryLarge.java", javaSource))
                 .allowSystemErrors(true)
                 .allowCompilationErrors()
+                .testModes(TestMode.DEFAULT)
                 .run()
-                /* We've recently removed the large file limit (look for PersistentFSConstants
-                   references)
-                .expect("src/test/pkg/VeryLarge.java: Error: Source file too large for lint to " +
-                        "process (2600KB); the current max size is 2560000KB. You can increase " +
-                        "the limit by setting this system property: " +
-                        "idea.max.intellisense.filesize=4096 (or even higher) [LintError]\n" +
-                        "1 errors, 0 warnings\n");
-                        */
-                .expectClean();
+                .expect(
+                        "src/test/pkg/VeryLarge.java: Error: Source file too large for lint to "
+                                + "process (20480KB); the current max size is 20480KB. You can increase "
+                                + "the limit by setting this system property: "
+                                + "idea.max.intellisense.filesize=32768 (or even higher) [LintError]\n"
+                                + "1 errors, 0 warnings\n");
 
         // Bump up the file limit and make sure it no longer complains!
-        String prev = System.getProperty("idea.max.intellisense.filesize");
+        String prev = System.getProperty(IDEA_MAX_INTELLISENSE_FILESIZE);
         try {
-            System.setProperty(IDEA_MAX_INTELLISENSE_FILESIZE, "4096");
+            System.setProperty(IDEA_MAX_INTELLISENSE_FILESIZE, Integer.toString(max + 1024));
             lint().files(java("src/test/pkg/VeryLarge.java", javaSource))
                     .allowSystemErrors(true)
                     .allowCompilationErrors()
+                    .testModes(TestMode.DEFAULT)
                     .run()
                     .expectClean();
         } finally {

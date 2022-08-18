@@ -24,11 +24,11 @@ import org.gradle.api.provider.Provider
  *
  * This class allows querying for the values set via the DSL model.
  *
- * Use [VariantDslInfoBuilder] to instantiate.
+ * Use [DslInfoBuilder] to instantiate.
  *
  * @see [com.android.build.gradle.internal.component.ApplicationCreationConfig]
  */
-interface ApplicationVariantDslInfo: VariantDslInfo, ApkProducingComponentDslInfo, PublishableVariantDslInfo, TestedComponentDslInfo {
+interface ApplicationVariantDslInfo: VariantDslInfo, ApkProducingComponentDslInfo, PublishableComponentDslInfo, TestedVariantDslInfo {
 
     /**
      * Returns the version name for this variant. This could be specified by the product flavors,
@@ -50,4 +50,6 @@ interface ApplicationVariantDslInfo: VariantDslInfo, ApkProducingComponentDslInf
     val isWearAppUnbundled: Boolean?
 
     val isEmbedMicroApp: Boolean
+
+    val isProfileable: Boolean
 }

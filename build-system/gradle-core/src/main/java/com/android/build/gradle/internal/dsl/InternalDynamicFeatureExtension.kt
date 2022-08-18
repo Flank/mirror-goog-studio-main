@@ -25,8 +25,7 @@ import com.android.build.api.dsl.DynamicFeatureProductFlavor
 /** See [InternalCommonExtension] */
 interface InternalDynamicFeatureExtension :
     DynamicFeatureExtension,
-    InternalTestedExtension,
-    InternalCommonExtension<
+    InternalTestedExtension<
             DynamicFeatureBuildFeatures,
             DynamicFeatureBuildType,
             DynamicFeatureDefaultConfig,

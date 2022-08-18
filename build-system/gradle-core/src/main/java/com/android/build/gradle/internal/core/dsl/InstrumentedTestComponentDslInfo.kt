@@ -32,14 +32,12 @@ interface InstrumentedTestComponentDslInfo {
      * @param dexingType the selected dexing type for this variant.
      * @return the instrumentation test runner name
      */
-    // DO NOT USE, Use CreationConfig and subtypes methods.
     fun getInstrumentationRunner(dexingType: DexingType): Provider<String>
 
     /**
      * Returns the instrumentationRunner arguments to use to test this variant, or if the variant is
      * a test, the ones to use to test the tested variant
      */
-    // DO NOT USE, Use CreationConfig and subtypes methods.
     val instrumentationRunnerArguments: Map<String, String>
 
     /**
@@ -48,7 +46,6 @@ interface InstrumentedTestComponentDslInfo {
      *
      * @return the handleProfiling value
      */
-    // DO NOT USE, Use CreationConfig and subtypes methods.
     val handleProfiling: Provider<Boolean>
 
     /**
@@ -57,10 +54,8 @@ interface InstrumentedTestComponentDslInfo {
      *
      * @return the functionalTest value
      */
-    // DO NOT USE, Use CreationConfig and subtypes methods.
     val functionalTest: Provider<Boolean>
 
     /** Gets the test label for this variant  */
-    // DO NOT USE, Use CreationConfig and subtypes methods.
     val testLabel: Provider<String?>
 }

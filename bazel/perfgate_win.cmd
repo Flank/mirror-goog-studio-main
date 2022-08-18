@@ -34,6 +34,7 @@ CALL %SCRIPTDIR%bazel.cmd ^
  --config=ci --config=ants ^
  --build_metadata=ab_build_id=%BUILDNUMBER% ^
  --build_metadata=ab_target=perfgate-win ^
+ --build_metadata=ANDROID_TEST_INVESTIGATE="http://ab/tests/bazel/%INVOCATIONID%" ^
  --build_tag_filters=-no_windows ^
  --invocation_id=%INVOCATIONID% ^
  --build_event_binary_file=%DISTDIR%\bazel-%BUILDNUMBER%.bes ^

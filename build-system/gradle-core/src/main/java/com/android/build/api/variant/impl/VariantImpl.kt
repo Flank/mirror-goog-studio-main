@@ -19,6 +19,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
@@ -36,6 +37,7 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
@@ -176,7 +178,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy {
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.buildConfig) {
             BuildConfigCreationConfigImpl(
                 this,
@@ -188,7 +190,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         }
     }
 
-    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
                 dslInfo,
@@ -200,10 +202,17 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         }
     }
 
+    override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        ManifestPlaceholdersCreationConfigImpl(
+            dslInfo,
+            internalServices
+        )
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
-    val externalExtensions: Map<Class<*>, Any>? by lazy {
+    private val externalExtensions: Map<Class<*>, Any>? by lazy {
         variantBuilder.getRegisteredExtensions()
     }
 
@@ -296,8 +305,8 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         get() = dslInfo.supportedAbis
 
     override val postProcessingFeatures: PostprocessingFeatures?
-        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
-    override val consumerProguardFiles: List<File> by lazy {
+        get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()
+    override val consumerProguardFiles: List<File> by lazy(LazyThreadSafetyMode.NONE) {
         immutableListBuilder<File> {
             addAll(dslInfo.gatherProguardFiles(ProguardFileType.CONSUMER))
             // We include proguardFiles if we're in a dynamic-feature module.
@@ -306,4 +315,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
             }
         }
     }
+    override val manifestPlaceholders: MapProperty<String, String>
+        get() = manifestPlaceholdersCreationConfig.placeholders
 }

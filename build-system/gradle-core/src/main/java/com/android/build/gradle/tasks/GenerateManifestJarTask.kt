@@ -43,7 +43,7 @@ import org.gradle.api.tasks.TaskProvider
  * This manifest class is used for accessing Android Manifest custom permission names.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MANIFEST, TaskCategoryLabel.ZIPPING])
 abstract class GenerateManifestJarTask : NonIncrementalTask() {
 
     @get:InputFile

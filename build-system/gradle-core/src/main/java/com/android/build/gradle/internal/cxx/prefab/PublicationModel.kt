@@ -68,6 +68,9 @@ data class PrefabModulePublication(
     val moduleHeaders : File?,
     @get:Input
     @get:Optional
+    val moduleExportLibraries : List<String>,
+    @get:Input
+    @get:Optional
     val moduleLibraryName : String?,
     @get:Nested
     val abis : List<PrefabAbiPublication>

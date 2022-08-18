@@ -29,6 +29,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiParameter
 import com.intellij.psi.PsiVariable
+import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.asJava.elements.FakeFileForLightClass
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UAnnotation
@@ -490,6 +491,16 @@ fun UElement.isBelow(parent: UElement, strict: Boolean = false): Boolean {
         curr = curr.uastParent
     }
     return false
+}
+
+/**
+ * Returns true if [this] element is a child or indirect child of the
+ * given [parent]. If [strict] is false, this method will return true
+ * when [parent] is the same as [this].
+ */
+fun PsiElement?.isBelow(parent: PsiElement, strict: Boolean = false): Boolean {
+    this ?: return false
+    return PsiTreeUtil.isAncestor(parent, this, strict)
 }
 
 /**

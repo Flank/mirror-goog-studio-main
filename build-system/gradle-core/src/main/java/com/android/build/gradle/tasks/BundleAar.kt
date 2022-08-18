@@ -142,8 +142,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     creationConfig.artifacts.get(
                         InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
-                        DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
-                    )
+                            DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR)
                 )
             }
 
@@ -394,11 +393,14 @@ abstract class BundleAar : Zip(), VariantAwareTask {
     }
 
     companion object {
-        private fun prependToCopyPath(pathSegment: String) = Action { copySpec: CopySpec ->
-            copySpec.eachFile { fileCopyDetails: FileCopyDetails ->
-                fileCopyDetails.relativePath =
-                    fileCopyDetails.relativePath.prepend(pathSegment)
-            }
-        }
+
+        private fun prependToCopyPath(pathSegment: String, includeEmptyDirs: Boolean = false) =
+                Action { copySpec: CopySpec ->
+                    copySpec.includeEmptyDirs = includeEmptyDirs
+                    copySpec.eachFile { fileCopyDetails: FileCopyDetails ->
+                        fileCopyDetails.relativePath =
+                                fileCopyDetails.relativePath.prepend(pathSegment)
+                    }
+                }
     }
 }

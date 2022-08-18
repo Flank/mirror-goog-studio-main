@@ -38,6 +38,7 @@ enum class TaskCategoryLabel {
     JAVA_RESOURCES,
     // Tasks that involve Java docs
     JAVA_DOC,
+    KOTLIN,
     // Tasks that invovle AIDL
     AIDL,
     // Tasks involving Renderscript framework
@@ -62,8 +63,11 @@ enum class TaskCategoryLabel {
     DEPLOYMENT,
     // Tasks that helps/gives information to the user
     HELP,
+    // Task related to packaging APKs
     APK_PACKAGING,
+    // Tasks related to packaging AARs
     AAR_PACKAGING,
+    // Tasks related to packaging bundles
     BUNDLE_PACKAGING,
     // Tasks that involve the optimization of the project
     OPTIMIZATION,
@@ -71,4 +75,16 @@ enum class TaskCategoryLabel {
     SOURCE_GENERATION,
     // Tasks that process sources
     SOURCE_PROCESSING,
+    // Tasks related to packaging artifacts
+    ZIPPING,
+    LINKING,
+    MERGING,
+    FUSING,
+    // org.gradle tasks - No tasks in AGP should have this annotation label
+    GRADLE,
+    // Various tasks that do not fall into any other category
+    // No tasks in AGP should have this annotation label
+    MISC,
+    // Other TP plugins - No task in AGP should have this annotation label
+    UNKNOWN
 }

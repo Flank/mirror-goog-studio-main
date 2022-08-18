@@ -48,7 +48,7 @@ import java.io.File
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DATA_BINDING, TaskCategoryLabel.MERGING])
 abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     /**
      * Classes available at Runtime. We extract BR files from there so that even if there is no

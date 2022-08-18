@@ -66,7 +66,9 @@ private constructor(
       // We want to update whenever the ConnectedDevicesTracker updates, or when one of the
       // devices' deviceInfoFlow updates (to know when the device comes online, since it will
       // often appear initially in an offline state, and we ignore offline devices).
-      adbSession.connectedDevicesTracker.connectedDevices
+      adbSession
+        .connectedDevicesTracker
+        .connectedDevices
         .flatMapLatest { devices ->
           combine(devices.map { device -> device.deviceInfoFlow.map { Pair(device, it) } }) {
             it.mapNotNull { (device, info) ->

@@ -24,9 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * A component of [DeviceProvisioner] responsible for a particular class of device.
- */
+/** A component of [DeviceProvisioner] responsible for a particular class of device. */
 interface DeviceProvisionerPlugin {
 
   /**
@@ -56,28 +54,20 @@ interface DeviceProvisionerPlugin {
   val templates: StateFlow<List<DeviceTemplate>>
     get() = MutableStateFlow(emptyList<DeviceTemplate>()).asStateFlow()
 
-  /**
-   * A [DeviceAction] that creates a device, typically based on input from the user.
-   */
+  /** A [DeviceAction] that creates a device, typically based on input from the user. */
   val createDeviceAction: CreateDeviceAction?
     get() = null
 
-  /**
-   * A [DeviceAction] that creates a template, typically based on input from the user.
-   */
+  /** A [DeviceAction] that creates a template, typically based on input from the user. */
   val createDeviceTemplateAction: CreateDeviceTemplateAction?
     get() = null
 }
 
-/**
- * On device disconnection, runs the given block in the [AdbSession] scope.
- */
+/** On device disconnection, runs the given block in the [AdbSession] scope. */
 fun ConnectedDevice.invokeOnDisconnection(block: suspend () -> Unit) {
   scope.coroutineContext[Job]?.invokeOnCompletion {
     // Run the block in the AdbSession scope, since this CompletionHandler must
     // be fast, non-blocking, and thread-safe, and not throw exceptions.
-    session.scope.launch {
-      block()
-    }
+    session.scope.launch { block() }
   }
 }

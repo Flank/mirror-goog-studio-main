@@ -35,7 +35,7 @@ import org.gradle.work.DisableCachingByDefault
  * A task merging dex files in dynamic feature modules into a single artifact type.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.DEXING, TaskCategoryLabel.MERGING])
 abstract class FeatureDexMergeTask : NonIncrementalTask() {
 
     @get:InputFiles

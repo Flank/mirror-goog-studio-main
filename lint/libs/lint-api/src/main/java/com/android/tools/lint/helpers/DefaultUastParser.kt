@@ -137,7 +137,9 @@ open class DefaultUastParser(
         if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
             if (!warnedAboutLargeFiles) {
                 warnedAboutLargeFiles = true
-                val max = FileUtilRt.getUserFileSizeLimit()
+                // default user file size limit = 2500 KiB
+                // default user content load limit = 20000 KiB
+                val max = max(FileUtilRt.getUserFileSizeLimit(), FileUtilRt.getUserContentLoadLimit()) / 1024
                 val size = file.length() / 1024
                 val sizeRoundedUp = 2.0.pow(ceil(log10(size.toDouble()) / log10(2.0) + 0.2)).toInt()
                 context.report(

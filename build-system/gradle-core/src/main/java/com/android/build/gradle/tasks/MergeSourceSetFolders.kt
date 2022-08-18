@@ -69,7 +69,7 @@ import java.io.File
 import java.io.IOException
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_PROCESSING, TaskCategoryLabel.MERGING])
 abstract class MergeSourceSetFolders : NewIncrementalTask() {
 
     @get:OutputDirectory

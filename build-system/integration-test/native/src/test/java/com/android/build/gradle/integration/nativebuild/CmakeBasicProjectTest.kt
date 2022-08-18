@@ -17,7 +17,9 @@
 package com.android.build.gradle.integration.nativebuild
 
 import com.android.SdkConstants.CURRENT_PLATFORM
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.Version
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkLocation
@@ -53,11 +55,13 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.configure.shouldConfigure
+import com.android.build.gradle.internal.cxx.hashing.sha256Of
 import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
 import com.android.build.gradle.internal.cxx.io.decodeSynchronizeFile
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons.getNativeBuildMiniConfig
 import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
+import com.android.build.gradle.internal.cxx.model.cxxBuildHashKeyFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
 import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
@@ -408,6 +412,49 @@ class CmakeBasicProjectTest(
         println(project.readStructuredLogs(::decodeExecuteProcess))
         val process = project.readStructuredLogs(::decodeExecuteProcess).first()
         assertThat(process.argsList).contains("-C$path")
+    }
+
+    @Test
+    fun `ensure hashed output paths are stable`() {
+        Assume.assumeTrue(mode == Mode.CMake && cmakeVersionInDsl != "3.6.0")
+        project.execute("configure${mode.buildFolderTag}Debug[x86_64]")
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+        val hashKey = abi.cxxBuildHashKeyFile.readText()
+        val hashSegment = abi.cxxBuildHashKeyFile.parentFile.name
+        val hashKeyExpected =
+            """
+            # Values used to calculate the hash in this folder name.
+            # Should not depend on the absolute path of the project itself.
+            #   - AGP: ${Version.ANDROID_GRADLE_PLUGIN_VERSION}.
+            #   - ${'$'}NDK is the path to NDK $NDK_DEFAULT_VERSION.
+            #   - ${'$'}PROJECT is the path to the parent folder of the root Gradle build file.
+            #   - ${'$'}ABI is the ABI to be built with. The specific value doesn't contribute to the value of the hash.
+            #   - ${'$'}HASH is the hash value computed from this text.
+            #   - ${'$'}CMAKE is the path to CMake $cmakeVersionInDsl.
+            #   - ${'$'}NINJA is the path to Ninja.
+            -H${'$'}PROJECT
+            -DCMAKE_SYSTEM_NAME=Android
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+            -DCMAKE_SYSTEM_VERSION=16
+            -DANDROID_PLATFORM=android-16
+            -DANDROID_ABI=${'$'}ABI
+            -DCMAKE_ANDROID_ARCH_ABI=${'$'}ABI
+            -DANDROID_NDK=${'$'}NDK
+            -DCMAKE_ANDROID_NDK=${'$'}NDK
+            -DCMAKE_TOOLCHAIN_FILE=${'$'}NDK/build/cmake/android.toolchain.cmake
+            -DCMAKE_MAKE_PROGRAM=${'$'}NINJA
+            -DCMAKE_C_FLAGS=-DTEST_C_FLAG -DTEST_C_FLAG_2
+            -DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${'$'}PROJECT/build/intermediates/cxx/Debug/${'$'}HASH/obj/${'$'}ABI
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=${'$'}PROJECT/build/intermediates/cxx/Debug/${'$'}HASH/obj/${'$'}ABI
+            -DCMAKE_BUILD_TYPE=Debug
+            -B${'$'}PROJECT/.cxx/Debug/${'$'}HASH/${'$'}ABI
+            -GNinja
+            """.trimIndent()
+        assertThat(hashKey).isEqualTo(hashKeyExpected)
+        val expectedHashSegment = sha256Of(hashKeyExpected, includeGradleVersionInHash = false).substring(0,8)
+        // If the text above passes then the SHA-256 of it should be stable.
+        assertThat(hashSegment).isEqualTo(expectedHashSegment)
     }
 
     @Test

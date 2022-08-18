@@ -179,7 +179,7 @@ open class ApplicationVariantImpl @Inject constructor(
     override val debuggable: Boolean
         get() = delegate.isDebuggable
     override val profileable: Boolean
-        get() = delegate.isProfileable
+        get() = dslInfo.isProfileable
     override val isCoreLibraryDesugaringEnabled: Boolean
         get() = delegate.isCoreLibraryDesugaringEnabled
 
@@ -201,12 +201,6 @@ open class ApplicationVariantImpl @Inject constructor(
                 )
             return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
         }
-
-    // ---------------------------------------------------------------------------------------------
-    // DO NOT USE, only present for old variant API.
-    // ---------------------------------------------------------------------------------------------
-    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        dslInfo.signingConfig
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

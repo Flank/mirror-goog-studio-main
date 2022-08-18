@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
@@ -89,7 +90,7 @@ open class TestFixturesImpl @Inject constructor(
 ), TestFixtures, TestFixturesCreationConfig {
 
     override val description: String
-        get() = if (dslInfo.hasFlavors()) {
+        get() = if (productFlavorList.isNotEmpty()) {
             val sb = StringBuilder(50)
             dslInfo.componentIdentity.buildType?.let { sb.appendCapitalized(it) }
             sb.append(" build for flavor ")
@@ -110,8 +111,6 @@ open class TestFixturesImpl @Inject constructor(
         internalServices.providerOf(String::class.java, variantDslInfo.namespace)
     override val debuggable: Boolean
         get() = mainVariant.debuggable
-    override val profileable: Boolean
-        get() = mainVariant.profileable
     override val minSdkVersion: AndroidVersion
         get() = mainVariant.minSdkVersion
     override val targetSdkVersion: AndroidVersion
@@ -121,14 +120,9 @@ open class TestFixturesImpl @Inject constructor(
 
     override val aarMetadata: AarMetadata =
         internalServices.newInstance(AarMetadata::class.java).also {
-            it.minCompileSdk.set(variantDslInfo.aarMetadata.minCompileSdk ?: 1)
-            it.minCompileSdkExtension.set(
-                variantDslInfo.aarMetadata.minCompileSdkExtension
-                    ?: DEFAULT_MIN_COMPILE_SDK_EXTENSION
-            )
-            it.minAgpVersion.set(
-                variantDslInfo.aarMetadata.minAgpVersion ?: DEFAULT_MIN_AGP_VERSION
-            )
+            it.minCompileSdk.set(1)
+            it.minCompileSdkExtension.set(DEFAULT_MIN_COMPILE_SDK_EXTENSION)
+            it.minAgpVersion.set(DEFAULT_MIN_AGP_VERSION)
         }
 
     override val javaCompilation: JavaCompilation =
@@ -143,6 +137,9 @@ open class TestFixturesImpl @Inject constructor(
     // ---------------------------------------------------------------------------------------------
 
     override val buildConfigCreationConfig: BuildConfigCreationConfig? = null
+
+    override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig?
+        get() = mainVariant.manifestPlaceholdersCreationConfig
 
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride

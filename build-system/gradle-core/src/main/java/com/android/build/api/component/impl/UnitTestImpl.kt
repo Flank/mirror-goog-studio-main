@@ -20,6 +20,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.UnitTest
 import com.android.build.api.component.analytics.AnalyticsEnabledUnitTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
+import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
@@ -31,9 +32,10 @@ import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.DEFAULT_TEST_RUNNER
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -45,6 +47,7 @@ import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
 
@@ -105,7 +108,7 @@ open class UnitTestImpl @Inject constructor(
      * the instrumentation tag to be present in the merged manifest to process android resources.
      */
     override val instrumentationRunner: Provider<String>
-        get() = services.provider { VariantDslInfoImpl.DEFAULT_TEST_RUNNER }
+        get() = services.provider { DEFAULT_TEST_RUNNER }
 
     override val testedApplicationId: Provider<String>
         get() = mainVariant.applicationId
@@ -113,15 +116,15 @@ open class UnitTestImpl @Inject constructor(
     override val debuggable: Boolean
         get() = mainVariant.debuggable
 
-    override val profileable: Boolean
-        get() = mainVariant.profileable
+    override val manifestPlaceholders: MapProperty<String, String>
+        get() = manifestPlaceholdersCreationConfig.placeholders
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
     override val isTestCoverageEnabled: Boolean
         get() = dslInfo.isUnitTestCoverageEnabled
 
-    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy {
+    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         // in case of unit tests, we add the R jar even if android resources are
         // disabled (includeAndroidResources) as we want to be able to compile against
         // the values inside.
@@ -134,6 +137,13 @@ open class UnitTestImpl @Inject constructor(
         } else {
             null
         }
+    }
+
+    override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        ManifestPlaceholdersCreationConfigImpl(
+            dslInfo.testedVariantDslInfo,
+            internalServices
+        )
     }
 
     override fun <T : Component> createUserVisibleVariantObject(

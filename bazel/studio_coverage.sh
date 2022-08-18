@@ -73,6 +73,7 @@ fi
   --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
   --profile="${dist_dir:-/tmp}/profile-${build_number}.json.gz" \
   --build_metadata=ANDROID_BUILD_ID="${build_number}" \
+  --build_metadata=ANDROID_TEST_INVESTIGATE="http://ab/tests/bazel/${invocation_id}" \
   --build_metadata=ab_build_id="${build_number}" \
   --build_metadata=ab_target=studio-coverage \
   ${auth_options} \

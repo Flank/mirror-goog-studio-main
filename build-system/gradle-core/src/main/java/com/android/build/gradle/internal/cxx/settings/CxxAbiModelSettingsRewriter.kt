@@ -90,6 +90,7 @@ import com.google.common.collect.Lists
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
+import com.android.Version
 
 /**
  * Rewrite the CxxAbiModel in three phases:
@@ -189,27 +190,78 @@ private fun CxxAbiModel.supportNdkR14AndEarlier() : CxxAbiModel {
 }
 
 /**
- * Calculate hash and plug it into the model.
+ * Calculate hash and plug it into the model. Return the new model along with the text that
+ * was hashed.
+ *
+ * The user can pass arbitrary parameters to CMake (or ndk-build) so we can't guard against every
+ * case that could make the hash local-machine-specific. This is best effort, works in the default
+ * case, and we provide the hash_key.txt file (written later) to be able to diagnose problems.
+ * The consequence of a non-portable paths is that hypothetical caching tech (ccache, reclient,
+ * gomacc, etc) may not be able to share results. However, build results will still be accurate.
  */
-private fun CxxAbiModel.calculateConfigurationHash() =
-    copy(fullConfigurationHash = sha256Of(configurationArguments))
+private fun CxxAbiModel.calculateConfigurationHash() : CxxAbiModel {
+    var header =
+        """
+        # Values used to calculate the hash in this folder name.
+        # Should not depend on the absolute path of the project itself.
+        #   - AGP: ${Version.ANDROID_GRADLE_PLUGIN_VERSION}.
+        #   - ${'$'}NDK is the path to NDK ${variant.module.ndkVersion}.
+        #   - ${'$'}PROJECT is the path to the parent folder of the root Gradle build file.
+        #   - ${'$'}ABI is the ABI to be built with. The specific value doesn't contribute to the value of the hash.
+        #   - ${'$'}HASH is the hash value computed from this text.
+
+        """.trimIndent()
+
+    var arguments = configurationArguments.joinToString("\n")
+        .replace(variant.module.ndkFolder.path, "\$NDK")
+        .replace(variant.module.project.rootBuildGradleFolder.path, "\$PROJECT")
+        .replace(NDK_ABI.ref, "\$ABI")
+        .replace(NDK_CONFIGURATION_HASH.ref, "\$HASH")
+
+    if (variant.module.cmake != null) {
+        header +=             """
+            #   - ${'$'}CMAKE is the path to CMake ${variant.module.cmake.minimumCmakeVersion}.
+
+            """.trimIndent()
+        arguments = arguments.replace(variant.module.cmake.cmakeExe!!.path, "\$CMAKE")
+
+    }
+
+    if (variant.module.ninjaExe != null) {
+        header +=             """
+            #   - ${'$'}NINJA is the path to Ninja.
+
+            """.trimIndent()
+        arguments = arguments.replace(variant.module.ninjaExe.path, "\$NINJA")
+    }
+
+    val hashKey = header + arguments.replace("\\", "/")
+
+    return copy(
+        fullConfigurationHash = sha256Of(hashKey, includeGradleVersionInHash = false),
+        fullConfigurationHashKey = hashKey
+    )
+}
 
 /**
  * Finally, expand all of the post-hash macros.
  */
-private fun CxxAbiModel.expandConfigurationHashMacros() = rewrite { _, value ->
-    reifyString(value) { tokenMacro ->
-        when(tokenMacro) {
-            NDK_ABI.qualifiedName,
-            NDK_CONFIGURATION_HASH.qualifiedName,
-            NDK_FULL_CONFIGURATION_HASH.qualifiedName -> {
-                val macro = Macro.lookup(tokenMacro) ?: error("Unrecognized macro: $tokenMacro")
-                resolveMacroValue(macro)
+private fun CxxAbiModel.expandConfigurationHashMacros() : CxxAbiModel {
+    val result = rewrite { _, value ->
+        reifyString(value) { tokenMacro ->
+            when(tokenMacro) {
+                NDK_ABI.qualifiedName,
+                NDK_CONFIGURATION_HASH.qualifiedName,
+                NDK_FULL_CONFIGURATION_HASH.qualifiedName -> {
+                    val macro = Macro.lookup(tokenMacro) ?: error("Unrecognized macro: $tokenMacro")
+                    resolveMacroValue(macro)
+                }
+                else ->
+                    error(tokenMacro)
             }
-            else ->
-                error(tokenMacro)
         }
     }
+    return result
 }
 
 /**

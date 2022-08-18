@@ -21,6 +21,7 @@ import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
+import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
@@ -46,6 +47,7 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
@@ -124,9 +126,6 @@ open class AndroidTestImpl @Inject constructor(
     override val debuggable: Boolean
         get() = dslInfo.isDebuggable
 
-    override val profileable: Boolean
-        get() = dslInfo.isProfileable
-
     override val namespaceForR: Provider<String> = dslInfo.namespaceForR
 
     override val minSdkVersion: AndroidVersion
@@ -150,7 +149,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val packaging: ApkPackaging by lazy {
         ApkPackagingImpl(
-            dslInfo.testedVariant!!.packaging,
+            dslInfo.testedVariantDslInfo.packaging,
             variantServices,
             minSdkVersion.apiLevel
         )
@@ -160,9 +159,9 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
-                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
                     mainVariant.minifiedEnabled
-                else -> dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+                else -> dslInfo.postProcessingOptions.codeShrinkerEnabled()
             }
         }
 
@@ -170,9 +169,9 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             return when {
                 mainVariant.componentType.isAar -> false
-                !dslInfo.getPostProcessingOptions().hasPostProcessingConfiguration() ->
+                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
                     mainVariant.resourcesShrink
-                else -> dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()
+                else -> dslInfo.postProcessingOptions.resourcesShrinkingEnabled()
             }
         }
 
@@ -249,13 +248,16 @@ open class AndroidTestImpl @Inject constructor(
             )
     }
 
+    override val manifestPlaceholders: MapProperty<String, String>
+        get() = manifestPlaceholdersCreationConfig.placeholders
+
     // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
     // Even if android resources is disabled in a library project, we still need to merge and link
     // external resources to create the test apk.
-    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig by lazy {
+    override val androidResourcesCreationConfig: AndroidResourcesCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
         AndroidResourcesCreationConfigImpl(
             this,
             dslInfo,
@@ -263,7 +265,7 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy {
+    override val buildConfigCreationConfig: BuildConfigCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.buildConfig) {
             BuildConfigCreationConfigImpl(
                 this,
@@ -275,7 +277,7 @@ open class AndroidTestImpl @Inject constructor(
         }
     }
 
-    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy {
+    override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
                 dslInfo,
@@ -285,6 +287,13 @@ open class AndroidTestImpl @Inject constructor(
         } else {
             null
         }
+    }
+
+    override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        ManifestPlaceholdersCreationConfigImpl(
+            dslInfo,
+            internalServices
+        )
     }
 
     override val targetSdkVersionOverride: AndroidVersion?
@@ -368,9 +377,6 @@ open class AndroidTestImpl @Inject constructor(
 
     override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
 
-    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
-        dslInfo.signingConfig
-
     override val defaultGlslcArgs: List<String>
         get() = dslInfo.defaultGlslcArgs
     override val scopedGlslcArgs: Map<String, List<String>>
@@ -390,7 +396,7 @@ open class AndroidTestImpl @Inject constructor(
         get() = isTestCoverageEnabled && mainVariant.componentType.isAar
 
     override val postProcessingFeatures: PostprocessingFeatures?
-        get() = dslInfo.getPostProcessingOptions().getPostprocessingFeatures()
+        get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

@@ -49,6 +49,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
         const val VIEW_DETAILS_MESSAGE = "View details in Google Play SDK Index"
     }
 
+    private lateinit var lastReadResult: ReadDataResult
     private var initialized: Boolean = false
     private var status: GooglePlaySdkIndexStatus = GooglePlaySdkIndexStatus.NOT_READY
     private val libraryToSdk = HashMap<String, LibraryToSdk>()
@@ -66,6 +67,25 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
         initialize(null)
     }
 
+    private fun readIndexData(readFunction: () -> InputStream?): ReadDataResult {
+        var readDataErrorType = ReadDataErrorType.DATA_FUNCTION_EXCEPTION
+        try {
+            val rawData = readFunction.invoke()
+            if (rawData != null) {
+                readDataErrorType = ReadDataErrorType.GZIP_EXCEPTION
+                val gzipData = GZIPInputStream(rawData)
+                readDataErrorType = ReadDataErrorType.INDEX_PARSE_EXCEPTION
+                val index = Index.parseFrom(gzipData)
+                readDataErrorType = if (index != null) ReadDataErrorType.NO_ERROR else ReadDataErrorType.INDEX_PARSE_NULL_ERROR
+                return ReadDataResult(index, readDataErrorType, exception = null)
+            }
+        }
+        catch (exception: Exception) {
+            return ReadDataResult(index = null, readDataErrorType, exception)
+        }
+        return ReadDataResult(index = null, readDataErrorType = ReadDataErrorType.DATA_FUNCTION_NULL_ERROR, exception = null)
+    }
+
     @VisibleForTesting
     fun initialize(overriddenData: InputStream? = null) {
         synchronized(this) {
@@ -76,27 +96,45 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
             status = GooglePlaySdkIndexStatus.NOT_READY
         }
         var index: Index? = null
+        val indexDataSource: DataSourceType
         // Read from cache/network
         if (overriddenData != null) {
             // Do not check for exceptions, calling from a test
+            lastReadSourceType = DataSourceType.TEST_DATA
+            indexDataSource = lastReadSourceType
             index = Index.parseFrom(overriddenData)
-        } else {
-            try {
-                index = Index.parseFrom(GZIPInputStream(findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE)))
-            } catch (exception: Exception) {
-                val message = if (exception.message.isNullOrEmpty()) exception.toString() else exception.message
-                logCachingError(message)
-                try {
-                    index = Index.parseFrom(GZIPInputStream(readDefaultData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE)))
-                } catch (defaultException: Exception) {
-                    logErrorInDefaultData(defaultException.message)
+        }
+        else {
+            lastReadResult = readIndexData { findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE) }
+            if (lastReadResult.index != null) {
+                // Using data from cache
+                indexDataSource = lastReadSourceType
+                index = lastReadResult.index
+            }
+            else {
+                if (lastReadSourceType != DataSourceType.DEFAULT_DATA) {
+                    lastReadSourceType = DataSourceType.UNKNOWN_SOURCE
+                    val offlineResult = readIndexData {
+                        readDefaultData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE)
+                    }
+                    if (offlineResult.index != null) {
+                        indexDataSource = DataSourceType.DEFAULT_DATA
+                        index = offlineResult.index
+                    } else {
+                        indexDataSource = DataSourceType.UNKNOWN_SOURCE
+                        logErrorInDefaultData(offlineResult)
+                    }
+                }
+                else {
+                    indexDataSource = DataSourceType.UNKNOWN_SOURCE
+                    logErrorInDefaultData(lastReadResult)
                 }
             }
         }
         if (index != null) {
             setMaps(index)
             status = GooglePlaySdkIndexStatus.READY
-            logIndexLoadedCorrectly()
+            logIndexLoadedCorrectly(indexDataSource)
         }
     }
 
@@ -259,10 +297,13 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
     }
 
     override fun readDefaultData(relative: String): InputStream? {
-        if (GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE == relative) {
-            return GooglePlaySdkIndex::class.java.getResourceAsStream("/$GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE")
+        // This function is called only if there were errors while reading the cached data, log that error if the previous source was known
+        if (lastReadSourceType != DataSourceType.UNKNOWN_SOURCE) {
+            // Log reason for not being able to use cached file
+            logCachingError(lastReadResult, lastReadSourceType)
         }
-        return null
+        // We only have a single file, return it no matter what relative string is used
+        return GooglePlaySdkIndex::class.java.getResourceAsStream("/$GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_RESOURCE")
     }
 
     /**
@@ -325,12 +366,31 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
     protected open fun logOutdated(groupId: String, artifactId: String, versionString: String, file: File?) {
     }
 
-    protected open fun logCachingError(message: String?) {
+    protected open fun logCachingError(readResult: ReadDataResult, dataSourceType: DataSourceType) {
     }
 
-    protected open fun logErrorInDefaultData(message: String?) {
+    protected open fun logErrorInDefaultData(readResult: ReadDataResult) {
     }
 
-    protected open fun logIndexLoadedCorrectly() {
+    protected open fun logIndexLoadedCorrectly(dataSourceType: DataSourceType) {
     }
+
+    protected enum class ReadDataErrorType {
+        NO_ERROR,
+        // Function used to get the data caused an exception
+        DATA_FUNCTION_EXCEPTION,
+        // Function used to get the data returned null
+        DATA_FUNCTION_NULL_ERROR,
+        // There was an exception while decompressing the raw data
+        GZIP_EXCEPTION,
+        // Exception while parsing decompressed data
+        INDEX_PARSE_EXCEPTION,
+        // Resulted Index was null after parsing
+        INDEX_PARSE_NULL_ERROR,;
+    }
+
+    protected class ReadDataResult(val index: Index?, val readDataErrorType: ReadDataErrorType, val exception: Exception?)
+
+    @VisibleForTesting
+    fun getLastReadSource() = lastReadSourceType
 }

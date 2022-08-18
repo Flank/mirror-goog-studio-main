@@ -108,8 +108,9 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         return listOf(ABSOLUTE_LAYOUT, TAG_USES_PERMISSION_SDK_M)
     }
 
-    override fun getApplicableAttributes(): Collection<String>? {
+    override fun getApplicableAttributes(): Collection<String> {
         return listOf(
+            ATTR_USER_SHARED_ID,
             // TODO: fill_parent is deprecated as of API 8.
             // We could warn about it, but it will probably be very noisy
             // and make people disable the deprecation check; let's focus on
@@ -158,6 +159,16 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
         val fix: String
         var minSdk = 1
         when (name) {
+            ATTR_USER_SHARED_ID -> {
+                if (!attribute.ownerElement.hasAttributeNS(ANDROID_URI, ATTR_SHARED_USER_MAX_SDK_VERSION)) {
+                    fix = "Consider removing `$ATTR_USER_SHARED_ID` for new users by adding " +
+                            "`android:sharedUserMaxSdkVersion=\"32\"` to your manifest. " +
+                            "See https://developer.android.com/guide/topics/manifest/manifest-element for details."
+                    val addFix = fix().set(ANDROID_URI, ATTR_SHARED_USER_MAX_SDK_VERSION, "32").build()
+                    context.report(ISSUE, attribute, context.getLocation(attribute), fix, addFix)
+                }
+                return
+            }
             ATTR_PERMISSION -> {
                 if (TAG_SERVICE == attribute.ownerElement.tagName &&
                     CHOOSER_TARGET_SERVICE_PERM == attribute.value
@@ -301,6 +312,9 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         private const val APP_ACTIONS_MIGRATION_URL =
             "https://developers.google.com/assistant/app/legacy/migration-guide"
+
+        private const val ATTR_USER_SHARED_ID = "sharedUserId"
+        private const val ATTR_SHARED_USER_MAX_SDK_VERSION = "sharedUserMaxSdkVersion"
 
         /** Usage of deprecated views or attributes. */
         @JvmField

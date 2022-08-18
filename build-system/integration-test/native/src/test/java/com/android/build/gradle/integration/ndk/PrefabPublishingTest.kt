@@ -212,6 +212,9 @@ class PrefabPublishingTest(
             containsFile("prefab/prefab.json")
             containsFile("prefab/modules/$gradleModuleName/module.json")
             containsFile("prefab/modules/${gradleModuleName}_static/module.json")
+            // Regression test for b/232117952
+            doesNotContain("/modules/$gradleModuleName/")
+            doesNotContain("/modules/$gradleModuleName/include/$gradleModuleName/")
         }
     }
 

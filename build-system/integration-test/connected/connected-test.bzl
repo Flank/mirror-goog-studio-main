@@ -1,4 +1,5 @@
 load("//tools/base/build-system/integration-test:integration-test.bzl", "single_gradle_integration_test")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 
 # A gradle connected test
 #
@@ -15,18 +16,32 @@ load("//tools/base/build-system/integration-test:integration-test.bzl", "single_
 def gradle_connected_test(
         name,
         srcs,
+        avd,
         deps,
         data,
         maven_repos,
+        maven_artifacts = [],
         runtime_deps = [],
         tags = [],
         timeout = "long",
+        jvm_flags = [],
         **kwargs):
+    if avd:
+        emulator_path = "%s/%s" % (native.package_name(), avd[1:])
+        jvm_flags = jvm_flags + ["-DEMULATOR_PATH=%s" % emulator_path]
+    if maven_artifacts:
+        repo_name = name + ".mavenRepo"
+        maven_repository(
+            name = repo_name,
+            artifacts = maven_artifacts,
+        )
+        absolute_path = "//%s:%s" % (native.package_name(), repo_name)
+        maven_repos += [absolute_path]
     single_gradle_integration_test(
         name = name,
         srcs = srcs,
         deps = deps,
-        data = data,
+        data = data + ([avd] if avd else []),
         maven_repos = maven_repos,
         runtime_deps = runtime_deps,
         tags = tags + [
@@ -34,5 +49,6 @@ def gradle_connected_test(
             "no_windows",
         ],
         timeout = timeout,
+        jvm_flags = jvm_flags,
         **kwargs
     )

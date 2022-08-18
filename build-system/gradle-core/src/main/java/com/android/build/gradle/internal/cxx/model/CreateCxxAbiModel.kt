@@ -88,6 +88,7 @@ fun createCxxAbiModel(
                 },
                 buildSettings = createBuildSettingsFromFile(module.buildSettingsFile),
                 fullConfigurationHash = configurationHash,
+                fullConfigurationHashKey = "",
                 configurationArguments = listOf(),
                 isActiveAbi = validAbiList.contains(abi),
                 prefabFolder = join(variantCxxBuildFolder, "prefab", abi.tag),

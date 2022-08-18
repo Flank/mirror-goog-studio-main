@@ -48,7 +48,7 @@ import java.util.zip.Deflater
  * simply executing the task.
  */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.JAVA_RESOURCES, TaskCategoryLabel.ZIPPING])
 abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     @get:OutputFile

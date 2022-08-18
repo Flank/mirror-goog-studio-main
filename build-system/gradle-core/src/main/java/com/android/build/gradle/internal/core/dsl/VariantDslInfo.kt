@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.core.dsl
 
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.PackagingOptions
-import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -29,9 +28,6 @@ import org.gradle.api.provider.ListProperty
  * build type, flavors) that are needed by main variants.
  */
 interface VariantDslInfo: ComponentDslInfo, ConsumableComponentDslInfo {
-
-    /** Returns true if the variant output is a bundle.  */
-    val isBundled: Boolean
 
     val nativeBuildSystem: NativeBuiltType?
 
@@ -49,18 +45,13 @@ interface VariantDslInfo: ComponentDslInfo, ConsumableComponentDslInfo {
 
     fun getProguardFiles(into: ListProperty<RegularFile>)
 
-    val isRenderscriptDebuggable: Boolean
-
     val isJniDebuggable: Boolean
 
     val lintOptions: Lint
 
     val packaging: PackagingOptions
 
-    ////////////////////////////////////////////////////////////////////////////////////////
-    //  APIs below should only be used at CreationConfig/Variant instantiation time       //
-    //  DO NOT USE THOSE IN TASKS                                                         //
-    ////////////////////////////////////////////////////////////////////////////////////////
+    val experimentalProperties: Map<String, Any>
 
     val externalNativeExperimentalProperties: Map<String, Any>
 }

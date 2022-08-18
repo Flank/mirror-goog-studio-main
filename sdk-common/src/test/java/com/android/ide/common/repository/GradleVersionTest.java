@@ -367,6 +367,7 @@ public class GradleVersionTest {
         assertTrue(GradleVersion.parse("1.0.0-alpha9-1").compareTo("1.0.0-alpha9-2") < 0);
         assertTrue(GradleVersion.parse("1.0.0-rc1").compareTo("1.0.0-alpha2") > 0);
         assertTrue(GradleVersion.parse("2.0.0-alpha1").compareTo("1.0.0-alpha1") > 0);
+        assertTrue(GradleVersion.parse("2.0.0-alpha08").compareTo("2.0.0-alpha6") > 0);
 
         // A pure -dev version is larger than a "numbered" preview. So if a piece of DSL was added
         // in alpha3, projects for 3.0.0-dev will use it.

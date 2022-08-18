@@ -3429,7 +3429,7 @@ class LintDriver(
         names: Collection<String>?
     ) {
         var message = "Issue `${issue.id}` is not allowed to be suppressed"
-        if (names?.isNotEmpty() == true) {
+        if (names?.isNotEmpty() == true && context !is XmlContext) {
             message += " (but can be with ${
             formatList(
                 names.map { "`@$it`" }.toList(),
@@ -3489,6 +3489,12 @@ class LintDriver(
             }
         }
 
+        val customSuppressNames = if (!allowSuppress) {
+            issue.suppressNames?.toSet()
+        } else {
+            null
+        }
+
         var currentNode = node
         if (currentNode is Attr) {
             currentNode = currentNode.ownerElement
@@ -3501,9 +3507,27 @@ class LintDriver(
                 if (element.hasAttributeNS(TOOLS_URI, ATTR_IGNORE)) {
                     val ignore = element.getAttributeNS(TOOLS_URI, ATTR_IGNORE)
                     if (isSuppressed(issue, ignore)) {
+                        if (customSuppressNames != null && context != null) {
+                            flagInvalidSuppress(
+                                context, issue, context.getLocation(currentNode),
+                                currentNode, issue.suppressNames
+                            )
+                            return false
+                        }
                         return true
                     }
-                } else if (checkComments && context!!.isSuppressedWithComment(currentNode, issue)) {
+                    if (customSuppressNames != null && isSuppressed(customSuppressNames, ignore)) {
+                        return true
+                    }
+                } else if (checkComments && context != null && context.isSuppressedWithComment(currentNode, issue)) {
+                    if (customSuppressNames != null) {
+                        flagInvalidSuppress(
+                            context, issue, context.getLocation(currentNode),
+                            currentNode, issue.suppressNames
+                        )
+                        return false
+                    }
+
                     return true
                 }
             }
@@ -3951,6 +3975,30 @@ class LintDriver(
             } else {
                 for (id in Splitter.on(',').trimResults().split(string)) {
                     if (matches(issue, id)) {
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
+
+        private fun isSuppressed(issueIds: Collection<String>, string: String): Boolean {
+            return issueIds.any { isSuppressed(it, string) }
+        }
+
+        private fun isSuppressed(issueId: String, string: String): Boolean {
+            if (string.isEmpty()) {
+                return false
+            }
+
+            if (string.indexOf(',') == -1) {
+                if (matches(issueId, string)) {
+                    return true
+                }
+            } else {
+                for (id in Splitter.on(',').trimResults().split(string)) {
+                    if (matches(issueId, id)) {
                         return true
                     }
                 }

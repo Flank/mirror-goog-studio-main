@@ -78,4 +78,12 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
      * @return a list of items.
      */
     fun getBuildConfigFields(): Map<String, BuildConfigField<out Serializable>>
+
+    /**
+     * Returns the merged manifest placeholders. All product flavors are merged first, then build
+     * type specific placeholders are added and potentially overrides product flavors values.
+     *
+     * @return the merged manifest placeholders for a build variant.
+     */
+    val manifestPlaceholders: Map<String, String>
 }

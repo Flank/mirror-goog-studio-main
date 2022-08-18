@@ -40,17 +40,14 @@ fun createPublishingInfoForLibrary(
     flavorList: List<ProductFlavor>,
     buildTypes: NamedDomainObjectContainer<out BuildType>,
     productFlavors: NamedDomainObjectContainer<out ProductFlavor>,
-    testFixtureMainVariantName: String?,
     issueReporter: IssueReporter
 ): VariantPublishingInfo {
     val optIn = publishingFeatureOptIn(publishing as AbstractPublishing<SingleVariant>, projectOptions)
     val components = mutableListOf<ComponentPublishingInfo>()
-    // attach the testFixtures variants to the main variant component
-    val variantBasedComponentName = testFixtureMainVariantName ?: variantName
 
     if (!optIn) {
         components.add(ComponentPublishingInfo(
-            variantBasedComponentName,
+            variantName,
             AbstractPublishing.Type.AAR))
 
         components.add(ComponentPublishingInfo(
@@ -66,15 +63,11 @@ fun createPublishingInfoForLibrary(
         ensureComponentNameUniqueness(publishing, issueReporter)
 
         val singleVariant = publishing.singleVariants.find {
-            if (testFixtureMainVariantName != null) {
-                it.variantName == testFixtureMainVariantName
-            } else {
                 it.variantName == variantName
-            }
         }
         if (singleVariant != null) {
             components.add(ComponentPublishingInfo(
-                variantBasedComponentName,
+                variantName,
                 AbstractPublishing.Type.AAR,
                 withSourcesJar = singleVariant.withSourcesJar,
                 withJavadocJar = singleVariant.withJavadocJar

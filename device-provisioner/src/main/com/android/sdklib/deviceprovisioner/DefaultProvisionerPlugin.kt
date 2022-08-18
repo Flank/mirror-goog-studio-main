@@ -17,13 +17,9 @@ package com.android.sdklib.deviceprovisioner
 
 import com.android.adblib.ConnectedDevice
 import com.android.adblib.deviceProperties
-import com.android.adblib.scope
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 /**
  * Plugin which provides handles for devices when no other plugin claims them. This will offer a

@@ -26,17 +26,22 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.StringConsumer.FileConsumer;
+import com.android.tools.r8.errors.UnsupportedFeatureDiagnostic;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
     private static final String INVOKE_CUSTOM =
-            "Invoke-customs are only supported starting with Android O";
+            "Invoke-customs are only supported starting with Android O (--min-api 26)";
 
     private static final String DEFAULT_INTERFACE_METHOD =
             "Default interface methods are only supported starting with Android N (--min-api 24)";
@@ -56,10 +61,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             @NonNull Path output,
             @Nullable DependencyGraphUpdater<File> desugarGraphUpdater)
             throws DexArchiveBuilderException {
-        D8DiagnosticsHandler d8DiagnosticsHandler = new InterceptingDiagnosticsHandler();
+        InterceptingDiagnosticsHandler diagnosticsHandler = new InterceptingDiagnosticsHandler();
         try {
 
-            D8Command.Builder builder = D8Command.builder(d8DiagnosticsHandler);
+            D8Command.Builder builder = D8Command.builder(diagnosticsHandler);
             AtomicInteger entryCount = new AtomicInteger();
             input.forEach(
                     entry -> {
@@ -114,7 +119,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
-            throw getExceptionToRethrow(e, d8DiagnosticsHandler);
+            throw getExceptionToRethrow(e, diagnosticsHandler, dexParams.getWithDesugaring());
         }
     }
 
@@ -129,14 +134,52 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
 
     @NonNull
     private static DexArchiveBuilderException getExceptionToRethrow(
-            @NonNull Throwable t, D8DiagnosticsHandler d8DiagnosticsHandler) {
+            @NonNull Throwable t,
+            InterceptingDiagnosticsHandler diagnosticsHandler,
+            boolean isDesugaring) {
         StringBuilder msg = new StringBuilder();
         msg.append("Error while dexing.");
-        for (String hint : d8DiagnosticsHandler.getPendingHints()) {
+        Set<String> unsupportedFeatures = diagnosticsHandler.getUnsupportedFeatures();
+        if (!unsupportedFeatures.isEmpty()) {
+            // Get the largest required level needed to support the features.
+            int minSdkVersion = diagnosticsHandler.getRequiredSdkVersion();
+            if (!isDesugaring) {
+                diagnosticsHandler.addHint(getEnableDesugaringHint(minSdkVersion));
+            } else if (minSdkVersion != -1) {
+                diagnosticsHandler.addHint(
+                        "Increase the minSdkVersion to " + minSdkVersion + " or above.\n");
+            }
+            // Construct a new exception to replace the D8 thrown exception.
+            // This avoids the need to maintain pattern-match on D8 exceptions and
+            // instead base matching on the stable diagnostics API.
+            StringBuilder builder = new StringBuilder();
+            if (unsupportedFeatures.contains("invoke-custom")) {
+                builder.append("Error: ").append(INVOKE_CUSTOM);
+            } else if (unsupportedFeatures.contains("default-interface-method")) {
+                builder.append("Error: ").append(DEFAULT_INTERFACE_METHOD);
+            } else if (unsupportedFeatures.contains("static-interface-method")) {
+                builder.append("Error: ").append(STATIC_INTERFACE_METHOD);
+            } else {
+                // If not one of the three above legacy cases, construct an error message with a
+                // line
+                // for each unsupported feature. These are not currently pattern-matched on, so
+                // generalizing the reporting of these can be changed at a later point.
+                List<String> sorted = new ArrayList<>(unsupportedFeatures);
+                sorted.sort(String::compareTo);
+                for (String featureDescriptor : sorted) {
+                    builder.append("Error: UnsupportedFeature(")
+                            .append(featureDescriptor)
+                            .append(")\n");
+                }
+            }
+            Throwable rt = new RuntimeException(builder.toString());
+            rt.addSuppressed(t);
+            t = rt;
+        }
+        for (String hint : diagnosticsHandler.getPendingHints()) {
             msg.append(System.lineSeparator());
             msg.append(hint);
         }
-
         return new DexArchiveBuilderException(msg.toString(), t);
     }
 
@@ -156,25 +199,33 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     }
 
     private class InterceptingDiagnosticsHandler extends D8DiagnosticsHandler {
+
+        private Set<String> unsupportedFeatureDescriptors = new HashSet<>();
+        private int requiredSdkVersion = -1;
+
         public InterceptingDiagnosticsHandler() {
             super(D8DexArchiveBuilder.this.dexParams.getMessageReceiver());
         }
 
+        public int getRequiredSdkVersion() {
+            return requiredSdkVersion;
+        }
+
+        public Set<String> getUnsupportedFeatures() {
+            return unsupportedFeatureDescriptors;
+        }
+
         @Override
         protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
-
-            if (diagnostic.getDiagnosticMessage().startsWith(INVOKE_CUSTOM)) {
-                addHint(getEnableDesugaringHint(26));
+            if (diagnostic instanceof UnsupportedFeatureDiagnostic) {
+                UnsupportedFeatureDiagnostic feature = (UnsupportedFeatureDiagnostic) diagnostic;
+                String featureDescriptor = feature.getFeatureDescriptor();
+                int minSdkVersion = feature.getSupportedApiLevel();
+                unsupportedFeatureDescriptors.add(featureDescriptor);
+                if (requiredSdkVersion < minSdkVersion) {
+                    requiredSdkVersion = minSdkVersion;
+                }
             }
-
-            if (diagnostic.getDiagnosticMessage().startsWith(DEFAULT_INTERFACE_METHOD)) {
-                addHint(getEnableDesugaringHint(24));
-            }
-
-            if (diagnostic.getDiagnosticMessage().startsWith(STATIC_INTERFACE_METHOD)) {
-                addHint(getEnableDesugaringHint(24));
-            }
-
             return super.convertToMessage(kind, diagnostic);
         }
     }

@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.Vector;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,8 @@ public class DeviceState {
 
     private final String mCpuAbi;
 
+    private final Map<String, String> mProperties;
+
     private DeviceStatus mDeviceStatus;
 
     private final ServiceManager mServiceManager;
@@ -90,6 +93,7 @@ public class DeviceState {
             @NonNull String release,
             @NonNull String sdk,
             @NonNull String cpuAbi,
+            @NonNull Map<String, String> properties,
             @NonNull HostConnectionType hostConnectionType,
             int transportId) {
         mServer = server;
@@ -100,6 +104,7 @@ public class DeviceState {
         mBuildVersionSdk = sdk;
         mCpuAbi = cpuAbi;
         mFeatures = initFeatures(sdk);
+        mProperties = combinedProperties(manufacturer, model, release, sdk, cpuAbi, properties);
         mHostConnectionType = hostConnectionType;
         myTransportId = transportId;
         mDeviceStatus = DeviceStatus.OFFLINE;
@@ -115,6 +120,7 @@ public class DeviceState {
                 config.getBuildVersionRelease(),
                 config.getBuildVersionSdk(),
                 config.getCpuAbi(),
+                config.getProperties(),
                 config.getHostConnectionType(),
                 transportId);
         config.getFiles().forEach(fileState -> mFiles.put(fileState.getPath(), fileState));
@@ -163,6 +169,10 @@ public class DeviceState {
         } catch (NumberFormatException e) {
             return 1;
         }
+    }
+
+    public Map<String, String> getProperties() {
+        return mProperties;
     }
 
     @NonNull
@@ -354,6 +364,7 @@ public class DeviceState {
                 mBuildVersionRelease,
                 mBuildVersionSdk,
                 mCpuAbi,
+                mProperties,
                 mDeviceStatus);
     }
 
@@ -414,6 +425,22 @@ public class DeviceState {
 
     public List<String> getAbbLogs() {
         return (List<String>) mAbbLogs.clone();
+    }
+
+    private static Map<String, String> combinedProperties(
+            @NonNull String manufacturer,
+            @NonNull String model,
+            @NonNull String release,
+            @NonNull String sdk,
+            @NonNull String cpuAbi,
+            @NonNull Map<String, String> properties) {
+        Map<String, String> combined = new TreeMap<>(properties);
+        combined.put("ro.product.manufacturer", manufacturer);
+        combined.put("ro.product.model", model);
+        combined.put("ro.build.version.release", release);
+        combined.put("ro.build.version.sdk", sdk);
+        combined.put("ro.product.cpu.abi", cpuAbi);
+        return combined;
     }
 
     /**

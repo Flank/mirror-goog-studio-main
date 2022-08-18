@@ -21,8 +21,10 @@ import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeProviderFactory
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
 import com.android.build.gradle.internal.services.DslServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.services.createDslServices
 import com.android.build.gradle.internal.services.createProjectServices
+import com.android.build.gradle.internal.services.createVariantPropertiesApiServices
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AbstractProductFlavor
@@ -80,10 +82,11 @@ class MergedFlavorTest {
             custom2.applicationId = "com.custom2.app"
         }
     }
+
     private lateinit var dslServices: DslServices
+    private lateinit var services: VariantServices
 
-
-    private fun initDslServices(enableLegacyApi: Boolean, throwOnError: Boolean = !enableLegacyApi) {
+    private fun initservices(enableLegacyApi: Boolean, throwOnError: Boolean = !enableLegacyApi) {
         val properties =
             ImmutableMap.builder<String, Any>()
         properties.put(
@@ -100,26 +103,36 @@ class MergedFlavorTest {
                 issueReporter = FakeSyncIssueReporter(throwOnError = throwOnError)
             )
         )
+
+        services = createVariantPropertiesApiServices(
+            createProjectServices(
+                projectOptions = ProjectOptions(
+                    ImmutableMap.of(),
+                    FakeProviderFactory(FakeProviderFactory.factory, properties.build())
+                ),
+                issueReporter = FakeSyncIssueReporter(throwOnError = throwOnError)
+            )
+        )
     }
 
     @Test
     fun testClone() {
-        initDslServices(true)
-        val flavor = MergedFlavor.clone(custom, FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(true)
+        val flavor = MergedFlavor.clone(custom, FakeGradleProperty("com.forty.two"), services)
         assertThat(flavor.toString().substringAfter("{"))
                 .isEqualTo(custom.toString().substringAfter("{"))
         CopyOfTester.assertAllGettersCalled(
             MergedFlavor::class.java,
             flavor,
             listOf("getApplicationId")
-        ) { MergedFlavor.clone(it, FakeGradleProperty("com.forty.two"), dslServices) }
+        ) { MergedFlavor.clone(it, FakeGradleProperty("com.forty.two"), services) }
     }
 
     @Test
     fun testMergeOnDefault() {
-        initDslServices(true)
+        initservices(true)
         val flavor =
-                MergedFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), dslServices)
+                MergedFlavor.mergeFlavors(defaultFlavor, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), services)
 
         assertThat(flavor.minSdkVersion?.apiLevel).isEqualTo(42)
         assertThat(flavor.targetSdkVersion?.apiLevel).isEqualTo(43)
@@ -135,10 +148,10 @@ class MergedFlavorTest {
 
     @Test
     fun testMergeOnCustom() {
-        initDslServices(true)
+        initservices(true)
 
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(defaultFlavor),FakeGradleProperty("com.forty.two"), dslServices)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(defaultFlavor),FakeGradleProperty("com.forty.two"), services)
 
         assertThat(flavor.minSdkVersion?.apiLevel).isEqualTo(42)
         assertThat(flavor.targetSdkVersion?.apiLevel).isEqualTo(43)
@@ -154,13 +167,13 @@ class MergedFlavorTest {
 
     @Test
     fun testMergeDefaultOnDefault() {
-        initDslServices(enableLegacyApi = false, throwOnError = false)
+        initservices(enableLegacyApi = false, throwOnError = false)
         val defaultFlavor2 = productFlavor("default2")
 
         val flavor =
                 MergedFlavor
                         .mergeFlavors(
-                                defaultFlavor2, ImmutableList.of(defaultFlavor), FakeGradleProperty("com.forty.two"), dslServices)
+                                defaultFlavor2, ImmutableList.of(defaultFlavor), FakeGradleProperty("com.forty.two"), services)
 
         assertThat(flavor.minSdkVersion).isNull()
         assertThat(flavor.targetSdkVersion).isNull()
@@ -176,8 +189,8 @@ class MergedFlavorTest {
 
     @Test
     fun testResourceConfigMerge() {
-        initDslServices(true)
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(true)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), services)
 
         val configs = flavor.resourceConfigurations
         assertThat(configs).containsExactly("hdpi", "ldpi")
@@ -185,8 +198,8 @@ class MergedFlavorTest {
 
     @Test
     fun testManifestPlaceholdersMerge() {
-        initDslServices(true)
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(true)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), services)
 
         val manifestPlaceholders = flavor.manifestPlaceholders
         assertThat(manifestPlaceholders)
@@ -195,8 +208,8 @@ class MergedFlavorTest {
 
     @Test
     fun testResValuesMerge() {
-        initDslServices(true)
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(true)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), services)
 
         val resValues = flavor.resValues
         assertThat(resValues).hasSize(3)
@@ -207,9 +220,9 @@ class MergedFlavorTest {
 
     @Test
     fun testBuildConfigFieldMerge() {
-        initDslServices(true)
+        initservices(true)
 
-        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), dslServices)
+        val flavor = MergedFlavor.mergeFlavors(custom2, ImmutableList.of(custom), FakeGradleProperty("com.forty.two"), services)
 
         val buildConfigFields = flavor.buildConfigFields
         assertThat(buildConfigFields).hasSize(3)
@@ -220,7 +233,7 @@ class MergedFlavorTest {
 
     @Test
     fun testMergeMultiple() {
-        initDslServices(true)
+        initservices(true)
 
         val custom3 = productFlavor("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
@@ -228,7 +241,7 @@ class MergedFlavorTest {
         custom3.versionNameSuffix = "custom3"
 
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), FakeGradleProperty("com.forty.two"), dslServices)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), FakeGradleProperty("com.forty.two"), services)
 
         assertThat(flavor.minSdkVersion).isEqualTo(
             DefaultApiVersion(
@@ -241,13 +254,13 @@ class MergedFlavorTest {
 
     @Test
     fun testSecondDimensionOverwritesDefault() {
-        initDslServices(true)
+        initservices(true)
 
         val custom3 = productFlavor("custom3")
         custom3.minSdkVersion = DefaultApiVersion(102)
 
         val flavor =
-                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), FakeGradleProperty("com.forty.two"), dslServices)
+                MergedFlavor.mergeFlavors(custom, ImmutableList.of(custom3, custom2), FakeGradleProperty("com.forty.two"), services)
         assertThat(flavor.minSdkVersion).isEqualTo(
             DefaultApiVersion(
                 102
@@ -259,8 +272,8 @@ class MergedFlavorTest {
 
     @Test
     fun testSetVersionCodeError() {
-        initDslServices(false)
-        val flavor = MergedFlavor.clone(defaultFlavor, FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(false)
+        val flavor = MergedFlavor.clone(defaultFlavor, FakeGradleProperty("com.forty.two"), services)
         try {
             flavor.versionCode = 123
             fail("Setting versionCode should result in RuntimeException from issueReporter")
@@ -281,8 +294,8 @@ class MergedFlavorTest {
 
     @Test
     fun testSetVersionNameError() {
-        initDslServices(false)
-        val flavor = MergedFlavor.clone(defaultFlavor, FakeGradleProperty("com.forty.two"), dslServices)
+        initservices(false)
+        val flavor = MergedFlavor.clone(defaultFlavor, FakeGradleProperty("com.forty.two"), services)
         try {
             flavor.versionName = "foo"
             fail("Setting versionName should result in RuntimeException from issueReporter")

@@ -1,4 +1,4 @@
-load("//tools/base/bazel:proto.bzl", "java_proto_library", "maven_proto_library")
+load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "maven_proto_library")
 load("//tools/base/common:version.bzl", "BASE_VERSION")
 
 maven_proto_library(
@@ -12,10 +12,9 @@ maven_proto_library(
     visibility = ["//visibility:public"],
 )
 
-java_proto_library(
-    name = "studio.android-device-provider-gradle-proto",
+android_java_proto_library(
+    name = "libstudio.android-device-provider-gradle-proto",
     srcs = glob(["*.proto"]),
-    proto_java_runtime_library = ["@maven//:com.google.protobuf.protobuf-java"],
     resource_strip_prefix = "tools/base/utp/android-device-provider-gradle-proto",
     visibility = ["//visibility:public"],
 )

@@ -105,7 +105,7 @@ import java.nio.file.Files
 import javax.inject.Inject
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
 abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: ObjectFactory) :
     ProcessAndroidResources() {
 

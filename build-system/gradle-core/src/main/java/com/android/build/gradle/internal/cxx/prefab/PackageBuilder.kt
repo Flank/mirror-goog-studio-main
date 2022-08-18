@@ -141,7 +141,7 @@ private class PrefabPackageBuilder(
         writeJsonFileIfDifferent(
             moduleDir.resolve("module.json"),
             ModuleMetadataV1(
-                exportLibraries = emptyList(),
+                exportLibraries = module.moduleExportLibraries,
                 libraryName = module.moduleLibraryName
             )
         )

@@ -331,16 +331,6 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
                             }
                             recordRejectedIssues(issues)
                             return null
-                        } else if (verifier.hasPackageConflict()) {
-                            if (reportErrors(driver)) {
-                                val message = getPackagingConflictMessage(className, verifier)
-                                LintClient.report(
-                                    client = client, issue = OBSOLETE_LINT_CHECK,
-                                    message = message, file = jarFile, project = currentProject, driver = driver
-                                )
-                            }
-                            recordRejectedIssues(issues)
-                            return null
                         }
                         // Not returning here: try to run the checks
                     } else {
@@ -386,16 +376,6 @@ of lint.
 Version of Lint API this lint check is using is $api.
 The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_API)}).
 """.trim()
-                                        LintClient.report(
-                                            client = client, issue = OBSOLETE_LINT_CHECK,
-                                            message = message, file = jarFile, project = currentProject, driver = driver
-                                        )
-                                    }
-                                    recordRejectedIssues(issues)
-                                    return null
-                                } else if (verifier.hasPackageConflict()) {
-                                    if (reportErrors(driver)) {
-                                        val message = getPackagingConflictMessage(className, verifier)
                                         LintClient.report(
                                             client = client, issue = OBSOLETE_LINT_CHECK,
                                             message = message, file = jarFile, project = currentProject, driver = driver
@@ -483,33 +463,6 @@ The Lint API version currently running is $CURRENT_API (${describeApi(CURRENT_AP
         private fun recordRejectedIssues(issues: List<Issue>) {
             val rejectedIssues = rejectedIssueIds ?: HashSet<String>().also { rejectedIssueIds = it }
             issues.forEach { rejectedIssues.add(it.id) }
-        }
-
-        private fun getPackagingConflictMessage(className: String, verifier: LintJarVerifier): String {
-            return """
-Lint found an issue registry (`$className`)
-which contains code in some of lint's reserved packages.
-
-This is usually because the lint jar has accidentally
-packed in libraries that are part of lint's API surface,
-such as the Kotlin standard library (`kotlin.*`), or
-some of the Android tooling libraries (`com.android.*`)
-including lint's own API jars, or some of the third party
-libraries that lint depends on, such as UAST.
-If you need these and cannot rely on the ones provided
-in lint's runtime environment, consider `jarjar`ing your
-own versions.
-
-A second reason is one where you've accidentally placed
-your own detector code into one of these package
-namespaces, since they are pretty broad (`com.android.*`).
-For Android specifically, you can place them under
-`com.android.internal.*` which is explicitly allowed.
-
-The first bundled package that is part of lint's API
-surface namespace is:
-${verifier.describeFirstPackagedDependency()}
-""".trim()
         }
 
         private fun getVendor(

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.prefab
 
 import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.cxx.configure.getPrefabExperimentalPackagingOptions
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.jsonFile
@@ -37,6 +38,7 @@ fun createPrefabPublication(
     configurationModel: CxxConfigurationModel,
     libraryVariant : LibraryCreationConfig
 ) : PrefabPublication {
+
     val abis = configurationModel.activeAbis.map { abi ->
         PrefabAbiPublication(
             abiName = abi.abi.tag,
@@ -48,12 +50,15 @@ fun createPrefabPublication(
         )
     }
     val modules = libraryVariant.global.prefab.map { options ->
+        val experimentalSettings = libraryVariant.getPrefabExperimentalPackagingOptions(options.name)
+
         PrefabModulePublication(
             moduleName = options.name,
             moduleLibraryName = options.libraryName,
             moduleHeaders = options.headers?.let { headers ->
                 libraryVariant.services.projectInfo.projectDirectory.dir(headers).asFile.absoluteFile
             },
+            moduleExportLibraries = experimentalSettings.exportLibraries ?: listOf(),
             abis = abis
         )
     }

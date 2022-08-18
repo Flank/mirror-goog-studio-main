@@ -25,6 +25,7 @@ import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Map;
 
 /** shell:getprop gets the device properties of the specified device. */
 public class GetPropCommandHandler extends SimpleShellHandler {
@@ -42,25 +43,18 @@ public class GetPropCommandHandler extends SimpleShellHandler {
         try {
             OutputStream stream = responseSocket.getOutputStream();
             CommandHandler.writeOkay(stream); // Send ok first.
-            String builder =
-                    "# This is some build info\n"
-                            + "# This is more build info\n\n"
-                            + "[ro.product.cpu.abi]: ["
-                            + device.getCpuAbi()
-                            + "]\n"
-                            + "[ro.product.manufacturer]: ["
-                            + device.getManufacturer()
-                            + "]\n"
-                            + "[ro.product.model]: ["
-                            + device.getModel()
-                            + "]\n"
-                            + "[ro.build.version.release]: ["
-                            + device.getBuildVersionRelease()
-                            + "]\n"
-                            + "[ro.build.version.sdk]: ["
-                            + device.getBuildVersionSdk()
-                            + "]\n";
-            stream.write(builder.getBytes(Charsets.UTF_8));
+            StringBuilder buf = new StringBuilder();
+            buf.append("# This is some build info\n");
+            buf.append("# This is more build info\n");
+            buf.append("\n");
+            for (Map.Entry<String, String> entry : device.getProperties().entrySet()) {
+                buf.append('[');
+                buf.append(entry.getKey());
+                buf.append("]: [");
+                buf.append(entry.getValue());
+                buf.append("]\n");
+            }
+            stream.write(buf.toString().getBytes(Charsets.UTF_8));
         } catch (IOException ignored) {
         }
     }

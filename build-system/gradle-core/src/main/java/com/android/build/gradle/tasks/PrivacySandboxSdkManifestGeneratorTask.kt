@@ -31,7 +31,7 @@ import org.gradle.work.DisableCachingByDefault
 
 // Disable caching since we only create a small text file.
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_GENERATION])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.SOURCE_GENERATION, TaskCategoryLabel.MANIFEST])
 abstract class PrivacySandboxSdkManifestGeneratorTask: NonIncrementalTask() {
 
     @get:OutputFile

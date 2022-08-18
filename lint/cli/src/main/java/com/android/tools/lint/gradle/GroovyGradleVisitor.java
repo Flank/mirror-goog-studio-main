@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.client.api.GradleVisitor;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.GradleContext;
@@ -55,6 +56,11 @@ public class GroovyGradleVisitor extends GradleVisitor {
             @NonNull GradleContext context, @NonNull List<? extends GradleScanner> detectors) {
         try {
             visitQuietly(context, detectors);
+        } catch (AssertionError e) {
+            // Test infrastructure checks
+            if (LintClient.isUnitTest()) {
+                throw e;
+            }
         } catch (Throwable t) {
             // else: ignore
             // Parsing the build script can involve class loading that we sometimes can't

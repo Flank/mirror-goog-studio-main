@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
+import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.fromDisallowChanges
@@ -230,6 +231,22 @@ abstract class DependencyResourcesComputer {
             services.newInstance(ResourceSourceSetInput::class.java)
         }
         resources.disallowChanges()
+
+        // Add the user added generated directories to the extraGeneratedResFolders.
+        // this should be cleaned up once the old variant API is removed.
+        creationConfig.sources.res.getVariantSources().get().forEach { directoryEntries ->
+            directoryEntries.directoryEntries
+                .filter {
+                    it.isUserAdded && it.isGenerated
+                }
+                .forEach {
+                    extraGeneratedResFolders.from(
+                        it.asFiles(
+                            creationConfig.services::directoryProperty
+                        )
+                    )
+                }
+        }
 
         creationConfig.oldVariantApiLegacySupport?.variantData?.extraGeneratedResFolders?.let {
             extraGeneratedResFolders.from(it)

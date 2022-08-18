@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.ide.common.blame.SourceFilePosition
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.manifmerger.NavigationXmlDocumentData
 import com.android.manifmerger.NavigationXmlLoader
 import com.android.utils.FileUtils
@@ -155,7 +156,12 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
                     }
                 }
             )
-            task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
+            task.manifestPlaceholders.setDisallowChanges(
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = {
+                    empty()
+                }
+            )
             task.forAar.set(forAar)
         }
     }

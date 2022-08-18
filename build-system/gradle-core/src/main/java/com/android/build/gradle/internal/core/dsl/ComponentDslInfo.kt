@@ -48,8 +48,6 @@ interface ComponentDslInfo: DimensionCombination {
     /** The list of product flavors. Items earlier in the list override later items.  */
     val productFlavorList: List<ProductFlavor>
 
-    fun hasFlavors(): Boolean
-
     val missingDimensionStrategies: ImmutableMap<String, AbstractProductFlavor.DimensionRequest>
 
     /**
@@ -128,23 +126,12 @@ interface ComponentDslInfo: DimensionCombination {
      */
     fun getResValues(): Map<ResValue.Key, ResValue>
 
-    /**
-     * Returns the merged manifest placeholders. All product flavors are merged first, then build
-     * type specific placeholders are added and potentially overrides product flavors values.
-     *
-     * @return the merged manifest placeholders for a build variant.
-     */
-    val manifestPlaceholders: Map<String, String>
-
-    fun getPostProcessingOptions(): PostProcessingOptions
+    val postProcessingOptions: PostProcessingOptions
 
     /**
-     * TODO: Clean this up
+     * TODO(b/242515559): Clean this up
      */
     val isAndroidTestCoverageEnabled: Boolean
 
     fun gatherProguardFiles(type: ProguardFileType): Collection<File>
-
-    // TODO: Move to VariantDslInfo
-    val experimentalProperties: Map<String, Any>
 }

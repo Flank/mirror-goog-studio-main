@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.builder.dexing.DexingType
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
@@ -81,4 +82,6 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
     val defaultGlslcArgs: List<String>
 
     val scopedGlslcArgs: Map<String, List<String>>
+
+    val manifestPlaceholders: MapProperty<String, String>
 }

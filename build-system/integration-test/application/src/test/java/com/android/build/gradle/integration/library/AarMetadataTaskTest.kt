@@ -257,7 +257,7 @@ class AarMetadataTaskTest {
         project.getSubproject("lib").buildFile.appendText(
             """
                 android {
-                    compileSdkPreview 'Tiramisu'
+                    compileSdkPreview 'TiramisuPrivacySandbox'
                 }
             """.trimIndent()
         )
@@ -271,7 +271,7 @@ class AarMetadataTaskTest {
                 AarMetadataTask.AAR_METADATA_FILE_NAME
             )
         PathSubject.assertThat(aarMetadataFile).contains(
-            "${FORCE_COMPILE_SDK_PREVIEW_PROPERTY}=Tiramisu"
+            "${FORCE_COMPILE_SDK_PREVIEW_PROPERTY}=TiramisuPrivacySandbox"
         )
     }
 }

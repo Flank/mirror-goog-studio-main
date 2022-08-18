@@ -16,7 +16,7 @@
 package com.android.build.gradle.internal.api
 
 import com.android.build.api.variant.VariantFilter
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeName
+import com.android.build.gradle.internal.core.dsl.impl.computeName
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.builder.core.ComponentType
 import com.android.builder.model.BuildType

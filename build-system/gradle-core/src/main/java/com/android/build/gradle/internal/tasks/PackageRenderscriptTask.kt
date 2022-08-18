@@ -30,7 +30,7 @@ import java.io.File
 
 /** task packaging the rs headers */
 @DisableCachingByDefault
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.RENDERSCRIPT])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.RENDERSCRIPT, TaskCategoryLabel.ZIPPING])
 abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
 
     @get:OutputDirectory

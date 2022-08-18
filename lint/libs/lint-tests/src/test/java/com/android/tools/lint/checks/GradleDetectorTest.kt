@@ -507,7 +507,6 @@ class GradleDetectorTest : AbstractCheckTest() {
                 """
             )
     }
-
     fun testSnapshots() {
         // Regression test for b/183137869:
         // Gradle special-cases the SNAPSHOT version; make sure we don't offer updates to/from it except
@@ -1081,6 +1080,51 @@ class GradleDetectorTest : AbstractCheckTest() {
                     "}\n"
             )
         ).issues(DEPENDENCY).run().expect(expected)
+    }
+
+    fun testLargeScreenIncorrectDependencies() {
+        val expected = "build.gradle:9: Warning: Upgrade androidx.slidingpanelayout for keyboard and mouse support [GradleDependency]\n" +
+                "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "build.gradle:10: Warning: Upgrade androidx.compose.foundation for keyboard and mouse support [GradleDependency]\n" +
+                "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 2 warnings"
+        lint().files(
+            gradle(
+                "" +
+                        "apply plugin: 'com.android.application'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    compileSdkVersion 21\n" +
+                        "    buildToolsVersion \"21.1.2\"\n" +
+                        "}\n" +
+                        "\n" +
+                        "dependencies {\n" +
+                        "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
+                        "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
+                        "}\n"
+            )
+        ).issues(DEPENDENCY).run().expect(expected)
+    }
+
+    fun testLargeScreenCorrectDependencies() {
+        lint().files(
+            gradle(
+                "" +
+                        "apply plugin: 'com.android.application'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    compileSdkVersion 21\n" +
+                        "    buildToolsVersion \"21.1.2\"\n" +
+                        "}\n" +
+                        "\n" +
+                        "dependencies {\n" +
+                        "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.2'\n" +
+                        "    compile 'androidx.compose.foundation:foundation:1.2.1'\n" +
+                        "}\n"
+            )
+        ).issues(DEPENDENCY).run().expectClean()
     }
 
     fun testDependenciesMinSdkVersion() {
@@ -4443,7 +4487,9 @@ class GradleDetectorTest : AbstractCheckTest() {
 
                         // SDK distributed via Maven
                         "caches/modules-2/files-2.1/com.android.support/recyclerview-v7/26.0.0/sample",
-                        "caches/modules-2/files-2.1/com.google.firebase/firebase-messaging/11.0.0/sample"
+                        "caches/modules-2/files-2.1/com.google.firebase/firebase-messaging/11.0.0/sample",
+                        "caches/modules-2/files-2.1/androidx.slidingpanelayout/slidingpanelayout/1.2.0/sample",
+                        "caches/modules-2/files-2.1/androidx.compose.foundation/foundation/1.2.1/sample"
                     )
                 )
             }
@@ -4464,6 +4510,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                   <com.google.android.gms/>
                   <com.google.android.support/>
                   <androidx.core/>
+                  <androidx.slidingpanelayout/>
+                  <androidx.compose/>
                 </metadata>
                 """.trimIndent()
             )
@@ -4538,6 +4586,24 @@ class GradleDetectorTest : AbstractCheckTest() {
                   <core-ktx versions="1.2.0"/>
                   <core versions="1.2.0"/>
                 </androidx.core>
+                """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/androidx/slidingpanelayout/group-index.xml",
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <androidx.slidingpanelayout>
+                  <slidingpanelayout versions="1.1.0", "1.2.0"/>
+                </androidx.slidingpanelayout>
+                """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/androidx/compose/foundation/group-index.xml",
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <androidx.compose.foundation>
+                  <foundation versions="1.1.0", "1.2.0"/>
+                </androidx.compose.foundation>
                 """.trimIndent()
             )
 

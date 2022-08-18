@@ -18,8 +18,7 @@ package com.android.build.gradle.internal.variant
 
 import com.android.SdkConstants
 import com.android.build.api.dsl.ProductFlavor
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.services.DslServices
@@ -27,6 +26,7 @@ import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.ComponentType
+import com.android.utils.appendCapitalized
 import com.android.utils.combineAsCamelCase
 import com.android.utils.toStrings
 import com.google.common.base.Joiner
@@ -41,6 +41,81 @@ class VariantPathHelper(
     private val dslInfo: ComponentDslInfo,
     private val dslServices: DslServices
 ) {
+
+    companion object {
+        /**
+         * Returns the full, unique name of the variant, including BuildType, flavors and test, dash
+         * separated. (similar to full name but with dashes)
+         *
+         * @return the name of the variant
+         */
+        @JvmStatic
+        fun computeBaseName(
+            dimensionCombination: DimensionCombination,
+            componentType: ComponentType) : String {
+            val sb = StringBuilder()
+            if (dimensionCombination.productFlavors.isNotEmpty()) {
+                for ((_, name) in dimensionCombination.productFlavors) {
+                    if (sb.isNotEmpty()) {
+                        sb.append('-')
+                    }
+                    sb.append(name)
+                }
+            }
+
+            dimensionCombination.buildType?.let {
+                if (sb.isNotEmpty()) {
+                    sb.append('-')
+                }
+                sb.append(it)
+            }
+
+            if (componentType.isNestedComponent) {
+                if (sb.isNotEmpty()) {
+                    sb.append('-')
+                }
+                sb.append(componentType.prefix)
+            }
+
+            if (sb.isEmpty()) {
+                sb.append("main")
+            }
+
+            return sb.toString()
+        }
+
+        /**
+         * Returns a full name that includes the given splits name.
+         *
+         * @param splitName the split name
+         * @return a unique name made up of the variant and split names.
+         */
+        @JvmStatic
+        fun computeFullNameWithSplits(
+            variantConfiguration: ComponentIdentity,
+            componentType: ComponentType,
+            splitName: String): String {
+            val sb = StringBuilder()
+
+            val flavorName = variantConfiguration.flavorName
+
+            if (!flavorName.isNullOrEmpty()) {
+                sb.append(flavorName)
+                sb.appendCapitalized(splitName)
+            } else {
+                sb.append(splitName)
+            }
+
+            variantConfiguration.buildType?.let {
+                sb.appendCapitalized(it)
+            }
+
+            if (componentType.isNestedComponent) {
+                sb.append(componentType.suffix)
+            }
+            return sb.toString()
+        }
+    }
 
     /**
      * Returns a unique directory name (can include multiple folders) for the variant, based on
@@ -75,7 +150,7 @@ class VariantPathHelper(
                 )
             )
         }
-        builder.add((dslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        builder.add(dslInfo.buildType!!)
         builder.build()
     }
 
@@ -103,7 +178,7 @@ class VariantPathHelper(
      * @return a unique name made up of the variant and split names.
      */
     fun computeFullNameWithSplits(splitName: String): String {
-        return VariantDslInfoBuilder.computeFullNameWithSplits(
+        return computeFullNameWithSplits(
             dslInfo.componentIdentity,
             dslInfo.componentType,
             splitName
@@ -117,8 +192,8 @@ class VariantPathHelper(
      * @return the name of the variant
      */
     val baseName: String by lazy {
-        VariantDslInfoBuilder.computeBaseName(
-            dslInfo as VariantDslInfoImpl,
+        computeBaseName(
+            dslInfo,
             dslInfo.componentType
         )
     }
@@ -137,7 +212,7 @@ class VariantPathHelper(
             }
         }
         sb.append(splitName).append('-')
-        sb.append((dslInfo as VariantDslInfoImpl).buildTypeObj.name)
+        sb.append(dslInfo.buildType!!)
         if (dslInfo.componentType.isNestedComponent) {
             sb.append('-').append(dslInfo.componentType.prefix)
         }

@@ -50,6 +50,7 @@ abstract class NetworkCache constructor(
      * */
     private val networkEnabled: Boolean = true
 ) {
+    protected var lastReadSourceType: DataSourceType = DataSourceType.UNKNOWN_SOURCE
 
     /** Reads the given query URL in, with the given time out, and returns the bytes found. */
     @Slow
@@ -66,7 +67,7 @@ abstract class NetworkCache constructor(
     protected open fun findData(relative: String): InputStream? {
         if (cacheDir != null) {
             synchronized(cacheDir) {
-                val file = cacheDir.resolve(if (relative.isNotEmpty()) relative else cacheKey)
+                val file = cacheDir.resolve(relative.ifEmpty { cacheKey })
                 try {
                     val lastModified = CancellableFileIo.getLastModifiedTime(file).toMillis()
                     val now = System.currentTimeMillis()
@@ -78,6 +79,15 @@ abstract class NetworkCache constructor(
                         // - Outside the "cache expiry interval" if a network connection is allowed we always try to download the
                         // latest version (code bellow). If a network connection is not allowed, we assume the cache only exists
                         // because it was (or will be) updated on a background task where a network connection is allowed.
+                        lastReadSourceType = if (lastModified != 0L) {
+                            if (now - lastModified > expiryMs) {
+                                DataSourceType.CACHE_FILE_EXPIRED_NO_NETWORK
+                            } else {
+                                DataSourceType.CACHE_FILE_RECENT
+                            }
+                        } else {
+                            DataSourceType.CACHE_FILE_EXPIRED_UNKNOWN
+                        }
                         return CancellableFileIo.newInputStream(file)
                     }
                 } catch (ignore: NoSuchFileException) {
@@ -85,6 +95,7 @@ abstract class NetworkCache constructor(
 
                 if (networkEnabled) {
                     try {
+                        lastReadSourceType = DataSourceType.CACHE_FILE_NEW
                         val data = readUrlData("$baseUrl$relative", networkTimeoutMs)
                         if (data != null) {
                             file.parent?.let { Files.createDirectories(it) }
@@ -97,8 +108,9 @@ abstract class NetworkCache constructor(
                         throw e
                     }
                     catch (e: Throwable) {
-                        // timeouts etc: fall through to use "expired" data, if available, otherwise use the Builtin index
+                        // timeouts etc.: fall through to use "expired" data, if available, otherwise use the Builtin index
                         try {
+                            lastReadSourceType = DataSourceType.CACHE_FILE_EXPIRED_NETWORK_ERROR
                             return CancellableFileIo.newInputStream(file)
                         } catch (ignore: NoSuchFileException) {
                         }
@@ -108,6 +120,27 @@ abstract class NetworkCache constructor(
         }
 
         // Fallback: Builtin index, used for offline scenarios etc
-        return readDefaultData(relative)
+        val result = readDefaultData(relative)
+        // Assign after reading, so it can be used inside readDefaultData for logging purposes
+        lastReadSourceType = DataSourceType.DEFAULT_DATA
+        return result
+    }
+
+    enum class DataSourceType {
+        UNKNOWN_SOURCE,
+        // Test data, not to be used in production
+        TEST_DATA,
+        // Cache file is too old but no network is available
+        CACHE_FILE_EXPIRED_NO_NETWORK,
+        // Cache file is too old, network is available but was not able to update
+        CACHE_FILE_EXPIRED_NETWORK_ERROR,
+        // Cache file exist but cannot tell if too old
+        CACHE_FILE_EXPIRED_UNKNOWN,
+        // Cache file exists and has not expired
+        CACHE_FILE_RECENT,
+        // Cache file and was just downloaded
+        CACHE_FILE_NEW,
+        // Default data was used
+        DEFAULT_DATA,
     }
 }

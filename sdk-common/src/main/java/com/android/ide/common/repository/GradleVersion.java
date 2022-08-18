@@ -29,18 +29,26 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * Supports versions in the given formats: <ul> <li>major (e.g. 1)</li> <li>major.minor (e.g.
- * 1.0)</li> <li>major.minor.micro (e.g. 1.1.1)</li> </ul> A version can also be a "preview" (e.g.
- * 1-alpha1, 1.0.0-rc2) or an unreleased version (or "snapshot") (e.g. 1-SNAPSHOT,
- * 1.0.0-alpha1-SNAPSHOT).
+ * Supports versions in the given formats:
+ *
+ * <ul>
+ *   <li>major (e.g. 1)
+ *   <li>major.minor (e.g. 1.0)
+ *   <li>major.minor.micro (e.g. 1.1.1)
+ * </ul>
+ *
+ * A version can also be a "previewType" (e.g. 1-alpha1, 1.0.0-rc2) or an unreleased version (or
+ * "snapshot") (e.g. 1-SNAPSHOT, 1.0.0-alpha1-SNAPSHOT).
  */
 public class GradleVersion implements Comparable<GradleVersion>, Serializable {
     private static final String PLUS = "+";
 
-    private static final Pattern PREVIEW_PATTERN = Pattern.compile("([a-zA-z]+)[\\-]?([\\d]+)?(-\\d+)?");
-
+    // TODO(b/242691473): This pattern is not inclusive for all the possible versions.
+    private static final Pattern PREVIEW_AND_SNAPSHOT_PATTERN =
+            Pattern.compile("([a-zA-z]+)[\\-]?([\\d]+)?[\\-]?(\\d+)?[\\-]?([a-zA-z]+)?");
     private final String mRawValue;
 
     @NonNull
@@ -59,10 +67,41 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
 
     private final boolean mSnapshot;
 
-    @NonNull
-    private final List<VersionSegment> mAdditionalSegments;
+    @NonNull private final List<VersionSegment> mAdditionalSegments;
 
-    private final String mQualifiers;
+    private final VersionQualifiers mQualifiers;
+
+    private static class VersionQualifiers {
+        @NotNull String previewType;
+
+        int preview;
+
+        // TODO(b/242691473): We could have multiple additional previewType types and should
+        //   consider all of them eventually.
+        int additionalPreviewType;
+
+        @Nullable String previewChannel;
+
+        private VersionQualifiers(
+                @NotNull String previewType,
+                int preview,
+                int additionalPreviewType,
+                @Nullable String previewChannel) {
+            this.previewType = previewType;
+            this.preview = preview;
+            this.additionalPreviewType = additionalPreviewType;
+            this.previewChannel = previewChannel;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return previewType
+                    + ((preview != 0) ? "-" + preview : "")
+                    + ((additionalPreviewType != 0) ? "-" + additionalPreviewType : "")
+                    + ((!isNullOrEmpty(previewChannel)) ? "-" + previewChannel : "");
+        }
+    }
 
     /**
      * Parses the given version. This method does the same as {@link #parse(String)}, but it does
@@ -93,12 +132,45 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
     @NonNull
     public static GradleVersion parse(@NonNull String value) {
         String version = value;
-        String qualifiers = null;
+        VersionQualifiers qualifiers = null;
         char dash = '-';
         int dashIndex = value.indexOf(dash);
         if (dashIndex != -1) {
             if (dashIndex < value.length() - 1) {
-                qualifiers = value.substring(dashIndex + 1);
+                String qualifiersText = value.substring(dashIndex + 1);
+                String qualifierName = null;
+                int qualifierValue = 0;
+                int additionalQualifierValue = 0;
+                String qualifierChannel = null;
+                Matcher matcher = PREVIEW_AND_SNAPSHOT_PATTERN.matcher(qualifiersText);
+                if (matcher.matches()) {
+                    qualifierName = matcher.group(1);
+                    if (matcher.groupCount() >= 2) {
+                        String group = matcher.group(2);
+                        if (!isNullOrEmpty(group)) {
+                            qualifierValue = Integer.parseInt(group);
+                        }
+                        String group3 = matcher.group(3);
+                        if (!isNullOrEmpty(group3)) {
+                            additionalQualifierValue = Integer.parseInt(group3);
+                        }
+                        String group4 = matcher.group(4);
+                        if (!isNullOrEmpty(group4)) {
+                            qualifierChannel = group4;
+                        }
+                    }
+                }
+                if (!isNullOrEmpty(qualifierName)
+                        || qualifierValue != 0
+                        || additionalQualifierValue != 0
+                        || !isNullOrEmpty(qualifierChannel)) {
+                    qualifiers =
+                            new VersionQualifiers(
+                                    qualifierName,
+                                    qualifierValue,
+                                    additionalQualifierValue,
+                                    qualifierChannel);
+                }
             }
             version = value.substring(0, dashIndex);
         }
@@ -124,39 +196,25 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                     additionalSegments.addAll(parsedVersionSegments.subList(3, segmentCount));
                 }
 
-                int preview = 0;
-                String previewType = null;
                 boolean snapshot = false;
 
                 if (qualifiers != null) {
-                    if (isSnapshotQualifier(qualifiers)) {
+                    if (isSnapshotQualifier(qualifiers.toString())) {
                         snapshot = true;
                         qualifiers = null;
-                    }
-                    else {
-                        // find and remove "SNAPSHOT" at the end of the qualifiers.
-                        int lastDashIndex = qualifiers.lastIndexOf(dash);
-                        if (lastDashIndex != -1) {
-                            String mayBeSnapshot = qualifiers.substring(lastDashIndex + 1);
-                            if (isSnapshotQualifier(mayBeSnapshot)) {
-                                snapshot = true;
-                                qualifiers = qualifiers.substring(0, lastDashIndex);
-                            }
-                        }
-                    }
-                    if (!isNullOrEmpty(qualifiers)) {
-                        Matcher matcher = PREVIEW_PATTERN.matcher(qualifiers);
-                        if (matcher.matches()) {
-                            previewType = matcher.group(1);
-                            if (matcher.groupCount() >= 2) {
-                                String group = matcher.group(2);
-                                if (!isNullOrEmpty(group)) {
-                                    preview = Integer.parseInt(group);
-                                }
-                            }
-                        }
+                    } else if (!isNullOrEmpty(qualifiers.previewChannel)
+                            && isSnapshotQualifier(qualifiers.previewChannel)) {
+                        snapshot = true;
+                        qualifiers.previewChannel = null;
                     }
                 }
+
+                int preview = (qualifiers != null) ? qualifiers.preview : 0;
+                String previewType =
+                        (qualifiers != null)
+                                ? qualifiers.previewType
+                                : null; // PreviewType is never null
+
                 return new GradleVersion(value, majorSegment, minorSegment, microSegment,
                         additionalSegments, preview, previewType, snapshot, qualifiers);
             }
@@ -235,7 +293,8 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                 Collections.emptyList(), 0, null, false, null);
     }
 
-    private GradleVersion(@NonNull String rawValue,
+    private GradleVersion(
+            @NonNull String rawValue,
             @NonNull VersionSegment majorSegment,
             @Nullable VersionSegment minorSegment,
             @Nullable VersionSegment microSegment,
@@ -243,7 +302,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
             int preview,
             @Nullable String previewType,
             boolean snapshot,
-            String qualifiers) {
+            VersionQualifiers qualifiers) {
         mRawValue = rawValue;
         mMajorSegment = majorSegment;
         mMinorSegment = minorSegment;
@@ -342,28 +401,37 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                 delta = mSnapshot == version.mSnapshot ? 0 : (mSnapshot ? -1 : 1);
             } else if (version.mQualifiers == null) {
                 return -1;
-            } else if (mQualifiers.startsWith("dev") && version.mQualifiers.startsWith("dev")) {
-                delta = mQualifiers.compareTo(version.mQualifiers);
-            } else if (mQualifiers.startsWith("dev") || version.mQualifiers.startsWith("dev")) {
-                delta = mQualifiers.startsWith("dev") ? -1 : 1;
+            } else if (mQualifiers.previewType.equals("dev")
+                    && version.mQualifiers.previewType.equals("dev")) {
+                delta = mQualifiers.preview - version.mQualifiers.preview;
+            } else if (mQualifiers.previewType.equals("dev")
+                    || version.mQualifiers.previewType.equals("dev")) {
+                delta = mQualifiers.previewType.equals("dev") ? -1 : 1;
+            } else if (mQualifiers.previewType.equals(version.mQualifiers.previewType)) {
+                delta = mQualifiers.preview - version.mQualifiers.preview;
+                if (delta == 0) {
+                    delta =
+                            mQualifiers.additionalPreviewType
+                                    - version.mQualifiers.additionalPreviewType;
+                }
             } else {
-                delta = mQualifiers.compareTo(version.mQualifiers);
+                // TODO(b/242691473): Fix previewType comparison.
+                delta = mQualifiers.previewType.compareTo(version.mQualifiers.previewType);
             }
         }
         return delta;
     }
 
     /**
-     * Is this {@linkplain GradleVersion} at least as high as the given
-     * major, minor, micro version?
+     * Is this {@linkplain GradleVersion} at least as high as the given major, minor, micro version?
      */
     public boolean isAtLeast(int major, int minor, int micro) {
         return isAtLeast(major, minor, micro, null, 0, false);
     }
 
     /**
-     * Is this {@linkplain GradleVersion} at least as high as the given
-     * major, minor, micro version? Any preview suffixes are ignored.
+     * Is this {@linkplain GradleVersion} at least as high as the given major, minor, micro version?
+     * Any previewType suffixes are ignored.
      */
     public boolean isAtLeastIncludingPreviews(int major, int minor, int micro) {
         return isAtLeast(major, minor, micro, "", 0, false);

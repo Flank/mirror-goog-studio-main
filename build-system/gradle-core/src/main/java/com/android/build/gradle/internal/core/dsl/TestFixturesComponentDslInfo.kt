@@ -22,10 +22,11 @@ package com.android.build.gradle.internal.core.dsl
  *
  * This class allows querying for the values set via the DSL model.
  *
- * Use [VariantDslInfoBuilder] to instantiate.
+ * Use [DslInfoBuilder] to instantiate.
  *
  * @see [com.android.build.gradle.internal.component.TestFixturesCreationConfig]
  */
-interface TestFixturesComponentDslInfo: VariantDslInfo, AarProducingComponentDslInfo {
+interface TestFixturesComponentDslInfo
+    : ComponentDslInfo, AarProducingComponentDslInfo, PublishableComponentDslInfo {
     val testFixturesAndroidResourcesEnabled: Boolean
 }

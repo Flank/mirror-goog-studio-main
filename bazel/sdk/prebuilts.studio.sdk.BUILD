@@ -84,7 +84,7 @@ filegroup(
     srcs = sdk_glob(
         include = ["build-tools/30.0.3/**"],
     ),
-    visibility = ["//visibility:private"],
+    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
 )
 
 filegroup(
@@ -233,8 +233,9 @@ java_import(
 )
 
 platform_filegroup(
-    name = "platforms/android-Tiramisu",
+    name = "platforms/android-TiramisuPrivacySandbox",
     visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )

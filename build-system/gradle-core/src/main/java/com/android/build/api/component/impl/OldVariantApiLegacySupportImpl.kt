@@ -27,7 +27,9 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedFlavor
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.ComponentDslInfoImpl
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
@@ -43,18 +45,20 @@ import java.io.Serializable
 
 class OldVariantApiLegacySupportImpl(
     private val component: ComponentCreationConfig,
-    private val variantDslInfo: VariantDslInfoImpl,
+    private val dslInfo: ComponentDslInfo,
     override val variantData: BaseVariantData
 ): OldVariantApiLegacySupport {
 
     override val buildTypeObj: BuildType
-        get() = variantDslInfo.buildTypeObj
+        get() = (dslInfo as ComponentDslInfoImpl).buildTypeObj
     override val productFlavorList: List<ProductFlavor>
-        get() = variantDslInfo.productFlavorList
+        get() = dslInfo.productFlavorList
     override val mergedFlavor: MergedFlavor
-        get() = variantDslInfo.mergedFlavor
+        get() = (dslInfo as ComponentDslInfoImpl).mergedFlavor
     override val javaCompileOptions: JavaCompileOptions
-        get() = variantDslInfo.javaCompileOptions
+        get() = dslInfo.javaCompileOptions
+    override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
+        (dslInfo as? ApkProducingComponentDslInfo)?.signingConfig
 
     override fun getJavaClasspathArtifacts(
         configType: AndroidArtifacts.ConsumedConfigType,
@@ -155,7 +159,7 @@ class OldVariantApiLegacySupportImpl(
     }
 
     override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        variantDslInfo.javaCompileOptions.annotationProcessorOptions
+        dslInfo.javaCompileOptions.annotationProcessorOptions
             .compilerArgumentProviders.add(args)
     }
 

@@ -424,11 +424,11 @@ class CheckAarMetadataTaskTest {
         addAarWithPossiblyInvalidAarMetadataToAppProject(
             aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
             aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-            forceCompileSdkPreview = "Tiramisu"
+            forceCompileSdkPreview = "TiramisuPrivacySandbox"
         )
         TestFileUtils.appendToFile(
             project.getSubproject("app").buildFile,
-            "\n\nandroid.compileSdkPreview 'Tiramisu'\n\n"
+            "\n\nandroid.compileSdkPreview 'TiramisuPrivacySandbox'\n\n"
         )
         val result = project.executor().run(":app:checkDebugAarMetadata")
         ScannerSubject.assertThat(result.stdout).contains("BUILD SUCCESSFUL")
@@ -439,7 +439,7 @@ class CheckAarMetadataTaskTest {
         addAarWithPossiblyInvalidAarMetadataToAppProject(
             aarFormatVersion = AarMetadataTask.AAR_FORMAT_VERSION,
             aarMetadataVersion = AarMetadataTask.AAR_METADATA_VERSION,
-            forceCompileSdkPreview = "Tiramisu"
+            forceCompileSdkPreview = "TiramisuPrivacySandbox"
         )
 
         // Test that build fails with desired error message.
@@ -453,13 +453,13 @@ class CheckAarMetadataTaskTest {
                         An issue was found when checking AAR metadata:
 
                           1.  Dependency 'library.aar' requires libraries and applications that
-                              depend on it to compile against codename "Tiramisu" of the
+                              depend on it to compile against codename "TiramisuPrivacySandbox" of the
                               Android APIs.
 
                               :app is currently compiled against $compileSdkHash.
 
                               Recommended action: Use a different version of dependency 'library.aar',
-                              or set compileSdkPreview to "Tiramisu" in your build.gradle
+                              or set compileSdkPreview to "TiramisuPrivacySandbox" in your build.gradle
                               file if you intend to experiment with that preview SDK.
                     """.trimIndent()
                 )

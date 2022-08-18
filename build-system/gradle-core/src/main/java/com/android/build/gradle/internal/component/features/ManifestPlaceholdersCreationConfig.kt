@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.core.dsl
+package com.android.build.gradle.internal.component.features
 
-import com.android.build.gradle.internal.publishing.VariantPublishingInfo
+import org.gradle.api.provider.MapProperty
 
 /**
- * Contains the final dsl info computed from the DSL object model (extension, default config,
- * build type, flavors) that are needed by publishable components.
+ * Creation config for components that support manifest placeholders.
  */
-interface PublishableVariantDslInfo {
-    // TODO: Remove nullability when implementation is split up
-    val publishInfo: VariantPublishingInfo?
+interface ManifestPlaceholdersCreationConfig {
+    val placeholders: MapProperty<String, String>
 }

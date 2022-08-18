@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture
 
-import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import java.io.File
 
@@ -46,7 +45,7 @@ abstract class GradleProject(
     }
 
     /** Map from a relative path to the corresponding [TestSourceFile] instance.  */
-    private val sourceFiles: MutableMap<String, TestSourceFile> = mutableMapOf()
+    protected val sourceFiles: MutableMap<String, TestSourceFile> = mutableMapOf()
 
     /** Returns a source file with the specified file path.  */
     fun getFile(relativePath: String): TestSourceFile {

@@ -107,9 +107,13 @@ public class D8DiagnosticsHandler implements DiagnosticsHandler {
 
     protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
         String textMessage = diagnostic.getDiagnosticMessage();
-
         Origin origin = diagnostic.getOrigin();
         Position positionInOrigin = diagnostic.getPosition();
+        return convertToMessage(kind, textMessage, origin, positionInOrigin);
+    }
+
+    protected Message convertToMessage(
+            Message.Kind kind, String textMessage, Origin origin, Position positionInOrigin) {
         SourceFilePosition position;
         if (origin instanceof PathOrigin) {
             File originFile = ((PathOrigin) origin).getPath().toFile();

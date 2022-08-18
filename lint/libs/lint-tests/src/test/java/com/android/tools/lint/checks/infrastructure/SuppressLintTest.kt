@@ -30,10 +30,14 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.XmlScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UImportStatement
 import org.junit.Test
+import org.w3c.dom.Attr
 
 /**
  * Checks that some lint checks cannot be suppressed with the normal
@@ -95,6 +99,7 @@ class SuppressLintTest {
                     import forbidden;
                     @MyOwnAnnotation
                     class Test {
+                        @SuppressWarnings("InfiniteRecursion")
                         public void forbidden() {
                             forbidden();
                         }
@@ -186,6 +191,80 @@ class SuppressLintTest {
                     forbidden()
                     ~~~~~~~~~~~
                 2 errors, 2 warnings
+                """
+            )
+    }
+
+    @Test
+    fun checkForbiddenSuppressWithXmlIgnore() {
+        lint()
+            .allowCompilationErrors()
+            .files(
+                xml(
+                    "res/layout/main.xml",
+                    """
+                    <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      xmlns:tools="http://schemas.android.com/tools"
+                      xmlns:android="http://schemas.android.com/apk/res/android">
+
+                      <androidx.compose.ui.platform.ComposeView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:forbidden="true"
+                        tools:ignore="_SecureIssue"/>
+                    </LinearLayout>
+                    """
+                ).indented()
+            )
+            .issues(MySecurityDetector.TEST_ISSUE)
+            .sdkHome(TestUtils.getSdk().toFile())
+            .run()
+            .expect(
+                """
+                res/layout/main.xml:7: Error: Issue _SecureIssue is not allowed to be suppressed [LintError]
+                  <androidx.compose.ui.platform.ComposeView
+                  ^
+                res/layout/main.xml:10: Warning: Some error message here [_SecureIssue]
+                    android:forbidden="true"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 1 warnings
+                """
+            )
+    }
+
+    @Test
+    fun checkForbiddenSuppressWithXmlComment() {
+        lint()
+            .allowCompilationErrors()
+            .files(
+                xml(
+                    "res/layout/main.xml",
+                    """
+                    <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      xmlns:android="http://schemas.android.com/apk/res/android">
+
+                      <!--suppress _SecureIssue -->
+                      <androidx.compose.ui.platform.ComposeView android:forbidden="true"/>
+                    </LinearLayout>
+                    """
+                ).indented()
+            )
+            .issues(MySecurityDetector.TEST_ISSUE)
+            .sdkHome(TestUtils.getSdk().toFile())
+            .run()
+            .expect(
+                """
+                res/layout/main.xml:7: Error: Issue _SecureIssue is not allowed to be suppressed [LintError]
+                  <androidx.compose.ui.platform.ComposeView android:forbidden="true"/>
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                res/layout/main.xml:7: Warning: Some error message here [_SecureIssue]
+                  <androidx.compose.ui.platform.ComposeView android:forbidden="true"/>
+                                                            ~~~~~~~~~~~~~~~~~~~~~~~~
+                1 errors, 1 warnings
                 """
             )
     }
@@ -451,7 +530,7 @@ class SuppressLintTest {
 
     // Sample detector which just flags calls to a method called "forbidden"
     @SuppressWarnings("ALL")
-    class MySecurityDetector : Detector(), Detector.UastScanner {
+    class MySecurityDetector : Detector(), SourceCodeScanner, XmlScanner {
         override fun getApplicableUastTypes() = listOf(UImportStatement::class.java)
 
         override fun getApplicableMethodNames(): List<String> {
@@ -483,6 +562,15 @@ class SuppressLintTest {
             }
         }
 
+        override fun getApplicableAttributes(): Collection<String> = listOf("forbidden")
+
+        override fun visitAttribute(context: XmlContext, attribute: Attr) {
+            val message = "Some error message here"
+            val location = context.getLocation(attribute)
+            context.report(TEST_ISSUE, attribute, location, message)
+            context.report(TEST_ISSUE_NEVER_SUPPRESSIBLE, attribute, location, message)
+        }
+
         companion object {
             @Suppress("SpellCheckingInspection")
             @JvmField
@@ -494,7 +582,7 @@ class SuppressLintTest {
                 suppressAnnotations = listOf("foo.bar.MyOwnAnnotation"),
                 implementation = Implementation(
                     MySecurityDetector::class.java,
-                    Scope.JAVA_FILE_SCOPE
+                    Scope.JAVA_AND_RESOURCE_FILES
                 )
             )
 
@@ -510,7 +598,7 @@ class SuppressLintTest {
                 suppressAnnotations = emptyList(),
                 implementation = Implementation(
                     MySecurityDetector::class.java,
-                    Scope.JAVA_FILE_SCOPE
+                    Scope.JAVA_AND_RESOURCE_FILES
                 )
             )
         }

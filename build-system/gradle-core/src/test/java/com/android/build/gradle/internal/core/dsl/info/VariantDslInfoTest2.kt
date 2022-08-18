@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.core
+package com.android.build.gradle.internal.core.dsl.info
 
-import com.android.build.api.dsl.BuildFeatures
-import com.android.build.api.dsl.CommonExtension
-import com.android.build.api.dsl.TestedExtension
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.VariantManager
+import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.AndroidTestComponentDslInfoImpl
+import com.android.build.gradle.internal.core.dsl.impl.ApplicationVariantDslInfoImpl
 import com.android.build.gradle.internal.dsl.BuildType
 import com.android.build.gradle.internal.dsl.DefaultConfig
+import com.android.build.gradle.internal.dsl.InternalApplicationExtension
 import com.android.build.gradle.internal.dsl.ProductFlavor
 import com.android.build.gradle.internal.manifest.ManifestData
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
+import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.services.DslServices
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.createDslServices
@@ -276,27 +279,6 @@ class VariantDslInfoTest2 :
     }
 
     @Test
-    fun `instrumentationRunner on non test`() {
-        given {
-            // no specific manifest info
-            manifestData { }
-        }
-
-        // provide a custom convert action to only call VariantDslInfo.instrumentationRunner
-        // as it's not normally called for non-test variant type.
-        convertToResult {
-            instrumentationRunner = it.getInstrumentationRunner(DexingType.NATIVE_MULTIDEX).orNull
-        }
-
-        exceptionRule.expect(RuntimeException::class.java)
-        exceptionRule.expectMessage("instrumentationRunner is not available to non-test variant")
-
-        expect {
-            // value is not relevant here since exception will be thrown
-        }
-    }
-
-    @Test
     fun `instrumentationRunner from defaultConfig`() {
         given {
             // no specific manifest info
@@ -395,27 +377,6 @@ class VariantDslInfoTest2 :
     }
 
     @Test
-    fun `handleProfiling on non test`() {
-        given {
-            // no specific manifest info
-            manifestData { }
-        }
-
-        // provide a custom convert action to call VariantDslInfo.handleProfiling
-        // even though this is not a test componentType
-        convertToResult {
-            handleProfiling = it.handleProfiling.orNull
-        }
-
-        exceptionRule.expect(RuntimeException::class.java)
-        exceptionRule.expectMessage("handleProfiling is not available to non-test variant")
-
-        expect {
-            // value is not relevant here since exception will be thrown
-        }
-    }
-
-    @Test
     fun `handleProfiling from defaultConfig`() {
         given {
             // no specific manifest info
@@ -510,27 +471,6 @@ class VariantDslInfoTest2 :
 
         expect {
             functionalTest = false
-        }
-    }
-
-    @Test
-    fun `functionalTest on non test`() {
-        given {
-            // no specific manifest info
-            manifestData { }
-        }
-
-        // provide a custom convert action to call VariantDslInfo.functionalTest
-        // even though this is not a test componentType
-        convertToResult {
-            functionalTest = it.functionalTest.orNull
-        }
-
-        exceptionRule.expect(RuntimeException::class.java)
-        exceptionRule.expectMessage("functionalTest is not available to non-test variant")
-
-        expect {
-            // value is not relevant here since exception will be thrown
         }
     }
 
@@ -859,28 +799,16 @@ class VariantDslInfoTest2 :
     override fun instantiateGiven() = GivenData(dslServices)
     override fun instantiateResult() = ResultData()
 
-    interface TestedFullExtension: CommonExtension<
-            BuildFeatures,
-            com.android.build.api.dsl.BuildType,
-            com.android.build.api.dsl.DefaultConfig,
-            com.android.build.api.dsl.ProductFlavor
-            >, TestedExtension
-
-    override fun defaultWhen(given: GivenData): ResultData? {
+    override fun defaultWhen(given: GivenData): ResultData {
         val componentIdentity = Mockito.mock(ComponentIdentity::class.java)
         Mockito.`when`(componentIdentity.name).thenReturn("compIdName")
 
-        val extension =  if (given.componentType.isTestComponent) {
-            Mockito.mock(TestedFullExtension::class.java).also {
-                Mockito.`when`(it.namespace).thenReturn(given.namespace)
+        val extension = Mockito.mock(InternalApplicationExtension::class.java).also {
+            Mockito.`when`(it.namespace).thenReturn(given.namespace)
+            if (given.componentType.isTestComponent) {
                 Mockito.`when`(it.testNamespace).thenReturn(given.testNamespace)
             }
-        } else {
-            Mockito.mock(CommonExtension::class.java).also {
-                Mockito.`when`(it.namespace).thenReturn(given.namespace)
-            }
         }
-        val oldExtension = Mockito.mock(BaseExtension::class.java)
 
         // this does not quite test what VariantManager does because this only checks
         // for the product flavors of that one variant, while VariantManager looks
@@ -889,72 +817,67 @@ class VariantDslInfoTest2 :
             given.flavors
         )
 
-        val parentVariant =
-            if (given.componentType.isNestedComponent) {
-                VariantDslInfoImpl(
+        val mainVariant = ApplicationVariantDslInfoImpl(
+            componentIdentity = componentIdentity,
+            componentType = given.testedcomponentType,
+            defaultConfig = given.defaultConfig,
+            buildTypeObj = given.buildType,
+            productFlavorList = given.flavors,
+            dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
+            services = services,
+            buildDirectory = buildDirectory,
+            publishInfo = VariantPublishingInfo(emptyList()),
+            extension = extension,
+            oldExtension = null,
+            signingConfigOverride = null,
+        )
+
+        val dslInfo = when (given.componentType) {
+            ComponentTypeImpl.ANDROID_TEST -> {
+                AndroidTestComponentDslInfoImpl(
                     componentIdentity = componentIdentity,
                     componentType = given.testedcomponentType,
                     defaultConfig = given.defaultConfig,
                     buildTypeObj = given.buildType,
                     productFlavorList = given.flavors,
+                    dataProvider = DirectManifestDataProvider(given.testManifestData, projectServices),
+                    testedVariantDslInfo = mainVariant,
                     signingConfigOverride = null,
-                    productionVariant = null,
-                    dataProvider = DirectManifestDataProvider(given.manifestData, projectServices),
-                    dslServices = dslServices,
+                    inconsistentTestAppId = inconsistentTestAppId,
                     services = services,
                     buildDirectory = buildDirectory,
-                    publishInfo = null,
-                    experimentalProperties = mapOf(),
-                    inconsistentTestAppId = false,
                     extension = extension,
-                    oldExtension = oldExtension
+                    oldExtension = null
                 )
-            } else { null }
-
-        val variantDslInfo = VariantDslInfoImpl(
-            componentIdentity = componentIdentity,
-            componentType = given.componentType,
-            defaultConfig = given.defaultConfig,
-            buildTypeObj = given.buildType,
-            productFlavorList = given.flavors,
-            signingConfigOverride = null,
-            productionVariant = parentVariant,
-            dataProvider =
-                if (given.componentType.isTestComponent) {
-                    DirectManifestDataProvider(given.testManifestData, projectServices)
-                } else {
-                    DirectManifestDataProvider(given.manifestData, projectServices)
-                },
-            dslServices = dslServices,
-            services = services,
-            buildDirectory = buildDirectory,
-            experimentalProperties = mapOf(),
-            publishInfo = null,
-            inconsistentTestAppId = inconsistentTestAppId,
-            extension = extension,
-            oldExtension = oldExtension
-        )
+            }
+            ComponentTypeImpl.BASE_APK -> {
+                mainVariant
+            }
+            else -> {
+                throw RuntimeException("Unexpected type")
+            }
+        }
 
         return instantiateResult().also {
             if (convertAction != null) {
-                convertAction?.invoke(it, variantDslInfo)
+                convertAction?.invoke(it, dslInfo)
             } else {
-                it.versionCode = variantDslInfo.versionCode.orNull
-                it.versionName = variantDslInfo.versionName.orNull
+                it.versionCode = (dslInfo as? ApplicationVariantDslInfo)?.versionCode?.orNull
+                it.versionName = (dslInfo as? ApplicationVariantDslInfo)?.versionName?.orNull
                 // only query these if this is not a test.
-                if (given.componentType.isForTesting) {
-                    it.instrumentationRunner = variantDslInfo.getInstrumentationRunner(given.dexingType).orNull
-                    it.handleProfiling = variantDslInfo.handleProfiling.get()
-                    it.functionalTest = variantDslInfo.functionalTest.get()
+                if (dslInfo is AndroidTestComponentDslInfo) {
+                    it.instrumentationRunner = dslInfo.getInstrumentationRunner(given.dexingType).orNull
+                    it.handleProfiling = dslInfo.handleProfiling.get()
+                    it.functionalTest = dslInfo.functionalTest.get()
                 }
                 try {
-                    it.namespace = variantDslInfo.namespace.orNull
+                    it.namespace = dslInfo.namespace.orNull
                 } catch (e: RuntimeException) {
                     // RuntimeException can be thrown when ManifestData.packageName is null
                     it.namespace = null
                 }
                 try {
-                    it.namespaceForR = variantDslInfo.namespaceForR.orNull
+                    it.namespaceForR = (dslInfo as? AndroidTestComponentDslInfo)?.namespaceForR?.orNull
                 } catch (e: RuntimeException) {
                     // RuntimeException can be thrown when ManifestData.packageName is null
                     it.namespaceForR = null
@@ -974,14 +897,14 @@ class VariantDslInfoTest2 :
     }
 
     /** optional conversion action from variantDslInfo to result Builder. */
-    private var convertAction: (ResultData.(variantInfo: VariantDslInfo) -> Unit)? = null
+    private var convertAction: (ResultData.(variantInfo: ComponentDslInfo) -> Unit)? = null
 
     /**
      * registers a custom conversion from variantDslInfo to ResultBuilder.
      * This avoid having to use when {} which requires implementing all that defaultWhen()
      * does.
      */
-    private fun convertToResult(action: ResultData.(variantInfo: VariantDslInfo) -> Unit) {
+    private fun convertToResult(action: ResultData.(variantInfo: ComponentDslInfo) -> Unit) {
         convertAction = action
     }
 

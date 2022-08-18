@@ -22,9 +22,11 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifa
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.configureVariantProperties
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import org.gradle.api.attributes.Usage
 import org.gradle.api.file.RegularFileProperty
@@ -35,6 +37,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
 @CacheableTask
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING, TaskCategoryLabel.MANIFEST])
 abstract class PrivacySandboxSdkManifestMergerTask: FusedLibraryManifestMergerTask() {
 
     @get: InputFile

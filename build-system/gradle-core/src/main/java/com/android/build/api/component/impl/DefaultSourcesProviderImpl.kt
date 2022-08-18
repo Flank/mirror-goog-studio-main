@@ -63,6 +63,7 @@ class DefaultSourcesProviderImpl(
     }
 
     override fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> = component.defaultResSources(lateAdditionsDelegate)
+    override fun getResources(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>  = flattenSourceProviders(lateAdditionsDelegate) { sourceSet -> sourceSet.resources }
     override fun getAssets(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> = defaultAssetsSources(lateAdditionsDelegate)
     override fun getJniLibs(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> =
             getSourceList(lateAdditionsDelegate, DefaultAndroidSourceSet::jniLibs)

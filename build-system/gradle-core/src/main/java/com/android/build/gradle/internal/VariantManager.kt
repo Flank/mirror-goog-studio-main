@@ -44,16 +44,16 @@ import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.computeSourceSetName
-import com.android.build.gradle.internal.core.VariantDslInfoBuilder.Companion.getBuilder
-import com.android.build.gradle.internal.core.VariantDslInfoImpl
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.TestFixturesComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
 import com.android.build.gradle.internal.core.dsl.UnitTestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.DslInfoBuilder
+import com.android.build.gradle.internal.core.dsl.impl.DslInfoBuilder.Companion.getBuilder
+import com.android.build.gradle.internal.core.dsl.impl.computeSourceSetName
 import com.android.build.gradle.internal.crash.ExternalApiUsageException
 import com.android.build.gradle.internal.dependency.VariantDependenciesBuilder
 import com.android.build.gradle.internal.dsl.BuildType
@@ -169,16 +169,6 @@ class VariantManager<
 
     private lateinit var _buildFeatureValues: BuildFeatureValues
 
-
-    private fun hasDynamicFeatures(): Boolean =
-        (dslExtension as? ApplicationExtension)?.dynamicFeatures?.isNotEmpty() ?: false
-
-    private fun getCompileSdkVersion(): String?  {
-        val newExtension = dslExtension as? CommonExtensionImpl<*,*,*,*> ?: throw RuntimeException("Wrong DSL instance")
-        return newExtension.compileSdkVersion
-    }
-
-
     /**
      * Creates the variants.
      *
@@ -282,12 +272,11 @@ class VariantManager<
                 getLazyManifestParser(
                         defaultConfigSourceProvider.manifestFile,
                         componentType.requiresManifest) { canParseManifest() },
-                dslServices,
                 variantPropertiesApiServices,
                 oldExtension,
                 dslExtension,
-                hasDynamicFeatures = hasDynamicFeatures(),
-                dslExtension.experimentalProperties,
+                project.layout.buildDirectory,
+                dslServices
         )
 
         // We must first add the flavors to the variant config, in order to get the proper
@@ -296,8 +285,7 @@ class VariantManager<
             variantDslInfoBuilder.addProductFlavor(
                     productFlavorData.productFlavor, productFlavorData.sourceSet)
         }
-        val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-                project.layout.buildDirectory)
+        val variantDslInfo = variantDslInfoBuilder.createDslInfo()
         val componentIdentity = variantDslInfo.componentIdentity
 
         // create the Variant object so that we can run the action which may interrupt the creation
@@ -420,24 +408,24 @@ class VariantManager<
 
     private fun<DslInfoT: ComponentDslInfo> createCompoundSourceSets(
             productFlavorList: List<ProductFlavorData<ProductFlavor>>,
-            variantDslInfoBuilder: VariantDslInfoBuilder<CommonExtensionT, DslInfoT>) {
-        val componentType = variantDslInfoBuilder.componentType
+            dslInfoBuilder: DslInfoBuilder<CommonExtensionT, DslInfoT>) {
+        val componentType = dslInfoBuilder.componentType
         if (productFlavorList.isNotEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             val variantSourceSet = variantInputModel
                     .sourceSetManager
                     .setUpSourceSet(
-                            computeSourceSetName(variantDslInfoBuilder.name, componentType),
+                            computeSourceSetName(dslInfoBuilder.name, componentType),
                             componentType.isTestComponent) as DefaultAndroidSourceSet
-            variantDslInfoBuilder.variantSourceProvider = variantSourceSet
+            dslInfoBuilder.variantSourceProvider = variantSourceSet
         }
         if (productFlavorList.size > 1) {
             val multiFlavorSourceSet = variantInputModel
                     .sourceSetManager
                     .setUpSourceSet(
-                            computeSourceSetName(variantDslInfoBuilder.flavorName,
+                            computeSourceSetName(dslInfoBuilder.flavorName,
                                                     componentType),
                             componentType.isTestComponent) as DefaultAndroidSourceSet
-            variantDslInfoBuilder.multiFlavorSourceProvider = multiFlavorSourceSet
+            dslInfoBuilder.multiFlavorSourceProvider = multiFlavorSourceSet
         }
     }
 
@@ -461,15 +449,15 @@ class VariantManager<
             getLazyManifestParser(
                 testFixturesSourceSet.manifestFile,
                 testFixturesComponentType.requiresManifest) { canParseManifest() },
-            dslServices,
             variantPropertiesApiServices,
             oldExtension = oldExtension,
             extension = dslExtension,
-            hasDynamicFeatures = hasDynamicFeatures(),
-            testFixtureMainVariantName = mainComponentInfo.variant.name
+            buildDirectory = project.layout.buildDirectory,
+            dslServices = dslServices
         )
 
-        variantDslInfoBuilder.productionVariant = mainComponentInfo.variantDslInfo as VariantDslInfoImpl
+        variantDslInfoBuilder.productionVariant =
+            mainComponentInfo.variantDslInfo as TestedVariantDslInfo
 
         val productFlavorList = mainComponentInfo.variantDslInfo.productFlavorList
 
@@ -484,9 +472,7 @@ class VariantManager<
                 )
             }
         }
-        val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-            project.layout.buildDirectory
-        )
+        val variantDslInfo = variantDslInfoBuilder.createDslInfo()
 
         // now that we have the result of the filter, we can continue configuring the variant
         createCompoundSourceSets(productFlavorDataList, variantDslInfoBuilder)
@@ -608,13 +594,14 @@ class VariantManager<
                 getLazyManifestParser(
                         testSourceSet.manifestFile,
                         componentType.requiresManifest) { canParseManifest() },
-                dslServices,
                 variantPropertiesApiServices,
                 oldExtension = oldExtension,
                 extension = dslExtension,
-                hasDynamicFeatures = hasDynamicFeatures())
+                buildDirectory = project.layout.buildDirectory,
+                dslServices = dslServices
+        )
         variantDslInfoBuilder.productionVariant =
-                testedComponentInfo.variantDslInfo as VariantDslInfoImpl
+                testedComponentInfo.variantDslInfo as TestedVariantDslInfo
         variantDslInfoBuilder.inconsistentTestAppId = inconsistentTestAppId
 
         val productFlavorList = testedComponentInfo.variantDslInfo.productFlavorList
@@ -629,8 +616,7 @@ class VariantManager<
                     it.getTestSourceSet(componentType)!!)
             }
         }
-        val variantDslInfo = variantDslInfoBuilder.createVariantDslInfo(
-                project.layout.buildDirectory)
+        val variantDslInfo = variantDslInfoBuilder.createDslInfo()
         val apiAccessStats = testedComponentInfo.stats
         if (componentType.isApk
             && testedComponentInfo.variantBuilder is HasAndroidTestBuilder) {

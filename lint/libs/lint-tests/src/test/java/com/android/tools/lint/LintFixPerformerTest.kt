@@ -42,7 +42,8 @@ class LintFixPerformerTest : TestCase() {
         vararg fixes: LintFix,
         expected: String,
         expectedOutput: String? = null,
-        expectedFailure: String? = null
+        expectedFailure: String? = null,
+        includeMarkers: Boolean = false
     ) {
         val client = TestLintClient()
         for (fix in fixes) {
@@ -51,7 +52,7 @@ class LintFixPerformerTest : TestCase() {
         var after: String = source
         var output = ""
         val printStatistics = expectedOutput != null
-        val performer = object : LintFixPerformer(client, printStatistics) {
+        val performer = object : LintFixPerformer(client, printStatistics, includeMarkers = includeMarkers) {
             override fun writeFile(pendingFile: PendingEditFile, contents: String) {
                 after = contents
             }
@@ -406,6 +407,49 @@ class LintFixPerformerTest : TestCase() {
         assertEquals(
             "[id, name, layout_width, layout_height, layout_bar, layout_foo, bar, foo]",
             sorted.toString()
+        )
+    }
+
+    fun testShortenNames() {
+        // Regression test for b/https://issuetracker.google.com/241573146
+        val file = File("Test.java")
+        @Language("java")
+        val source =
+            """
+            package test.pkg;
+            import android.graphics.drawable.Drawable;
+            import android.graphics.Outline;
+
+            class Test {
+                static void getOutline() {
+                }
+            }
+            """.trimIndent()
+
+        val range = Location.create(file, source, 0, source.length)
+        val fix =
+            fix().replace()
+                .text("()")
+                .with("(android.graphics.drawable.Drawable drawable, android.graphics.Outline outline)")
+                .shortenNames()
+                .autoFix()
+                .range(range)
+                .build()
+        check(
+            file, source, fix,
+            expected =
+            """
+            package test.pkg;
+            import android.graphics.drawable.Drawable;
+            import android.graphics.Outline;
+
+            class Test {
+                static void getOutline(Drawable drawable, Outline outline) {
+                }
+            }
+            """,
+            expectedOutput = "Applied 1 edits across 1 files for this fix: Replace with (android.graphics.drawable.Drawable drawable, android.graphics.Outline outline)",
+            includeMarkers = true
         )
     }
 }

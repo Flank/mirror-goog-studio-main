@@ -1061,7 +1061,13 @@ open class GradleDetector : Detector(), GradleScanner {
 
         if (newerVersion != null && version > GradleVersion(0, 0, 0) && newerVersion > version) {
             val versionString = newerVersion.toString()
-            val message = getNewerVersionAvailableMessage(dependency, versionString, null)
+            val message = if (dependency.groupId == "androidx.slidingpanelayout" && dependency.artifactId == "slidingpanelayout") {
+                "Upgrade `androidx.slidingpanelayout` for keyboard and mouse support"
+            } else if (dependency.groupId == "androidx.compose.foundation" && dependency.artifactId == "foundation") {
+                "Upgrade `androidx.compose.foundation` for keyboard and mouse support"
+            } else {
+                getNewerVersionAvailableMessage(dependency, versionString, null)
+            }
             val fix = if (!isResolved) getUpdateDependencyFix(revision, versionString) else null
             report(context, cookie, issue, message, fix)
         }

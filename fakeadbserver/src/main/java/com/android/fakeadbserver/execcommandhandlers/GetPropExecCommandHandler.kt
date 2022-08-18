@@ -30,16 +30,13 @@ class GetPropExecCommandHandler : SimpleExecHandler("getprop") {
     ) {
         val stream = responseSocket.getOutputStream()
         writeOkay(stream) // Send ok first.
-        val builder = """
-            # This is some build info
-            # This is more build info
-
-            [ro.product.manufacturer]: [${device.manufacturer}]
-            [ro.product.model]: [${device.model}]
-            [ro.build.version.release]: [${device.buildVersionRelease}]
-            [ro.build.version.sdk]: [${device.buildVersionSdk}]
-
-            """.trimIndent()
-        stream.write(builder.toByteArray(Charsets.UTF_8))
+        val buf = StringBuilder()
+        buf.append("# This is some build info\n")
+        buf.append("# This is more build info\n")
+        buf.append("\n")
+        for (entry in device.properties) {
+            buf.append("[${entry.key}]: [${entry.value}]\n")
+        }
+        stream.write(buf.toString().toByteArray(Charsets.UTF_8))
     }
 }

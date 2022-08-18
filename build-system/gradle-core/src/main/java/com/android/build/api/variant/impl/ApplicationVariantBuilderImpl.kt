@@ -76,11 +76,11 @@ open class ApplicationVariantBuilderImpl @Inject constructor(
         }
 
     override var isMinifyEnabled: Boolean =
-        dslInfo.getPostProcessingOptions().codeShrinkerEnabled()
+        dslInfo.postProcessingOptions.codeShrinkerEnabled()
         set(value) = setMinificationIfPossible("minifyEnabled", value){ field = it }
 
     override var shrinkResources: Boolean =
-        dslInfo.getPostProcessingOptions().resourcesShrinkingEnabled()
+        dslInfo.postProcessingOptions.resourcesShrinkingEnabled()
         set(value) = setMinificationIfPossible("shrinkResources", value){ field = it }
 
 }

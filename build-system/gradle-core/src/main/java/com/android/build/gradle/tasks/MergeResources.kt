@@ -103,7 +103,7 @@ import javax.xml.bind.JAXBException
 import javax.xml.parsers.DocumentBuilderFactory
 
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.MERGING])
 abstract class MergeResources : NewIncrementalTask() {
     // ----- PUBLIC TASK API -----
     /** Directory to write the merged resources to  */

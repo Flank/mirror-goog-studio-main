@@ -61,7 +61,7 @@ import java.io.File
  * Invokes AAPT2 link on the merged resources of all library dependencies into the .ap_ format.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
 abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() {
 
     @get:Input

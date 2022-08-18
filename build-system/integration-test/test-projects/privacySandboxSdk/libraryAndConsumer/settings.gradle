@@ -1,0 +1,5 @@
+apply from: "../commonLocalRepo.gradle", to: pluginManagement
+
+include ':app'
+include ':ads-sdk-implementation'
+include ':ads-sdk'

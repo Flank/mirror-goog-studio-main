@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.ide.common.attribution.TaskCategoryLabel
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -37,6 +38,7 @@ import java.io.IOException
  * simply executing the task.
  */
 @DisableCachingByDefault
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.MERGING])
 abstract class MergeFileTask : NonIncrementalTask() {
 
     @get:InputFiles

@@ -740,7 +740,7 @@ open class LintFixPerformer constructor(
                         if (to == -1) {
                             to = line.length
                         }
-                        imported.add(line.substring("package ".length, to).trim { it <= ' ' } + ".")
+                        imported.add(line.substring("package ".length, to).trim() + ".")
                     } else if (line.startsWith("import ")) {
                         var from = "import ".length
                         if (line.startsWith("static ", from)) {
@@ -753,7 +753,7 @@ open class LintFixPerformer constructor(
                         if (line[to - 1] == '*') {
                             to--
                         }
-                        imported.add(line.substring(from, to).trim { it <= ' ' })
+                        imported.add(line.substring(from, to).trim())
                     }
                 }
                 for (full in imported) {
@@ -766,7 +766,7 @@ open class LintFixPerformer constructor(
                             }
                             clz = clz.substring(0, index + 1)
                         }
-                        replacement = replacement.replace(clz, "")
+                        replacement = removePackage(replacement, clz)
                     }
                 }
             }
@@ -805,6 +805,53 @@ open class LintFixPerformer constructor(
         val edit = PendingEdit(replaceFix, contents, startOffset, endOffset, replacement)
         file.edits.add(edit)
         return true
+    }
+
+    /**
+     * Given a package [prefix] and a Java/Kotlin source fragment, removes the
+     * package prefix from any fully qualified references with that package
+     * prefix. The reason we can't just use [String.replace] is that we only
+     * want to replace prefixes in the same package, not in any sub packages.
+     *
+     * For example, given the package prefix `p1.p2`, for the source
+     * string `p1.p2.p3.Class1, `p1.p2.Class2`, this method will return
+     * `p1.p2.p3.Class1, Class2`.
+     */
+    private fun removePackage(source: String, prefix: String): String {
+        if (prefix.isEmpty()) {
+            return source
+        }
+
+        // Checks whether the symbol starting at offset [next] references
+        // the [prefix] package and not potentially some subpackage of it
+        fun isPackageMatchAt(next: Int): Boolean {
+            var i = next + prefix.length
+            while (i < source.length) {
+                val c = source[i++]
+                if (c == '.') {
+                    return false
+                } else if (!c.isJavaIdentifierPart()) {
+                    return true
+                }
+            }
+            return true
+        }
+
+        val sb = StringBuilder()
+        var index = 0
+        while (true) {
+            val next = source.indexOf(prefix, index)
+            sb.append(source.substring(index, if (next == -1) source.length else next))
+            if (next == -1) {
+                break
+            }
+            index = next + prefix.length
+            if ((index == source.length || !source[index].isUpperCase()) && !isPackageMatchAt(next)) {
+                sb.append(source.substring(next, index))
+            }
+        }
+
+        return sb.toString()
     }
 
     fun computeEdits(incident: Incident, lintFix: LintFix): List<PendingEditFile> {

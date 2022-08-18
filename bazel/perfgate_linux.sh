@@ -30,6 +30,7 @@ readonly invocation_id="$(uuidgen)"
   ${config_options} --config=ants \
   --build_metadata=ab_build_id="${BUILD_NUMBER}" \
   --build_metadata=ab_target=perfgate-linux \
+  --build_metadata=ANDROID_TEST_INVESTIGATE="http://ab/tests/bazel/${invocation_id}" \
   --invocation_id=${invocation_id} \
   --build_tag_filters=${build_tag_filters} \
   --define=meta_android_build_number=${build_number} \

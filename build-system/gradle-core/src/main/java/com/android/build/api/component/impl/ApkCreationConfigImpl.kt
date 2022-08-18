@@ -32,9 +32,6 @@ open class ApkCreationConfigImpl<T: ApkCreationConfig>(
     val isDebuggable: Boolean
         get() = dslInfo.isDebuggable
 
-    val isProfileable: Boolean
-        get() = dslInfo.isProfileable
-
     override val needsShrinkDesugarLibrary: Boolean
         get() {
             if (!isCoreLibraryDesugaringEnabled(config)) {

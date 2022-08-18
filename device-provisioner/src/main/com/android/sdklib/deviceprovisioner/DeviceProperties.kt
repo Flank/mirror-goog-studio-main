@@ -16,7 +16,6 @@
 package com.android.sdklib.deviceprovisioner
 
 import com.android.sdklib.AndroidVersion
-import com.android.sdklib.AndroidVersion.AndroidVersionException
 import com.android.sdklib.devices.Abi
 
 /**
@@ -26,56 +25,62 @@ import com.android.sdklib.devices.Abi
  */
 interface DeviceProperties {
 
-    val model: String?
-    val manufacturer: String?
-    val apiLevel: AndroidVersion
-    val abi: Abi?
+  val model: String?
+  val manufacturer: String?
+  val abi: Abi?
+  /** The Android API level. May include a codename if not a release version. */
+  val androidVersion: AndroidVersion
+  /** The user-visible version of Android, like "7.1" or "11". */
+  val androidRelease: String?
 
-    open class Builder {
+  /**
+   * A string ideally unique to the device instance (e.g. serial number or emulator console port),
+   * used for disambiguating this device from others with similar properties.
+   */
+  val disambiguator: String?
 
-        var manufacturer: String? = null
-        var model: String? = null
-        var apiLevel = AndroidVersion.DEFAULT
-        var abi: Abi? = null
+  open class Builder {
 
-        fun readCommonProperties(properties: Map<String, String>) {
-            manufacturer =
-                properties["ro.product.manufacturer"]
-                    ?: properties["ro.manufacturer"]
-            model =
-                properties["ro.product.model"]
-                    ?: properties["ro.model"]
-            apiLevel =
-                properties["ro.build.version.sdk"]?.let {
-                    try {
-                        AndroidVersion(it)
-                    } catch (e: AndroidVersionException) {
-                        null
-                    }
-                } ?: AndroidVersion.DEFAULT
-            abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
+    var manufacturer: String? = null
+    var model: String? = null
+    var abi: Abi? = null
+    var androidVersion = AndroidVersion.DEFAULT
+    var androidRelease: String? = null
+    var disambiguator: String? = null
+
+    fun readCommonProperties(properties: Map<String, String>) {
+      manufacturer = properties["ro.product.manufacturer"] ?: properties["ro.manufacturer"]
+      model = properties["ro.product.model"] ?: properties["ro.model"]
+      androidVersion =
+        properties["ro.build.version.sdk"]?.let { it.toIntOrNull() }?.let { sdk ->
+          AndroidVersion(sdk, properties["ro.build.version.codename"])
         }
-
-        fun buildBase(): DeviceProperties = Impl(manufacturer, model, apiLevel, abi)
+          ?: AndroidVersion.DEFAULT
+      abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
+      androidRelease = properties["ro.build.version.release"]
     }
 
-    class Impl(
-        override val manufacturer: String?,
-        override val model: String?,
-        override val apiLevel: AndroidVersion,
-        override val abi: Abi?
-    ) : DeviceProperties
+    fun buildBase(): DeviceProperties =
+      Impl(manufacturer, model, androidVersion, abi, androidRelease, disambiguator)
+  }
 
-    /**
-     * Default implementation of device title; may be overridden.
-     */
-    fun title(): String =
+  class Impl(
+    override val manufacturer: String?,
+    override val model: String?,
+    override val androidVersion: AndroidVersion,
+    override val abi: Abi?,
+    override val androidRelease: String?,
+    override val disambiguator: String?
+  ) : DeviceProperties
+
+  /** Default implementation of device title; may be overridden. */
+  fun title(): String =
+    when {
+      manufacturer.isNullOrBlank() -> model ?: "Unknown"
+      else ->
         when {
-            manufacturer.isNullOrBlank() ->
-                model ?: "Unknown"
-            else -> when {
-                model.isNullOrBlank() -> "$manufacturer Device"
-                else -> "$manufacturer $model"
-            }
+          model.isNullOrBlank() -> "$manufacturer Device"
+          else -> "$manufacturer $model"
         }
+    }
 }

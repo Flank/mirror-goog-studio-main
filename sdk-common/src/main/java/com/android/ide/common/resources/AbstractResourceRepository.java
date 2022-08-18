@@ -55,7 +55,7 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
             @NonNull String resourceName) {
         ListMultimap<String, ResourceItem> map = getResourcesInternal(namespace, resourceType);
         List<ResourceItem> items = map.get(resourceName);
-        return items == null ? ImmutableList.of() : ImmutableList.copyOf(items);
+        return items.isEmpty() ? ImmutableList.of() : ImmutableList.copyOf(items);
     }
 
     @Override
@@ -93,7 +93,7 @@ public abstract class AbstractResourceRepository implements ResourceRepository {
             @NonNull String resourceName) {
         ListMultimap<String, ResourceItem> map = getResourcesInternal(namespace, resourceType);
         List<ResourceItem> items = map.get(resourceName);
-        return items != null && !items.isEmpty();
+        return !items.isEmpty();
     }
 
     @Override

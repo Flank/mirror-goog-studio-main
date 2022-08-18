@@ -74,7 +74,7 @@ import java.io.IOException
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
-@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES])
+@BuildAnalyzer(taskCategoryLabels = [TaskCategoryLabel.ANDROID_RESOURCES, TaskCategoryLabel.LINKING])
 abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
     @get:Input
     abstract val debuggable: Property<Boolean>

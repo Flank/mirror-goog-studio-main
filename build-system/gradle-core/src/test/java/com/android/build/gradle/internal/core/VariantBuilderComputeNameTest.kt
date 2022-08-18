@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.core
 
 import com.android.build.api.component.impl.ComponentIdentityImpl
+import com.android.build.gradle.internal.core.dsl.impl.computeName
 import com.android.build.gradle.internal.variant.DimensionCombinationImpl
+import com.android.build.gradle.internal.variant.VariantPathHelper.Companion.computeBaseName
+import com.android.build.gradle.internal.variant.VariantPathHelper.Companion.computeFullNameWithSplits
 import com.android.builder.core.ComponentType
 import com.android.builder.core.ComponentTypeImpl
 import com.android.testutils.AbstractBuildGivenBuildExpectTest
@@ -205,14 +208,14 @@ class VariantBuilderComputeNameTest :
 
     override fun defaultWhen(given: GivenBuilder): ResultBuilder {
         val varCombo = DimensionCombinationImpl(given.buildType, given.flavors)
-        var flavorName: String = ""
+        var flavorName = ""
 
         return ResultBuilder().also {
-            it.name = VariantDslInfoBuilder.computeName(varCombo, given.componentType) {
+            it.name = computeName(varCombo, given.componentType) {
                 flavorName = it
             }
-            it.baseName = VariantDslInfoBuilder.computeBaseName(varCombo, given.componentType)
-            it.fullNameWithSplit = VariantDslInfoBuilder.computeFullNameWithSplits(
+            it.baseName = computeBaseName(varCombo, given.componentType)
+            it.fullNameWithSplit = computeFullNameWithSplits(
                 ComponentIdentityImpl(
                     it.name,
                     flavorName,

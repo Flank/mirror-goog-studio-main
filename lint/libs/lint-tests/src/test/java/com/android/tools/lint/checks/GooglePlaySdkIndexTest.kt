@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.checks
 
+import com.android.ide.common.repository.NetworkCache
 import com.android.tools.lint.detector.api.LintFix
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
@@ -150,6 +151,7 @@ class GooglePlaySdkIndexTest {
             }
         }
         index.initialize(ByteArrayInputStream(proto.toByteArray()))
+        assertThat(index.getLastReadSource()).isEqualTo(NetworkCache.DataSourceType.TEST_DATA)
     }
 
     @Test
@@ -233,6 +235,21 @@ class GooglePlaySdkIndexTest {
                 assertThat(lintLink).isNull()
             }
         }
+    }
+
+    @Test
+    fun `offline snapshot can be used correctly`() {
+        val offlineIndex = object : GooglePlaySdkIndex() {
+            override fun readUrlData(url: String, timeout: Int): ByteArray? {
+                return null
+            }
+
+            override fun error(throwable: Throwable, message: String?) {
+            }
+        }
+        offlineIndex.initialize()
+        assertThat(offlineIndex.isReady()).isTrue()
+        assertThat(offlineIndex.getLastReadSource()).isEqualTo(NetworkCache.DataSourceType.DEFAULT_DATA)
     }
 
     private fun hasOutdatedIssues(): Boolean {

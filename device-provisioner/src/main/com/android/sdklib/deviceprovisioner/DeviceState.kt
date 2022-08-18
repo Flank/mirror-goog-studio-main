@@ -17,8 +17,8 @@ package com.android.sdklib.deviceprovisioner
 
 import com.android.adblib.ConnectedDevice
 import com.google.common.base.Stopwatch
-import kotlinx.coroutines.Job
 import java.time.Duration
+import kotlinx.coroutines.Job
 
 /**
  * Identifies the state of a provisionable device with respect to ADB: disconnected, connecting,
