@@ -261,6 +261,7 @@ platform_filegroup(
     name = "platforms/android-30",
     #visibility = ["//visibility:private"],
     visibility = [
+        "//tools/adt/idea/debuggers:__pkg__",
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )
