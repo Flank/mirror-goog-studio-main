@@ -17,7 +17,6 @@
 package com.android.tools.instrumentation.threading.agent.callback;
 
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Logger;
 
 /**
  * Java agent is loaded by the bootstrap class loader, and we cannot emit bytecode that calls into
@@ -26,9 +25,6 @@ import java.util.logging.Logger;
  * <p>So, we install a layer of indirection between these two worlds.
  */
 public final class ThreadingCheckerTrampoline {
-    private static final Logger LOGGER =
-            Logger.getLogger(ThreadingCheckerTrampoline.class.getName());
-
     private static final CopyOnWriteArrayList<ThreadingCheckerHook> hooks =
             new CopyOnWriteArrayList<>();
 
@@ -56,10 +52,6 @@ public final class ThreadingCheckerTrampoline {
     // This method is called from instrumented bytecode.
     public static void verifyOnUiThread() {
         if (hooks.isEmpty()) {
-            LOGGER.warning(
-                    "Threading annotation check skipped for method '"
-                            + getInstrumentedMethodSignature()
-                            + "'. No ThreadingCheckerHook installed.");
             return;
         }
         if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
@@ -73,10 +65,6 @@ public final class ThreadingCheckerTrampoline {
     // This method is called from instrumented bytecode.
     public static void verifyOnWorkerThread() {
         if (hooks.isEmpty()) {
-            LOGGER.warning(
-                    "Threading annotation check skipped for method '"
-                            + getInstrumentedMethodSignature()
-                            + "'. No ThreadingCheckerHook installed.");
             return;
         }
         if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
