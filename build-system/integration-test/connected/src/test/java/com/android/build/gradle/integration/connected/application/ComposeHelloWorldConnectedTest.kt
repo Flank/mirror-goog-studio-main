@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import com.android.testutils.TestUtils.KOTLIN_VERSION_FOR_COMPOSE_TESTS
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Rule
@@ -34,6 +35,7 @@ class ComposeHelloWorldConnectedTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
+        .withKotlinVersion(KOTLIN_VERSION_FOR_COMPOSE_TESTS)
         .create()
 
     @Before

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.testutils.TestUtils.KOTLIN_VERSION_FOR_COMPOSE_TESTS
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -27,6 +28,7 @@ class ComposeHelloWorldTest {
     @JvmField
     @Rule
     val project = GradleTestProject.builder().fromTestProject("composeHelloWorld")
+            .withKotlinVersion(KOTLIN_VERSION_FOR_COMPOSE_TESTS)
             .create()
 
     @Test

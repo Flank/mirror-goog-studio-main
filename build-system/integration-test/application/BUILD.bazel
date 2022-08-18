@@ -264,6 +264,8 @@ single_gradle_integration_test_per_source(
             "src/test/java/com/android/build/gradle/integration/application/Java11CompileTest.kt",
             "src/test/java/com/android/build/gradle/integration/application/AgpVersionConsistencyTest.kt",
             "src/test/java/com/android/build/gradle/integration/application/JavaCompileWithToolChainTest.kt",
+            "src/test/java/com/android/build/gradle/integration/application/ComposeHelloWorldTest.kt",
+            "src/test/java/com/android/build/gradle/integration/multiplatform/KotlinMultiplatformComposeTest.kt",
         ],
     ),
     data = TEST_DATA + OLD_SDKS + PREVIEW_SDKS,
@@ -326,6 +328,26 @@ gradle_integration_test(
         "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test/application:prebuilts",
         "//tools/base/build-system/previous-versions:7.1.0",
+    ],
+    deps = TEST_DEPS,
+)
+
+gradle_integration_test(
+    name = "compose-tests",
+    srcs = glob(
+        [
+            "src/test/java/com/android/build/gradle/integration/application/ComposeHelloWorldTest.kt",
+            "src/test/java/com/android/build/gradle/integration/multiplatform/KotlinMultiplatformComposeTest.kt",
+        ],
+    ),
+    data = TEST_DATA,
+    maven_repo_zips = [
+        "//tools/base/build-system:android_gradle_plugin",
+    ],
+    maven_repos = [
+        "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_for_compose_prebuilts",
     ],
     deps = TEST_DEPS,
 )
@@ -527,6 +549,7 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test:dagger_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_1_4_32_prebuilts",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_prebuilts",
+        "//tools/base/build-system/integration-test:kotlin_gradle_plugin_for_compose_prebuilts",
         "//tools/base/build-system/integration-test:prefab_repo",
         "//tools/base/build-system/integration-test:support_library_latest",
         "//tools/base/build-system/integration-test/application:prebuilts",

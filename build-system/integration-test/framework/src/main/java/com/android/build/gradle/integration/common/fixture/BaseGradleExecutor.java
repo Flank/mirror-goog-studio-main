@@ -247,20 +247,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
-        if (ifAppliesKotlinPlugin(project)) {
-            //noinspection ConstantConditions
-            if (TestUtils.KOTLIN_VERSION_FOR_TESTS.equals("1.7.0")) {
-                // workaround for https://youtrack.jetbrains.com/issue/KT-52694
-                arguments.add("-Pkotlin.mpp.enableKotlinToolingMetadataArtifact=false");
-            } else {
-                throw new IllegalStateException("Please remove the workaround above.");
-            }
-        }
 
         if (offline) {
             arguments.add("--offline");
         }
-        // Avoid fail on warning if Kotlin is applied - b/169842093.
         if (failOnWarning) {
             arguments.add("--warning-mode=fail");
         }

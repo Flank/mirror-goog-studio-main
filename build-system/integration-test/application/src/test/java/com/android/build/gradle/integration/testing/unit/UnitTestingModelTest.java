@@ -32,7 +32,6 @@ import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
-import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.truth.Truth;
@@ -87,14 +86,8 @@ public class UnitTestingModelTest {
             expectedAdditionalClassesFolders.add(project.file("app/build/tmp/kotlin-classes/"
                     + variant.getName()));
             if (variant.getBuildType().equals("release")) {
-                //noinspection ConstantConditions,StatementWithEmptyBody
-                if (TestUtils.KOTLIN_VERSION_FOR_TESTS.equals("1.7.0")) {
-                    // KGP tasks disabled because of https://youtrack.jetbrains.com/issue/KT-52694
-                    // Uncomment once KGP is updated to 1.7.10+
-                    // expectedAdditionalClassesFolders.add(project.file("app/build/kotlinToolingMetadata"));
-                } else {
-                    throw new IllegalStateException("Please remove the workaround above.");
-                }
+                expectedAdditionalClassesFolders.add(
+                        project.file("app/build/kotlinToolingMetadata"));
             }
             Truth.assertThat(variant.getMainArtifact().getAdditionalClassesFolders())
                     .containsExactlyElementsIn(expectedAdditionalClassesFolders);

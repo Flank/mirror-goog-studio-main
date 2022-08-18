@@ -85,26 +85,61 @@ maven_repository(
     visibility = [":__subpackages__"],
 )
 
+# Latest Kotlin Gradle plugin dependencies
+KGP_LATEST = [
+    "@maven//:org.jetbrains.kotlin.android.org.jetbrains.kotlin.android.gradle.plugin_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.20-Beta",
+]
+
 # Kotlin Gradle plugin dependencies
+# IMPORTANT: This list should generally not be used as it contains mixed versions. It's here only
+# for historical reasons and should be removed at some point. Consider using
+# `kotlin_gradle_plugin_latest_prebuilts` instead or create a new list that contains a single
+# version.
 maven_repository(
     name = "kotlin_gradle_plugin_prebuilts",
     # keep sorted
-    artifacts = [
-        "@maven//:org.jetbrains.kotlin.android.org.jetbrains.kotlin.android.gradle.plugin_1.7.0",
+    artifacts = KGP_LATEST + [
         "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.6.21",
-        "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.21",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.0",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.0",
         # 1.6.10 is required by the old version checker in PluginVersionCheckTest
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.10",
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.21",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.6.21",
-        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.6.21",
-        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.6.21",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Latest Kotlin Gradle plugin dependencies
+# DO NOT MIX different versions in this list
+maven_repository(
+    name = "kotlin_gradle_plugin_latest_prebuilts",
+    artifacts = KGP_LATEST,
+    visibility = ["//visibility:public"],
+)
+
+# Kotlin Gradle plugin dependencies for projects using Compose (these are typically used when the
+# projects can't be upgraded to the latest version of the Kotlin Gradle plugin as there isn't a
+# compatible Compose version yet).
+# DO NOT MIX different versions in this list.
+maven_repository(
+    name = "kotlin_gradle_plugin_for_compose_prebuilts",
+    artifacts = [
+        "@maven//:org.jetbrains.kotlin.android.org.jetbrains.kotlin.android.gradle.plugin_1.7.0",
+        "@maven//:org.jetbrains.kotlin.jvm.org.jetbrains.kotlin.jvm.gradle.plugin_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.0",
+        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.0",
     ],
     visibility = ["//visibility:public"],

@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.testprojects.createGr
 import com.android.build.gradle.integration.common.fixture.testprojects.prebuilts.setUpHelloWorld
 import com.android.build.gradle.internal.TaskManager.Companion.COMPOSE_KOTLIN_COMPILER_EXTENSION_VERSION
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.TestUtils.KOTLIN_VERSION_FOR_COMPOSE_TESTS
 import org.junit.Rule
 import org.junit.Test
 
@@ -80,7 +81,7 @@ class KotlinMultiplatformComposeTest {
         }
     }
         .withKotlinGradlePlugin(true)
-        .withKotlinVersion("1.7.0")
+        .withKotlinVersion(KOTLIN_VERSION_FOR_COMPOSE_TESTS)
         .create()
 
     /** Regression test for b/203594737. */

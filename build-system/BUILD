@@ -192,23 +192,42 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
+# Latest Kotlin Gradle plugin dependencies
+# DO NOT MIX different versions in this list
+KGP_LATEST = [
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.7.20-Beta",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.20-Beta",
+]
+
+# Kotlin Gradle plugin dependencies for projects using Compose (these are typically used when the
+# projects can't be upgraded to the latest version of the Kotlin Gradle plugin as there isn't a
+# compatible Compose version yet).
+# DO NOT MIX different versions in this list.
+KGP_FOR_COMPOSE = [
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.7.0",
+    "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.0",
+]
+
 # m2 repository used by performance tests
 maven_repository(
     name = "performance_test_repo",
-    artifacts = [
+    artifacts = KGP_LATEST + KGP_FOR_COMPOSE + [
         "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.0",
-        "@maven//:org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-android-extensions-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-script-runtime_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-reflect_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk7_1.7.0",
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.6.10",
-        "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.0",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
         "@maven//:androidx.activity.activity-compose_1.3.1",
