@@ -67,10 +67,11 @@ public class MdnsCommandHandler extends HostCommandHandler {
                     sb.append(
                             String.format(
                                     Locale.US,
-                                    "%s\t%s\t%s\n",
+                                    "%s\t%s\t%s:%d\n",
                                     service.getInstanceName(),
                                     service.getServiceName(),
-                                    service.getDeviceAddress()));
+                                    service.getDeviceAddress().getHostString(),
+                                    service.getDeviceAddress().getPort()));
                 });
         return sb.toString();
     }
