@@ -16,6 +16,7 @@
 package com.android.ddmlib.clientmanager;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.concurrency.WorkerThread;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.IDevice;
@@ -42,6 +43,7 @@ public class DeviceClientManagerUtils {
         DeviceClientManagerListener listener =
                 new DeviceClientManagerListener() {
                     @Override
+                    @WorkerThread
                     public void processListUpdated(
                             @NotNull AndroidDebugBridge bridge,
                             @NotNull DeviceClientManager deviceClientManager) {
@@ -52,6 +54,7 @@ public class DeviceClientManagerUtils {
                     }
 
                     @Override
+                    @WorkerThread
                     public void processNameUpdated(
                             @NotNull AndroidDebugBridge bridge,
                             @NotNull DeviceClientManager deviceClientManager,
@@ -62,6 +65,7 @@ public class DeviceClientManagerUtils {
                     }
 
                     @Override
+                    @WorkerThread
                     public void processDebuggerStatusUpdated(
                             @NotNull AndroidDebugBridge bridge,
                             @NotNull DeviceClientManager deviceClientManager,
