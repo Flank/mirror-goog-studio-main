@@ -17,17 +17,23 @@ package com.android.sdklib.deviceprovisioner
 
 import com.android.adblib.AdbSession
 import com.android.adblib.ConnectedDevice
+import com.android.adblib.DeviceSelector
 import com.android.adblib.connectedDevicesTracker
 import com.android.adblib.deviceInfo
+import com.android.adblib.serialNumber
 import com.android.adblib.thisLogger
+import java.time.Duration
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.withTimeoutOrNull
 
 /**
  * Central access point for devices and device templates. [DeviceProvisionerPlugin] instances
@@ -59,6 +65,41 @@ private constructor(
   /** The [device templates][DeviceTemplate] known to this class, provided by its plugins. */
   val templates: StateFlow<List<DeviceTemplate>> =
     combinedTemplates.stateIn(adbSession.scope, SharingStarted.Eagerly, emptyList())
+
+  /**
+   * Finds the DeviceHandle of the connected device with the given serial number, waiting up to
+   * [timeout] for it to appear.
+   *
+   * This is intended for interoperability with DDMLib, or AdbLib's ConnectedDevicesTracker. It's
+   * possible for a device to be visible by these interfaces before it becomes visible via the
+   * DeviceProvisioner; thus, we wait a short time for it to show up before giving up.
+   *
+   * This has the potential to introduce unnecessary delays if invoked for a device that no longer
+   * exists, thus it should be used with care. Generally, it is preferable to obtain a
+   * [DeviceHandle] by collecting the [devices] flow.
+   */
+  suspend fun findConnectedDeviceHandle(
+    deviceSelector: DeviceSelector,
+    timeout: Duration = Duration.ofSeconds(2)
+  ): DeviceHandle? =
+    withTimeoutOrNull(timeout) {
+      val serialNumber = adbSession.hostServices.getSerialNo(deviceSelector)
+      val connectedDevices = adbSession.connectedDevicesTracker.connectedDevices
+      // If it's not present in the ConnectedDevicesTracker, make a call to ADB to be sure.
+      val isPresent =
+        connectedDevices.value.any { it.serialNumber == serialNumber } ||
+          adbSession.hostServices.devices().any { it.serialNumber == serialNumber }
+      when {
+        isPresent ->
+          // ADB is aware of this serial number; wait for it to appear in the provisioner.
+          devices
+            .mapNotNull { handles ->
+              handles.firstOrNull { it.state.connectedDevice?.serialNumber == serialNumber }
+            }
+            .firstOrNull()
+        else -> null
+      }
+    }
 
   init {
     // Track changes in ADB-connected devices

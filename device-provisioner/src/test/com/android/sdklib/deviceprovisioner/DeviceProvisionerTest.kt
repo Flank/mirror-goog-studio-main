@@ -24,7 +24,10 @@ import com.android.adblib.serialNumber
 import com.android.adblib.testing.FakeAdbSession
 import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
 import com.google.common.truth.Truth.assertThat
+import java.time.Duration
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -193,6 +196,24 @@ class DeviceProvisionerTest {
         assertThat(handle).isNotSameAs(originalHandle)
         assertThat(handle.state).isInstanceOf(Connected::class.java)
       }
+    }
+  }
+
+  @Test
+  fun findConnectedDeviceHandle() {
+    runBlockingWithTimeout {
+      setDevices(SerialNumbers.physicalWifi, SerialNumbers.emulator)
+
+      val emulator =
+        async(Dispatchers.IO) {
+          provisioner.findConnectedDeviceHandle(
+            DeviceSelector.fromSerialNumber(SerialNumbers.emulator),
+            Duration.ofSeconds(5)
+          )
+        }
+
+      val handle = emulator.await()
+      assertThat(handle?.state?.connectedDevice?.serialNumber).isEqualTo(SerialNumbers.emulator)
     }
   }
 }
