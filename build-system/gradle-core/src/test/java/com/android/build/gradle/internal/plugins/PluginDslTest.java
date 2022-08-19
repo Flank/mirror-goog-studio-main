@@ -297,7 +297,7 @@ public class PluginDslTest {
                 VariantCreationConfig variant = componentMap.get(variantName);
                 assertThat(
                                 variant.getOldVariantApiLegacySupport()
-                                        .getJavaCompileOptions()
+                                        .getOldVariantApiJavaCompileOptions()
                                         .getAnnotationProcessorOptions()
                                         .getClassNames())
                         .containsExactly(dim2, dim1)

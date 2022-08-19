@@ -206,7 +206,7 @@ interface VariantServices : BaseServices {
      * The [MapProperty] will be marked as [Property.finalizeValueOnRead], and will be locked
      * with [Property.disallowChanges] after the variant API(s) have run.
      */
-    fun <K, V> mapPropertyOf(keyType: Class<K>, valueType: Class<V>, value: Map<K, V>): MapProperty<K, V>
+    fun <K, V> mapPropertyOf(keyType: Class<K>, valueType: Class<V>, value: Map<K, V>, disallowUnsafeRead: Boolean = true): MapProperty<K, V>
 
     /**
      * Creates a new property that is backing an old API returning T.

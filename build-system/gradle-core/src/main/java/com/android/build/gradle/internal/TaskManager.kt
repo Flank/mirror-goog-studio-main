@@ -2571,13 +2571,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 DataBindingBuilder.getPrintMachineReadableOutput(),
                 isKotlinKaptPluginApplied(project),
                 getProjectKotlinPluginKotlinVersion(project))
-        // Even though at this point, the old variantDsl related objects are dead, the KAPT plugin
-        // is using reflection to query the [CompilerArgumentProvider] to look if databinding is
-        // turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT switches to the
-        // new variant API.
-        creationConfig.oldVariantApiLegacySupport?.addDataBindingArgsToOldVariantApi(dataBindingArgs)
 
-        // add it the new Variant API objects, this is what our tasks use.
+        // add it the Variant API objects, this is what our tasks use
         processorOptions.argumentProviders.add(dataBindingArgs)
     }
 

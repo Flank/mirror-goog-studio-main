@@ -96,7 +96,7 @@ interface ComponentDslInfo: DimensionCombination {
      */
     val targetSdkVersion: MutableAndroidVersion?
 
-    val javaCompileOptions: JavaCompileOptions
+    val javaCompileOptionsSetInDSL: JavaCompileOptions
 
     val compileOptions: CompileOptions
 

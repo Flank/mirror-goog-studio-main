@@ -91,11 +91,11 @@ internal abstract class ComponentDslInfoImpl internal constructor(
         )
     }
 
-    final override val javaCompileOptions = MergedJavaCompileOptions()
+    final override val javaCompileOptionsSetInDSL = MergedJavaCompileOptions()
 
     init {
         computeMergedOptions(
-            javaCompileOptions,
+            javaCompileOptionsSetInDSL,
             { javaCompileOptions as JavaCompileOptions },
             { javaCompileOptions as JavaCompileOptions }
         )

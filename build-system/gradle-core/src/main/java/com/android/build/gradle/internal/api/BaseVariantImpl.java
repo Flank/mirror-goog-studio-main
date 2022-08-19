@@ -180,7 +180,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public JavaCompileOptions getJavaCompileOptions() {
-        return oldVariantApiLegacySupport.getJavaCompileOptions();
+        return oldVariantApiLegacySupport.getOldVariantApiJavaCompileOptions();
     }
 
     @NonNull

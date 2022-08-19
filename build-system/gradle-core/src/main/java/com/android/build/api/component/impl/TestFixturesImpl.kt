@@ -127,7 +127,7 @@ open class TestFixturesImpl @Inject constructor(
 
     override val javaCompilation: JavaCompilation =
         JavaCompilationImpl(
-            variantDslInfo.javaCompileOptions,
+            variantDslInfo.javaCompileOptionsSetInDSL,
             buildFeatures.dataBinding,
             internalServices
         )

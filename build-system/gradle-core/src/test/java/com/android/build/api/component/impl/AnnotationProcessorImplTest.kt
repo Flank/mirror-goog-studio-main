@@ -43,21 +43,21 @@ internal class AnnotationProcessorImplTest {
     lateinit var internalServices: VariantServices
 
     private fun initMocks(
-        classNames: List<String>,
-        arguments: Map<String, String>,
-        providers: List<CommandLineArgumentProvider>) {
+        classNames: List<String> = listOf(),
+        arguments: Map<String, String> = mapOf(),
+        providers: List<CommandLineArgumentProvider> = listOf()) {
         `when`(annotationProcessorOptions.classNames).thenReturn(classNames)
-        `when`(internalServices.listPropertyOf(String::class.java, classNames))
-            .thenReturn(FakeListProperty(classNames))
+        `when`(internalServices.listPropertyOf(String::class.java, classNames, false))
+            .thenReturn(FakeListProperty(classNames.toMutableList()))
         `when`(annotationProcessorOptions.arguments).thenReturn(arguments)
-        `when`(internalServices.mapPropertyOf(String::class.java, String::class.java, arguments))
-            .thenReturn(FakeMapProperty(arguments))
+        `when`(internalServices.mapPropertyOf(String::class.java, String::class.java, arguments, false))
+            .thenReturn(FakeMapProperty(arguments.toMutableMap()))
         `when`(annotationProcessorOptions.compilerArgumentProviders).thenReturn(providers)
     }
 
     @Test
     fun testFinalListOfClassNames_empty() {
-        initMocks(listOf(), mapOf(), listOf())
+        initMocks()
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
             true,
@@ -70,7 +70,7 @@ internal class AnnotationProcessorImplTest {
 
     @Test
     fun testFinalListOfClassNames_with_random_processors() {
-        initMocks(listOf("com.foo.RandomProcessor"), mapOf(), listOf())
+        initMocks(mutableListOf("com.foo.RandomProcessor"))
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
             true,
@@ -86,9 +86,7 @@ internal class AnnotationProcessorImplTest {
     @Test
     fun testFinalListOfClassNames_with_random_processors_including_databinding() {
         initMocks(
-            listOf("com.foo.RandomProcessor", DataBindingBuilder.PROCESSOR_NAME),
-            mapOf(),
-            listOf()
+            mutableListOf("com.foo.RandomProcessor", DataBindingBuilder.PROCESSOR_NAME),
         )
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
@@ -104,7 +102,7 @@ internal class AnnotationProcessorImplTest {
 
     @Test
     fun testFinalListOfClassNames_withArguments() {
-        initMocks(listOf(), mapOf("-processor" to "foo.bar.SomeProcessor"), listOf())
+        initMocks(arguments = mutableMapOf("-processor" to "foo.bar.SomeProcessor"))
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
             true,
@@ -117,9 +115,8 @@ internal class AnnotationProcessorImplTest {
 
     @Test
     fun testFinalListOfClassNames_withArguments_including_databinding() {
-        initMocks(listOf(),
-            mapOf("-processor" to "foo.bar.SomeProcessor:${DataBindingBuilder.PROCESSOR_NAME}"),
-            listOf()
+        initMocks(
+            arguments = mutableMapOf("-processor" to "foo.bar.SomeProcessor:${DataBindingBuilder.PROCESSOR_NAME}"),
         )
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
@@ -136,7 +133,7 @@ internal class AnnotationProcessorImplTest {
     fun testFinalListOfClassNames_withArgumentProviders() {
         val argumentProvider =
             CommandLineArgumentProvider { listOf("-processor", "com.foo.SomeProcessor") }
-        initMocks(listOf(), mapOf(), listOf(argumentProvider))
+        initMocks(providers = listOf(argumentProvider))
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
             true,
@@ -152,7 +149,7 @@ internal class AnnotationProcessorImplTest {
         val argumentProvider =
             CommandLineArgumentProvider {
                 listOf("-processor", "com.foo.SomeProcessor:${DataBindingBuilder.PROCESSOR_NAME}") }
-        initMocks(listOf(), mapOf(), listOf(argumentProvider))
+        initMocks(providers = listOf(argumentProvider))
         val annotationProcessorImpl = AnnotationProcessorImpl(
             annotationProcessorOptions,
             true,

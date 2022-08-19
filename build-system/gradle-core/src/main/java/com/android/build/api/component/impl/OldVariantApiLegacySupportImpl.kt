@@ -19,7 +19,9 @@ package com.android.build.api.component.impl
 import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.variant.AnnotationProcessor
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.gradle.api.AnnotationProcessorOptions
 import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.DependencyConfigurator
 import com.android.build.gradle.internal.VariantManager
@@ -34,13 +36,17 @@ import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraA
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
+import com.android.build.gradle.internal.services.BaseServices
+import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.errors.IssueReporter
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.Serializable
 
 class OldVariantApiLegacySupportImpl(
@@ -55,10 +61,82 @@ class OldVariantApiLegacySupportImpl(
         get() = dslInfo.productFlavorList
     override val mergedFlavor: MergedFlavor
         get() = (dslInfo as ComponentDslInfoImpl).mergedFlavor
-    override val javaCompileOptions: JavaCompileOptions
-        get() = dslInfo.javaCompileOptions
     override val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig? =
         (dslInfo as? ApkProducingComponentDslInfo)?.signingConfig
+
+    /**
+     * The old variant API runs after the new variant API, yet we need to make sure that whatever
+     * method used by the users (old variant API or new variant API), we end up with the same
+     * storage so the information is visible to both old and new variant API users.
+     *
+     * The new Variant API does not allow for reading (at least not without doing an explicit
+     * [org.gradle.api.provider.Provider.get] call. However, the old variant API was providing
+     * reading access.
+     *
+     * In order to use the same storage, an implementation of the old variant objects (List and Map)
+     * need to be proxied to the new Variant API storage (ListProperty and MapProperty). It is not
+     * possible to do the reverse proxy'ing since the storage must be able to store
+     * [org.gradle.api.provider.Provider<T>] which a plain java List cannot do.
+     *
+     * When the user reads information using the old variant API, there is no choice but doing a
+     * [org.gradle.api.provider.Provider.get] call which can fail during old variant API execution
+     * since some of these providers can be obtained from a Task execution.
+     *
+     * Therefore, only allow access to the old variant API when the compatibility flag is set.
+     */
+    class JavaCompileOptionsForOldVariantAPI(
+        private val services: BaseServices,
+        private val annotationProcessor: AnnotationProcessor
+    ): JavaCompileOptions {
+        // Initialize the wrapper instance that will be returned on each call.
+        private val _annotationProcessorOptions = object: AnnotationProcessorOptions {
+            private val _classNames = MutableListBackedUpWithListProperty(
+                annotationProcessor.classNames,
+            "AnnotationProcessorOptions.classNames")
+            private val _arguments = MutableMapBackedUpWithMapProperty(
+                annotationProcessor.arguments,
+                "AnnotationProcessorOptions.arguments",
+            )
+
+            override fun getClassNames(): MutableList<String> = _classNames
+
+            override fun getArguments(): MutableMap<String, String> = _arguments
+
+            override fun getCompilerArgumentProviders(): MutableList<CommandLineArgumentProvider> =
+                annotationProcessor.argumentProviders
+        }
+        override val annotationProcessorOptions: AnnotationProcessorOptions
+            get() {
+                if (!services.projectOptions.get(BooleanOption.ENABLE_LEGACY_API)) {
+                    services.issueReporter
+                        .reportError(
+                            IssueReporter.Type.GENERIC,
+                            RuntimeException(
+            """
+            Access to deprecated legacy com.android.build.gradle.api.BaseVariant.getJavaCompileOptions requires compatibility mode for Property values in new com.android.build.api.variant.AnnotationProcessorOptions
+            $ENABLE_LEGACY_API
+            """.trimIndent()
+                            )
+                        )
+                    // return default value during sync
+                    return object: AnnotationProcessorOptions {
+                        override fun getClassNames(): MutableList<String> = mutableListOf()
+
+                        override fun getArguments(): MutableMap<String, String> = mutableMapOf()
+
+                        override fun getCompilerArgumentProviders(): MutableList<CommandLineArgumentProvider>  = mutableListOf()
+                    }
+                }
+                return _annotationProcessorOptions
+            }
+    }
+
+    override val oldVariantApiJavaCompileOptions: JavaCompileOptions =
+        JavaCompileOptionsForOldVariantAPI(
+            component.services,
+            component.javaCompilation.annotationProcessor
+        )
+
 
     override fun getJavaClasspathArtifacts(
         configType: AndroidArtifacts.ConsumedConfigType,
@@ -156,11 +234,6 @@ class OldVariantApiLegacySupportImpl(
         component.buildConfigCreationConfig?.buildConfigFields?.put(
             key, BuildConfigField(type, value, comment)
         )
-    }
-
-    override fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments) {
-        dslInfo.javaCompileOptions.annotationProcessorOptions
-            .compilerArgumentProviders.add(args)
     }
 
     override fun handleMissingDimensionStrategy(

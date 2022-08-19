@@ -27,33 +27,48 @@ import org.gradle.api.provider.Provider
 import org.gradle.process.CommandLineArgumentProvider
 
 class AnnotationProcessorImpl(
-    annotationProcessorOptions: AnnotationProcessorOptions,
+    annotationProcessorOptionsSetInDSL: AnnotationProcessorOptions,
     val dataBindingEnabled: Boolean,
     val internalServices: VariantServices,
 ): AnnotationProcessor {
 
     /**
-     * This is the public facing [ListProperty] for users to dynamically add annotation processors.
-     * Do not use this method internally to get the final list of annotation processors since we
+     * These are the public facing [ListProperty] or [MapProperty] for users to dynamically add
+     * annotation processors or parameters to annotation processors.
+     *
+     * These lists will contain all externally added classNames whether it was added from the old
+     * variant API using the [com.android.build.gradle.api.BaseVariant.getJavaCompileOptions] or
+     * the new Variant API using the [com.android.build.api.variant.Component.javaCompilation]
+     * methods.
+     *
+     * These lists are initialized from the DSL objects (via the merged variant DSL helper classes)
+     *
+     * Do not use those methods internally to get the final list of annotation processors since we
      * are adding extra annotation processors depending on build features turned on/off, etc..
+     * It is therefore ok to use those for mutating the lists but never to get their final values.
+     *
+     * Once the old variant API is removed, these properties should be disallowed for unsafe read,
+     * tracked by b/243199661.
      */
     override val classNames: ListProperty<String> =
         internalServices.listPropertyOf(
             String::class.java,
-            annotationProcessorOptions.classNames,
+            annotationProcessorOptionsSetInDSL.classNames,
+            false,
         )
 
     override val arguments: MapProperty<String, String> =
         internalServices.mapPropertyOf(
             String::class.java,
             String::class.java,
-            annotationProcessorOptions.arguments,
+            annotationProcessorOptionsSetInDSL.arguments,
+            false,
         )
 
     override val argumentProviders: LockableList<CommandLineArgumentProvider> =
         LockableList<CommandLineArgumentProvider>("AnnotationProcessor::argumentProviders")
             .also {
-                it.addAll(annotationProcessorOptions.compilerArgumentProviders)
+                it.addAll(annotationProcessorOptionsSetInDSL.compilerArgumentProviders)
             }
 
     /**

@@ -22,7 +22,7 @@ import org.gradle.api.provider.Provider
 import java.util.function.BiFunction
 
 class FakeListProperty<T>(
-    val values: List<T>? = null
+    private val values: MutableList<T>? = null
 ): ListProperty<T> {
 
     override fun get(): List<T> = values ?: listOf()
@@ -96,11 +96,12 @@ class FakeListProperty<T>(
     }
 
     override fun empty(): ListProperty<T> {
-        TODO("Not yet implemented")
+        values?.clear()
+        return this
     }
 
     override fun add(p0: T) {
-        TODO("Not yet implemented")
+        values?.add(p0)
     }
 
     override fun add(p0: Provider<out T>) {

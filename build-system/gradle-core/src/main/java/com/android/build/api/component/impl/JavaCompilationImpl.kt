@@ -22,14 +22,14 @@ import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.services.VariantServices
 
 class JavaCompilationImpl(
-    javaCompileOptions: JavaCompileOptions,
+    javaCompileOptionsSetInDSL: JavaCompileOptions,
     dataBindingEnabled: Boolean,
     internalServices: VariantServices,
 ): JavaCompilation {
 
     override val annotationProcessor: AnnotationProcessor =
         AnnotationProcessorImpl(
-            javaCompileOptions.annotationProcessorOptions,
+            javaCompileOptionsSetInDSL.annotationProcessorOptions,
             dataBindingEnabled,
             internalServices
         )

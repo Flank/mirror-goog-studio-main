@@ -134,7 +134,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override val javaCompilation: JavaCompilation =
         JavaCompilationImpl(
-            dslInfo.javaCompileOptions,
+            dslInfo.javaCompileOptionsSetInDSL,
             buildFeatures.dataBinding,
             internalServices)
 

@@ -22,14 +22,14 @@ import org.gradle.api.provider.Provider
 import java.util.function.BiFunction
 
 class FakeMapProperty<K, V>(
-    val value: Map<K, V>? = null
+    private val values: MutableMap<K, V>? = null
 ): MapProperty<K, V> {
 
-    override fun get(): Map<K, V> = value ?: mapOf()
+    override fun get(): Map<K, V> = values ?: mapOf()
 
-    override fun getOrNull(): Map<K, V>? = value
+    override fun getOrNull(): Map<K, V>? = values
 
-    override fun getOrElse(p0: Map<K, V>): Map<K, V> = value ?: p0
+    override fun getOrElse(p0: Map<K, V>): Map<K, V> = values ?: p0
 
     override fun <S : Any?> map(p0: Transformer<out S, in MutableMap<K, V>>): Provider<S> {
         TODO("Not yet implemented")
@@ -79,7 +79,8 @@ class FakeMapProperty<K, V>(
     }
 
     override fun empty(): MapProperty<K, V> {
-        TODO("Not yet implemented")
+        values?.clear()
+        return this
     }
 
     override fun getting(p0: K): Provider<V> {
@@ -103,7 +104,7 @@ class FakeMapProperty<K, V>(
     }
 
     override fun put(p0: K, p1: V) {
-        TODO("Not yet implemented")
+        values?.set(p0, p1)
     }
 
     override fun put(p0: K, p1: Provider<out V>) {
@@ -111,7 +112,9 @@ class FakeMapProperty<K, V>(
     }
 
     override fun putAll(p0: MutableMap<out K, out V>) {
-        TODO("Not yet implemented")
+        p0.entries.forEach {
+            values?.put(it.key, it.value)
+        }
     }
 
     override fun putAll(p0: Provider<out MutableMap<out K, out V>>) {

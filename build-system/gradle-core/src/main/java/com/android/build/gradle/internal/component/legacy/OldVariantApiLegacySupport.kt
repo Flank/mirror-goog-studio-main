@@ -22,7 +22,6 @@ import com.android.build.gradle.api.JavaCompileOptions
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.core.MergedFlavor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.tasks.databinding.DataBindingCompilerArguments
 import com.android.build.gradle.internal.variant.BaseVariantData
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
@@ -32,7 +31,7 @@ interface OldVariantApiLegacySupport {
     val buildTypeObj: BuildType
     val productFlavorList: List<ProductFlavor>
     val mergedFlavor: MergedFlavor
-    val javaCompileOptions: JavaCompileOptions
+    val oldVariantApiJavaCompileOptions: JavaCompileOptions
     val variantData: BaseVariantData
     val dslSigningConfig: com.android.build.gradle.internal.dsl.SigningConfig?
 
@@ -46,11 +45,6 @@ interface OldVariantApiLegacySupport {
 
     // TODO : b/214316660
     fun getAllRawAndroidResources(component: ComponentCreationConfig): FileCollection
-
-    // The KAPT plugin is using reflection to query the [CompilerArgumentProvider] to look if
-    // databinding is turned on, so keep on adding to the [VariantDslInfo]'s list until KAPT
-    // switches to the new variant API.
-    fun addDataBindingArgsToOldVariantApi(args: DataBindingCompilerArguments)
 
     fun handleMissingDimensionStrategy(dimension: String, alternatedValues: List<String>)
 }
