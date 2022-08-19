@@ -100,6 +100,11 @@ enum class IntegerOption(
      */
     GRADLE_MANAGED_DEVICE_MAX_CONCURRENT_DEVICES("android.experimental.testOptions.managedDevices.maxConcurrentDevices", ApiStage.Experimental),
 
+    /**
+     * The timeout duration in seconds for install apk
+     * If the value is 0 or negative value, it will be set to a default value by UTP.
+     */
+    INSTALL_APK_TIMEOUT("android.experimental.testOptions.installApkTimeout", ApiStage.Experimental),
     /* ------------
      * REMOVED APIS
      */

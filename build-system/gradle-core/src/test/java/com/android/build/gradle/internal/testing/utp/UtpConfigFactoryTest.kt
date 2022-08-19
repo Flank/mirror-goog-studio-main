@@ -140,6 +140,7 @@ class UtpConfigFactoryTest {
             useOrchestrator: Boolean = false,
             uninstallIncompatibleApks: Boolean = false,
             additionalTestOutputDir: File? = null,
+            installApkTimeout: Int? = null,
             shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return UtpConfigFactory().createRunnerConfigProtoForLocalDevice(
@@ -161,6 +162,7 @@ class UtpConfigFactoryTest {
                 mockResultListenerClientCert,
                 mockResultListenerClientPrivateKey,
                 mockTrustCertCollection,
+                installApkTimeout,
                 shardConfig
         )
     }
@@ -172,6 +174,7 @@ class UtpConfigFactoryTest {
             shardConfig: ShardConfig? = null,
             emulatorGpuFlag: String = "auto-no-window",
             showEmulatorKernelLogging: Boolean = false,
+            installApkTimeout: Int? = null,
     ): RunnerConfigProto.RunnerConfig {
         val managedDevice = UtpManagedDevice(
                 "deviceName",
@@ -199,6 +202,7 @@ class UtpConfigFactoryTest {
                 testResultListenerServerMetadata,
                 emulatorGpuFlag,
                 showEmulatorKernelLogging,
+                installApkTimeout,
                 shardConfig
         )
     }
@@ -213,6 +217,12 @@ class UtpConfigFactoryTest {
     fun createRunnerConfigProtoForLocalDeviceUseOrchestrator() {
         val runnerConfigProto = createForLocalDevice(useOrchestrator = true)
         assertRunnerConfigProto(runnerConfigProto, useOrchestrator = true)
+    }
+
+    @Test
+    fun createRunnerConfigProtoForLocalDeviceInstallApkTimeout() {
+        val runnerConfigProto = createForLocalDevice(installApkTimeout = 5)
+        assertRunnerConfigProto(runnerConfigProto, installApkTimeout = 5)
     }
 
     @Test
@@ -319,6 +329,15 @@ class UtpConfigFactoryTest {
             useOrchestrator = true,
             useGradleManagedDeviceProvider = true
         )
+    }
+
+    @Test
+    fun createRunnerConfigProtoForManagedDeviceInstallApkTimeout() {
+        val runnerConfigProto = createForManagedDevice(installApkTimeout = 5)
+        assertRunnerConfigProto(runnerConfigProto,
+            deviceId = ":app:deviceNameDebugAndroidTest",
+            useGradleManagedDeviceProvider = true,
+            installApkTimeout = 5)
     }
 
     @Test

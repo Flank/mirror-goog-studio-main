@@ -191,6 +191,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
         @Nested
         public abstract BuildToolsExecutableInput getBuildTools();
 
+        @Input
+        @Optional
+        public abstract Property<Integer> getInstallApkTimeout();
+
         TestRunner createTestRunner(
                 WorkerExecutor workerExecutor,
                 ExecutorServiceAdapter executorServiceAdapter,
@@ -217,7 +221,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         useOrchestrator,
                         getUninstallIncompatibleApks().get(),
                         utpTestResultListener,
-                        utpLoggingLevel());
+                        utpLoggingLevel(),
+                        getInstallApkTimeout().getOrNull());
             } else {
                 switch (getExecutionEnum().get()) {
                     case ANDROID_TEST_ORCHESTRATOR:
@@ -822,6 +827,9 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                     projectOptions,
                                     (EmulatorSnapshots) testOptions.getEmulatorSnapshots()));
 
+            task.getTestRunnerFactory()
+                    .getInstallApkTimeout()
+                    .set(projectOptions.getProvider(IntegerOption.INSTALL_APK_TIMEOUT));
             task.getCodeCoverageEnabled().set(creationConfig.isAndroidTestCoverageEnabled());
             boolean useJacocoTransformOutputs =
                     creationConfig.isAndroidTestCoverageEnabled();

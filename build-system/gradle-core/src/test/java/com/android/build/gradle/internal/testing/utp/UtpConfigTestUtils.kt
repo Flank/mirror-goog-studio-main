@@ -61,6 +61,7 @@ fun assertRunnerConfigProto(
     emulatorGpuFlag: String = "auto-no-window",
     showEmulatorKernelLogging: Boolean = false,
     uninstallIncompatibleApks: Boolean = false,
+    installApkTimeout: Int? = null
 ) {
     val deviceProviderProto = if (useGradleManagedDeviceProvider) { """
         label {
@@ -191,6 +192,8 @@ fun assertRunnerConfigProto(
         ""
     }
 
+    val installApkTimeoutString = if (installApkTimeout != null) "seconds: ${installApkTimeout}" else ""
+
     assertThat(protoPrinter.printToString(runnerConfig)).isEqualTo("""
         device {
           device_id {
@@ -216,6 +219,9 @@ fun assertRunnerConfigProto(
             config {
               type_url: "type.googleapis.com/google.testing.platform.runner.plugin.android.proto.AndroidDevicePlugin"
               value {
+                install_apk_timeout {
+                  ${installApkTimeoutString}
+                }
                 test_service_apks {
                   source_path {
                     path: "mockHelperApkPath"

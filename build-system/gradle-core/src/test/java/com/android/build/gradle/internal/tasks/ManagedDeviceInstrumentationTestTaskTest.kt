@@ -257,6 +257,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
             .thenReturn(FakeGradleProperty(Level.OFF))
         `when`(factory.emulatorGpuFlag).thenReturn(FakeGradleProperty("auto-no-window"))
         `when`(factory.showEmulatorKernelLoggingFlag).thenReturn(FakeGradleProperty(false))
+        `when`(factory.installApkTimeout).thenReturn(FakeGradleProperty(0))
 
         val testRunner = factory.createTestRunner(workerExecutor, null)
         assertThat(testRunner).isInstanceOf(ManagedDeviceTestRunner::class.java)

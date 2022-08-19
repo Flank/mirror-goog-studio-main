@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
+import com.android.build.gradle.options.IntegerOption
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
@@ -55,6 +56,7 @@ import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.gradle.api.logging.Logging
+import java.time.Duration
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
 // UTP can run multiple test fixtures at a time so we have to give a name for
@@ -114,6 +116,7 @@ class UtpConfigFactory {
         resultListenerClientCert: File,
         resultListenerClientPrivateKey: File,
         trustCertCollection: File,
+        installApkTimeout: Int?,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
@@ -138,6 +141,7 @@ class UtpConfigFactory {
                         findAdditionalTestOutputDirectoryOnDevice(device, testData)
                     },
                     coverageOutputDir,
+                    installApkTimeout,
                     shardConfig
                 )
             )
@@ -195,6 +199,7 @@ class UtpConfigFactory {
         testResultListenerServerMetadata: UtpTestResultListenerServerMetadata,
         emulatorGpuFlag: String,
         showEmulatorKernelLogging: Boolean,
+        installApkTimeout: Int?,
         shardConfig: ShardConfig? = null
     ): RunnerConfigProto.RunnerConfig {
         return RunnerConfigProto.RunnerConfig.newBuilder().apply {
@@ -210,7 +215,7 @@ class UtpConfigFactory {
                     additionalTestOutputDir?.let {
                         findAdditionalTestOutputDirectoryOnManagedDevice(device, testData)
                     },
-                    coverageOutputDir, shardConfig
+                    coverageOutputDir, installApkTimeout, shardConfig
                 )
             )
             singleDeviceExecutor = createSingleDeviceExecutor(device.id, shardConfig)
@@ -326,6 +331,7 @@ class UtpConfigFactory {
         additionalTestOutputDir: File?,
         additionalTestOutputOnDeviceDir: String?,
         coverageOutputDir: File,
+        installApkTimeout: Int?,
         shardConfig: ShardConfig?
     ): FixtureProto.TestFixture {
         return FixtureProto.TestFixture.newBuilder().apply {
@@ -368,7 +374,7 @@ class UtpConfigFactory {
                                               additionalTestOutputOnDeviceDir, shardConfig)
             }
             addHostPlugin(createAndroidTestPlugin(
-                    testData, appApks, additionalInstallOptions, helperApks, utpDependencies))
+                    testData, appApks, additionalInstallOptions, helperApks, installApkTimeout, utpDependencies))
             addHostPlugin(createAndroidTestDeviceInfoPlugin(utpDependencies))
             addHostPlugin(createAndroidTestLogcatPlugin(utpDependencies))
             if (testData.isTestCoverageEnabled) {
@@ -527,6 +533,7 @@ class UtpConfigFactory {
             appApks: Iterable<File>,
             additionalInstallOptions: Iterable<String>,
             helperApks: Iterable<File>,
+            installApkTimeoutSeconds: Int?,
             utpDependencies: UtpDependencies
     ): ExtensionProto.Extension {
         return ANDROID_TEST_PLUGIN.toExtensionProto(
@@ -566,6 +573,10 @@ class UtpConfigFactory {
                         path = helperApk.absolutePath
                     }
                 }
+            }
+
+            installApkTimeoutBuilder.apply{
+                seconds = installApkTimeoutSeconds?.toLong() ?: 0L
             }
         }
     }

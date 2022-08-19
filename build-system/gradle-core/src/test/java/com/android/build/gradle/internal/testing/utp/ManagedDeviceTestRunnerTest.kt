@@ -100,6 +100,7 @@ class ManagedDeviceTestRunnerTest {
                 any(),
                 any(),
                 any(),
+                nullable(Int::class.java),
                 nullable(ShardConfig::class.java))).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -138,6 +139,7 @@ class ManagedDeviceTestRunnerTest {
             "auto-no-window",
             showEmulatorKernelLogging = false,
             mockAvdComponents,
+            null,
             Level.WARNING,
             mockUtpConfigFactory) { runnerConfigs, _, _, resultsDir, _ ->
             utpInvocationCount++

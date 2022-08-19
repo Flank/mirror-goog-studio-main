@@ -128,6 +128,10 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
         @get:Input
         abstract val showEmulatorKernelLoggingFlag: Property<Boolean>
 
+        @get:Input
+        @get: Optional
+        abstract val installApkTimeout: Property<Int>
+
         fun createTestRunner(
             workerExecutor: WorkerExecutor, numShards: Int?): ManagedDeviceTestRunner {
 
@@ -151,6 +155,7 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                 emulatorGpuFlag.get(),
                 showEmulatorKernelLoggingFlag.get(),
                 avdComponents.get(),
+                installApkTimeout.getOrNull(),
                 utpLoggingLevel.get()
             )
         }
@@ -491,6 +496,9 @@ abstract class ManagedDeviceInstrumentationTestTask: NonIncrementalTask(), Andro
                         createRetentionConfig(
                                 projectOptions,
                                 globalConfig.testOptions.emulatorSnapshots as EmulatorSnapshots))
+            task.testRunnerFactory
+                .installApkTimeout
+                .setDisallowChanges(projectOptions[IntegerOption.INSTALL_APK_TIMEOUT])
 
             task.dependencies =
                 creationConfig

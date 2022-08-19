@@ -37,6 +37,7 @@ class ManagedDeviceTestRunner(
     private val emulatorGpuFlag: String,
     private val showEmulatorKernelLogging: Boolean,
     private val avdComponents: AvdComponentsBuildService,
+    private val installApkTimeout: Int?,
     private val utpLoggingLevel: Level = Level.WARNING,
     private val configFactory: UtpConfigFactory = UtpConfigFactory(),
     private val runUtpTestSuiteAndWaitFunc: (
@@ -105,6 +106,7 @@ class ManagedDeviceTestRunner(
                         resultListenerServerMetadata,
                         emulatorGpuFlag,
                         showEmulatorKernelLogging,
+                        installApkTimeout,
                         shardConfig
                     )
                 }

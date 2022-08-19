@@ -105,6 +105,7 @@ class UtpTestRunnerTest {
                 any(),
                 any(),
                 any(),
+                nullable(Int::class.java),
                 nullable(ShardConfig::class.java))).then {
             RunnerConfigProto.RunnerConfig.getDefaultInstance()
         }
@@ -125,6 +126,7 @@ class UtpTestRunnerTest {
             uninstallIncompatibleApks = false,
             mockTestResultListener,
             Level.WARNING,
+            null,
             mockUtpConfigFactory) { runnerConfigs, _, _, _, _ ->
             capturedRunnerConfigs = runnerConfigs
             listOf(result)
