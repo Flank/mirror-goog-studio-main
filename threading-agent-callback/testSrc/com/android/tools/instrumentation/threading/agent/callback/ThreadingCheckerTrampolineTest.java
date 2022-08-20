@@ -79,7 +79,7 @@ public class ThreadingCheckerTrampolineTest {
 
         String baselineMethod =
                 "com.android.tools.instrumentation.threading.agent.callback.ThreadingCheckerTrampolineTest$InnerTestClass#method1";
-        ThreadingCheckerTrampoline.baselineViolations =
+        ThreadingCheckerTrampoline.BaselineViolationsHolder.baselineViolations =
                 BaselineViolations.fromStream(new ByteArrayInputStream(baselineMethod.getBytes()));
 
         // method1 is in the baseline

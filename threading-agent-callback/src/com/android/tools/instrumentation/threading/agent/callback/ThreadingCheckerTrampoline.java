@@ -32,12 +32,17 @@ public final class ThreadingCheckerTrampoline {
     private static final CopyOnWriteArrayList<ThreadingCheckerHook> hooks =
             new CopyOnWriteArrayList<>();
 
-    static BaselineViolations baselineViolations;
+    static class BaselineViolationsHolder {
+        static BaselineViolations baselineViolations = BaselineViolations.fromResource();
+    }
+
+    static BaselineViolations getBaselineViolations() {
+        return BaselineViolationsHolder.baselineViolations;
+    }
 
     // This method should be called from Android Studio startup code.
     public static void installHook(ThreadingCheckerHook newHook) {
         hooks.add(newHook);
-        baselineViolations = BaselineViolations.fromResource();
     }
 
     public static void removeHook(ThreadingCheckerHook hook) {
@@ -57,7 +62,7 @@ public final class ThreadingCheckerTrampoline {
                             + "'. No ThreadingCheckerHook installed.");
             return;
         }
-        if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
+        if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
             return;
         }
         for (ThreadingCheckerHook hook : hooks) {
@@ -74,7 +79,7 @@ public final class ThreadingCheckerTrampoline {
                             + "'. No ThreadingCheckerHook installed.");
             return;
         }
-        if (baselineViolations.isIgnored(getInstrumentedMethodSignature())) {
+        if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
             return;
         }
         for (ThreadingCheckerHook hook : hooks) {
