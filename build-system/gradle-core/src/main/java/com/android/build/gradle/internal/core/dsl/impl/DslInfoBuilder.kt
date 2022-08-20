@@ -174,7 +174,6 @@ class DslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>, DslInfoT: Co
             buildDirectory = buildDirectory,
             publishInfo = createPublishingInfoForApp(
                 (extension as InternalApplicationExtension).publishing as ApplicationPublishingImpl,
-                variantServices.projectOptions,
                 name,
                 extension.dynamicFeatures.isNotEmpty(),
                 variantServices.issueReporter
@@ -196,7 +195,6 @@ class DslInfoBuilder<CommonExtensionT: CommonExtension<*, *, *, *>, DslInfoT: Co
             buildDirectory = buildDirectory,
             publishInfo = createPublishingInfoForLibrary(
                 (extension as InternalLibraryExtension).publishing as LibraryPublishingImpl,
-                variantServices.projectOptions,
                 name,
                 buildType,
                 flavors.map { it.first },

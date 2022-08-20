@@ -20,7 +20,6 @@ import static com.android.testutils.truth.ZipFileSubject.assertThat;
 
 import com.android.Version;
 import com.android.build.api.attributes.AgpVersionAttr;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
@@ -121,17 +120,6 @@ public class AppPublishingTest {
                 it -> {
                     it.doesNotContain("mapping.txt");
                 });
-    }
-
-    @Test
-    public void testApkPublishingWithoutNewPublishingDsl() throws Exception {
-        setUpLegacyPublishing();
-        project.execute("publishApkPublicationToMavenRepository");
-        File testRepo = new File(project.getProjectDir(), "testrepo");
-        File groupIdFolder = FileUtils.join(testRepo, "test", "densitysplit");
-
-        File apkFile = FileUtils.join(groupIdFolder, "apk", "1.0", "apk-1.0.zip");
-        assertThat(apkFile).isFile();
     }
 
     private void setUpApkPublishing() throws Exception {

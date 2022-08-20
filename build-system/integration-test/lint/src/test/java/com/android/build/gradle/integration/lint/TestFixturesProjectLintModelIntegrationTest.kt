@@ -124,6 +124,12 @@ class TestFixturesProjectLintModelIntegrationTest {
         if (publishAndroidLib) {
             TestFileUtils.appendToFile(project.getSubproject(":lib").buildFile,
                 """
+                android {
+                    publishing {
+                        singleVariant("release")
+                    }
+                }
+
                 afterEvaluate {
                     publishing {
                         repositories {

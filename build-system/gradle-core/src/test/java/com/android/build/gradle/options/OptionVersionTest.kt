@@ -57,7 +57,6 @@ class OptionVersionTest {
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
             BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
             BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS,
-            OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION
         )
 
         private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {

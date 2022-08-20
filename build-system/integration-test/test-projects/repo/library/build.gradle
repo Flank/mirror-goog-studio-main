@@ -28,6 +28,11 @@ android {
         free {}
         paid {}
     }
+    publishing {
+        multipleVariants {
+            allVariants()
+        }
+    }
 }
 
 afterEvaluate {
@@ -38,7 +43,7 @@ afterEvaluate {
                 artifactId = 'lib'
                 version = '1.0'
 
-                from components.all
+                from components.default
             }
         }
     }

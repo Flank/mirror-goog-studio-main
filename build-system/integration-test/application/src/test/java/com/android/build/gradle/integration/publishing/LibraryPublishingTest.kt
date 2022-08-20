@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.attributes.Usage
@@ -87,34 +86,6 @@ class LibraryPublishingTest {
     }
 
     @Test
-    fun testNoAutomaticComponentCreation() {
-        addPublication(RELEASE)
-        var result = library.executor()
-            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
-            .expectFailure().run("help")
-        assertThat(result.failureMessage).contains("" +
-                "Could not get unknown property 'release' for SoftwareComponentInternal")
-
-        // When new DSL is used, AGP won't create software components for each variant automatically.
-        TestFileUtils.appendToFile(
-            library.buildFile,
-            """
-
-                android {
-                    publishing {
-                        singleVariant("debug") {}
-                    }
-                }
-            """.trimIndent()
-        )
-
-        result = library.executor()
-            .expectFailure().run("help")
-        assertThat(result.failureMessage).contains("" +
-                "Could not get unknown property 'release' for SoftwareComponentInternal")
-    }
-
-    @Test
     fun testSingleVariantPublishing() {
         addPublication(RELEASE)
         TestFileUtils.appendToFile(
@@ -137,20 +108,12 @@ class LibraryPublishingTest {
     }
 
     @Test
-    fun testMigrationWithoutChanges() {
+    fun testErrorMessageForNotUsingPublishingDsl() {
         addPublication(RELEASE)
-        library.execute("clean", "publish")
-        app.execute("clean", "assembleDebug")
-    }
-
-    @Test
-    fun testMigrationWarningMessage() {
-        addPublication(RELEASE)
-        val result = library.executor().run("help")
-        result.stdout.use {
+        val result = library.executor().expectFailure().run("publish")
+        result.stderr.use {
             ScannerSubject.assertThat(it).contains("""
-                Software Components will not be created automatically for Maven publishing from
-                Android Gradle Plugin 8.0.
+                Could not get unknown property 'release' for SoftwareComponentInternal
             """.trimIndent())
         }
     }
@@ -484,26 +447,6 @@ class LibraryPublishingTest {
                 "Using non-existing build type \"random\" when selecting variants to be " +
                         "published in multipleVariants publishing DSL."
             )
-        }
-    }
-
-    @Test
-    fun testDisableComponentCreationFlagWarningMessage() {
-        var result = library
-            .executor()
-            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, true)
-            .run("help")
-        result.stdout.use {
-            ScannerSubject.assertThat(it).doesNotContain(
-                "'android.disableAutomaticComponentCreation=true' is deprecated")
-        }
-        result = library
-            .executor()
-            .with(OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION, false)
-            .run("help")
-        result.stdout.use {
-            ScannerSubject.assertThat(it).contains(
-                "'android.disableAutomaticComponentCreation=false' is deprecated")
         }
     }
 

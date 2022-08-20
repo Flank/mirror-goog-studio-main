@@ -95,6 +95,12 @@ class TestFixturesTest {
         if (publishAndroidLib) {
             TestFileUtils.appendToFile(project.getSubproject(":lib").buildFile,
                 """
+                android {
+                    publishing {
+                        singleVariant("release")
+                    }
+                }
+
                 afterEvaluate {
                     publishing {
                         repositories {
@@ -204,7 +210,6 @@ class TestFixturesTest {
 
     @Test
     fun `app consumes android library test fixtures published using new publishing dsl`() {
-        addNewPublishingDslForAndroidLibrary()
         setUpProject(
             publishJavaLib = false,
             publishAndroidLib = true
@@ -476,19 +481,6 @@ class TestFixturesTest {
             """.trimIndent()
         )
         useAndroidX()
-    }
-
-    private fun addNewPublishingDslForAndroidLibrary() {
-        TestFileUtils.appendToFile(
-            project.getSubproject(":lib").buildFile,
-            """
-                android{
-                    publishing{
-                        singleVariant("release")
-                    }
-                }
-            """.trimIndent()
-        )
     }
 
     private fun useAndroidX() {

@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.options
 
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.Version.VERSION_7_0
+import com.android.build.gradle.options.Version.VERSION_8_0
 import com.android.build.gradle.options.Version.VERSION_BEFORE_4_0
 import com.android.builder.model.PROPERTY_SIGNING_V1_ENABLED
 import com.android.builder.model.PROPERTY_SIGNING_V2_ENABLED
@@ -45,7 +45,6 @@ enum class OptionalBooleanOption(
     /* ----------------
     * SOFTLY ENFORCED FEATURES
     */
-    DISABLE_AUTOMATIC_COMPONENT_CREATION("android.disableAutomaticComponentCreation",  FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.VERSION_8_0), true),
 
     /* ----------------
      * ENFORCED FEATURES
@@ -54,6 +53,12 @@ enum class OptionalBooleanOption(
     ENABLE_R8(
         "android.enableR8",
         FeatureStage.Enforced(VERSION_7_0, "Please remove it from `gradle.properties`.")
+    ),
+
+    @Suppress("unused")
+    DISABLE_AUTOMATIC_COMPONENT_CREATION(
+        "android.disableAutomaticComponentCreation",
+        FeatureStage.Enforced(VERSION_8_0, "Please remove it from `gradle.properties`.")
     ),
 
     /* ----------------
