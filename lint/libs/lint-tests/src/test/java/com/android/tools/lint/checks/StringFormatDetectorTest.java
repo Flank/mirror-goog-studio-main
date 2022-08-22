@@ -2158,6 +2158,39 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testErrorType() {
+        // Regression test for https://issuetracker.google.com/243241184
+        lint().files(
+                        xml(
+                                "res/values/formatstrings.xml",
+                                ""
+                                        + "<resources>\n"
+                                        + "    <string name=\"score\">Score: %1$d</string>\n"
+                                        + "</resources>\n"),
+                        kotlin(
+                                ""
+                                        + "import android.app.Activity\n"
+                                        + "\n"
+                                        + "class StringFormatMatches : Activity() {\n"
+                                        + "    fun test() {\n"
+                                        + "        val score = getString(R.string.score, getScore())\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "fun getScore() = Unknown(42)"), // deliberately unknown
+                                                                           // method with unknown
+                                                                           // return type
+                        java(
+                                ""
+                                        + "/*HIDE-FROM-DOCUMENTATION*/public class R {\n"
+                                        + "    public static class string {\n"
+                                        + "        public static final int score = 1;\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .issues(StringFormatDetector.ARG_TYPES)
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mFormatstrings =
             xml(

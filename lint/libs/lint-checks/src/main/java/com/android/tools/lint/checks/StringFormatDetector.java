@@ -105,6 +105,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastErrorType;
 import org.jetbrains.uast.UastFacade;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.w3c.dom.Element;
@@ -1499,7 +1500,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements SourceC
                         if (isInStringExpression(call, expression)) {
                             type = getStringType(context, expression);
                         }
-                        if (type != null) {
+                        if (type != null && !(type instanceof UastErrorType)) {
                             boolean valid = true;
                             String formatType = getFormatArgumentType(s, i);
                             if (formatType == null) {
