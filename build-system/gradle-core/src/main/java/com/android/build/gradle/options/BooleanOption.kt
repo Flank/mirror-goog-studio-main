@@ -110,7 +110,7 @@ enum class BooleanOption(
 
     // FIXME switch to false once we know we don't use these getters internally.
     ENABLE_LEGACY_API("android.compatibility.enableLegacyApi", true, FeatureStage.Supported),
-    FULL_R8("android.enableR8.fullMode", false, FeatureStage.Supported),
+    FULL_R8("android.enableR8.fullMode", true, FeatureStage.Supported),
 
     /* ---------------------
      * EXPERIMENTAL FEATURES
