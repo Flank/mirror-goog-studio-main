@@ -43,8 +43,9 @@ class BuiltArtifactsLoaderImplTest {
     fun testSingleFileTransformation() {
         createSimpleMetadataFile()
 
-        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
-            FakeGradleDirectory(tmpFolder.root))
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(
+            FakeGradleDirectory(tmpFolder.root)
+        )
 
         assertThat(builtArtifacts).isNotNull()
 
@@ -54,11 +55,13 @@ class BuiltArtifactsLoaderImplTest {
             variantName = builtArtifacts.variantName,
             elements = builtArtifacts.elements.map {
                 assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
-                    "some manifest")
+                    "some manifest"
+                )
                 it.newOutput(
                     outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
                         file.writeText("updated APK")
-                    }.toPath())
+                    }.toPath()
+                )
             }
         )
 
@@ -66,7 +69,8 @@ class BuiltArtifactsLoaderImplTest {
 
         // load the new file
         val updatedBuiltArtifacts = BuiltArtifactsLoaderImpl().load(
-            FakeGradleDirectory(outFolder.root))
+            FakeGradleDirectory(outFolder.root)
+        )
 
         assertThat(updatedBuiltArtifacts).isNotNull()
 
@@ -121,10 +125,12 @@ class BuiltArtifactsLoaderImplTest {
       "outputFile": "file2.xml"
     }
   ]
-}""", Charsets.UTF_8)
+}""", Charsets.UTF_8
+        )
 
-        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
-            FakeGradleDirectory(tmpFolder.root))
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(
+            FakeGradleDirectory(tmpFolder.root)
+        )
 
         assertThat(builtArtifacts).isNotNull()
         val newBuiltArtifacts = BuiltArtifactsImpl(
@@ -133,11 +139,13 @@ class BuiltArtifactsLoaderImplTest {
             variantName = builtArtifacts.variantName,
             elements = builtArtifacts.elements.map {
                 assertThat(File(it.outputFile).readText(Charsets.UTF_8)).isEqualTo(
-                    it.filters.joinToString())
+                    it.filters.joinToString()
+                )
                 it.newOutput(
                     outFolder.newFile("${File(it.outputFile).name}.new").also { file ->
                         file.writeText("updated APK : ${it.filters.joinToString()}")
-                    }.toPath())
+                    }.toPath()
+                )
             }
         )
 
@@ -145,7 +153,8 @@ class BuiltArtifactsLoaderImplTest {
 
         // load the new file
         val updatedBuiltArtifacts = BuiltArtifactsLoaderImpl().load(
-            FakeGradleDirectory(outFolder.root))
+            FakeGradleDirectory(outFolder.root)
+        )
 
         assertThat(updatedBuiltArtifacts).isNotNull()
         assertThat(updatedBuiltArtifacts!!.applicationId).isEqualTo(builtArtifacts.applicationId)
@@ -155,7 +164,8 @@ class BuiltArtifactsLoaderImplTest {
         updatedBuiltArtifacts.elements.forEach { builtArtifact ->
             assertThat(builtArtifact.filters).hasSize(1)
             assertThat(builtArtifact.filters.first().filterType).isEqualTo(
-                FilterConfiguration.FilterType.DENSITY)
+                FilterConfiguration.FilterType.DENSITY
+            )
             val filterValue = builtArtifact.filters.first().identifier
             assertThat(File(builtArtifact.outputFile).readText(Charsets.UTF_8)).isEqualTo(
                 "updated APK : $filterValue"
@@ -167,8 +177,9 @@ class BuiltArtifactsLoaderImplTest {
     fun testSimpleLoading() {
         createSimpleMetadataFile()
 
-        val builtArtifacts= BuiltArtifactsLoaderImpl().load(
-            FakeGradleDirectory(tmpFolder.root))
+        val builtArtifacts = BuiltArtifactsLoaderImpl().load(
+            FakeGradleDirectory(tmpFolder.root)
+        )
 
         assertThat(builtArtifacts).isNotNull()
         assertThat(builtArtifacts!!.artifactType).isEqualTo(InternalArtifactType.PACKAGED_MANIFESTS)
@@ -177,7 +188,42 @@ class BuiltArtifactsLoaderImplTest {
         assertThat(builtArtifacts.elements).hasSize(1)
         val builtArtifact = builtArtifacts.elements.first()
         assertThat(builtArtifact.outputFile).isEqualTo(
-            FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath))
+            FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath)
+        )
+        assertThat(builtArtifact.versionCode).isEqualTo(123)
+        assertThat(builtArtifact.versionName).isEqualTo("version_name")
+        assertThat(builtArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
+    }
+
+    @Test
+    fun testListLoading() {
+        createListMetadataFile()
+
+        val builtArtifacts = BuiltArtifactsLoaderImpl.loadListFromFile(
+            tmpFolder.root.resolve(BuiltArtifactsImpl.METADATA_FILE_NAME)
+        )
+
+        assertThat(builtArtifacts).hasSize(2)
+        assertThat(builtArtifacts[0].artifactType).isEqualTo(InternalArtifactType.PACKAGED_MANIFESTS)
+        assertThat(builtArtifacts[0].applicationId).isEqualTo("com.android.test1")
+        assertThat(builtArtifacts[0].variantName).isEqualTo("debug")
+        assertThat(builtArtifacts[0].elements).hasSize(1)
+        var builtArtifact = builtArtifacts[0].elements.first()
+        assertThat(builtArtifact.outputFile).isEqualTo(
+            FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file1.xml").absolutePath)
+        )
+        assertThat(builtArtifact.versionCode).isEqualTo(123)
+        assertThat(builtArtifact.versionName).isEqualTo("version_name")
+        assertThat(builtArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
+
+        assertThat(builtArtifacts[1].artifactType).isEqualTo(InternalArtifactType.PACKAGED_MANIFESTS)
+        assertThat(builtArtifacts[1].applicationId).isEqualTo("com.android.test2")
+        assertThat(builtArtifacts[1].variantName).isEqualTo("debug")
+        assertThat(builtArtifacts[1].elements).hasSize(1)
+        builtArtifact = builtArtifacts[1].elements.first()
+        assertThat(builtArtifact.outputFile).isEqualTo(
+            FileUtils.toSystemIndependentPath(File(tmpFolder.root, "file2.xml").absolutePath)
+        )
         assertThat(builtArtifact.versionCode).isEqualTo(123)
         assertThat(builtArtifact.versionName).isEqualTo("version_name")
         assertThat(builtArtifact.outputType).isEqualTo(VariantOutputConfiguration.OutputType.SINGLE)
@@ -203,6 +249,49 @@ class BuiltArtifactsLoaderImplTest {
       "outputFile": "file1.xml"
     }
   ]
-}""", Charsets.UTF_8)
+}""", Charsets.UTF_8
+        )
+    }
+
+    private fun createListMetadataFile() {
+        tmpFolder.newFile("file1.xml").writeText("some manifest1")
+        tmpFolder.newFile("file2.xml").writeText("some manifest2")
+        tmpFolder.newFile(BuiltArtifactsImpl.METADATA_FILE_NAME).writeText(
+            """[{
+  "version": 1,
+  "artifactType": {
+    "type": "PACKAGED_MANIFESTS",
+    "kind": "Directory"
+  },
+  "applicationId": "com.android.test1",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "file1.xml"
+    }
+  ]
+},{
+  "version": 1,
+  "artifactType": {
+    "type": "PACKAGED_MANIFESTS",
+    "kind": "Directory"
+  },
+  "applicationId": "com.android.test2",
+  "variantName": "debug",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "versionCode": 123,
+      "versionName": "version_name",
+      "outputFile": "file2.xml"
+    }
+  ]
+}]""", Charsets.UTF_8
+        )
     }
 }
