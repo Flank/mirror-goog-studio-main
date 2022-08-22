@@ -29,11 +29,13 @@ import com.android.adblib.testingutils.FakeAdbServerProvider;
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.SwingUtilities;
 import kotlin.Unit;
+import kotlinx.coroutines.TimeoutCancellationException;
 import org.junit.Test;
 
 @SuppressWarnings({"resource", "CodeBlock2Expr"})
@@ -51,11 +53,52 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
                 JavaBridge.runBlocking(
                         session,
                         continuation -> {
-                            session.getHostServices().version(continuation);
-                        });
+                            return session.getHostServices().version(continuation);
+                        },
+                        session.getScope(),
+                        30_000);
 
         // Assert
         assertEquals(40, version);
+    }
+
+    @Test
+    public void runBlockingHandlesNonSuspendingCoroutines() {
+        // Prepare
+        FakeAdbServerProvider fakeAdb =
+                registerCloseable(new FakeAdbServerProvider().buildDefault().start());
+        AdbSession session = createHostServices(fakeAdb).getSession();
+
+        // Act
+        int result =
+                JavaBridge.runBlocking(
+                        session,
+                        cnt -> JavaBridgeTestUtils.immediateResultCoroutine(5, cnt),
+                        session.getScope(),
+                        30_000);
+
+        // Assert
+        assertEquals(10, result);
+    }
+
+    @Test
+    public void runBlockingHandlesExceptionNonSuspendingCoroutines() {
+        // Prepare
+        FakeAdbServerProvider fakeAdb =
+                registerCloseable(new FakeAdbServerProvider().buildDefault().start());
+        AdbSession session = createHostServices(fakeAdb).getSession();
+
+        // Act
+        exceptionRule.expect(Exception.class);
+        exceptionRule.expectMessage("test");
+        JavaBridge.runBlocking(
+                session,
+                cnt -> JavaBridgeTestUtils.immediateExceptionCoroutine("test", cnt),
+                session.getScope(),
+                30_000);
+
+        // Assert
+        fail("Should not reach");
     }
 
     @Test
@@ -78,9 +121,30 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
         fail("Should not reach");
     }
 
+    @Test
+    public void runBlockingHandlesTimeout() {
+        // Prepare
+        FakeAdbServerProvider fakeAdb =
+                registerCloseable(new FakeAdbServerProvider().buildDefault().start());
+        AdbSession session = createHostServices(fakeAdb).getSession();
+
+        // Act
+        exceptionRule.expect(TimeoutCancellationException.class);
+        JavaBridge.runBlocking(
+                session,
+                cnt -> {
+                    return delay(5_000, cnt);
+                },
+                session.getScope(),
+                10);
+
+        // Assert
+        fail("Should not reach");
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Test
-    public void runBlockingCanBeCancelled() throws Exception {
+    public void runBlockingIsCancelledWhenScopeIsCancelled() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());
@@ -95,11 +159,14 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
                                     session,
                                     continuation -> {
                                         hasStarted.set(true);
-                                        delay(10_000, continuation);
+                                        return delay(10_000, continuation);
                                     });
                         });
+        AtomicReference<Throwable> uncaughtException = new AtomicReference<>();
+        t.setUncaughtExceptionHandler((thread, throwable) -> uncaughtException.set(throwable));
 
-        // Start thread, wait for runBlocking and "delay" to start, then cancel coroutine scope
+        // Start thread, wait for runBlocking and "delay" to start, then cancel
+        // coroutine scope
         t.start();
         while (!hasStarted.get()) {
             // Wait until thread has started
@@ -109,10 +176,12 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
 
         // Assert
         assertFalse(t.isAlive());
+        assertNotNull(uncaughtException.get());
+        assertTrue(uncaughtException.get() instanceof CancellationException);
     }
 
     @Test
-    public void runBlockingThrowsWhenCalledOnEventDispatchThread() throws Exception {
+    public void runBlockingThrowsWhenCalledOnEventDispatchThread() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());
@@ -123,11 +192,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
         exceptionRule.expectCause(instanceOf(IllegalStateException.class));
         SwingUtilities.invokeAndWait(
                 () -> {
-                    JavaBridge.runBlocking(
-                            session,
-                            continuation -> {
-                                kotlinx.coroutines.DelayKt.delay(10, continuation);
-                            });
+                    JavaBridge.runBlocking(session, continuation -> delay(10, continuation));
                 });
 
         // Assert
@@ -144,10 +209,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
         // Act
         JavaDeferred<Integer> deferredVersion =
                 JavaBridge.invokeAsync(
-                        session,
-                        continuation -> {
-                            session.getHostServices().version(continuation);
-                        });
+                        session, continuation -> session.getHostServices().version(continuation));
         int version = deferredVersion.awaitBlocking();
 
         // Assert
@@ -179,7 +241,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Test
-    public void invokeAsyncCanBeCancelled() throws Exception {
+    public void invokeAsyncCanBeCancelled() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());
@@ -187,11 +249,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
 
         // Act
         JavaDeferred<Unit> deferred =
-                JavaBridge.invokeAsync(
-                        session,
-                        continuation -> {
-                            kotlinx.coroutines.DelayKt.delay(10_000, continuation);
-                        });
+                JavaBridge.invokeAsync(session, continuation -> delay(10_000, continuation));
 
         // Wait until async has started running
         while (!deferred.isActive()) {
@@ -204,7 +262,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
     }
 
     @Test
-    public void invokeAsyncWorksOnEventDispatchThread() throws Exception {
+    public void invokeAsyncWorksOnEventDispatchThread() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());
@@ -217,9 +275,8 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
                     JavaDeferred<Integer> deferred =
                             JavaBridge.invokeAsync(
                                     session,
-                                    continuation -> {
-                                        session.getHostServices().version(continuation);
-                                    });
+                                    continuation ->
+                                            session.getHostServices().version(continuation));
                     deferredVersion.set(deferred);
                 });
 
@@ -230,7 +287,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
     }
 
     @Test
-    public void invokeAsyncAddCallbackWorks() throws InterruptedException {
+    public void invokeAsyncAddCallbackWorks() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());
@@ -239,10 +296,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
         // Act
         JavaDeferred<Integer> deferredVersion =
                 JavaBridge.invokeAsync(
-                        session,
-                        continuation -> {
-                            session.getHostServices().version(continuation);
-                        });
+                        session, continuation -> session.getHostServices().version(continuation));
         AtomicInteger version = new AtomicInteger();
         deferredVersion.addCallback(
                 (throwable, value) -> {
@@ -257,7 +311,7 @@ public class JavaBridgeTest extends AdbLibToolsTestBase {
     }
 
     @Test
-    public void invokeAsyncAddCallbackIsTransparentToExceptions() throws InterruptedException {
+    public void invokeAsyncAddCallbackIsTransparentToExceptions() throws Throwable {
         // Prepare
         FakeAdbServerProvider fakeAdb =
                 registerCloseable(new FakeAdbServerProvider().buildDefault().start());

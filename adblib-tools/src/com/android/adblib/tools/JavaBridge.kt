@@ -21,12 +21,13 @@ import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.Future
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
@@ -55,13 +56,19 @@ object JavaBridge {
     @JvmOverloads
     fun <T> invokeAsync(
         session: AdbSession,
-        block: CheckedConsumer<CancellableContinuation<T>>,
+        block: CheckedFunction<CancellableContinuation<T>, Any?>,
         scope: CoroutineScope = session.scope
     ): JavaDeferred<T> {
         val deferred = scope.async<T>(session.host.ioDispatcher) {
             suspendCancellableCoroutine { continuation ->
                 try {
-                    block.accept(continuation)
+                    val result = block.accept(continuation)
+                    if (result != COROUTINE_SUSPENDED) {
+                        // Handle case where coroutine terminated right away with a value
+                        // (which should be type "T" if caller did not use unsafe casts)
+                        @Suppress("UNCHECKED_CAST")
+                        continuation.resume(result as T)
+                    }
                 } catch (t: Throwable) {
                     continuation.resumeWithException(t)
                 }
@@ -95,26 +102,11 @@ object JavaBridge {
     @JvmOverloads
     fun <T> runBlocking(
         session: AdbSession,
-        block: CheckedConsumer<CancellableContinuation<T>>,
+        block: CheckedFunction<CancellableContinuation<T>, Any?>,
         scope: CoroutineScope = session.scope,
         timeoutMillis: Long = Long.MAX_VALUE
     ): T {
-        throwIfEventDispatchThread(session)
-        return runBlocking {
-            withTimeout(timeoutMillis) {
-                suspendCancellableCoroutine { continuation ->
-                    // Cancel "block" when "scope" is cancelled (exceptionally or not)
-                    scope.coroutineContext.job.invokeOnCompletion { throwable ->
-                        throwable?.also { continuation.cancel(throwable) }
-                    }
-                    try {
-                        block.accept(continuation)
-                    } catch (t: Throwable) {
-                        continuation.resumeWithException(t)
-                    }
-                }
-            }
-        }
+        return invokeAsync(session, block, scope).awaitBlocking(timeoutMillis)
     }
 
     fun throwIfEventDispatchThread(session: AdbSession) {
@@ -186,21 +178,23 @@ class JavaDeferred<T>(
 }
 
 /**
- * A [java.util.function.Consumer] which may throw.
+ * A [java.util.function.Function] which may throw.
  *
- * @param T the type of value supplied to this consumer.
+ * @param T the type of value supplied to this function.
+ * @param R the type of result of this function.
  */
 @FunctionalInterface
-interface CheckedConsumer<T> {
+interface CheckedFunction<T, R> {
 
     /**
      * Performs this operation on the given argument.
      *
      * @param t the input argument
+     * @return the function result
      * @throws Throwable if an error occurs
      */
     @Throws(Throwable::class)
-    fun accept(t: T)
+    fun accept(t: T): R
 }
 
 /**
