@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_APKS;
+
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.dsl.Installation;
@@ -26,16 +28,16 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkComponentsKt;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.test.BuiltArtifactsSplitOutputMatcher;
 import com.android.build.gradle.internal.testing.ConnectedDeviceProvider;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.InstallUtils;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.build.gradle.internal.tasks.TaskCategory;
-import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -43,12 +45,16 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
@@ -95,20 +101,17 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                         System.getenv("ANDROID_SERIAL"));
         deviceProvider.use(
                 () -> {
-                    BuiltArtifactsImpl builtArtifacts =
-                            new BuiltArtifactsLoaderImpl().load(getApkDirectory().get());
-
                     install(
                             getProjectPath().get(),
                             variantName,
                             deviceProvider,
                             minSdkVersion,
-                            builtArtifacts,
+                            getApkDirectory().get(),
+                            getPrivacySandboxSdksApksFiles().getFiles(),
                             supportedAbis,
                             getInstallOptions(),
                             getTimeOutInMs(),
                             getLogger());
-
                     return null;
                 });
     }
@@ -117,13 +120,39 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             @NonNull String projectPath,
             @NonNull String variantName,
             @NonNull DeviceProvider deviceProvider,
-            @NonNull AndroidVersion minSkdVersion,
-            @NonNull BuiltArtifactsImpl builtArtifacts,
+            @NonNull AndroidVersion minSdkVersion,
+            @NonNull Directory apkDirectory,
+            @NonNull Set<File> privacySandboxSdksApksFiles,
             @NonNull Set<String> supportedAbis,
             @NonNull Collection<String> installOptions,
             int timeOutInMs,
             @NonNull Logger logger)
-            throws DeviceException, ProcessException {
+            throws DeviceException {
+        install(
+                projectPath,
+                variantName,
+                deviceProvider,
+                minSdkVersion,
+                new BuiltArtifactsLoaderImpl().load(apkDirectory),
+                privacySandboxSdksApksFiles,
+                supportedAbis,
+                installOptions,
+                timeOutInMs,
+                logger);
+    }
+
+    private static void install(
+            @NonNull String projectPath,
+            @NonNull String variantName,
+            @NonNull DeviceProvider deviceProvider,
+            @NonNull AndroidVersion minSkdVersion,
+            @NonNull BuiltArtifactsImpl builtArtifacts,
+            @NonNull Set<File> privacySandboxSdksApksFiles,
+            @NonNull Set<String> supportedAbis,
+            @NonNull Collection<String> installOptions,
+            int timeOutInMs,
+            @NonNull Logger logger)
+            throws DeviceException {
         ILogger iLogger = new LoggerWrapper(logger);
         int successfulInstallCount = 0;
         List<? extends DeviceConnector> devices = deviceProvider.getDevices();
@@ -131,11 +160,20 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             if (InstallUtils.checkDeviceApiLevel(
                     device, minSkdVersion, iLogger, projectPath, variantName)) {
                 // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
-                final List<File> apkFiles =
+
+                DeviceConfigProviderImpl deviceConfigProvider =
+                        new DeviceConfigProviderImpl(device);
+                final ImmutableList.Builder<File> apkFilesBuilder = ImmutableList.builder();
+                privacySandboxSdksApksFiles.forEach(
+                        file -> apkFilesBuilder.addAll(
+                                BundleInstallUtils.extractApkFilesBypassingBundleTool(file.toPath())
+                                        .stream()
+                                        .map(Path::toFile)
+                                        .collect(Collectors.toUnmodifiableList())));
+                apkFilesBuilder.addAll(
                         BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
-                                new DeviceConfigProviderImpl(device),
-                                builtArtifacts,
-                                supportedAbis);
+                                deviceConfigProvider, builtArtifacts, supportedAbis));
+                ImmutableList<File> apkFiles = apkFilesBuilder.build();
 
                 if (apkFiles.isEmpty()) {
                     logger.lifecycle(
@@ -201,6 +239,11 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract DirectoryProperty getApkDirectory();
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    public abstract ConfigurableFileCollection getPrivacySandboxSdksApksFiles();
+
     @Nested
     public abstract BuildToolsExecutableInput getBuildTools();
 
@@ -239,6 +282,21 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             SingleArtifact.APK.INSTANCE, task.getApkDirectory());
+            if (creationConfig
+                    .getServices()
+                    .getProjectOptions()
+                    .get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
+                task.getPrivacySandboxSdksApksFiles()
+                        .setFrom(
+                                creationConfig
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                AndroidArtifacts.ConsumedConfigType
+                                                        .RUNTIME_CLASSPATH,
+                                                AndroidArtifacts.ArtifactScope.ALL,
+                                                ANDROID_PRIVACY_SANDBOX_SDK_APKS));
+            }
+            task.getPrivacySandboxSdksApksFiles().disallowChanges();
 
             Installation installationOptions = creationConfig.getGlobal().getInstallationOptions();
             task.setTimeOutInMs(installationOptions.getTimeOutInMs());
