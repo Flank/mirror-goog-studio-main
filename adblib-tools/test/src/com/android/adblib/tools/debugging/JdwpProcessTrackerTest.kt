@@ -29,15 +29,14 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Test
-import java.util.Collections
+import java.util.concurrent.CopyOnWriteArrayList
 
 class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
 
     @Test
-    fun testJdwpProcessTrackerWorks() {
+    fun testJdwpProcessTrackerWorks(): Unit = runBlockingWithTimeout {
         val deviceID = "1234"
         val theOneFeatureSupported = "push_sync"
         val features = setOf(theOneFeatureSupported)
@@ -58,35 +57,83 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         val pid11 = 11
 
         // Act
-        val listOfProcessList = synchronizedList<List<JdwpProcess>>()
-        runBlockingWithTimeout {
-            launch {
-                fakeDevice.startClient(pid10, 0, "a.b.c", false)
-                yieldUntil { listOfProcessList.size == 1 }
-
-                fakeDevice.startClient(pid11, 0, "a.b.c.e", false)
-                yieldUntil { listOfProcessList.size == 2 }
-
-                // Note: The flow may emit 1 or 2 lists depending on how fast clients
-                // are stopped.
-                fakeDevice.stopClient(pid10)
-                fakeDevice.stopClient(pid11)
+        val listOfProcessList = CopyOnWriteArrayList<List<JdwpProcess>>()
+        launch {
+            fakeDevice.startClient(pid10, 0, "a.b.c", false)
+            Assert.assertNotNull(fakeDevice.getClient(pid10))
+            yieldUntil {
+                val size = listOfProcessList.size
+                size == 1
             }
 
-            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
-            jdwpTracker.createFlow().takeWhile { processList ->
-                listOfProcessList.add(processList)
-                listOfProcessList.size < 2 || processList.isNotEmpty()
-            }.collect()
+            fakeDevice.startClient(pid11, 0, "a.b.c.e", false)
+            Assert.assertNotNull(fakeDevice.getClient(pid10))
+            Assert.assertNotNull(fakeDevice.getClient(pid11))
+            yieldUntil { listOfProcessList.size == 2 }
+
+            // Note: Depending on how fast FakeAdbServer is, adblib may get one or two
+            //       jdwp tracking event
+            fakeDevice.stopClient(pid10)
+            fakeDevice.stopClient(pid11)
+            Assert.assertNull(fakeDevice.getClient(pid10))
+            Assert.assertNull(fakeDevice.getClient(pid11))
         }
 
-        // Assert
-        Assert.assertTrue(listOfProcessList.size >= 3)
+        val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
+        // Collecting the flow deterministically is a little tricky, as the list of events
+        // in the flow depend on how fast FakeAdbServer emits events from the "track-jdwp"
+        // event and how fast adblib collects and emits these events in the jdwp tracker
+        // flow.
+        jdwpTracker.createFlow().takeWhile { processList ->
+            // The goal here is to collect 3 list of processes in `listOfProcessList`
+            // * One with a single process
+            // * One with 2 processes
+            // * One with no processes (after both processes are stopped)
+            // The flow itself may emit a variable amount of "no process" lists in the flow,
+            // then a variable amount of "1 process" lists in the flow, then a variable
+            // amount of "2 processes" lists, then a variable amount of "no process" lists.
+            when (listOfProcessList.size) {
+                // When the list is empty, only add a non-empty process list, it should be a list
+                // of 1 process.
+                0 -> {
+                    if (processList.isNotEmpty()) {
+                        assert(processList.size == 1)
+                        listOfProcessList.add(processList)
+                    }
+                    true
+                }
+                // When the list has one element, add an element only if the process list
+                // contains 2 elements.
+                1 -> {
+                    // The flow may emit a list of 1 process multiple times, because
+                    // FakeAdbServer sometimes emit the same list multiple times
+                    if (processList.size == 2) {
+                        listOfProcessList.add(processList)
+                    }
+                    true
+                }
+                // When the list has 2 elements, wait until we get an empty process list
+                // stop collecting at that point.
+                2 -> {
+                    if (processList.isEmpty()) {
+                        // There may be 1 or 2 lists depending on how fast the flow
+                        // catches up with the 2 process terminations.
+                        listOfProcessList.add(processList)
+                        false
+                    } else {
+                        true
+                    }
+                }
+                else -> {
+                    Assert.fail("Should not reach")
+                    false
+                }
+            }
+        }.collect()
 
-        // Help debug test failures:
-        listOfProcessList.forEachIndexed { index, jdwpProcesses ->
-            println("Process list #$index: $jdwpProcesses")
-        }
+        // Assert: We should have 3 lists: 1 process, 2 processes, empty list.
+        Assert.assertTrue(listOfProcessList.size == 3)
+
         // First list has one process
         Assert.assertEquals(1, listOfProcessList[0].size)
         Assert.assertEquals(listOf(pid10), listOfProcessList[0].map { it.pid }.toList())
@@ -96,7 +143,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         Assert.assertEquals(listOf(pid10, pid11), listOfProcessList[1].map { it.pid }.toList())
 
         // Last list is empty
-        Assert.assertEquals(0, listOfProcessList.last().size)
+        Assert.assertEquals(0, listOfProcessList[2].size)
 
         // Ensure JdwpProcess instances are re-used across flow changes
         Assert.assertSame(listOfProcessList[0].first { it.pid == pid10 },
@@ -160,7 +207,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
     }
 
     @Test
-    fun testJdwpProcessTrackerFlowStopsWhenDeviceDisconnects() {
+    fun testJdwpProcessTrackerFlowStopsWhenDeviceDisconnects(): Unit = runBlockingWithTimeout {
         val deviceID = "1234"
         val theOneFeatureSupported = "push_sync"
         val features = setOf(theOneFeatureSupported)
@@ -181,20 +228,18 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         val pid11 = 11
 
         // Act
-        runBlocking {
-            val listOfProcessList = synchronizedList<List<JdwpProcess>>()
-            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
-            launch {
-                fakeDevice.startClient(pid10, 0, "a.b.c", false)
-                fakeDevice.startClient(pid11, 0, "a.b.c.e", false)
-                yieldUntil { listOfProcessList.size >= 1 }
+        val listOfProcessList = CopyOnWriteArrayList<List<JdwpProcess>>()
+        val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
+        launch {
+            fakeDevice.startClient(pid10, 0, "a.b.c", false)
+            fakeDevice.startClient(pid11, 0, "a.b.c.e", false)
+            yieldUntil { listOfProcessList.size >= 1 }
 
-                fakeAdb.disconnectDevice(fakeDevice.deviceId)
-            }
+            fakeAdb.disconnectDevice(fakeDevice.deviceId)
+        }
 
-            jdwpTracker.createFlow().collect {
-                listOfProcessList.add(it)
-            }
+        jdwpTracker.createFlow().collect {
+            listOfProcessList.add(it)
         }
 
         // Assert
@@ -203,7 +248,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
     }
 
     @Test
-    fun testJdwpProcessTrackerFlowIsExceptionTransparent() {
+    fun testJdwpProcessTrackerFlowIsExceptionTransparent(): Unit = runBlockingWithTimeout {
         val deviceID = "1234"
         val theOneFeatureSupported = "push_sync"
         val features = setOf(theOneFeatureSupported)
@@ -225,13 +270,11 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         // Act
         exceptionRule.expect(Exception::class.java)
         exceptionRule.expectMessage("My Test Exception")
-        runBlocking {
-            fakeDevice.startClient(pid10, 0, "a.b.c", false)
+        fakeDevice.startClient(pid10, 0, "a.b.c", false)
 
-            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
-            jdwpTracker.createFlow().collect {
-                throw Exception("My Test Exception")
-            }
+        val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
+        jdwpTracker.createFlow().collect {
+            throw Exception("My Test Exception")
         }
 
         // Assert (should not reach)
@@ -239,7 +282,7 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
     }
 
     @Test
-    fun testJdwpProcessTrackerFlowICanBeCancelled() {
+    fun testJdwpProcessTrackerFlowICanBeCancelled(): Unit = runBlockingWithTimeout {
         val deviceID = "1234"
         val theOneFeatureSupported = "push_sync"
         val features = setOf(theOneFeatureSupported)
@@ -262,20 +305,14 @@ class JdwpProcessTrackerTest : AdbLibToolsTestBase() {
         // Act
         exceptionRule.expect(CancellationException()::class.java)
         exceptionRule.expectMessage("My Test Exception")
-        runBlocking {
-            fakeDevice.startClient(pid10, 0, "a.b.c", false)
+        fakeDevice.startClient(pid10, 0, "a.b.c", false)
 
-            val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
-            jdwpTracker.createFlow().collect {
-                cancel("My Test Exception")
-            }
+        val jdwpTracker = JdwpProcessTracker(hostServices.session, deviceSelector)
+        jdwpTracker.createFlow().collect {
+            cancel("My Test Exception")
         }
 
         // Assert (should not reach)
         Assert.fail()
-    }
-
-    private fun <T> synchronizedList(): MutableList<T> {
-        return Collections.synchronizedList(mutableListOf())
     }
 }

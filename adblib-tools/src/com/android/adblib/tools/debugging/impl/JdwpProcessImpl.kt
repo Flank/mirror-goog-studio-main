@@ -79,6 +79,10 @@ internal class JdwpProcessImpl(
         startCollectProperties(scope, flowProxyActivity)
     }
 
+    override fun toString(): String {
+        return "JdwpProcess(device=$device, pid=$pid, properties=${propertiesFlow.value})"
+    }
+
     private fun startCollectProperties(
         scope: CoroutineScope,
         flowProxyActivity: Flow<ProxyActivity>
