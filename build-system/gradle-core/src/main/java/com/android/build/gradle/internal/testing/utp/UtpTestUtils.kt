@@ -280,6 +280,13 @@ fun shouldEnableUtp(
                     "supported by ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM yet.")
         return false
     }
+    if (projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+        Logging.getLogger("UtpTestUtils").warn(
+            "Disabling ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM option because " +
+                    "PRIVACY_SANDBOX_SDK_SUPPORT is set. This is not " +
+                    "supported by ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM yet.")
+        return false
+    }
     return (projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM]
             || (testOptions != null && testOptions.emulatorSnapshots.enableForTestFailures))
 }
