@@ -161,7 +161,7 @@
         <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
-                <d:screen-size>xlarge</d:screen-size>
+                <d:screen-size>large</d:screen-size>
                 <d:diagonal-length>55.0</d:diagonal-length>
                 <d:pixel-density>tvdpi</d:pixel-density>
                 <d:screen-ratio>long</d:screen-ratio>
