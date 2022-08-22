@@ -37,11 +37,29 @@ class OptionVersionTest {
          *
          * IMPORTANT: Add a tracking bug to ensure all pending issues are fixed before beta
          * releases of each version.
-         *  - [Add more here]
-         *  - Tracking bug for AGP 7.1: TBD
-         *  - Tracking bug for AGP 7.0: 171996591
+         *  - Tracking bug for AGP 8.0: b/243560711
          */
-        private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf()
+        private val KNOWN_VIOLATING_DEPRECATED_OPTIONS: List<Option<*>> = listOf(
+            BooleanOption.USE_NEW_JAR_CREATOR,
+            BooleanOption.USE_NEW_APK_CREATOR,
+            BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG,
+            BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING,
+            BooleanOption.ENABLE_RESOURCE_OPTIMIZATIONS,
+            BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING,
+            BooleanOption.INCLUDE_REPOSITORIES_IN_DEPENDENCY_REPORT,
+            BooleanOption.ENABLE_ART_PROFILES,
+            BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM,
+            BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER,
+            BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE,
+            BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP,
+            BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES,
+            BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,
+            BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,
+            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
+            BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
+            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS,
+            OptionalBooleanOption.DISABLE_AUTOMATIC_COMPONENT_CREATION
+        )
 
         private fun getStableVersionIgnoringDotReleases(versionString: String): GradleVersion {
             // Normalize the version string first (e.g., "7.0" => "7.0.0")
