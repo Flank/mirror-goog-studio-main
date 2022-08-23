@@ -219,29 +219,6 @@ public class ApkParserTest {
     }
 
     @Test
-    public void testParsingBigZip() throws Exception {
-        Path tempDirectory = Files.createTempDirectory("");
-        try {
-            Path zipArchive = tempDirectory.resolve("big.zip");
-            int numFiles = 3;
-            int sizePerFile = 1_000_000_000;
-            createZip(numFiles, sizePerFile, zipArchive.toFile());
-            Assert.assertTrue(
-                    "Zip is less than 3GiB", Files.size(zipArchive) > numFiles * sizePerFile);
-            ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
-            try (RandomAccessFile file = new RandomAccessFile(zipArchive.toFile(), "r")) {
-                ApkParser.findCDLocation(file.getChannel(), map);
-                assertEquals(
-                        "Central directory offset found",
-                        true,
-                        map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
-            }
-        } finally {
-            PathUtils.deleteRecursivelyIfExists(tempDirectory);
-        }
-    }
-
-    @Test
     public void testUIntOverflow() {
         long doesNotFitInUint32 = 0x1_FF_FF_FF_FFL;
         boolean exceptionCaught = false;
