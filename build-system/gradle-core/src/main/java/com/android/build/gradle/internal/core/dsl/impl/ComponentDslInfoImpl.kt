@@ -94,9 +94,6 @@ internal abstract class ComponentDslInfoImpl internal constructor(
 
     // build type delegates
 
-    override val isAndroidTestCoverageEnabled: Boolean
-        get() = buildTypeObj.enableAndroidTestCoverage || buildTypeObj.isTestCoverageEnabled
-
     override val postProcessingOptions: PostProcessingOptions by lazy {
         if ((buildTypeObj as com.android.build.gradle.internal.dsl.BuildType)
                 .postProcessingConfiguration ==

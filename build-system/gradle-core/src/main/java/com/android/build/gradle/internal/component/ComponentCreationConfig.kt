@@ -145,8 +145,6 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     val providedOnlyClasspath: FileCollection
 
-    val packageJacocoRuntime: Boolean
-
     val javaCompilation: JavaCompilation
 
     fun addVariantOutput(
@@ -162,13 +160,6 @@ interface ComponentCreationConfig : ComponentIdentity {
      * Returns the artifact name modified depending on the component type.
      */
     fun getArtifactName(name: String): String
-
-    // ---------------------------------------------------------------------------------------------
-    // VARIANT DSL INFO REPLACEMENTS
-    // ---------------------------------------------------------------------------------------------
-    // TODO: Figure out if we should be exposing any of the below
-
-    val isAndroidTestCoverageEnabled: Boolean
 
     /** Publish intermediate artifacts in the BuildArtifactsHolder based on PublishingSpecs.  */
     fun publishBuildArtifacts()

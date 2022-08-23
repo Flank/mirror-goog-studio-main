@@ -162,9 +162,6 @@ open class LibraryVariantImpl @Inject constructor(
     override val minSdkVersionForDexing: AndroidVersion
         get() = delegate.minSdkVersionForDexing
 
-    override val packageJacocoRuntime: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
-
     override val publishInfo: VariantPublishingInfo?
         get() = dslInfo.publishInfo
 }

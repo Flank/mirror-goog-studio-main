@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.core.dsl.impl
 
+import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.gradle.internal.core.dsl.InstrumentedTestComponentDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
@@ -26,6 +27,7 @@ import com.android.builder.dexing.isLegacyMultiDexMode
 import org.gradle.api.provider.Provider
 
 internal class InstrumentedTestDslInfoImpl(
+    private val buildTypeObj: BuildType,
     private val productFlavorList: List<ProductFlavor>,
     private val defaultConfig: DefaultConfig,
     private val dataProvider: ManifestDataProvider,
@@ -92,4 +94,7 @@ internal class InstrumentedTestDslInfoImpl(
             // there is actually no DSL value for this.
             return dataProvider.manifestData.map { it.testLabel }
         }
+
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = buildTypeObj.enableAndroidTestCoverage || buildTypeObj.isTestCoverageEnabled
 }

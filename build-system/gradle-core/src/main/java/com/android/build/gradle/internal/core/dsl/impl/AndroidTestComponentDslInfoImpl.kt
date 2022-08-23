@@ -96,6 +96,9 @@ internal class AndroidTestComponentDslInfoImpl(
         }
     }
 
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = instrumentedTestDelegate.isAndroidTestCoverageEnabled
+
     // TODO: Android Test doesn't have isDebuggable dsl in the build type, we should move to using
     //  the value from the tested type
     override val isDebuggable: Boolean
@@ -124,6 +127,7 @@ internal class AndroidTestComponentDslInfoImpl(
 
     private val instrumentedTestDelegate by lazy {
         InstrumentedTestDslInfoImpl(
+            buildTypeObj,
             productFlavorList,
             defaultConfig,
             dataProvider,

@@ -179,9 +179,6 @@ open class TestVariantImpl @Inject constructor(
     override val instrumentationRunnerArguments: Map<String, String>
         get() = dslInfo.instrumentationRunnerArguments
 
-    override val isTestCoverageEnabled: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
-
     override val shouldPackageDesugarLibDex: Boolean = delegate.isCoreLibraryDesugaringEnabled(this)
     override val debuggable: Boolean
         get() = delegate.isDebuggable
@@ -202,7 +199,14 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
+    /**
+     * For test projects, coverage will only be effective if set by the tested project.
+     */
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = dslInfo.isAndroidTestCoverageEnabled
     override val useJacocoTransformInstrumentation: Boolean
+        get() = false
+    override val packageJacocoRuntime: Boolean
         get() = false
 
     // ---------------------------------------------------------------------------------------------

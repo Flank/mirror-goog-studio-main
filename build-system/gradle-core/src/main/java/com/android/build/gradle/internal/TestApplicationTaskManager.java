@@ -133,7 +133,6 @@ public class TestApplicationTaskManager
         createTestDevicesForVariant(
                 testVariantProperties,
                 testData,
-                null,
                 testVariantProperties.getName(),
                 ComponentType.ANDROID_TEST_SUFFIX);
     }

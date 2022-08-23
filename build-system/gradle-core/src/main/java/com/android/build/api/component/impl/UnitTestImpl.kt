@@ -121,7 +121,7 @@ open class UnitTestImpl @Inject constructor(
 
     // these would normally be public but not for unit-test. They are there to feed the
     // manifest but aren't actually used.
-    override val isTestCoverageEnabled: Boolean
+    override val isUnitTestCoverageEnabled: Boolean
         get() = dslInfo.isUnitTestCoverageEnabled
 
     override val androidResourcesCreationConfig: AndroidResourcesCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
@@ -166,8 +166,4 @@ open class UnitTestImpl @Inject constructor(
      * There is no build config fields for unit tests.
      */
     override val buildConfigCreationConfig: BuildConfigCreationConfig? = null
-
-    // TODO: Remove
-    override val isUnitTestCoverageEnabled: Boolean
-        get() = dslInfo.isUnitTestCoverageEnabled
 }

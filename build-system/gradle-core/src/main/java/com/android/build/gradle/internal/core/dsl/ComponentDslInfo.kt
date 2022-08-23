@@ -92,10 +92,5 @@ interface ComponentDslInfo {
 
     val postProcessingOptions: PostProcessingOptions
 
-    /**
-     * TODO(b/242515559): Clean this up
-     */
-    val isAndroidTestCoverageEnabled: Boolean
-
     fun gatherProguardFiles(type: ProguardFileType): Collection<File>
 }

@@ -320,9 +320,6 @@ open class AndroidTestImpl @Inject constructor(
     override val instrumentationRunnerArguments: Map<String, String>
         get() = dslInfo.instrumentationRunnerArguments
 
-    override val isTestCoverageEnabled: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
-
     /**
      * Package desugar_lib DEX for base feature androidTest only if the base packages shrunk
      * desugar_lib. This should be fixed properly by analyzing the test code when generating L8
@@ -392,9 +389,17 @@ open class AndroidTestImpl @Inject constructor(
     override val ignoreAllLibraryKeepRules: Boolean
         get() = dslInfo.ignoreAllLibraryKeepRules
 
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = dslInfo.isAndroidTestCoverageEnabled
+
     // Only instrument library androidTests. In app modules, the main classes are instrumented.
     override val useJacocoTransformInstrumentation: Boolean
-        get() = isTestCoverageEnabled && mainVariant.componentType.isAar
+        get() = dslInfo.isAndroidTestCoverageEnabled && mainVariant.componentType.isAar
+
+    // Only include the jacoco agent if coverage is enabled in library test components
+    // as in apps it will have already been included in the tested application.
+    override val packageJacocoRuntime: Boolean
+        get() = dslInfo.isAndroidTestCoverageEnabled && mainVariant.componentType.isAar
 
     override val postProcessingFeatures: PostprocessingFeatures?
         get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()

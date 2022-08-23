@@ -58,4 +58,9 @@ interface InstrumentedTestComponentDslInfo {
 
     /** Gets the test label for this variant  */
     val testLabel: Provider<String?>
+
+    /**
+     * Whether android test coverage is enabled for the component's buildType.
+     */
+    val isAndroidTestCoverageEnabled: Boolean
 }

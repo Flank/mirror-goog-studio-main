@@ -56,4 +56,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
         get() = null
 
     val useJacocoTransformInstrumentation: Boolean
+
+    val packageJacocoRuntime: Boolean
 }

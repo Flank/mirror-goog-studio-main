@@ -255,10 +255,6 @@ open class ApplicationVariantImpl @Inject constructor(
     override val needsShrinkDesugarLibrary: Boolean
         get() = delegate.needsShrinkDesugarLibrary
 
-    // Apps include the jacoco agent if test coverage is enabled
-    override val packageJacocoRuntime: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
-
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(
             global.bundleOptions.codeTransparency.signing,
@@ -267,6 +263,10 @@ open class ApplicationVariantImpl @Inject constructor(
     )
 
     override val useJacocoTransformInstrumentation: Boolean
+        get() = isAndroidTestCoverageEnabled
+
+    // Apps include the jacoco agent if test coverage is enabled
+    override val packageJacocoRuntime: Boolean
         get() = isAndroidTestCoverageEnabled
 
     override val isWearAppUnbundled: Boolean?

@@ -360,12 +360,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
         }
     }
 
-    override val packageJacocoRuntime: Boolean
-        get() = false
-
-    override val isAndroidTestCoverageEnabled: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
-
     override val modelV1LegacySupport = ModelV1LegacySupportImpl(dslInfo)
 
     override val oldVariantApiLegacySupport: OldVariantApiLegacySupport? by lazy {

@@ -82,7 +82,7 @@ abstract class AbstractTestDataImpl(
     override var animationsDisabled = creationConfig.services.provider { false }
 
     override val testCoverageEnabled =
-        creationConfig.services.provider { creationConfig.isTestCoverageEnabled }
+        creationConfig.services.provider { creationConfig.isAndroidTestCoverageEnabled }
 
     override val minSdkVersion = creationConfig.services.provider { creationConfig.minSdkVersion }
 

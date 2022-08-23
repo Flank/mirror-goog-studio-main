@@ -198,7 +198,10 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val signingConfigImpl: SigningConfigImpl? = null
 
     override val useJacocoTransformInstrumentation: Boolean
-        get() = dslInfo.isAndroidTestCoverageEnabled
+        get() = isAndroidTestCoverageEnabled
+
+    override val packageJacocoRuntime: Boolean
+        get() = false
 
     // ---------------------------------------------------------------------------------------------
     // DO NOT USE, Deprecated DSL APIs.

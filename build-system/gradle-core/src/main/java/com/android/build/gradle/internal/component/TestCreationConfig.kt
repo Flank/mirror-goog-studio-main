@@ -33,6 +33,4 @@ interface TestCreationConfig: ComponentCreationConfig {
      * The application of the app under tests
      */
     val testedApplicationId: Provider<String>
-
-    val isTestCoverageEnabled: Boolean
 }

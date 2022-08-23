@@ -317,4 +317,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     }
     override val manifestPlaceholders: MapProperty<String, String>
         get() = manifestPlaceholdersCreationConfig.placeholders
+
+    override val isAndroidTestCoverageEnabled: Boolean
+        get() = (this as? HasAndroidTest)?.androidTest?.isAndroidTestCoverageEnabled == true
 }

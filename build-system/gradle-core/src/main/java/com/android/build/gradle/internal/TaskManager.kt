@@ -38,7 +38,9 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
+import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
@@ -1826,7 +1828,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     protected fun createTestDevicesForVariant(
         creationConfig: InstrumentedTestCreationConfig,
         testData: AbstractTestDataImpl,
-        testedVariant: VariantCreationConfig?,
         variantName: String,
         testTaskSuffix: String = ""
     ) {
@@ -1834,7 +1835,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         if (!shouldEnableUtp(
                 globalConfig.services.projectOptions,
                 globalConfig.testOptions,
-                testedVariant?.componentType
+                (creationConfig as? NestedComponentCreationConfig)?.mainVariant?.componentType
             ) ||
                 managedDevices.isEmpty()) {
             return
@@ -1931,8 +1932,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         // Register a test coverage report generation task to every managedDeviceCheck
         // task.
-        if ((testedVariant?.isAndroidTestCoverageEnabled == true) &&
-                creationConfig is TestComponentCreationConfig) {
+        if (creationConfig is TestComponentCreationConfig &&
+            creationConfig.isAndroidTestCoverageEnabled) {
             val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
                 project, JacocoTask.getJacocoVersion(creationConfig)
             )
@@ -1941,7 +1942,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                     creationConfig, jacocoAntConfiguration
                 )
             )
-            testedVariant.taskContainer.coverageReportTask?.dependsOn(reportTask)
+            creationConfig.mainVariant.taskContainer.coverageReportTask?.dependsOn(reportTask)
             // Run the report task after all tests are finished on all devices.
             deviceToProvider.values.forEach { managedDeviceTestTask ->
                 reportTask.dependsOn(managedDeviceTestTask)
@@ -2009,7 +2010,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         taskFactory.configure(
                 CONNECTED_ANDROID_TEST
         ) { connectedAndroidTest: Task -> connectedAndroidTest.dependsOn(connectedTask) }
-        if (testedVariant.isAndroidTestCoverageEnabled) {
+        if (androidTestProperties.isAndroidTestCoverageEnabled) {
             val jacocoAntConfiguration = JacocoConfigurations.getJacocoAntTaskConfiguration(
                     project, JacocoTask.getJacocoVersion(androidTestProperties))
             val reportTask = taskFactory.register(
@@ -2061,7 +2062,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         createTestDevicesForVariant(
             androidTestProperties,
             testData,
-            testedVariant,
             androidTestProperties.mainVariant.name
         )
     }
@@ -2346,8 +2346,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    protected fun handleJacocoDependencies(creationConfig: ComponentCreationConfig) {
-        if (creationConfig.packageJacocoRuntime) {
+    private fun handleJacocoDependencies(creationConfig: ComponentCreationConfig) {
+        if (creationConfig is ApkCreationConfig && creationConfig.packageJacocoRuntime) {
             val jacocoAgentRuntimeDependency = JacocoConfigurations.getAgentRuntimeDependency(
                     JacocoTask.getJacocoVersion(creationConfig))
             project.dependencies
@@ -2382,8 +2382,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
 
         val instrumentedClasses: FileCollection =
-            if (creationConfig.isAndroidTestCoverageEnabled &&
-                    creationConfig !is ApplicationCreationConfig) {
+            if (creationConfig is ConsumableCreationConfig &&
+                creationConfig.isAndroidTestCoverageEnabled &&
+                creationConfig !is ApplicationCreationConfig) {
                 // For libraries that can be published,avoid publishing classes
                 // with runtime dependencies on Jacoco.
                 creationConfig.artifacts
@@ -2963,8 +2964,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 .taskContainer
                 .assetGenTask =
                 taskFactory.register(creationConfig.computeTaskName("generate", "Assets"))
-        if (!creationConfig.componentType.isForTesting
-                && creationConfig.isAndroidTestCoverageEnabled) {
+        // Create anchor task for creating instrumentation test coverage reports
+        if (creationConfig is VariantCreationConfig && creationConfig.isAndroidTestCoverageEnabled) {
             creationConfig
                     .taskContainer
                     .coverageReportTask = taskFactory.register(
@@ -2972,7 +2973,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             ) { task: Task ->
                 task.group = JavaBasePlugin.VERIFICATION_GROUP
                 task.description = String.format(
-                        "Creates test coverage reports for the %s variant.",
+                        "Creates instrumentation test coverage reports for the %s variant.",
                         creationConfig.name)
             }
         }

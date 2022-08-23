@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.BuildAnalyzer;
+import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
@@ -43,7 +44,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidAnalyticsTestListener;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.ComponentType;
-import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -145,7 +145,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
         @Override
         public void handleProvider(@NotNull TaskProvider<AndroidUnitTest> taskProvider) {
             super.handleProvider(taskProvider);
-            if (unitTestCreationConfig.isTestCoverageEnabled()) {
+            if (unitTestCreationConfig.isUnitTestCoverageEnabled()) {
                 unitTestCreationConfig
                         .getArtifacts()
                         .setInitialProvider(taskProvider,
@@ -160,7 +160,7 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
             super.configure(task);
             unitTestCreationConfig.onTestedVariant(
                     testedConfig -> {
-                        if (unitTestCreationConfig.isTestCoverageEnabled()) {
+                        if (unitTestCreationConfig.isUnitTestCoverageEnabled()) {
                             task.getProject()
                                     .getPlugins()
                                     .withType(

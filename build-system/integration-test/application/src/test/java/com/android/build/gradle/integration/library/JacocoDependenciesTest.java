@@ -70,6 +70,10 @@ public class JacocoDependenciesTest {
                 "\ndependencies {\n" + "    api project(':library')\n" + "}\n");
 
         appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\nandroid.buildTypes.debug.enableAndroidTestCoverage = true");
+
+        appendToFile(
                 project.getSubproject("library").getBuildFile(),
                 "\nandroid.buildTypes.debug.enableAndroidTestCoverage = true");
     }
@@ -84,8 +88,41 @@ public class JacocoDependenciesTest {
         Optional<Dex> dexOptional = apk.getMainDexFile();
         Truth8.assertThat(dexOptional).isPresent();
 
-        // noinspection ConstantConditions
         assertThat(dexOptional.get()).containsClasses("Lorg/jacoco/agent/rt/IAgent;");
+    }
+
+    @Test
+    public void checkJacocoInLibAndroidTest() throws IOException, InterruptedException {
+        project.executor().run("clean", "library:assembleDebugAndroidTest");
+
+        Apk apk =
+                project.getSubproject(":library")
+                        .getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
+        assertThat(apk.getFile()).isFile();
+
+        Optional<Dex> dexOptional = apk.getMainDexFile();
+        Truth8.assertThat(dexOptional).isPresent();
+
+        assertThat(dexOptional.get()).containsClasses("Lorg/jacoco/agent/rt/IAgent;");
+    }
+
+    @Test
+    public void checkJacocoNotInAppWhenLibraryHasTestCoverageEnabled()
+            throws IOException, InterruptedException {
+        TestFileUtils.searchAndReplace(
+                project.getSubproject("app").getBuildFile(),
+                "android.buildTypes.debug.enableAndroidTestCoverage = true",
+                "android.buildTypes.debug.enableAndroidTestCoverage = false");
+
+        project.executor().run("clean", "app:assembleDebug");
+
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
+        assertThat(apk.getFile()).isFile();
+
+        Optional<Dex> dexOptional = apk.getMainDexFile();
+        Truth8.assertThat(dexOptional).isPresent();
+
+        assertThat(dexOptional.get()).doesNotContainClasses("Lorg/jacoco/agent/rt/IAgent;");
     }
 
     @Test
@@ -97,13 +134,15 @@ public class JacocoDependenciesTest {
     @Test
     public void checkVersionForced() throws IOException {
         TestFileUtils.searchAndReplace(
-                project.getSubproject("library").getBuildFile(),
-                "apply plugin: 'com.android.library'",
+                project.getSubproject("app").getBuildFile(),
+                "apply plugin: 'com.android.application'",
                 "\n"
-                        + "apply plugin: 'com.android.library'\n"
+                        + "apply plugin: 'com.android.application'\n"
                         + "dependencies {\n"
                         + "  implementation "
-                        + "'org.jacoco:org.jacoco.agent:" + oldJacocoVersion + ":runtime'\n"
+                        + "'org.jacoco:org.jacoco.agent:"
+                        + oldJacocoVersion
+                        + ":runtime'\n"
                         + "}\n");
         assertAgentMavenCoordinates(
                 "org.jacoco:org.jacoco.agent:" + JacocoOptions.DEFAULT_VERSION + ":runtime@jar");
@@ -112,7 +151,7 @@ public class JacocoDependenciesTest {
     @Test
     public void checkAgentRuntimeVersionWhenOverridden() throws IOException {
         TestFileUtils.appendToFile(
-                project.getSubproject("library").getBuildFile(),
+                project.getSubproject("app").getBuildFile(),
                 "\n" + "android.jacoco.version '" + oldJacocoVersion + "'\n");
         assertAgentMavenCoordinates(
                 "org.jacoco:org.jacoco.agent:" + oldJacocoVersion + ":runtime@jar");
@@ -132,7 +171,7 @@ public class JacocoDependenciesTest {
         LibraryGraphHelper helper = new LibraryGraphHelper(container);
         Variant appDebug =
                 AndroidProjectUtils.getVariantByName(
-                        container.getOnlyModelMap().get(":library"), "debug");
+                        container.getOnlyModelMap().get(":app"), "debug");
 
         DependencyGraphs dependencyGraphs = appDebug.getMainArtifact().getDependencyGraphs();
         assertThat(
