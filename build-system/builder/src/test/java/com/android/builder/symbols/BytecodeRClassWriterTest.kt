@@ -31,11 +31,13 @@ import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.io.IOException
 import java.lang.reflect.Field
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Locale
 import java.util.zip.ZipFile
 import javax.tools.JavaFileObject
 import javax.tools.ToolProvider
@@ -278,6 +280,52 @@ class BytecodeRClassWriterTest {
         assertThat(valueStringToInt("0x7f04002c")).isEqualTo(0x7f04002c)
     }
 
+    @Test
+    fun rPackageSmokeTest() {
+        val rJar = mTemporaryFolder.newFile("R.jar")
+        val packageJar1 = mTemporaryFolder.newFile("SdkRPackage.jar")
+        val packageJar2 = mTemporaryFolder.newFile("AppBackwardCompatRPackage.jar")
+
+        val symbols = SymbolTable.builder()
+                .tablePackage("com.example.privacysandboxenabledsdk")
+                .add(Symbol.normalSymbol(ResourceType.ID, "foo", 0x1))
+                .add(
+                        Symbol.styleableSymbol(
+                                "styles",
+                                ImmutableList.of(0x2, 0x4),
+                                ImmutableList.of("style1", "style2")))
+                .build()
+
+        val privacySandboxSdkApplicationId = "com.example.privacysandboxenabledsdk.production"
+
+        exportToCompiledJava(listOf(symbols), rJar.toPath(), rPackage = privacySandboxSdkApplicationId)
+        writeRPackages(mapOf(privacySandboxSdkApplicationId to 0x7f000000), packageJar1.toPath())
+        writeRPackages(mapOf(privacySandboxSdkApplicationId to 0x7e000000), packageJar2.toPath())
+
+        fun classloaderOf(vararg jars: File) = URLClassLoader(jars.map { it.toURI().toURL() }.toTypedArray())
+
+        classloaderOf(rJar, packageJar1).use {
+            assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$id"))
+                    .containsExactly("int foo = 0x7F000001")
+            assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$styleable"))
+                    .containsExactly(
+                            "int[] styles = [0x7F000002,0x7F000004]",
+                            "int styles_style1 = 0",
+                            "int styles_style2 = 1",
+                    )
+        }
+        classloaderOf(rJar, packageJar2).use {
+            assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$id"))
+                    .containsExactly("int foo = 0x7E000001")
+            assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$styleable"))
+                    .containsExactly(
+                            "int[] styles = [0x7E000002,0x7E000004]",
+                            "int styles_style1 = 0",
+                            "int styles_style2 = 1",
+                    )
+        }
+    }
+
     private fun loadFields(classLoader: ClassLoader, name: String) =
             classLoader.loadClass(name)
                     .fields
@@ -286,9 +334,18 @@ class BytecodeRClassWriterTest {
                     .toList()
 
     private fun valueAsString(field: Field) = when (field.type.typeName) {
-        "int" -> field.get(null)
-        "int[]" -> "[" + (field.get(null) as IntArray).joinToString(",") + "]"
+        "int" -> field.get(null).formatInt
+        "int[]" -> "[" + (field.get(null) as IntArray).joinToString(",") { it.formatInt } + "]"
         else -> throw IllegalStateException("Unexpected type " + field.type.typeName)
+    }
+
+    private val Any.formatInt: String get() {
+        (this as Int)
+        return if (this > 0x10000000 || this < 0) {
+            "0x%08X".format(Locale.US, this)
+        } else {
+            this.toString()
+        }
     }
 
     private fun files(dir: Path) =

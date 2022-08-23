@@ -46,13 +46,18 @@ import java.util.EnumSet
 import java.util.zip.Deflater.NO_COMPRESSION
 
 @Throws(IOException::class)
-fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: Boolean = false) {
+fun exportToCompiledJava(
+        tables: Iterable<SymbolTable>,
+        outJar: Path,
+        finalIds: Boolean = false,
+        rPackage: String? = null,
+) {
     JarFlinger(outJar).use { jarCreator ->
         // NO_COMPRESSION because R.jar isn't packaged into final APK or AAR
         jarCreator.setCompressionLevel(NO_COMPRESSION)
         val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
         mergedTables.forEach { table ->
-            exportToCompiledJava(table, jarCreator, finalIds)
+            exportToCompiledJava(table, jarCreator, finalIds, rPackage)
         }
     }
 }
@@ -61,12 +66,13 @@ fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: 
 fun exportToCompiledJava(
     table: SymbolTable,
     jarMerger: JarCreator,
-    finalIds: Boolean = false
+    finalIds: Boolean = false,
+    rPackage: String? = null,
 ) {
     val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
     for (resType in ResourceType.values()) {
         // Don't write empty R$ classes.
-        val bytes = generateResourceTypeClass(table, resType, finalIds) ?: continue
+        val bytes = generateResourceTypeClass(table, resType, finalIds, rPackage) ?: continue
         resourceTypes.add(resType)
         val innerR = internalName(table, resType)
         jarMerger.addEntry(innerR + SdkConstants.DOT_CLASS, bytes.inputStream())
@@ -112,7 +118,7 @@ private fun generateOuterRClass(resourceTypes: EnumSet<ResourceType>, packageR: 
 }
 
 private fun generateResourceTypeClass(
-    table: SymbolTable, resType: ResourceType, finalIds: Boolean): ByteArray? {
+    table: SymbolTable, resType: ResourceType, finalIds: Boolean, rPackage: String?): ByteArray? {
     val symbols = table.getSymbolByResourceType(resType)
     if (symbols.isEmpty()) {
         return null
@@ -147,7 +153,7 @@ private fun generateResourceTypeClass(
                 s.canonicalName,
                 s.javaType.desc,
                 null,
-                if (s is Symbol.StyleableSymbol) null else s.intValue
+                if (s is Symbol.StyleableSymbol || rPackage != null) null else s.intValue
         )
                 .visitEnd()
 
@@ -174,38 +180,54 @@ private fun generateResourceTypeClass(
     init.visitEnd()
 
     // init method
-    if (resType == ResourceType.STYLEABLE) {
+    if (resType == ResourceType.STYLEABLE || rPackage != null) {
         val method = Method("<clinit>", "()V")
         val clinit = GeneratorAdapter(ACC_PUBLIC.or(ACC_STATIC), method, null, null, cw)
         clinit.visitCode()
+        if (rPackage != null) {
+            clinit.visitFieldInsn(GETSTATIC, rPackage.replace(".", "/") + "/RPackage", "packageId", "I")
+            clinit.storeLocal(1, INT_TYPE)
+        }
+
         for (s in symbols) {
-            s as Symbol.StyleableSymbol
-            val values = s.values
-            clinit.push(values.size)
-            clinit.newArray(INT_TYPE)
+            if (resType == ResourceType.STYLEABLE) {
+                s as Symbol.StyleableSymbol
+                val values = s.values
+                clinit.push(values.size)
+                clinit.newArray(INT_TYPE)
 
-            for ((i, value) in values.withIndex()) {
-                if (isUnstableAndroidAttr(value, s.children[i])) {
-                    // For unstable android attributes a reference to android.R.attr should be used
-                    // instead of the value (0).
-                    val name = s.children[i].substringAfter("android").drop(1)
-                    clinit.dup()
-                    clinit.push(i)
-                    clinit.visitFieldInsn(
-                            GETSTATIC,
-                            "android/R\$attr",
-                            canonicalizeValueResourceName(name),
-                            "I")
-                    clinit.arrayStore(INT_TYPE)
-                } else {
-                    clinit.dup()
-                    clinit.push(i)
-                    clinit.push(value)
-                    clinit.arrayStore(INT_TYPE)
+                for ((i, value) in values.withIndex()) {
+                    if (isUnstableAndroidAttr(value, s.children[i])) {
+                        // For unstable android attributes a reference to android.R.attr should be used
+                        // instead of the value (0).
+                        val name = s.children[i].substringAfter("android").drop(1)
+                        clinit.dup()
+                        clinit.push(i)
+                        clinit.visitFieldInsn(
+                                GETSTATIC,
+                                "android/R\$attr",
+                                canonicalizeValueResourceName(name),
+                                "I")
+                        clinit.arrayStore(INT_TYPE)
+                    } else {
+                        clinit.dup()
+                        clinit.push(i)
+                        clinit.push(value)
+                        if (rPackage != null) {
+                            clinit.loadLocal(1)
+                            clinit.visitInsn(Opcodes.IADD)
+                        }
+                        clinit.arrayStore(INT_TYPE)
+                    }
                 }
-            }
 
-            clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
+                clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
+            } else {
+                clinit.push(s.intValue)
+                clinit.loadLocal(1)
+                clinit.visitInsn(Opcodes.IADD)
+                clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "I")
+            }
         }
         clinit.returnValue()
         clinit.endMethod()
@@ -233,5 +255,32 @@ private fun internalName(table: SymbolTable, type: ResourceType?): String {
         className
     } else {
         "${table.tablePackage.replace(".", "/")}/$className"
+    }
+}
+
+/**
+ * Write RPackage class for privacy sandbox SDKs
+ *
+ * See b/243502800
+ */
+fun writeRPackages(packageNameToId: Map<String, Int>, outJar: Path,) {
+    JarFlinger(outJar).use { jarCreator ->
+        // NO_COMPRESSION because RPackage.jar isn't packaged into final APK or AAR
+        jarCreator.setCompressionLevel(NO_COMPRESSION)
+        packageNameToId.forEach { (packageName, packageId) ->
+            val cw = ClassWriter(COMPUTE_MAXS)
+            val internalName = packageName.replace(".", "/")+ "/" + "RPackage"
+            cw.visit(
+                    Opcodes.V1_8,
+                    ACC_PUBLIC + ACC_FINAL + ACC_SUPER,
+                    internalName, null,
+                    "java/lang/Object", null)
+            cw.visitField(ACC_PUBLIC + ACC_STATIC + ACC_FINAL, "packageId", "I", null, packageId)
+            cw.visitEnd()
+            jarCreator.addEntry(
+                    internalName + SdkConstants.DOT_CLASS,
+                    cw.toByteArray().inputStream()
+            )
+        }
     }
 }
