@@ -123,15 +123,6 @@ class AnalyticsEnabledSourcesTest {
         )
     }
 
-    @Test
-    fun getResources() {
-        testAnalytics(
-            SourceDirectories.Flat::class.java,
-            Sources::resources,
-            VariantPropertiesMethodType.SOURCES_RESOURCES_ACCESS_VALUE
-        )
-    }
-
     private fun <T: SourceDirectories> testAnalytics(
         type: Class<T>,
         accessor: (sources: Sources) -> T?,

@@ -42,11 +42,6 @@ interface Sources {
     val res: SourceDirectories.Layered?
 
     /**
-     * Access to the Java-style resources sources folders.
-     */
-    val resources: SourceDirectories.Flat?
-
-    /**
      * Access to the Android assets sources folders.
      */
     val assets: SourceDirectories.Layered?

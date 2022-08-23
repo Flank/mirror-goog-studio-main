@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -74,7 +75,9 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            task.from(creationConfig.sources.resources.getAsFileTrees())
+            for (sourceProvider in creationConfig.variantSources.sortedSourceProviders) {
+                task.from((sourceProvider as AndroidSourceSet).resources.getSourceFiles())
+            }
             task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         }
     }

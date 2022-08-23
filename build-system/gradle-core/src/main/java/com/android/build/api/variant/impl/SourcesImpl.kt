@@ -87,19 +87,6 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
-    override val resources: FlatSourceDirectoriesImpl =
-        FlatSourceDirectoriesImpl(
-            SourceType.JAVA_RESOURCES.name,
-            variantServices,
-            variantSourceSet?.resources?.filter,
-        ).also { sourceDirectoriesImpl ->
-
-            defaultSourceProvider.getResources(sourceDirectoriesImpl).run {
-                sourceDirectoriesImpl.addSources(this)
-            }
-            updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.resources)
-        }
-
     override val assets: AssetSourceDirectoriesImpl =
         AssetSourceDirectoriesImpl(
             SourceType.ASSETS.folder,
