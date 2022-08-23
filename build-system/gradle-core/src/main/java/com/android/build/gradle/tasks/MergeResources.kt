@@ -499,6 +499,9 @@ abstract class MergeResources : NewIncrementalTask() {
         if (generatedPngsOutputDir.isPresent) {
             sourceSets.add(generatedPngsOutputDir.get().asFile)
         }
+        mergedNotCompiledResourcesOutputDirectory?.let {
+            if (it.exists()) { sourceSets.add(it) }
+        }
         sourceSets.add(destinationDir)
         sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_MERGED_DOT_DIR))
         sourceSets.add(FileUtils.join(incrementalFolder, SdkConstants.FD_STRIPPED_DOT_DIR))

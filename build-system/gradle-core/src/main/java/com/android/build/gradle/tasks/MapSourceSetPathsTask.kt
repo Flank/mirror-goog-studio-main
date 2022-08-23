@@ -47,6 +47,10 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
 
     @get:Input
     @get:Optional
+    abstract val mergedNotCompiledDir: Property<String>
+
+    @get:Input
+    @get:Optional
     abstract val generatedResDir: Property<String>
 
     @get:Input
@@ -84,6 +88,7 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
             generatedResDir.orNull,
             renderscriptResOutputDir.orNull,
             mergeResourcesOutputDir.orNull,
+            mergedNotCompiledDir.orNull
         )
         val generatedSourceSets = allGeneratedRes.get().flatten()
 
@@ -173,6 +178,12 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                         as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
                     it.asFile.absolutePath
                 }
+            )
+            task.mergedNotCompiledDir.setDisallowChanges(
+                    (creationConfig.artifacts.get(InternalArtifactType.MERGED_NOT_COMPILED_RES)
+                            as DefaultFilePropertyFactory.DefaultDirectoryVar).locationOnly.map {
+                        it.asFile.absolutePath
+                    }
             )
             task.namespace.setDisallowChanges(creationConfig.namespace)
             if (includeDependencies) {

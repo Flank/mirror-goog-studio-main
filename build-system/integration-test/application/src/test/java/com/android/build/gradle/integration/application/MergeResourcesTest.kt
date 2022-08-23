@@ -531,5 +531,30 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
         assertThat(FileUtils.join(generatedPngs, "drawable-anydpi-v28", "icon.xml")
                 .readLines()).containsExactlyElementsIn(listOf("<vector>c</vector>"))
     }
+
+    // Regression test for b/206674992
+    @Test
+    fun testIncrementalResourceChangeOfMergedNotCompiledResource() {
+        val appProject = project.getSubproject(":app")
+        val noCompileLayout = appProject.file("src/main/res/layout/no_compile.xml")
+
+        // Resource shrinker is required to generate the mergedNotCompiled resource directory.
+        TestFileUtils.appendToFile(
+                appProject.buildFile,
+                "android.buildTypes.release.minifyEnabled true\n" +
+                        "android.buildTypes.release.shrinkResources true"
+        )
+        FileUtils.createFile(noCompileLayout,
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<merge/>")
+        project.execute(":app:mergeReleaseResources")
+
+        TestFileUtils.appendToFile(
+                noCompileLayout,
+                "<!-- Comment causing incremental run. -->"
+        )
+
+        project.execute(":app:mergeReleaseResources")
+    }
 }
 
