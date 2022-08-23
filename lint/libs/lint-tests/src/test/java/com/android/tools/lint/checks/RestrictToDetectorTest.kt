@@ -2090,4 +2090,45 @@ class RestrictToDetectorTest : AbstractCheckTest() {
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun testTestOnly() {
+        // Regression test for b/243197340
+        lint().files(
+            kotlin(
+                """
+                import androidx.annotation.VisibleForTesting
+
+                class ProductionCode {
+                    fun compute() {
+                        initialize() // OK
+                    }
+
+                    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+                    fun initialize() {
+                    }
+                }
+                """
+            ).indented(),
+            kotlin(
+                """
+                import org.jetbrains.annotations.TestOnly;
+                class Code {
+                    @TestOnly
+                    fun test() {
+                        ProductionCode().initialize() // Not allowed; this method is intended to be private
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package org.jetbrains.annotations;
+                import java.lang.annotation.*;
+                @Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.TYPE})
+                public @interface TestOnly { }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
