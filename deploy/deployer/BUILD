@@ -106,6 +106,7 @@ filegroup(
 coverage_java_test(
     name = "deployer.tests",
     size = "medium",
+    timeout = "long",
     srcs = glob(["src/test/java/**/*.java"]) + [
         "//tools/base/deploy/sites:Sites.java",
     ],
