@@ -129,6 +129,7 @@ class MinimalPrivacySandboxSdkTest {
             Truth.assertThat(apk.entries.map { it.toString() }).containsExactly(
                     "/resources.arsc",
                     "/classes.dex",
+                    "/classes2.dex",
                     "/AndroidManifest.xml"
             )
         }

@@ -19,4 +19,11 @@ package com.android.testutils.apk
 import java.io.File
 
 /** Represents an Android bundle file. */
-class Aab(file: File) : Zip(file)
+class Aab(file: File) : Zip(file) {
+    fun getDexListForModule(module: String): List<Dex> {
+        var index = 1
+        return generateSequence {
+            getEntry("base/dex/classes${if(index++==1) "" else index}.dex")?.let { Dex(it) }
+        }.toList()
+    }
+}
