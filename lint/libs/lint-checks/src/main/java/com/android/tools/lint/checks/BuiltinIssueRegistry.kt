@@ -155,6 +155,7 @@ open class BuiltinIssueRegistry : IssueRegistry() {
                 GradleDetector.AGP_DEPENDENCY,
                 GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH,
                 GradleDetector.BUNDLED_GMS,
+                GradleDetector.CHROMEOS_ABI_SUPPORT,
                 GradleDetector.COMPATIBILITY,
                 GradleDetector.DATA_BINDING_WITHOUT_KAPT,
                 GradleDetector.DEPENDENCY,

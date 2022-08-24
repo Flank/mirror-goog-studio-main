@@ -436,6 +436,7 @@ abstract class Reporter protected constructor(
                     FontDetector.FONT_VALIDATION,
                     GradleDetector.AGP_DEPENDENCY,
                     GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH,
+                    GradleDetector.CHROMEOS_ABI_SUPPORT,
                     GradleDetector.COMPATIBILITY,
                     GradleDetector.DEPENDENCY,
                     GradleDetector.DEPRECATED,

@@ -566,6 +566,49 @@ open class GradleDetector : Detector(), GradleScanner {
             mDeclaredSourceCompatibility = true
         } else if ((parent == "" || parent == "java") && property == "targetCompatibility") {
             mDeclaredTargetCompatibility = true
+        } else if (property == "include" && parent == "abi"
+            || property == "abiFilters" && parent == "ndk") {
+            checkForChromeOSAbiSplits(context, valueCookie, value)
+        }
+    }
+
+    /**
+     * For ChromeOS performance, we want to check if a developer has turned on
+     * abiSplits or abiFilters as they target specific ABIs. If the developer
+     * has included both `x86` and `x86_64` no warning will show. However, if
+     * either of those are missing the warning will pop up.
+     *
+     * If the user has not included `abiSplits` or `abiFilters` this logic
+     * will not be called.
+     */
+    private fun checkForChromeOSAbiSplits(
+        context: GradleContext,
+        valueCookie: Any,
+        value: String) {
+        val abis = value.split(',')
+        var hasX86 = false
+        var hasX8664 = false
+        for (i in abis.indices) {
+            if (abis[i].contains("\"x86_64\"") || abis[i].contains("\'x86_64\'")) {
+                hasX8664 = true
+            } else if (abis[i].contains("\"x86\"") || abis[i].contains("\'x86\'")) {
+                hasX86 = true
+            }
+        }
+
+        val message: String? =
+            if (!hasX86 && !hasX8664) {
+                "Missing x86 and x86_64 ABI support for ChromeOS"
+            } else if (!hasX86) {
+                "Missing x86 ABI support for ChromeOS"
+            } else if (!hasX8664) {
+                "Missing x86_64 ABI support for ChromeOS"
+            } else {
+                null
+            }
+
+        message?.let { m ->
+            report(context, valueCookie, CHROMEOS_ABI_SUPPORT, m)
         }
     }
 
@@ -2826,6 +2869,24 @@ open class GradleDetector : Detector(), GradleScanner {
             severity = Severity.ERROR,
             implementation = IMPLEMENTATION,
             moreInfo = GOOGLE_PLAY_SDK_INDEX_URL,
+            androidSpecific = true
+        )
+
+        @JvmField
+        val CHROMEOS_ABI_SUPPORT = Issue.create(
+            id = "ChromeOsAbiSupport",
+            briefDescription = "Missing ABI Support for ChromeOS",
+            explanation = """
+                To properly support ChromeOS, your Android application should have an x86 and/or x86_64 binary \
+                as part of the build configuration. To fix the issue, ensure your files are properly optimized \
+                for ARM; the binary translator will then ensure compatibility with x86. Alternatively, add an \
+                `abiSplit` for x86 within your `build.gradle` file and create the required x86 dependencies.
+            """,
+            category = Category.CHROME_OS,
+            priority = 4,
+            severity = Severity.WARNING,
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/ndk/guides/abis",
             androidSpecific = true
         )
 
