@@ -32,10 +32,10 @@ public class GradleVersionCheckTest {
     /**
      * An old version of Gradle to use in this test.
      *
-     * <p>(This can't be lower than 4.8 as those Gradle versions do not support JDK 11, see bug
-     * 161639074.)
+     * <p>(This can't be lower than 7.3 as those Gradle versions do not support JDK 17, see bug
+     * 243592738.)
      */
-    private static final String OLD_GRADLE_VERSION = "5.0";
+    private static final String OLD_GRADLE_VERSION = "7.3.3";
 
     @Rule
     public GradleTestProject project =
