@@ -100,6 +100,31 @@ class DeprecationDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testAutoRevoke() {
+        lint().files(
+            manifest(
+                """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="test.pkg">
+                    <application
+                        android:icon="@drawable/ic_launcher"
+                        android:autoRevokePermissions="discouraged"
+                        android:label="@string/app_name">
+                    </application>
+
+                </manifest>
+                """
+            ).indented()
+        ).run().expect(
+            """
+            AndroidManifest.xml:5: Warning: autoRevokePermissions has no effect; this flag was only used in preview versions of Android 11 [Deprecated]
+                    android:autoRevokePermissions="discouraged"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+        )
+    }
+
     // Sample code
     private val mDeprecation = xml(
         "res/layout/deprecation.xml",

@@ -124,7 +124,8 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
             ATTR_NUMERIC,
             ATTR_PHONE_NUMBER,
             ATTR_PASSWORD,
-            ATTR_PERMISSION
+            ATTR_PERMISSION,
+            ATTR_AUTO_REVOKE_PERMISSIONS,
             // ATTR_SINGLE_LINE is marked deprecated, but (a) it's used a lot everywhere,
             // including in our own apps, and (b) replacing it with the suggested replacement
             // can lead to crashes; see issue 37137344
@@ -162,11 +163,17 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
             ATTR_USER_SHARED_ID -> {
                 if (!attribute.ownerElement.hasAttributeNS(ANDROID_URI, ATTR_SHARED_USER_MAX_SDK_VERSION)) {
                     fix = "Consider removing `$ATTR_USER_SHARED_ID` for new users by adding " +
-                            "`android:sharedUserMaxSdkVersion=\"32\"` to your manifest. " +
-                            "See https://developer.android.com/guide/topics/manifest/manifest-element for details."
+                        "`android:sharedUserMaxSdkVersion=\"32\"` to your manifest. " +
+                        "See https://developer.android.com/guide/topics/manifest/manifest-element for details."
                     val addFix = fix().set(ANDROID_URI, ATTR_SHARED_USER_MAX_SDK_VERSION, "32").build()
                     context.report(ISSUE, attribute, context.getLocation(attribute), fix, addFix)
                 }
+                return
+            }
+            ATTR_AUTO_REVOKE_PERMISSIONS -> {
+                // Flag added in R previews (March 2020), removed/deprecated in June
+                val message = "$name has no effect; this flag was only used in preview versions of Android 11"
+                context.report(ISSUE, attribute, context.getLocation(attribute), message)
                 return
             }
             ATTR_PERMISSION -> {
@@ -315,6 +322,7 @@ class DeprecationDetector : ResourceXmlDetector(), SourceCodeScanner {
 
         private const val ATTR_USER_SHARED_ID = "sharedUserId"
         private const val ATTR_SHARED_USER_MAX_SDK_VERSION = "sharedUserMaxSdkVersion"
+        private const val ATTR_AUTO_REVOKE_PERMISSIONS = "autoRevokePermissions"
 
         /** Usage of deprecated views or attributes. */
         @JvmField
