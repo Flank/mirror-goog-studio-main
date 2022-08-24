@@ -32,6 +32,7 @@ import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -302,6 +303,16 @@ class LocalEmulatorProvisionerPlugin(
         }
       }
   }
+
+  class Activating(properties: DeviceProperties, val job: Job, val timeoutTracker: TimeoutTracker) :
+    com.android.sdklib.deviceprovisioner.Activating(properties)
+
+  class Deactivating(
+    properties: DeviceProperties,
+    connectedDevice: ConnectedDevice,
+    val job: Job,
+    val timeoutTracker: TimeoutTracker
+  ) : com.android.sdklib.deviceprovisioner.Deactivating(properties, connectedDevice)
 }
 
 class LocalEmulatorProperties(

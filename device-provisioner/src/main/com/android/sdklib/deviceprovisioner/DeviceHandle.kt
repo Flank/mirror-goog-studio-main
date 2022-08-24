@@ -20,8 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * A specific device known to the DeviceProvisioner. It may or may not be connected.
  *
- * This is stateful and has identity: if a device corresponding to this PDevice is connected,
- * disconnected, and reconnected, this PDevice should remain linked to it.
+ * This is stateful and has identity: if a device corresponding to this DeviceHandle is connected,
+ * disconnected, and reconnected, this DeviceHandle should remain linked to it.
  */
 interface DeviceHandle {
   val state: DeviceState

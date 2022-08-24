@@ -18,7 +18,6 @@ package com.android.sdklib.deviceprovisioner
 import com.android.adblib.ConnectedDevice
 import com.google.common.base.Stopwatch
 import java.time.Duration
-import kotlinx.coroutines.Job
 
 /**
  * Identifies the state of a provisionable device with respect to ADB: disconnected, connecting,
@@ -30,24 +29,18 @@ sealed interface DeviceState {
     get() = null
 }
 
-class Disconnected(override val properties: DeviceProperties) : DeviceState
+open class Disconnected(override val properties: DeviceProperties) : DeviceState
 
-class Activating(
-  override val properties: DeviceProperties,
-  val job: Job,
-  val timeoutTracker: TimeoutTracker
-) : DeviceState
+open class Activating(override val properties: DeviceProperties) : DeviceState
 
-class Connected(
+open class Connected(
   override val properties: DeviceProperties,
   override val connectedDevice: ConnectedDevice
 ) : DeviceState
 
-class Deactivating(
+open class Deactivating(
   override val properties: DeviceProperties,
   override val connectedDevice: ConnectedDevice,
-  val job: Job,
-  val timeoutTracker: TimeoutTracker
 ) : DeviceState
 
 class TimeoutTracker(private val duration: Duration) {
