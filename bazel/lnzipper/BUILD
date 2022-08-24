@@ -28,7 +28,6 @@ java_binary(
     main_class = "com.android.tools.bazel.lnzipper.LnZipper",
     visibility = [
         "//prebuilts/studio/intellij-sdk:__pkg__",
-        "//prebuilts/tools/common/kotlin-plugin:__pkg__",
         "//tools/adt/idea/studio:__pkg__",
     ],
     runtime_deps = [
