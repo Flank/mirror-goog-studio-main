@@ -32,6 +32,7 @@ import junit.framework.TestCase
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
@@ -89,6 +90,47 @@ class DataFlowAnalyzerTest : TestCase() {
         method?.accept(analyzer)
 
         assertEquals("e, f, g, toString", receivers.joinToString { it })
+
+        Disposer.dispose(parsed.second)
+    }
+
+    fun testParameter() {
+        val parsed = LintUtilsTest.parse(
+            """
+                package test.pkg;
+
+                @SuppressWarnings("all")
+                public class Test {
+                    public void test(int a, int b) {
+                        int c = 0;
+                        int d = c;
+                        int e = 0;
+                        m(b); // should be flagged because we're tracking parameter b
+                        m(c); // should be flagged because we're tracking variable c
+                        m(d); // tracked because it flows from variable c
+                        m(e); // NOT included
+                    }
+
+                    public void m(int x) { }
+                }
+            """,
+            File("test/pkg/Test.java")
+        )
+
+        val variable = findVariableDeclaration(parsed, "c")
+        val method = variable.getParentOfType(UMethod::class.java)!!
+        val parameter = method.uastParameters.last()
+
+        val arguments = mutableListOf<String>()
+        val analyzer = object : DataFlowAnalyzer(listOf(parameter, variable)) {
+            override fun argument(call: UCallExpression, reference: UElement) {
+                val name = call.methodName ?: "?"
+                arguments.add(name + "(" + reference.sourcePsi?.text + ")")
+            }
+        }
+        method.accept(analyzer)
+
+        assertEquals("m(b), m(c), m(d)", arguments.joinToString { it })
 
         Disposer.dispose(parsed.second)
     }
@@ -158,6 +200,24 @@ class DataFlowAnalyzerTest : TestCase() {
                     target = node
                 }
                 return super.visitCallExpression(node)
+            }
+        })
+        assertNotNull(target)
+        return target!!
+    }
+
+    private fun findVariableDeclaration(
+        parsed: com.android.utils.Pair<JavaContext, Disposable>,
+        targetName: String
+    ): UVariable {
+        var target: UVariable? = null
+        val file = parsed.first.uastFile!!
+        file.accept(object : AbstractUastVisitor() {
+            override fun visitVariable(node: UVariable): Boolean {
+                if (node.name == targetName) {
+                    target = node
+                }
+                return super.visitVariable(node)
             }
         })
         assertNotNull(target)

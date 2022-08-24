@@ -231,6 +231,11 @@ abstract class DataFlowAnalyzer(
                     if (parent is UQualifiedReferenceExpression && parent.selector == element) {
                         instances.add(parent)
                     }
+                } else if (element is UVariable) {
+                    val reference = element.javaPsi as? PsiVariable
+                    if (reference != null && !references.contains(reference)) {
+                        references.add(reference)
+                    }
                 }
                 val type = (element as? UExpression)?.getExpressionType() as? PsiClassType
                 type?.resolve()?.let { types.add(it) }
@@ -757,6 +762,13 @@ abstract class DataFlowAnalyzer(
                 sb.append("\n")
             }
         }
+        if (references.isNotEmpty()) {
+            sb.append("References:\n")
+            for (reference in references) {
+                sb.append(reference.id())
+                sb.append("\n")
+            }
+        }
 
         return sb.toString()
     }
@@ -770,7 +782,18 @@ abstract class DataFlowAnalyzer(
             this.sourcePsi?.text?.replace(Regex("\\s+"), " ")
         val max = 100
         return if (s.length > max) {
-            s.substring(0, max / 2) + "..." + s.substring(max / 2 + 3)
+            s.substring(0, max / 2) + "..." + s.substring(s.length - (max / 2 + 3))
+        } else {
+            s
+        }
+    }
+
+    fun PsiElement.id(): String {
+        val s = Integer.toHexString(System.identityHashCode(this)) + ":" +
+            this.text?.replace(Regex("\\s+"), " ")
+        val max = 100
+        return if (s.length > max) {
+            s.substring(0, max / 2) + "..." + s.substring(s.length - (max / 2 + 3))
         } else {
             s
         }
