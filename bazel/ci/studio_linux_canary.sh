@@ -25,6 +25,7 @@ export USE_BAZEL_VERSION=last_rc
   test \
   --config=ci \
   --config=ants \
+  --bes_keywords=use_module_info \
   --invocation_id=${INVOCATION_ID} \
   --build_tag_filters=${BUILD_TAG_FILTERS} \
   --build_event_binary_file="${DIST_DIR:-/tmp}/bazel-${BUILD_NUMBER}.bes" \
