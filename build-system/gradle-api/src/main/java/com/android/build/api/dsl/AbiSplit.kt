@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * DSL object for configuring per-abi splits options.
  *
@@ -25,7 +23,5 @@ import org.gradle.api.Incubating
  */
 interface AbiSplit : Split {
     /** Whether to create an FULL_APK with all available ABIs. */
-    @get:Incubating
-    @set:Incubating
     var isUniversalApk: Boolean
 }

@@ -239,9 +239,9 @@ package com.android.build.api.dsl {
   }
 
   public interface AbiSplit extends com.android.build.api.dsl.Split {
-    method @org.gradle.api.Incubating public boolean isUniversalApk();
-    method @org.gradle.api.Incubating public void setUniversalApk(boolean isUniversalApk);
-    property @org.gradle.api.Incubating public abstract boolean isUniversalApk;
+    method public boolean isUniversalApk();
+    method public void setUniversalApk(boolean isUniversalApk);
+    property public abstract boolean isUniversalApk;
   }
 
   @Deprecated @org.gradle.api.Incubating public interface AdbOptions extends com.android.build.api.dsl.Installation {
@@ -884,12 +884,12 @@ package com.android.build.api.dsl {
   }
 
   public interface DensitySplit extends com.android.build.api.dsl.Split {
-    method @org.gradle.api.Incubating public void compatibleScreens(java.lang.String... sizes);
-    method @org.gradle.api.Incubating public java.util.Set<java.lang.String> getCompatibleScreens();
-    method @org.gradle.api.Incubating public boolean isStrict();
-    method @org.gradle.api.Incubating public void setStrict(boolean isStrict);
-    property @org.gradle.api.Incubating public abstract java.util.Set<java.lang.String> compatibleScreens;
-    property @org.gradle.api.Incubating public abstract boolean isStrict;
+    method public void compatibleScreens(java.lang.String... sizes);
+    method public java.util.Set<java.lang.String> getCompatibleScreens();
+    method public boolean isStrict();
+    method public void setStrict(boolean isStrict);
+    property public abstract java.util.Set<java.lang.String> compatibleScreens;
+    property public abstract boolean isStrict;
   }
 
   public interface DependenciesInfo {
