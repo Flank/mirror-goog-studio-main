@@ -24,6 +24,7 @@ import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_SRCJAR
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
+import com.android.SdkConstants.FD_DATA
 import com.android.SdkConstants.FN_ANNOTATIONS_ZIP
 import com.android.SdkConstants.GEN_FOLDER
 import com.android.SdkConstants.LIBS_FOLDER
@@ -678,7 +679,7 @@ abstract class LintClient {
 
             val latestPlatform = getLatestSdkTarget(minApi = SDK_DATABASE_MIN_VERSION)
             if (latestPlatform != null) {
-                val file = File(latestPlatform.location, relativePath)
+                val file = File(latestPlatform.location, FD_DATA + File.separator + relativePath)
                 if (file.isFile) {
                     return file
                 }

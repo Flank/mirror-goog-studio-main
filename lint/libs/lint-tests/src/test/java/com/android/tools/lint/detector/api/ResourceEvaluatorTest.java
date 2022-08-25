@@ -65,7 +65,7 @@ public class ResourceEvaluatorTest {
                         + statementsSource.replace("\n", "\n        ")
                         + "\n"
                         + "    }\n"
-                        + "    fun someMethod(@androidx.annotation.DrawableRes @androidx.annotation.StringRes param: Int) {c}\n"
+                        + "    fun someMethod(@androidx.annotation.DrawableRes @androidx.annotation.StringRes param: Int) { }\n"
                         + "}";
         return s;
     }
