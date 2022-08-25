@@ -63,6 +63,12 @@ class DefaultAndroidSourceDirectorySet(
     fun getSourceSetName() = name
 
     override fun srcDir(srcDir: Any): AndroidSourceDirectorySet {
+        if (srcDir is Iterable<*>) {
+            srcDir.forEach { src ->
+                src?.let { srcDir(it) }
+            }
+            return this
+        }
         source.add(srcDir)
         if (lateAdditionsDelegates.isNotEmpty()) {
             val directoryEntry = ProviderBasedDirectoryEntryImpl(
