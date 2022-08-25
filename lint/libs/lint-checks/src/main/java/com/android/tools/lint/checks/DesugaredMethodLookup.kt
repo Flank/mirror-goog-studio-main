@@ -40,8 +40,10 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
         return Arrays.binarySearch(methodDescriptors, "placeholder", signatureComparator) >= 0
     }
 
-    private fun compare(owner: String, name: String, desc: String, combined: String): Int {
+    @VisibleForTesting
+    fun compare(owner: String, name: String, desc: String, combined: String): Int {
         var ownerIndex = 0
+        var hadSeparator = false
         var nameIndex = 0
         var descIndex = 0
         // We don't include the return type in description strings
@@ -51,6 +53,7 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
         fun getNext(): Char {
             return when {
                 ownerIndex < owner.length -> owner[ownerIndex++]
+                !hadSeparator -> '#'.also { hadSeparator = true }
                 nameIndex < name.length -> name[nameIndex++]
                 descIndex < desc.length -> desc[descIndex++]
                 else -> 0.toChar()
@@ -60,7 +63,7 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
         var i = 0
         while (true) {
             val c = getNext()
-            val d = combined[i++].let { if (it == '#') combined[i++] else it }
+            val d = combined[i++]
             if (c != d) {
                 if (!c.isSymbolSeparator() || !d.isSymbolSeparator()) {
                     return d - c
@@ -157,11 +160,10 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
                 }
             }
             lines.sort()
-
             // make sure the files aren't Windows line separator encoded or that the line sequence methods handles it gracefully
             assert(lines.isNotEmpty() && !lines[0].endsWith('\r'))
 
-            lookup = DesugaredMethodLookup(lines.toTypedArray())
+            lookup = DesugaredMethodLookup(lines.distinct().toTypedArray())
             return null
         }
 
@@ -180,11 +182,10 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
                 }
             }
             lines.sort()
-
             // make sure the files aren't Windows line separator encoded or that the line sequence methods handles it gracefully
             assert(lines.isNotEmpty() && !lines[0].endsWith('\r'))
 
-            return DesugaredMethodLookup(lines.toTypedArray())
+            return DesugaredMethodLookup(lines.distinct().toTypedArray())
         }
 
         /**
@@ -194,7 +195,9 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
          */
         @TestOnly
         fun reset() {
-            lookup = DesugaredMethodLookup(defaultDesugaredMethods)
+            lookup = DesugaredMethodLookup(
+                defaultDesugaredMethods
+            )
         }
 
         @get:VisibleForTesting
@@ -377,6 +380,8 @@ class DesugaredMethodLookup(private val methodDescriptors: Array<String>) {
          * strings, files, shipped as resource files in r8 that the lint
          * model points to, etc.)
          */
-        var lookup: DesugaredMethodLookup = DesugaredMethodLookup(defaultDesugaredMethods)
+        var lookup: DesugaredMethodLookup = DesugaredMethodLookup(
+            defaultDesugaredMethods
+        )
     }
 }

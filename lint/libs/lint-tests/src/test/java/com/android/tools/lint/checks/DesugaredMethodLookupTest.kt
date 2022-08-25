@@ -31,6 +31,137 @@ import kotlin.test.assertNotEquals
 
 class DesugaredMethodLookupTest {
     @Test
+    fun testInnerClasses() {
+        val desc1 =
+            "" +
+                    "java/util/Map\$Entry#comparingByKey()Ljava/util/Comparator;\n" +
+                    "java/util/Map\$Entry#comparingByKey(Ljava/util/Comparator;)Ljava/util/Comparator;\n" +
+                    "java/util/Map\$Entry#comparingByValue()Ljava/util/Comparator;\n" +
+                    "java/util/Map\$Entry#comparingByValue(Ljava/util/Comparator;)Ljava/util/Comparator;\n"
+
+        val file1 = File.createTempFile("desc1", ".txt")
+        file1.writeText(desc1)
+        try {
+            DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
+            assertTrue(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "(Ljava/util/Comparator;)"))
+            assertTrue(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "comparingByValue", "()"))
+            assertFalse(DesugaredMethodLookup.isDesugared("java/util/Map\$Entry", "", ""))
+            assertFalse(DesugaredMethodLookup.isDesugared("java/util/Map", "comparingByValue", "()"))
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+    }
+
+    @Test
+    fun testCollectionStreamSimple() {
+        val desc1 =
+            "" +
+                    "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
+                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n"
+
+        val owner = "java.util.Collection"
+        val name = "stream"
+        val desc = "()"
+
+        val file1 = File.createTempFile("desc1", ".txt")
+        file1.writeText(desc1)
+        try {
+            DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
+            assertTrue(
+                DesugaredMethodLookup.isDesugared(
+                    owner = owner,
+                    name = name,
+                    desc = desc
+                )
+            )
+
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+    }
+
+    @Test
+    fun testCollectionStreamRightOfMidPoint() {
+        val desc1 =
+            "" +
+                    "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
+                    "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
+                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                    "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
+                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
+                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
+                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
+
+        val owner = "java.util.Collection"
+        val name = "stream"
+        val desc = "()"
+
+        val file1 = File.createTempFile("desc1", ".txt")
+        file1.writeText(desc1)
+        try {
+            DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
+            assertTrue(
+                DesugaredMethodLookup.isDesugared(
+                    owner = owner,
+                    name = name,
+                    desc = desc
+                )
+            )
+
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+    }
+
+    @Test
+    fun testCollectionStreamLeftOfMidpoint() {
+        val desc1 =
+            "" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
+                    "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
+                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                    "java/util/Collect#spliterator()Ljava/util/Spliterator;\n" +
+                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                    "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
+                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
+                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
+
+        val owner = "java.util.Collection"
+        val name = "stream"
+        val desc = "()"
+
+        val file1 = File.createTempFile("desc1", ".txt")
+        file1.writeText(desc1)
+        try {
+            DesugaredMethodLookup.setDesugaredMethods(listOf(file1.path))
+            assertTrue(
+                DesugaredMethodLookup.isDesugared(
+                    owner = owner,
+                    name = name,
+                    desc = desc
+                )
+            )
+
+        } finally {
+            DesugaredMethodLookup.reset()
+        }
+    }
+
+    @Test
     fun testFindAll() {
         assertTrue(DesugaredMethodLookup.isDesugared("java/lang/Character", "compare", "(CC)"))
 
@@ -59,16 +190,17 @@ class DesugaredMethodLookupTest {
     fun testFile() {
         val desc1 =
             "" +
-                "abc/def/GHI\$JKL#abc(III)Z\n" +
-                "def/gh/IJ\n"
+                    "abc/def/GHI\$JKL#abc(III)Z\n" +
+                    "def/gh/IJ\n"
         val desc2 =
             "" +
-                "g/hijk/l/MN#op\n" +
-                "hij/kl/mn/O#pQr()Z\n"
+                    "g/hijk/l/MN#op\n" +
+                    "hij/kl/mn/O#pQr()Z\n"
 
         fun check() {
             assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()"))
             assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)"))
+            assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI", "abc", "(III)"))
             assertFalse(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "ab", "(III)"))
             assertTrue(DesugaredMethodLookup.isDesugared("hij/kl/mn/O", "pQr", "()"))
 
@@ -136,12 +268,12 @@ class DesugaredMethodLookupTest {
     fun testDesugaringFromModel() {
         val desc1 =
             "" +
-                "abc/def/GHI\$JKL#abc(III)Z\n" +
-                "def/gh/IJ\n"
+                    "abc/def/GHI\$JKL#abc(III)Z\n" +
+                    "def/gh/IJ\n"
         val desc2 =
             "" +
-                "g/hijk/l/MN#op\n" +
-                "hij/kl/mn/O#pQr()Z\n"
+                    "g/hijk/l/MN#op\n" +
+                    "hij/kl/mn/O#pQr()Z\n"
 
         val file1 = File.createTempFile("desc1", ".txt").apply { writeText(desc1) }
         val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
