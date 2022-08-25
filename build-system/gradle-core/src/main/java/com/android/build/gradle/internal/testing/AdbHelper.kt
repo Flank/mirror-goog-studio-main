@@ -102,8 +102,8 @@ class AdbHelper(
      * @return The serial of the emulator that can be used for subsequent adb commands. See
      * [isBootCompleted], [killDevice].
      */
-    fun findDeviceSerialWithId(idValue: String): String {
-        val serials = allSerials()
+    fun findDeviceSerialWithId(idValue: String, logger: ILogger? = null): String {
+        val serials = allSerials(logger)
         for (serial in serials) {
             if (getIdForSerial(serial) == idValue) {
                 return serial
@@ -145,7 +145,7 @@ class AdbHelper(
         killProcess.waitFor()
     }
 
-    private fun allSerials(): List<String> {
+    private fun allSerials(logger: ILogger? = null): List<String> {
         val serials = mutableListOf<String>()
         val listDevicesProcess = processFactory(
             listOf(
@@ -165,8 +165,15 @@ class AdbHelper(
                             val trimmed = line.trim()
                             val values = trimmed.split("\\s+".toRegex())
                             // Looking for "<serial>    device"
-                            if (values.size == 2 && values[1] == "device") {
-                                serials.add(values[0])
+                            if (values.size == 2) {
+                                if (values[1] == "device") {
+                                    logger?.info("Found device: ${values[0]}")
+                                    serials.add(values[0])
+                                } else {
+                                    logger?.info(
+                                        "Found inactive device: ${values[0]} status: ${values[1]}"
+                                    )
+                                }
                             }
                         }
 

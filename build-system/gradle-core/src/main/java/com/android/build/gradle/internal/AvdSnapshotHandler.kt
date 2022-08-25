@@ -190,7 +190,7 @@ class AvdSnapshotHandler(
                 var emulatorSerial: String? = null
                 while(process.isAlive) {
                     try {
-                        emulatorSerial = adbHelper.findDeviceSerialWithId(deviceId)
+                        emulatorSerial = adbHelper.findDeviceSerialWithId(deviceId, logger)
                         break
                     } catch (e: Exception) {
                         logger.verbose("Waiting for $avdName to be attached to adb.")
@@ -279,7 +279,7 @@ class AvdSnapshotHandler(
         logger: ILogger
     ) {
         try {
-            val emulatorSerial = adbHelper.findDeviceSerialWithId(idValue)
+            val emulatorSerial = adbHelper.findDeviceSerialWithId(idValue, logger)
             adbHelper.killDevice(emulatorSerial)
         } catch (e: Exception) {
             logger.info("Failed to close emulator properly from adb. Reason: $e")
