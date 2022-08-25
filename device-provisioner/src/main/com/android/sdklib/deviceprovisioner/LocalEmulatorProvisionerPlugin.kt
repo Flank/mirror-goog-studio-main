@@ -19,6 +19,7 @@ import com.android.adblib.AdbSession
 import com.android.adblib.ConnectedDevice
 import com.android.adblib.deviceProperties
 import com.android.adblib.serialNumber
+import com.android.adblib.thisLogger
 import com.android.adblib.tools.EmulatorConsole
 import com.android.adblib.tools.localConsoleAddress
 import com.android.adblib.tools.openEmulatorConsole
@@ -31,8 +32,6 @@ import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +39,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -58,6 +56,7 @@ class LocalEmulatorProvisionerPlugin(
   private val avdManager: AvdManager,
   rescanPeriod: Duration = Duration.ofSeconds(10)
 ) : DeviceProvisionerPlugin {
+  val logger = thisLogger(adbSession)
 
   /**
    * An abstraction of the AvdManager / AvdManagerConnection classes to be injected, allowing for
@@ -250,12 +249,15 @@ class LocalEmulatorProvisionerPlugin(
         override suspend fun activate(params: ActivationParams) {
           // Note: the original DeviceManager does this in UI thread, but this may call
           // @Slow methods so switch
-          stateFlow.value =
-            Activating(
-              stateFlow.value.properties,
-              scope.launch { avdManager.startAvd(avdInfo) },
-              TimeoutTracker(CONNECTION_TIMEOUT)
-            )
+          stateFlow.advanceStateWithTimeout(
+            scope = scope,
+            timeout = CONNECTION_TIMEOUT,
+            updateState = { (it as? Disconnected)?.let { Activating(it.properties) } },
+            advanceAction = { avdManager.startAvd(avdInfo) },
+            onAbort = {
+              logger.warn("Emulator failed to connect within $CONNECTION_TIMEOUT_MINUTES minutes")
+            }
+          )
         }
       }
 
@@ -282,37 +284,26 @@ class LocalEmulatorProvisionerPlugin(
           stateFlow.map { it is Connected }.stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
         override suspend fun deactivate() {
-          when (val state = state) {
-            // TODO: In theory, we could cancel from the Connecting state, but it's hard to make
-            // that work without rewriting AvdManagerConnection.
-            is Connected -> {
-              stateFlow.value =
-                Deactivating(
-                  state.properties,
-                  state.connectedDevice,
-                  scope.launch(Dispatchers.IO) {
-                    // We can either use the emulator console or AvdManager (which uses a shell
-                    // command to kill the process)
-                    emulatorConsole?.kill() ?: avdManager.stopAvd(avdInfo)
-                  },
-                  TimeoutTracker(DISCONNECTION_TIMEOUT)
-                )
+          stateFlow.advanceStateWithTimeout(
+            scope = scope,
+            timeout = DISCONNECTION_TIMEOUT,
+            updateState = {
+              // TODO: In theory, we could cancel from the Connecting state, but that would require
+              //  a lot of work in AvdManagerConnection to make everything shutdown cleanly.
+              (it as? Connected)?.let { Deactivating(it.properties, it.connectedDevice) }
+            },
+            // We can either use the emulator console or AvdManager (which uses a shell
+            // command to kill the process)
+            advanceAction = { emulatorConsole?.kill() ?: avdManager.stopAvd(avdInfo) },
+            onAbort = {
+              logger.warn(
+                "Emulator failed to disconnect within $DISCONNECTION_TIMEOUT_MINUTES minutes"
+              )
             }
-            else -> {}
-          }
+          )
         }
       }
   }
-
-  class Activating(properties: DeviceProperties, val job: Job, val timeoutTracker: TimeoutTracker) :
-    com.android.sdklib.deviceprovisioner.Activating(properties)
-
-  class Deactivating(
-    properties: DeviceProperties,
-    connectedDevice: ConnectedDevice,
-    val job: Job,
-    val timeoutTracker: TimeoutTracker
-  ) : com.android.sdklib.deviceprovisioner.Deactivating(properties, connectedDevice)
 }
 
 class LocalEmulatorProperties(
@@ -336,3 +327,9 @@ class LocalEmulatorProperties(
 }
 
 private val LOCAL_EMULATOR_REGEX = "emulator-(\\d+)".toRegex()
+
+private const val CONNECTION_TIMEOUT_MINUTES: Long = 5
+private val CONNECTION_TIMEOUT = Duration.ofMinutes(CONNECTION_TIMEOUT_MINUTES)
+
+private const val DISCONNECTION_TIMEOUT_MINUTES: Long = 1
+private val DISCONNECTION_TIMEOUT = Duration.ofMinutes(DISCONNECTION_TIMEOUT_MINUTES)
