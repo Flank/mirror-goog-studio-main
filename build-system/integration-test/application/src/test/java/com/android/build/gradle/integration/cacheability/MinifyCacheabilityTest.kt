@@ -82,18 +82,13 @@ class MinifyCacheabilityTest {
             ":createMinifiedCompatibleScreenManifests", /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
             ":extractProguardFiles",
             ":generateMinifiedJacocoPropertiesFile", /** Intentionally not cacheable. See [com.android.build.gradle.internal.coverage.JacocoPropertiesTask] */
+            ":mapMinifiedSourceSetPaths", /* Intentionally not cacheable */
             ":mergeMinifiedJavaResource", /* Bug 181142260 */
             ":mergeMinifiedGeneratedProguardFiles", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction] */
             ":packageMinified",
             ":validateSigningMinified", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.ValidateSigningTask] */
             ":writeMinifiedAppMetadata", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AppMetadataTask] */
             ":writeMinifiedSigningConfigVersions", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.SigningConfigVersionsWriterTask] */
-        ).plus(
-                if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                    setOf(":mapMinifiedSourceSetPaths")
-                } else {
-                    setOf(":processMinifiedResources", ":mergeMinifiedResources")
-                }
         ),
         SKIPPED to setOf(
             ":assembleMinified",

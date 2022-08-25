@@ -296,16 +296,12 @@ abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
             creationConfig.services.initializeAapt2Input(task.aapt2)
             task.androidJarInput.initialize(creationConfig)
 
-            if (projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
-                val sourceSetMap =
-                        creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
-                task.sourceSetMaps.fromDisallowChanges(
-                        creationConfig.services.fileCollection(sourceSetMap)
-                )
-                task.dependsOn(sourceSetMap)
-            } else {
-                task.sourceSetMaps.disallowChanges()
-            }
+            val sourceSetMap =
+                    creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
+            task.sourceSetMaps.fromDisallowChanges(
+                    creationConfig.services.fileCollection(sourceSetMap)
+            )
+            task.dependsOn(sourceSetMap)
         }
     }
 }

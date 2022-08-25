@@ -70,12 +70,14 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":generateDebugResources" to UP_TO_DATE,
         ":generateDebugResValues" to FROM_CACHE,
         ":javaPreCompileDebug" to FROM_CACHE,
+        ":mapDebugSourceSetPaths" to DID_WORK, /* Intentionally not cacheable. */
         ":mergeDebugResources" to FROM_CACHE,
         ":preBuild" to UP_TO_DATE,
         ":preDebugBuild" to UP_TO_DATE,
         ":processDebugMainManifest" to FROM_CACHE,
         ":processDebugManifest" to FROM_CACHE,
         ":processDebugManifestForPackage" to FROM_CACHE,
+        ":processDebugResources" to FROM_CACHE
     ).plus(
         if (withKotlin) {
             mapOf(
@@ -85,15 +87,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
             )
         } else {
             emptyMap()
-        }
-    ).plus(
-        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-            mapOf(
-                ":mapDebugSourceSetPaths" to DID_WORK,
-                ":processDebugResources" to FROM_CACHE
-            )
-        } else {
-            mapOf(":processDebugResources" to DID_WORK)
         }
     ).plus(
             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {

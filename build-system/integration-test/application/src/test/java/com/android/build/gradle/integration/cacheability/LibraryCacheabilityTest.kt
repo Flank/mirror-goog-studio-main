@@ -81,20 +81,13 @@ class LibraryCacheabilityTest {
                     ":lib:copyReleaseJniLibsProjectAndLocalJars", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.LibraryJniLibsTask] */
                     ":lib:prepareReleaseArtProfile", /* No Bug, task is just file copy */
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
+                    ":lib:mapReleaseSourceSetPaths", /* Intentionally not cacheable */
                     ":lib:mergeReleaseConsumerProguardFiles", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask] */
                     ":lib:mergeReleaseGeneratedProguardFiles", /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction] */
                     ":lib:mergeReleaseJavaResource", /* Bug 181142260 */
                     ":lib:prepareLintJarForPublish", /* Bug 120413672 */
                     /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.AarMetadataTask] */
                     ":lib:writeReleaseAarMetadata",
-                ).plus(
-                        // mapDebugSourceSetPaths is not cacheable but exists to enable the main
-                        // resource compilation to be cacheable.
-                        if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                            setOf(":lib:mapReleaseSourceSetPaths")
-                        } else {
-                            emptySet()
-                        }
                 ),
                 SKIPPED to setOf(
                     ":lib:assembleRelease",

@@ -1020,15 +1020,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 alsoOutputNotCompiledResources,
                 flags,
                 null /*configCallback*/)
-        if (creationConfig
-                        .services
-                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
-            taskFactory.register(
-                    MapSourceSetPathsTask.CreateAction(
-                        creationConfig,
-                        includeDependencies
-                    ))
-        }
+        taskFactory.register(
+                MapSourceSetPathsTask.CreateAction(creationConfig, includeDependencies))
     }
 
     /** Defines the merge type for [.basicCreateMergeResourcesTask]  */

@@ -15,26 +15,15 @@
  */
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
 import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
-import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 
-@RunWith(Parameterized::class)
-class MessageRewriteWithJvmResCompilerTest(private val useRelativeResPaths: Boolean) {
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun useRelativeResPaths() = arrayOf(true, false)
-    }
+class MessageRewriteWithJvmResCompilerTest {
 
     @get:Rule
     var project: GradleTestProject = builder().fromTestProject("flavoredlib").create()
@@ -44,51 +33,52 @@ class MessageRewriteWithJvmResCompilerTest(private val useRelativeResPaths: Bool
     fun testErrorInStringsForCompile() {
         // Incorrect strings.xml should cause the res compiler to throw an error and we should
         // rewrite it to point to the original file.
-        val executor = gradleTaskExecutor()
+        val executor = project.executor()
         TemporaryProjectModification.doTest(project) { it: TemporaryProjectModification ->
             it.replaceInFile(
-                "app/src/flavor1/res/values/strings.xml",
-                "</resources>", "<id name=\"incorrect\">hello</id></resources>"
+                    "app/src/flavor1/res/values/strings.xml",
+                    "</resources>", "<id name=\"incorrect\">hello</id></resources>"
             )
             val result = executor.expectFailure().run("assembleDebug")
             result.stderr.use { stderr ->
                 assertThat(stderr)
-                    .contains(
-                        FileUtils.join("app", "src", "flavor1", "res", "values", "strings.xml")
-                    )
+                        .contains(
+                                FileUtils.join("app",
+                                        "src",
+                                        "flavor1",
+                                        "res",
+                                        "values",
+                                        "strings.xml")
+                        )
             }
         }
         // Fix it up and check that it compiles correctly.
         TemporaryProjectModification.doTest(project) { it: TemporaryProjectModification ->
             it.replaceInFile(
-                "app/src/flavor1/res/values/strings.xml",
-                "<id name=\"incorrect\">hello</id>",
-                ""
+                    "app/src/flavor1/res/values/strings.xml",
+                    "<id name=\"incorrect\">hello</id>",
+                    ""
             )
-            gradleTaskExecutor().run("assembleDebug")
+            project.executor().run("assembleDebug")
         }
     }
 
     @Test
     fun testInvalidXmlFileReportsSourceFile() {
-        val executor = gradleTaskExecutor()
+        val executor = project.executor()
         TemporaryProjectModification.doTest(project) { it: TemporaryProjectModification ->
             it.replaceInFile(
-                "app/src/main/res/layout/main.xml",
-                "</LinearLayout>", ""
+                    "app/src/main/res/layout/main.xml",
+                    "</LinearLayout>", ""
             )
             val result = executor.expectFailure().run("assembleDebug")
             result.stderr.use { stderr ->
                 assertThat(stderr)
-                    .contains(
-                        FileUtils.join("app", "src", "main", "res", "layout", "main.xml")
-                    )
+                        .contains(
+                                FileUtils.join("app", "src", "main", "res", "layout", "main.xml")
+                        )
             }
         }
     }
 
-    private fun gradleTaskExecutor(): GradleTaskExecutor {
-        return project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, useRelativeResPaths)
-    }
 }

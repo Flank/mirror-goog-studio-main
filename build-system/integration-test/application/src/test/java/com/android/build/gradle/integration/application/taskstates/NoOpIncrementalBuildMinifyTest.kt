@@ -81,6 +81,8 @@ class NoOpIncrementalBuildMinifyTest {
                 ":javaPreCompileReleaseUnitTest",
                 ":lintAnalyzeDebug",
                 ":lintReportDebug",
+                ":mapDebugAndroidTestSourceSetPaths",
+                ":mapDebugSourceSetPaths",
                 ":mergeDebugAndroidTestAssets",
                 ":mergeDebugAndroidTestJavaResource",
                 ":mergeDebugAndroidTestJniLibFolders",
@@ -96,6 +98,7 @@ class NoOpIncrementalBuildMinifyTest {
                 ":mergeReleaseJniLibFolders",
                 ":mergeReleaseResources",
                 ":mergeReleaseShaders",
+                ":mapReleaseSourceSetPaths",
                 ":minifyReleaseWithR8",
                 ":optimizeReleaseResources",
                 ":packageDebugAndroidTest",
@@ -119,14 +122,6 @@ class NoOpIncrementalBuildMinifyTest {
                 ":writeDebugAndroidTestSigningConfigVersions",
                 ":writeReleaseAppMetadata",
                 ":writeReleaseSigningConfigVersions"
-            ).plus(
-                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                        setOf(":mapReleaseSourceSetPaths",
-                                ":mapDebugAndroidTestSourceSetPaths",
-                                ":mapDebugSourceSetPaths")
-                    } else {
-                        emptySet()
-                    }
             ),
             SKIPPED to setOf(
                 ":compileDebugAidl",

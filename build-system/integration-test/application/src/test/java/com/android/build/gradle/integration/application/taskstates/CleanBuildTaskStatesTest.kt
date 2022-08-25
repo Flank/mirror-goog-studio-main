@@ -52,6 +52,7 @@ class CleanBuildTaskStatesTest {
                 ":app:generateDebugResValues",
                 ":app:javaPreCompileDebug",
                 ":app:javaPreCompileDebugUnitTest",
+                ":app:mapDebugSourceSetPaths",
                 ":app:mergeDebugAssets",
                 ":app:mergeDebugJavaResource",
                 ":app:mergeDebugJniLibFolders",
@@ -68,12 +69,6 @@ class CleanBuildTaskStatesTest {
                 ":app:validateSigningDebug",
                 ":app:writeDebugAppMetadata",
                 ":app:writeDebugSigningConfigVersions"
-            ).plus(
-                    if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                        setOf(":app:mapDebugSourceSetPaths")
-                    } else {
-                        emptySet()
-                    }
             ).plus(
                 if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
                     setOf(":app:generateDebugManifestClass")

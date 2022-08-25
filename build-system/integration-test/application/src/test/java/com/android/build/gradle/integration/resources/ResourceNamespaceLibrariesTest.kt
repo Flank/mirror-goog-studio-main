@@ -157,7 +157,6 @@ android.defaultConfig.minSdkVersion 21
     fun smokeTest() {
         project.executor()
             .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
-            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false) // b/178461741
             .with(BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES, false) // b/178461741
             .run(
                 ":lib:assembleDebug",

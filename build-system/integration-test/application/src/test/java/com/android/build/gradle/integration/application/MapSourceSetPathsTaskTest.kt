@@ -29,9 +29,7 @@ class MapSourceSetPathsTaskTest {
                 "android.buildTypes.debug.minifyEnabled true\n" +
                         "android.buildTypes.debug.shrinkResources true"
         )
-        val run = project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, true)
-                .run("mapF1FaDebugSourceSetPaths")
+        val run = project.executor().run("mapF1FaDebugSourceSetPaths")
         val filePathMapsDir = FileUtils.join(project.intermediatesDir, InternalArtifactType
                 .SOURCE_SET_PATH_MAP.getFolderName())
         val sourceSetMap = FileUtils.join(filePathMapsDir, "f1FaDebug", "file-map.txt")
@@ -56,13 +54,5 @@ class MapSourceSetPathsTaskTest {
         val mergeResourcesTaskExecutions =
             run.didWorkTasks.filter { it.startsWith(":merge") && it.endsWith("Resources") }
         assertThat(mergeResourcesTaskExecutions).isEmpty()
-    }
-
-    @Test
-    fun `test MapSourceSetPathsTask does not run when ENABLE_SOURCE_SET_PATHS_MAP disabled`() {
-        val execution = project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
-                .run("assembleDebug")
-        assertThat(execution.didWorkTasks).doesNotContain(":mapDebugSourceSetPaths")
     }
 }

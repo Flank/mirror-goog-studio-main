@@ -237,11 +237,6 @@ enum class BooleanOption(
             DeprecationReporter.DeprecationTarget.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE
         )
     ),
-    ENABLE_SOURCE_SET_PATHS_MAP(
-        "android.enableSourceSetPathsMap",
-        true,
-        FeatureStage.SoftlyEnforced(VERSION_8_0)
-    ),
     RELATIVE_COMPILE_LIB_RESOURCES(
         "android.cacheCompileLibResources",
         true,
@@ -489,6 +484,13 @@ enum class BooleanOption(
         FeatureStage.Enforced(VERSION_7_3)
     ),
 
+    @Suppress("unused")
+    ENABLE_SOURCE_SET_PATHS_MAP(
+            "android.enableSourceSetPathsMap",
+            true,
+            FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
     /* ----------------
      * REMOVED FEATURES
      */
@@ -586,7 +588,6 @@ enum class BooleanOption(
             false,
             FeatureStage.Removed(VERSION_7_0, "Desugar tool has been removed from AGP.")
     ),
-
     ; // end of enums
 
     override val status = stage.status

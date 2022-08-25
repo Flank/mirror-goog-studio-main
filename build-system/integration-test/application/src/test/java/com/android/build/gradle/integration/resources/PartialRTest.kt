@@ -74,10 +74,7 @@ class PartialRTest {
 
     @Test
     fun checkBuilds() {
-        project.executor()
-            // b/207829416
-            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
-            .run(":app:assembleDebug")
+        project.execute(":app:assembleDebug")
 
         val stringsR = FileUtils.join(
                 project.getSubproject("app").intermediatesDir,
@@ -135,10 +132,7 @@ class PartialRTest {
         assertThat(strings2).exists()
 
         // Incremental build.
-        project.executor()
-            // b/207829416
-            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, false)
-            .run(":app:assembleDebug")
+        project.execute(":app:assembleDebug")
 
         // Partial file for the removed file should have been removed too.
         assertThat(strings2).doesNotExist()

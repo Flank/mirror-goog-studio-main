@@ -28,23 +28,14 @@ import org.junit.runners.Parameterized
 import java.util.Scanner
 
 /** Tests the error message rewriting logic.  */
-@RunWith(Parameterized::class)
-class MessageRewriteTest(private val isRelativeResSourceSetsEnabled: Boolean) {
+class MessageRewriteTest {
 
     @get:Rule
     val project = GradleTestProject.builder().fromTestProject("flavoredlib").create()
 
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters
-        fun isRelativeResSourceSetsEnabled() = arrayOf(true, false)
-    }
-
     @Test
     fun invalidAppLayoutFile() {
-        project.executor()
-            .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
-            .run("assembleDebug")
+        project.execute("assembleDebug")
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("app/src/main/res/layout/main.xml", "</LinearLayout>", "")
             val result = project.executor()
@@ -62,7 +53,6 @@ class MessageRewriteTest(private val isRelativeResSourceSetsEnabled: Boolean) {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("app/src/main/res/layout/main.xml","@string/app_string", "@string/agloe")
             val result = project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
                 .expectFailure()
                 .run("assembleDebug")
             checkPathInOutput(
@@ -75,7 +65,6 @@ class MessageRewriteTest(private val isRelativeResSourceSetsEnabled: Boolean) {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("app/src/main/res/values/strings.xml", "string", "")
             val result = project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
                 .expectFailure()
                 .run("assembleDebug")
             checkPathInOutput(
@@ -92,7 +81,6 @@ class MessageRewriteTest(private val isRelativeResSourceSetsEnabled: Boolean) {
                 "@string/agloe"
             )
             val result = project.executor()
-                .with(BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP, isRelativeResSourceSetsEnabled)
                 .expectFailure()
                 .run("assembleDebug")
             // b/206624424 - Errors in libraries currently (and incorrectly) rewrite as

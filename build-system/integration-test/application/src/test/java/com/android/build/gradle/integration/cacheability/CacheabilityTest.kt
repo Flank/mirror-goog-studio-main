@@ -69,6 +69,7 @@ class CacheabilityTest {
             TaskInfo(FROM_CACHE, "process", "MainManifest", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "process", "Manifest", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "process", "ManifestForPackage", listOf("Debug", "Release")),
+            TaskInfo(FROM_CACHE, "process", "Resources", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "test", "", listOf("DebugUnitTest", "ReleaseUnitTest")),
             TaskInfo(FROM_CACHE, "compile", "ArtProfile", listOf("Release")),
 
@@ -98,6 +99,8 @@ class CacheabilityTest {
             TaskInfo(DID_WORK, "lintVital", "", listOf("Release")),
             /* Intentionally not cacheable. */
             TaskInfo(DID_WORK, "lintVitalReport", "", listOf("Release")),
+            /* Intentionally not cacheable to allow processResources to be cacheable */
+            TaskInfo(DID_WORK, "map", "SourceSetPaths", listOf("Debug", "Release")),
             /* b/181142260 */
             TaskInfo(DID_WORK, "merge", "JavaResource", listOf("Debug", "Release")),
             TaskInfo(FROM_CACHE, "merge", "Resources", listOf("Debug", "Release")),
@@ -128,20 +131,6 @@ class CacheabilityTest {
             TaskInfo(SKIPPED, "process", "JavaRes",
                     listOf("Debug", "DebugUnitTest","Release", "ReleaseUnitTest")),
             TaskInfo(SKIPPED, "strip", "DebugSymbols", listOf("Debug", "Release"))
-    ).plus(
-            // mapDebugSourceSetPaths is not cacheable but exists to enable the main
-            // resource compilation to be cacheable.
-            if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                listOf(
-                        TaskInfo(FROM_CACHE, "process", "Resources", listOf("Debug", "Release")),
-                        TaskInfo(DID_WORK, "map", "SourceSetPaths", listOf("Debug", "Release"))
-                )
-            } else {
-                /* Bug 141301405 */
-                listOf(
-                        TaskInfo(DID_WORK,"process", "Resources", listOf("Debug", "Release"))
-                )
-            }
     ).plus(
         if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
             listOf(

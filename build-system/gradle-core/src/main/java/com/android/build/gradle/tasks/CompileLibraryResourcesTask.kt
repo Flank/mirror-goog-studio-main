@@ -282,7 +282,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
 
             val packagedRes = creationConfig.artifacts.get(InternalArtifactType.PACKAGED_RES)
             val useRelativeInputDirectories =
-                services.projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP] &&
                         services.projectOptions[BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES]
             task.relativeResourcePathsEnabled.setDisallowChanges(useRelativeInputDirectories)
             if (useRelativeInputDirectories) {
@@ -339,7 +338,6 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             super.configure(task)
             val services = creationConfig.services
             val useRelativeInputDirectories =
-                services.projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP] &&
                         services.projectOptions[BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES]
             if (useRelativeInputDirectories) {
                 task.inputDirectoriesAsRelative.from(inputDirectories)

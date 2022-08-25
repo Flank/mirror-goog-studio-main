@@ -561,15 +561,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             )
             val componentType = creationConfig.componentType
 
-            if (projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]) {
-                val sourceSetMap =
-                        creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
-                task.sourceSetMaps.fromDisallowChanges(
-                        creationConfig.services.fileCollection(sourceSetMap))
-                task.dependsOn(sourceSetMap)
-            } else {
-                task.sourceSetMaps.disallowChanges()
-            }
+            val sourceSetMap =
+                    creationConfig.artifacts.get(InternalArtifactType.SOURCE_SET_PATH_MAP)
+            task.sourceSetMaps.fromDisallowChanges(
+                    creationConfig.services.fileCollection(sourceSetMap))
+            task.dependsOn(sourceSetMap)
 
             // Tests should not have feature dependencies, however because they include the
             // tested production component in their dependency graph, we see the tested feature

@@ -51,7 +51,6 @@ class OptionVersionTest {
             BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM,
             BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER,
             BooleanOption.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE,
-            BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP,
             BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES,
             BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES,
             BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,

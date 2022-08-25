@@ -171,9 +171,6 @@ abstract class MergeResources : NewIncrementalTask() {
     abstract val resourceDirsOutsideRootProjectDir: SetProperty<String>
 
     @get:Input
-    abstract val relativePathsEnabled: Property<Boolean>
-
-    @get:Input
     abstract val pseudoLocalesEnabled: Property<Boolean>
 
     @get:Internal
@@ -490,9 +487,6 @@ abstract class MergeResources : NewIncrementalTask() {
     private fun getRelativeSourceSetMap(
         resourceSets: List<ResourceSet>, destinationDir: File, incrementalFolder: File
     ): Map<String, String> {
-        if (!relativePathsEnabled.get()) {
-            return emptyMap()
-        }
         val sourceSets: MutableList<File> =
             resourceSets.flatMap(ResourceSet::getSourceFiles).toMutableList()
 
@@ -891,15 +885,11 @@ abstract class MergeResources : NewIncrementalTask() {
             task.renderscriptGeneratedResDir.setDisallowChanges(
                 creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
 
-            val relativeLocalResources = !processResources ||
-                    creationConfig.services
-                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]
-
             task.resourcesComputer.initFromVariantScope(
-                creationConfig,
-                microApk,
-                libraryArtifacts,
-                relativeLocalResources
+                    creationConfig = creationConfig,
+                    microApkResDir = microApk,
+                    libraryDependencies = libraryArtifacts,
+                    relativeLocalResources = true
             )
             val features = creationConfig.buildFeatures
             val isDataBindingEnabled = features.dataBinding
@@ -952,12 +942,6 @@ abstract class MergeResources : NewIncrementalTask() {
                         .getEnvVariable(ANDROID_AAPT_IGNORE)
                 )
             task.projectRootDir.set(task.project.rootDir)
-            task.relativePathsEnabled
-                .set(
-                    creationConfig
-                        .services
-                        .projectOptions[BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP]
-                )
         }
 
         companion object {

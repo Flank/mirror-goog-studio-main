@@ -56,6 +56,7 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                             ":app:generateDebugResources",
                             ":app:generateDebugResValues",
                             ":app:javaPreCompileDebug",
+                            ":app:mapDebugSourceSetPaths",
                             ":app:mergeDebugAssets",
                             ":app:mergeDebugJavaResource",
                             ":app:mergeDebugJniLibFolders",
@@ -107,12 +108,6 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                             ":lib:syncDebugLibJars",
                             ":lib:writeDebugAarMetadata",
                         )
-                        .plus(
-                            if (BooleanOption.ENABLE_SOURCE_SET_PATHS_MAP.defaultValue) {
-                                setOf(":app:mapDebugSourceSetPaths")
-                            } else {
-                                emptySet()
-                            })
                         .plus(
                             if (BooleanOption.GENERATE_MANIFEST_CLASS.defaultValue) {
                                 setOf(":app:generateDebugManifestClass")

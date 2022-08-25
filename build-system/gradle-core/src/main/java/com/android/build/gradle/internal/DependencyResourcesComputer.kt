@@ -58,24 +58,11 @@ abstract class DependencyResourcesComputer {
      * fingerprinting.
     */
     abstract class ResourceSourceSetInput {
-        @get:Internal
-        abstract val relative: Property<Boolean>
-
-        @get:Internal
-        val sourceDirectories: ConfigurableFileCollection
-            get() = if(relative.get()) sourceDirectoriesRelative else sourceDirectoriesAbsolute
-
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
         @get:Incremental
         @get:IgnoreEmptyDirectories
-        abstract val sourceDirectoriesRelative: ConfigurableFileCollection
-
-        @get:InputFiles
-        @get:PathSensitive(PathSensitivity.ABSOLUTE)
-        @get:Incremental
-        @get:IgnoreEmptyDirectories
-        abstract val sourceDirectoriesAbsolute: ConfigurableFileCollection
+        abstract val sourceDirectories: ConfigurableFileCollection
     }
 
     /** Local resources from within this project */
@@ -268,7 +255,6 @@ abstract class DependencyResourcesComputer {
     fun addResourceSets(resourcesMap: Map<String, FileCollection>, relative: Boolean, blockFactory: () -> ResourceSourceSetInput) {
         resourcesMap.forEach{(name, fileCollection) ->
             resources.put(name, blockFactory().also {
-                it.relative.set(relative)
                 it.sourceDirectories.fromDisallowChanges(fileCollection)
             })
         }
