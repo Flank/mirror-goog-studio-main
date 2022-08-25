@@ -106,8 +106,8 @@ class SourceSetsMixedApiUseTest {
                     )
 
                     addFile("src/main/java/com/example/generate/GenerateJniPlugin.java",
-                            //language=java
-                            """
+                        //language=java
+                        """
                                 package com.example.generate;
 
                                 import com.android.build.gradle.AppExtension;
@@ -117,6 +117,9 @@ class SourceSetsMixedApiUseTest {
                                 import org.gradle.api.file.Directory;
                                 import org.gradle.api.provider.Provider;
                                 import org.gradle.api.tasks.TaskProvider;
+                                import java.io.File;
+                                import java.io.IOException;
+                                import java.nio.file.Files;
 
                                 /* A Plugin that demonstrates adding generated jnilibs from a task using the legacy variant API */
                                 class GenerateJniPlugin implements Plugin<Project> {
@@ -166,6 +169,19 @@ class SourceSetsMixedApiUseTest {
                                             variant.getPreBuildProvider().configure(task -> task.dependsOn(outputDir));
                                         });
 
+                                        // After evaluation late initialization
+                                        project.afterEvaluate(it -> {
+                                            AndroidSourceSet variantSourceSet = extension.getSourceSets().getByName("main");
+                                            File lateFolder = project.getLayout().getBuildDirectory().dir("lateDefinedJavaSources").get().getAsFile();
+                                            variantSourceSet.getJava().srcDir(lateFolder);
+                                            try {
+                                                File dir = project.getLayout().getBuildDirectory().dir("lateDefinedJavaSources/com/example/generated").get().getAsFile();
+                                                dir.mkdirs();
+                                                Files.writeString(new File(dir, "Test.java").toPath(), "package com.example.generated;\n\nclass Test { }");
+                                            } catch (IOException ignored) { }
+                                        });
+
+
                                     }
                             }
                             """.trimIndent()
@@ -178,11 +194,12 @@ class SourceSetsMixedApiUseTest {
     }
 
     @Test
-    fun jniSourceRegistrationShouldBeRepresented() {
+    fun sourceRegistrationShouldBeRepresented() {
         project.executor().run(":api-use:assembleDebug")
         project.getSubproject(":api-use").getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
             assertThat(apk).containsFile("lib/armeabi-v7a/main-sourceset-generated.so")
             assertThat(apk).containsFile("lib/armeabi-v7a/debug-sourceset-generated.so")
+            assertThat(apk).containsClass("Lcom/example/generated/Test;")
         }
     }
 }

@@ -58,7 +58,10 @@ interface DirectoryEntry {
      * Return the source folder as a [ConfigurableFileTree] which can be used as
      * [org.gradle.api.Task] input.
      */
-    fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree): ConfigurableFileTree
+    fun asFileTree(
+        fileTreeCreator: () -> ConfigurableFileTree,
+        directoryPropertyCreator: () -> DirectoryProperty
+    ): ConfigurableFileTree
 
     /**
      * Optional filter associated with this source folder.

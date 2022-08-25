@@ -65,7 +65,11 @@ class DefaultAndroidSourceDirectorySet(
     override fun srcDir(srcDir: Any): AndroidSourceDirectorySet {
         source.add(srcDir)
         if (lateAdditionsDelegates.isNotEmpty()) {
-            val directoryEntry = ProviderBasedDirectoryEntryImpl(name, project.files(srcDir).elements)
+            val directoryEntry = ProviderBasedDirectoryEntryImpl(
+                name,
+                project.files(srcDir).elements,
+                filter
+            )
             lateAdditionsDelegates.forEach { it.addSource(directoryEntry) }
         }
         return this
@@ -98,7 +102,11 @@ class DefaultAndroidSourceDirectorySet(
             val previousFiles = this.srcDirs
             val newFiles = project.files(srcDirs).files
             for (newFile in (newFiles - previousFiles)) {
-                val directoryEntry = ProviderBasedDirectoryEntryImpl(name, project.files(newFile).elements)
+                val directoryEntry = ProviderBasedDirectoryEntryImpl(
+                    name,
+                    project.files(newFile).elements,
+                    filter
+                )
                 lateAdditionsDelegates.forEach { it.addSource(directoryEntry) }
             }
         }

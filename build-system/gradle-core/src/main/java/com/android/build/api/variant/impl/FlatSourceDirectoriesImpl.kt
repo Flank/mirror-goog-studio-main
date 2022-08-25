@@ -65,7 +65,10 @@ class FlatSourceDirectoriesImpl(
     internal fun getAsFileTrees(): Provider<List<ConfigurableFileTree>> =
             variantSources.map { entries: MutableList<DirectoryEntry> ->
                 entries.map { sourceDirectory ->
-                    sourceDirectory.asFileTree(variantServices::fileTree)
+                    sourceDirectory.asFileTree(
+                        variantServices::fileTree,
+                        variantServices::directoryProperty
+                    )
                 }
             }
 

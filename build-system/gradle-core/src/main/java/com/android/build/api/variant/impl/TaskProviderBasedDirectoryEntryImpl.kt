@@ -47,6 +47,9 @@ class TaskProviderBasedDirectoryEntryImpl(
         return directoryProvider
     }
 
-    override fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree): ConfigurableFileTree =
+    override fun asFileTree(
+        fileTreeCreator: () -> ConfigurableFileTree,
+        directoryPropertyCreator: () -> DirectoryProperty
+    ): ConfigurableFileTree =
             fileTreeCreator().setDir(directoryProvider).builtBy(directoryProvider)
 }

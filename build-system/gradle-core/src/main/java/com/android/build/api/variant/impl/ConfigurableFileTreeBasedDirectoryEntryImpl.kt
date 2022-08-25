@@ -31,7 +31,7 @@ import org.gradle.api.tasks.util.PatternFilterable
  */
 class ConfigurableFileTreeBasedDirectoryEntryImpl(
     override val name: String,
-    val configurableFileTree: ConfigurableFileTree,
+    private val configurableFileTree: ConfigurableFileTree,
 ): DirectoryEntry {
 
     override fun asFiles(directoryPropertyCreator: () -> DirectoryProperty): Provider<Directory> {
@@ -47,6 +47,9 @@ class ConfigurableFileTreeBasedDirectoryEntryImpl(
     override val filter: PatternFilterable?
         get() = null
 
-    override fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree) = configurableFileTree
+    override fun asFileTree(
+        fileTreeCreator: () -> ConfigurableFileTree,
+        directoryPropertyCreator: () -> DirectoryProperty
+    ) = configurableFileTree
 }
 

@@ -22,11 +22,12 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.util.PatternFilterable
+import org.gradle.api.tasks.util.PatternSet
 
 class ProviderBasedDirectoryEntryImpl(
     override val name: String,
     val elements: Provider<Set<FileSystemLocation>>,
-    override val filter: PatternFilterable? = null
+    override val filter: PatternFilterable?
 ): DirectoryEntry  {
 
     override val isGenerated: Boolean = true
@@ -45,8 +46,18 @@ class ProviderBasedDirectoryEntryImpl(
         }
     }
 
-    override fun asFileTree(fileTreeCreator: () -> ConfigurableFileTree): ConfigurableFileTree =
-        fileTreeCreator().from(elements).builtBy(elements)
-
-
+    override fun asFileTree(
+        fileTreeCreator: () -> ConfigurableFileTree,
+        directoryPropertyCreator: () -> DirectoryProperty
+    ): ConfigurableFileTree {
+        return fileTreeCreator()
+            .from(asFiles(directoryPropertyCreator))
+            .builtBy(elements)
+            .also {
+                if (filter != null) {
+                    it.include((filter as PatternSet).asIncludeSpec)
+                    it.exclude(filter.asExcludeSpec)
+                }
+            }
+    }
 }
