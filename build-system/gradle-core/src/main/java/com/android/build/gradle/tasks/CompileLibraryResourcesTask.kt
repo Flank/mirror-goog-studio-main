@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.SerializableInputChanges
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.build.gradle.internal.tasks.TaskCategory
@@ -62,20 +61,11 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
     @get:InputFiles
     @get:Incremental
     @get:Optional
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
-    abstract val inputDirectoriesAsAbsolute: ConfigurableFileCollection
-
-    @get:InputFiles
-    @get:Incremental
-    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val inputDirectoriesAsRelative: ConfigurableFileCollection
+    abstract val inputDirectories: ConfigurableFileCollection
 
     @get:Input
     abstract val pseudoLocalesEnabled: Property<Boolean>
-
-    @get:Input
-    abstract val relativeResourcePathsEnabled: Property<Boolean>
 
     @get:Input
     abstract val crunchPng: Property<Boolean>
@@ -102,25 +92,17 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
                 parameters.incremental.set(inputChanges.isIncremental)
                 parameters.incrementalChanges.set(
                     if (inputChanges.isIncremental) {
-                        inputChanges.getChangesInSerializableForm(getInputDirectories())
+                        inputChanges.getChangesInSerializableForm(inputDirectories)
                     } else {
                         null
                     }
                 )
-                parameters.inputDirectories.from(getInputDirectories())
+                parameters.inputDirectories.from(inputDirectories)
                 parameters.partialRDirectory.set(partialRDirectory)
                 parameters.pseudoLocalize.set(pseudoLocalesEnabled)
                 parameters.crunchPng.set(crunchPng)
                 parameters.excludeValues.set(excludeValuesFiles)
             }
-    }
-
-    private fun getInputDirectories(): ConfigurableFileCollection {
-        return if (relativeResourcePathsEnabled.get()) {
-            inputDirectoriesAsRelative
-        } else {
-            inputDirectoriesAsAbsolute
-        }
     }
 
     protected abstract class CompileLibraryResourcesParams : ProfileAwareWorkAction.Parameters() {
@@ -278,21 +260,10 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task: CompileLibraryResourcesTask
         ) {
             super.configure(task)
-            val services = creationConfig.services
-
             val packagedRes = creationConfig.artifacts.get(InternalArtifactType.PACKAGED_RES)
-            val useRelativeInputDirectories =
-                        services.projectOptions[BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES]
-            task.relativeResourcePathsEnabled.setDisallowChanges(useRelativeInputDirectories)
-            if (useRelativeInputDirectories) {
-                task.inputDirectoriesAsRelative.setFrom(
-                    creationConfig.services.fileCollection(packagedRes)
-                )
-            } else {
-                task.inputDirectoriesAsAbsolute.setFrom(
-                    creationConfig.services.fileCollection(packagedRes)
-                )
-            }
+            task.inputDirectories.setFrom(
+                creationConfig.services.fileCollection(packagedRes)
+            )
             task.pseudoLocalesEnabled.setDisallowChanges(
                 creationConfig.androidResourcesCreationConfig!!.pseudoLocalesEnabled
             )
@@ -336,20 +307,11 @@ abstract class CompileLibraryResourcesTask : NewIncrementalTask() {
             task: CompileLibraryResourcesTask
         ) {
             super.configure(task)
-            val services = creationConfig.services
-            val useRelativeInputDirectories =
-                        services.projectOptions[BooleanOption.RELATIVE_COMPILE_LIB_RESOURCES]
-            if (useRelativeInputDirectories) {
-                task.inputDirectoriesAsRelative.from(inputDirectories)
-            } else {
-                task.inputDirectoriesAsAbsolute.from(inputDirectories)
-            }
-            task.inputDirectoriesAsAbsolute.from(inputDirectories)
+            task.inputDirectories.from(inputDirectories)
             task.crunchPng.setDisallowChanges(androidResourcesCreationConfig.isCrunchPngs)
             task.pseudoLocalesEnabled.setDisallowChanges(
                 androidResourcesCreationConfig.pseudoLocalesEnabled
             )
-            task.relativeResourcePathsEnabled.setDisallowChanges(useRelativeInputDirectories)
             task.excludeValuesFiles.set(false)
             task.dependsOn(creationConfig.taskContainer.resourceGenTask)
 

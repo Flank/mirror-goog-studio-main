@@ -237,11 +237,6 @@ enum class BooleanOption(
             DeprecationReporter.DeprecationTarget.ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE
         )
     ),
-    RELATIVE_COMPILE_LIB_RESOURCES(
-        "android.cacheCompileLibResources",
-        true,
-        FeatureStage.SoftlyEnforced(VERSION_8_0)
-    ),
 
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
@@ -487,6 +482,13 @@ enum class BooleanOption(
     @Suppress("unused")
     ENABLE_SOURCE_SET_PATHS_MAP(
             "android.enableSourceSetPathsMap",
+            true,
+            FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
+    @Suppress("unused")
+    RELATIVE_COMPILE_LIB_RESOURCES(
+            "android.cacheCompileLibResources",
             true,
             FeatureStage.Enforced(Version.VERSION_8_0)
     ),
