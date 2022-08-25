@@ -4367,10 +4367,10 @@ maven_import(
 )
 
 maven_artifact(
-    name = "nl.jqno.equalsverifier.equalsverifier_3.4.1",
-    pom = "repository/nl/jqno/equalsverifier/equalsverifier/3.4.1/equalsverifier-3.4.1.pom",
+    name = "nl.jqno.equalsverifier.equalsverifier_3.8",
+    pom = "repository/nl/jqno/equalsverifier/equalsverifier/3.8/equalsverifier-3.8.pom",
     repo_root_path = "repository",
-    repo_path = "nl/jqno/equalsverifier/equalsverifier/3.4.1",
+    repo_path = "nl/jqno/equalsverifier/equalsverifier/3.8",
     parent = "org.sonatype.oss.oss-parent_9",
     visibility = ["//visibility:public"],
 )
@@ -4380,12 +4380,12 @@ maven_import(
     classifiers = [],
     parent = "org.sonatype.oss.oss-parent_9",
     jars = [
-        "repository/nl/jqno/equalsverifier/equalsverifier/3.4.1/equalsverifier-3.4.1.jar"
+        "repository/nl/jqno/equalsverifier/equalsverifier/3.8/equalsverifier-3.8.jar"
     ],
     original_deps = [],
-    pom = "repository/nl/jqno/equalsverifier/equalsverifier/3.4.1/equalsverifier-3.4.1.pom",
+    pom = "repository/nl/jqno/equalsverifier/equalsverifier/3.8/equalsverifier-3.8.pom",
     repo_root_path = "repository",
-    repo_path = "nl/jqno/equalsverifier/equalsverifier/3.4.1",
+    repo_path = "nl/jqno/equalsverifier/equalsverifier/3.8",
     visibility = ["//visibility:public"],
 )
 
