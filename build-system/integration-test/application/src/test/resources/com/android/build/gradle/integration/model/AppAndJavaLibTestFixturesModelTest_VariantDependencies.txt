@@ -2,34 +2,34 @@
    - name                 = "debug"
    > mainArtifact:
       - compileDependencies:
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - unresolvedDependencies = []
    < mainArtifact
    > androidTestArtifact:
       > compileDependencies:
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
-               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
+               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
                   - requestedCoordinates = (null)
                   - dependencies         = []
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
             - dependencies = "*visited*"
       < compileDependencies
       - runtimeDependencies:
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
-               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
+               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
                   - requestedCoordinates = (null)
                   - dependencies         = []
       - unresolvedDependencies = []
@@ -39,17 +39,17 @@
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
             - requestedCoordinates = (null)
             - dependencies         = []
       - runtimeDependencies:
          - :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified:
             - requestedCoordinates = (null)
             - dependencies:
-               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
+               - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
                   - requestedCoordinates = (null)
                   - dependencies         = []
-         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
+         - :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
             - dependencies = "*visited*"
       - unresolvedDependencies = []
    < unitTestArtifact
@@ -96,7 +96,7 @@
          - lintJar            = (null)
          - androidLibraryData = (null)
       < :|:app|debug|com.android.build.api.attributes.AgpVersionAttr>{AGP_Version}, com.android.build.gradle.internal.attributes.VariantAttr>debug, org.gradle.usage>java-runtime|project:app:unspecified
-      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
+      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified:
          - type               = PROJECT
          - artifact           = {PROJECT}/lib/build/libs/lib-test-fixtures.jar{!}
          > projectInfo:
@@ -108,7 +108,7 @@
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
-               * "org.gradle.jvm.version -> 11"
+               * "org.gradle.jvm.version -> {Java_Version}"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
             - capabilities:
@@ -117,8 +117,8 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified
-      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
+      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib-test-fixtures:unspecified
+      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified:
          - type               = PROJECT
          - artifact           = {PROJECT}/lib/build/libs/lib.jar{!}
          > projectInfo:
@@ -130,7 +130,7 @@
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
-               * "org.gradle.jvm.version -> 11"
+               * "org.gradle.jvm.version -> {Java_Version}"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-api"
             - capabilities:
@@ -139,8 +139,8 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified
-      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
+      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-api|project:lib:unspecified
+      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified:
          - type               = PROJECT
          - artifact           = {PROJECT}/lib/build/libs/lib-test-fixtures.jar{!}
          > projectInfo:
@@ -152,7 +152,7 @@
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
-               * "org.gradle.jvm.version -> 11"
+               * "org.gradle.jvm.version -> {Java_Version}"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
@@ -161,8 +161,8 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified
-      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
+      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib-test-fixtures:unspecified
+      > :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified:
          - type               = PROJECT
          - artifact           = {PROJECT}/lib/build/libs/lib.jar{!}
          > projectInfo:
@@ -174,7 +174,7 @@
             - attributes:
                * "org.gradle.category -> library"
                * "org.gradle.dependency.bundling -> external"
-               * "org.gradle.jvm.version -> 11"
+               * "org.gradle.jvm.version -> {Java_Version}"
                * "org.gradle.libraryelements -> jar"
                * "org.gradle.usage -> java-runtime"
             - capabilities:
@@ -183,6 +183,6 @@
          - libraryInfo        = (null)
          - lintJar            = (null)
          - androidLibraryData = (null)
-      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>11, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified
+      < :|:lib|org.gradle.category>library, org.gradle.dependency.bundling>external, org.gradle.jvm.version>{Java_Version}, org.gradle.libraryelements>jar, org.gradle.usage>java-runtime|project:lib:unspecified
    < libraries
 < VariantDependencies

@@ -353,6 +353,15 @@ fun Any?.toNormalizedStrings(normalizer: FileNormalizer): Any = when (this) {
 }
 
 fun String.normalizeAgpVersion(): String {
-    return this.replace(ANDROID_GRADLE_PLUGIN_VERSION, "{AGP_Version}")
+    return this
+        .replace(ANDROID_GRADLE_PLUGIN_VERSION, "{AGP_Version}")
+        .replace(
+            "org.gradle.jvm.version>${Runtime.version().feature()}",
+            "org.gradle.jvm.version>{Java_Version}"
+        )
+        .replace(
+            "org.gradle.jvm.version -> ${Runtime.version().feature()}",
+            "org.gradle.jvm.version -> {Java_Version}"
+        )
 }
 
