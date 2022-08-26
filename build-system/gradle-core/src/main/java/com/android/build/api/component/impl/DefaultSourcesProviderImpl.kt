@@ -46,7 +46,7 @@ class DefaultSourcesProviderImpl(
     override fun getJava(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry> = component.defaultJavaSources(lateAdditionsDelegate)
 
     override fun getKotlin(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry> = mutableListOf<DirectoryEntry>().also { sourceSets ->
-        for (sourceProvider in variantSources.sortedSourceProviders) {
+        for (sourceProvider in variantSources.getSortedSourceProviders(false)) {
             val sourceSet = sourceProvider as AndroidSourceSet
             val sourceDirectorySet = sourceSet.kotlin as DefaultAndroidSourceDirectorySet
             sourceDirectorySet.addLateAdditionDelegate(lateAdditionsDelegate)
@@ -89,7 +89,8 @@ class DefaultSourcesProviderImpl(
         sourceDirectory: (sourceSet: AndroidSourceSet) -> AndroidSourceDirectorySet
     ): List<DirectoryEntry> {
         val sourceSets = mutableListOf<DirectoryEntry>()
-        for (sourceProvider in variantSources.sortedSourceProviders) {
+        // Variant sources are added independently later so that they can be added to the model
+        for (sourceProvider in variantSources.getSortedSourceProviders(false)) {
             val sourceSet = sourceProvider as AndroidSourceSet
             val androidSourceDirectorySet = sourceDirectory(sourceSet) as DefaultAndroidSourceDirectorySet
             androidSourceDirectorySet.addLateAdditionDelegate(lateAdditionsDelegate)
@@ -194,7 +195,8 @@ class DefaultSourcesProviderImpl(
         getSourceList(lateAdditionsDelegate) { sourceProvider -> sourceProvider.assets }
 
     private fun getSourceList(lateAdditionsDelegate: SourceDirectoriesImpl, action: (sourceProvider: DefaultAndroidSourceSet) -> AndroidSourceDirectorySet): List<DirectoryEntries> {
-        return variantSources.sortedSourceProviders.map { sourceProvider ->
+        // Variant sources are added independently later so that they can be added to the model
+        return variantSources.getSortedSourceProviders(false).map { sourceProvider ->
             sourceProvider as DefaultAndroidSourceSet
             val androidSourceDirectorySet = action(sourceProvider) as DefaultAndroidSourceDirectorySet
             androidSourceDirectorySet.addLateAdditionDelegate(lateAdditionsDelegate)

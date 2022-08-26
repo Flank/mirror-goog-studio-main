@@ -83,26 +83,27 @@ class VariantSources internal constructor(
      *
      * @return a list of source provider
      */
-    val  sortedSourceProviders: List<SourceProvider>
-        get() {
-            val providers: MutableList<SourceProvider> =
-                Lists.newArrayListWithExpectedSize(flavorSourceProviders.size + 4)
+    fun getSortedSourceProviders(addVariantSources: Boolean = true): List<SourceProvider> {
+        val providers: MutableList<SourceProvider> =
+            Lists.newArrayListWithExpectedSize(flavorSourceProviders.size + 4)
 
-            // first the default source provider
-            providers.add(defaultSourceProvider)
-            // the list of flavor must be reversed to use the right overlay order.
-            for (n in flavorSourceProviders.indices.reversed()) {
-                providers.add(flavorSourceProviders[n])
-            }
-            // multiflavor specific overrides flavor
-            multiFlavorSourceProvider?.let(providers::add)
-            // build type overrides flavors
-            buildTypeSourceProvider?.let(providers::add)
-            // variant specific overrides all
-            variantSourceProvider?.let(providers::add)
-
-            return providers
+        // first the default source provider
+        providers.add(defaultSourceProvider)
+        // the list of flavor must be reversed to use the right overlay order.
+        for (n in flavorSourceProviders.indices.reversed()) {
+            providers.add(flavorSourceProviders[n])
         }
+        // multiflavor specific overrides flavor
+        multiFlavorSourceProvider?.let(providers::add)
+        // build type overrides flavors
+        buildTypeSourceProvider?.let(providers::add)
+        // variant specific overrides all
+        if (addVariantSources) {
+            variantSourceProvider?.let(providers::add)
+        }
+
+        return providers
+    }
 
     val manifestOverlays: List<File>
         get() {
@@ -123,13 +124,7 @@ class VariantSources internal constructor(
             return inputs
         }
 
-    fun getSourceFiles(f: Function<SourceProvider, Collection<File>>): Set<File> {
-        return sortedSourceProviders.flatMap {
-            f.apply(it)
-        }.toSet()
-    }
-
-     /**
+    /**
      * Returns a map af all customs source directories registered. Key is the source set name as
      * registered by the user. Value is also a map of source set name to list of folders registered
      * for this source set.
@@ -137,7 +132,7 @@ class VariantSources internal constructor(
     val customSourceList: Map<String, Collection<CustomSourceDirectory>>
         get() {
             return immutableMapBuilder<String, Collection<CustomSourceDirectory>> {
-             sortedSourceProviders.forEach {
+             getSortedSourceProviders().forEach {
                  this.put(it.name, it.customDirectories)
              }
             }.toMap()

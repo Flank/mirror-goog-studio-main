@@ -928,7 +928,7 @@ abstract class VariantInputs {
             creationConfig.androidResourcesCreationConfig?.resourceConfigurations ?: emptyList()
         )
 
-        sourceProviders.setDisallowChanges(creationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+        sourceProviders.setDisallowChanges(creationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
             creationConfig.services
                 .newInstance(SourceProviderInput::class.java)
                 .initialize(sourceProvider, lintMode)
@@ -946,7 +946,7 @@ abstract class VariantInputs {
         val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
         variantWithTests.unitTest?.let { unitTestCreationConfig ->
             testSourceProviderList.addAll(
-                unitTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                unitTestCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
                     creationConfig.services
                         .newInstance(SourceProviderInput::class.java)
                         .initialize(sourceProvider, lintMode, unitTestOnly = true)
@@ -955,7 +955,7 @@ abstract class VariantInputs {
         }
         variantWithTests.androidTest?.let { androidTestCreationConfig ->
             testSourceProviderList.addAll(
-                androidTestCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                androidTestCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
                     creationConfig.services
                         .newInstance(SourceProviderInput::class.java)
                         .initialize(sourceProvider, lintMode, instrumentationTestOnly = true)
@@ -964,7 +964,7 @@ abstract class VariantInputs {
         }
         variantWithTests.testFixtures?.let { testFixturesCreationConfig ->
             testFixturesSourceProviders.setDisallowChanges(
-                testFixturesCreationConfig.variantSources.sortedSourceProviders.map { sourceProvider ->
+                testFixturesCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
                     creationConfig.services
                         .newInstance(SourceProviderInput::class.java)
                         .initialize(
