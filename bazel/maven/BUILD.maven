@@ -1080,6 +1080,105 @@ maven_import(
 )
 
 maven_artifact(
+    name = "com.google.devtools.ksp.symbol-processing-api_1.7.10-1.0.6",
+    pom = "repository/com/google/devtools/ksp/symbol-processing-api/1.7.10-1.0.6/symbol-processing-api-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing-api/1.7.10-1.0.6",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.devtools.ksp.symbol-processing-api",
+    classifiers = [],
+    jars = [
+        "repository/com/google/devtools/ksp/symbol-processing-api/1.7.10-1.0.6/symbol-processing-api-1.7.10-1.0.6.jar"
+    ],
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib",
+    ],
+    original_deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+    ],
+    pom = "repository/com/google/devtools/ksp/symbol-processing-api/1.7.10-1.0.6/symbol-processing-api-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing-api/1.7.10-1.0.6",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.google.devtools.ksp.symbol-processing-gradle-plugin_1.7.10-1.0.6",
+    pom = "repository/com/google/devtools/ksp/symbol-processing-gradle-plugin/1.7.10-1.0.6/symbol-processing-gradle-plugin-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing-gradle-plugin/1.7.10-1.0.6",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.10",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.10",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.10",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.devtools.ksp.symbol-processing-gradle-plugin",
+    classifiers = [],
+    jars = [
+        "repository/com/google/devtools/ksp/symbol-processing-gradle-plugin/1.7.10-1.0.6/symbol-processing-gradle-plugin-1.7.10-1.0.6.jar"
+    ],
+    exports = [
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin-api",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin",
+    ],
+    original_deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.7.10",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin-api_1.7.10",
+        "org.jetbrains.kotlin.kotlin-gradle-plugin_1.7.10",
+    ],
+    pom = "repository/com/google/devtools/ksp/symbol-processing-gradle-plugin/1.7.10-1.0.6/symbol-processing-gradle-plugin-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing-gradle-plugin/1.7.10-1.0.6",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "com.google.devtools.ksp.symbol-processing_1.7.10-1.0.6",
+    pom = "repository/com/google/devtools/ksp/symbol-processing/1.7.10-1.0.6/symbol-processing-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing/1.7.10-1.0.6",
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+        "org.jetbrains.kotlin.kotlin-compiler-embeddable_1.7.10",
+        "com.google.devtools.ksp.symbol-processing-api_1.7.10-1.0.6",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.devtools.ksp.symbol-processing",
+    classifiers = [],
+    jars = [
+        "repository/com/google/devtools/ksp/symbol-processing/1.7.10-1.0.6/symbol-processing-1.7.10-1.0.6.jar"
+    ],
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib",
+        "org.jetbrains.kotlin.kotlin-compiler-embeddable",
+        "com.google.devtools.ksp.symbol-processing-api",
+    ],
+    original_deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+        "org.jetbrains.kotlin.kotlin-compiler-embeddable_1.7.10",
+        "com.google.devtools.ksp.symbol-processing-api_1.7.10-1.0.6",
+    ],
+    pom = "repository/com/google/devtools/ksp/symbol-processing/1.7.10-1.0.6/symbol-processing-1.7.10-1.0.6.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/devtools/ksp/symbol-processing/1.7.10-1.0.6",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.errorprone.error_prone_annotations_2.4.0",
     pom = "repository/com/google/errorprone/error_prone_annotations/2.4.0/error_prone_annotations-2.4.0.pom",
     repo_root_path = "repository",
@@ -6972,6 +7071,9 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "org/jetbrains/kotlin/kotlin-compiler-embeddable/1.7.10",
     deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+        "org.jetbrains.kotlin.kotlin-script-runtime_1.7.10",
+        "org.jetbrains.kotlin.kotlin-reflect_1.7.10",
         "org.jetbrains.kotlin.kotlin-daemon-embeddable_1.7.10",
         "org.jetbrains.intellij.deps.trove4j_1.0.20200330",
         "net.java.dev.jna.jna_5.6.0",
@@ -6986,13 +7088,19 @@ maven_import(
         "repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.7.10/kotlin-compiler-embeddable-1.7.10.jar"
     ],
     exports = [
+        "org.jetbrains.kotlin.kotlin-script-runtime",
+        "org.jetbrains.kotlin.kotlin-reflect",
         "org.jetbrains.intellij.deps.trove4j",
-    ],
-    deps = [
-        "org.jetbrains.kotlin.kotlin-daemon-embeddable",
         "net.java.dev.jna.jna",
     ],
+    deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib",
+        "org.jetbrains.kotlin.kotlin-daemon-embeddable",
+    ],
     original_deps = [
+        "org.jetbrains.kotlin.kotlin-stdlib_1.7.10",
+        "org.jetbrains.kotlin.kotlin-script-runtime_1.7.10",
+        "org.jetbrains.kotlin.kotlin-reflect_1.7.10",
         "org.jetbrains.kotlin.kotlin-daemon-embeddable_1.7.10",
         "org.jetbrains.intellij.deps.trove4j_1.0.20200330",
         "net.java.dev.jna.jna_5.6.0",
@@ -7244,13 +7352,13 @@ maven_import(
     exports = [
         "org.jetbrains.kotlin.kotlin-gradle-plugin-model",
         "org.jetbrains.kotlin.kotlin-tooling-core",
-        "org.jetbrains.kotlin.kotlin-project-model",
     ],
     deps = [
         "org.jetbrains.kotlin.kotlin-gradle-plugin-idea",
         "org.jetbrains.kotlin.kotlin-util-klib",
         "org.jetbrains.kotlin.kotlin-klib-commonizer-api",
         "org.jetbrains.kotlin.kotlin-tooling-metadata",
+        "org.jetbrains.kotlin.kotlin-project-model",
         "com.google.code.gson.gson",
         "com.google.guava.guava",
         "de.undercouch.gradle-download-task",
@@ -7304,7 +7412,7 @@ maven_import(
     jars = [
         "repository/org/jetbrains/kotlin/kotlin-klib-commonizer-api/1.7.10/kotlin-klib-commonizer-api-1.7.10.jar"
     ],
-    exports = [
+    deps = [
         "org.jetbrains.kotlin.kotlin-native-utils",
     ],
     original_deps = [
@@ -7362,7 +7470,7 @@ maven_import(
     jars = [
         "repository/org/jetbrains/kotlin/kotlin-project-model/1.7.10/kotlin-project-model-1.7.10.jar"
     ],
-    deps = [
+    exports = [
         "org.jetbrains.kotlin.kotlin-tooling-core",
     ],
     original_deps = [
@@ -7766,7 +7874,7 @@ maven_import(
     jars = [
         "repository/org/jetbrains/kotlin/kotlin-util-klib/1.7.10/kotlin-util-klib-1.7.10.jar"
     ],
-    exports = [
+    deps = [
         "org.jetbrains.kotlin.kotlin-util-io",
     ],
     original_deps = [

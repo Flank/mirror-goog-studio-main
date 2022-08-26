@@ -21,6 +21,8 @@ ARTIFACTS = [
     "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.6",
     "com.google.crypto.tink:tink:1.3.0-rc2",
+    "com.google.devtools.ksp:symbol-processing-gradle-plugin:1.7.10-1.0.6",
+    "com.google.devtools.ksp:symbol-processing:1.7.10-1.0.6",
     "com.fasterxml.jackson.core:jackson-annotations:2.11.1",
     "com.fasterxml.jackson.core:jackson-core:2.11.1",
     "com.fasterxml.jackson.core:jackson-databind:2.11.1",
