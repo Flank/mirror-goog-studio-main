@@ -138,6 +138,7 @@ class UtpTestRunnerTest {
             "variantName",
             mockTestData,
             setOf(mockHelperApk),
+            emptySet(),
             listOf(mockDevice),
             0,
             setOf(),

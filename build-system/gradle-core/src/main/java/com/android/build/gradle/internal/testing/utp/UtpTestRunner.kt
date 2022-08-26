@@ -25,9 +25,9 @@ import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
+import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.logging.Level
-import org.gradle.workers.WorkerExecutor
 
 /**
  * Runs Android Instrumentation tests using UTP (Unified Test Platform).
@@ -61,6 +61,7 @@ class UtpTestRunner @JvmOverloads constructor(
             variantName: String,
             testData: StaticTestData,
             apksForDevice: MutableMap<DeviceConnector, ImmutableList<File>>,
+            dependencyApks: Set<File>,
             helperApks: MutableSet<File>,
             timeoutInMs: Int,
             installOptions: MutableCollection<String>,

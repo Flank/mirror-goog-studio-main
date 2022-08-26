@@ -52,6 +52,7 @@ public class ShardedTestRunner extends BaseTestRunner {
             @NonNull String variantName,
             @NonNull StaticTestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
+            @NonNull Set<File> dependencyApks,
             @NonNull Set<File> helperApks,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,

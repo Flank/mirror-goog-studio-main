@@ -510,6 +510,7 @@ public class SimpleTestRunnableTest {
                         "flavor",
                         testedApks,
                         getStaticData(),
+                        Collections.emptySet(),
                         Collections.singleton(buddyApk),
                         resultsDir,
                         additionalTestOutputEnabled,
@@ -556,6 +557,7 @@ public class SimpleTestRunnableTest {
         runnable.run();
 
         verify(deviceConnector, atLeastOnce()).getName();
+        verify(deviceConnector, atLeastOnce()).getDeviceConfig();
         verify(deviceConnector).connect(TIMEOUT, logger);
         verify(deviceConnector).installPackage(testApk, installOptions, TIMEOUT, logger);
 

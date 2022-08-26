@@ -72,7 +72,6 @@ import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -366,6 +365,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             getProjectPath().get(),
                                             getTestData().get().getFlavorName().get(),
                                             getTestData().get().getAsStaticData(),
+                                            getPrivacySandboxSdkApksFiles().getFiles(),
                                             getBuddyApks().getFiles(),
                                             getFilteredDevices(deviceProvider),
                                             deviceProvider.getTimeoutInMs(),
@@ -573,6 +573,11 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract ConfigurableFileCollection getBuddyApks();
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.ABSOLUTE)
+    @Optional
+    public abstract ConfigurableFileCollection getPrivacySandboxSdkApksFiles();
 
     public static class CreationAction
             extends VariantTaskCreationAction<
@@ -908,6 +913,23 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                                         .RUNTIME_CLASSPATH));
             }
             task.getRClasses().disallowChanges();
+            if (creationConfig
+                            .getServices()
+                            .getProjectOptions()
+                            .get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)
+                    && testedConfig != null) {
+                task.getPrivacySandboxSdkApksFiles()
+                        .setFrom(
+                                testedConfig
+                                        .getVariantDependencies()
+                                        .getArtifactFileCollection(
+                                                AndroidArtifacts.ConsumedConfigType
+                                                        .RUNTIME_CLASSPATH,
+                                                AndroidArtifacts.ArtifactScope.ALL,
+                                                AndroidArtifacts.ArtifactType
+                                                        .ANDROID_PRIVACY_SANDBOX_SDK_APKS));
+            }
+            task.getPrivacySandboxSdkApksFiles().disallowChanges();
         }
     }
 }

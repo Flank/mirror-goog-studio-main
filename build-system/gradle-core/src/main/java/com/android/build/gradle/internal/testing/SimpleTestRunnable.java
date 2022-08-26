@@ -22,6 +22,8 @@ import static com.android.ddmlib.DdmPreferences.getTimeOut;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.tasks.BundleInstallUtils;
+import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.ddmlib.AdbCommandRejectedException;
@@ -46,6 +48,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +92,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
     @NonNull private final List<File> testedApks;
     @NonNull private final Collection<String> installOptions;
     @NonNull private final ILogger logger;
+    @NonNull private final Set<File> dependencyApks;
     @NonNull private final Set<File> helperApks;
     @NonNull private final BaseTestRunner.TestResult testResult;
 
@@ -101,6 +105,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         this.device = params.device;
         this.runner = params.runner;
         this.flavorName = params.flavorName;
+        this.dependencyApks = params.dependencyApks;
         this.helperApks = params.helperApks;
         this.resultsDir = params.resultsDir;
         this.additionalTestOutputDir = params.additionalTestOutputDir;
@@ -183,6 +188,19 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             String coverageFile = getCoverageFile(userId);
             prefixedCoverageFilePath =
                     (useTestStorageService ? TEST_STORAGE_SERVICE_OUTPUT_DIR : "") + coverageFile;
+
+            DeviceConfigProviderImpl deviceConfigProvider = new DeviceConfigProviderImpl(device);
+            for (File helperApk : dependencyApks) {
+                List<File> apks =
+                        BundleInstallUtils.extractApkFilesBypassingBundleTool(helperApk.toPath())
+                                .stream()
+                                .map(Path::toFile)
+                                .collect(Collectors.toList());
+
+                logger.verbose(
+                        "DeviceConnector '%s': installing dependency APK %s", deviceName, apks);
+                device.installPackages(apks, installOptions, timeoutInMs, logger);
+            }
 
             if (!testedApks.isEmpty()) {
                 logger.verbose(
@@ -657,6 +675,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
         @NonNull private final List<File> testedApks;
         @NonNull private final Collection<String> installOptions;
         @NonNull private final ILogger logger;
+        @NonNull private final Set<File> dependencyApks;
         @NonNull private final Set<File> helperApks;
         @NonNull private final BaseTestRunner.TestResult testResult;
 
@@ -669,6 +688,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
                 @NonNull String flavorName,
                 @NonNull List<File> testedApks,
                 @NonNull StaticTestData testData,
+                @NonNull Set<File> dependencyApks,
                 @NonNull Set<File> helperApks,
                 @NonNull File resultsDir,
                 boolean additionalTestOutputEnabled,
@@ -682,6 +702,7 @@ public class SimpleTestRunnable implements WorkerExecutorFacade.WorkAction {
             this.device = device;
             this.runner = runner;
             this.flavorName = flavorName;
+            this.dependencyApks = dependencyApks;
             this.helperApks = helperApks;
             this.resultsDir = resultsDir;
             this.additionalTestOutputDir = additionalTestOutputDir;

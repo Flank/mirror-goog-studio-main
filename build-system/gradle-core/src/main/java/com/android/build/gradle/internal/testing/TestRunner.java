@@ -45,6 +45,7 @@ public interface TestRunner {
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull StaticTestData testData,
+            @NonNull Set<File> dependencyApks,
             @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
             int timeoutInMs,
