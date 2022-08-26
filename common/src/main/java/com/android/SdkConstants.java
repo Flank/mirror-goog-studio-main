@@ -2105,6 +2105,8 @@ public final class SdkConstants {
     public static final String EXT_ASAR = "asar";
     /** Extension for Android Privacy Sandbox Sdk bundles */
     public static final String EXT_ASB = "asb";
+    /** Extension for APKs file containing multiple APKs */
+    public static final String EXT_APKS = "apks";
     /** Extension for Android atom files. */
     public static final String EXT_ATOM = "atom";
     /** Extension of java files, i.e. "java" */
@@ -2166,6 +2168,8 @@ public final class SdkConstants {
     public static final String DOT_ASAR = DOT + EXT_ASAR;
     /** Extension for Android Privacy Sandbox Sdk bundles */
     public static final String DOT_ASB = DOT + EXT_ASB;
+    /** Extension for APKs file containing multiple APKs */
+    public static final String DOT_APKS = DOT + EXT_APKS;
     /** Dot-Extension of zip files, i.e. ".zip" */
     public static final String DOT_ZIP = DOT + EXT_ZIP;
     /** Dot-Extension of aidl files, i.e. ".aidl" */

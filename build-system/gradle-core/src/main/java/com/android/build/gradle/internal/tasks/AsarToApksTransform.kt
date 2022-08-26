@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.EXT_ASB
 import com.android.SdkConstants.DOT_ASB
+import com.android.SdkConstants.DOT_APKS
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
@@ -40,6 +41,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.nio.file.Files
 import java.util.concurrent.ForkJoinPool
+import kotlin.io.path.nameWithoutExtension
 
 /**
  * Transform for generating privacy sandbox APKs signed with the debug key.
@@ -65,7 +67,7 @@ abstract class AsarToApksTransform: TransformAction<AsarToApksTransform.AsarToAp
 
     override fun transform(outputs: TransformOutputs) {
         val inputFile = getInputArtifact().get().asFile.toPath()
-        val outputFile = outputs.file(inputFile.fileName.toString()).toPath()
+        val outputFile = outputs.file(inputFile.nameWithoutExtension + DOT_APKS).toPath()
         val tempDir = Files.createTempDirectory(EXT_ASB)
         try {
             // Workaround for lack of asar to apks support (b/235469089)
