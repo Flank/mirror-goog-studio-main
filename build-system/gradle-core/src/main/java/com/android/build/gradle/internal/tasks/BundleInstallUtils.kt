@@ -20,9 +20,11 @@ package com.android.build.gradle.internal.tasks
 import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.bundle.Devices
 import com.android.tools.build.bundletool.commands.ExtractApksCommand
+import com.android.zipflinger.ZipArchive
 import com.google.common.collect.ImmutableSet
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.nameWithoutExtension
 
 internal fun getDeviceSpec(device: DeviceConfigProvider): Devices.DeviceSpec {
     return Devices.DeviceSpec.newBuilder().also { spec ->
@@ -54,4 +56,16 @@ internal fun getApkFiles(
 
     // create the APKs
     return command.build().execute()
+}
+// This is required until there is a new version of bundletool capable of extracting it via the
+// method above.
+internal fun extractApkFilesBypassingBundleTool(apkBundle: Path): List<Path> {
+    val tempFolder: Path = Files.createTempDirectory(apkBundle.nameWithoutExtension)
+    val outputFile = tempFolder.resolve("extracted-apk.apk")
+    ZipArchive(apkBundle).use {
+        it.getInputStream("standalones/standalone.apk").use { inputStream ->
+            Files.copy(inputStream, outputFile)
+        }
+    }
+    return listOf(outputFile)
 }
