@@ -31,9 +31,9 @@ import com.android.adblib.tools.debugging.packets.ddms.ddmsChunks
 import com.android.adblib.tools.debugging.packets.ddms.writeToChannel
 import com.android.adblib.tools.debugging.properties
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
-import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
-import com.android.adblib.tools.testutils.CoroutineTestUtils.waitNonNull
-import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
+import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.testingutils.CoroutineTestUtils.waitNonNull
+import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.utils.ResizableBuffer
 import com.android.fakeadbserver.DeviceState
 import kotlinx.coroutines.flow.first
