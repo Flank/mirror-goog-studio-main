@@ -45,9 +45,6 @@ build:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UN
 
 build:jdk17 --java_runtime_version=jdk17
 
-test:jdk17_with_jdk11 --jvmopt='-Dforce_embedded_jdk11=true'
-build:jdk17_with_jdk11 --config=jdk17 --//prebuilts/studio/jdk/jdk17:force_include_jdk11_files=True
-
 # Local runs require longer timeouts.
 test:local --test_timeout=120,600,1800,7200
 
