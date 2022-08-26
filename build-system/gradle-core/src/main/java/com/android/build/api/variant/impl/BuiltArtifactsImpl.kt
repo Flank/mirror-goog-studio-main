@@ -33,7 +33,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.bufferedWriter
 
-data class BuiltArtifactsImpl @JvmOverloads constructor(
+class BuiltArtifactsImpl @JvmOverloads constructor(
     override val version: Int = BuiltArtifacts.METADATA_FILE_VERSION,
     override val artifactType: Artifact<*>,
     override val applicationId: String,
