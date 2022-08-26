@@ -130,6 +130,17 @@ open class AnalyticsEnabledSources @Inject constructor(
                 objectFactory)
         }
 
+    override val resources: SourceDirectories.Flat
+        get() {
+            stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
+                VariantPropertiesMethodType.SOURCES_RESOURCES_ACCESS_VALUE
+            return objectFactory.newInstance(
+                AnalyticsEnabledFlat::class.java,
+                delegate.resources,
+                stats,
+                objectFactory)
+        }
+
     override fun getByName(name: String): SourceDirectories.Flat {
         stats.variantApiAccessBuilder.addVariantPropertiesAccessBuilder().type =
             VariantPropertiesMethodType.SOURCES_EXTRAS_ACCESS_VALUE

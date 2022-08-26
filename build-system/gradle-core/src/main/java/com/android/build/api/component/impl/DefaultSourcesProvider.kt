@@ -47,6 +47,11 @@ interface DefaultSourcesProvider {
     fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>
 
     /**
+     * the list of sources [DirectoryEntry] for java resources.
+     */
+    fun getResources(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>
+
+    /**
      * the list of [DirectoryEntries] for assets.
      *
      * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
