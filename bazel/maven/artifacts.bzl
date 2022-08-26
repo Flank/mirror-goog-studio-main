@@ -371,7 +371,7 @@ DATA = [
     "org.jetbrains.compose.ui:ui-test-junit4-desktop:1.1.1",
     "org.jetbrains.dokka:dokka-base:1.4.32",
     "org.jetbrains.dokka:javadoc-plugin:1.4.32",
-    "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.0",
+    "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.0",  # Remove it later (b/243935746)
     "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.10",
     "org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin:1.7.20-Beta",
     "org.jetbrains.kotlin:jvm-abi-gen:1.7.0",
