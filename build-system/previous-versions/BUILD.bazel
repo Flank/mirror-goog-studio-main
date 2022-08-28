@@ -2,6 +2,19 @@ load("//tools/base/bazel:maven.bzl", "maven_repository")
 load("//tools/base/bazel:gradle.bzl", "gradle_build")
 
 #keep sorted
+AGP_7_4_0_ARTIFACTS = [
+    "@maven//:com.android.tools.build.aapt2_7.4.0-alpha09-8841542",
+    "@maven//:com.android.tools.build.gradle_7.4.0-alpha09",
+    "@maven//:com.android.tools.lint.lint-gradle_30.4.0-alpha09",
+]
+
+maven_repository(
+    name = "7.4.0",
+    artifacts = AGP_7_4_0_ARTIFACTS,
+    visibility = ["//visibility:public"],
+)
+
+#keep sorted
 AGP_7_3_0_ARTIFACTS = [
     "@maven//:com.android.tools.build.aapt2_7.3.0-rc01-8691043",
     "@maven//:com.android.tools.build.gradle_7.3.0-rc01",
