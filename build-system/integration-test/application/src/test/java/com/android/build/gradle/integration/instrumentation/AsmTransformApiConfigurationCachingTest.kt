@@ -47,7 +47,7 @@ class AsmTransformApiConfigurationCachingTest {
                 dependencies {
                     api gradleApi()
                     api "com.android.tools.build:gradle:${"$"}rootProject.buildVersion"
-                    implementation "org.ow2.asm:asm-util:7.0"
+                    implementation "org.ow2.asm:asm-util:9.2"
                 }
 
                 gradlePlugin {

@@ -99,8 +99,8 @@ maven_repository(
         "@maven//:commons-logging.commons-logging_1.1.1",
         "@maven//:org.jdeferred.jdeferred-android-aar_1.2.3",
         "@maven//:org.mockito.mockito-core_3.12.4",
-        "@maven//:org.robolectric.android-all_7.0.0_r1-robolectric-r1",
-        "@maven//:org.robolectric.robolectric_4.2.1",
+        "@maven//:org.robolectric.android-all-instrumented_7.0.0_r1-robolectric-r1-i4",
+        "@maven//:org.robolectric.robolectric_4.8.2",
     ],
     visibility = ["__subpackages__"],
 )

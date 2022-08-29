@@ -15253,21 +15253,18 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "androidx.test.monitor_1.1.0",
-    pom = "repository/androidx/test/monitor/1.1.0/monitor-1.1.0.pom",
+    name = "androidx.test.monitor_1.4.0",
+    pom = "repository/androidx/test/monitor/1.4.0/monitor-1.4.0.pom",
     repo_root_path = "repository",
-    repo_path = "androidx/test/monitor/1.1.0",
-    deps = [
-        "androidx.annotation.annotation_1.0.0",
-    ],
+    repo_path = "androidx/test/monitor/1.4.0",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "androidx.test.monitor_1.1.1",
-    pom = "repository/androidx/test/monitor/1.1.1/monitor-1.1.1.pom",
+    name = "androidx.test.monitor_1.1.0",
+    pom = "repository/androidx/test/monitor/1.1.0/monitor-1.1.0.pom",
     repo_root_path = "repository",
-    repo_path = "androidx/test/monitor/1.1.1",
+    repo_path = "androidx/test/monitor/1.1.0",
     deps = [
         "androidx.annotation.annotation_1.0.0",
     ],
@@ -15301,17 +15298,6 @@ maven_artifact(
     pom = "repository/androidx/test/monitor/1.3.1-alpha02/monitor-1.3.1-alpha02.pom",
     repo_root_path = "repository",
     repo_path = "androidx/test/monitor/1.3.1-alpha02",
-    deps = [
-        "androidx.annotation.annotation_1.0.0",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "androidx.test.monitor_1.4.0",
-    pom = "repository/androidx/test/monitor/1.4.0/monitor-1.4.0.pom",
-    repo_root_path = "repository",
-    repo_path = "androidx/test/monitor/1.4.0",
     deps = [
         "androidx.annotation.annotation_1.0.0",
     ],
@@ -15771,26 +15757,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "backport-util-concurrent.backport-util-concurrent_3.1",
-    pom = "repository/backport-util-concurrent/backport-util-concurrent/3.1/backport-util-concurrent-3.1.pom",
+    name = "com.almworks.sqlite4java.sqlite4java_1.0.392",
+    pom = "repository/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.pom",
     repo_root_path = "repository",
-    repo_path = "backport-util-concurrent/backport-util-concurrent/3.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "classworlds.classworlds_1.1-alpha-2",
-    pom = "repository/classworlds/classworlds/1.1-alpha-2/classworlds-1.1-alpha-2.pom",
-    repo_root_path = "repository",
-    repo_path = "classworlds/classworlds/1.1-alpha-2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "com.almworks.sqlite4java.sqlite4java_0.282",
-    pom = "repository/com/almworks/sqlite4java/sqlite4java/0.282/sqlite4java-0.282.pom",
-    repo_root_path = "repository",
-    repo_path = "com/almworks/sqlite4java/sqlite4java/0.282",
+    repo_path = "com/almworks/sqlite4java/sqlite4java/1.0.392",
     parent = "org.sonatype.oss.oss-parent_4",
     visibility = ["//visibility:public"],
 )
@@ -25874,19 +25844,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.android.apps.common.testing.accessibility.framework.accessibility-test-framework_2.1",
-    pom = "repository/com/google/android/apps/common/testing/accessibility/framework/accessibility-test-framework/2.1/accessibility-test-framework-2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/android/apps/common/testing/accessibility/framework/accessibility-test-framework/2.1",
-    deps = [
-        "org.hamcrest.hamcrest-core_1.3",
-        "org.hamcrest.hamcrest-library_1.3",
-        "com.google.protobuf.protobuf-java_2.6.1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.android.gms.play-services-ads-base_20.0.0",
     pom = "repository/com/google/android/gms/play-services-ads-base/20.0.0/play-services-ads-base-20.0.0.pom",
     repo_root_path = "repository",
@@ -27168,6 +27125,15 @@ maven_artifact(
 )
 
 maven_artifact(
+    name = "com.google.errorprone.error_prone_annotations_2.9.0",
+    pom = "repository/com/google/errorprone/error_prone_annotations/2.9.0/error_prone_annotations-2.9.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/errorprone/error_prone_annotations/2.9.0",
+    parent = "com.google.errorprone.error_prone_parent_2.9.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.errorprone.javac-shaded_9-dev-r4023-3",
     pom = "repository/com/google/errorprone/javac-shaded/9-dev-r4023-3/javac-shaded-9-dev-r4023-3.pom",
     repo_root_path = "repository",
@@ -27665,15 +27631,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.google.protobuf.protobuf-java_2.6.1",
-    pom = "repository/com/google/protobuf/protobuf-java/2.6.1/protobuf-java-2.6.1.pom",
-    repo_root_path = "repository",
-    repo_path = "com/google/protobuf/protobuf-java/2.6.1",
-    parent = "com.google.google_1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "com.google.protobuf.protobuf-java_3.0.0",
     pom = "repository/com/google/protobuf/protobuf-java/3.0.0/protobuf-java-3.0.0.pom",
     repo_root_path = "repository",
@@ -27809,10 +27766,10 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "com.ibm.icu.icu4j_53.1",
-    pom = "repository/com/ibm/icu/icu4j/53.1/icu4j-53.1.pom",
+    name = "com.ibm.icu.icu4j_70.1",
+    pom = "repository/com/ibm/icu/icu4j/70.1/icu4j-70.1.pom",
     repo_root_path = "repository",
-    repo_path = "com/ibm/icu/icu4j/53.1",
+    repo_path = "com/ibm/icu/icu4j/70.1",
     visibility = ["//visibility:public"],
 )
 
@@ -28667,22 +28624,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "nekohtml.nekohtml_1.9.6.2",
-    pom = "repository/nekohtml/nekohtml/1.9.6.2/nekohtml-1.9.6.2.pom",
-    repo_root_path = "repository",
-    repo_path = "nekohtml/nekohtml/1.9.6.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "nekohtml.xercesMinimal_1.9.6.2",
-    pom = "repository/nekohtml/xercesMinimal/1.9.6.2/xercesMinimal-1.9.6.2.pom",
-    repo_root_path = "repository",
-    repo_path = "nekohtml/xercesMinimal/1.9.6.2",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "net.java.dev.jna.jna-platform_5.5.0",
     pom = "repository/net/java/dev/jna/jna-platform/5.5.0/jna-platform-5.5.0.pom",
     repo_root_path = "repository",
@@ -28873,15 +28814,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-launcher_1.8.0",
-    pom = "repository/org/apache/ant/ant-launcher/1.8.0/ant-launcher-1.8.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-launcher/1.8.0",
-    parent = "org.apache.ant.ant-parent_1.8.0",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "org.apache.ant.ant_1.10.5",
     pom = "repository/org/apache/ant/ant/1.10.5/ant-1.10.5.pom",
     repo_root_path = "repository",
@@ -28901,18 +28833,6 @@ maven_artifact(
     parent = "org.apache.ant.ant-parent_1.10.9",
     deps = [
         "org.apache.ant.ant-launcher_1.10.9",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.ant.ant_1.8.0",
-    pom = "repository/org/apache/ant/ant/1.8.0/ant-1.8.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant/1.8.0",
-    parent = "org.apache.ant.ant-parent_1.8.0",
-    deps = [
-        "org.apache.ant.ant-launcher_1.8.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -29140,210 +29060,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.apache.maven.wagon.wagon-file_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon-file/1.0-beta-6/wagon-file-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon-file/1.0-beta-6",
-    parent = "org.apache.maven.wagon.wagon-providers_1.0-beta-6",
-    deps = [
-        "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.wagon.wagon-http-lightweight_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon-http-lightweight/1.0-beta-6/wagon-http-lightweight-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon-http-lightweight/1.0-beta-6",
-    parent = "org.apache.maven.wagon.wagon-providers_1.0-beta-6",
-    deps = [
-        "org.apache.maven.wagon.wagon-http-shared_1.0-beta-6",
-        "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.wagon.wagon-http-shared_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon-http-shared/1.0-beta-6/wagon-http-shared-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon-http-shared/1.0-beta-6",
-    parent = "org.apache.maven.wagon.wagon-providers_1.0-beta-6",
-    deps = [
-        "nekohtml.xercesMinimal_1.9.6.2",
-        "nekohtml.nekohtml_1.9.6.2",
-        "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon-provider-api/1.0-beta-6/wagon-provider-api-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon-provider-api/1.0-beta-6",
-    parent = "org.apache.maven.wagon.wagon_1.0-beta-6",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.4.2",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-ant-tasks_2.1.3",
-    pom = "repository/org/apache/maven/maven-ant-tasks/2.1.3/maven-ant-tasks-2.1.3.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-ant-tasks/2.1.3",
-    parent = "org.apache.maven.maven-parent_19",
-    deps = [
-        "org.apache.ant.ant_1.8.0",
-        "classworlds.classworlds_1.1-alpha-2",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.codehaus.plexus.plexus-interpolation_1.11",
-        "org.apache.maven.maven-artifact_2.2.1",
-        "org.apache.maven.maven-artifact-manager_2.2.1",
-        "org.apache.maven.maven-model_2.2.1",
-        "org.apache.maven.maven-project_2.2.1",
-        "org.apache.maven.maven-error-diagnostics_2.2.1",
-        "org.apache.maven.maven-settings_2.2.1",
-        "org.apache.maven.wagon.wagon-file_1.0-beta-6",
-        "org.apache.maven.wagon.wagon-http-lightweight_1.0-beta-6",
-        "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-artifact-manager_2.2.1",
-    pom = "repository/org/apache/maven/maven-artifact-manager/2.2.1/maven-artifact-manager-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-artifact-manager/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.apache.maven.maven-repository-metadata_2.2.1",
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.apache.maven.maven-artifact_2.2.1",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-        "org.apache.maven.wagon.wagon-provider-api_1.0-beta-6",
-        "backport-util-concurrent.backport-util-concurrent_3.1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-artifact_2.2.1",
-    pom = "repository/org/apache/maven/maven-artifact/2.2.1/maven-artifact-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-artifact/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-error-diagnostics_2.2.1",
-    pom = "repository/org/apache/maven/maven-error-diagnostics/2.2.1/maven-error-diagnostics-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-error-diagnostics/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-model_2.2.1",
-    pom = "repository/org/apache/maven/maven-model/2.2.1/maven-model-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-model/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-plugin-registry_2.2.1",
-    pom = "repository/org/apache/maven/maven-plugin-registry/2.2.1/maven-plugin-registry-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-plugin-registry/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-profile_2.2.1",
-    pom = "repository/org/apache/maven/maven-profile/2.2.1/maven-profile-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-profile/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.apache.maven.maven-model_2.2.1",
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.codehaus.plexus.plexus-interpolation_1.11",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-project_2.2.1",
-    pom = "repository/org/apache/maven/maven-project/2.2.1/maven-project-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-project/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.apache.maven.maven-settings_2.2.1",
-        "org.apache.maven.maven-profile_2.2.1",
-        "org.apache.maven.maven-model_2.2.1",
-        "org.apache.maven.maven-artifact-manager_2.2.1",
-        "org.apache.maven.maven-plugin-registry_2.2.1",
-        "org.codehaus.plexus.plexus-interpolation_1.11",
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.apache.maven.maven-artifact_2.2.1",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-repository-metadata_2.2.1",
-    pom = "repository/org/apache/maven/maven-repository-metadata/2.2.1/maven-repository-metadata-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-repository-metadata/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-settings_2.2.1",
-    pom = "repository/org/apache/maven/maven-settings/2.2.1/maven-settings-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-settings/2.2.1",
-    parent = "org.apache.maven.maven_2.2.1",
-    deps = [
-        "org.apache.maven.maven-model_2.2.1",
-        "org.codehaus.plexus.plexus-interpolation_1.11",
-        "org.codehaus.plexus.plexus-utils_1.5.15",
-        "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "org.bouncycastle.bcpkix-jdk15on_1.48",
     pom = "repository/org/bouncycastle/bcpkix-jdk15on/1.48/bcpkix-jdk15on-1.48.pom",
     repo_root_path = "repository",
@@ -29374,18 +29090,18 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.bouncycastle.bcprov-jdk15on_1.52",
-    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.52/bcprov-jdk15on-1.52.pom",
-    repo_root_path = "repository",
-    repo_path = "org/bouncycastle/bcprov-jdk15on/1.52",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
     name = "org.bouncycastle.bcprov-jdk15on_1.56",
     pom = "repository/org/bouncycastle/bcprov-jdk15on/1.56/bcprov-jdk15on-1.56.pom",
     repo_root_path = "repository",
     repo_path = "org/bouncycastle/bcprov-jdk15on/1.56",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.bouncycastle.bcprov-jdk15on_1.68",
+    pom = "repository/org/bouncycastle/bcprov-jdk15on/1.68/bcprov-jdk15on-1.68.pom",
+    repo_root_path = "repository",
+    repo_path = "org/bouncycastle/bcprov-jdk15on/1.68",
     visibility = ["//visibility:public"],
 )
 
@@ -30117,54 +29833,6 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "org/codehaus/mojo/animal-sniffer-annotations/1.18",
     parent = "org.codehaus.mojo.animal-sniffer-parent_1.18",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus-container-default_1.0-alpha-9-stable-1",
-    pom = "repository/org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1/plexus-container-default-1.0-alpha-9-stable-1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1",
-    parent = "org.codehaus.plexus.plexus-containers_1.0.3",
-    deps = [
-        "org.codehaus.plexus.plexus-utils_1.0.4",
-        "classworlds.classworlds_1.1-alpha-2",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus-interpolation_1.11",
-    pom = "repository/org/codehaus/plexus/plexus-interpolation/1.11/plexus-interpolation-1.11.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-interpolation/1.11",
-    parent = "org.codehaus.plexus.plexus-components_1.1.14",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus-utils_1.0.4",
-    pom = "repository/org/codehaus/plexus/plexus-utils/1.0.4/plexus-utils-1.0.4.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-utils/1.0.4",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus-utils_1.4.2",
-    pom = "repository/org/codehaus/plexus/plexus-utils/1.4.2/plexus-utils-1.4.2.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-utils/1.4.2",
-    parent = "org.codehaus.plexus.plexus_1.0.11",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus-utils_1.5.15",
-    pom = "repository/org/codehaus/plexus/plexus-utils/1.5.15/plexus-utils-1.5.15.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-utils/1.5.15",
-    parent = "org.codehaus.plexus.plexus_2.0.2",
     visibility = ["//visibility:public"],
 )
 
@@ -35234,173 +34902,192 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.robolectric.android-all_7.0.0_r1-robolectric-r1",
-    pom = "repository/org/robolectric/android-all/7.0.0_r1-robolectric-r1/android-all-7.0.0_r1-robolectric-r1.pom",
+    name = "org.robolectric.android-all-instrumented_7.0.0_r1-robolectric-r1-i4",
+    pom = "repository/org/robolectric/android-all-instrumented/7.0.0_r1-robolectric-r1-i4/android-all-instrumented-7.0.0_r1-robolectric-r1-i4.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/android-all/7.0.0_r1-robolectric-r1",
-    parent = "org.sonatype.oss.oss-parent_9",
+    repo_path = "org/robolectric/android-all-instrumented/7.0.0_r1-robolectric-r1-i4",
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.annotations_4.2.1",
-    pom = "repository/org/robolectric/annotations/4.2.1/annotations-4.2.1.pom",
+    name = "org.robolectric.annotations_4.8.2",
+    pom = "repository/org/robolectric/annotations/4.8.2/annotations-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/annotations/4.2.1",
+    repo_path = "org/robolectric/annotations/4.8.2",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.junit_4.8.2",
+    pom = "repository/org/robolectric/junit/4.8.2/junit-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/junit/4.8.2",
     deps = [
-        "org.robolectric.shadowapi_4.2.1",
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.sandbox_4.8.2",
+        "org.robolectric.pluginapi_4.8.2",
+        "org.robolectric.shadowapi_4.8.2",
+        "org.robolectric.utils-reflector_4.8.2",
     ],
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.junit_4.2.1",
-    pom = "repository/org/robolectric/junit/4.2.1/junit-4.2.1.pom",
+    name = "org.robolectric.nativeruntime_4.8.2",
+    pom = "repository/org/robolectric/nativeruntime/4.8.2/nativeruntime-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/junit/4.2.1",
+    repo_path = "org/robolectric/nativeruntime/4.8.2",
     deps = [
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.sandbox_4.2.1",
-        "org.robolectric.pluginapi_4.2.1",
-        "org.robolectric.shadowapi_4.2.1",
-        "org.robolectric.utils-reflector_4.2.1",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.robolectric.pluginapi_4.2.1",
-    pom = "repository/org/robolectric/pluginapi/4.2.1/pluginapi-4.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/robolectric/pluginapi/4.2.1",
-    deps = [
-        "org.robolectric.annotations_4.2.1",
-        "org.apache.ant.ant_1.8.0",
-        "org.apache.maven.maven-ant-tasks_2.1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.robolectric.plugins-maven-dependency-resolver_4.2.1",
-    pom = "repository/org/robolectric/plugins-maven-dependency-resolver/4.2.1/plugins-maven-dependency-resolver-4.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/robolectric/plugins-maven-dependency-resolver/4.2.1",
-    deps = [
-        "org.robolectric.pluginapi_4.2.1",
-        "org.robolectric.utils_4.2.1",
-        "org.apache.ant.ant_1.8.0",
-        "org.apache.maven.maven-ant-tasks_2.1.3",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.robolectric.resources_4.2.1",
-    pom = "repository/org/robolectric/resources/4.2.1/resources-4.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/robolectric/resources/4.2.1",
-    deps = [
-        "org.robolectric.utils_4.2.1",
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.pluginapi_4.2.1",
+        "org.robolectric.utils_4.8.2",
         "com.google.guava.guava_27.0.1-jre",
     ],
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.robolectric_4.2.1",
-    pom = "repository/org/robolectric/robolectric/4.2.1/robolectric-4.2.1.pom",
+    name = "org.robolectric.pluginapi_4.8.2",
+    pom = "repository/org/robolectric/pluginapi/4.8.2/pluginapi-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/robolectric/4.2.1",
+    repo_path = "org/robolectric/pluginapi/4.8.2",
     deps = [
-        "androidx.test.monitor_1.1.1",
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.junit_4.2.1",
-        "org.robolectric.pluginapi_4.2.1",
-        "org.robolectric.resources_4.2.1",
-        "org.robolectric.sandbox_4.2.1",
-        "org.robolectric.utils_4.2.1",
-        "org.robolectric.utils-reflector_4.2.1",
-        "org.robolectric.plugins-maven-dependency-resolver_4.2.1",
-        "javax.inject.javax.inject_1",
-        "javax.annotation.javax.annotation-api_1.3.2",
-        "org.robolectric.shadows-framework_4.2.1",
-        "org.bouncycastle.bcprov-jdk15on_1.52",
-    ],
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.robolectric.sandbox_4.2.1",
-    pom = "repository/org/robolectric/sandbox/4.2.1/sandbox-4.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/robolectric/sandbox/4.2.1",
-    deps = [
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.utils_4.2.1",
-        "org.robolectric.shadowapi_4.2.1",
-        "org.robolectric.utils-reflector_4.2.1",
-        "javax.annotation.javax.annotation-api_1.3.2",
-        "javax.inject.javax.inject_1",
-        "org.ow2.asm.asm_7.0",
-        "org.ow2.asm.asm-commons_7.0",
+        "org.robolectric.annotations_4.8.2",
         "com.google.guava.guava_27.0.1-jre",
     ],
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.shadowapi_4.2.1",
-    pom = "repository/org/robolectric/shadowapi/4.2.1/shadowapi-4.2.1.pom",
+    name = "org.robolectric.plugins-maven-dependency-resolver_4.8.2",
+    pom = "repository/org/robolectric/plugins-maven-dependency-resolver/4.8.2/plugins-maven-dependency-resolver-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/shadowapi/4.2.1",
-    visibility = ["//visibility:public"],
-)
-
-maven_artifact(
-    name = "org.robolectric.shadows-framework_4.2.1",
-    pom = "repository/org/robolectric/shadows-framework/4.2.1/shadows-framework-4.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/robolectric/shadows-framework/4.2.1",
+    repo_path = "org/robolectric/plugins-maven-dependency-resolver/4.8.2",
     deps = [
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.resources_4.2.1",
-        "org.robolectric.pluginapi_4.2.1",
-        "org.robolectric.utils_4.2.1",
-        "org.robolectric.utils-reflector_4.2.1",
-        "com.almworks.sqlite4java.sqlite4java_0.282",
-        "com.ibm.icu.icu4j_53.1",
-        "com.google.android.apps.common.testing.accessibility.framework.accessibility-test-framework_2.1",
+        "org.robolectric.pluginapi_4.8.2",
+        "org.robolectric.utils_4.8.2",
+        "com.google.guava.guava_27.0.1-jre",
     ],
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.utils-reflector_4.2.1",
-    pom = "repository/org/robolectric/utils-reflector/4.2.1/utils-reflector-4.2.1.pom",
+    name = "org.robolectric.resources_4.8.2",
+    pom = "repository/org/robolectric/resources/4.8.2/resources-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/utils-reflector/4.2.1",
+    repo_path = "org/robolectric/resources/4.8.2",
     deps = [
-        "org.ow2.asm.asm_7.0",
-        "org.ow2.asm.asm-commons_7.0",
-        "org.ow2.asm.asm-util_7.0",
+        "org.robolectric.utils_4.8.2",
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.pluginapi_4.8.2",
+        "com.google.guava.guava_27.0.1-jre",
     ],
     visibility = ["//visibility:public"],
 )
 
 maven_artifact(
-    name = "org.robolectric.utils_4.2.1",
-    pom = "repository/org/robolectric/utils/4.2.1/utils-4.2.1.pom",
+    name = "org.robolectric.robolectric_4.8.2",
+    pom = "repository/org/robolectric/robolectric/4.8.2/robolectric-4.8.2.pom",
     repo_root_path = "repository",
-    repo_path = "org/robolectric/utils/4.2.1",
+    repo_path = "org/robolectric/robolectric/4.8.2",
     deps = [
-        "org.robolectric.annotations_4.2.1",
-        "org.robolectric.pluginapi_4.2.1",
-        "org.robolectric.utils-reflector_4.2.1",
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.junit_4.8.2",
+        "org.robolectric.pluginapi_4.8.2",
+        "org.robolectric.resources_4.8.2",
+        "org.robolectric.sandbox_4.8.2",
+        "org.robolectric.utils_4.8.2",
+        "org.robolectric.utils-reflector_4.8.2",
+        "org.robolectric.plugins-maven-dependency-resolver_4.8.2",
         "javax.inject.javax.inject_1",
         "javax.annotation.javax.annotation-api_1.3.2",
+        "org.robolectric.shadows-framework_4.8.2",
+        "org.bouncycastle.bcprov-jdk15on_1.68",
+        "androidx.test.monitor_1.4.0",
+        "androidx.test.espresso.espresso-idling-resource_3.4.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.sandbox_4.8.2",
+    pom = "repository/org/robolectric/sandbox/4.8.2/sandbox-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/sandbox/4.8.2",
+    deps = [
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.utils_4.8.2",
+        "org.robolectric.shadowapi_4.8.2",
+        "org.robolectric.utils-reflector_4.8.2",
+        "javax.annotation.javax.annotation-api_1.3.2",
+        "javax.inject.javax.inject_1",
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-commons_9.2",
+        "com.google.guava.guava_27.0.1-jre",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.shadowapi_4.8.2",
+    pom = "repository/org/robolectric/shadowapi/4.8.2/shadowapi-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/shadowapi/4.8.2",
+    deps = [
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.utils_4.8.2",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.shadows-framework_4.8.2",
+    pom = "repository/org/robolectric/shadows-framework/4.8.2/shadows-framework-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/shadows-framework/4.8.2",
+    deps = [
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.nativeruntime_4.8.2",
+        "org.robolectric.resources_4.8.2",
+        "org.robolectric.pluginapi_4.8.2",
+        "org.robolectric.sandbox_4.8.2",
+        "org.robolectric.shadowapi_4.8.2",
+        "org.robolectric.utils_4.8.2",
+        "org.robolectric.utils-reflector_4.8.2",
+        "androidx.test.monitor_1.4.0",
+        "com.almworks.sqlite4java.sqlite4java_1.0.392",
+        "com.ibm.icu.icu4j_70.1",
+        "androidx.annotation.annotation_1.1.0",
+        "com.google.auto.value.auto-value-annotations_1.7.4",
+        "com.google.errorprone.error_prone_annotations_2.9.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.utils-reflector_4.8.2",
+    pom = "repository/org/robolectric/utils-reflector/4.8.2/utils-reflector-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/utils-reflector/4.8.2",
+    deps = [
+        "org.ow2.asm.asm_9.2",
+        "org.ow2.asm.asm-commons_9.2",
+        "org.ow2.asm.asm-util_9.2",
+        "org.robolectric.utils_4.8.2",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "org.robolectric.utils_4.8.2",
+    pom = "repository/org/robolectric/utils/4.8.2/utils-4.8.2.pom",
+    repo_root_path = "repository",
+    repo_path = "org/robolectric/utils/4.8.2",
+    deps = [
+        "org.robolectric.annotations_4.8.2",
+        "org.robolectric.pluginapi_4.8.2",
+        "javax.inject.javax.inject_1",
+        "javax.annotation.javax.annotation-api_1.3.2",
+        "com.google.guava.guava_27.0.1-jre",
+        "com.google.errorprone.error_prone_annotations_2.9.0",
     ],
     visibility = ["//visibility:public"],
 )
@@ -35889,6 +35576,13 @@ maven_artifact(
     repo_root_path = "repository",
     repo_path = "com/google/errorprone/error_prone_parent/2.4.0",
     parent = "org.sonatype.oss.oss-parent_7",
+)
+
+maven_artifact(
+    name = "com.google.errorprone.error_prone_parent_2.9.0",
+    pom = "repository/com/google/errorprone/error_prone_parent/2.9.0/error_prone_parent-2.9.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/errorprone/error_prone_parent/2.9.0",
 )
 
 maven_artifact(
@@ -36594,13 +36288,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.apache.ant.ant-parent_1.8.0",
-    pom = "repository/org/apache/ant/ant-parent/1.8.0/ant-parent-1.8.0.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/ant/ant-parent/1.8.0",
-)
-
-maven_artifact(
     name = "org.apache.commons.commons-parent_11",
     pom = "repository/org/apache/commons/commons-parent/11/commons-parent-11.pom",
     repo_root_path = "repository",
@@ -36895,51 +36582,11 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.apache.maven.wagon.wagon-providers_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon-providers/1.0-beta-6/wagon-providers-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon-providers/1.0-beta-6",
-    parent = "org.apache.maven.wagon.wagon_1.0-beta-6",
-)
-
-maven_artifact(
-    name = "org.apache.maven.wagon.wagon_1.0-beta-6",
-    pom = "repository/org/apache/maven/wagon/wagon/1.0-beta-6/wagon-1.0-beta-6.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/wagon/wagon/1.0-beta-6",
-    parent = "org.apache.maven.maven-parent_11",
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-parent_11",
-    pom = "repository/org/apache/maven/maven-parent/11/maven-parent-11.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-parent/11",
-    parent = "org.apache.apache_5",
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven-parent_19",
-    pom = "repository/org/apache/maven/maven-parent/19/maven-parent-19.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven-parent/19",
-    parent = "org.apache.apache_9",
-)
-
-maven_artifact(
     name = "org.apache.maven.maven-parent_27",
     pom = "repository/org/apache/maven/maven-parent/27/maven-parent-27.pom",
     repo_root_path = "repository",
     repo_path = "org/apache/maven/maven-parent/27",
     parent = "org.apache.apache_17",
-)
-
-maven_artifact(
-    name = "org.apache.maven.maven_2.2.1",
-    pom = "repository/org/apache/maven/maven/2.2.1/maven-2.2.1.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/maven/maven/2.2.1",
-    parent = "org.apache.maven.maven-parent_11",
 )
 
 maven_artifact(
@@ -36997,13 +36644,6 @@ maven_artifact(
     pom = "repository/org/apache/apache/4/apache-4.pom",
     repo_root_path = "repository",
     repo_path = "org/apache/apache/4",
-)
-
-maven_artifact(
-    name = "org.apache.apache_5",
-    pom = "repository/org/apache/apache/5/apache-5.pom",
-    repo_root_path = "repository",
-    repo_path = "org/apache/apache/5",
 )
 
 maven_artifact(
@@ -37082,14 +36722,6 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.codehaus.plexus.plexus-components_1.1.14",
-    pom = "repository/org/codehaus/plexus/plexus-components/1.1.14/plexus-components-1.1.14.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-components/1.1.14",
-    parent = "org.codehaus.plexus.plexus_2.0.2",
-)
-
-maven_artifact(
     name = "org.codehaus.plexus.plexus-components_1.3.1",
     pom = "repository/org/codehaus/plexus/plexus-components/1.3.1/plexus-components-1.3.1.pom",
     repo_root_path = "repository",
@@ -37098,40 +36730,11 @@ maven_artifact(
 )
 
 maven_artifact(
-    name = "org.codehaus.plexus.plexus-containers_1.0.3",
-    pom = "repository/org/codehaus/plexus/plexus-containers/1.0.3/plexus-containers-1.0.3.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus-containers/1.0.3",
-    parent = "org.codehaus.plexus.plexus_1.0.4",
-)
-
-maven_artifact(
     name = "org.codehaus.plexus.plexus-containers_1.6",
     pom = "repository/org/codehaus/plexus/plexus-containers/1.6/plexus-containers-1.6.pom",
     repo_root_path = "repository",
     repo_path = "org/codehaus/plexus/plexus-containers/1.6",
     parent = "org.codehaus.plexus.plexus_3.3.2",
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus_1.0.11",
-    pom = "repository/org/codehaus/plexus/plexus/1.0.11/plexus-1.0.11.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus/1.0.11",
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus_1.0.4",
-    pom = "repository/org/codehaus/plexus/plexus/1.0.4/plexus-1.0.4.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus/1.0.4",
-)
-
-maven_artifact(
-    name = "org.codehaus.plexus.plexus_2.0.2",
-    pom = "repository/org/codehaus/plexus/plexus/2.0.2/plexus-2.0.2.pom",
-    repo_root_path = "repository",
-    repo_path = "org/codehaus/plexus/plexus/2.0.2",
 )
 
 maven_artifact(

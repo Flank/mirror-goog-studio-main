@@ -93,7 +93,7 @@ class AsmTransformApiTest: BuildSrcScriptApiTest() {
 
                 buildFile = """
                     dependencies {
-                        implementation("org.ow2.asm:asm-util:7.0")
+                        implementation("org.ow2.asm:asm-util:9.2")
                     }
                 """.trimIndent()
             }

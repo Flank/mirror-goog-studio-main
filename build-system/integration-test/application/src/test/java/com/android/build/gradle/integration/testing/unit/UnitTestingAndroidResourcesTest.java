@@ -62,8 +62,13 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class UnitTestingAndroidResourcesTest {
 
-    public static final String SDK_VERSION = "7.0.0_r1-robolectric-r1";
-    public static final String PLATFORM_JAR_NAME = "android-all-" + SDK_VERSION + ".jar";
+    public static final String SDK_VERSION = "7.0.0_r1-robolectric-r1-i4";
+    public static final String PLATFORM_JAR_NAME =
+            String.format("android-all-instrumented-%s.jar", SDK_VERSION);
+    public static final String PLATFORM_JAR_RELATIVE_PATH =
+            String.format(
+                    "org/robolectric/android-all-instrumented/%s/%s",
+                    SDK_VERSION, PLATFORM_JAR_NAME);
 
     enum Plugin {
         LIBRARY,
@@ -99,10 +104,7 @@ public class UnitTestingAndroidResourcesTest {
     public void copyPlatformJar() throws Exception {
         boolean found = false;
         for (Path path : GradleTestProject.getLocalRepositories()) {
-            Path platformJar =
-                    path.resolve(
-                            "org/robolectric/android-all/" + SDK_VERSION + "/"
-                                    + PLATFORM_JAR_NAME);
+            Path platformJar = path.resolve(PLATFORM_JAR_RELATIVE_PATH);
             if (Files.exists(platformJar)) {
                 found = true;
                 Path robolectricLibs = project.file("robolectric-libs").toPath();
@@ -113,7 +115,10 @@ public class UnitTestingAndroidResourcesTest {
         }
 
         if (!found) {
-            Assert.fail("Failed to find Robolectric platform jar in prebuilts.");
+            Assert.fail(
+                    String.format(
+                            "Failed to find Robolectric platform jar %s in prebuilts.",
+                            PLATFORM_JAR_RELATIVE_PATH));
         }
     }
 
