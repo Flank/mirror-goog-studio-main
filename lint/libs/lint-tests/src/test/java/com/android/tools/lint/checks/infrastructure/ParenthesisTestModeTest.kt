@@ -75,7 +75,7 @@ class ParenthesisTestModeTest {
                 val t: Any = "test"
                 val t2: Any = ""${'"'}test""${'"'}
                 (((((t as? String))?.plus("other"))?.get(0))?.dec())?.inc()
-                (("foo".chars()).allMatch { (it.dec() > 0) }).toString()
+                (("foo".chars()).allMatch { ((it).dec() > 0) }).toString()
             }
         """.trimIndent().trim()
 
@@ -97,7 +97,7 @@ class ParenthesisTestModeTest {
                 val t: Any = ("test")
                 val t2: Any = (${'"'}""test""${'"'})
                 ((((((t as? String)))?.plus(("other")))?.get((0)))?.dec())?.inc()
-                ((("foo").chars()).allMatch { (it.dec() > (0)) }).toString()
+                ((("foo").chars()).allMatch { ((it).dec() > (0)) }).toString()
             }
         """.trimIndent().trim()
 

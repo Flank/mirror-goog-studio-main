@@ -79,10 +79,10 @@ class TypesTest : TestCase() {
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                 "            UParameter (name = times) [@org.jetbrains.annotations.NotNull var times: int] : PsiType:int\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                "            UBlockExpression [{...}] : PsiType:Unit\n" +
+                "            UBlockExpression [{...}] : PsiType:void\n" +
                 "        UMethod (name = getProperty2) [public final fun getProperty2() : java.lang.String = UastEmptyExpression] : PsiType:String\n" +
-                "        UMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable value: java.lang.String) : void = UastEmptyExpression] : PsiType:void\n" +
-                "            UParameter (name = value) [@org.jetbrains.annotations.Nullable var value: java.lang.String] : PsiType:String\n" +
+                "        UMethod (name = setProperty2) [public final fun setProperty2(@org.jetbrains.annotations.Nullable <set-?>: java.lang.String) : void = UastEmptyExpression] : PsiType:void\n" +
+                "            UParameter (name = <set-?>) [@org.jetbrains.annotations.Nullable var <set-?>: java.lang.String] : PsiType:String\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
                 "        UMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression] : PsiType:String\n" +
                 "        UMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @org.jetbrains.annotations.NotNull arg2: int) {...}]\n" +
@@ -149,7 +149,7 @@ class TypesTest : TestCase() {
                         UBlockExpression
                     UMethod (name = getProperty2)
                     UMethod (name = setProperty2)
-                        UParameter (name = value)
+                        UParameter (name = <set-?>)
                             UAnnotation (fqName = org.jetbrains.annotations.Nullable)
                     UMethod (name = getProperty1)
                     UMethod (name = Kotlin)
@@ -430,9 +430,9 @@ class TypesTest : TestCase() {
                 "                UIdentifier (Identifier (foo)) [UIdentifier (Identifier (foo))]\n" +
                 "                USimpleNameReferenceExpression (identifier = foo, resolvesTo = null) [foo] : PsiType:Unit\n" +
                 "        UMethod (name = foo) [public static final fun foo() : void {...}] : PsiType:void\n" +
-                "            UBlockExpression [{...}] : PsiType:Unit\n" +
+                "            UBlockExpression [{...}] : PsiType:void\n" +
                 "        UMethod (name = bar) [public static final fun bar() : void {...}] : PsiType:void\n" +
-                "            UBlockExpression [{...}] : PsiType:Unit\n" +
+                "            UBlockExpression [{...}] : PsiType:void\n" +
                 "                UDeclarationsExpression [var x: java.lang.String = foo().toString()]\n" +
                 "                    ULocalVariable (name = x) [var x: java.lang.String = foo().toString()] : PsiType:String\n" +
                 "                        UQualifiedReferenceExpression [foo().toString()] : PsiType:String\n" +
@@ -444,7 +444,7 @@ class TypesTest : TestCase() {
                 "                                USimpleNameReferenceExpression (identifier = toString, resolvesTo = null) [toString] : PsiType:String\n" +
                 "        UMethod (name = getBaz) [public static final fun getBaz() : kotlin.Unit = UastEmptyExpression] : PsiType:Unit\n" +
                 "        UMethod (name = test) [public static final fun test() : void {...}] : PsiType:void\n" +
-                "            UBlockExpression [{...}] : PsiType:Unit\n" +
+                "            UBlockExpression [{...}] : PsiType:void\n" +
                 "                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [foo()] : PsiType:Unit\n" +
                 "                    UIdentifier (Identifier (foo)) [UIdentifier (Identifier (foo))]\n" +
                 "                    USimpleNameReferenceExpression (identifier = foo, resolvesTo = null) [foo] : PsiType:Unit\n" +

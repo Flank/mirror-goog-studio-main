@@ -251,29 +251,7 @@ abstract class DataFlowAnalyzer(
                 matched = true
             } else {
                 val resolved = receiver.tryResolve()
-                if (resolved == null && receiver is USimpleNameReferenceExpression) {
-                    // Work around UAST bug where resolving in a lambda doesn't work; KT-46628.
-                    if (receiver.identifier == "it") {
-                        var curr: UElement = receiver
-                        while (true) {
-                            val lambda = curr.getParentOfType(ULambdaExpression::class.java, true) ?: break
-                            val valueParameters = lambda.valueParameters
-                            if (valueParameters.any { parameter ->
-                                val javaPsi = parameter.javaPsi
-                                val sourcePsi = parameter.sourcePsi
-                                javaPsi != null && references.contains(javaPsi) ||
-                                    sourcePsi != null && references.contains(sourcePsi)
-                            }
-                            ) {
-                                // We found the variable
-                                matched = true
-                                break
-                            }
-
-                            curr = lambda
-                        }
-                    }
-                } else if (resolved != null) {
+                if (resolved != null) {
                     if (references.contains(resolved)) {
                         matched = true
                     }

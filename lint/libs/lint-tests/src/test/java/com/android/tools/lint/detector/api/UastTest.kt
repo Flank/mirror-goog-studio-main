@@ -290,7 +290,7 @@ class UastTest : TestCase() {
                         UField (name = x) [@org.jetbrains.annotations.NotNull private final var x: int] : PsiType:int
                             UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                         UMethod (name = print) [public fun print() : void {...}] : PsiType:void
-                            UBlockExpression [{...}] : PsiType:Unit
+                            UBlockExpression [{...}] : PsiType:void
                                 UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(x)] : PsiType:Unit
                                     UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
                                     USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
@@ -425,7 +425,7 @@ class UastTest : TestCase() {
                             ULiteralExpression (value = 42) [42] : PsiType:int
                         UMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}] : PsiType:void
                             UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
-                            UBlockExpression [{...}] : PsiType:Unit
+                            UBlockExpression [{...}] : PsiType:void
                                 UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:Unit
                                     UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
                                     USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
@@ -433,7 +433,7 @@ class UastTest : TestCase() {
                         UClass (name = Companion) [public static final class Companion {...}]
                             UMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}] : PsiType:void
                                 UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
-                                UBlockExpression [{...}] : PsiType:Unit
+                                UBlockExpression [{...}] : PsiType:void
                                     UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:Unit
                                         UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
                                         USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
@@ -533,7 +533,7 @@ class UastTest : TestCase() {
                             UParameter (name = y) [@org.jetbrains.annotations.NotNull var y: int] : PsiType:int
                                 UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
                             UParameter (name = ${"$"}completion) [var ${"$"}completion: kotlin.coroutines.Continuation<? super kotlin.Unit>] : PsiType:Continuation<? super Unit>
-                            UBlockExpression [{...}] : PsiType:Unit
+                            UBlockExpression [{...}] : PsiType:void
                                 UDeclarationsExpression [var z: int = x + y]
                                     ULocalVariable (name = z) [var z: int = x + y] : PsiType:int
                                         UBinaryExpression (operator = +) [x + y] : PsiType:int
@@ -1035,7 +1035,7 @@ class UastTest : TestCase() {
                 UFile (package = test.pkg) [package test.pkg...]
                   UClass (name = TestKt) [public final class TestKt {...}]
                     UMethod (name = test1) [public static final fun test1() : void {...}] : PsiType:void
-                      UBlockExpression [{...}] : PsiType:Unit
+                      UBlockExpression [{...}] : PsiType:void
                         UDeclarationsExpression [var thread1: java.lang.Thread = <init>({ ...})]
                           ULocalVariable (name = thread1) [var thread1: java.lang.Thread = <init>({ ...})] : PsiType:Thread
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>({ ...})] : PsiType:Thread
@@ -1048,7 +1048,7 @@ class UastTest : TestCase() {
                                     USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:Unit
                                     ULiteralExpression (value = "hello") ["hello"] : PsiType:String
                     UMethod (name = test2) [public static final fun test2() : void {...}] : PsiType:void
-                      UBlockExpression [{...}] : PsiType:Unit
+                      UBlockExpression [{...}] : PsiType:void
                         UDeclarationsExpression [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
                           ULocalVariable (name = thread2) [var thread2: java.lang.Thread = <init>(Runnable({ ...}))] : PsiType:Thread
                             UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(Runnable({ ...}))] : PsiType:Thread
@@ -1206,7 +1206,7 @@ class UastTest : TestCase() {
                 public final class SimpleClass {
                     @org.jetbrains.annotations.NotNull private var foo: int
                     public final fun getFoo() : int = UastEmptyExpression
-                    public final fun setFoo(value: int) : void = UastEmptyExpression
+                    public final fun setFoo(<set-?>: int) : void = UastEmptyExpression
                     public fun SimpleClass() {
                         {
                             foo = android.R.layout.activity_list_item
@@ -1357,8 +1357,8 @@ class UastTest : TestCase() {
                           ULiteralExpression (value = "SomeStringValue") ["SomeStringValue"] : PsiType:String
                       ULiteralExpression (value = 0) [0] : PsiType:int
                     UMethod (name = getMyProperty) [public static final fun getMyProperty() : int = UastEmptyExpression] : PsiType:int
-                    UMethod (name = setMyProperty) [public static final fun setMyProperty(value: int) : void = UastEmptyExpression] : PsiType:void
-                      UParameter (name = value) [var value: int] : PsiType:int
+                    UMethod (name = setMyProperty) [public static final fun setMyProperty(<set-?>: int) : void = UastEmptyExpression] : PsiType:void
+                      UParameter (name = <set-?>) [var <set-?>: int] : PsiType:int
                   UClass (name = MyFieldAnnotation) [public abstract annotation MyFieldAnnotation {...}]
                     UAnnotation (fqName = kotlin.annotation.Target) [@kotlin.annotation.Target(allowedTargets = AnnotationTarget.FIELD)]
                       UNamedExpression (name = allowedTargets) [allowedTargets = AnnotationTarget.FIELD]
@@ -1400,27 +1400,20 @@ class UastTest : TestCase() {
         check(
             source
         ) { file ->
-            try {
-                file.accept(object : AbstractUastVisitor() {
-                    override fun visitCallExpression(node: UCallExpression): Boolean {
-                        val argument = node.valueArguments.firstOrNull()
-                        (argument as? UReferenceExpression)?.let {
-                            val resolved = argument.resolve()
-                            assertNotNull(
-                                "Couldn't resolve `${argument.sourcePsi?.text ?: argument.asSourceString()}`",
-                                resolved
-                            )
-                        }
-
-                        return super.visitCallExpression(node)
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitCallExpression(node: UCallExpression): Boolean {
+                    val argument = node.valueArguments.firstOrNull()
+                    (argument as? UReferenceExpression)?.let {
+                        val resolved = argument.resolve()
+                        assertNotNull(
+                            "Couldn't resolve `${argument.sourcePsi?.text ?: argument.asSourceString()}`",
+                            resolved
+                        )
                     }
-                })
-                // When we get this failure, KT-46628 has been fixed and we can remove
-                // local workarounds, such as the one in DataflowAnalyzer.
-                fail("Expected unresolved error: see KT-46628")
-            } catch (failure: AssertionFailedError) {
-                assertEquals("Couldn't resolve `it`", failure.message)
-            }
+
+                    return super.visitCallExpression(node)
+                }
+            })
         }
     }
 

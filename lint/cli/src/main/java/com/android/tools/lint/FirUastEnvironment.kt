@@ -21,33 +21,28 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.impl.jar.CoreJarFileSystem
 import com.intellij.pom.java.LanguageLevel
-import org.jetbrains.kotlin.analysis.api.standalone.configureApplicationEnvironment
-import org.jetbrains.kotlin.analysis.api.standalone.configureProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.analysis.api.standalone.StandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.project.structure.ProjectStructureProvider
+import org.jetbrains.kotlin.cli.common.CompilerSystemProperties
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.uast.UastLanguagePlugin
 import org.jetbrains.uast.kotlin.BaseKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.FirKotlinUastLanguagePlugin
 import org.jetbrains.uast.kotlin.FirKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.FirCliKotlinUastResolveProviderService
+import org.jetbrains.uast.kotlin.providers.KotlinPsiDeclarationProviderFactory
+import org.jetbrains.uast.kotlin.providers.impl.KotlinStaticPsiDeclarationProviderFactory
 import java.io.File
 import kotlin.concurrent.withLock
 
 /** This class is FIR version of [UastEnvironment] */
 class FirUastEnvironment private constructor(
-    // TODO: we plan to redesign Analysis API facade to not use KotlinCoreEnvironment (which is FE1.0 specific)
-    private val kotlinCompilerEnv: KotlinCoreEnvironment,
+    override val coreAppEnv: CoreApplicationEnvironment,
+    override val ideaProject: MockProject,
+    override val kotlinCompilerConfig: CompilerConfiguration,
     override val projectDisposable: Disposable
 ) : UastEnvironment {
-    override val coreAppEnv: CoreApplicationEnvironment
-        get() = kotlinCompilerEnv.projectEnvironment.environment
-
-    override val ideaProject: MockProject
-        get() = kotlinCompilerEnv.projectEnvironment.project
-
-    override val kotlinCompilerConfig: CompilerConfiguration
-        get() = kotlinCompilerEnv.configuration
 
     class Configuration private constructor(
         override val kotlinCompilerConfig: CompilerConfiguration
@@ -70,8 +65,13 @@ class FirUastEnvironment private constructor(
         @JvmStatic
         fun create(config: UastEnvironment.Configuration): FirUastEnvironment {
             val parentDisposable = Disposer.newDisposable("FirUastEnvironment.create")
-            val kotlinEnv = createKotlinCompilerEnv(parentDisposable, config)
-            return FirUastEnvironment(kotlinEnv, parentDisposable)
+            val analysisSession = createAnalysisSession(parentDisposable, config)
+            return FirUastEnvironment(
+                analysisSession.coreApplicationEnvironment,
+                analysisSession.mockProject,
+                config.kotlinCompilerConfig,
+                parentDisposable
+            )
         }
     }
 }
@@ -86,31 +86,40 @@ private fun createKotlinCompilerConfig(enableKotlinScripting: Boolean): Compiler
     return config
 }
 
-private fun createKotlinCompilerEnv(
+private fun createAnalysisSession(
     parentDisposable: Disposable,
     config: UastEnvironment.Configuration
-): KotlinCoreEnvironment {
-    // TODO: will use Analysis API facade instead
-    val env = KotlinCoreEnvironment
-        .createForProduction(parentDisposable, config.kotlinCompilerConfig, EnvironmentConfigFiles.JVM_CONFIG_FILES)
-    appLock.withLock { configureFirApplicationEnvironment(env.projectEnvironment.environment) }
-    configureFirProjectEnvironment(env, config)
+): StandaloneAnalysisAPISession {
+    // [configureApplicationEnvironment] will register app disposable and dispose it at [UastEnvironment#disposeApplicationEnvironment].
+    // I.e., we manage the application lifecycle manually.
+    CompilerSystemProperties.KOTLIN_COMPILER_ENVIRONMENT_KEEPALIVE_PROPERTY.value = "true"
 
-    return env
+    val analysisSession = buildStandaloneAnalysisAPISession(
+        projectDisposable = parentDisposable,
+    ) {
+        buildKtModuleProviderByCompilerConfiguration(config.kotlinCompilerConfig)
+    }
+    appLock.withLock { configureFirApplicationEnvironment(analysisSession.coreApplicationEnvironment) }
+    configureFirProjectEnvironment(analysisSession, config)
+
+    return analysisSession
 }
 
 private fun configureFirProjectEnvironment(
-    env: KotlinCoreEnvironment,
+    analysisAPISession: StandaloneAnalysisAPISession,
     config: UastEnvironment.Configuration
 ) {
-    val project = env.projectEnvironment.project
-    val jarFileSystem = env.projectEnvironment.environment.jarFileSystem as CoreJarFileSystem
-    // TODO: will use Analysis API facade instead
-    configureProjectEnvironment(
-        project,
-        config.kotlinCompilerConfig,
-        env::createPackagePartProvider,
-        jarFileSystem
+    val project = analysisAPISession.mockProject
+
+    val projectStructureProvider = project.getService(ProjectStructureProvider::class.java)
+    // TODO: will be part of analysis API session creation
+    project.registerService(
+        KotlinPsiDeclarationProviderFactory::class.java,
+        KotlinStaticPsiDeclarationProviderFactory(
+            project,
+            projectStructureProvider.getKtBinaryModules(),
+            analysisAPISession.coreApplicationEnvironment.jarFileSystem as CoreJarFileSystem
+        )
     )
 
     project.registerService(
@@ -123,9 +132,6 @@ private fun configureFirProjectEnvironment(
 
 private fun configureFirApplicationEnvironment(appEnv: CoreApplicationEnvironment) {
     configureApplicationEnvironment(appEnv) {
-        // TODO: will use Analysis API facade instead
-        configureApplicationEnvironment(it.application)
-
         it.addExtension(UastLanguagePlugin.extensionPointName, FirKotlinUastLanguagePlugin())
 
         it.application.registerService(
