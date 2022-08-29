@@ -99,21 +99,7 @@ interface DeprecationReporter {
         TRANSFORM_API(
             Version.VERSION_8_0,
             """
-                The Transform API is removed to improve build performance. Projects that use the
-                Transform API force the Android Gradle plugin to use a less optimized flow for the
-                build that can result in large regressions in build times. It’s also difficult to
-                use the Transform API and combine it with other Gradle features; the replacement
-                APIs aim to make it easier to extend the build without introducing performance or
-                correctness issues.
-
-                There is no single replacement for the Transform API—there are new, targeted
-                APIs for each use case. All the replacement APIs are in the
-                `androidComponents {}` block.
-
-                The Transform API uses incremental APIs deprecated since Gradle 7.5. Please add
-                `${BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL.propertyName}=true` to
-                `gradle.properties` to fix this issue. Note that this will run transforms
-                non-incrementally and may have a build performance impact.
+                The Transform API support has been removed in AGP 8.0.
             """.trimIndent()
         )
         ;
@@ -150,6 +136,22 @@ interface DeprecationReporter {
      */
     fun reportDeprecatedApi(
         newApiElement: String?,
+        oldApiElement: String,
+        url: String,
+        deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a usage of a removed API in the DSL/API. The API is still present for the time
+     * being to avoid failing sync but it is not functional and will trigger a runtime failure at
+     * execution time.
+     *
+     * @param oldApiElement the name of the deprecated element, with the name of the class
+     * owning it.
+     * @param url URL to documentation about the deprecation
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportRemovedApi(
         oldApiElement: String,
         url: String,
         deprecationTarget: DeprecationTarget)

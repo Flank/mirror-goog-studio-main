@@ -170,8 +170,6 @@ TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects/testWithDep",
     "//tools/base/build-system/integration-test:test-projects/tictactoe",
     "//tools/base/build-system/integration-test:test-projects/transformApiTest",
-    "//tools/base/build-system/integration-test:test-projects/transformInModuleWithKotlin",
-    "//tools/base/build-system/integration-test:test-projects/transformVariantApiTest",
     "//tools/base/build-system/integration-test:test-projects/unitTesting",
     "//tools/base/build-system/integration-test:test-projects/unitTestingAndroidResources",
     "//tools/base/build-system/integration-test:test-projects/unitTestingBuildTypes",

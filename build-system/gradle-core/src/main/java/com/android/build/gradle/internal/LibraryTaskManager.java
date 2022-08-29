@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.LibraryVariantBuilder;
@@ -60,7 +59,6 @@ import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreati
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
-import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.variant.ComponentInfo;
@@ -79,7 +77,6 @@ import com.android.build.gradle.tasks.SourceJarTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.build.gradle.tasks.sync.LibraryVariantModelTask;
 import com.android.builder.errors.IssueReporter;
-import com.android.builder.errors.IssueReporter.Type;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -240,60 +237,12 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
 
         final boolean instrumented = libraryVariant.isAndroidTestCoverageEnabled();
 
-        TransformManager transformManager = libraryVariant.getTransformManager();
-
         // ----- Code Coverage first -----
         if (instrumented) {
             createJacocoTask(libraryVariant);
         }
 
         maybeCreateTransformClassesWithAsmTask(libraryVariant);
-
-        // ----- External Transforms -----
-        // apply all the external transforms.
-        List<Transform> customTransforms = globalConfig.getTransforms();
-        List<List<Object>> customTransformsDependencies = globalConfig.getTransformsDependencies();
-
-        final IssueReporter issueReporter = libraryVariant.getServices().getIssueReporter();
-
-        for (int i = 0, count = customTransforms.size(); i < count; i++) {
-            Transform transform = customTransforms.get(i);
-
-            // Check the transform only applies to supported scopes for libraries:
-            // We cannot transform scopes that are not packaged in the library
-            // itself.
-            Sets.SetView<? super Scope> difference =
-                    Sets.difference(transform.getScopes(), TransformManager.PROJECT_ONLY);
-            if (!difference.isEmpty()) {
-                String scopes = difference.toString();
-                issueReporter.reportError(
-                        Type.GENERIC,
-                        String.format(
-                                "Transforms with scopes '%s' cannot be applied to library projects.",
-                                scopes));
-            }
-
-            List<Object> deps = customTransformsDependencies.get(i);
-            transformManager.addTransform(
-                    taskFactory,
-                    libraryVariant,
-                    transform,
-                    null,
-                    task -> {
-                        if (!deps.isEmpty()) {
-                            task.dependsOn(deps);
-                        }
-                    },
-                    taskProvider -> {
-                        // if the task is a no-op then we make assemble task
-                        // depend on it.
-                        if (transform.getScopes().isEmpty()) {
-                            TaskFactoryUtils.dependsOn(
-                                    libraryVariant.getTaskContainer().getAssembleTask(),
-                                    taskProvider);
-                        }
-                    });
-        }
 
         // Create jar with library classes used for publishing to runtime elements.
         taskFactory.register(

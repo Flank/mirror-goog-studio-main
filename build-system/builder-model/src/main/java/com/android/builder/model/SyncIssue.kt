@@ -280,6 +280,13 @@ interface SyncIssue {
         /** Using the variant API to set the application ID to a dynamic value */
         const val TYPE_APPLICATION_ID_MUST_NOT_BE_DYNAMIC = 50
 
+        /**
+         * Using the removed API. The support for the API was removed
+         * but API and associated types were left intact to not fail sync with
+         * ClassNotFoundException which would be confusing to users.
+         */
+        const val TYPE_REMOVED_API = 51;
+
         // NOTE: When adding a new type here, increment the index by 1. This index may not be consistent
         // with the corresponding value in studio_stats.proto (e.g., it could be lower by 1), because of
         // an indexing issue in the past (see http://issuetracker.google.com/138278313).

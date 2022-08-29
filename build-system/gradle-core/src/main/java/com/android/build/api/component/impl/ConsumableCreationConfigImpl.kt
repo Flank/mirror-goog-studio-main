@@ -68,7 +68,6 @@ open class ConsumableCreationConfigImpl<T: ConsumableCreationConfig>(
         // We need to create a stream from the merged java resources if we're in a library module,
         // or if we're in an app/feature module which uses the transform pipeline.
         return (dslInfo.componentType.isAar
-                || config.global.transforms.isNotEmpty()
                 || config.minifiedEnabled)
     }
 

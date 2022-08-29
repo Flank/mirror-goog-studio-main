@@ -92,20 +92,12 @@ public class CheckAll {
     }
 
     private GradleTaskExecutor executor() {
-        if (LEGACY_INCREMENTAL_TRANSFORM.contains(project.getName())) {
-            return project.executor().withFailOnWarning(false);
-        } else {
-            return project.executor();
-        }
+        return project.executor();
     }
 
     private static boolean canAssemble(@NonNull GradleTestProject project) {
         return !BROKEN_ALWAYS_ASSEMBLE.contains(project.getName());
     }
-
-    // legacy incremental transform uses deprecated gradle api
-    private static final ImmutableSet<String> LEGACY_INCREMENTAL_TRANSFORM =
-            ImmutableSet.of("transformVariantApiTest", "jarjarIntegration");
 
     private static final ImmutableSet<String> BROKEN_ALWAYS_ASSEMBLE =
             ImmutableSet.of(

@@ -175,12 +175,6 @@ class GlobalTaskCreationConfigImpl(
     override val testServers: List<TestServer>
         get() = oldExtension.testServers
 
-    override val transforms: List<Transform>
-        get() = oldExtension.transforms
-
-    override val transformsDependencies: List<List<Any>>
-        get() = oldExtension.transformsDependencies
-
     override val namespacedAndroidResources: Boolean
         get() = extension.androidResources.namespaced
 

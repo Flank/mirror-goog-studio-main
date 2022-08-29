@@ -21,11 +21,11 @@ import com.android.SdkConstants.DATA_BINDING_KTX_LIB_ARTIFACT
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.artifact.Artifact.Single
 import com.android.build.api.artifact.MultipleArtifact
+import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
-import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantBuilder
@@ -61,7 +61,6 @@ import com.android.build.gradle.internal.lint.LintTaskManager
 import com.android.build.gradle.internal.packaging.getDefaultDebugKeystoreLocation
 import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.pipeline.TransformTask
 import com.android.build.gradle.internal.profile.AnalyticsConfiguratorService
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
@@ -2122,17 +2121,10 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         maybeCreateTransformClassesWithAsmTask(creationConfig)
 
-        // ----- External Transforms -----
-        val registeredLegacyTransform = addExternalLegacyTransforms(transformManager, creationConfig)
-
         // New gradle-transform jacoco instrumentation support.
         if (creationConfig.isAndroidTestCoverageEnabled &&
             !creationConfig.componentType.isForTesting) {
-            if (registeredLegacyTransform) {
-                createJacocoTaskWithLegacyTransformSupport(creationConfig)
-            } else {
                 createJacocoTask(creationConfig)
-            }
         }
 
         // initialize the all classes scope, at this point we do not consume the classes, just read
@@ -2206,53 +2198,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         if (creationConfig.componentType.isDynamicFeature) {
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
-        createDexTasks(creationConfig, creationConfig.dexingType, registeredLegacyTransform)
-    }
-
-    /**
-     * Adds any transforms registered in a module build file. Returns true if any transforms have
-     * been added.
-     */
-    private fun addExternalLegacyTransforms(
-        transformManager: TransformManager,
-        creationConfig: ApkCreationConfig
-    ): Boolean {
-        val customTransforms = globalConfig.transforms
-        val customTransformsDependencies = globalConfig.transformsDependencies
-        var registeredLegacyTransform = false
-        for (i in customTransforms.indices) {
-            val transform = customTransforms[i]
-            val deps = customTransformsDependencies[i]
-            registeredLegacyTransform = registeredLegacyTransform or transformManager
-                .addTransform(
-                    taskFactory,
-                    creationConfig,
-                    transform,
-                    null,
-                    object : TaskConfigAction<TransformTask> {
-                        override fun configure(task: TransformTask) {
-                            if (deps.isNotEmpty()) {
-                                task.dependsOn(deps)
-                            }
-                        }
-
-                    },
-                    object : TaskProviderCallback<TransformTask> {
-                        override fun handleProvider(taskProvider: TaskProvider<TransformTask>) {
-                            // if the task is a no-op then we make assemble task depend
-                            // on it.
-                            if (transform.scopes.isEmpty()) {
-                                creationConfig
-                                    .taskContainer
-                                    .assembleTask.dependsOn<Task>(taskProvider)
-                            }
-                        }
-
-                    }
-                )
-                .isPresent
-        }
-        return registeredLegacyTransform
+        createDexTasks(creationConfig, creationConfig.dexingType, false)
     }
 
     /**

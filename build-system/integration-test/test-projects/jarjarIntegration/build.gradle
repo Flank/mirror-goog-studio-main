@@ -19,8 +19,25 @@ android {
     //noinspection ExpiringTargetSdkVersion,ExpiredTargetSdkVersion
     targetSdkVersion 20
   }
+}
 
-  registerTransform(new com.android.test.jarjar.JarJarTransform())
+import com.android.test.jarjar.JarJarTask
+import com.android.build.api.variant.ScopedArtifacts
+import com.android.build.api.artifact.ScopedArtifact
+
+androidComponents {
+    onVariants(selector().withBuildType("debug"), { variant ->
+        TaskProvider<JarJarTask> taskProvider = project.tasks.register(variant.getName() + "JarJar", JarJarTask.class)
+        variant.artifacts
+                .forScope(ScopedArtifacts.Scope.ALL)
+                .use(taskProvider)
+                .toTransform(
+                        ScopedArtifact.CLASSES.INSTANCE,
+                        { it.getInputJars() },
+                        { it.getInputDirectories() },
+                        { it.getOutput() }
+                )
+    })
 }
 
 apply from: "../commonLocalRepo.gradle"

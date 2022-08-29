@@ -1,101 +1,64 @@
 package com.android.test.jarjar;
 
-import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent.ContentType;
-import com.android.build.api.transform.QualifiedContent.DefaultContentType;
-import com.android.build.api.transform.QualifiedContent.Scope;
-import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformOutputProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.TaskAction;
 
-public class JarJarTransform extends Transform {
+public abstract class JarJarTask extends DefaultTask {
 
-    @Override
-    public String getName() {
-        return "jarjar";
-    }
+    @javax.inject.Inject
+    public JarJarTask() {}
 
-    @Override
-    public Set<ContentType> getInputTypes() {
-        return ImmutableSet.<ContentType>of(DefaultContentType.CLASSES);
-    }
+    @InputFiles
+    abstract ListProperty<Directory> getInputDirectories();
 
-    @Override
-    public Set<Scope> getScopes() {
-        // needs to run on everything to rename what is using gson
-        return EnumSet.of(
-                Scope.PROJECT,
-                Scope.SUB_PROJECTS,
-                Scope.EXTERNAL_LIBRARIES);
-    }
+    @InputFiles
+    abstract ListProperty<RegularFile> getInputJars();
 
-    @Override
-    public boolean isIncremental() {
-        return false;
-    }
+    @OutputFiles
+    abstract RegularFileProperty getOutput();
 
-    @Override
-    public void transform(
-            Context context,
-            Collection<TransformInput> inputs,
-            Collection<TransformInput> referencedStreams,
-            TransformOutputProvider output,
-            boolean isIncremental)
-            throws TransformException, IOException {
+    @TaskAction
+    void taskAction() throws Exception {
 
-        if (output == null) {
-            throw new RuntimeException("Missing output object for transform " + getName());
-        }
-        output.deleteAll();
-        File outputJar = output.getContentLocation("main", getOutputTypes(), getScopes(),
-                Format.JAR);
-		// create the parent folder
-		outputJar.getParentFile().mkdirs();
-
-        // create intermediate files to handle the jar input and the rule file.
         File mergedInputs = File.createTempFile("jajar", "jar");
         File jarjarRules = File.createTempFile("jajar", "rule");
 
         try {
-            // create a tmp jar that contains all the inputs. This is because jarjar expects a jar input.
+            // create a tmp jar that contains all the inputs. This is because jarjar expects a jar
+            // input.
             // this code is based on the JarMergingTransform
-            combineInputIntoJar(inputs, mergedInputs);
+            combineInputIntoJar(mergedInputs);
 
             // create the jarjar rules file.
             Files.write("rule com.google.gson.** com.google.repacked.gson.@1", jarjarRules, Charsets.UTF_8);
 
             // run jarjar by calling the main method as if it came from the command line.
-            String[] args =  ImmutableList.of(
-                    "process",
-                    jarjarRules.getAbsolutePath(),
-                    mergedInputs.getAbsolutePath(),
-                    outputJar.getAbsolutePath()
-            ).toArray(new String[4]);
+            String[] args =
+                    ImmutableList.of(
+                                    "process",
+                                    jarjarRules.getAbsolutePath(),
+                                    mergedInputs.getAbsolutePath(),
+                                    getOutput().get().getAsFile().getAbsolutePath())
+                            .toArray(new String[4]);
             com.tonicsystems.jarjar.Main.main(args);
-
-        } catch (Exception e) {
-            throw new TransformException(e);
         } finally {
             // delete tmp files
             mergedInputs.delete();
@@ -103,8 +66,7 @@ public class JarJarTransform extends Transform {
         }
     }
 
-    private void combineInputIntoJar(Collection<TransformInput> inputs, File mergedInputs)
-            throws TransformException, IOException {
+    private void combineInputIntoJar(File mergedInputs) throws IOException {
         Closer closer = Closer.create();
         try {
 
@@ -113,20 +75,12 @@ public class JarJarTransform extends Transform {
 
             final byte[] buffer = new byte[8192];
 
-            for (TransformInput input : inputs) {
-                for (JarInput jarInput : input.getJarInputs()) {
-                    processJarFile(jos, jarInput.getFile(), buffer);
-                }
-
-                for (DirectoryInput dirInput : input.getDirectoryInputs()) {
-                    processFolder(jos, "", dirInput.getFile(), buffer);
-                }
+            for (Directory directory : getInputDirectories().get()) {
+                processFolder(jos, "", directory.getAsFile(), buffer);
             }
-
-        } catch (FileNotFoundException e) {
-            throw new TransformException(e);
-        } catch (IOException e) {
-            throw new TransformException(e);
+            for (RegularFile regularFile : getInputJars().get()) {
+                processJarFile(jos, regularFile.getAsFile(), buffer);
+            }
         } finally {
             closer.close();
         }

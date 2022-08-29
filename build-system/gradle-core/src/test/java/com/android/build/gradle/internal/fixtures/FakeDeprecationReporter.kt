@@ -22,6 +22,7 @@ import com.android.build.gradle.options.Option
 class FakeDeprecationReporter: DeprecationReporter {
 
     val warnings = mutableListOf<String>()
+    val errors = mutableListOf<String>()
 
     override fun reportDeprecatedUsage(newDslElement: String,
             oldDslElement: String,
@@ -57,6 +58,14 @@ class FakeDeprecationReporter: DeprecationReporter {
         deprecationTarget: DeprecationReporter.DeprecationTarget
     ) {
         warnings.add(oldConfiguration)
+    }
+
+    override fun reportRemovedApi(
+        oldApiElement: String,
+        url: String,
+        deprecationTarget: DeprecationReporter.DeprecationTarget
+    ) {
+        errors.add(oldApiElement)
     }
 
     override fun reportDeprecatedValue(dslElement: String,

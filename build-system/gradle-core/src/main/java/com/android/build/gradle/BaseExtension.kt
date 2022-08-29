@@ -106,10 +106,6 @@ abstract class BaseExtension protected constructor(
     private val isBaseModule: Boolean
 ) : AndroidConfig, Lockable {
 
-    private val _transforms: MutableList<Transform> = mutableListOf()
-    /** Secondary dependencies for the custom transform. */
-    private val _transformDependencies: MutableList<List<Any>> = mutableListOf()
-
     private val _dexOptions = dslServices.newInstance(DexOptions::class.java)
 
     @Deprecated("Using dexOptions is obsolete.")
@@ -124,7 +120,6 @@ abstract class BaseExtension protected constructor(
 
     private val deviceProviderList: MutableList<DeviceProvider> = Lists.newArrayList()
     private val testServerList: MutableList<TestServer> = Lists.newArrayList()
-    private val transformList: MutableList<Transform> = Lists.newArrayList()
 
     @get:Incubating
     abstract val composeOptions: ComposeOptions
@@ -263,24 +258,21 @@ abstract class BaseExtension protected constructor(
      * [https://developer.android.com/studio/releases/gradle-plugin-roadmap]
      */
     @Deprecated(
-        "The transform API is planned to be removed in Android Gradle plugin 8.0."
+        "The transform API support has been removed in Android Gradle plugin 8.0."
     )
     fun registerTransform(transform: Transform, vararg dependencies: Any) {
-        dslServices.deprecationReporter.reportDeprecatedApi(
-            newApiElement = null,
+        dslServices.deprecationReporter.reportRemovedApi(
             oldApiElement = "android.registerTransform",
             url = "https://developer.android.com/studio/releases/gradle-plugin-api-updates#transform-api",
             deprecationTarget = DeprecationReporter.DeprecationTarget.TRANSFORM_API
         )
-        _transforms.add(transform)
-        _transformDependencies.add(listOf(dependencies))
     }
 
     override val transforms: List<Transform>
-        get() = ImmutableList.copyOf(_transforms)
+        get() = ImmutableList.of()
 
     override val transformsDependencies: List<List<Any>>
-        get() = ImmutableList.copyOf(_transformDependencies)
+        get() = ImmutableList.of()
 
     open fun defaultPublishConfig(value: String) {
         defaultPublishConfig = value

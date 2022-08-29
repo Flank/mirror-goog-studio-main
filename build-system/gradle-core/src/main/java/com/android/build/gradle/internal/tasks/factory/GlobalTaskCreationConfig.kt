@@ -90,8 +90,6 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
     val testCoverage: TestCoverage
     val testOptions: TestOptions
     val testServers: List<TestServer>
-    val transforms: List<Transform>
-    val transformsDependencies: List<List<Any>>
 
     // processed access to some DSL values
 
