@@ -45,7 +45,6 @@ import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.getR8Version
 import com.android.builder.dexing.runR8
-import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
@@ -334,11 +333,6 @@ abstract class R8Task @Inject constructor(
 
             task.executionOptions.setDisallowChanges(
                 creationConfig.global.settingsOptions.executionProfile?.r8Options)
-
-            if (!creationConfig.services.projectOptions[BooleanOption.R8_FAIL_ON_MISSING_CLASSES]) {
-                // Keep until AGP 8.0. It used to be necessary because of http://b/72683872.
-                proguardConfigurations.add("-ignorewarnings")
-            }
 
             task.proguardConfigurations = proguardConfigurations
 

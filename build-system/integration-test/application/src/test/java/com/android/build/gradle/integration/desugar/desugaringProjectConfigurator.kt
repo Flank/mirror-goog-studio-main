@@ -26,6 +26,7 @@ fun configureR8Desugaring(project: GradleTestProject) {
             """
                 -keep class *{*;}
                 -dontobfuscate
+                -dontwarn java.lang.ClassValue
                 """
     )
 

@@ -59,9 +59,7 @@ class ShrinkLibraryTest {
     @Test
     fun testLambdaStubOnBootclasspath() {
         compileWithJava8Target()
-        project.executor()
-            .with(BooleanOption.R8_FAIL_ON_MISSING_CLASSES, true)
-            .run(":assembleDebug")
+        project.executor().run(":assembleDebug")
     }
 
     private fun compileWithJava8Target() {

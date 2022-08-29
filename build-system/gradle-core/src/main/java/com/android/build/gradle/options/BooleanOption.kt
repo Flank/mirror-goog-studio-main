@@ -127,7 +127,6 @@ enum class BooleanOption(
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries", false, FeatureStage.Experimental),
     DISABLE_EARLY_MANIFEST_PARSING("android.disableEarlyManifestParsing", false, FeatureStage.Experimental),
     ENABLE_RESOURCE_NAMESPACING_DEFAULT("android.enableResourceNamespacingDefault", false, FeatureStage.Experimental),
-    R8_FAIL_ON_MISSING_CLASSES("android.r8.failOnMissingClasses", false, FeatureStage.Experimental),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false, FeatureStage.Experimental),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false, FeatureStage.Experimental),
     ENABLE_PARTIAL_R_INCREMENTAL_BUILDS("android.enablePartialRIncrementalBuilds", false, FeatureStage.Experimental),
@@ -491,6 +490,13 @@ enum class BooleanOption(
             "android.cacheCompileLibResources",
             true,
             FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
+    @Suppress("unused")
+    R8_FAIL_ON_MISSING_CLASSES(
+        "android.r8.failOnMissingClasses",
+        true,
+        FeatureStage.Enforced(Version.VERSION_8_0)
     ),
 
     /* ----------------

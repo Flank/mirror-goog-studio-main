@@ -705,7 +705,7 @@ class R8ToolTest {
     @Test
     fun testMissingRulesGenerated() {
         val missingRules = tmp.newFile()
-        val proguardConfig = ProguardConfig(listOf(), null, listOf("-ignorewarnings"),
+        val proguardConfig = ProguardConfig(listOf(), null, listOf(),
                 ProguardOutputFiles(
                         tmp.newFile().toPath(),
                         tmp.newFile().toPath(),
@@ -734,10 +734,10 @@ class R8ToolTest {
             }
         }
 
-
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
-        runR8(
+        try {
+            runR8(
                 listOf(classes),
                 output,
                 listOf(),
@@ -752,29 +752,9 @@ class R8ToolTest {
                 featureJavaResourceJars = listOf(),
                 featureDexDir = null,
                 featureJavaResourceOutputDir = null
-        )
-        assertThat(missingRules).containsAllOf("-dontwarn test.B", "-dontwarn test.C")
-
-        try {
-            runR8(
-                    listOf(classes),
-                    output,
-                    listOf(),
-                    javaRes,
-                    bootClasspath,
-                    emptyList(),
-                    toolConfig,
-                    proguardConfig.copy(proguardConfigurations = emptyList()),
-                    mainDexConfig,
-                    NoOpMessageReceiver(),
-                    featureClassJars = listOf(),
-                    featureJavaResourceJars = listOf(),
-                    featureDexDir = null,
-                    featureJavaResourceOutputDir = null
             )
-            fail("This should fail as classes are missing")
         } catch (ignored: CompilationFailedException) {
-            // this should fail
+            assertThat(missingRules).containsAllOf("-dontwarn test.B", "-dontwarn test.C")
         }
     }
 

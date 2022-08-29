@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.getOutputDir
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.truth.PathSubject.assertThat
@@ -100,7 +99,7 @@ class R8TaskTest {
         """.trimIndent())
         project.file("proguard-rules.pro").appendText("-keep class test.A { *; }")
 
-        project.executor().run(":assembleDebug")
+        project.executor().expectFailure().run(":assembleDebug")
         val missingRules = project.buildDir.resolve("outputs/mapping/debug/missing_rules.txt")
         assertThat(missingRules).contentWithUnixLineSeparatorsIsExactly(
                 """
@@ -113,7 +112,6 @@ class R8TaskTest {
 
         val result =
                 project.executor()
-                        .with(BooleanOption.R8_FAIL_ON_MISSING_CLASSES, true)
                         .expectFailure()
                         .run(":assembleDebug")
         result.stderr.use {
