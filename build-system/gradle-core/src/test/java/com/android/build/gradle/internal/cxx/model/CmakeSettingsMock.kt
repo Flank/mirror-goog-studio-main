@@ -40,6 +40,7 @@ class CmakeSettingsMock : BasicModuleModelMock() {
             sdkComponents,
             androidLocationProvider,
             configurationParameters,
+            versionExecutor,
             cmakeFinder,
             ninjaFinder
         )

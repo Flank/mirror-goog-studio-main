@@ -155,6 +155,7 @@ class SettingsConfigurationRewriterKtTest {
                         sdkComponents,
                         androidLocationProvider,
                         listOf(configurationParameters),
+                        versionExecutor,
                         providers,
                         layout
                     )
@@ -180,6 +181,7 @@ class SettingsConfigurationRewriterKtTest {
                         sdkComponents,
                         androidLocationProvider,
                         listOf(configurationParameters),
+                        versionExecutor,
                         providers,
                         layout
                     )

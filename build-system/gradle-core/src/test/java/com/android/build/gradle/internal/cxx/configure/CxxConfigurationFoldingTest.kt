@@ -50,6 +50,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -70,6 +71,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -99,6 +101,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -128,6 +131,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -156,6 +160,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -177,6 +182,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -208,6 +214,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -239,6 +246,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -270,6 +278,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -301,6 +310,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -336,6 +346,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2, config3),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -394,6 +405,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -427,6 +439,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )
@@ -458,6 +471,7 @@ class CxxConfigurationFoldingTest {
                 sdkComponents,
                 androidLocationProvider,
                 listOf(config1, config2),
+                versionExecutor,
                 providers,
                 layout
             )

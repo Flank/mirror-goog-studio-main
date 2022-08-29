@@ -70,6 +70,7 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
+import java.io.File
 
 /**
  * Create just the externalNativeBuild per-variant task.
@@ -91,6 +92,7 @@ fun createCxxVariantBuildTask(
         sdkComponentsBuildService.get(),
         androidLocationBuildService.get(),
         listOf(configuration),
+        providers.createConfigurationTimeVersionExecutor(),
         providers,
         layout
     ).toConfigurationModel()
@@ -134,6 +136,7 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                 createInitialCxxModel(sdkComponents,
                         androidLocationsProvider,
                         configurationParameters,
+                        providers.createConfigurationTimeVersionExecutor(),
                         providers,
                         layout
                 )
@@ -333,12 +336,18 @@ fun createInitialCxxModel(
     sdkComponents: SdkComponentsBuildService,
     androidLocationsProvider: AndroidLocationsProvider,
     configurationParameters: List<CxxConfigurationParameters>,
+    versionExecutor: (File) -> String,
     providers: ProviderFactory,
     layout: ProjectLayout
 ) : List<CxxAbiModel> {
+
     return configurationParameters.flatMap { parameters ->
         val module = time("create-module-model") {
-            createCxxModuleModel(sdkComponents, androidLocationsProvider, parameters)
+            createCxxModuleModel(
+                sdkComponents,
+                androidLocationsProvider,
+                versionExecutor,
+                parameters)
         }
         val variant = time("create-variant-model") {
             createCxxVariantModel(parameters, module)
@@ -350,6 +359,12 @@ fun createInitialCxxModel(
             }
         }
     }
+}
+
+private fun ProviderFactory.createConfigurationTimeVersionExecutor() : (File) -> String = { exe ->
+    exec { spec ->
+        spec.commandLine(exe.path, "--version")
+    }.standardOutput.asText.get()
 }
 
 private fun List<CxxAbiModel>.toConfigurationModel() =

@@ -46,6 +46,7 @@ class CreateCxxModuleModelTest {
             assertThat(createCxxModuleModel(
                 it.sdkComponents,
                 it.androidLocationProvider,
+                it.versionExecutor,
                 it.configurationParameters)).isNotNull()
         }
     }
@@ -57,6 +58,7 @@ class CreateCxxModuleModelTest {
             assertThat(createCxxModuleModel(
                 it.sdkComponents,
                 it.androidLocationProvider,
+                it.versionExecutor,
                 it.configurationParameters
             )).isNotNull()
         }
@@ -93,6 +95,7 @@ class CreateCxxModuleModelTest {
                 val module = createCxxModuleModel(
                     it.sdkComponents,
                     it.androidLocationProvider,
+                    it.versionExecutor,
                     it.configurationParameters
                 )
                 val finalStagingDir = module.cxxFolder
@@ -114,6 +117,7 @@ class CreateCxxModuleModelTest {
                 val module = createCxxModuleModel(
                     it.sdkComponents,
                     it.androidLocationProvider,
+                    it.versionExecutor,
                     configurationParameters
                 )
                 val finalStagingDir = module.cxxFolder

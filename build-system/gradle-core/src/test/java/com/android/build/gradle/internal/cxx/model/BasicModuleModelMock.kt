@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
-import com.android.SdkConstants.NDK_DEFAULT_VERSION
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.NinjaLocator
@@ -56,20 +56,22 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileContents
+import org.gradle.api.file.ProjectLayout
+import org.gradle.api.file.RegularFile
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.SetProperty
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.util.Locale
-import org.gradle.api.file.FileContents
-import org.gradle.api.file.ProjectLayout
-import org.gradle.api.file.RegularFile
-import org.mockito.ArgumentMatchers
 import java.util.concurrent.Callable
 
 /**
@@ -188,6 +190,25 @@ open class BasicModuleModelMock {
         SdkComponentsBuildService::class.java,
         throwUnmocked
     )
+
+    val versionExecutor : (File) -> String = { exe ->
+        val processBuilder = ProcessBuilder(exe.absolutePath, "--version")
+        processBuilder.redirectErrorStream()
+        val process = processBuilder.start()
+        var bufferedReader: BufferedReader? = null
+        var inputStreamReader: InputStreamReader? = null
+        try {
+            inputStreamReader = InputStreamReader(process.inputStream)
+            try {
+                bufferedReader = BufferedReader(inputStreamReader)
+                bufferedReader.readLine()
+            } finally {
+                bufferedReader?.close()
+            }
+        } finally {
+            inputStreamReader?.close()
+        }
+    }
     val projectOptions = mock(
         ProjectOptions::class.java,
         throwUnmocked
@@ -395,7 +416,7 @@ open class BasicModuleModelMock {
         doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
         doReturn(Revision.parseRevision(NDK_DEFAULT_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(cmakeDir.parentFile).`when`(cmakeFinder)
-            .findCmakePath(any(), any(), any(), any(), any())
+            .findCmakePath(any(), any(), any(), any(), any(), any())
 
         doReturn(cmakeDir.parentFile.resolve("ninja.exe")).`when`(ninjaFinder)
             .findNinjaPath(any(), any())

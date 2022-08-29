@@ -33,6 +33,7 @@ open class BasicNdkBuildMock : BasicModuleModelMock() {
             sdkComponents,
             androidLocationProvider,
             configurationParameters,
+            versionExecutor,
             cmakeFinder,
             ninjaFinder
         )

@@ -26,6 +26,7 @@ class CreateCxxVariantModelTest {
             val module = createCxxModuleModel(
                 it.sdkComponents,
                 it.androidLocationProvider,
+                it.versionExecutor,
                 it.configurationParameters
             )
             createCxxVariantModel(

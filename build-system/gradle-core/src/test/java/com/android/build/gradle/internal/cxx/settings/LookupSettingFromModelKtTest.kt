@@ -47,6 +47,7 @@ class LookupSettingFromModelKtTest {
                 it.sdkComponents,
                 it.androidLocationProvider,
                 it.configurationParameters,
+                it.versionExecutor,
                 it.cmakeFinder,
                 it.ninjaFinder)
             val variant = createCxxVariantModel(
@@ -77,6 +78,7 @@ class LookupSettingFromModelKtTest {
                     sdkComponents,
                     androidLocationProvider,
                     listOf(parameters),
+                    versionExecutor,
                     providers,
                     layout)
                     .single { abi -> abi.abi == Abi.X86_64 }
@@ -97,7 +99,8 @@ class LookupSettingFromModelKtTest {
                     )
             )
             val allAbis = createInitialCxxModel(
-                it.sdkComponents, it.androidLocationProvider, listOf(configurationParameters), it.providers, it.layout
+                it.sdkComponents, it.androidLocationProvider, listOf(configurationParameters),
+                it.versionExecutor, it.providers, it.layout
             )
             val abi = allAbis.single { abi -> abi.abi == Abi.X86_64 }
 
@@ -139,6 +142,7 @@ class LookupSettingFromModelKtTest {
                         it.sdkComponents,
                         it.androidLocationProvider,
                         listOf(it.configurationParameters),
+                        it.versionExecutor,
                         it.providers,
                         it.layout
                     )

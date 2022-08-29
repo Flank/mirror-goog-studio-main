@@ -121,22 +121,7 @@ internal class CmakeServerExternalNativeJsonGenerator(
                     )
                 }
             val cmakeBinFolder = cmake.cmakeExe!!.parentFile
-            val cmakeServer =
-                ServerFactory.create(cmakeBinFolder, serverReceiver)
-            if (cmakeServer == null) {
-                val actual = CmakeUtils.getVersion(cmakeBinFolder)
-                throw RuntimeException(
-                    String.format(
-                        "Actual CMake version '%s.%s.%s' did not satisfy requested minimum or default "
-                                + "CMake minimum version '%s'. Possibly cmake.dir doesn't match "
-                                + "android.externalNativeBuild.cmake.version.",
-                        actual.major,
-                        actual.minor,
-                        actual.micro,
-                        cmake.minimumCmakeVersion
-                    )
-                )
-            }
+            val cmakeServer = ServerFactory.create(cmakeBinFolder, serverReceiver)
             if (!cmakeServer.connect()) {
                 throw RuntimeException(
                     "Unable to connect to Cmake server located at: "
@@ -371,13 +356,8 @@ internal class CmakeServerExternalNativeJsonGenerator(
     companion object {
         private const val CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: "
 
-        @Throws(IOException::class)
         private fun getCmakeInfoString(cmakeServer: Server): String {
-            return String.format(
-                "Cmake path: %s, version: %s",
-                cmakeServer.cmakePath,
-                CmakeUtils.getVersion(File(cmakeServer.cmakePath)).toString()
-            )
+            return "Cmake path: ${cmakeServer.cmakePath}"
         }
 
         /**

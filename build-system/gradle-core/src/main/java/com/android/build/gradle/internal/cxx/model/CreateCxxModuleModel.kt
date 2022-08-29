@@ -44,6 +44,7 @@ fun createCxxModuleModel(
     sdkComponents : SdkComponentsBuildService,
     androidLocationProvider: AndroidLocationsProvider,
     configurationParameters: CxxConfigurationParameters,
+    versionExecutor: (File) -> String,
     cmakeLocator: CmakeLocator,
     ninjaLocator: NinjaLocator
 ) : CxxModuleModel {
@@ -101,7 +102,8 @@ fun createCxxModuleModel(
                             configurationParameters.cmakeVersion,
                             localPropertyFile(CMAKE_DIR_PROPERTY),
                             androidLocationProvider,
-                            sdkComponents.sdkDirectoryProvider.get().asFile
+                            sdkComponents.sdkDirectoryProvider.get().asFile,
+                            versionExecutor
                     ) { sdkComponents.installCmake(it) }
             val cmakeExe =
                     if (cmakeFolder == null) null
@@ -162,11 +164,13 @@ fun createCxxModuleModel(
 fun createCxxModuleModel(
     sdkComponents: SdkComponentsBuildService,
     androidLocationProvider: AndroidLocationsProvider,
+    versionExecutor: (File) -> String,
     configurationParameters: CxxConfigurationParameters
 ) = createCxxModuleModel(
     sdkComponents,
     androidLocationProvider,
     configurationParameters,
+    versionExecutor,
     CmakeLocator(),
     NinjaLocator()
 )

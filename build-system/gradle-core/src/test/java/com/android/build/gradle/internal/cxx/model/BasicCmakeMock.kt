@@ -34,6 +34,7 @@ open class BasicCmakeMock(createFakeNinja : Boolean = true) : BasicModuleModelMo
             sdkComponents,
             androidLocationProvider,
             configurationParameters,
+            versionExecutor,
             cmakeFinder,
             ninjaFinder
         )

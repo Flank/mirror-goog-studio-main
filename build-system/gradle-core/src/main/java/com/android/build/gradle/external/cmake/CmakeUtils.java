@@ -29,16 +29,13 @@ import com.android.build.gradle.external.cmake.server.Target;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
 import com.android.repository.Revision;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /** Cmake utility class. */
 public class CmakeUtils {
@@ -51,8 +48,15 @@ public class CmakeUtils {
      * @throws IOException I/O failure
      */
     @NonNull
-    public static Revision getVersion(@NonNull File cmakeInstallPath) throws IOException {
-        final String versionString = getVersionString(cmakeInstallPath);
+    public static Revision getVersion(
+            @NonNull File cmakeInstallPath, @NonNull Function<File, String> versionExecutor)
+            throws IOException {
+        final String versionOutput = versionExecutor.apply(new File(cmakeInstallPath, "cmake"));
+        if (!versionOutput.startsWith(CMAKE_VERSION_LINE_PREFIX)) {
+            throw new RuntimeException(
+                    "Did not recognize stdout line as a cmake version: " + versionOutput);
+        }
+        final String versionString = versionOutput.substring(CMAKE_VERSION_LINE_PREFIX.length());
         // Custom built CMake (like the Google-built one in the SDK) started having a version
         // number containing hash of something. For example,
         //   3.17.0-gc5272a5
@@ -124,63 +128,6 @@ public class CmakeUtils {
                         .setPrettyPrinting()
                         .create();
         return gson.toJson(content);
-    }
-
-    /**
-     * Reads the first line of the version output for the current Cmake and returns the version
-     * string. For the version output 'cmake version 3.8.0-rc2' the function return '3.8.0-rc2'
-     *
-     * @return Current Cmake version as a string
-     * @throws IOException I/O failure
-     */
-    @NonNull
-    private static String getVersionString(@NonNull File cmakeInstallPath) throws IOException {
-        final String versionOutput = getCmakeVersionLinePrefix(cmakeInstallPath);
-        if (!versionOutput.startsWith(CMAKE_VERSION_LINE_PREFIX)) {
-            throw new RuntimeException(
-                    "Did not recognize stdout line as a cmake version: " + versionOutput);
-        }
-        return versionOutput.substring(CMAKE_VERSION_LINE_PREFIX.length());
-    }
-
-    /**
-     * Reads the version output for the current Cmake and returns the first line read. Example:
-     *
-     * <p>$ ./cmake --version
-     *
-     * <p>cmake version 3.8.0-rc2
-     *
-     * <p>CMake suite maintained and supported by Kitware (kitware.com/cmake).
-     *
-     * <p>This function for the above example would return 'cmake version 3.8.0-rc2'
-     *
-     * @return Current Cmake version output as string
-     * @throws IOException I/O failure
-     */
-    private static String getCmakeVersionLinePrefix(@NonNull File cmakeInstallPath)
-            throws IOException {
-        File cmakeExecutable = new File(cmakeInstallPath, "cmake");
-        ProcessBuilder processBuilder =
-                new ProcessBuilder(cmakeExecutable.getAbsolutePath(), "--version");
-        processBuilder.redirectErrorStream();
-        Process process = processBuilder.start();
-        BufferedReader bufferedReader = null;
-        InputStreamReader inputStreamReader = null;
-        try {
-            inputStreamReader = new InputStreamReader(process.getInputStream());
-            try {
-                bufferedReader = new BufferedReader(inputStreamReader);
-                return bufferedReader.readLine();
-            } finally {
-                if (bufferedReader != null) {
-                    bufferedReader.close();
-                }
-            }
-        } finally {
-            if (inputStreamReader != null) {
-                inputStreamReader.close();
-            }
-        }
     }
 
     /**
