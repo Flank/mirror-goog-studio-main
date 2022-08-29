@@ -25,9 +25,19 @@ import com.android.tools.profgen.ObfuscationMap
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
+import kotlinx.cli.default
 import kotlinx.cli.required
 import java.io.File
 import kotlin.system.exitProcess
+
+@ExperimentalCli
+enum class ArtProfileFormat {
+    V0_1_5_S, // targets S+
+    V0_1_0_P, // targets P -> R
+    V0_0_9_OMR1, // targets Android O MR1
+    V0_0_5_O, // targets O
+    V0_0_1_N // targets N
+}
 
 @ExperimentalCli
 class BinCommand : Subcommand("bin", "Generate Binary Profile") {
@@ -36,6 +46,8 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
     val outPath by option(ArgType.String, "output", "o", "File path to generated binary profile").required()
     val obfPath by option(ArgType.String, "map", "m", "File path to name obfuscation map")
     val metaPath by option(ArgType.String, "output-meta", "om", "File path to generated metadata output")
+    val artProfileFormat by option(ArgType.Choice<ArtProfileFormat>(), "profile-format", "pf", "The ART profile format version").default(ArtProfileFormat.V0_1_0_P)
+
     override fun execute() {
         val hrpFile = File(hrpPath)
         require(hrpFile.exists()) { "File not found: $hrpPath" }
@@ -60,7 +72,14 @@ class BinCommand : Subcommand("bin", "Generate Binary Profile") {
         val apk = Apk(apkFile)
         val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
         val profile = ArtProfile(hrp, obf, apk)
-        profile.save(outFile.outputStream(), ArtProfileSerializer.V0_1_0_P)
+        val version = when(artProfileFormat) {
+            ArtProfileFormat.V0_1_0_P -> ArtProfileSerializer.V0_1_0_P
+            ArtProfileFormat.V0_1_5_S -> ArtProfileSerializer.V0_1_5_S
+            ArtProfileFormat.V0_0_9_OMR1 -> ArtProfileSerializer.V0_0_9_OMR1
+            ArtProfileFormat.V0_0_5_O -> ArtProfileSerializer.V0_0_5_O
+            ArtProfileFormat.V0_0_1_N -> ArtProfileSerializer.V0_0_1_N
+        }
+        profile.save(outFile.outputStream(), version)
         if (metaFile != null) {
             profile.save(metaFile.outputStream(), ArtProfileSerializer.METADATA_0_0_2)
         }
