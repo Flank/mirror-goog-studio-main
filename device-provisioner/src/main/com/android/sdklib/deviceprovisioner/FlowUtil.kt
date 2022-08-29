@@ -17,7 +17,10 @@ package com.android.sdklib.deviceprovisioner
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 sealed interface SetChange<T> {
   class Add<T>(val value: T) : SetChange<T>
@@ -36,4 +39,15 @@ fun <T> Flow<Set<T>>.trackSetChanges(): Flow<SetChange<T>> = flow {
     (new - current).forEach { emit(SetChange.Add(it)) }
     current = new
   }
+}
+
+/**
+ * Given a Flow<Iterable<T>>, where each T contains a nested Flow<S>, return a flow of
+ * List<Pair<T,S>> that updates every time the source flow updates or the nested flow of any T
+ * updates.
+ */
+fun <T, S> Flow<Iterable<T>>.pairWithNestedState(
+  innerState: (T) -> Flow<S>
+): Flow<List<Pair<T, S>>> = flatMapLatest { ts ->
+  combine(ts.map { t -> innerState(t).map { Pair(t, it) } }) { it.toList() }
 }

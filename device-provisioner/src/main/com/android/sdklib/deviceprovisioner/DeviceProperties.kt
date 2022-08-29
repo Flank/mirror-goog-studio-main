@@ -87,4 +87,9 @@ interface DeviceProperties {
           else -> "$manufacturer $model"
         }
     }
+
+  companion object {
+    /** Builds a basic DeviceProperties instance with no additional fields. */
+    fun build(block: Builder.() -> Unit): DeviceProperties = Builder().apply(block).buildBase()
+  }
 }

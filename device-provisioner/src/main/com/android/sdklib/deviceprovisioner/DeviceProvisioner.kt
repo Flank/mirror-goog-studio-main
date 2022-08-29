@@ -25,6 +25,7 @@ import com.android.adblib.thisLogger
 import com.android.sdklib.deviceprovisioner.SetChange.Add
 import java.time.Duration
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,9 @@ private constructor(
 
   private val combinedDevices = combine(provisioners.map { it.devices }) { it.flatMap { it } }
   private val combinedTemplates = combine(provisioners.map { it.templates }) { it.flatMap { it } }
+
+  val scope: CoroutineScope
+    get() = adbSession.scope
 
   /** The [device handles][DeviceHandle] known to this class, provided by its plugins. */
   val devices: StateFlow<List<DeviceHandle>> =

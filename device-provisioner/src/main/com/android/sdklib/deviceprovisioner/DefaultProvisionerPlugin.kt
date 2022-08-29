@@ -35,8 +35,7 @@ class DefaultProvisionerPlugin : DeviceProvisionerPlugin {
 
   override suspend fun claim(device: ConnectedDevice): DeviceHandle {
     val properties = device.deviceProperties().allReadonly()
-    val deviceProperties =
-      DeviceProperties.Builder().apply { readCommonProperties(properties) }.buildBase()
+    val deviceProperties = DeviceProperties.build { readCommonProperties(properties) }
     val handle = DefaultDeviceHandle(Connected(deviceProperties, device))
 
     _devices.update { it + handle }
