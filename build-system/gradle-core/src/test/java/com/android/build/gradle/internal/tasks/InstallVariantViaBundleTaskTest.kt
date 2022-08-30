@@ -19,10 +19,14 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
+import com.android.builder.testing.api.DeviceConfigProviderImpl
 import com.android.builder.testing.api.DeviceConnector
 import com.android.builder.testing.api.DeviceProvider
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
+import org.gradle.api.Project
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -51,7 +55,7 @@ class InstallVariantViaBundleTaskTest {
     @Mock
     private lateinit var deviceConnector: DeviceConnector
 
-    private lateinit var params: InstallVariantViaBundleTask.Params
+    private lateinit var project: Project
 
     @Before
     @Throws(Exception::class)
@@ -59,8 +63,11 @@ class InstallVariantViaBundleTaskTest {
         MockitoAnnotations.initMocks(this)
         `when`(deviceConnector.apiLevel).thenReturn(21)
         `when`(deviceConnector.name).thenReturn("fake_device")
-        val project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
-        params = object : InstallVariantViaBundleTask.Params() {
+        project = ProjectBuilder.builder().withProjectDir(tmp.newFolder()).build()
+    }
+
+    private fun getParams(privacySandboxSdkApksFiles: List<File> = emptyList()) =
+        object : InstallVariantViaBundleTask.Params() {
             override val adbExe: RegularFileProperty
                 get() = project.objects.fileProperty().fileValue(File("adb.exe"))
             override val apkBundle: RegularFileProperty
@@ -83,9 +90,11 @@ class InstallVariantViaBundleTaskTest {
                 get() = project.objects.property(String::class.java).value("workerKey")
             override val analyticsService: Property<AnalyticsService>
                 get() = FakeGradleProperty(FakeNoOpAnalyticsService())
-        }
+            override val privacySandboxSdkApksFiles: FileCollection
+                get() = project.objects.fileCollection()
+                    .also { it.setFrom(privacySandboxSdkApksFiles) }
 
-    }
+        }
 
     @Test
     fun installSingle() {
@@ -95,12 +104,13 @@ class InstallVariantViaBundleTaskTest {
             ""
         )
 
-        val runnable = TestInstallRunnable(params, deviceConnector, outputPath)
+        val runnable = TestInstallRunnable(getParams(), deviceConnector, outputPath)
 
         runnable.run()
 
         verify(deviceConnector, atLeastOnce()).name
         verify(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector).deviceConfig
 
         verify(deviceConnector).installPackage(
             ArgumentMatchers.eq(outputPath.toFile()),
@@ -123,12 +133,13 @@ class InstallVariantViaBundleTaskTest {
             ""
         )
 
-        val runnable = TestInstallRunnable(params, deviceConnector, outputPath, outputPath2)
+        val runnable = TestInstallRunnable(getParams(), deviceConnector, outputPath, outputPath2)
 
         runnable.run()
 
         verify(deviceConnector, atLeastOnce()).name
         verify(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector).deviceConfig
 
         verify(deviceConnector).installPackages(
             ArgumentMatchers.eq(listOf(outputPath.toFile(), outputPath2.toFile())),
@@ -139,18 +150,118 @@ class InstallVariantViaBundleTaskTest {
         verifyNoMoreInteractions(deviceConnector)
     }
 
+    @Test
+    fun installPrivacySandboxSdkApks_oneToOne() {
+
+        val outputPath = Files.createTempFile(
+            "extract-apk",
+            ""
+        )
+        val sdk1Apks = File("sdk1.apks")
+        val sdk1ExtractedApk = File("sdk1-extracted.apk")
+        val runnable = TestInstallRunnable(
+            getParams(listOf(sdk1Apks)),
+            deviceConnector,
+            outputPath,
+            privacySandboxSdkApkMapping = mapOf(
+                sdk1Apks to listOf(sdk1ExtractedApk)
+            )
+        )
+
+        runnable.run()
+
+        verify(deviceConnector, atLeastOnce()).name
+        verify(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector).deviceConfig
+
+        verify(deviceConnector).installPackages(
+            ArgumentMatchers.eq(listOf(sdk1ExtractedApk)),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.any()
+        )
+
+        verify(deviceConnector).installPackage(
+            ArgumentMatchers.eq(outputPath.toFile()),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.any()
+        )
+        verifyNoMoreInteractions(deviceConnector)
+    }
+
+    @Test
+    fun installPrivacySandboxSdkApks_manyToMany() {
+
+        val outputPath = Files.createTempFile(
+            "extract-apk",
+            ""
+        )
+        val sdk1Apks = File("sdk1.apks")
+        val sdk1ExtractedApk1 = File("sdk1-extracted1.apk")
+        val sdk1ExtractedApk2 = File("sdk1-extracted2.apk")
+
+        val sdk2Apks = File("sdk2.apks")
+        val sdk2ExtractedApk1 = File("sdk2-extracted1.apk")
+        val sdk2ExtractedApk2 = File("sdk2-extracted2.apk")
+        val runnable = TestInstallRunnable(
+            getParams(listOf(sdk1Apks, sdk2Apks)),
+            deviceConnector,
+            outputPath,
+            privacySandboxSdkApkMapping = mapOf(
+                sdk1Apks to listOf(sdk1ExtractedApk1, sdk1ExtractedApk2),
+                sdk2Apks to listOf(sdk2ExtractedApk1, sdk2ExtractedApk2)
+            )
+        )
+
+        runnable.run()
+
+        verify(deviceConnector, atLeastOnce()).name
+        verify(deviceConnector, atLeastOnce()).apiLevel
+        verify(deviceConnector).deviceConfig
+
+        verify(deviceConnector).installPackages(
+            ArgumentMatchers.eq(listOf(sdk1ExtractedApk1, sdk1ExtractedApk2)),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.any()
+        )
+
+        verify(deviceConnector).installPackages(
+            ArgumentMatchers.eq(listOf(sdk2ExtractedApk1, sdk2ExtractedApk2)),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.any()
+        )
+
+        verify(deviceConnector).installPackage(
+            ArgumentMatchers.eq(outputPath.toFile()),
+            ArgumentMatchers.any(),
+            ArgumentMatchers.anyInt(),
+            ArgumentMatchers.any()
+        )
+        verifyNoMoreInteractions(deviceConnector)
+    }
+
     private class TestInstallRunnable(
         val params: InstallVariantViaBundleTask.Params,
         private val deviceConnector: DeviceConnector,
-        private vararg val outputPaths: Path
+        private vararg val outputPaths: Path,
+        private val privacySandboxSdkApkMapping: Map<File, List<File>> = mapOf(),
     ) : InstallVariantViaBundleTask.InstallRunnable() {
 
         override fun createDeviceProvider(iLogger: ILogger): DeviceProvider =
             InstallVariantTaskTest.FakeDeviceProvider(ImmutableList.of(deviceConnector))
 
-        override fun getApkFiles(device: DeviceConnector): List<Path> {
+        override fun getApkFiles(
+            device: DeviceConnector,
+            deviceConfigProvider: DeviceConfigProviderImpl
+        ): List<Path> {
             return ImmutableList.copyOf(outputPaths)
         }
+
+        override fun getPrivacySandboxSdkApkFiles(apk: Path) =
+            privacySandboxSdkApkMapping[apk.fileName.toFile()]!!
 
         override fun getParameters(): InstallVariantViaBundleTask.Params {
             return params
