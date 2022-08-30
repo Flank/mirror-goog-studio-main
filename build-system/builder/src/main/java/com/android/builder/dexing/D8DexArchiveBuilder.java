@@ -24,7 +24,6 @@ import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
-import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.StringConsumer.FileConsumer;
 import com.android.tools.r8.errors.UnsupportedFeatureDiagnostic;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -85,9 +84,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                     .setIntermediate(true)
                     .setOutput(
                             output,
-                            dexParams.getDexPerClass()
-                                    ? OutputMode.DexFilePerClassFile
-                                    : OutputMode.DexIndexed)
+                            (dexParams.getDexPerClass()
+                                            ? DexFilePerClassFile.INSTANCE
+                                            : DexIndexed.INSTANCE)
+                                    .getR8OutputMode())
                     .setIncludeClassesChecksum(dexParams.getDebuggable());
 
             if (dexParams.getDebuggable()) {

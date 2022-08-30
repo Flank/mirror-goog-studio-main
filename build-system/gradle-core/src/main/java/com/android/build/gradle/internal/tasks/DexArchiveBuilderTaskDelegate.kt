@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.dexing.ClassBucket
 import com.android.builder.dexing.ClassBucketGroup
-import com.android.builder.dexing.ClassFileEntry
 import com.android.builder.dexing.ClassFileInput
+import com.android.builder.dexing.DexFilePerClassFile
 import com.android.builder.dexing.DirectoryBucketGroup
 import com.android.builder.dexing.JarBucketGroup
 import com.android.builder.dexing.r8.ClassFileProviderFactory
@@ -283,22 +283,25 @@ class DexArchiveBuilderTaskDelegate(
     }
 
     @Suppress("UnstableApiUsage")
-    private fun deletePreviousOutputsFromDirs(inputFileChanges: Set<FileChange>, output: File) {
+    private fun deletePreviousOutputsFromDirs(inputFileChanges: Set<FileChange>, outputDir: File) {
         // Handle dir/file deletions only. We rewrite modified files, so no need to delete those.
-        inputFileChanges.forEach {
-            if (it.changeType == ChangeType.REMOVED) {
-                val fileOrDirToDelete: File? = when {
+        inputFileChanges
+            .filter { it.changeType == ChangeType.REMOVED }
+            .forEach {
+                when {
                     it.fileType == FileType.DIRECTORY -> {
-                        output.resolve(it.normalizedPath)
+                        FileUtils.deleteRecursivelyIfExists(outputDir.resolve(it.normalizedPath))
                     }
                     ClassFileInput.CLASS_MATCHER.test(it.normalizedPath) -> {
-                        output.resolve(ClassFileEntry.withDexExtension(it.normalizedPath))
+                        // We are in DexFilePerClassFile output mode
+                        DexFilePerClassFile.getOutputRelativePathsOfClassFile(
+                            classFileRelativePath = it.normalizedPath
+                        ).forEach { outputRelativePath ->
+                            FileUtils.deleteIfExists(outputDir.resolve(outputRelativePath))
+                        }
                     }
-                    else -> null
                 }
-                fileOrDirToDelete?.let { FileUtils.deleteRecursivelyIfExists(it) }
             }
-        }
     }
 
     private fun removeChangedJarOutputs(changes: Set<FileChange>, output: File) {

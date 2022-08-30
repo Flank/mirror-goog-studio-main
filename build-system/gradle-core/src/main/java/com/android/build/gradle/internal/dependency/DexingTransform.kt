@@ -28,11 +28,11 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.toSerializable
-import com.android.builder.dexing.ClassFileEntry
 import com.android.builder.dexing.ClassFileInput
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DependencyGraphUpdater
 import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexFilePerClassFile
 import com.android.builder.dexing.DexParameters
 import com.android.builder.dexing.MutableDependencyGraph
 import com.android.builder.dexing.isJarFile
@@ -189,14 +189,20 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
         val removedModifiedOrImpactedFiles =
             removedFiles + modifiedFiles + unchangedButImpactedFiles
 
-        // Remove stale dex outputs (not including those that will be overwritten)
-        inputChanges.removedFiles.forEach {
-            if (ClassFileInput.CLASS_MATCHER.test(it.file.path)) {
-                val staleOutputFile =
-                    dexOutputDir.resolve(ClassFileEntry.withDexExtension(it.normalizedPath))
-                FileUtils.deleteRecursivelyIfExists(staleOutputFile)
+        // Remove outputs of removed, modified, and unchanged-but-impacted class files
+        check(input.isDirectory) { "In incremental mode, input must be a directory: ${input.path}" }
+        (inputChanges.removedFiles.map { it.file } + input.walk().toList())
+            .filter {
+                ClassFileInput.CLASS_MATCHER.test(it.path) && it in removedModifiedOrImpactedFiles
             }
-        }
+            .forEach { classFile ->
+                // We are in DexFilePerClassFile output mode
+                DexFilePerClassFile.getOutputRelativePathsOfClassFile(
+                    classFileRelativePath = classFile.toRelativeString(input)
+                ).forEach { outputRelativePath ->
+                    FileUtils.deleteIfExists(dexOutputDir.resolve(outputRelativePath))
+                }
+            }
 
         // Remove stale nodes in the desugaring graph
         removedModifiedOrImpactedFiles.forEach {
@@ -204,9 +210,9 @@ abstract class BaseDexingTransform<T : BaseDexingTransform.Parameters> : Transfo
         }
 
         // Process only input files that are modified, added, or unchanged-but-impacted
-        val filter: (File, String) -> Boolean = { rootPath: File, relativePath: String ->
-            rootPath in modifiedImpactedOrAddedFiles /* for jars (we don't track class files in jars) */ ||
-                    rootPath.resolve(relativePath) in modifiedImpactedOrAddedFiles /* for class files in dirs */
+        val filter: (File, String) -> Boolean = { inputDir: File, relativePath: String ->
+            check(inputDir.isDirectory)
+            inputDir.resolve(relativePath) in modifiedImpactedOrAddedFiles
         }
         process(input, filter, dexOutputDir, null, true, desugarGraph)
 
