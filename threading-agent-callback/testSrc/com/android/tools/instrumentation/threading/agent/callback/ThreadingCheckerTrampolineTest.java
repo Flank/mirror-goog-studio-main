@@ -94,10 +94,16 @@ public class ThreadingCheckerTrampolineTest {
     }
 
     @Test
-    public void noop_whenInstallHookMethodIsNotCalled() {
-        // Verifies that no exceptions are thrown by the ThreadingCheckerTrampoline#verifyOnUiThread
-        // method if the ThreadingCheckerTrampoline#installHook has never been called.
+    public void keepsTrackOfSkippedChecks_whenVerifyMethodsAreCalledBeforeHookIsInstalled() {
         ThreadingCheckerTrampoline.verifyOnUiThread();
+        ThreadingCheckerTrampoline.verifyOnWorkerThread();
+
+        assertThat(ThreadingCheckerTrampoline.skippedChecksCounter.get()).isEqualTo(2L);
+        ThreadingCheckerTrampoline.installHook(createThreadingCheckerHook());
+
+        assertThat(ThreadingCheckerTrampoline.skippedChecksCounter.get()).isEqualTo(0L);
+        assertThat(verifyOnUiThreadCallCount).isEqualTo(0);
+        assertThat(verifyOnWorkerThreadCallCount).isEqualTo(0);
     }
 
     private ThreadingCheckerHook createThreadingCheckerHook() {

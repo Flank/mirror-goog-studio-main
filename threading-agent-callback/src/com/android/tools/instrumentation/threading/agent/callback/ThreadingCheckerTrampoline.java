@@ -17,6 +17,8 @@
 package com.android.tools.instrumentation.threading.agent.callback;
 
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 /**
  * Java agent is loaded by the bootstrap class loader, and we cannot emit bytecode that calls into
@@ -25,8 +27,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <p>So, we install a layer of indirection between these two worlds.
  */
 public final class ThreadingCheckerTrampoline {
+    private static final Logger LOGGER =
+            Logger.getLogger(ThreadingCheckerTrampoline.class.getName());
+
     private static final CopyOnWriteArrayList<ThreadingCheckerHook> hooks =
             new CopyOnWriteArrayList<>();
+
+    static final AtomicLong skippedChecksCounter = new AtomicLong();
 
     static class BaselineViolationsHolder {
         static BaselineViolations baselineViolations = BaselineViolations.fromResource();
@@ -39,6 +46,7 @@ public final class ThreadingCheckerTrampoline {
     // This method should be called from Android Studio startup code.
     public static void installHook(ThreadingCheckerHook newHook) {
         hooks.add(newHook);
+        warnIfSkippedChecksAndReset();
     }
 
     public static void removeHook(ThreadingCheckerHook hook) {
@@ -52,6 +60,7 @@ public final class ThreadingCheckerTrampoline {
     // This method is called from instrumented bytecode.
     public static void verifyOnUiThread() {
         if (hooks.isEmpty()) {
+            skippedChecksCounter.incrementAndGet();
             return;
         }
         if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
@@ -65,6 +74,7 @@ public final class ThreadingCheckerTrampoline {
     // This method is called from instrumented bytecode.
     public static void verifyOnWorkerThread() {
         if (hooks.isEmpty()) {
+            skippedChecksCounter.incrementAndGet();
             return;
         }
         if (getBaselineViolations().isIgnored(getInstrumentedMethodSignature())) {
@@ -72,6 +82,16 @@ public final class ThreadingCheckerTrampoline {
         }
         for (ThreadingCheckerHook hook : hooks) {
             hook.verifyOnWorkerThread();
+        }
+    }
+
+    private static void warnIfSkippedChecksAndReset() {
+        long skippedChecksCount = skippedChecksCounter.getAndSet(0L);
+        if (skippedChecksCount > 0) {
+            LOGGER.warning(
+                    "Threading annotation check was attempted "
+                            + skippedChecksCount
+                            + " times before the ThreadingCheckerHook was installed");
         }
     }
 
