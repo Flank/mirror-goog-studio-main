@@ -491,6 +491,27 @@ public class TestUtils {
     }
 
     @NonNull
+    public static Path getJava17Jdk() {
+        OsType osType = OsType.getHostOs();
+        String hostDir;
+        switch (osType) {
+            case LINUX:
+                hostDir = "linux";
+                break;
+            case DARWIN:
+                hostDir = "mac/Contents/Home";
+                break;
+            case WINDOWS:
+                hostDir = "win";
+                break;
+            default:
+                throw new IllegalStateException(
+                        "Java17 JDK not found for platform: " + OsType.getOsName());
+        }
+        return resolveWorkspacePath("prebuilts/studio/jdk/jdk17/" + hostDir);
+    }
+
+    @NonNull
     public static String getLatestAndroidPlatform() {
         return getLatestAndroidPlatform(TestType.OTHER);
     }

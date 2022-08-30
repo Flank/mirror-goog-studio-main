@@ -44,6 +44,8 @@ build:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNN
 build:jdk17 --jvmopt='--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED'
 
 build:jdk17 --java_runtime_version=jdk17
+build:jdk17 --//prebuilts/studio/jdk:embedded_jdk_version=17
+test:jdk17 --jvmopt='-Dembedded.jdk.path=prebuilts/studio/jdk/jdk17'
 
 # Local runs require longer timeouts.
 test:local --test_timeout=120,600,1800,7200
