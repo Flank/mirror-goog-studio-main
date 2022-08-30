@@ -271,6 +271,8 @@ DATA = [
     "com.android.tools.build:aapt2:jar:linux:7.0.0-7396180",
     "com.android.tools.build:aapt2:jar:linux:7.1.0-7984345",
     "com.android.tools.build:aapt2:jar:linux:7.2.0-7984345",
+    "com.android.tools.build:aapt2:jar:osx:7.2.0-7984345",
+    "com.android.tools.build:aapt2:jar:windows:7.2.0-7984345",
     "com.android.tools.build:aapt2:jar:linux:7.3.0-rc01-8691043",
     "com.android.tools.build:aapt2:jar:linux:7.4.0-alpha09-8841542",
     "com.android.tools.build:gradle:1.5.0",
