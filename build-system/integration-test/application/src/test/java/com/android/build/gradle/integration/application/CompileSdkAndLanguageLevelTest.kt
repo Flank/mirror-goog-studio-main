@@ -33,21 +33,28 @@ class CompileSdkAndLanguageLevelTest(
     private val javaVersion: JavaVersion,
     private val compileSdkVersion: Int
 ) {
+
     companion object {
+        private val isJdk11OrOlder = Runtime.version().feature() <= 11
+
+        private val params = arrayOf(
+            arrayOf(JavaVersion.VERSION_1_7, 19),
+            arrayOf(JavaVersion.VERSION_1_7, 21),
+            arrayOf(JavaVersion.VERSION_1_7, 24),
+            arrayOf(JavaVersion.VERSION_1_8, 19),
+            arrayOf(JavaVersion.VERSION_1_8, 21),
+            arrayOf(JavaVersion.VERSION_1_8, 24)
+            )
+
+        private val java6params = arrayOf(
+            arrayOf(JavaVersion.VERSION_1_6, 19),
+            arrayOf(JavaVersion.VERSION_1_6, 21),
+            arrayOf(JavaVersion.VERSION_1_6, 24),
+        )
+
         @Parameterized.Parameters(name = "javaVersion_{0}_compileSdkVersion_{1}")
         @JvmStatic
-        fun getParams() =
-            arrayOf(
-                arrayOf(JavaVersion.VERSION_1_6, 19),
-                arrayOf(JavaVersion.VERSION_1_6, 21),
-                arrayOf(JavaVersion.VERSION_1_6, 24),
-                arrayOf(JavaVersion.VERSION_1_7, 19),
-                arrayOf(JavaVersion.VERSION_1_7, 21),
-                arrayOf(JavaVersion.VERSION_1_7, 24),
-                arrayOf(JavaVersion.VERSION_1_8, 19),
-                arrayOf(JavaVersion.VERSION_1_8, 21),
-                arrayOf(JavaVersion.VERSION_1_8, 24)
-            )
+        fun getParams() = if (isJdk11OrOlder) arrayOf(*params, *java6params) else params
     }
 
     @JvmField
@@ -56,10 +63,14 @@ class CompileSdkAndLanguageLevelTest(
         .fromTestApp(MinimalSubProject.app("com.example"))
         .create()
 
+    private fun warnsOnVersion(javaVersion: JavaVersion) =
+        if (isJdk11OrOlder) javaVersion.isJava6 else javaVersion.isJava7
+
     @Before
     fun setUp() {
-        if (javaVersion.isJava6) {
-            // With target compatibility Java 6, javac generates the following warning:
+        if (warnsOnVersion(javaVersion)) {
+            // With target compatibility Java 6 before JDK11 and Java 7 after JDK12,
+            // javac generates the following warning:
             // "warning: [options] target value 1.6 is obsolete and will be removed in a future release"
             // By default, integration tests treat javac warnings as errors, but the above warning
             // is expected so we can ignore it.
@@ -91,7 +102,7 @@ class CompileSdkAndLanguageLevelTest(
             it.writeText(
                 """
                 package com.example;
-                
+
                 public class DataJava6 {
                 }
             """.trimIndent()
@@ -103,10 +114,10 @@ class CompileSdkAndLanguageLevelTest(
                 it.writeText(
                     """
                 package com.example;
-                
+
                 import java.io.StringWriter;
                 import java.io.IOException;
-                
+
                 public class DataJava7 {
                     static {
                         try(StringWriter sw = new StringWriter()) {
@@ -126,7 +137,7 @@ class CompileSdkAndLanguageLevelTest(
                 it.writeText(
                     """
                 package com.example;
-                
+
                 public class DataJava8 {
                     static {
                         Runnable r = () -> System.out.println("");
