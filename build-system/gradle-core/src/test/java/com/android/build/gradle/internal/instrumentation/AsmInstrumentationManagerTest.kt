@@ -754,7 +754,9 @@ class AsmInstrumentationManagerTest(private val testMode: TestMode) {
             instrumentedClassesLoader.loadClass(className).methods
                 .map {
                     it.name to it.annotations.mapNotNull { annotation ->
-                        annotation.annotationClass.jvmName.takeIf { name -> name != "jdk.internal.HotSpotIntrinsicCandidate" }
+                        annotation.annotationClass.jvmName.takeIf { name ->
+                            !name.startsWith("jdk.internal.")
+                        }
                     }
                 }.filter { it.second.isNotEmpty() }
 

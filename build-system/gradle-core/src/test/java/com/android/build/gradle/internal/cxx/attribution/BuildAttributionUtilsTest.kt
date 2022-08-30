@@ -21,6 +21,8 @@ import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.util.zip.GZIPInputStream
 
 class BuildAttributionUtilsTest {
 
@@ -35,6 +37,22 @@ class BuildAttributionUtilsTest {
             TestResources.getFile("/com/android/build/gradle/internal/cxx/attribution/dolphin-build-attribution.json.gz")
         val outputFile = tmp.newFile("output.json.gz")
         generateChromeTrace(zipFile, outputFile)
-        Truth.assertThat(outputFile.readBytes()).isEqualTo(expectedTraceFile.readBytes())
+        assertTraceFilesAreTheSame(
+            expectedZipFile = expectedTraceFile,
+            outputZipFile = outputFile
+        )
+    }
+
+    private fun assertTraceFilesAreTheSame(
+        expectedZipFile: File,
+        outputZipFile: File
+    ) {
+        fun getFirstElement(file: File): ByteArray {
+            return GZIPInputStream(file.inputStream().buffered()).use { zipFile ->
+                zipFile.readAllBytes()
+            }
+        }
+
+        Truth.assertThat(getFirstElement(outputZipFile)).isEqualTo(getFirstElement(expectedZipFile))
     }
 }

@@ -215,22 +215,23 @@ class TaskMethodModifiersAndAnnotationsTest {
                             it.getAnnotation(Classpath::class.java).toString()
                         it.getAnnotation(PathSensitive::class.java) != null ->
                             it.getAnnotation(PathSensitive::class.java).toString()
+                                .replace("value=", "")
                         else -> "OTHER"
                     }
                     return@map "${it.name}  $annotation"
                 }
         assertThat(incrementalInputs).containsExactly(
-            "getAppMetadata  @org.gradle.api.tasks.PathSensitive(value=NAME_ONLY)",
-            "getAssets  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
-            "getDexFolders  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
-            "getFeatureDexFolder  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
+            "getAppMetadata  @org.gradle.api.tasks.PathSensitive(NAME_ONLY)",
+            "getAssets  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
+            "getDexFolders  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
+            "getFeatureDexFolder  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
             "getFeatureJavaResourceFiles  @org.gradle.api.tasks.Classpath()",
             "getJavaResourceFiles  @org.gradle.api.tasks.Classpath()",
             "getJniFolders  @org.gradle.api.tasks.Classpath()",
-            "getManifests  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
-            "getMergedArtProfile  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
-            "getMergedArtProfileMetadata  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)",
-            "getResourceFiles  @org.gradle.api.tasks.PathSensitive(value=RELATIVE)"
+            "getManifests  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
+            "getMergedArtProfile  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
+            "getMergedArtProfileMetadata  @org.gradle.api.tasks.PathSensitive(RELATIVE)",
+            "getResourceFiles  @org.gradle.api.tasks.PathSensitive(RELATIVE)"
         )
     }
 
