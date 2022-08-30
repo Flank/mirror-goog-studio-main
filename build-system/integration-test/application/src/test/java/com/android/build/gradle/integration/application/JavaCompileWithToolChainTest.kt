@@ -63,26 +63,26 @@ class JavaCompileWithToolChainTest {
         TestFileUtils.searchAndReplace(
             project.gradlePropertiesFile,
             "org.gradle.java.installations.paths=${jdk8LocationInGradleFile}",
-            "org.gradle.java.installations.paths=${jdk11LocationInGradleFile}"
+            "org.gradle.java.installations.paths=${latestJdkLocationInGradleFile}"
         )
 
         TestFileUtils.searchAndReplace(
             project.buildFile,
             "languageVersion = JavaLanguageVersion.of(8)",
-            "languageVersion = JavaLanguageVersion.of(11)"
+            "languageVersion = JavaLanguageVersion.of($latestJdkVersion)"
         )
 
         result = project.executor().withArgument("--info").run("assembleDebug")
         result.stdout.use {
             ScannerSubject.assertThat(it).contains(
-                "Compiling with toolchain '${jdk11LocationFromStdout}'"
+                "Compiling with toolchain '${latestJdkLocationFromStdout}'"
             )
         }
     }
 
     companion object {
         enum class JdkVersion {
-            JDK11,
+            LATEST_JDK,
             JDK8
         }
 
@@ -92,7 +92,7 @@ class JavaCompileWithToolChainTest {
                 OsType.WINDOWS ->
                     when(jdkVersion) {
                         JdkVersion.JDK8 -> "win64"
-                        JdkVersion.JDK11 -> "win"
+                        JdkVersion.LATEST_JDK -> "win"
                     }
                 OsType.DARWIN -> "mac/Contents/Home"
                 else -> throw IllegalStateException("Unsupported operating system")
@@ -104,13 +104,15 @@ class JavaCompileWithToolChainTest {
                 "prebuilts/studio/jdk/${getPlatformSpecificJdkLocationSuffix(JdkVersion.JDK8)}")
                 .toString()
 
-        private val jdk11Location =
+        private val latestJdkVersion = Runtime.version().feature()
+
+        private val latestJdkLocation =
             TestUtils.resolveWorkspacePath(
-                "prebuilts/studio/jdk/jdk11/${getPlatformSpecificJdkLocationSuffix(JdkVersion.JDK11)}")
+                "prebuilts/studio/jdk/jdk$latestJdkVersion/${getPlatformSpecificJdkLocationSuffix(JdkVersion.LATEST_JDK)}")
                 .toString()
 
         val jdk8LocationInGradleFile = jdk8Location.replace("\\", "/")
-        val jdk11LocationInGradleFile = jdk11Location.replace("\\", "/")
+        val latestJdkLocationInGradleFile = latestJdkLocation.replace("\\", "/")
 
         val jdk8LocationFromStdout = if (OsType.getHostOs() == OsType.WINDOWS) {
             jdk8Location.replace("/", "\\")
@@ -118,10 +120,10 @@ class JavaCompileWithToolChainTest {
             jdk8Location
         }
 
-        val jdk11LocationFromStdout = if (OsType.getHostOs() == OsType.WINDOWS) {
-            jdk11Location.replace("/", "\\")
+        val latestJdkLocationFromStdout = if (OsType.getHostOs() == OsType.WINDOWS) {
+            latestJdkLocation.replace("/", "\\")
         } else {
-            jdk11Location
+            latestJdkLocation
         }
     }
 }
