@@ -94,9 +94,9 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     /**
      * Configuration task name to ABI.
      * Key: The name of the configuration task (like 'configureCMakeDebug[x86]')
-     * Value: The ABIs to configure when this task is run.
+     * Value: The ABI to configure when this task is run along with the names of variants covered.
      */
-    val configureAbis = mutableMapOf<TaskName, CxxAbiModel>()
+    val configureAbis = mutableMapOf<TaskName, Pair<List<VariantName>, CxxAbiModel>>()
 
     /**
      * Configure group task name to individual per-ABI configure tasks.
@@ -108,9 +108,9 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
     /**
      * Build task name to ABI.
      * Key: The name of the build task (like 'buildCMakeDebug')
-     * Value: The ABIs to build when this task is run.
+     * Value: The ABI to build when this task is run along with the names of variants covered.
      */
-    val buildAbis = mutableMapOf<TaskName, CxxAbiModel>()
+    val buildAbis = mutableMapOf<TaskName, Pair<List<VariantName>, CxxAbiModel>>()
 
     /**
      * Build group task name to individual per-ABI build tasks.
@@ -269,20 +269,22 @@ class CxxConfigurationFolding(abis : List<CxxAbiModel>) {
      * Utility method that sets a representative ABI for the given task. If there is already an ABI
      * then this function verifies that the new ABI is accurately represented by the prior ABI.
      */
-    private fun MutableMap<TaskName, CxxAbiModel>.setRepresentativeAbiForTask(
+    private fun MutableMap<TaskName, Pair<List<VariantName>,CxxAbiModel>>.setRepresentativeAbiForTask(
         taskName : TaskName,
         abi : CxxAbiModel) {
         val map  = this
         val prior = map[taskName]
         if (prior == null) {
-            map[taskName] = abi
+            map[taskName] = listOf(abi.variant.variantName) to abi
         } else {
-            if (prior.abi != abi.abi) {
-                error("Expected ${prior.abi} but got ${abi.abi}")
+            val (priorVariants, priorAbi) = prior
+            if (priorAbi.abi != abi.abi) {
+                error("Expected ${priorAbi} but got ${abi.abi}")
             }
-            if (prior.configurationArguments != abi.configurationArguments) {
+            if (priorAbi.configurationArguments != abi.configurationArguments) {
                 error("Expected same configuration arguments")
             }
+            map[taskName] = (priorVariants + abi.variant.variantName) to abi
         }
     }
 }

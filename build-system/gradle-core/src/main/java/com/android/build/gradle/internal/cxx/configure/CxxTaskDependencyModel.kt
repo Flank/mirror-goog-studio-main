@@ -17,9 +17,10 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 
 /**
- * Four kinds of Gradle task.
+ * Kinds of Gradle task.
  *
  * Configure: Invokes CMake or ndk-build to create a configuration for a single ABI, including
  *   compile_commands.json.
@@ -31,10 +32,10 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
  * VariantBuild: A per-variant build that refers many-to-one with per-configuration builds.
  */
 sealed class CxxGradleTaskModel {
-    data class Configure(val representative: CxxAbiModel) : CxxGradleTaskModel()
+    data class Configure(val coveredVariants: List<CxxVariantModel>, val representative: CxxAbiModel) : CxxGradleTaskModel()
     object ConfigureGroup : CxxGradleTaskModel()
     data class VariantConfigure(val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
-    data class Build(val representative: CxxAbiModel) : CxxGradleTaskModel()
+    data class Build(val coveredVariants: List<CxxVariantModel>, val representative: CxxAbiModel) : CxxGradleTaskModel()
     object BuildGroup : CxxGradleTaskModel()
     data class VariantBuild(val representatives: List<CxxAbiModel>) : CxxGradleTaskModel()
 }

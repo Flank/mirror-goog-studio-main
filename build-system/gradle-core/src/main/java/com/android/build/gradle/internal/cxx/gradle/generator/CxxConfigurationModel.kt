@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
-import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
+import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
@@ -189,7 +189,7 @@ fun tryCreateConfigurationParameters(
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
-        getProjectPath(variant, globalConfig.externalNativeBuild) ?: return null
+        getProjectPath(variant) ?: return null
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -312,15 +312,23 @@ fun tryCreateConfigurationParameters(
 }
 
 /**
+ * Return true if this Gradle module contains a C/C++ build.
+ */
+fun externalNativeBuildIsActive(creationConfig : ConsumableCreationConfig) : Boolean {
+    if (creationConfig !is VariantCreationConfig) return false
+    return getProjectPath(creationConfig) != null
+}
+
+/**
  * Resolve the CMake or ndk-build path and buildStagingDirectory of native build project.
  * - If there is exactly 1 path in the DSL, then use it.
  * - If there are more than 1, then that is an error. The user has specified both cmake and
  *   ndkBuild in the same project.
  */
 private fun getProjectPath(
-    component: VariantCreationConfig,
-    config: ExternalNativeBuild
+    component: VariantCreationConfig
 ): NativeProjectPath? {
+    val config = component.global.externalNativeBuild
     val externalProjectPaths = listOfNotNull(
         component.ninja.path?.let { NativeProjectPath(NINJA, it, component.ninja.configure, component.ninja.buildStagingDirectory) },
         config.cmake.path?.let { NativeProjectPath(CMAKE, it, null, config.cmake.buildStagingDirectory) },

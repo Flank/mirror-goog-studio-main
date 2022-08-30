@@ -140,4 +140,35 @@ fun decodeNativeModelBuilderOutcome(
 ) = encoded.decode(decoder)
 
 
+/**
+ * Transform a [CreateCxxModel] into an [EncodedCreateCxxModel] by encoding
+ * strings with [StringEncoder].
+ */
+fun CreateCxxModel.encode(encoder : StringEncoder) : EncodedCreateCxxModel {
+    val encoded = EncodedCreateCxxModel.newBuilder()
+    encoded.gradlePath = encoder.encode(gradlePath)
+    encoded.variantName = encoder.encode(variantName)
+    return encoded.build()
+}
+
+/**
+ * Transform a [EncodedCreateCxxModel] into an [CreateCxxModel] by decoding
+ * strings with [StringDecoder].
+ */
+fun EncodedCreateCxxModel.decode(decoder : StringDecoder) : CreateCxxModel {
+    val decoded = CreateCxxModel.newBuilder()
+    decoded.gradlePath = decoder.decode(gradlePath)
+    decoded.variantName = decoder.decode(variantName)
+    return decoded.build()
+}
+
+/**
+ * Helper function for calling decode for this [EncodedCreateCxxConfiguration]
+ */
+fun decodeCreateCxxModel(
+    encoded : EncodedCreateCxxModel,
+    decoder : StringDecoder
+) = encoded.decode(decoder)
+
+
 

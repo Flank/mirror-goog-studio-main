@@ -128,3 +128,14 @@ message EncodedNativeModelBuilderOutcome {
     int32 failed_configure_messages = 8;
 }
 
+// Records creation of C/C++ model
+message CreateCxxModel {
+    string gradle_path = 1;
+    string variant_name = 2;
+}
+
+message EncodedCreateCxxModel {
+    int32 gradle_path = 1;
+    int32 variant_name = 2;
+}
+

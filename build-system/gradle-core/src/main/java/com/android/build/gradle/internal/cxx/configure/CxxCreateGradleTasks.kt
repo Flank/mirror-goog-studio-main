@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationMo
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationParameters
 import com.android.build.gradle.internal.cxx.gradle.generator.tryCreateConfigurationParameters
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.logStructured
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
@@ -64,48 +65,10 @@ import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PREFAB_PACKAGE
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
-import com.android.build.gradle.internal.services.AndroidLocationsBuildService
-import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.tasks.ExternalNativeBuildTask
 import org.gradle.api.file.ProjectLayout
-import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import java.io.File
-
-/**
- * Create just the externalNativeBuild per-variant task.
- * This is done earlier so that callers of [taskContainer.externalNativeBuildTask]
- */
-fun createCxxVariantBuildTask(
-    taskFactory: TaskFactory,
-    variant: VariantCreationConfig,
-    providers: ProviderFactory,
-    layout: ProjectLayout) {
-    val configuration = tryCreateConfigurationParameters(
-        variant.services.projectOptions,
-        variant) ?: return
-    val sdkComponentsBuildService: Provider<SdkComponentsBuildService> =
-        getBuildService(variant.services.buildServiceRegistry)
-    val androidLocationBuildService: Provider<AndroidLocationsBuildService> =
-        getBuildService(variant.services.buildServiceRegistry)
-    val configurationModel  = createInitialCxxModel(
-        sdkComponentsBuildService.get(),
-        androidLocationBuildService.get(),
-        listOf(configuration),
-        providers.createConfigurationTimeVersionExecutor(),
-        providers,
-        layout
-    ).toConfigurationModel()
-    variant.taskContainer.cxxConfigurationModel = configurationModel
-    variant.taskContainer.externalNativeBuildTask =
-        taskFactory.register(
-            createRepublishCxxBuildTask(
-                configurationModel,
-                variant,
-                variant.computeTaskName("externalNativeBuild")
-            )
-        )
-}
 
 /**
  * Construct gradle tasks for C/C++ configuration and build.
@@ -141,11 +104,12 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         layout
                 )
             }
+
+            val variantMap = variants.associate { it.variant.name to it.variant }
+
             val taskModel = createFoldedCxxTaskDependencyModel(abis)
 
             val globalConfig = variants.first().variant.global
-
-            val variantMap = variants.associate { it.variant.name to it.variant }
 
             for ((name, task) in taskModel.tasks) {
                 when (task) {
@@ -189,19 +153,24 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         }
                     }
                     is Build -> {
-                        val variant = variantMap.getValue(task.representative.variant.variantName)
+                        val coveredVariantConfigurations =  task.coveredVariants.map { variantMap.getValue(it.variantName) }
                         val buildTask = taskFactory.register(createWorkingCxxBuildTask(
+                            coveredVariantConfigurations,
                             globalConfig,
                             task.representative,
                             name))
-                        // Make sure any prefab dependencies are built first
-                        buildTask.dependsOn(
-                            variant.variantDependencies.getArtifactCollection(
-                                COMPILE_CLASSPATH,
-                                ALL,
-                                PREFAB_PACKAGE
-                            ).artifactFiles
-                        )
+                        for(variant in task.coveredVariants) {
+                            val variantConfiguration = variantMap.getValue(task.representative.variant.variantName)
+
+                            // Make sure any prefab dependencies are built first
+                            buildTask.dependsOn(
+                                variantConfiguration.variantDependencies.getArtifactCollection(
+                                    COMPILE_CLASSPATH,
+                                    ALL,
+                                    PREFAB_PACKAGE
+                                ).artifactFiles
+                            )
+                        }
                     }
                     is BuildGroup -> {
                         taskFactory.register(name)
@@ -209,8 +178,15 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                     is VariantBuild -> {
                         val configuration = task.representatives.toConfigurationModel()
                         val variant = variantMap.getValue(configuration.variant.variantName)
-                        val buildTask = variant.taskContainer.externalNativeBuildTask!!
-                        variant.taskContainer.compileTask.dependsOn(buildTask)
+                        val buildTask = taskFactory.register(
+                            createRepublishCxxBuildTask(
+                                configuration,
+                                variant,
+                                variant.computeTaskName("externalNativeBuild")
+                            )
+                        )
+                        variant.taskContainer.cxxConfigurationModel = configuration
+                        variant.taskContainer.externalNativeBuildTask = buildTask
                         buildTask.dependsOn(variant.variantDependencies.getArtifactFileCollection(
                                 RUNTIME_CLASSPATH,
                                 ALL,
@@ -286,6 +262,7 @@ private fun createPrefabPackageTask(
  */
 fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskDependencyModel {
     if (globalAbis.isEmpty()) return CxxTaskDependencyModel(tasks = mapOf(), edges=listOf())
+    val variantsByName = globalAbis.map { it.variant }.distinct().associateBy { it.variantName }
     val tasks = mutableMapOf<String, CxxGradleTaskModel>()
     val edges = mutableListOf<Pair<String, String>>()
     val namer = CxxConfigurationFolding(globalAbis)
@@ -293,8 +270,9 @@ fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskD
     val variantAbis = globalAbis
             .groupBy { it.variant.variantName }
 
-    namer.configureAbis.forEach { (taskName, abi) ->
-        tasks[taskName] = Configure(abi)
+    namer.configureAbis.forEach { (taskName, target) ->
+        val (variantsCovered, abi) = target
+        tasks[taskName] = Configure(variantsCovered.map { variantsByName.getValue(it) }, abi)
     }
     namer.configureGroups.forEach { (groupingTask, configureTasks) ->
         tasks[groupingTask] = ConfigureGroup
@@ -302,8 +280,9 @@ fun createFoldedCxxTaskDependencyModel(globalAbis: List<CxxAbiModel>) : CxxTaskD
             edges += groupingTask to configureTask
         }
     }
-    namer.buildAbis.forEach { (taskName, abi) ->
-        tasks[taskName] = Build(abi)
+    namer.buildAbis.forEach { (taskName, target) ->
+        val (variantsCovered, abi) = target
+        tasks[taskName] = Build(variantsCovered.map { variantsByName.getValue(it) }, abi)
     }
     namer.buildGroups.forEach { (groupingTask, buildTasks) ->
         tasks[groupingTask] = BuildGroup
@@ -342,6 +321,15 @@ fun createInitialCxxModel(
 ) : List<CxxAbiModel> {
 
     return configurationParameters.flatMap { parameters ->
+        // Log the fact that configuration parameters were constructed.
+        logStructured { encoder ->
+            CreateCxxModel.newBuilder()
+                .setGradlePath(parameters.gradleModulePathName)
+                .setVariantName(parameters.variantName)
+                .build()
+                .encode(encoder)
+        }
+
         val module = time("create-module-model") {
             createCxxModuleModel(
                 sdkComponents,

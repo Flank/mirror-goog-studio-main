@@ -43,4 +43,9 @@ sealed class InternalMultipleArtifactType<T: FileSystemLocation>(
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
     object RES_COMPILED_FLAT_FILES: InternalMultipleArtifactType<Directory>(DIRECTORY)
+
+    // native libs built in module
+    // Unlike other JNI libs artifacts, these directories end with the ABI name. The reason is that
+    // separate tasks produce each ABI's outputs.
+    object EXTERNAL_NATIVE_BUILD_LIBS: InternalMultipleArtifactType<Directory>(DIRECTORY)
 }

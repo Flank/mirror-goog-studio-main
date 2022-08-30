@@ -147,8 +147,6 @@ class NdkBuildBuildSettingsTest {
         assertThat(golden).isEqualTo("""
             {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/arm64-v8a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/merged_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/ndkBuild/debug/obj/local/arm64-v8a/libhello-jni.so{F}
-            {PROJECT}/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/arm64-v8a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/stripped_native_libs/debug/out/lib/armeabi-v7a/libhello-jni.so{F}
             {PROJECT}/build/intermediates/{DEBUG}/obj/local/arm64-v8a/libhello-jni.so{F}

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTasksKt.createCxxVariantBuildTask;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.JAVA_DOC_PUBLICATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
@@ -210,9 +209,6 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
         TaskManager.setJavaCompilerTask(javacTask, libraryVariant);
 
         taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
-
-        createCxxVariantBuildTask(
-                taskFactory, variantInfo.getVariant(), project.getProviders(), project.getLayout());
 
         createMergeJniLibFoldersTasks(libraryVariant);
 

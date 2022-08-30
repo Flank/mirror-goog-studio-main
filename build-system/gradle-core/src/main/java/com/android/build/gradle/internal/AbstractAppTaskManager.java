@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.cxx.configure.CxxCreateGradleTasksKt.createCxxVariantBuildTask;
-
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.variant.VariantBuilder;
@@ -136,10 +134,6 @@ public abstract class AbstractAppTaskManager<
         createAidlTask(creationConfig);
 
         maybeExtractProfilerDependencies(creationConfig);
-
-        // Set up the C/C++ external native build task
-        createCxxVariantBuildTask(
-                taskFactory, variant.getVariant(), project.getProviders(), project.getLayout());
 
         // Add a task to merge the jni libs folders
         createMergeJniLibFoldersTasks(creationConfig);

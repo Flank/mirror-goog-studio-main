@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
+import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.gradle.generator.externalNativeBuildIsActive
 import com.android.build.gradle.internal.cxx.io.removeDuplicateFiles
 import com.android.build.gradle.internal.initialize
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions.Companion.compileGlob
@@ -30,16 +32,17 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
+import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.merge.DuplicateRelativeFileException
-import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.utils.FileUtils
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
+import org.gradle.api.file.RelativePath
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.ListProperty
@@ -124,7 +127,8 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
             override fun visitFile(details: FileVisitDetails) {
                 if (predicate.test(details.name)) {
                     inputFiles.add(
-                        InputFile(details.file, "lib/${details.relativePath.pathString}")
+                        InputFile(details.file,
+                            "lib/${toAbiRootedPath(details.file, details.relativePath)}")
                     )
                 }
             }
@@ -326,6 +330,7 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
 
         private const val includedFileSuffix = SdkConstants.DOT_NATIVE_LIBS
         private val includedFileNames = listOf(SdkConstants.FN_GDBSERVER, SdkConstants.FN_GDB_SETUP)
+        private val abiTags = Abi.values().map { it.tag }.toSet()
 
         // predicate logic must match patternSet logic below
         val predicate = Predicate<String> { fileName ->
@@ -340,6 +345,37 @@ abstract class MergeNativeLibsTask : NonIncrementalTask() {
                 includedFileNames.forEach { patternSet.include("**/$it") }
                 return patternSet
             }
+
+        /**
+         * [file] is one of these two kinds:
+         *    (1) /path/to/{x86/lib.so}
+         *    (2) /path/to/x86/{lib.so}
+         * Where the value in {braces} is the [relativePath] from the file visitor.
+         * The first (1) is from tasks that process all ABIs in a single task.
+         * The second (2) is from tasks the where each task processes one ABI.
+         *
+         * This function distinguishes the two cases and returns a relative path that always
+         * starts with an ABI. So, for example, both of the cases above would return:
+         *
+         *    x86/lib.so
+         *
+         */
+        private fun toAbiRootedPath(file : File, relativePath: RelativePath) : String {
+            return if (abiTags.any { it == relativePath.segments[0] }) {
+                // Case (1) the relative path starts with an ABI name. Return it directly.
+                relativePath.pathString
+            } else {
+                // Case (2) the relative path does not start with an ABI name. Prepend the
+                // ABI name from the end of [file] after [relativePath] has been removed.
+                var root = file
+                repeat(relativePath.segments.size) { root = root.parentFile }
+                val abi = root.name
+                if (!abiTags.any { it == abi }) {
+                    error("$abi extracted from path $file is not an ABI")
+                }
+                abi + separatorChar + relativePath.pathString
+            }
+        }
     }
 
     data class InputFile(val file: File, val relativePath: String) : Serializable
@@ -351,7 +387,6 @@ fun getProjectNativeLibs(
     renderscript: Renderscript?
 ): FileCollection {
     val artifacts = creationConfig.artifacts
-    val taskContainer = creationConfig.taskContainer
     val nativeLibs = creationConfig.services.fileCollection()
 
     // add merged project native libs
@@ -360,14 +395,9 @@ fun getProjectNativeLibs(
     )
 
     // add content of the local external native build if there is one
-    val cxxConfiguration = taskContainer.cxxConfigurationModel
-    if (cxxConfiguration != null) {
-        val soFolders = cxxConfiguration.activeAbis
-            .map { it.soFolder.parentFile }
-            .distinct()
+    if (externalNativeBuildIsActive(creationConfig)) {
         nativeLibs.from(
-            creationConfig.services.fileCollection(soFolders)
-                .builtBy(taskContainer.externalNativeBuildTask?.name)
+            artifacts.getAll(InternalMultipleArtifactType.EXTERNAL_NATIVE_BUILD_LIBS)
         )
     }
 

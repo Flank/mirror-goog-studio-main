@@ -54,6 +54,8 @@ import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.attribution.decodeBuildTaskAttributions
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
+import com.android.build.gradle.internal.cxx.configure.CreateCxxModel
+import com.android.build.gradle.internal.cxx.configure.decodeCreateCxxModel
 import com.android.build.gradle.internal.cxx.configure.shouldConfigure
 import com.android.build.gradle.internal.cxx.hashing.sha256Of
 import com.android.build.gradle.internal.cxx.io.SynchronizeFile.Outcome.CREATED_HARD_LINK_FROM_SOURCE_TO_DESTINATION
@@ -649,6 +651,17 @@ class CmakeBasicProjectTest(
         TruthHelper.assertThatNativeLib(lib).isStripped()
     }
 
+    @Test
+    fun `ensure C++ build model is constructed expected number of times`() {
+        enableCxxStructuredLogging(project)
+        project.executor().run("assemble")
+        val creations = project.readStructuredLogs(::decodeCreateCxxModel)
+        assertThat(creations).containsExactly(
+            CreateCxxModel.newBuilder().setGradlePath(":").setVariantName("debug").build(),
+            CreateCxxModel.newBuilder().setGradlePath(":").setVariantName("release").build()
+        )
+    }
+
     private fun expectedBuildProducts() : String {
         // Mode.NinjaRedirect doesn't have .o files because they are built in an external folder
         return (if (mode == Mode.NinjaRedirect) """
@@ -681,7 +694,13 @@ class CmakeBasicProjectTest(
 
     @Test
     fun `build product golden locations`() {
-        project.execute("assembleDebug")
+        project.execute(
+            "assembleDebug",
+            // The tasks externalNativeBuild* are no longer part of the regular build. Instead,
+            // the MergeNativeLibs tasks depend directly on the individual buildCMake*[abi] tasks.
+            // The externalNativeBuild* tasks are left active as legacy tasks because we expose
+            // them as APIs to the user.
+            "externalNativeBuildDebug")
         assertEqualsMultiline(
             project.goldenBuildProducts(),
             expectedBuildProducts())
@@ -697,7 +716,7 @@ class CmakeBasicProjectTest(
             tasks.whenTaskAdded { }
             """.trimIndent()
         )
-        project.execute("assembleDebug")
+        project.execute("assembleDebug", "externalNativeBuildDebug")
         assertEqualsMultiline(
             project.goldenBuildProducts(),
             expectedBuildProducts())
@@ -999,7 +1018,7 @@ apply plugin: 'com.android.application'
     @Test
     fun `ensure that file synchronizations are hard links`() {
         enableCxxStructuredLogging(project)
-        project.executor().run("assembleDebug")
+        project.executor().run("externalNativeBuildDebug")
         val fileSyncs = project.readStructuredLogs(::decodeSynchronizeFile)
         val syncs = fileSyncs
             .groupBy {
