@@ -18,7 +18,6 @@ package com.android.ide.common.attribution
 
 import com.android.SdkConstants
 import com.android.utils.FileUtils
-import com.android.ide.common.attribution.TaskCategory
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
@@ -77,9 +76,14 @@ data class AndroidGradlePluginAttributionData(
 
     /**
      * A map of task names to its class name, and primary and secondary task categories.
-     * Only sends task categories if flag BUILD_ANALYZER_TASK_LABELS is enabled
+     * Only sends task categories if flag BUILD_ANALYZER_TASK_LABELS is enabled.
      */
-    val taskNameToTaskInfoMap: Map<String, TaskInfo> = emptyMap()
+    val taskNameToTaskInfoMap: Map<String, TaskInfo> = emptyMap(),
+
+    /**
+     * List of warnings / information in Build Analyzer.
+     */
+    val buildAnalyzerTaskCategoryIssues: List<BuildAnalyzerTaskCategoryIssue> = emptyList()
 
 ) : Serializable {
 
@@ -319,6 +323,24 @@ data class AndroidGradlePluginAttributionData(
             return taskName!! to TaskInfo(className!!, taskCategoryInfo)
         }
 
+        private fun JsonWriter.writeBuildAnalyzerTaskCategoryIssues(buildAnalyzerTaskCategoryIssues: List<BuildAnalyzerTaskCategoryIssue>) {
+            name("buildAnalyzerTaskCategoryIssues").beginArray()
+            buildAnalyzerTaskCategoryIssues.forEach {
+                value(it.toString())
+            }
+            endArray()
+        }
+
+        private fun JsonReader.readBuildAnalyzerTaskCategoryIssues(): List<BuildAnalyzerTaskCategoryIssue> {
+            val buildAnalyzerTaskCategoryIssues = ArrayList<BuildAnalyzerTaskCategoryIssue>()
+            beginArray()
+            while (hasNext()) {
+                buildAnalyzerTaskCategoryIssues.add(BuildAnalyzerTaskCategoryIssue.valueOf(nextString()))
+            }
+            endArray()
+            return buildAnalyzerTaskCategoryIssues
+        }
+
         override fun write(writer: JsonWriter, data: AndroidGradlePluginAttributionData) {
             writer.beginObject()
 
@@ -350,6 +372,8 @@ data class AndroidGradlePluginAttributionData(
                 writer.writeTaskToTaskInfoEntry(it.key, it.value)
             }
 
+            writer.writeBuildAnalyzerTaskCategoryIssues(data.buildAnalyzerTaskCategoryIssues)
+
             writer.endObject()
         }
 
@@ -362,6 +386,7 @@ data class AndroidGradlePluginAttributionData(
             val buildscriptDependenciesInfo = HashSet<String>()
             var buildInfo: BuildInfo? = null
             val taskNameToTaskInfoMap = HashMap<String, TaskInfo>()
+            val buildAnalyzerTaskCategoryIssues = ArrayList<BuildAnalyzerTaskCategoryIssue>()
 
             reader.beginObject()
 
@@ -393,6 +418,8 @@ data class AndroidGradlePluginAttributionData(
                             reader.readList { reader.readTaskToTaskInfoEntry() }
                     )
 
+                    "buildAnalyzerTaskCategoryIssues" -> buildAnalyzerTaskCategoryIssues.addAll(reader.readBuildAnalyzerTaskCategoryIssues())
+
                     else -> {
                         reader.skipValue()
                     }
@@ -409,7 +436,8 @@ data class AndroidGradlePluginAttributionData(
                 javaInfo = javaInfo,
                 buildscriptDependenciesInfo = buildscriptDependenciesInfo,
                 buildInfo = buildInfo,
-                taskNameToTaskInfoMap = taskNameToTaskInfoMap
+                taskNameToTaskInfoMap = taskNameToTaskInfoMap,
+                buildAnalyzerTaskCategoryIssues = buildAnalyzerTaskCategoryIssues
             )
         }
     }

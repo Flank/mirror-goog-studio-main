@@ -64,7 +64,8 @@ class AndroidGradlePluginAttributionDataTest {
                     TaskCategory.SOURCE_PROCESSING
                 ))),
             "m" to TaskInfo(className = "n", taskCategoryInfo = TaskCategoryInfo(primaryTaskCategory = TaskCategory.UNKNOWN))
-        )
+        ),
+        buildAnalyzerTaskCategoryIssues = listOf(BuildAnalyzerTaskCategoryIssue.TEST_SHARDING_DISABLED, BuildAnalyzerTaskCategoryIssue.NON_TRANSITIVE_R_CLASS_DISABLED)
     )
 
     private fun save(outputDir: File, attributionData: AndroidGradlePluginAttributionData) {
@@ -110,7 +111,9 @@ class AndroidGradlePluginAttributionDataTest {
 |},
 |"taskNameToTaskInfoMap":[{"taskName":"k","className":"l","primaryTaskCategory":"ANDROID_RESOURCES",
                 |"secondaryTaskCategories":["COMPILATION","SOURCE_PROCESSING"]},
-                |{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}]
+                |{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}
+|],
+|"buildAnalyzerTaskCategoryIssues":["TEST_SHARDING_DISABLED","NON_TRANSITIVE_R_CLASS_DISABLED"]
 |}
 """.trimMargin().replace("\n", "")
 
@@ -184,7 +187,9 @@ class AndroidGradlePluginAttributionDataTest {
 |},
 |"taskNameToTaskInfoMap":[{"taskName":"k","className":"l","primaryTaskCategory":"ANDROID_RESOURCES",
 |"secondaryTaskCategories":["COMPILATION","SOURCE_PROCESSING"]},
-|{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}]
+|{"taskName":"m","className":"n","primaryTaskCategory":"UNKNOWN","secondaryTaskCategories":[]}
+|],
+|"buildAnalyzerTaskCategoryIssues":["TEST_SHARDING_DISABLED","NON_TRANSITIVE_R_CLASS_DISABLED"]
 |}
 """.trimMargin().replace("\n", "")
         )

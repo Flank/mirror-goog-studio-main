@@ -22,6 +22,8 @@ import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.utils.getBuildSrcPlugins
 import com.android.build.gradle.internal.utils.getBuildscriptDependencies
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.utils.SynchronizedFile
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.BuildInfo
@@ -29,9 +31,11 @@ import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.Jav
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskInfo
 import com.android.ide.common.attribution.AndroidGradlePluginAttributionData.TaskCategoryInfo
 import com.android.ide.common.attribution.TaskCategory
+import com.android.ide.common.attribution.BuildAnalyzerTaskCategoryIssue
 import com.android.utils.HelpfulEnumConverter
 import com.android.tools.analytics.HostData
 import org.gradle.api.Project
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -58,18 +62,26 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
 
     companion object {
 
+        val booleanOptionBasedIssues = mapOf(
+                BuildAnalyzerTaskCategoryIssue.NON_FINAL_RES_IDS_DISABLED to BooleanOption.USE_NON_FINAL_RES_IDS,
+                BuildAnalyzerTaskCategoryIssue.NON_TRANSITIVE_R_CLASS_DISABLED to BooleanOption.NON_TRANSITIVE_R_CLASS,
+                BuildAnalyzerTaskCategoryIssue.TEST_SHARDING_DISABLED to BooleanOption.ENABLE_TEST_SHARDING,
+                BuildAnalyzerTaskCategoryIssue.RESOURCE_VALIDATION_ENABLED to BooleanOption.DISABLE_RESOURCE_VALIDATION
+        )
+
         private var initialized = false
 
         private fun init(project: Project,
                         attributionFileLocation: String,
                         parameters: Parameters,
-                        sendTaskCategoryInfo: Boolean) {
+                        projectOptions: ProjectOptions) {
             if (initialized) {
                 return
             }
 
             initialized = true
             val taskCategoryConverter = HelpfulEnumConverter(TaskCategory::class.java)
+            val sendTaskCategoryInfo = projectOptions.get(BooleanOption.BUILD_ANALYZER_TASK_LABELS)
             project.gradle.taskGraph.whenReady { taskGraph ->
                 val outputFileToTasksMap = mutableMapOf<String, MutableList<String>>()
                 val taskNameToClassNameMap = mutableMapOf<String, String>()
@@ -83,7 +95,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                         }.add(task.path)
                     }
 
-                    val taskCategoryInfo = if (sendTaskCategoryInfo && task::class.java.isAnnotationPresent(BuildAnalyzer::class.java)) {
+                    val taskCategoryInfo = if (sendTaskCategoryInfo
+                            && task::class.java.isAnnotationPresent(BuildAnalyzer::class.java)) {
                         val annotation = task::class.java.getAnnotation(BuildAnalyzer::class.java)
                         val primaryTaskCategory =
                                 taskCategoryConverter.convert(annotation.primaryTaskCategory.toString())!!
@@ -125,7 +138,17 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                     )
                 )
                 parameters.taskNameToTaskInfoMap.set(taskNameToTaskInfoMap)
+
+                if (sendTaskCategoryInfo) {
+                    parameters.buildAnalyzerTaskCategoryIssues.set(getBuildAnalyzerIssues(projectOptions))
+                }
             }
+        }
+
+        private fun getBuildAnalyzerIssues(projectOptions: ProjectOptions): List<BuildAnalyzerTaskCategoryIssue> {
+            return booleanOptionBasedIssues.map { (issue, booleanOption) ->
+                issue.takeIf { !projectOptions.get(booleanOption) }
+            }.filterNotNull()
         }
 
         private fun saveAttributionData(
@@ -191,7 +214,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
                 javaInfo = parameters.javaInfo.get(),
                 buildscriptDependenciesInfo = parameters.buildscriptDependenciesInfo.get(),
                 buildInfo = parameters.buildInfo.get(),
-                taskNameToTaskInfoMap = parameters.taskNameToTaskInfoMap.get()
+                taskNameToTaskInfoMap = parameters.taskNameToTaskInfoMap.get(),
+                buildAnalyzerTaskCategoryIssues = parameters.buildAnalyzerTaskCategoryIssues.get()
             )
         )
     }
@@ -217,6 +241,8 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         val buildInfo: Property<BuildInfo>
 
         val taskNameToTaskInfoMap: MapProperty<String, TaskInfo>
+
+        val buildAnalyzerTaskCategoryIssues: ListProperty<BuildAnalyzerTaskCategoryIssue>
     }
 
     @Suppress("UnstableApiUsage")
@@ -224,14 +250,14 @@ abstract class BuildAttributionService : BuildService<BuildAttributionService.Pa
         project: Project,
         private val attributionFileLocation: String,
         private val listenersRegistry: BuildEventsListenerRegistry,
-        private val sendTaskCategoryInfo: Boolean
+        private val projectOptions: ProjectOptions
     ) : ServiceRegistrationAction<BuildAttributionService, Parameters>(
         project,
         BuildAttributionService::class.java
     ) {
 
         override fun configure(parameters: Parameters) {
-            init(project, attributionFileLocation, parameters, sendTaskCategoryInfo)
+            init(project, attributionFileLocation, parameters, projectOptions)
         }
 
         override fun execute(): Provider<BuildAttributionService> {
