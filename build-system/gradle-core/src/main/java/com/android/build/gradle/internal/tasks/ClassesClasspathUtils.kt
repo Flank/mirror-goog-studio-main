@@ -32,7 +32,6 @@ import org.gradle.api.file.FileCollection
 class ClassesClasspathUtils(
     val creationConfig: ApkCreationConfig,
     enableDexingArtifactTransform: Boolean,
-    variantHasLegacyTransforms: Boolean,
     classesAlteredTroughVariantAPI: Boolean,
 ) {
 
@@ -60,10 +59,6 @@ class ClassesClasspathUtils(
             creationConfig.isAndroidTestCoverageEnabled &&
                     !creationConfig.componentType.isForTesting
 
-        val jacocoTransformWithLegacyTransformsRegistered =
-            jacocoTransformEnabled && variantHasLegacyTransforms
-
-
         // The source of project classes depend on whether; Jacoco instrumentation is enabled,
         // instrumentation is collected using an artifact transform and or
         // the user registers a transform using the legacy Transform
@@ -78,7 +73,7 @@ class ClassesClasspathUtils(
         // (3) No Jacoco Transforms:
         //      then: Provide the project classes from the legacy transform API classes.
 
-        projectClasses = if (jacocoTransformEnabled && !variantHasLegacyTransforms && !classesAlteredTroughVariantAPI) {
+        projectClasses = if (jacocoTransformEnabled && !classesAlteredTroughVariantAPI) {
             creationConfig.services.fileCollection(
                 creationConfig.artifacts.get(
                     InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
@@ -89,15 +84,7 @@ class ClassesClasspathUtils(
                     )
                 ).asFileTree
             )
-        }
-        else if (jacocoTransformWithLegacyTransformsRegistered && !classesAlteredTroughVariantAPI) {
-            // Legacy support
-            // Do not pass project classes if transform code coverage
-            // is enabled and a legacy transform is applied, the legacy transform supported
-            // JacocoTask artifacts will be passed via the mixed scope classes.
-            creationConfig.services.fileCollection()
-        }
-        else {
+        } else {
             @Suppress("DEPRECATION") // Legacy support
             transformManager.getPipelineOutputAsFileCollection(
                 { _, scopes -> scopes == setOf(QualifiedContent.Scope.PROJECT) },
@@ -146,24 +133,7 @@ class ClassesClasspathUtils(
                 desugaringClasspathScopes.add(QualifiedContent.Scope.SUB_PROJECTS)
             }
             desugaringClasspathScopes.add(InternalScope.FEATURES)
-        }
-        else if (jacocoTransformWithLegacyTransformsRegistered) {
-            mixedScopeClasses = creationConfig.services.fileCollection(
-                creationConfig.artifacts.get(
-                    InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES),
-                creationConfig.services.fileCollection(
-                    creationConfig.artifacts.get(
-                        InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS
-                    )
-                ).asFileTree
-            )
-            subProjectsClasses = creationConfig.services.fileCollection()
-            externalLibraryClasses = creationConfig.services.fileCollection()
-            dexExternalLibsInArtifactTransform =
-                creationConfig.services.projectOptions[
-                        BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS]
-        }
-        else {
+        } else {
             // legacy Transform API
             @Suppress("DEPRECATION") // Legacy support
             subProjectsClasses =

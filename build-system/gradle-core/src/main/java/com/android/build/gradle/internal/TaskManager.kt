@@ -82,7 +82,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESO
 import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.JACOCO_INSTRUMENTED_JARS
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
-import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -2166,7 +2165,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         if (creationConfig.componentType.isDynamicFeature) {
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
-        createDexTasks(creationConfig, creationConfig.dexingType, false)
+        createDexTasks(creationConfig, creationConfig.dexingType)
     }
 
     /**
@@ -2175,8 +2174,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      */
     private fun createDexTasks(
             creationConfig: ApkCreationConfig,
-            dexingType: DexingType,
-            registeredLegacyTransforms: Boolean) {
+            dexingType: DexingType) {
         val java8LangSupport = creationConfig.getJava8LangSupportType()
         val supportsDesugaringViaArtifactTransform =
                 (java8LangSupport == Java8LangSupport.UNUSED
@@ -2195,13 +2193,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val enableDexingArtifactTransform = (creationConfig
                 .services
                 .projectOptions[BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM]
-                && !registeredLegacyTransforms
                 && supportsDesugaringViaArtifactTransform)
                 && !classesAlteredTroughVariantAPI
         val classpathUtils = ClassesClasspathUtils(
             creationConfig,
             enableDexingArtifactTransform,
-            registeredLegacyTransforms,
             classesAlteredTroughVariantAPI
         )
         taskFactory.register(
