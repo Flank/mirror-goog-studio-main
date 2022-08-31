@@ -348,6 +348,7 @@ java_jarjar(
 java_jarjar(
     name = "studio-grpc",
     srcs = [
+        "@maven//:com.google.api.grpc.proto-google-common-protos",
         "@maven//:io.grpc.grpc-api",
         "@maven//:io.grpc.grpc-auth",
         "@maven//:io.grpc.grpc-context",
