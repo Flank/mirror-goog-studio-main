@@ -20,13 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.ide.dependencies.BuildMapping
 import com.android.build.gradle.internal.ide.dependencies.computeBuildMapping
 import com.android.builder.core.BuilderConstants
-import com.google.common.base.Preconditions
 import org.gradle.api.Project
 import org.gradle.api.capabilities.Capability
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
-import org.gradle.api.plugins.BasePluginConvention
+import org.gradle.api.plugins.BasePluginExtension
 import org.gradle.api.provider.Provider
 import org.gradle.api.resources.TextResource
 import org.gradle.internal.component.external.model.ImmutableCapability
@@ -41,14 +40,11 @@ class ProjectInfo(private val project: Project) {
 
     companion object {
         @JvmStatic
-        fun Project.getBaseName(): String {
-            val convention = Preconditions.checkNotNull(
-                this.convention.findPlugin(BasePluginConvention::class.java))
-            return convention!!.archivesBaseName
-        }
+        fun Project.getBaseName(): Provider<String> =
+            this.extensions.getByType(BasePluginExtension::class.java).archivesName
     }
 
-    fun getProjectBaseName(): String = project.getBaseName()
+    fun getProjectBaseName(): Provider<String> = project.getBaseName()
 
     val path: String
         get() = project.path

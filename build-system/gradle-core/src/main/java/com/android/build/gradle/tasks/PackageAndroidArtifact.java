@@ -259,16 +259,12 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Input
     public abstract Property<Boolean> getDexUseLegacyPackaging();
 
-    protected String projectBaseName;
-
     @Nullable protected String buildTargetAbi;
 
     @Nullable protected String buildTargetDensity;
 
     @Input
-    public String getProjectBaseName() {
-        return projectBaseName;
-    }
+    public abstract Property<String> getProjectBaseName();
 
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
@@ -1280,8 +1276,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
             packageAndroidArtifact.getDebugBuild().disallowChanges();
 
-            packageAndroidArtifact.projectBaseName =
-                    creationConfig.getServices().getProjectInfo().getProjectBaseName();
+            packageAndroidArtifact
+                    .getProjectBaseName()
+                    .set(creationConfig.getServices().getProjectInfo().getProjectBaseName());
+            packageAndroidArtifact.getProjectBaseName().disallowChanges();
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.buildTargetAbi =
                     creationConfig.getGlobal().getSplits().getAbi().isEnable()

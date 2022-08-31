@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getAapt2Executable
 import com.android.build.gradle.internal.signing.SigningConfigDataProvider
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.tools.build.bundletool.commands.BuildApksCommand
 import com.android.tools.build.bundletool.commands.BuildApksCommand.ApkBuildMode
 import com.android.tools.build.bundletool.androidtools.Aapt2Command
@@ -191,7 +190,11 @@ abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
                 taskProvider,
                 BundleToStandaloneApkTask::outputFile
             )
-                .withName("${creationConfig.services.projectInfo.getProjectBaseName()}-${creationConfig.baseName}-universal$suffix")
+                .withName(
+                    creationConfig.services.projectInfo.getProjectBaseName().map {
+                        "$it-${creationConfig.baseName}-universal$suffix"
+                    }
+                )
                 .on(SingleArtifact.APK_FROM_BUNDLE)
         }
 

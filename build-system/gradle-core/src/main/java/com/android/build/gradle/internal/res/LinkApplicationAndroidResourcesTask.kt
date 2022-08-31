@@ -207,8 +207,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     abstract val resPackageOutputFolder: DirectoryProperty
 
     @get:Input
-    lateinit var projectBaseName: String
-        private set
+    abstract val projectBaseName: Property<String>
 
     @get:Input
     lateinit var taskInputType: InternalArtifactType<Directory>
@@ -449,7 +448,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     abstract class BaseCreationAction(
         creationConfig: ComponentCreationConfig,
         private val generateLegacyMultidexMainDexProguardRules: Boolean,
-        private val baseName: String?,
+        private val baseName: Provider<String>,
         private val isLibrary: Boolean
     ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask, ComponentCreationConfig>(
         creationConfig
@@ -585,7 +584,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                 task.resOffset.disallowChanges()
             }
 
-            task.projectBaseName = baseName!!
+            task.projectBaseName.setDisallowChanges(baseName)
             task.isLibrary = isLibrary
 
             task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
@@ -611,7 +610,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         creationConfig: ComponentCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         private val sourceArtifactType: TaskManager.MergeType,
-        baseName: String,
+        baseName: Provider<String>,
         isLibrary: Boolean
     ) : BaseCreationAction(
         creationConfig,
@@ -703,7 +702,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     class NamespacedCreationAction(
         creationConfig: ApkCreationConfig,
         generateLegacyMultidexMainDexProguardRules: Boolean,
-        baseName: String?
+        baseName: Provider<String>
     ) : BaseCreationAction(
         creationConfig,
         generateLegacyMultidexMainDexProguardRules,

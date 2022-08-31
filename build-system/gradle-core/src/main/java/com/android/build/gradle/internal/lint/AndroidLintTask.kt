@@ -48,7 +48,7 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.configuration.ShowStacktrace
 import org.gradle.api.plugins.JavaBasePlugin
-import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -833,7 +833,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
 
     fun configureForStandalone(
         taskCreationServices: TaskCreationServices,
-        javaPluginConvention: JavaPluginConvention,
+        javaPluginExtension: JavaPluginExtension,
         customLintChecksConfig: FileCollection,
         lintOptions: Lint,
         partialResults: Provider<Directory>,
@@ -863,7 +863,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.checkOnly.setDisallowChanges(lintOptions.checkOnly)
         this.lintTool.initialize(taskCreationServices)
         this.projectInputs
-            .initializeForStandalone(project, javaPluginConvention, lintOptions, lintMode)
+            .initializeForStandalone(project, javaPluginExtension, lintOptions, lintMode)
         this.outputs.upToDateWhen {
             // Workaround for b/193244776
             // Ensure the task runs if inputBaselineFile is set and the file doesn't exist, unless
@@ -875,7 +875,7 @@ abstract class AndroidLintTask : NonIncrementalTask() {
         this.variantInputs
             .initializeForStandalone(
                 project,
-                javaPluginConvention,
+                javaPluginExtension,
                 taskCreationServices.projectOptions,
                 fatalOnly,
                 checkDependencies = false,

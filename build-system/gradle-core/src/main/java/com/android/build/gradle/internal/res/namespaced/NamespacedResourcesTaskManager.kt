@@ -51,7 +51,7 @@ class NamespacedResourcesTaskManager(
      */
     fun createNamespacedResourceTasks(
             packageOutputType: Artifact.Single<Directory>?,
-            baseName: String,
+            baseName: Provider<String>,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
 
         // Compile
@@ -89,7 +89,7 @@ class NamespacedResourcesTaskManager(
 
     private fun createNamespacedAppProcessTask(
             packageOutputType: Artifact.Single<Directory>?,
-            baseName: String,
+            baseName: Provider<String>,
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
         // TODO fix by using the right type for field componentProperties
        taskFactory.register(

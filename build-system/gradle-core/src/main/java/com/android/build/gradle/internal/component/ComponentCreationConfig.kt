@@ -149,7 +149,7 @@ interface ComponentCreationConfig : ComponentIdentity {
 
     fun addVariantOutput(
         variantOutputConfiguration: VariantOutputConfiguration,
-        outputFileName: String? = null
+        outputFileName: Provider<String>? = null
     )
 
     fun computeLocalFileDependencies(filePredicate: Predicate<File>): FileCollection

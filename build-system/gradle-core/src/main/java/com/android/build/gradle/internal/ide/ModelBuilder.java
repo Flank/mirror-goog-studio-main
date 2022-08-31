@@ -1067,7 +1067,7 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         return new AndroidArtifactImpl(
                 name,
-                ProjectInfo.getBaseName(project) + "-" + component.getBaseName(),
+                ProjectInfo.getBaseName(project).get() + "-" + component.getBaseName(),
                 taskContainer.getAssembleTask().getName(),
                 artifacts.get(InternalArtifactType.APK_IDE_REDIRECT_FILE.INSTANCE).getOrNull(),
                 isSigningReady

@@ -208,7 +208,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override fun addVariantOutput(
         variantOutputConfiguration: VariantOutputConfiguration,
-        outputFileName: String?
+        outputFileName: Provider<String>?
     ) {
         variantOutputs.add(
             VariantOutputImpl(
@@ -221,10 +221,9 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                 internalServices.newPropertyBackingDeprecatedApi(
                     String::class.java,
                     outputFileName
-                        ?: paths.getOutputFileName(
-                            internalServices.projectInfo.getProjectBaseName(),
-                            variantOutputConfiguration.baseName(this)
-                        ),
+                        ?: internalServices.projectInfo.getProjectBaseName().map {
+                            paths.getOutputFileName(it, variantOutputConfiguration.baseName(this))
+                        }
                 )
             )
         )
