@@ -23,12 +23,14 @@ import com.android.adblib.deviceInfo
 import com.android.adblib.serialNumber
 import com.android.adblib.thisLogger
 import java.time.Duration
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
@@ -49,7 +51,8 @@ private constructor(
     fun create(adbSession: AdbSession, provisioners: List<DeviceProvisionerPlugin>) =
       DeviceProvisioner(
         adbSession,
-        (provisioners + DefaultProvisionerPlugin()).sortedByDescending { it.priority }
+        (provisioners + OfflineDeviceProvisionerPlugin() + DefaultProvisionerPlugin())
+          .sortedByDescending { it.priority }
       )
   }
 
@@ -102,45 +105,42 @@ private constructor(
     }
 
   init {
-    // Track changes in ADB-connected devices
+    // Track changes in ADB-connected devices: any time we have a ConnectedDevice from ADB
+    // that is not owned by a DeviceHandle, offer it to the plugins. We need to track changes in
+    // both the ConnectedDevicesTracker and in our device list (in case a DeviceHandle goes away).
     adbSession.scope.launch {
-      // We want to update whenever the ConnectedDevicesTracker updates, or when one of the
-      // devices' deviceInfoFlow updates (to know when the device comes online, since it will
-      // often appear initially in an offline state, and we ignore offline devices).
       adbSession
         .connectedDevicesTracker
         .connectedDevices
-        .flatMapLatest { devices ->
-          combine(devices.map { device -> device.deviceInfoFlow.map { Pair(device, it) } }) {
-            it.mapNotNull { (device, info) ->
-              when (info.deviceState) {
-                com.android.adblib.DeviceState.ONLINE -> device
-                else -> null
-              }
-            }
-          }
+        .combine(claimedConnectedDevices()) { connectedDevices, claimedConnectedDevices ->
+          (connectedDevices - claimedConnectedDevices).forEach { offer(it) }
         }
-        .collect(::updateDevicesFromAdb)
+        .collect()
     }
   }
 
-  /** Indicates that the list of devices connected to ADB has changed. */
-  private suspend fun updateDevicesFromAdb(connectedDevices: List<ConnectedDevice>) {
-    // Do we have any new devices that we need to identify?
-    val currentConnectedDevices = devices.value.mapNotNull { it.state.connectedDevice }.toSet()
-    (connectedDevices - currentConnectedDevices).forEach { newDevice ->
-      provisioners.firstOrNull {
-        try {
-          it.claim(newDevice)
-        } catch (t: Throwable) {
-          logger.error(t, "Offering ${newDevice.deviceInfo.serialNumber}")
-          false
-        }
+  /** Extracts all the ConnectedDevices from the current DeviceHandles. */
+  private fun claimedConnectedDevices(): Flow<Set<ConnectedDevice>> =
+    devices.flatMapLatest { handles ->
+      when {
+        handles.isEmpty() -> flowOf(emptySet())
+        else ->
+          combine(handles.map { it.stateFlow.map { it.connectedDevice } }) {
+            it.filterNotNull().toSet()
+          }
       }
     }
 
-    // We don't actually update the states here: the plugin updates its own list when
-    // it claims a device
+  /** Offers the device to all of the plugins in priority order, stopping once one claims it. */
+  private suspend fun offer(newDevice: ConnectedDevice) {
+    provisioners.firstOrNull {
+      try {
+        it.claim(newDevice)
+      } catch (t: Throwable) {
+        logger.error(t, "Offering ${newDevice.deviceInfo.serialNumber}")
+        false
+      }
+    }
   }
 
   /**
