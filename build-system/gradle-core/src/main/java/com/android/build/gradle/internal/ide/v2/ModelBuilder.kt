@@ -610,7 +610,7 @@ class ModelBuilder<
             isInstantAppCompatible = inspectManifestForInstantTag(variant, instantAppResultMap),
             desugaredMethods = getDesugaredMethods(
                 variant.services,
-                variant.isCoreLibraryDesugaringEnabled,
+                variant.isCoreLibraryDesugaringEnabledLintCheck,
                 variant.minSdkVersion,
                 variant.global.compileSdkHashString,
                 variant.global.bootClasspath
@@ -699,7 +699,7 @@ class ModelBuilder<
             listOf()
         }
 
-        val coreLibDesugaring = (component as? ConsumableCreationConfig)?.isCoreLibraryDesugaringEnabled
+        val coreLibDesugaring = (component as? ConsumableCreationConfig)?.isCoreLibraryDesugaringEnabledLintCheck
                 ?: false
         val outputsAreSigned = component.oldVariantApiLegacySupport?.variantData?.outputsAreSigned ?: false
         val isSigned = (signingConfig?.hasConfig() ?: false) || outputsAreSigned

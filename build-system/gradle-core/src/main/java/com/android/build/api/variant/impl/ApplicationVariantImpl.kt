@@ -19,14 +19,13 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.component.impl.features.DexingCreationConfigImpl
 import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.component.impl.isTestApk
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.Component
@@ -36,6 +35,7 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -44,7 +44,6 @@ import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -54,7 +53,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.StringOption
-import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
 import javax.inject.Inject
@@ -89,17 +87,6 @@ open class ApplicationVariantImpl @Inject constructor(
     taskCreationServices,
     globalTaskCreationConfig
 ), ApplicationVariant, ApplicationCreationConfig, HasAndroidTest, HasTestFixtures {
-
-    val delegate by lazy { ApkCreationConfigImpl(
-        this,
-        dslInfo) }
-
-    init {
-        dslInfo.multiDexKeepProguard?.let {
-            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                .addInitialProvider(null, internalServices.toRegularFileProvider(it))
-        }
-    }
 
     // ---------------------------------------------------------------------------------------------
     // PUBLIC API
@@ -168,20 +155,24 @@ open class ApplicationVariantImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
+    override val dexingCreationConfig: DexingCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        DexingCreationConfigImpl(
+            this,
+            dslInfo.dexingDslInfo,
+            internalServices
+        )
+    }
+
     override val testOnlyApk: Boolean
         get() = isTestApk()
 
     override val needAssetPackTasks: Boolean
         get() = global.assetPacks.isNotEmpty()
 
-    override val shouldPackageDesugarLibDex: Boolean
-        get() = delegate.isCoreLibraryDesugaringEnabled
     override val debuggable: Boolean
-        get() = delegate.isDebuggable
+        get() = dslInfo.isDebuggable
     override val profileable: Boolean
         get() = dslInfo.isProfileable
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override val shouldPackageProfilerDependencies: Boolean
         get() = advancedProfilingTransforms.isNotEmpty()
@@ -203,12 +194,6 @@ open class ApplicationVariantImpl @Inject constructor(
         }
 
     // ---------------------------------------------------------------------------------------------
-    // DO NOT USE, Deprecated DSL APIs.
-    // ---------------------------------------------------------------------------------------------
-
-    override val multiDexKeepFile = dslInfo.multiDexKeepFile
-
-    // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
 
@@ -227,9 +212,6 @@ open class ApplicationVariantImpl @Inject constructor(
             dslInfo.versionCode,
         )
 
-    override val dexingType: DexingType
-        get() = delegate.dexingType
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
@@ -244,16 +226,6 @@ open class ApplicationVariantImpl @Inject constructor(
                 stats
             ) as T
         }
-
-    override val minSdkVersionForDexing: AndroidVersion
-        get() = delegate.minSdkVersionForDexing
-
-    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
-
-    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
-
-    override val needsShrinkDesugarLibrary: Boolean
-        get() = delegate.needsShrinkDesugarLibrary
 
     override val bundleConfig: BundleConfigImpl = BundleConfigImpl(
         CodeTransparencyImpl(

@@ -32,6 +32,7 @@ import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.ProguardFileType
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -234,17 +235,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key = ResValueKeyImpl(type, name)
 
-    private var _isMultiDexEnabled: Boolean? = dslInfo.isMultiDexEnabled
-    override val isMultiDexEnabled: Boolean
-        get() {
-            return _isMultiDexEnabled ?: (minSdkVersion.getFeatureLevel() >= 21)
-        }
-
-    override val needsMainDexListForBundle: Boolean
-        get() = dslInfo.componentType.isBaseModule
-                && global.hasDynamicFeatures
-                && dexingType.needsMainDexList
-
     override var unitTest: UnitTestImpl? = null
 
     override val pseudoLocalesEnabled: Property<Boolean> by lazy {
@@ -320,4 +310,20 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
 
     override val isAndroidTestCoverageEnabled: Boolean
         get() = (this as? HasAndroidTest)?.androidTest?.isAndroidTestCoverageEnabled == true
+
+    override val needsMergedJavaResStream: Boolean
+        get() {
+            // We need to create a stream from the merged java resources if we're in a library module,
+            // or if we're in an app/feature module which uses the transform pipeline.
+            return (dslInfo.componentType.isAar || minifiedEnabled)
+        }
+
+    override val isCoreLibraryDesugaringEnabledLintCheck: Boolean
+        get() = if (this is ApkCreationConfig) {
+            dexingCreationConfig.isCoreLibraryDesugaringEnabled
+        } else {
+            // We don't dex library variants, but we still need to check if core library desugaring
+            // for lint checks.
+            global.compileOptions.isCoreLibraryDesugaringEnabled
+        }
 }

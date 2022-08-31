@@ -390,13 +390,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
      * This creates tasks common to all variant types.
      */
     private fun createTasksForVariant(
-            variant: ComponentInfo<VariantBuilderT, VariantT>,
+        variant: ComponentInfo<VariantBuilderT, VariantT>,
     ) {
         val variantProperties = variant.variant
         val componentType = variantProperties.componentType
         val variantDependencies = variantProperties.variantDependencies
-        if (variantProperties.dexingType.isLegacyMultiDexMode()
-                && variantProperties.componentType.isApk) {
+        if (variantProperties is ApkCreationConfig &&
+            variantProperties.dexingCreationConfig.dexingType.isLegacyMultiDexMode()) {
             val multiDexDependency =
                     if (variantProperties
                             .services
@@ -687,7 +687,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         }
         if (testVariant.componentType.isApk) { // ANDROID_TEST
-            if ((testVariant as ApkCreationConfig).dexingType.isLegacyMultiDexMode()) {
+            if ((testVariant as ApkCreationConfig).dexingCreationConfig.dexingType.isLegacyMultiDexMode()) {
                 val multiDexInstrumentationDep = if (testVariant
                                 .services
                                 .projectOptions[BooleanOption.USE_ANDROID_X])
@@ -905,7 +905,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // The main dex list calculation for the bundle also needs the feature classes for reference
         // only
         if ((creationConfig as? ApplicationCreationConfig)?.consumesFeatureJars == true ||
-            (creationConfig as? ConsumableCreationConfig)?.needsMainDexListForBundle == true) {
+            (creationConfig as? ApkCreationConfig)?.dexingCreationConfig?.needsMainDexListForBundle == true) {
             transformManager.addStream(
                     OriginalStream.builder("metadata-classes")
                             .addContentTypes(TransformManager.CONTENT_CLASS)
@@ -1186,6 +1186,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         val useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 (creationConfig is ApkCreationConfig
                         && creationConfig
+                        .dexingCreationConfig
                         .dexingType
                         .needsMainDexList)
         if (globalConfig.namespacedAndroidResources) {
@@ -2165,13 +2166,13 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
 
         // Code Dexing (MonoDex, Legacy Multidex or Native Multidex)
-        if (creationConfig.needsMainDexListForBundle) {
+        if (creationConfig.dexingCreationConfig.needsMainDexListForBundle) {
             taskFactory.register(D8BundleMainDexListTask.CreationAction(creationConfig))
         }
         if (creationConfig.componentType.isDynamicFeature) {
             taskFactory.register(FeatureDexMergeTask.CreationAction(creationConfig))
         }
-        createDexTasks(creationConfig, creationConfig.dexingType)
+        createDexTasks(creationConfig, creationConfig.dexingCreationConfig.dexingType)
     }
 
     /**
@@ -2181,7 +2182,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     private fun createDexTasks(
             creationConfig: ApkCreationConfig,
             dexingType: DexingType) {
-        val java8LangSupport = creationConfig.getJava8LangSupportType()
+        val java8LangSupport = creationConfig.dexingCreationConfig.java8LangSupportType
         val supportsDesugaringViaArtifactTransform =
                 (java8LangSupport == Java8LangSupport.UNUSED
                         || (java8LangSupport == Java8LangSupport.D8
@@ -2264,7 +2265,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // to be included multiple times and will cause the build to fail because of same types
         // being defined multiple times in the final dex.
         val separateFileDependenciesDexingTask =
-                (creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
+                (creationConfig.dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8
                         && dexingUsingArtifactTransforms)
         if (separateFileDependenciesDexingTask) {
             val desugarFileDeps = DexFileDependenciesTask.CreationAction(creationConfig)
@@ -3263,9 +3264,9 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             apkCreationConfig: ApkCreationConfig,
             enableDexingArtifactTransform: Boolean) {
         val separateFileDependenciesDexingTask =
-                (apkCreationConfig.getJava8LangSupportType() == Java8LangSupport.D8
+                (apkCreationConfig.dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8
                         && enableDexingArtifactTransform)
-        if (apkCreationConfig.shouldPackageDesugarLibDex) {
+        if (apkCreationConfig.dexingCreationConfig.shouldPackageDesugarLibDex) {
             taskFactory.register(
                     L8DexDesugarLibTask.CreationAction(
                             apkCreationConfig,
@@ -3274,7 +3275,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
 
         if(apkCreationConfig.componentType.isDynamicFeature
-            && apkCreationConfig.needsShrinkDesugarLibrary
+            && apkCreationConfig.dexingCreationConfig.needsShrinkDesugarLibrary
         ) {
             taskFactory.register(
                 DesugarLibKeepRulesMergeTask.CreationAction(

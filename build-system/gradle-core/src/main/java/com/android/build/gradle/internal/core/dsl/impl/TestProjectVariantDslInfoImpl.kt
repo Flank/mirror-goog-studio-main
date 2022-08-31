@@ -21,6 +21,8 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.dsl.TestProjectVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.features.DexingDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.features.DexingDslInfoImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalTestExtension
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -155,4 +157,10 @@ internal class TestProjectVariantDslInfoImpl(
         get() = instrumentedTestDelegate.functionalTest
     override val testLabel: Provider<String?>
         get() = instrumentedTestDelegate.testLabel
+
+    override val dexingDslInfo: DexingDslInfo by lazy {
+        DexingDslInfoImpl(
+            buildTypeObj, mergedFlavor, services
+        )
+    }
 }

@@ -18,12 +18,10 @@ package com.android.build.api.variant.impl
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledLibraryVariant
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ConsumableCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AarMetadata
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.LibraryVariant
 import com.android.build.api.variant.Renderscript
@@ -36,7 +34,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.VariantPublishingInfo
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -46,7 +43,6 @@ import com.android.build.gradle.internal.tasks.AarMetadataTask.Companion.DEFAULT
 import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
-import com.android.builder.dexing.DexingType
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -117,16 +113,8 @@ open class LibraryVariantImpl @Inject constructor(
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
 
-    private val delegate by lazy { ConsumableCreationConfigImpl(this, dslInfo) }
-
-    override val dexingType: DexingType
-        get() = delegate.dexingType
-
     override val debuggable: Boolean
         get() = dslInfo.isDebuggable
-
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = delegate.isCoreLibraryDesugaringEnabled
 
     override fun <T : Component> createUserVisibleVariantObject(
         projectServices: ProjectServices,
@@ -150,17 +138,6 @@ open class LibraryVariantImpl @Inject constructor(
         // return false otherwise
         get() = dslInfo.postProcessingOptions
             .let { it.hasPostProcessingConfiguration() && it.resourcesShrinkingEnabled() }
-
-    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
-
-    override fun getJava8LangSupportType(): Java8LangSupport =
-        delegate.getJava8LangSupportType()
-
-    override val needsShrinkDesugarLibrary: Boolean
-        get() = delegate.needsShrinkDesugarLibrary
-
-    override val minSdkVersionForDexing: AndroidVersion
-        get() = delegate.minSdkVersionForDexing
 
     override val publishInfo: VariantPublishingInfo?
         get() = dslInfo.publishInfo

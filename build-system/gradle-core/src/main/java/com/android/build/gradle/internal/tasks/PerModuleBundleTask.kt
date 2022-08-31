@@ -340,7 +340,7 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     artifacts.getAll(InternalMultipleArtifactType.DEX)
                 }
             )
-            if (creationConfig.shouldPackageDesugarLibDex) {
+            if (creationConfig.dexingCreationConfig.shouldPackageDesugarLibDex) {
                 task.dexFiles.from(
                     artifacts.get(InternalArtifactType.DESUGAR_LIB_DEX)
                 )

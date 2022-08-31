@@ -1459,7 +1459,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         private static FileCollection getDesugarLibDexIfExists(
                 @NonNull ApkCreationConfig creationConfig) {
-            if (!creationConfig.getShouldPackageDesugarLibDex()) {
+            if (!creationConfig.getDexingCreationConfig().getShouldPackageDesugarLibDex()) {
                 return creationConfig.getServices().fileCollection();
             }
             return creationConfig

@@ -24,6 +24,8 @@ import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.core.dsl.TestedVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.features.DexingDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.features.DexingDslInfoImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalTestedExtension
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -129,6 +131,12 @@ internal class AndroidTestComponentDslInfoImpl(
             dataProvider,
             services,
             mainVariantDslInfo.testInstrumentationRunnerArguments
+        )
+    }
+
+    override val dexingDslInfo: DexingDslInfo by lazy {
+        DexingDslInfoImpl(
+            buildTypeObj, mergedFlavor, services
         )
     }
 

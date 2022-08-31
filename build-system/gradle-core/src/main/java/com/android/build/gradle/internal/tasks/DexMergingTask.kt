@@ -55,6 +55,8 @@ import com.android.builder.dexing.getSortedRelativePathsInJar
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationActionImpl
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
@@ -238,7 +240,10 @@ abstract class DexMergingTask : NewIncrementalTask() {
         private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: InternalMultipleArtifactType<Directory> = InternalMultipleArtifactType.DEX
-    ) : VariantTaskCreationAction<DexMergingTask, ApkCreationConfig>(creationConfig) {
+    ) : VariantTaskCreationAction<DexMergingTask, ApkCreationConfig>(creationConfig),
+        DexingTaskCreationAction by DexingTaskCreationActionImpl(
+            creationConfig
+        ) {
 
         private val internalName: String = when (action) {
             MERGE_LIBRARY_PROJECTS -> creationConfig.computeTaskName("mergeLibDex")
@@ -275,7 +280,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
             // Shared parameters
             task.sharedParams.dexingType.setDisallowChanges(dexingType)
             task.sharedParams.minSdkVersion.setDisallowChanges(
-                creationConfig.minSdkVersionForDexing.getFeatureLevel()
+                dexingCreationConfig.minSdkVersionForDexing.getFeatureLevel()
             )
             task.sharedParams.debuggable.setDisallowChanges(creationConfig.debuggable)
             task.sharedParams.errorFormatMode.setDisallowChanges(
@@ -291,7 +296,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
                     creationConfig.artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
                 )
 
-                creationConfig.multiDexKeepFile?.let {
+                dexingCreationConfig.multiDexKeepFile?.let {
                     task.sharedParams.mainDexListConfig.userMultidexKeepFile.setDisallowChanges(it)
                 }
 
@@ -447,7 +452,7 @@ abstract class DexMergingTask : NewIncrementalTask() {
 
                     // Deploy API is either the minSdkVersion or if deploying from the IDE, the API level of
                     // the device we're deploying too.
-                    val targetDeployApi = creationConfig.minSdkVersionForDexing.getFeatureLevel()
+                    val targetDeployApi = dexingCreationConfig.minSdkVersionForDexing.getFeatureLevel()
                     // We can be in native multidex mode while using 20- value for dexing
                     val overrideMinSdkVersion = max(21, targetDeployApi)
                     getNumberOfBuckets(minSdkVersion = overrideMinSdkVersion)

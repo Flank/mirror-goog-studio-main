@@ -40,6 +40,7 @@ import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider
 import com.android.build.gradle.internal.api.VariantFilter
+import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestFixturesCreationConfig
@@ -915,16 +916,26 @@ class VariantManager<
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(minSdkVersion))
                         .setMinifyEnabled(variant.minifiedEnabled)
-                        .setUseMultidex(variant.isMultiDexEnabled)
-                        .setUseLegacyMultidex(variant.dexingType.isLegacyMultiDexMode())
                         .setVariantType(variant.componentType.analyticsVariantType)
                         .setDexBuilder(GradleBuildVariant.DexBuilderTool.D8_DEXER)
                         .setDexMerger(GradleBuildVariant.DexMergerTool.D8_MERGER)
-                        .setCoreLibraryDesugaringEnabled(variant.isCoreLibraryDesugaringEnabled)
                         .setHasUnitTest(variant.unitTest != null)
                         .setHasAndroidTest((variant as? HasAndroidTest)?.androidTest != null)
                         .setHasTestFixtures((variant as? HasTestFixtures)?.testFixtures != null)
-                        .testExecution = AnalyticsUtil.toProto(dslExtension.testOptions.execution.toExecutionEnum() ?: TestOptions.Execution.HOST)
+
+                    it.testExecution = AnalyticsUtil.toProto(dslExtension.testOptions.execution.toExecutionEnum() ?: TestOptions.Execution.HOST)
+
+                    if (variant is ApkCreationConfig) {
+                        it.useLegacyMultidex = variant.dexingCreationConfig.dexingType.isLegacyMultiDexMode()
+                        it.coreLibraryDesugaringEnabled = variant.dexingCreationConfig.isCoreLibraryDesugaringEnabled
+                        it.useMultidex = variant.dexingCreationConfig.isMultiDexEnabled
+
+                        val supportType = variant.dexingCreationConfig.java8LangSupportType
+                        if (supportType != Java8LangSupport.INVALID
+                            && supportType != Java8LangSupport.UNUSED) {
+                            variantAnalytics.java8LangSupport = AnalyticsUtil.toProto(supportType)
+                        }
+                    }
 
                     if (variant.minifiedEnabled) {
                         // If code shrinker is used, it can only be R8
@@ -934,11 +945,6 @@ class VariantManager<
                     variant.maxSdkVersion?.let { version ->
                         variantAnalytics.setMaxSdkVersion(
                             ApiVersion.newBuilder().setApiLevel(version.toLong()))
-                    }
-                    val supportType = variant.getJava8LangSupportType()
-                    if (supportType != Java8LangSupport.INVALID
-                        && supportType != Java8LangSupport.UNUSED) {
-                        variantAnalytics.java8LangSupport = AnalyticsUtil.toProto(supportType)
                     }
                 }
             }

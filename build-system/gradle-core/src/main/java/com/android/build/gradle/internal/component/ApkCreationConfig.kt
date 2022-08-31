@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.impl.BundleConfigImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
+import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import java.io.File
 
 /**
@@ -30,9 +31,6 @@ interface ApkCreationConfig: ConsumableCreationConfig {
 
     // TODO: move to a non variant object (GlobalTaskScope?)
     val testOnlyApk: Boolean
-
-    /** If this variant should package desugar_lib DEX in the final APK. */
-    val shouldPackageDesugarLibDex: Boolean
 
     /**
      * If this variant should package additional dependencies (code and native libraries) needed for
@@ -50,12 +48,12 @@ interface ApkCreationConfig: ConsumableCreationConfig {
      */
     val signingConfigImpl: SigningConfigImpl?
 
-    val multiDexKeepFile: File?
-
     val bundleConfig: BundleConfigImpl?
         get() = null
 
     val useJacocoTransformInstrumentation: Boolean
 
     val packageJacocoRuntime: Boolean
+
+    val dexingCreationConfig: DexingCreationConfig
 }

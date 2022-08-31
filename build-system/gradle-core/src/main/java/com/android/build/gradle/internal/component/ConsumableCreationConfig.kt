@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.internal.component
 
-import com.android.build.api.component.impl.ApkCreationConfigImpl
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Packaging
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
-import com.android.build.gradle.internal.scope.Java8LangSupport
-import com.android.builder.dexing.DexingType
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 
 /**
@@ -36,16 +31,6 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
     val renderscriptCreationConfig: RenderscriptCreationConfig?
 
     val packaging: Packaging
-
-    /**
-     * Returns the minimum SDK version for which is used for dexing this variant.
-     * See [ApkCreationConfigImpl.minSdkVersionForDexing] for details.
-     */
-    val minSdkVersionForDexing: AndroidVersion
-
-    val isMultiDexEnabled: Boolean
-
-    val isCoreLibraryDesugaringEnabled: Boolean
 
     val proguardFiles: ListProperty<RegularFile>
 
@@ -60,28 +45,22 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
      */
     val ignoreAllLibraryKeepRules: Boolean
 
-    val dexingType: DexingType
-
     val minifiedEnabled: Boolean
     val resourcesShrink: Boolean
 
     /** Returns whether we need to create a stream from the merged java resources */
     val needsMergedJavaResStream: Boolean
 
-    fun getJava8LangSupportType(): Java8LangSupport
-
     val postProcessingFeatures: PostprocessingFeatures?
-
-    /**
-     * Returns if we need to shrink desugar lib when desugaring Core Library.
-     */
-    val needsShrinkDesugarLibrary: Boolean
-
-    val needsMainDexListForBundle: Boolean
 
     val defaultGlslcArgs: List<String>
 
     val scopedGlslcArgs: Map<String, List<String>>
 
     val isAndroidTestCoverageEnabled: Boolean
+
+    /**
+     * Used by lint to run checks related to core library desugaring.
+     */
+    val isCoreLibraryDesugaringEnabledLintCheck: Boolean
 }

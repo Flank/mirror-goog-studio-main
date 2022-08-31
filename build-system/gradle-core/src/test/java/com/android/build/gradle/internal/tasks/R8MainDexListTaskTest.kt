@@ -170,7 +170,7 @@ fun runR8(
         proguardConfigurations = proguardConfigurations,
         isAar = ComponentTypeImpl.BASE_APK.isAar,
         errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-        dexingType = dexingType,
+        legacyMultiDexEnabled = dexingType == DexingType.LEGACY_MULTIDEX,
         useFullR8 = false,
         referencedInputs = referencedInputs,
         classes = classes,

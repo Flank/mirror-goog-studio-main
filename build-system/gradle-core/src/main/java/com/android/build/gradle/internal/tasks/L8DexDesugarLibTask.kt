@@ -31,6 +31,8 @@ import com.android.build.gradle.internal.utils.getDesugarLibJarFromMaven
 import com.android.builder.dexing.KeepRulesConfig
 import com.android.builder.dexing.runL8
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationActionImpl
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -104,6 +106,8 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             private val separateFileDependenciesDexingTask: Boolean
     ) : VariantTaskCreationAction<L8DexDesugarLibTask, ApkCreationConfig>(
         creationConfig
+    ), DexingTaskCreationAction by DexingTaskCreationActionImpl(
+        creationConfig
     ) {
         override val name = computeTaskName("l8DexDesugarLib")
         override val type = L8DexDesugarLibTask::class.java
@@ -124,9 +128,9 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
             task.libConfiguration.set(getDesugarLibConfig(creationConfig.services))
             task.desugarLibJar.from(getDesugarLibJarFromMaven(creationConfig.services))
             task.androidJarInput.initialize(creationConfig)
-            task.minSdkVersion.set(creationConfig.minSdkVersionForDexing.getFeatureLevel())
+            task.minSdkVersion.set(dexingCreationConfig.minSdkVersionForDexing.getFeatureLevel())
 
-            if (creationConfig.needsShrinkDesugarLibrary) {
+            if (dexingCreationConfig.needsShrinkDesugarLibrary) {
                 setDesugarLibKeepRules(
                     task.keepRulesFiles,
                     creationConfig,
@@ -135,7 +139,7 @@ abstract class L8DexDesugarLibTask : NonIncrementalTask() {
                 )
 
                 // make sure non-minified release build is not obfuscated
-                if (creationConfig.getJava8LangSupportType() == Java8LangSupport.D8) {
+                if (dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8) {
                     task.keepRulesConfigurations.set(listOf("-dontobfuscate"))
                 }
             }
@@ -209,7 +213,7 @@ fun setDesugarLibKeepRules(
                 InternalArtifactType.DESUGAR_LIB_EXTERNAL_FILE_LIB_KEEP_RULES))
     }
 
-    val nonMinified = creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
+    val nonMinified = creationConfig.dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8
     if (creationConfig.global.hasDynamicFeatures && nonMinified) {
         keepRulesFiles.from(
             creationConfig.variantDependencies.getArtifactFileCollection(

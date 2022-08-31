@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.transforms.testdata.ClassWithDesugarApi
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.ComponentTypeImpl
-import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.R8OutputType
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -730,7 +729,7 @@ class R8Test(val r8OutputType: R8OutputType) {
             proguardConfigurations = proguardConfigurations,
             isAar = componentType.isAar,
             errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
-            dexingType = DexingType.NATIVE_MULTIDEX,
+            legacyMultiDexEnabled = false,
             useFullR8 = useFullR8,
             referencedInputs = referencedInputs,
             classes = classes,

@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.multidex.D8MainDexList
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationActionImpl
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -149,6 +151,8 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
         creationConfig: ApkCreationConfig
     ) : VariantTaskCreationAction<D8BundleMainDexListTask, ApkCreationConfig> (
         creationConfig
+    ), DexingTaskCreationAction by DexingTaskCreationActionImpl(
+        creationConfig
     ) {
         private val libraryClasses: FileCollection
 
@@ -189,7 +193,9 @@ abstract class D8BundleMainDexListTask : NonIncrementalTask() {
             task.userMultidexProguardRules.setDisallowChanges(
                 creationConfig.artifacts.getAll(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
             )
-            task.userMultidexKeepFile.setDisallowChanges(creationConfig.multiDexKeepFile)
+            task.userMultidexKeepFile.setDisallowChanges(
+                dexingCreationConfig.multiDexKeepFile
+            )
             task.bootClasspath.from(creationConfig.global.bootClasspath).disallowChanges()
             task.errorFormat
                 .setDisallowChanges(

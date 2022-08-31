@@ -508,7 +508,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     features.add(Invoker.Feature.ADVANCED_PROFILING)
                 }
             }
-            if (creationConfig.dexingType === DexingType.LEGACY_MULTIDEX) {
+            if (creationConfig.dexingCreationConfig.dexingType === DexingType.LEGACY_MULTIDEX) {
                 features.add(
                     if (creationConfig.services.projectOptions[BooleanOption.USE_ANDROID_X]) {
                         Invoker.Feature.ADD_ANDROIDX_MULTIDEX_APPLICATION_IF_NO_NAME

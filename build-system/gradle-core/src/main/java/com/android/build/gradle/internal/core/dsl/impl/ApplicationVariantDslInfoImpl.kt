@@ -22,6 +22,8 @@ import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
+import com.android.build.gradle.internal.core.dsl.features.DexingDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.features.DexingDslInfoImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.InternalApplicationExtension
 import com.android.build.gradle.internal.dsl.SigningConfig
@@ -169,6 +171,12 @@ internal class ApplicationVariantDslInfoImpl(
         get() = mergedFlavor.wearAppUnbundled
     override val isEmbedMicroApp: Boolean
         get() = applicationBuildType.isEmbedMicroApp
+
+    override val dexingDslInfo: DexingDslInfo by lazy {
+        DexingDslInfoImpl(
+            buildTypeObj, mergedFlavor, services
+        )
+    }
 
     private fun computeVersionNameSuffix(): String {
         // for the suffix we combine the suffix from all the flavors. However, we're going to

@@ -20,14 +20,13 @@ import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.AndroidTestImpl
-import com.android.build.api.component.impl.ApkCreationConfigImpl
 import com.android.build.api.component.impl.TestFixturesImpl
+import com.android.build.api.component.impl.features.DexingCreationConfigImpl
 import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.component.impl.isTestApk
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
-import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.DynamicFeatureVariant
@@ -35,6 +34,7 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
+import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.DynamicFeatureVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.scope.BuildFeatureValues
-import com.android.build.gradle.internal.scope.Java8LangSupport
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.TaskCreationServices
@@ -54,7 +53,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.StringOption
-import com.android.builder.dexing.DexingType
 import com.android.builder.errors.IssueReporter
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 import org.gradle.api.provider.Property
@@ -102,16 +100,7 @@ open class DynamicFeatureVariantImpl @Inject constructor(
                             "build.gradle file."
                 )
         }
-
-        dslInfo.multiDexKeepProguard?.let {
-            artifacts.getArtifactContainer(MultipleArtifact.MULTIDEX_KEEP_PROGUARD)
-                .addInitialProvider(null, internalServices.toRegularFileProvider(it))
-        }
     }
-
-    private val delegate by lazy { ApkCreationConfigImpl(
-        this,
-        dslInfo) }
 
     /*
      * Providers of data coming from the base modules. These are loaded just once and finalized.
@@ -146,9 +135,17 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         renderscriptCreationConfig?.renderscript
     }
 
-// ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
     // INTERNAL API
     // ---------------------------------------------------------------------------------------------
+
+    override val dexingCreationConfig: DexingCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        DexingCreationConfigImpl(
+            this,
+            dslInfo.dexingDslInfo,
+            internalServices
+        )
+    }
 
     // always false for this type
     override val embedsMicroApp: Boolean
@@ -180,11 +177,8 @@ open class DynamicFeatureVariantImpl @Inject constructor(
         })
     }
 
-    override val shouldPackageDesugarLibDex: Boolean = false
     override val debuggable: Boolean
-        get() = delegate.isDebuggable
-    override val isCoreLibraryDesugaringEnabled: Boolean
-        get() = delegate.isCoreLibraryDesugaringEnabled
+        get() = dslInfo.isDebuggable
 
     override val shouldPackageProfilerDependencies: Boolean = false
 
@@ -202,12 +196,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
 
     override val packageJacocoRuntime: Boolean
         get() = false
-
-    // ---------------------------------------------------------------------------------------------
-    // DO NOT USE, Deprecated DSL APIs.
-    // ---------------------------------------------------------------------------------------------
-
-    override val multiDexKeepFile = dslInfo.multiDexKeepFile
 
     // ---------------------------------------------------------------------------------------------
     // Private stuff
@@ -282,9 +270,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
     override val resourcesShrink: Boolean
         get() = false
 
-    override val dexingType: DexingType
-        get() = delegate.dexingType
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
@@ -299,16 +284,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
                 stats
             ) as T
         }
-
-    override val minSdkVersionForDexing: AndroidVersion
-        get() = delegate.minSdkVersionForDexing
-
-    override val needsMergedJavaResStream: Boolean = delegate.getNeedsMergedJavaResStream()
-
-    override fun getJava8LangSupportType(): Java8LangSupport = delegate.getJava8LangSupportType()
-
-    override val needsShrinkDesugarLibrary: Boolean
-        get() = delegate.needsShrinkDesugarLibrary
 
     override val ignoredLibraryKeepRules: Provider<Set<String>> =
             baseModuleMetadata.map { it.ignoredLibraryKeepRules }

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.core.dsl.impl
 
-import com.android.build.api.dsl.ApplicationBuildType
 import com.android.build.api.dsl.BuildType
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
@@ -27,7 +26,6 @@ import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.dsl.OptimizationImpl
 import com.android.build.gradle.internal.services.VariantServices
-import com.android.build.gradle.options.IntegerOption
 import com.android.builder.core.ComponentType
 import com.android.builder.model.ClassField
 import com.google.common.collect.ImmutableList
@@ -35,7 +33,6 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import org.gradle.api.file.DirectoryProperty
-import java.io.File
 
 internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     componentIdentity: ComponentIdentity,
@@ -106,32 +103,6 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     }
 
     // build type delegates
-
-    // Only require specific multidex opt-in for legacy multidex.
-    override val isMultiDexEnabled: Boolean?
-        get() {
-            // Only require specific multidex opt-in for legacy multidex.
-            return (buildTypeObj as? ApplicationBuildType)?.multiDexEnabled
-                ?: mergedFlavor.multiDexEnabled
-        }
-    override val multiDexKeepProguard: File?
-        get() {
-            var value = buildTypeObj.multiDexKeepProguard
-            if (value != null) {
-                return value
-            }
-            value = mergedFlavor.multiDexKeepProguard
-            return value
-        }
-    override val multiDexKeepFile: File?
-        get() {
-            var value = buildTypeObj.multiDexKeepFile
-            if (value != null) {
-                return value
-            }
-            value = mergedFlavor.multiDexKeepFile
-            return value
-        }
 
     override val renderscriptOptimLevel: Int
         get() = buildTypeObj.renderscriptOptimLevel
@@ -208,10 +179,6 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
         }
 
     // helper methods
-
-    // TODO: move to global scope
-    override val targetDeployApiFromIDE: Int? =
-        services.projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API)
 
     override fun getBuildConfigFields(): Map<String, BuildConfigField<out java.io.Serializable>> {
         val buildConfigFieldsMap =

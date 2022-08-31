@@ -14,24 +14,27 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.core.dsl
+package com.android.build.gradle.internal.core.dsl.features
 
-import com.android.build.gradle.internal.core.dsl.features.DexingDslInfo
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.options.ProjectOptions
+import java.io.File
 
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
- * build type, flavors) that are needed by components that produces APKs.
+ * build type, flavors) that are needed by components that produce dex files.
  */
-interface ApkProducingComponentDslInfo: ConsumableComponentDslInfo {
+interface DexingDslInfo {
+    // Only require specific multidex opt-in for legacy multidex.
+    val isMultiDexEnabled: Boolean?
 
-    val dexingDslInfo: DexingDslInfo
+    val multiDexKeepProguard: File?
 
-    val isDebuggable: Boolean
+    val multiDexKeepFile: File?
 
-    /** Holds all SigningConfig information from the DSL and/or [ProjectOptions].  */
-    val signingConfig: SigningConfig?
-
-    val isSigningReady: Boolean
+    /**
+     * Returns the API to which device/emulator we're deploying via the IDE or null if not.
+     * Can be used to optimize some build steps when deploying via the IDE.
+     *
+     * This has no relation with targetSdkVersion from build.gradle/manifest.
+     */
+    val targetDeployApiFromIDE: Int?
 }

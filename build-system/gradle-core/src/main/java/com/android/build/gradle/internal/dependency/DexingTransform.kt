@@ -335,12 +335,12 @@ fun getDexingArtifactConfigurations(components: Collection<ComponentCreationConf
 
 fun getDexingArtifactConfiguration(creationConfig: ApkCreationConfig): DexingArtifactConfiguration {
     return DexingArtifactConfiguration(
-        minSdk = creationConfig.minSdkVersionForDexing.getFeatureLevel(),
+        minSdk = creationConfig.dexingCreationConfig.minSdkVersionForDexing.getFeatureLevel(),
         isDebuggable = creationConfig.debuggable,
         enableDesugaring =
-            creationConfig.getJava8LangSupportType() == Java8LangSupport.D8,
-        enableCoreLibraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled,
-        needsShrinkDesugarLibrary = creationConfig.needsShrinkDesugarLibrary,
+            creationConfig.dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8,
+        enableCoreLibraryDesugaring = creationConfig.dexingCreationConfig.isCoreLibraryDesugaringEnabled,
+        needsShrinkDesugarLibrary = creationConfig.dexingCreationConfig.needsShrinkDesugarLibrary,
         asmTransformedVariant =
             if (creationConfig.instrumentationCreationConfig?.dependenciesClassesAreInstrumented == true) {
                 creationConfig.name

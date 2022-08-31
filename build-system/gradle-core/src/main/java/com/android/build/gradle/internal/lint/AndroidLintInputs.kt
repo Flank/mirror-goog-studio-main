@@ -20,7 +20,6 @@ package com.android.build.gradle.internal.lint
 import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.dsl.Lint
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
@@ -1117,7 +1116,10 @@ abstract class BuildFeaturesInput {
 
     fun initialize(creationConfig: VariantCreationConfig) {
         viewBinding.setDisallowChanges(creationConfig.buildFeatures.viewBinding)
-        coreLibraryDesugaringEnabled.setDisallowChanges(creationConfig.isCoreLibraryDesugaringEnabled)
+        coreLibraryDesugaringEnabled.setDisallowChanges(
+            (creationConfig as? ApkCreationConfig)?.dexingCreationConfig?.isCoreLibraryDesugaringEnabled
+                ?: false
+        )
         namespacingMode.setDisallowChanges(
             if (creationConfig.global.namespacedAndroidResources) {
                 LintModelNamespacingMode.DISABLED
@@ -1425,7 +1427,7 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             )
         )
 
-        val coreLibDesugaring = (creationConfig as? ConsumableCreationConfig)?.isCoreLibraryDesugaringEnabled
+        val coreLibDesugaring = (creationConfig as? ConsumableCreationConfig)?.isCoreLibraryDesugaringEnabledLintCheck
                 ?: false
         desugaredMethodsFiles.from(
                 getDesugaredMethods(

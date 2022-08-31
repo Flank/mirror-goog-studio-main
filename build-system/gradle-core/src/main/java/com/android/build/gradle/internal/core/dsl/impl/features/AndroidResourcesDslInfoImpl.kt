@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.core.dsl.impl
+package com.android.build.gradle.internal.core.dsl.impl.features
 
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.ApplicationBuildType

@@ -31,6 +31,8 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.DexingTaskCreationActionImpl
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.transform.CacheableTransform
@@ -229,6 +231,8 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
         classesClasspathUtils: ClassesClasspathUtils,
     ) : VariantTaskCreationAction<DexArchiveBuilderTask, ApkCreationConfig>(
         creationConfig
+    ), DexingTaskCreationAction by DexingTaskCreationActionImpl(
+        creationConfig
     ) {
 
         override val name = creationConfig.computeTaskName("dexBuilder")
@@ -292,7 +296,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
                 taskProvider,
                 DexArchiveBuilderTask::previousRunNumberOfBucketsFile
             ).withName("out").on(InternalArtifactType.DEX_NUMBER_OF_BUCKETS_FILE)
-            if (creationConfig.needsShrinkDesugarLibrary) {
+            if (dexingCreationConfig.needsShrinkDesugarLibrary) {
                 creationConfig.artifacts.setInitialProvider(
                     taskProvider
                 ) { it.projectOutputs.keepRules }
@@ -325,10 +329,10 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             task.subProjectClasses.from(subProjectsClasses)
             task.mixedScopeClasses.from(mixedScopeClasses)
 
-            val minSdkVersionForDexing = creationConfig.minSdkVersionForDexing.getFeatureLevel()
+            val minSdkVersionForDexing = dexingCreationConfig.minSdkVersionForDexing.getFeatureLevel()
             task.dexParams.minSdkVersion.set(minSdkVersionForDexing)
             val languageDesugaring =
-                creationConfig.getJava8LangSupportType() == Java8LangSupport.D8
+                dexingCreationConfig.java8LangSupportType == Java8LangSupport.D8
             task.dexParams.withDesugaring.set(languageDesugaring)
 
             // If min sdk version for dexing is >= N(24) then we can avoid adding extra classes to
@@ -346,7 +350,7 @@ abstract class DexArchiveBuilderTask : NewIncrementalTask() {
             // Set bootclasspath only for two cases:
             // 1. language desugaring with D8 and minSdkVersionForDexing < 24
             // 2. library desugaring enabled(required for API conversion)
-            val libraryDesugaring = creationConfig.isCoreLibraryDesugaringEnabled
+            val libraryDesugaring = dexingCreationConfig.isCoreLibraryDesugaringEnabled
             if (languageDesugaringNeeded || libraryDesugaring) {
                 task.dexParams.desugarBootclasspath
                         .from(creationConfig.global.filteredBootClasspath)
