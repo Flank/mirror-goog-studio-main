@@ -113,17 +113,19 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
             briefDescription = "Incompatible setRequestedOrientation value",
             explanation = """
                 The `Activity` should not be locked to a portrait orientation so that users \
-                can take advantage of the multi-window environments and larger landscape-first screens \
-                that Android runs on such as Chrome OS. To fix the issue, consider calling \
-                `setRequestedOrientation` with the `ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR` or \
-                `ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED` options or removing the call \
-                all together.
+                can take advantage of the multi-window environments and larger landscape-first \
+                screens that Android runs on such as ChromeOS, tablets, and foldables. To fix \
+                the issue, consider calling `setRequestedOrientation` with the \
+                `ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR` or \
+                `ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED` options or removing the \
+                call all together.
                 """,
             category = Category.CORRECTNESS,
             priority = 4,
             severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = IMPLEMENTATION
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/guide/topics/large-screens/large-screen-cookbook#restricted_app_orientation"
         ).setEnabledByDefault(true)
 
         @JvmField
@@ -131,18 +133,19 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
             id = "UnsupportedChromeOsCameraSystemFeature",
             briefDescription = "Looking for Rear Camera only feature",
             explanation = """
-                You should look for the `FEATURE_CAMERA_ANY` features to include all \
-                possible cameras that may be on the device. Looking for `FEATURE_CAMERA` \
-                only looks for a rear facing camera, which certain tablets or Chrome OS \
-                devices don't have, as well as newer device configurations and modes may place the \
-                device in a state where the rear camera is not available. To fix the issue, \
+                You should look for the `FEATURE_CAMERA_ANY` features to include all possible \
+                cameras that may be on the device. Looking for `FEATURE_CAMERA` only looks \
+                for a rear facing camera, which certain large screen devices don't have, \
+                as well as newer device configurations and modes may place the device \
+                in a state where the rear camera is not available. To fix the issue, \
                 look for `FEATURE_CAMERA_ANY` instead.
                 """,
             category = Category.CORRECTNESS,
             priority = 4,
             severity = Severity.WARNING,
             androidSpecific = true,
-            implementation = IMPLEMENTATION
+            implementation = IMPLEMENTATION,
+            moreInfo = "https://developer.android.com/guide/topics/large-screens/large-screen-cookbook#chromebook_camera_support"
         ).setEnabledByDefault(true)
 
         val UNSUPPORTED_ORIENTATIONS = setOf(

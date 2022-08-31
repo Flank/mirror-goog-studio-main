@@ -70,11 +70,11 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
             Issue.create(
                             "UnsupportedChromeOsHardware",
                             "Unsupported Chrome OS Hardware Feature",
-                            "The `<uses-feature>` element should not require this unsupported Chrome OS hardware "
-                                    + "feature. Any uses-feature not explicitly marked with `required=\"false\"` is "
-                                    + "necessary on the device to be installed on. Ensure that any features that might "
-                                    + "prevent it from being installed on a Chrome OS device are reviewed and marked as "
-                                    + "not required in the manifest.",
+                            "The `<uses-feature>` element should not require this unsupported large screen "
+                                    + "hardware feature. Any <uses-feature> not explicitly marked with `required=\"false\"` "
+                                    + "is necessary on the device to be installed on. Ensure that any features that might "
+                                    + "prevent it from being installed on a ChromeOS, large screen, or foldable device are "
+                                    + "reviewed and marked as not required in the manifest.",
                             Category.CHROME_OS,
                             6,
                             Severity.ERROR,
@@ -89,10 +89,10 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                             "PermissionImpliesUnsupportedChromeOsHardware",
                             "Permission Implies Unsupported Chrome OS Hardware",
                             "The `<uses-permission>` element should not require a permission that implies an "
-                                    + "unsupported Chrome OS hardware feature. Google Play assumes that certain "
-                                    + "hardware related permissions indicate that the underlying hardware features are "
-                                    + "required by default. To fix the issue, consider declaring the corresponding "
-                                    + "uses-feature element with `required=\"false\"` attribute.",
+                                    + "unsupported large screen hardware feature. Google Play assumes that certain "
+                                    + "hardware related permissions indicate that the underlying hardware features "
+                                    + "are required by default. To fix the issue, consider declaring the corresponding "
+                                    + "<uses-feature> element with `required=\"false\"` attribute.",
                             Category.CHROME_OS,
                             3,
                             Severity.ERROR,
