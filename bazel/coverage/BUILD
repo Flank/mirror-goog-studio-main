@@ -841,9 +841,6 @@ coverage_report(
 # Coverage report for AQI
 coverage_report(
     name = "aqi",
-    srcpath_exclude = [
-        "tools/vendor/google/firebase/src/com/google/services/firebase/insights/client/grpc/LegacyCrashlyticsGrpcClientImpl.kt",
-    ],
     srcpath_include = [
         "tools/vendor/google/firebase/src/com/google/services/firebase/insights",
     ],
