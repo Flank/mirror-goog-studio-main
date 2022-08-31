@@ -35,6 +35,10 @@ interface PrivacySandboxSdkBundle {
     @set:Incubating
     var sdkProviderClassName: String?
 
+    @get:Incubating
+    @set:Incubating
+    var compatSdkProviderClassName: String?
+
     @Incubating
     fun setVersion(major: Int, minor: Int, patch: Int)
 }

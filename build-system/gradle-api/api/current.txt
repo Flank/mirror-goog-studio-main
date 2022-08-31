@@ -1493,13 +1493,16 @@ package com.android.build.api.dsl {
 
   @org.gradle.api.Incubating public interface PrivacySandboxSdkBundle {
     method @org.gradle.api.Incubating public String? getApplicationId();
+    method @org.gradle.api.Incubating public String? getCompatSdkProviderClassName();
     method @Deprecated @org.gradle.api.Incubating public String? getPackageName();
     method @org.gradle.api.Incubating public String? getSdkProviderClassName();
     method @org.gradle.api.Incubating public void setApplicationId(String? applicationId);
+    method @org.gradle.api.Incubating public void setCompatSdkProviderClassName(String? compatSdkProviderClassName);
     method @Deprecated @org.gradle.api.Incubating public void setPackageName(String? packageName);
     method @org.gradle.api.Incubating public void setSdkProviderClassName(String? sdkProviderClassName);
     method @org.gradle.api.Incubating public void setVersion(int major, int minor, int patch);
     property @org.gradle.api.Incubating public abstract String? applicationId;
+    property @org.gradle.api.Incubating public abstract String? compatSdkProviderClassName;
     property @Deprecated @org.gradle.api.Incubating public abstract String? packageName;
     property @org.gradle.api.Incubating public abstract String? sdkProviderClassName;
   }

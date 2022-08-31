@@ -103,6 +103,8 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
                         .build()
                 ).setSdkProviderClassName(
                     sdkBundleProperties.sdkProviderClassName.get()
+                ).setCompatSdkProviderClassName(
+                    sdkBundleProperties.compatSdkProviderClassName.get()
                 ).build()
 
         val sdkBundleConfig =
@@ -179,6 +181,7 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
                     version.minor.setDisallowChanges(bundle.version?.minor ?: -1)
                     version.patch.setDisallowChanges(bundle.version?.patch ?: -1)
                     sdkProviderClassName.setDisallowChanges(bundle.sdkProviderClassName ?: "")
+                    compatSdkProviderClassName.setDisallowChanges(bundle.compatSdkProviderClassName ?: "")
                 }
             }
 
@@ -218,6 +221,9 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
 
         @get:Input
         val sdkProviderClassName: Property<String>
+
+        @get:Input
+        val compatSdkProviderClassName: Property<String>
     }
 }
 

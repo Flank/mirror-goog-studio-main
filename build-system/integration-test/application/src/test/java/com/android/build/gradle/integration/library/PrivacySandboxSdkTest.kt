@@ -133,6 +133,7 @@ class PrivacySandboxSdkTest {
                             bundle {
                                 applicationId = "com.example.privacysandboxsdk"
                                 sdkProviderClassName = "Test"
+                                compatSdkProviderClassName = "Test"
                                 setVersion(1, 2, 3)
                             }
                         }
