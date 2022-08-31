@@ -208,30 +208,11 @@ abstract class MergeJavaResourceTask
         creationConfig
     ) {
 
-        private val projectJavaResFromStreams: FileCollection?
-
         override val name: String
             get() = computeTaskName("merge", "JavaResource")
 
         override val type: Class<MergeJavaResourceTask>
             get() = MergeJavaResourceTask::class.java
-
-        init {
-            if (creationConfig.needsJavaResStreams) {
-                // Because ordering matters for Transform pipeline, we need to fetch the java res
-                // as soon as this creation action is instantiated, if needed.
-                projectJavaResFromStreams =
-                    creationConfig.transformManager
-                        .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
-                // We must also consume corresponding streams to avoid duplicates; any downstream
-                // transforms will use the merged-java-res stream instead.
-                @Suppress("DEPRECATION") // Legacy support
-                creationConfig.transformManager
-                    .consumeStreams(mutableSetOf(com.android.build.api.transform.QualifiedContent.Scope.PROJECT), setOf(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES))
-            } else {
-                projectJavaResFromStreams = null
-            }
-        }
 
         override fun handleProvider(
             taskProvider: TaskProvider<MergeJavaResourceTask>
@@ -256,14 +237,10 @@ abstract class MergeJavaResourceTask
         ) {
             super.configure(task)
 
-            if (projectJavaResFromStreams != null) {
-                task.projectJavaResAsJars.fromDisallowChanges(projectJavaResFromStreams)
-                task.unfilteredProjectJavaRes = projectJavaResFromStreams
-            } else {
-                val projectJavaRes = getProjectJavaRes(creationConfig)
-                task.unfilteredProjectJavaRes = projectJavaRes
-                task.projectJavaRes.from(projectJavaRes.asFileTree.matching(patternSet))
-            }
+
+            val projectJavaRes = getProjectJavaRes(creationConfig)
+            task.unfilteredProjectJavaRes = projectJavaRes
+            task.projectJavaRes.from(projectJavaRes.asFileTree.matching(patternSet))
             task.projectJavaRes.disallowChanges()
 
             @Suppress("DEPRECATION") // Legacy support

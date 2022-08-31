@@ -82,15 +82,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     ) : VariantTaskCreationAction<BundleLibraryJavaRes, ComponentCreationConfig>(
         creationConfig
     ) {
-
-        private val projectJavaResFromStreams = if (creationConfig.needsJavaResStreams) {
-            // Because ordering matters for TransformAPI, we need to fetch java res from the
-            // transform pipeline as soon as this creation action is instantiated, in needed.
-            creationConfig.transformManager.getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
-        } else {
-            null
-        }
-
         override val name: String = computeTaskName("bundleLibRes")
 
         override val type: Class<BundleLibraryJavaRes> = BundleLibraryJavaRes::class.java
@@ -113,14 +104,9 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
             val resources: FileCollection?
             // we should have two tasks with each input and ensure that only one runs for any build.
-            if (projectJavaResFromStreams != null) {
-                task.unfilteredResources = projectJavaResFromStreams
-                resources = projectJavaResFromStreams
-            } else {
-                val projectJavaRes = getProjectJavaRes(creationConfig)
-                task.unfilteredResources = projectJavaRes
-                resources = projectJavaRes.asFileTree.matching(MergeJavaResourceTask.patternSet)
-            }
+            val projectJavaRes = getProjectJavaRes(creationConfig)
+            task.unfilteredResources = projectJavaRes
+            resources = projectJavaRes.asFileTree.matching(MergeJavaResourceTask.patternSet)
             task.inputs.files(resources)
                 .skipWhenEmpty()
                 .ignoreEmptyDirectories(false)

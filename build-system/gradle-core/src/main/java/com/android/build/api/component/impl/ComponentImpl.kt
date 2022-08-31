@@ -472,9 +472,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
 
     override fun getArtifactName(name: String) = name
 
-    // external transforms are disabled, we never need java res streams.
-    override val needsJavaResStreams: Boolean = false
-
     /**
      * Publish an intermediate artifact.
      *

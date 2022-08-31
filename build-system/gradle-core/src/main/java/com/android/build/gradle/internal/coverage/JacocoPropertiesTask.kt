@@ -81,22 +81,6 @@ abstract class JacocoPropertiesTask : NonIncrementalTask() {
             creationConfig.computeTaskName("generate", "JacocoPropertiesFile")
         override val type: Class<JacocoPropertiesTask> get() = JacocoPropertiesTask::class.java
 
-        init {
-            // Do immediately as transform API is sensitive to the execution order.
-            if (creationConfig.needsJavaResStreams) {
-                val taskOutput =
-                    creationConfig.artifacts.get(InternalArtifactType.JACOCO_CONFIG_RESOURCES_JAR)
-                @Suppress("DEPRECATION") // Legacy support
-                creationConfig.transformManager.addStream(
-                    OriginalStream.builder("jacoco-properties-file")
-                        .addContentType(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
-                        .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
-                        .setFileCollection(creationConfig.services.fileCollection(taskOutput))
-                        .build()
-                )
-            }
-        }
-
         override fun handleProvider(taskProvider: TaskProvider<JacocoPropertiesTask>) {
             creationConfig.artifacts
                 .setInitialProvider(taskProvider, JacocoPropertiesTask::propertiesJar)

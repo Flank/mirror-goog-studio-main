@@ -1201,9 +1201,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                     .transformManager
                     .addStream(
                             OriginalStream.builder("final-r-classes")
-                                    .addContentTypes(
-                                            if (creationConfig.needsJavaResStreams) TransformManager.CONTENT_JARS else setOf(
-                                                com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
+                                    .addContentTypes(setOf(QualifiedContent.DefaultContentType.CLASSES))
                                     .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                                     .setFileCollection(rFiles)
                                     .build())
@@ -1307,15 +1305,8 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
     /**
      * Creates the java resources processing tasks.
      *
-     *
-     * The java processing will happen in two steps:
-     *
-     *
-     *  * [Sync] task configured with [ProcessJavaResTask.CreationAction] will sync
+     * [Sync] task configured with [ProcessJavaResTask.CreationAction] will sync
      * all source folders into a single folder identified by [InternalArtifactType]
-     *  * [MergeJavaResourceTask] will take the output of this merge plus the dependencies
-     * and will create a single merge with the [PackagingOptions] settings applied.
-     *
      *
      * This sets up only the Sync part. The java res merging is setup via [ ][.createMergeJavaResTask]
      */
@@ -1323,27 +1314,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
         taskFactory.register(ProcessJavaResTask.CreationAction(creationConfig))
-
-        // create the stream generated from this task, but only if a library with custom transforms,
-        // in which case the custom transforms must be applied before java res merging.
-        if (creationConfig.needsJavaResStreams) {
-            @Suppress("DEPRECATION") // Legacy support
-            creationConfig
-                    .transformManager
-                    .addStream(
-                            OriginalStream.builder("processed-java-res")
-                                    .addContentType(com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES)
-                                    .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
-                                    .setFileCollection(
-                                            creationConfig
-                                                    .services
-                                                    .fileCollection(
-                                                            creationConfig
-                                                                    .artifacts
-                                                                    .get(
-                                                                            JAVA_RES)))
-                                    .build())
-        }
     }
 
     /**
@@ -1480,9 +1450,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         transformManager.addStream(
                 OriginalStream.builder("all-classes") // Need both classes and resources because some annotation
                         // processors generate resources
-                        .addContentTypes(
-                                if (creationConfig.needsJavaResStreams) TransformManager.CONTENT_JARS else setOf(
-                                    com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES))
+                        .addContentTypes(setOf(QualifiedContent.DefaultContentType.CLASSES))
                         .addScope(com.android.build.api.transform.QualifiedContent.Scope.PROJECT)
                         .setFileCollection(creationConfig
                             .artifacts

@@ -163,8 +163,6 @@ interface ComponentCreationConfig : ComponentIdentity {
      */
     fun getArtifactName(name: String): String
 
-    val needsJavaResStreams: Boolean
-
     // ---------------------------------------------------------------------------------------------
     // VARIANT DSL INFO REPLACEMENTS
     // ---------------------------------------------------------------------------------------------
