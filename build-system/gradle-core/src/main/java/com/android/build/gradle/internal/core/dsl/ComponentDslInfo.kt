@@ -73,19 +73,6 @@ interface ComponentDslInfo {
      */
     val minSdkVersion: MutableAndroidVersion
 
-    val maxSdkVersion: Int?
-
-    /**
-     * Return the targetSdkVersion for this variant.
-     *
-     *
-     * This uses both the value from the manifest (if present), and the override coming from the
-     * flavor(s) (if present).
-     *
-     * @return the targetSdkVersion
-     */
-    val targetSdkVersion: MutableAndroidVersion?
-
     val javaCompileOptionsSetInDSL: JavaCompileOptions
 
     val androidResourcesDsl: AndroidResourcesDslInfo?

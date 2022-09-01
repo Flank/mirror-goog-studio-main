@@ -66,10 +66,6 @@ internal class TestFixturesDslInfoImpl(
     )
     override val minSdkVersion: MutableAndroidVersion
         get() = mainVariantDslInfo.minSdkVersion
-    override val maxSdkVersion: Int?
-        get() = mainVariantDslInfo.maxSdkVersion
-    override val targetSdkVersion: MutableAndroidVersion?
-        get() = mainVariantDslInfo.targetSdkVersion
 
     override val publishInfo: VariantPublishingInfo
         get() = (mainVariantDslInfo as PublishableComponentDslInfo).publishInfo

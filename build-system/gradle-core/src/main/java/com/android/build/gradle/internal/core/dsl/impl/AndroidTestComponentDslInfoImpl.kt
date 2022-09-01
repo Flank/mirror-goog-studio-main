@@ -76,10 +76,6 @@ internal class AndroidTestComponentDslInfoImpl(
 
     override val minSdkVersion: MutableAndroidVersion
         get() = mainVariantDslInfo.minSdkVersion
-    override val maxSdkVersion: Int?
-        get() = mainVariantDslInfo.maxSdkVersion
-    override val targetSdkVersion: MutableAndroidVersion?
-        get() = mainVariantDslInfo.targetSdkVersion
 
     override val namespaceForR: Provider<String> by lazy {
         if (inconsistentTestAppId) {

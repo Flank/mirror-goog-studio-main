@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.core.dsl
 
 import com.android.build.api.dsl.Lint
 import com.android.build.api.dsl.PackagingOptions
+import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -54,4 +55,17 @@ interface VariantDslInfo: ComponentDslInfo, ConsumableComponentDslInfo {
     val experimentalProperties: Map<String, Any>
 
     val externalNativeExperimentalProperties: Map<String, Any>
+
+    val maxSdkVersion: Int?
+
+    /**
+     * Return the targetSdkVersion for this variant.
+     *
+     *
+     * This uses both the value from the manifest (if present), and the override coming from the
+     * flavor(s) (if present).
+     *
+     * @return the targetSdkVersion
+     */
+    val targetSdkVersion: MutableAndroidVersion?
 }
