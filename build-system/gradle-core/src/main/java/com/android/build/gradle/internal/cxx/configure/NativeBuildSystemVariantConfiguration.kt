@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.api.variant.impl.VariantImpl
-import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 
 /**
  * This class represents a single native build variant config that is abstract against the
@@ -33,8 +33,8 @@ data class NativeBuildSystemVariantConfig(
 
 // TODO(b/225137414): stop resolving variant properties
 fun createNativeBuildSystemVariantConfig(
-    buildSystem: NativeBuildSystem,
-    variant: VariantImpl<*>
+    variant: VariantImpl<*>,
+    nativeBuildCreationConfig: NativeBuildCreationConfig
 ): NativeBuildSystemVariantConfig {
 
     /**
@@ -65,7 +65,7 @@ fun createNativeBuildSystemVariantConfig(
      *     }
      * </pre>
      */
-    val ndkAbiFilters: Set<String> = variant.ndkConfig.abiFilters
+    val ndkAbiFilters: Set<String> = nativeBuildCreationConfig.ndkConfig.abiFilters
 
 
     /**

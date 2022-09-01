@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.prefab
 
 import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.cxx.configure.getPrefabExperimentalPackagingOptions
 import com.android.build.gradle.internal.cxx.gradle.generator.CxxConfigurationModel
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -36,7 +37,8 @@ import java.util.regex.Pattern
  */
 fun createPrefabPublication(
     configurationModel: CxxConfigurationModel,
-    libraryVariant : LibraryCreationConfig
+    libraryVariant : LibraryCreationConfig,
+    nativeBuildCreationConfig: NativeBuildCreationConfig
 ) : PrefabPublication {
 
     val abis = configurationModel.activeAbis.map { abi ->
@@ -50,7 +52,7 @@ fun createPrefabPublication(
         )
     }
     val modules = libraryVariant.global.prefab.map { options ->
-        val experimentalSettings = libraryVariant.getPrefabExperimentalPackagingOptions(options.name)
+        val experimentalSettings = nativeBuildCreationConfig.getPrefabExperimentalPackagingOptions(options.name)
 
         PrefabModulePublication(
             moduleName = options.name,

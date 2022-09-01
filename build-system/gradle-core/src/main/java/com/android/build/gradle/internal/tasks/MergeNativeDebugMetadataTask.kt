@@ -103,7 +103,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
             variant: ApplicationCreationConfig
         ): FileCollection {
             val nativeDebugMetadataDirs = variant.services.fileCollection()
-            when (variant.nativeDebugSymbolLevel) {
+            when (variant.nativeBuildCreationConfig?.nativeDebugSymbolLevel) {
                 DebugSymbolLevel.FULL -> {
                     nativeDebugMetadataDirs.from(
                         variant.artifacts.get(
@@ -133,6 +133,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
                     )
                 }
                 DebugSymbolLevel.NONE -> { }
+                null -> { }
             }
             nativeDebugMetadataDirs.disallowChanges()
             return nativeDebugMetadataDirs.asFileTree.matching(patternSet)

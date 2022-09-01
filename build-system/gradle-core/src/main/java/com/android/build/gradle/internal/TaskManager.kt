@@ -979,9 +979,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 RenderscriptCompile.
                 CreationAction(
                     creationConfig,
-                    ndkConfig = if (creationConfig is AndroidTestCreationConfig) {
-                        creationConfig.mainVariant.ndkConfig
-                    } else (creationConfig as VariantCreationConfig).ndkConfig
+                    ndkConfig = creationConfig.nativeBuildCreationConfig!!.ndkConfig
                 )
             )
 

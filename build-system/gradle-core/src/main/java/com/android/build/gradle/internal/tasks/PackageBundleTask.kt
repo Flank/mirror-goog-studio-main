@@ -570,7 +570,9 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 MergeNativeDebugMetadataTask.getNativeDebugMetadataFiles(creationConfig)
             )
 
-            task.abiFilters.setDisallowChanges(creationConfig.supportedAbis)
+            task.abiFilters.setDisallowChanges(
+                creationConfig.nativeBuildCreationConfig?.supportedAbis ?: emptyList()
+            )
 
             task.aaptOptionsNoCompress.setDisallowChanges(
                 creationConfig.androidResourcesCreationConfig?.androidResources?.noCompress,

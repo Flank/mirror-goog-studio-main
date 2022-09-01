@@ -190,11 +190,4 @@ open class TestFixturesImpl @Inject constructor(
     override fun getArtifactName(name: String): String {
         return "$testFixturesFeatureName-$name"
     }
-
-    // ---------------------------------------------------------------------------------------------
-    // Private stuff
-    // ---------------------------------------------------------------------------------------------
-
-    override val supportedAbis: Set<String>
-        get() = mainVariant.supportedAbis
 }

@@ -55,7 +55,8 @@ class TestDataImpl(
         testConfig.services.provider { testConfig.mainVariant.componentType.isAar }
 
     @get:Input
-    val supportedAbis: Set<String> = testConfig.supportedAbis
+    val supportedAbis: Set<String> =
+        testConfig.nativeBuildCreationConfig?.supportedAbis ?: emptySet()
 
     override fun findTestedApks(deviceConfigProvider: DeviceConfigProvider): List<File> {
         testedApksDir ?: return emptyList()

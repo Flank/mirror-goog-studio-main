@@ -32,6 +32,7 @@ import com.android.build.api.variant.impl.VariantOutputConfigurationImpl
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ApplicationVariantDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -201,12 +202,11 @@ class ApplicationVariantFactory(
         globalConfig: GlobalTaskCreationConfig,
     ) {
         variant.calculateFilters(globalConfig.splits)
-        val densities =
-            variant.getFilters(VariantOutput.FilterType.DENSITY)
-        val abis =
-            variant.getFilters(VariantOutput.FilterType.ABI)
-        checkSplitsConflicts(appVariant, abis, globalConfig)
-        if (!densities.isEmpty()) {
+        val densities = variant.getFilters(VariantOutput.FilterType.DENSITY)
+        val abis = variant.getFilters(VariantOutput.FilterType.ABI)
+        val nativeBuildCreationConfig = appVariant.nativeBuildCreationConfig!!
+        checkSplitsConflicts(nativeBuildCreationConfig, abis, globalConfig)
+        if (densities.isNotEmpty()) {
             variant.compatibleScreens = globalConfig.splits.density
                 .compatibleScreens
         }
@@ -214,9 +214,9 @@ class ApplicationVariantFactory(
             populateMultiApkOutputs(abis, densities, globalConfig)
         variantOutputs.forEach { appVariant.addVariantOutput(it) }
         restrictEnabledOutputs(
-                appVariant,
-                appVariant.outputs,
-                globalConfig
+            nativeBuildCreationConfig,
+            appVariant.outputs,
+            globalConfig
         )
     }
 
@@ -297,7 +297,7 @@ class ApplicationVariantFactory(
     }
 
     private fun checkSplitsConflicts(
-        component: ApplicationCreationConfig,
+        component: NativeBuildCreationConfig,
         abiFilters: Set<String?>,
         globalConfig: GlobalTaskCreationConfig,
     ) { // if we don't have any ABI splits, nothing is conflicting.
@@ -326,7 +326,7 @@ class ApplicationVariantFactory(
     }
 
     private fun restrictEnabledOutputs(
-        component: ApplicationCreationConfig,
+        component: NativeBuildCreationConfig,
         variantOutputs: VariantOutputList,
         globalConfig: GlobalTaskCreationConfig
     ) {

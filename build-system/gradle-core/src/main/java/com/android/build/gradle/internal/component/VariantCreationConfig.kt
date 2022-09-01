@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.component.impl.UnitTestImpl
-import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.builder.core.ComponentType
 import org.gradle.api.provider.MapProperty
 
@@ -25,12 +24,6 @@ interface VariantCreationConfig: ConsumableCreationConfig {
     val maxSdkVersion: Int?
 
     val experimentalProperties: MapProperty<String, Any>
-
-    val externalNativeExperimentalProperties: Map<String, Any>
-
-    val ndkConfig: MergedNdkConfig
-
-    val isJniDebuggable: Boolean
 
     val testComponents: MutableMap<ComponentType, TestComponentCreationConfig>
 

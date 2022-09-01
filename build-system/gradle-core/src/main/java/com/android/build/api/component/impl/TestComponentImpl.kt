@@ -97,7 +97,4 @@ abstract class TestComponentImpl<DslInfoT: TestComponentDslInfo> @Inject constru
     override fun <T> onTestedVariant(action: (VariantCreationConfig) -> T): T {
         return action(mainVariant)
     }
-
-    override val supportedAbis: Set<String>
-        get() = mainVariant.supportedAbis
 }

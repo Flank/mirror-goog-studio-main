@@ -32,8 +32,6 @@ import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.BuildConfigField
-import com.android.build.api.variant.CanMinifyAndroidResourcesBuilder
-import com.android.build.api.variant.CanMinifyCodeBuilder
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Renderscript
@@ -51,6 +49,7 @@ import com.android.build.gradle.internal.component.features.BuildConfigCreationC
 import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.component.features.OptimizationCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.component.features.ShadersCreationConfig
@@ -286,6 +285,9 @@ open class AndroidTestImpl @Inject constructor(
             internalServices
         )
     }
+
+    override val nativeBuildCreationConfig: NativeBuildCreationConfig?
+        get() = mainVariant.nativeBuildCreationConfig
 
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride

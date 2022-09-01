@@ -20,6 +20,7 @@ import com.android.build.api.component.impl.ComponentImpl
 import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
 import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
+import com.android.build.api.component.impl.features.NativeBuildCreationConfigImpl
 import com.android.build.api.component.impl.features.OptimizationCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.component.impl.features.ShadersCreationConfigImpl
@@ -30,7 +31,6 @@ import com.android.build.api.variant.CanMinifyAndroidResourcesBuilder
 import com.android.build.api.variant.CanMinifyCodeBuilder
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ExternalNativeBuild
-import com.android.build.api.variant.ExternalNdkBuildImpl
 import com.android.build.api.variant.Packaging
 import com.android.build.api.variant.ResValue
 import com.android.build.api.variant.Variant
@@ -41,14 +41,12 @@ import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.component.features.OptimizationCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.component.features.ShadersCreationConfig
-import com.android.build.gradle.internal.core.MergedNdkConfig
-import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
-import com.android.build.gradle.internal.cxx.configure.externalNativeNinjaOptions
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildFeatureValues
@@ -141,32 +139,8 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     }
 
 
-    override val externalNativeBuild: ExternalNativeBuild? by lazy {
-        dslInfo.nativeBuildSystem?.let { nativeBuildType ->
-            when(nativeBuildType) {
-                NativeBuiltType.CMAKE ->
-                    dslInfo.externalNativeBuildOptions.externalNativeCmakeOptions?.let {
-                        ExternalCmakeImpl(
-                                it,
-                                variantServices
-                        )
-                    }
-                NativeBuiltType.NDK_BUILD ->
-                    dslInfo.externalNativeBuildOptions.externalNativeNdkBuildOptions?.let {
-                        ExternalNdkBuildImpl(
-                                it,
-                                variantServices
-                        )
-                    }
-                NativeBuiltType.NINJA -> {
-                    ExternalNinjaImpl(
-                        externalNativeNinjaOptions,
-                        variantServices
-                    )
-                }
-            }
-        }
-    }
+    override val externalNativeBuild: ExternalNativeBuild?
+        get() = nativeBuildCreationConfig.externalNativeBuild
 
     override fun <T> getExtension(type: Class<T>): T? =
         type.cast(externalExtensions?.get(type))
@@ -225,6 +199,14 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         )
     }
 
+    override val nativeBuildCreationConfig: NativeBuildCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        NativeBuildCreationConfigImpl(
+            this,
+            dslInfo.nativeBuildDslInfo!!,
+            internalServices
+        )
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
@@ -271,9 +253,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 dslInfo.experimentalProperties
             )
 
-    override val externalNativeExperimentalProperties: Map<String, Any>
-        get() = dslInfo.externalNativeExperimentalProperties
-
     override val nestedComponents: List<ComponentImpl<*>>
         get() = listOfNotNull(
             unitTest,
@@ -288,13 +267,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
             (this as? HasAndroidTest)?.androidTest,
             (this as? HasTestFixtures)?.testFixtures
         )
-
-    override val ndkConfig: MergedNdkConfig
-        get() = dslInfo.ndkConfig
-    override val isJniDebuggable: Boolean
-        get() = dslInfo.isJniDebuggable
-    override val supportedAbis: Set<String>
-        get() = dslInfo.supportedAbis
 
     override val manifestPlaceholders: MapProperty<String, String>
         get() = manifestPlaceholdersCreationConfig.placeholders

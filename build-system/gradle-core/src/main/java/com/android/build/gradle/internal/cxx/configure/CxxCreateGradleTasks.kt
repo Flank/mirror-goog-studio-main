@@ -140,7 +140,11 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         // Add prefab configure task
                         if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
-                            val publication = createPrefabPublication(configuration, variant)
+                            val publication = createPrefabPublication(
+                                configuration,
+                                variant,
+                                variant.nativeBuildCreationConfig!!
+                            )
                             if (configuration.variant.module.project.isBuildOnlyTargetAbiEnabled) {
                                 // Write the header-only publication only if this is an IDE build.
                                 HeaderOnly.writePublicationFile(publication)
@@ -199,7 +203,11 @@ fun <VariantBuilderT : ComponentBuilder, VariantT : VariantCreationConfig> creat
                         // Add prefab package task
                         if (variant is LibraryCreationConfig &&
                             variant.buildFeatures.prefabPublishing) {
-                            val publication = createPrefabPublication(configuration, variant)
+                            val publication = createPrefabPublication(
+                                configuration,
+                                variant,
+                                variant.nativeBuildCreationConfig!!
+                            )
 
                             createPrefabPackageTask(
                                 taskFactory,

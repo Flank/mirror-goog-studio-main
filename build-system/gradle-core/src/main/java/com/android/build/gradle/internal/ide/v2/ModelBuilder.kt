@@ -714,7 +714,7 @@ class ModelBuilder<
 
             applicationId = getApplicationId(component),
 
-            abiFilters = component.supportedAbis,
+            abiFilters = (component as? ConsumableCreationConfig)?.nativeBuildCreationConfig?.supportedAbis ?: emptySet(),
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
             codeShrinker = CodeShrinker.R8.takeIf {

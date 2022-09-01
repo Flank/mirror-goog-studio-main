@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import java.io.File
 
 /**
@@ -73,7 +73,7 @@ data class CoreExternalNativeNinjaOptions(
 /**
  * Planned as field in  com.android.build.api.dsl.ExternalNativeBuild
  */
-val VariantCreationConfig.ninja : Ninja get() = externalNativeExperimentalProperties.ninja
+val NativeBuildCreationConfig.ninja : Ninja get() = externalNativeExperimentalProperties.ninja
 
 val Map<String, Any>.ninja : Ninja get() = Ninja(
     path = propertyAsFile("ninja.path"),
@@ -84,7 +84,7 @@ val Map<String, Any>.ninja : Ninja get() = Ninja(
 /**
  * Planned as field in com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
  */
-val VariantCreationConfig.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
+val NativeBuildCreationConfig.externalNativeNinjaOptions get() = CoreExternalNativeNinjaOptions(
     abiFilters = externalNativeExperimentalProperties.propertyAsSet("ninja.abiFilters"),
     arguments = externalNativeExperimentalProperties.propertyAsList("ninja.arguments"),
     cFlags = externalNativeExperimentalProperties.propertyAsList("ninja.cFlags"),
@@ -149,7 +149,7 @@ data class PrefabExperimentalPackagingOptions(
 /**
  * Retrieve user's experimental settings for an individual Prefab publishing module.
  */
-fun VariantCreationConfig.getPrefabExperimentalPackagingOptions(module : String)
+fun NativeBuildCreationConfig.getPrefabExperimentalPackagingOptions(module : String)
     : PrefabExperimentalPackagingOptions {
     var exportLibraries : List<String>? = null
     for((key, value) in externalNativeExperimentalProperties) {

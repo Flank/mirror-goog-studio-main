@@ -397,7 +397,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                     )
                 )
             } else {
-                task.abiFilters.set(creationConfig.supportedAbis)
+                task.abiFilters.set(
+                    creationConfig.nativeBuildCreationConfig?.supportedAbis ?: emptyList()
+                )
             }
             task.abiFilters.disallowChanges()
             task.baseModuleMetadata.disallowChanges()

@@ -43,9 +43,7 @@ import com.android.build.api.variant.impl.VariantOutputListKt;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.component.ApkCreationConfig;
 import com.android.build.gradle.internal.component.ApplicationCreationConfig;
-import com.android.build.gradle.internal.component.NestedComponentCreationConfig;
 import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.component.VariantCreationConfig;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dependency.AndroidAttributes;
 import com.android.build.gradle.internal.manifest.ManifestData;
@@ -1250,13 +1248,10 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getAssets()
                     .set(creationConfig.getArtifacts().get(COMPRESSED_ASSETS.INSTANCE));
             boolean isJniDebuggable;
-            if (creationConfig instanceof NestedComponentCreationConfig) {
-                isJniDebuggable =
-                        ((NestedComponentCreationConfig) creationConfig)
-                                .getMainVariant()
-                                .isJniDebuggable();
+            if (creationConfig.getNativeBuildCreationConfig() != null) {
+                isJniDebuggable = creationConfig.getNativeBuildCreationConfig().isJniDebuggable();
             } else {
-                isJniDebuggable = ((VariantCreationConfig) creationConfig).isJniDebuggable();
+                isJniDebuggable = false;
             }
             packageAndroidArtifact.setJniDebugBuild(isJniDebuggable);
             packageAndroidArtifact.getDebugBuild().set(creationConfig.getDebuggable());
@@ -1281,7 +1276,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                                 COMPILE_CLASSPATH, PROJECT, BASE_MODULE_METADATA));
             }
             packageAndroidArtifact.getBaseModuleMetadata().disallowChanges();
-            Set<String> supportedAbis = creationConfig.getSupportedAbis();
+            final Set<String> supportedAbis;
+
+            if (creationConfig.getNativeBuildCreationConfig() != null) {
+                supportedAbis = creationConfig.getNativeBuildCreationConfig().getSupportedAbis();
+            } else {
+                supportedAbis = Collections.emptySet();
+            }
             if (!supportedAbis.isEmpty()) {
                 // If the build author has set the supported Abis that is respected
                 packageAndroidArtifact.getAbiFilters().set(supportedAbis);

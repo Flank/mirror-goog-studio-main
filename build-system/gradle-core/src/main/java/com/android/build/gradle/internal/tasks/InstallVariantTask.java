@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -279,7 +280,14 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
             super.configure(task);
 
             task.variantName = creationConfig.getBaseName();
-            task.supportedAbis = creationConfig.getSupportedAbis();
+
+            if (creationConfig.getNativeBuildCreationConfig() == null) {
+                task.supportedAbis = Collections.emptySet();
+            } else {
+                task.supportedAbis =
+                        creationConfig.getNativeBuildCreationConfig().getSupportedAbis();
+            }
+
             task.minSdkVersion =
                     VariantApiExtensionsKt.toSharedAndroidVersion(
                             creationConfig.getMinSdkVersion());

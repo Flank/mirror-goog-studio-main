@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.component
 
 import com.android.build.api.variant.Packaging
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.component.features.OptimizationCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.component.features.ShadersCreationConfig
@@ -43,4 +44,5 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
     // optional features
     val renderscriptCreationConfig: RenderscriptCreationConfig?
     val shadersCreationConfig: ShadersCreationConfig?
+    val nativeBuildCreationConfig: NativeBuildCreationConfig?
 }

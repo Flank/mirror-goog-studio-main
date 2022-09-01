@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.cxx.gradle.generator
 
+import com.android.build.api.dsl.ExternalNativeBuild
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.api.variant.impl.toSharedAndroidVersion
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.cxx.caching.CachingEnvironment
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfig
@@ -188,8 +190,9 @@ fun tryCreateConfigurationParameters(
 ): CxxConfigurationParameters? {
     val globalConfig = variant.global
     val projectInfo = variant.services.projectInfo
+    val nativeBuildCreationConfig = variant.nativeBuildCreationConfig!!
     val (buildSystem, makeFile, configureScript, buildStagingFolder) =
-        getProjectPath(variant) ?: return null
+        getProjectPath(nativeBuildCreationConfig, globalConfig.externalNativeBuild) ?: return null
 
     val cxxFolder = findCxxFolder(
         buildSystem,
@@ -304,8 +307,8 @@ fun tryCreateConfigurationParameters(
         implicitBuildTargetSet = prefabTargets,
         variantName = variant.name,
         nativeVariantConfig = createNativeBuildSystemVariantConfig(
-            buildSystem,
-            variant as VariantImpl<*>
+            variant as VariantImpl<*>,
+            nativeBuildCreationConfig
         ),
         outputOptions = outputOptions
     )
@@ -315,8 +318,12 @@ fun tryCreateConfigurationParameters(
  * Return true if this Gradle module contains a C/C++ build.
  */
 fun externalNativeBuildIsActive(creationConfig : ConsumableCreationConfig) : Boolean {
-    if (creationConfig !is VariantCreationConfig) return false
-    return getProjectPath(creationConfig) != null
+    return creationConfig.nativeBuildCreationConfig?.let { nativeBuildCreationConfig ->
+        getProjectPath(
+            nativeBuildCreationConfig,
+            creationConfig.global.externalNativeBuild
+        )
+    } != null
 }
 
 /**
@@ -326,9 +333,9 @@ fun externalNativeBuildIsActive(creationConfig : ConsumableCreationConfig) : Boo
  *   ndkBuild in the same project.
  */
 private fun getProjectPath(
-    component: VariantCreationConfig
+    component: NativeBuildCreationConfig,
+    config: ExternalNativeBuild
 ): NativeProjectPath? {
-    val config = component.global.externalNativeBuild
     val externalProjectPaths = listOfNotNull(
         component.ninja.path?.let { NativeProjectPath(NINJA, it, component.ninja.configure, component.ninja.buildStagingDirectory) },
         config.cmake.path?.let { NativeProjectPath(CMAKE, it, null, config.cmake.buildStagingDirectory) },

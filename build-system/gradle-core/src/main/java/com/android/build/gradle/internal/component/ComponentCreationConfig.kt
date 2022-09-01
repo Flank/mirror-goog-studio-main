@@ -80,7 +80,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val applicationId: Provider<String>
     val namespace: Provider<String>
     val debuggable: Boolean
-    val supportedAbis: Set<String>
 
     val minSdkVersion: AndroidVersion
     val targetSdkVersion: AndroidVersion

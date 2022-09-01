@@ -24,13 +24,8 @@ import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.MutableAndroidVersion
-import com.android.build.gradle.internal.core.MergedExternalNativeBuildOptions
-import com.android.build.gradle.internal.core.MergedNdkConfig
-import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.dsl.VariantDslInfo
-import com.android.build.gradle.internal.cxx.configure.ninja
-import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
-import com.android.build.gradle.internal.dsl.CoreNdkOptions
+import com.android.build.gradle.internal.core.dsl.impl.features.NativeBuildDslInfoImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.VariantServices
@@ -60,45 +55,6 @@ internal abstract class VariantDslInfoImpl internal constructor(
     extension
 ), VariantDslInfo {
 
-    // merged options
-
-    override val ndkConfig: MergedNdkConfig = MergedNdkConfig()
-    override val externalNativeBuildOptions = MergedExternalNativeBuildOptions()
-
-    override val externalNativeExperimentalProperties: Map<String, Any>
-        get() {
-            // merge global and variant properties
-            val mergedProperties = mutableMapOf<String, Any>()
-            mergedProperties.putAll(extension.externalNativeBuild.experimentalProperties)
-            mergedProperties.putAll(
-                externalNativeBuildOptions.externalNativeExperimentalProperties
-            )
-            return mergedProperties
-        }
-
-    init {
-        mergeOptions()
-    }
-
-    private fun mergeOptions() {
-        computeMergedOptions(
-            defaultConfig,
-            buildTypeObj,
-            productFlavorList,
-            ndkConfig,
-            { ndk as CoreNdkOptions },
-            { ndk as CoreNdkOptions }
-        )
-        computeMergedOptions(
-            defaultConfig,
-            buildTypeObj,
-            productFlavorList,
-            externalNativeBuildOptions,
-            { externalNativeBuild as CoreExternalNativeBuildOptions },
-            { externalNativeBuild as CoreExternalNativeBuildOptions }
-        )
-    }
-
     // merged flavor delegates
 
     override val minSdkVersion: MutableAndroidVersion
@@ -112,11 +68,6 @@ internal abstract class VariantDslInfoImpl internal constructor(
         // if there's a testedVariant, return its value, otherwise return the merged flavor
         // value. If there's no value set, then return null
         get() =  mergedFlavor.targetSdkVersion?.let { MutableAndroidVersion(it.apiLevel, it.codename) }
-
-    // build type delegates
-
-    override val isJniDebuggable: Boolean
-        get() = buildTypeObj.isJniDebuggable
 
     // extension delegates
 
@@ -138,23 +89,21 @@ internal abstract class VariantDslInfoImpl internal constructor(
         )
     }
 
-    override val nativeBuildSystem: NativeBuiltType?
-        get() {
-            if (externalNativeExperimentalProperties.ninja.path != null) return NativeBuiltType.NINJA
-            if (extension.externalNativeBuild.ndkBuild.path != null) return NativeBuiltType.NDK_BUILD
-            if (extension.externalNativeBuild.cmake.path != null) return NativeBuiltType.CMAKE
-            return null
-        }
-
-    override val supportedAbis: Set<String>
-        get() = if (componentType.isDynamicFeature) setOf() else ndkConfig.abiFilters
-
     override val lintOptions: Lint
         get() = extension.lint
     override val packaging: PackagingOptions
         get() = extension.packagingOptions
     override val experimentalProperties: Map<String, Any>
         get() = extension.experimentalProperties
+    override val nativeBuildDslInfo by lazy(LazyThreadSafetyMode.NONE) {
+        NativeBuildDslInfoImpl(
+            componentType,
+            defaultConfig,
+            buildTypeObj,
+            productFlavorList,
+            extension
+        )
+    }
 
     // helper methods
 

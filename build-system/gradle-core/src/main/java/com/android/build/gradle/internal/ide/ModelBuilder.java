@@ -1064,14 +1064,19 @@ public class ModelBuilder<Extension extends BaseExtension>
 
         MutableTaskContainer taskContainer = component.getTaskContainer();
         ArtifactsImpl artifacts = component.getArtifacts();
-        final CodeShrinker codeShrinker;
-        if (component instanceof ConsumableCreationConfig
-                && ((ConsumableCreationConfig) component)
-                        .getOptimizationCreationConfig()
-                        .getMinifiedEnabled()) {
-            codeShrinker = CodeShrinker.R8;
-        } else {
-            codeShrinker = null;
+        CodeShrinker codeShrinker = null;
+        Set<String> supportedAbis = Collections.emptySet();
+        if (component instanceof ConsumableCreationConfig) {
+            ConsumableCreationConfig creationConfig = ((ConsumableCreationConfig) component);
+            if (creationConfig.getOptimizationCreationConfig().getMinifiedEnabled()) {
+                codeShrinker = CodeShrinker.R8;
+            }
+            if (creationConfig.getNativeBuildCreationConfig() != null) {
+                supportedAbis =
+                        ((ConsumableCreationConfig) component)
+                                .getNativeBuildCreationConfig()
+                                .getSupportedAbis();
+            }
         }
 
         return new AndroidArtifactImpl(
@@ -1100,7 +1105,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 additionalRuntimeApks,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
-                component.getSupportedAbis(),
+                supportedAbis,
                 instantRun,
                 testOptions,
                 taskContainer.getConnectedTestTask() == null

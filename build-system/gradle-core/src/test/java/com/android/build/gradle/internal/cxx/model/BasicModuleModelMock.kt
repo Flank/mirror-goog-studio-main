@@ -21,6 +21,7 @@ import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.variant.impl.AndroidVersionImpl
 import com.android.build.api.variant.impl.VariantImpl
 import com.android.build.gradle.internal.SdkComponentsBuildService
+import com.android.build.gradle.internal.component.features.NativeBuildCreationConfig
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
@@ -320,8 +321,12 @@ open class BasicModuleModelMock {
         doReturn(emptyList<File>().iterator()).`when`(prefabFileCollection).iterator()
 
         doReturn(variantExternalNativeBuild).`when`(this.variantImpl).externalNativeBuild
-        doReturn(mergedNdkConfig).`when`(this.variantImpl).ndkConfig
-        doReturn(variantExperimentalProperties).`when`(this.variantImpl).externalNativeExperimentalProperties
+
+        val nativeBuildCreationConfig = Mockito.mock(NativeBuildCreationConfig::class.java)
+
+        doReturn(mergedNdkConfig).`when`(nativeBuildCreationConfig).ndkConfig
+        doReturn(variantExperimentalProperties).`when`(nativeBuildCreationConfig).externalNativeExperimentalProperties
+        doReturn(nativeBuildCreationConfig).`when`(this.variantImpl).nativeBuildCreationConfig
         doReturn(abiSplitOptions).`when`(splits).abi
         doReturn(setOf<String>()).`when`(splits).abiFilters
         doReturn(false).`when`(abiSplitOptions).isUniversalApk

@@ -178,15 +178,6 @@ open class ApplicationVariantImpl @Inject constructor(
             ) ?: emptyList()
         }
 
-    override val nativeDebugSymbolLevel: DebugSymbolLevel
-        get() {
-            val debugSymbolLevelOrNull =
-                NdkOptions.DEBUG_SYMBOL_LEVEL_CONVERTER.convert(
-                    dslInfo.ndkConfig.debugSymbolLevel
-                )
-            return debugSymbolLevelOrNull ?: if (debuggable) DebugSymbolLevel.NONE else DebugSymbolLevel.SYMBOL_TABLE
-        }
-
     // ---------------------------------------------------------------------------------------------
     // Private stuff
     // ---------------------------------------------------------------------------------------------
