@@ -861,7 +861,9 @@ abstract class VariantInputs {
         val creationConfig = variantWithTests.main
         name.setDisallowChanges(creationConfig.name)
         this.checkDependencies.setDisallowChanges(checkDependencies)
-        minifiedEnabled.setDisallowChanges(creationConfig.minifiedEnabled)
+        minifiedEnabled.setDisallowChanges(
+            creationConfig.optimizationCreationConfig.minifiedEnabled
+        )
         mainArtifact.initialize(
             creationConfig,
             checkDependencies,
@@ -952,14 +954,18 @@ abstract class VariantInputs {
         sourceProviders.add(mainSourceProvider)
         sourceProviders.disallowChanges()
 
-        proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
+        proguardFiles.setDisallowChanges(
+            creationConfig.optimizationCreationConfig.proguardFiles
+        )
 
         extractedProguardFiles.setDisallowChanges(
             creationConfig.global.globalArtifacts.get(
                 InternalArtifactType.DEFAULT_PROGUARD_FILES
             )
         )
-        consumerProguardFiles.setDisallowChanges(creationConfig.consumerProguardFiles)
+        consumerProguardFiles.setDisallowChanges(
+            creationConfig.optimizationCreationConfig.consumerProguardFiles
+        )
 
         variantWithTests.unitTest?.let { unitTestCreationConfig ->
             unitTestSourceProvider.set(
@@ -1399,7 +1405,8 @@ abstract class AndroidArtifactInput : ArtifactInput() {
             ModelBuilder.getGeneratedResourceFoldersFileCollection(creationConfig)
         )
         shrinkable.setDisallowChanges(
-            creationConfig is ConsumableCreationConfig && creationConfig.minifiedEnabled
+            creationConfig is ConsumableCreationConfig &&
+                    creationConfig.optimizationCreationConfig.minifiedEnabled
         )
         useSupportLibraryVectorDrawables.setDisallowChanges(
             creationConfig.androidResourcesCreationConfig?.vectorDrawables?.useSupportLibrary

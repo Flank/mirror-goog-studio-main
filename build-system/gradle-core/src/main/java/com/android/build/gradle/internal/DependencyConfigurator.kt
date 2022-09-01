@@ -805,7 +805,9 @@ class DependencyConfigurator(
             }
         }
         if (projectOptions[BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION]
-                && allComponents.any { it is ConsumableCreationConfig && it.minifiedEnabled }) {
+                && allComponents.any {
+                    it is ConsumableCreationConfig && it.optimizationCreationConfig.minifiedEnabled
+                }) {
             dependencies.registerTransform(
                     FilterShrinkerRulesTransform::class.java
             ) { reg: TransformSpec<FilterShrinkerRulesTransform.Parameters> ->

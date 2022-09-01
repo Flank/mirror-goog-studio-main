@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.utils.getFilteredConfigurationFiles
 import com.android.build.gradle.internal.utils.immutableMapBuilder
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.EvalIssueException
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationActionImpl
 import com.android.utils.FileUtils
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
@@ -125,6 +127,8 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
     class CreationAction(creationConfig: VariantCreationConfig) :
         VariantTaskCreationAction<ExportConsumerProguardFilesTask, VariantCreationConfig>(
             creationConfig
+        ), OptimizationTaskCreationAction by OptimizationTaskCreationActionImpl(
+            creationConfig
         ) {
 
         override val name: String
@@ -149,7 +153,9 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
         ) {
             super.configure(task)
 
-            task.consumerProguardFiles.from(creationConfig.consumerProguardFiles)
+            task.consumerProguardFiles.from(
+                optimizationCreationConfig.consumerProguardFiles
+            )
             task.isBaseModule = creationConfig.componentType.isBaseModule
             task.isDynamicFeature = creationConfig.componentType.isDynamicFeature
 
@@ -167,8 +173,12 @@ abstract class ExportConsumerProguardFilesTask : NonIncrementalTask() {
                 )
                 task.inputFiles.from(task.libraryKeepRules.artifactFiles)
 
-                task.ignoredKeepRules.setDisallowChanges(creationConfig.ignoredLibraryKeepRules)
-                task.ignoreAllKeepRules.setDisallowChanges(creationConfig.ignoreAllLibraryKeepRules)
+                task.ignoredKeepRules.setDisallowChanges(
+                    optimizationCreationConfig.ignoredLibraryKeepRules
+                )
+                task.ignoreAllKeepRules.setDisallowChanges(
+                    optimizationCreationConfig.ignoreAllLibraryKeepRules
+                )
             }
             task.buildDirectory.setDisallowChanges(task.project.layout.buildDirectory)
         }

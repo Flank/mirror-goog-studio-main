@@ -21,12 +21,12 @@ import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.ComponentIdentity
-import com.android.build.gradle.internal.core.MergedOptimization
 import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.OptimizationDslInfo
 import com.android.build.gradle.internal.core.dsl.features.ShadersDslInfo
+import com.android.build.gradle.internal.core.dsl.impl.features.OptimizationDslInfoImpl
 import com.android.build.gradle.internal.core.dsl.impl.features.ShadersDslInfoImpl
 import com.android.build.gradle.internal.dsl.DefaultConfig
-import com.android.build.gradle.internal.dsl.OptimizationImpl
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.ComponentType
 import com.android.builder.model.ClassField
@@ -51,28 +51,6 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     buildDirectory,
     extension
 ), ConsumableComponentDslInfo {
-
-    // merged options
-
-    private val mergedOptimization = MergedOptimization()
-
-    init {
-        mergeOptions()
-    }
-
-    private fun mergeOptions() {
-        computeMergedOptions(
-            mergedOptimization,
-            { optimization as OptimizationImpl },
-            { optimization as OptimizationImpl }
-        )
-    }
-
-    override val ignoredLibraryKeepRules: Set<String>
-        get() = mergedOptimization.ignoredLibraryKeepRules
-
-    override val ignoreAllLibraryKeepRules: Boolean
-        get() = mergedOptimization.ignoreAllLibraryKeepRules
 
     // merged flavor delegates
 
@@ -139,6 +117,17 @@ internal abstract class ConsumableComponentDslInfoImpl internal constructor(
     override val shadersDslInfo: ShadersDslInfo? by lazy(LazyThreadSafetyMode.NONE) {
         ShadersDslInfoImpl(
             defaultConfig, buildTypeObj, productFlavorList
+        )
+    }
+
+    override val optimizationDslInfo: OptimizationDslInfo by lazy(LazyThreadSafetyMode.NONE) {
+        OptimizationDslInfoImpl(
+            componentType,
+            defaultConfig,
+            buildTypeObj,
+            productFlavorList,
+            services,
+            buildDirectory
         )
     }
 }

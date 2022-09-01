@@ -850,7 +850,8 @@ public class PluginDslTest {
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
             String variantName = entry.getKey();
             Set<File> proguardFiles =
-                    componentMap.get(variantName).getProguardFiles().get().stream()
+                    componentMap.get(variantName).getOptimizationCreationConfig().getProguardFiles()
+                            .get().stream()
                             .map(RegularFile::getAsFile)
                             .map(File::getAbsoluteFile)
                             .collect(Collectors.toSet());

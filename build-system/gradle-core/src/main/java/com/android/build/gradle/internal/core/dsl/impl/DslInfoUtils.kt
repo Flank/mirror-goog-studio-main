@@ -16,6 +16,11 @@
 
 package com.android.build.gradle.internal.core.dsl.impl
 
+import com.android.build.api.dsl.BuildType
+import com.android.build.api.dsl.ProductFlavor
+import com.android.build.api.dsl.VariantDimension
+import com.android.build.gradle.internal.core.MergedOptions
+import com.android.build.gradle.internal.dsl.DefaultConfig
 import com.android.build.gradle.internal.variant.DimensionCombination
 import com.android.builder.core.ComponentType
 import com.android.utils.appendCapitalized
@@ -94,4 +99,49 @@ fun computeSourceSetName(
         name = componentType.prefix.appendCapitalized(name)
     }
     return name
+}
+
+/**
+ * Merge a specific option in GradleVariantConfiguration.
+ *
+ *
+ * It is assumed that merged option type with a method to reset and append is created for the
+ * option being merged.
+ *
+ *
+ * The order of priority is BuildType, ProductFlavors, and default config. ProductFlavor
+ * added earlier has higher priority than ProductFlavor added later.
+ *
+ * @param mergedOption The merged option store in the GradleVariantConfiguration.
+ * @param getFlavorOption A Function to return the option from a ProductFlavor.
+ * @param getBuildTypeOption A Function to return the option from a BuildType.
+ * takes priority and overwrite option in the first input argument.
+ * @param <CoreOptionsT> The core type of the option being merge.
+ * @param <MergedOptionsT> The merge option type.
+</MergedOptionsT></CoreOptionsT> */
+internal fun <CoreOptionsT, MergedOptionsT : MergedOptions<CoreOptionsT>> computeMergedOptions(
+    defaultConfig: DefaultConfig,
+    buildTypeObj: BuildType,
+    productFlavorList: List<ProductFlavor>,
+    mergedOption: MergedOptionsT,
+    getFlavorOption: VariantDimension.() -> CoreOptionsT?,
+    getBuildTypeOption: BuildType.() -> CoreOptionsT?
+) {
+    mergedOption.reset()
+
+    val defaultOption = defaultConfig.getFlavorOption()
+    if (defaultOption != null) {
+        mergedOption.append(defaultOption)
+    }
+    // reverse loop for proper order
+    for (i in productFlavorList.indices.reversed()) {
+        val flavorOption = productFlavorList[i].getFlavorOption()
+        if (flavorOption != null) {
+            mergedOption.append(flavorOption)
+        }
+    }
+    val buildTypeOption = buildTypeObj.getBuildTypeOption()
+    if (buildTypeOption != null) {
+        mergedOption.append(buildTypeOption)
+    }
 }

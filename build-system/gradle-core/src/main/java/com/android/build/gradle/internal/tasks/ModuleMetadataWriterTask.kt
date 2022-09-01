@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -119,9 +118,12 @@ abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.versionCode.setDisallowChanges(creationConfig.outputs.getMainSplit().versionCode)
             task.versionName.setDisallowChanges(creationConfig.outputs.getMainSplit().versionName)
             task.abiFilters.setDisallowChanges(creationConfig.supportedAbis.sorted())
-            task.ignoredLibraryKeepRules.setDisallowChanges(creationConfig.ignoredLibraryKeepRules)
+            task.ignoredLibraryKeepRules.setDisallowChanges(
+                creationConfig.optimizationCreationConfig.ignoredLibraryKeepRules
+            )
             task.ignoreAllLibraryKeepRules.setDisallowChanges(
-                    creationConfig.ignoreAllLibraryKeepRules)
+                    creationConfig.optimizationCreationConfig.ignoreAllLibraryKeepRules
+            )
         }
     }
 }

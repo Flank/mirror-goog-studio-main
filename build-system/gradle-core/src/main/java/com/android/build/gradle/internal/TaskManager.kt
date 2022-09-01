@@ -2168,7 +2168,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         // Since the shrinker (R8) also dexes the class files, if we have minifedEnabled we stop
         // the flow and don't set-up dexing.
         maybeCreateJavaCodeShrinkerTask(creationConfig)
-        if (creationConfig.minifiedEnabled) {
+        if (creationConfig.optimizationCreationConfig.minifiedEnabled) {
             maybeCreateDesugarLibTask(creationConfig, false, false)
             return
         }
@@ -2797,7 +2797,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
     protected open fun maybeCreateJavaCodeShrinkerTask(
             creationConfig: ConsumableCreationConfig) {
-        if (creationConfig.minifiedEnabled) {
+        if (creationConfig.optimizationCreationConfig.minifiedEnabled) {
             doCreateJavaCodeShrinkerTask(creationConfig)
         }
     }
@@ -2816,7 +2816,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 && creationConfig.buildFeatures.androidResources)
         val task: TaskProvider<out Task> =
                 createR8Task(creationConfig, isTestApplication, addCompileRClass)
-        if (creationConfig.postProcessingFeatures != null) {
+        if (creationConfig.optimizationCreationConfig.postProcessingFeatures != null) {
             val checkFilesTask =
                     taskFactory.register(CheckProguardFiles.CreationAction(creationConfig))
             task.dependsOn(checkFilesTask)
@@ -3491,7 +3491,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         private fun generatesProguardOutputFile(creationConfig: ComponentCreationConfig): Boolean {
             return ((creationConfig is ConsumableCreationConfig
-                    && creationConfig.minifiedEnabled)
+                    && creationConfig.optimizationCreationConfig.minifiedEnabled)
                     || creationConfig.componentType.isDynamicFeature)
         }
 

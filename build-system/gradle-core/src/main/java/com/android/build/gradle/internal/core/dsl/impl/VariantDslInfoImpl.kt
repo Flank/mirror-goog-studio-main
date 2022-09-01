@@ -24,8 +24,6 @@ import com.android.build.api.dsl.PackagingOptions
 import com.android.build.api.dsl.ProductFlavor
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.MutableAndroidVersion
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.core.MergedExternalNativeBuildOptions
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
@@ -38,11 +36,8 @@ import com.android.build.gradle.internal.manifest.ManifestDataProvider
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.ComponentType
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.io.File
 
 internal abstract class VariantDslInfoImpl internal constructor(
     componentIdentity: ComponentIdentity,
@@ -87,11 +82,17 @@ internal abstract class VariantDslInfoImpl internal constructor(
 
     private fun mergeOptions() {
         computeMergedOptions(
+            defaultConfig,
+            buildTypeObj,
+            productFlavorList,
             ndkConfig,
             { ndk as CoreNdkOptions },
             { ndk as CoreNdkOptions }
         )
         computeMergedOptions(
+            defaultConfig,
+            buildTypeObj,
+            productFlavorList,
             externalNativeBuildOptions,
             { externalNativeBuild as CoreExternalNativeBuildOptions },
             { externalNativeBuild as CoreExternalNativeBuildOptions }
@@ -147,19 +148,6 @@ internal abstract class VariantDslInfoImpl internal constructor(
 
     override val supportedAbis: Set<String>
         get() = if (componentType.isDynamicFeature) setOf() else ndkConfig.abiFilters
-
-    override fun getProguardFiles(into: ListProperty<RegularFile>) {
-        val result: MutableList<File> = ArrayList(gatherProguardFiles(ProguardFileType.EXPLICIT))
-        if (result.isEmpty()) {
-            result.addAll(postProcessingOptions.getDefaultProguardFiles())
-        }
-
-        val projectDir = services.projectInfo.projectDirectory
-        result.forEach { file ->
-            into.add(projectDir.file(file.absolutePath))
-        }
-    }
-
 
     override val lintOptions: Lint
         get() = extension.lint

@@ -16,13 +16,13 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledAndroidTest
 import com.android.build.api.component.impl.features.AndroidResourcesCreationConfigImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
 import com.android.build.api.component.impl.features.DexingCreationConfigImpl
 import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
+import com.android.build.api.component.impl.features.OptimizationCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
 import com.android.build.api.component.impl.features.ShadersCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
@@ -32,6 +32,8 @@ import com.android.build.api.variant.AndroidTest
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.ApkPackaging
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.api.variant.CanMinifyAndroidResourcesBuilder
+import com.android.build.api.variant.CanMinifyCodeBuilder
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.Renderscript
@@ -42,8 +44,6 @@ import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.impl.ApkPackagingImpl
 import com.android.build.api.variant.impl.ResValueKeyImpl
 import com.android.build.api.variant.impl.SigningConfigImpl
-import com.android.build.gradle.internal.PostprocessingFeatures
-import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.component.features.BuildConfigCreationC
 import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
+import com.android.build.gradle.internal.component.features.OptimizationCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
 import com.android.build.gradle.internal.component.features.ShadersCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
@@ -73,7 +74,6 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import org.gradle.api.provider.SetProperty
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -145,26 +145,6 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
-    override val minifiedEnabled: Boolean
-        get() {
-            return when {
-                mainVariant.componentType.isAar -> false
-                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
-                    mainVariant.minifiedEnabled
-                else -> dslInfo.postProcessingOptions.codeShrinkerEnabled()
-            }
-        }
-
-    override val resourcesShrink: Boolean
-        get() {
-            return when {
-                mainVariant.componentType.isAar -> false
-                !dslInfo.postProcessingOptions.hasPostProcessingConfiguration() ->
-                    mainVariant.resourcesShrink
-                else -> dslInfo.postProcessingOptions.resourcesShrinkingEnabled()
-            }
-        }
-
     override val instrumentationRunner: Property<String> by lazy {
         internalServices.propertyOf(
             String::class.java,
@@ -212,16 +192,8 @@ open class AndroidTestImpl @Inject constructor(
         renderscriptCreationConfig?.renderscript
     }
 
-    override val proguardFiles: ListProperty<RegularFile> by lazy {
-        variantServices.listPropertyOf(RegularFile::class.java) {
-            val projectDir = services.projectInfo.projectDirectory
-            it.addAll(
-                dslInfo.gatherProguardFiles(ProguardFileType.TEST).map { file ->
-                    projectDir.file(file.absolutePath)
-                }
-            )
-        }
-    }
+    override val proguardFiles: ListProperty<RegularFile>
+        get() = optimizationCreationConfig.proguardFiles
 
     override fun makeResValueKey(type: String, name: String): ResValue.Key =
         ResValueKeyImpl(type, name)
@@ -305,6 +277,16 @@ open class AndroidTestImpl @Inject constructor(
         )
     }
 
+    final override val optimizationCreationConfig: OptimizationCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        OptimizationCreationConfigImpl(
+            this,
+            dslInfo.optimizationDslInfo,
+            null,
+            null,
+            internalServices
+        )
+    }
+
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
 
@@ -351,16 +333,8 @@ open class AndroidTestImpl @Inject constructor(
         get() {
             // We need to create a stream from the merged java resources if we're in a library module,
             // or if we're in an app/feature module which uses the transform pipeline.
-            return (dslInfo.componentType.isAar || minifiedEnabled)
+            return (dslInfo.componentType.isAar || optimizationCreationConfig.minifiedEnabled)
         }
-    override val ignoredLibraryKeepRules: SetProperty<String>
-        get() = internalServices.setPropertyOf(
-            String::class.java,
-            dslInfo.ignoredLibraryKeepRules
-        )
-
-    override val ignoreAllLibraryKeepRules: Boolean
-        get() = dslInfo.ignoreAllLibraryKeepRules
 
     override val isAndroidTestCoverageEnabled: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled
@@ -373,8 +347,5 @@ open class AndroidTestImpl @Inject constructor(
     // as in apps it will have already been included in the tested application.
     override val packageJacocoRuntime: Boolean
         get() = dslInfo.isAndroidTestCoverageEnabled && mainVariant.componentType.isAar
-
-    override val postProcessingFeatures: PostprocessingFeatures?
-        get() = dslInfo.postProcessingOptions.getPostprocessingFeatures()
 }
 

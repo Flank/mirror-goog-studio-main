@@ -44,8 +44,6 @@ interface VariantDslInfo: ComponentDslInfo, ConsumableComponentDslInfo {
      */
     val supportedAbis: Set<String>
 
-    fun getProguardFiles(into: ListProperty<RegularFile>)
-
     val isJniDebuggable: Boolean
 
     val lintOptions: Lint

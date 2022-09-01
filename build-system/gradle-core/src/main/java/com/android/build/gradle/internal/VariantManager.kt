@@ -915,7 +915,7 @@ class VariantManager<
                     it
                         .setIsDebug(buildType.isDebuggable)
                         .setMinSdkVersion(AnalyticsUtil.toProto(minSdkVersion))
-                        .setMinifyEnabled(variant.minifiedEnabled)
+                        .setMinifyEnabled(variant.optimizationCreationConfig.minifiedEnabled)
                         .setVariantType(variant.componentType.analyticsVariantType)
                         .setDexBuilder(GradleBuildVariant.DexBuilderTool.D8_DEXER)
                         .setDexMerger(GradleBuildVariant.DexMergerTool.D8_MERGER)
@@ -937,7 +937,7 @@ class VariantManager<
                         }
                     }
 
-                    if (variant.minifiedEnabled) {
+                    if (variant.optimizationCreationConfig.minifiedEnabled) {
                         // If code shrinker is used, it can only be R8
                         variantAnalytics.codeShrinker = GradleBuildVariant.CodeShrinkerTool.R8
                     }

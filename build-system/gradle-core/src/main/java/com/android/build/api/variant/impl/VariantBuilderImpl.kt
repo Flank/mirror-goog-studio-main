@@ -152,7 +152,8 @@ abstract class VariantBuilderImpl(
         newValue: Boolean,
         setter: (Boolean) -> Unit
     ) {
-        if (dslInfo.postProcessingOptions.hasPostProcessingConfiguration())
+        if ((dslInfo as VariantDslInfo).optimizationDslInfo
+                .postProcessingOptions.hasPostProcessingConfiguration())
             variantBuilderServices.issueReporter.reportWarning(
                 IssueReporter.Type.GENERIC,
                 "You cannot set $varName via Variant API as build uses postprocessing{...} " +

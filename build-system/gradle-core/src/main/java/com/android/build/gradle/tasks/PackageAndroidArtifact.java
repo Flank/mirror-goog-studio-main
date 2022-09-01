@@ -1400,7 +1400,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         private FileCollection getJavaResources(@NonNull ApkCreationConfig creationConfig) {
             ArtifactsImpl artifacts = creationConfig.getArtifacts();
 
-            if (creationConfig.getMinifiedEnabled()) {
+            if (creationConfig.getOptimizationCreationConfig().getMinifiedEnabled()) {
                 Provider<RegularFile> mergedJavaResProvider =
                         artifacts.get(SHRUNK_JAVA_RES.INSTANCE);
                 return creationConfig.getServices().fileCollection(mergedJavaResProvider);
@@ -1488,7 +1488,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .get(BooleanOption.ENABLE_GLOBAL_SYNTHETICS)
                     || creationConfig.getDexingCreationConfig().getDexingType()
                             != DexingType.NATIVE_MULTIDEX
-                    || creationConfig.getMinifiedEnabled()) {
+                    || creationConfig.getOptimizationCreationConfig().getMinifiedEnabled()) {
                 return creationConfig.getServices().fileCollection();
             }
             return creationConfig

@@ -19,15 +19,12 @@ package com.android.build.gradle.internal.core.dsl
 import com.android.build.api.variant.ComponentIdentity
 import com.android.build.api.variant.impl.MutableAndroidVersion
 import com.android.build.gradle.api.JavaCompileOptions
-import com.android.build.gradle.internal.ProguardFileType
-import com.android.build.gradle.internal.core.PostProcessingOptions
 import com.android.build.gradle.internal.core.dsl.features.AndroidResourcesDslInfo
 import com.android.builder.core.AbstractProductFlavor
 import com.android.builder.core.ComponentType
 import com.google.common.collect.ImmutableMap
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
-import java.io.File
 
 /**
  * Contains the final dsl info computed from the DSL object model (extension, default config,
@@ -76,8 +73,4 @@ interface ComponentDslInfo {
     val javaCompileOptionsSetInDSL: JavaCompileOptions
 
     val androidResourcesDsl: AndroidResourcesDslInfo?
-
-    val postProcessingOptions: PostProcessingOptions
-
-    fun gatherProguardFiles(type: ProguardFileType): Collection<File>
 }

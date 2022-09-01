@@ -241,7 +241,7 @@ class LibraryTaskManager(
         // This is used for building the AAR.
         taskFactory.register(
             LibraryAarJarsTask.CreationAction(
-                libraryVariant, libraryVariant.minifiedEnabled
+                libraryVariant, libraryVariant.optimizationCreationConfig.minifiedEnabled
             )
         )
 

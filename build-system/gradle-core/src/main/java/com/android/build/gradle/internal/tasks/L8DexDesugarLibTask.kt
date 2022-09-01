@@ -160,7 +160,7 @@ fun setDesugarLibKeepRules(
                     InternalArtifactType.DESUGAR_LIB_PROJECT_KEEP_RULES
             )
     )
-    if (creationConfig.minifiedEnabled) {
+    if (creationConfig.optimizationCreationConfig.minifiedEnabled) {
         // no additional rules are needed, R8 generates all of them
         return
     }

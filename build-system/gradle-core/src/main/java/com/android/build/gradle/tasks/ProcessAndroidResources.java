@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.tasks.TaskCategory;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import java.io.File;
-
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -98,7 +97,9 @@ public abstract class ProcessAndroidResources extends NewIncrementalTask {
     protected static boolean generatesProguardOutputFile(
             @NonNull ComponentCreationConfig creationConfig) {
         return (creationConfig instanceof ConsumableCreationConfig
-                        && ((ConsumableCreationConfig) creationConfig).getMinifiedEnabled())
+                        && ((ConsumableCreationConfig) creationConfig)
+                                .getOptimizationCreationConfig()
+                                .getMinifiedEnabled())
                 || creationConfig.getComponentType().isDynamicFeature();
     }
 }

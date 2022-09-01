@@ -15,7 +15,6 @@
  */
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledApplicationVariant
 import com.android.build.api.component.impl.AndroidTestImpl
@@ -132,11 +131,6 @@ open class ApplicationVariantImpl @Inject constructor(
     override val publishInfo: VariantPublishingInfo?
         get() = dslInfo.publishInfo
 
-    override val minifiedEnabled: Boolean
-        get() = variantBuilder.isMinifyEnabled
-    override val resourcesShrink: Boolean
-        get() = variantBuilder.shrinkResources
-
     override var androidTest: AndroidTestImpl? = null
 
     override var testFixtures: TestFixturesImpl? = null
@@ -197,8 +191,8 @@ open class ApplicationVariantImpl @Inject constructor(
     // Private stuff
     // ---------------------------------------------------------------------------------------------
 
-    override val consumesFeatureJars: Boolean =
-        minifiedEnabled && global.hasDynamicFeatures
+    override val consumesFeatureJars: Boolean
+        get() = optimizationCreationConfig.minifiedEnabled && global.hasDynamicFeatures
 
     override fun createVersionNameProperty(): Property<String?> =
         internalServices.newNullablePropertyBackingDeprecatedApi(

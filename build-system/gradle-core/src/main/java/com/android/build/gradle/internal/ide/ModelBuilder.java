@@ -823,7 +823,8 @@ public class ModelBuilder<Extension extends BaseExtension>
         boolean isDynamicFeature = component.getComponentType().isDynamicFeature();
 
         if (!isBaseModule) {
-            List<File> consumerProguardFiles = component.getConsumerProguardFiles();
+            List<File> consumerProguardFiles =
+                    component.getOptimizationCreationConfig().getConsumerProguardFiles();
 
             ExportConsumerProguardFilesTask.checkProguardFiles(
                     project.getLayout().getBuildDirectory(),
@@ -1065,7 +1066,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         ArtifactsImpl artifacts = component.getArtifacts();
         final CodeShrinker codeShrinker;
         if (component instanceof ConsumableCreationConfig
-                && ((ConsumableCreationConfig) component).getMinifiedEnabled()) {
+                && ((ConsumableCreationConfig) component)
+                        .getOptimizationCreationConfig()
+                        .getMinifiedEnabled()) {
             codeShrinker = CodeShrinker.R8;
         } else {
             codeShrinker = null;

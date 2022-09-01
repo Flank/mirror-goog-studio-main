@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledTestVariant
 import com.android.build.api.component.impl.features.DexingCreationConfigImpl
@@ -30,7 +29,6 @@ import com.android.build.api.variant.Renderscript
 import com.android.build.api.variant.TestVariant
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
-import com.android.build.gradle.internal.ProguardFileType
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
@@ -49,8 +47,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.VariantPathHelper
 import com.android.build.gradle.options.IntegerOption
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -108,11 +104,6 @@ open class TestVariantImpl @Inject constructor(
         }
     }
 
-    override val minifiedEnabled: Boolean
-        get() = variantBuilder.isMinifyEnabled
-    override val resourcesShrink: Boolean
-        get() = false
-
     override val instrumentationRunner: Property<String> by lazy {
         internalServices.propertyOf(
             String::class.java,
@@ -139,17 +130,6 @@ open class TestVariantImpl @Inject constructor(
 
     override val renderscript: Renderscript? by lazy {
         renderscriptCreationConfig?.renderscript
-    }
-
-    override val proguardFiles: ListProperty<RegularFile> by lazy {
-        internalServices.listPropertyOf(RegularFile::class.java) {
-            val projectDir = services.projectInfo.projectDirectory
-            it.addAll(
-                dslInfo.gatherProguardFiles(ProguardFileType.TEST).map { file ->
-                    projectDir.file(file.absolutePath)
-                }
-            )
-        }
     }
 
     // ---------------------------------------------------------------------------------------------

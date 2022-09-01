@@ -131,14 +131,6 @@ open class LibraryVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val minifiedEnabled: Boolean
-        get() = variantBuilder.isMinifyEnabled
-    override val resourcesShrink: Boolean
-        // need to return shrink flag for PostProcessing as this API has the flag for libraries
-        // return false otherwise
-        get() = dslInfo.postProcessingOptions
-            .let { it.hasPostProcessingConfiguration() && it.resourcesShrinkingEnabled() }
-
     override val publishInfo: VariantPublishingInfo?
         get() = dslInfo.publishInfo
 }

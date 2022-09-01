@@ -85,8 +85,9 @@ class AndroidResourcesCreationConfigImpl(
 
     override val useResourceShrinker: Boolean
         get() {
-            if (component !is ConsumableCreationConfig || !component.resourcesShrink
-                || dslInfo.componentType.isForTesting) {
+            if (component !is ConsumableCreationConfig ||
+                !component.optimizationCreationConfig.resourcesShrink ||
+                dslInfo.componentType.isForTesting) {
                 return false
             }
             val newResourceShrinker =
@@ -101,7 +102,7 @@ class AndroidResourcesCreationConfigImpl(
                     .reportError(IssueReporter.Type.GENERIC, message)
                 return false
             }
-            if (component is ConsumableCreationConfig && !component.minifiedEnabled) {
+            if (!component.optimizationCreationConfig.minifiedEnabled) {
                 internalServices
                     .issueReporter
                     .reportError(

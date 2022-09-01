@@ -38,6 +38,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentType
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
@@ -193,6 +195,8 @@ abstract class ProguardConfigurableTask(
         private val addCompileRClass: Boolean
     ) : VariantTaskCreationAction<TaskT, CreationConfigT>(
         creationConfig
+    ), OptimizationTaskCreationAction by OptimizationTaskCreationActionImpl(
+        creationConfig
     ) {
 
         private val includeFeaturesInScopes: Boolean = (creationConfig as? ApplicationCreationConfig)
@@ -302,7 +306,8 @@ abstract class ProguardConfigurableTask(
         ) {
             super.configure(task)
 
-            if (testedConfig is ConsumableCreationConfig && testedConfig.minifiedEnabled) {
+            if (testedConfig is ConsumableCreationConfig &&
+                testedConfig.optimizationCreationConfig.minifiedEnabled) {
                 task.testedMappingFile.from(
                     testedConfig
                         .artifacts
@@ -368,8 +373,8 @@ abstract class ProguardConfigurableTask(
                             ALL,
                             FILTERED_PROGUARD_RULES
                     )
-            task.ignoredLibraryKeepRules.set(creationConfig.ignoredLibraryKeepRules)
-            task.ignoreAllLibraryKeepRules.set(creationConfig.ignoreAllLibraryKeepRules)
+            task.ignoredLibraryKeepRules.set(optimizationCreationConfig.ignoredLibraryKeepRules)
+            task.ignoreAllLibraryKeepRules.set(optimizationCreationConfig.ignoreAllLibraryKeepRules)
 
             when {
                 testedConfig != null -> {
@@ -378,7 +383,7 @@ abstract class ProguardConfigurableTask(
 
                     // All -dontwarn rules for test dependencies should go in here:
                     val configurationFiles = task.project.files(
-                        creationConfig.proguardFiles,
+                        optimizationCreationConfig.proguardFiles,
                         task.libraryKeepRules.artifactFiles
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -389,7 +394,7 @@ abstract class ProguardConfigurableTask(
 
                     // All -dontwarn rules for test dependen]cies should go in here:
                     val configurationFiles = task.project.files(
-                        creationConfig.proguardFiles,
+                        optimizationCreationConfig.proguardFiles,
                         task.libraryKeepRules.artifactFiles
                     )
                     task.configurationFiles.from(configurationFiles)
@@ -419,7 +424,7 @@ abstract class ProguardConfigurableTask(
             task: ProguardConfigurableTask,
             creationConfig: ConsumableCreationConfig
         ) {
-            val postprocessingFeatures = creationConfig.postProcessingFeatures
+            val postprocessingFeatures = optimizationCreationConfig.postProcessingFeatures
             postprocessingFeatures?.let { setActions(postprocessingFeatures) }
 
             val aaptProguardFile =
@@ -437,7 +442,7 @@ abstract class ProguardConfigurableTask(
             )
 
             val configurationFiles = task.project.files(
-                creationConfig.proguardFiles,
+                optimizationCreationConfig.proguardFiles,
                 aaptProguardFile,
                 task.libraryKeepRules.artifactFiles
             )

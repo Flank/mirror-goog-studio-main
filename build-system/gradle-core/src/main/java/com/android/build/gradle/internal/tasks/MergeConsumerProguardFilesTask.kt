@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask.Companion.checkProguardFiles
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.OptimizationTaskCreationActionImpl
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.errors.EvalIssueException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -84,7 +86,9 @@ abstract class MergeConsumerProguardFilesTask : MergeFileTask() {
 
     class CreationAction(
             creationConfig: VariantCreationConfig
-    ) : VariantTaskCreationAction<MergeConsumerProguardFilesTask, VariantCreationConfig>(creationConfig) {
+    ) : VariantTaskCreationAction<MergeConsumerProguardFilesTask, VariantCreationConfig>(
+        creationConfig
+    ), OptimizationTaskCreationAction by OptimizationTaskCreationActionImpl(creationConfig) {
 
         override val name: String
             get() = computeTaskName("merge", "ConsumerProguardFiles")
@@ -105,7 +109,9 @@ abstract class MergeConsumerProguardFilesTask : MergeFileTask() {
             super.configure(task)
             task.isBaseModule = creationConfig.componentType.isBaseModule
             task.isDynamicFeature = creationConfig.componentType.isDynamicFeature
-            task.consumerProguardFiles.from(creationConfig.consumerProguardFiles)
+            task.consumerProguardFiles.from(
+                optimizationCreationConfig.consumerProguardFiles
+            )
             val inputFiles = creationConfig
                     .services
                     .fileCollection(

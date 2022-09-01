@@ -16,12 +16,12 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.api.artifact.MultipleArtifact
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.api.component.analytics.AnalyticsEnabledDynamicFeatureVariant
 import com.android.build.api.component.impl.AndroidTestImpl
 import com.android.build.api.component.impl.TestFixturesImpl
 import com.android.build.api.component.impl.features.DexingCreationConfigImpl
+import com.android.build.api.component.impl.features.OptimizationCreationConfigImpl
 import com.android.build.api.component.impl.getAndroidResources
 import com.android.build.api.component.impl.isTestApk
 import com.android.build.api.dsl.CommonExtension
@@ -263,13 +263,6 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             it.finalizeValueOnRead()
         }
 
-
-    override val minifiedEnabled: Boolean
-        get() = false
-
-    override val resourcesShrink: Boolean
-        get() = false
-
     override fun <T : Component> createUserVisibleVariantObject(
             projectServices: ProjectServices,
             operationsRegistrar: VariantApiOperationsRegistrar<out CommonExtension<*, *, *, *>, out VariantBuilder, out Variant>,
@@ -285,6 +278,14 @@ open class DynamicFeatureVariantImpl @Inject constructor(
             ) as T
         }
 
-    override val ignoredLibraryKeepRules: Provider<Set<String>> =
-            baseModuleMetadata.map { it.ignoredLibraryKeepRules }
+    override val optimizationCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        OptimizationCreationConfigImpl(
+            this,
+            dslInfo.optimizationDslInfo,
+            null,
+            null,
+            internalServices,
+            baseModuleMetadata
+        )
+    }
 }

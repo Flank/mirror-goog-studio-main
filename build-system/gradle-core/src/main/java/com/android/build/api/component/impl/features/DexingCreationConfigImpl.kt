@@ -101,7 +101,7 @@ class DexingCreationConfigImpl(
                 Java8LangSupport.UNUSED
             } else if (component.services.projectInfo.hasPlugin("me.tatarka.retrolambda")) {
                 Java8LangSupport.RETROLAMBDA
-            } else if (component.minifiedEnabled) {
+            } else if (component.optimizationCreationConfig.minifiedEnabled) {
                 Java8LangSupport.R8
             } else {
                 // D8 cannot be used if R8 is used

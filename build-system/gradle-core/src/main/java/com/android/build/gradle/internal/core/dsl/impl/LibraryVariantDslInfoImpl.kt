@@ -63,6 +63,9 @@ internal class LibraryVariantDslInfoImpl internal constructor(
 
     private fun mergeOptions() {
         computeMergedOptions(
+            defaultConfig,
+            buildTypeObj,
+            productFlavorList,
             aarMetadata,
             { (this as LibraryVariantDimension).aarMetadata },
             { (this as LibraryVariantDimension).aarMetadata }

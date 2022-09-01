@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.core.dsl
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.gradle.internal.core.dsl.features.OptimizationDslInfo
 import com.android.build.gradle.internal.core.dsl.features.ShadersDslInfo
-import java.io.File
 import java.io.Serializable
 
 /**
@@ -39,16 +39,7 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
 
     val renderscriptOptimLevel: Int
 
-    /**
-     * Returns the component ids of those external library dependencies whose keep rules are ignored
-     * when building the project.
-     */
-    val ignoredLibraryKeepRules: Set<String>
-
-    /**
-     * Returns whether to ignore all keep rules from external library dependencies.
-     */
-    val ignoreAllLibraryKeepRules: Boolean
+    val optimizationDslInfo: OptimizationDslInfo
 
     /**
      * Returns a list of items for the BuildConfig class.

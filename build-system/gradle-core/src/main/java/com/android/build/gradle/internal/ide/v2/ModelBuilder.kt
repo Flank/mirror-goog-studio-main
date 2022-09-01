@@ -718,7 +718,8 @@ class ModelBuilder<
             testInfo = testInfo,
             bundleInfo = getBundleInfo(component),
             codeShrinker = CodeShrinker.R8.takeIf {
-                component is ConsumableCreationConfig && component.minifiedEnabled
+                component is ConsumableCreationConfig &&
+                        component.optimizationCreationConfig.minifiedEnabled
             },
 
             assembleTaskName = taskContainer.assembleTask.name,
