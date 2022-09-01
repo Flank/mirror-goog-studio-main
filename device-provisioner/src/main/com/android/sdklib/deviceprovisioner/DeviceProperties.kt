@@ -28,8 +28,13 @@ interface DeviceProperties {
   val model: String?
   val manufacturer: String?
   val abi: Abi?
-  /** The Android API level. May include a codename if not a release version. */
-  val androidVersion: AndroidVersion
+  /**
+   * The Android API level. May include a codename if not a release version.
+   *
+   * This should be set for any device we can read properties from; if this is null, the device is
+   * probably offline.
+   */
+  val androidVersion: AndroidVersion?
   /** The user-visible version of Android, like "7.1" or "11". */
   val androidRelease: String?
 
@@ -44,7 +49,7 @@ interface DeviceProperties {
     var manufacturer: String? = null
     var model: String? = null
     var abi: Abi? = null
-    var androidVersion = AndroidVersion.DEFAULT
+    var androidVersion: AndroidVersion? = null
     var androidRelease: String? = null
     var disambiguator: String? = null
 
@@ -55,7 +60,6 @@ interface DeviceProperties {
         properties["ro.build.version.sdk"]?.let { it.toIntOrNull() }?.let { sdk ->
           AndroidVersion(sdk, properties["ro.build.version.codename"])
         }
-          ?: AndroidVersion.DEFAULT
       abi = properties["ro.product.cpu.abi"]?.let { Abi.getEnum(it) }
       androidRelease = properties["ro.build.version.release"]
     }
@@ -67,7 +71,7 @@ interface DeviceProperties {
   class Impl(
     override val manufacturer: String?,
     override val model: String?,
-    override val androidVersion: AndroidVersion,
+    override val androidVersion: AndroidVersion?,
     override val abi: Abi?,
     override val androidRelease: String?,
     override val disambiguator: String?
