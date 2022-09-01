@@ -54,9 +54,9 @@ filegroup(
         include = ["build-tools/29.0.2/**"],
     ),
     visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
         "//tools/adt/idea/old-agp-tests:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//prebuilts/studio/buildbenchmarks:__pkg__",
         "//tools/base/build-system/previous-versions:__pkg__",
     ],
 )
@@ -67,9 +67,9 @@ filegroup(
         include = ["build-tools/28.0.3/**"],
     ),
     visibility = [
+        "//prebuilts/studio/buildbenchmarks:__pkg__",
         "//tools/adt/idea/old-agp-tests:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
-        "//prebuilts/studio/buildbenchmarks:__pkg__",
     ],
 )
 
@@ -213,9 +213,9 @@ java_import(
         "//tools/base/app-inspection/agent:__pkg__",
         "//tools/base/app-inspection/inspectors:__subpackages__",
         "//tools/base/deploy/agent/runtime:__pkg__",
-        "//tools/base/profiler/app:__pkg__",
         "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
         "//tools/base/experimental/live-sql-inspector:__pkg__",
+        "//tools/base/profiler/app:__pkg__",
         "//tools/vendor/google/directaccess-client/reverse-daemon:__pkg__",
     ],
 )
@@ -224,11 +224,11 @@ java_import(
 # Note: these are stubbed classes.
 java_import(
     name = "platforms/latest_runtime_jar",
-    jars = sdk_path(["platforms/android-32/android.jar"]),
     testonly = 1,
+    jars = sdk_path(["platforms/android-32/android.jar"]),
     visibility = [
-        "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
         "//tools/base/app-inspection/inspectors:__subpackages__",
+        "//tools/base/dynamic-layout-inspector/agent:__subpackages__",
     ],
 )
 
@@ -236,6 +236,7 @@ platform_filegroup(
     name = "platforms/android-TiramisuPrivacySandbox",
     visibility = [
         "//prebuilts/studio/buildbenchmarks:__pkg__",
+        "//tools/adt/idea/project-system-gradle:__subpackages__",
         "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )
@@ -276,8 +277,8 @@ platform_filegroup(
 platform_filegroup(
     name = "platforms/android-28",
     visibility = [
-        "//tools/adt/idea/old-agp-tests:__pkg__",
         "//prebuilts/studio/buildbenchmarks:__pkg__",
+        "//tools/adt/idea/old-agp-tests:__pkg__",
         "//tools/vendor/google/lldb-integration-tests:__pkg__",
     ],
 )
