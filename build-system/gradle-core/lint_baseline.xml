@@ -201,7 +201,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="129"/>
+            line="131"/>
     </issue>
 
     <issue
@@ -209,7 +209,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="137"/>
+            line="139"/>
     </issue>
 
     <issue
@@ -217,7 +217,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="165"/>
+            line="167"/>
     </issue>
 
     <issue
@@ -225,7 +225,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/component/impl/AndroidTestImpl.kt"
-            line="212"/>
+            line="214"/>
     </issue>
 
     <issue
@@ -929,7 +929,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="137"/>
+            line="139"/>
     </issue>
 
     <issue
@@ -937,7 +937,7 @@
         message="Avoid `by lazy` for simple lazy initialization">
         <location
             file="src/main/java/com/android/build/api/variant/impl/VariantImpl.kt"
-            line="215"/>
+            line="223"/>
     </issue>
 
     <issue

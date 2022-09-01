@@ -24,6 +24,7 @@ import com.android.build.api.component.impl.features.BuildConfigCreationConfigIm
 import com.android.build.api.component.impl.features.DexingCreationConfigImpl
 import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
+import com.android.build.api.component.impl.features.ShadersCreationConfigImpl
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidResources
@@ -51,6 +52,7 @@ import com.android.build.gradle.internal.component.features.DexingCreationConfig
 import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
+import com.android.build.gradle.internal.component.features.ShadersCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.AndroidTestComponentDslInfo
 import com.android.build.gradle.internal.dependency.VariantDependencies
@@ -297,6 +299,12 @@ open class AndroidTestImpl @Inject constructor(
     override val isCoreLibraryDesugaringEnabledLintCheck: Boolean
         get() = dexingCreationConfig.isCoreLibraryDesugaringEnabled
 
+    override val shadersCreationConfig: ShadersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        ShadersCreationConfigImpl(
+            dslInfo.shadersDslInfo!!
+        )
+    }
+
     override val targetSdkVersionOverride: AndroidVersion?
         get() = mainVariant.targetSdkVersionOverride
 
@@ -345,12 +353,6 @@ open class AndroidTestImpl @Inject constructor(
             // or if we're in an app/feature module which uses the transform pipeline.
             return (dslInfo.componentType.isAar || minifiedEnabled)
         }
-
-    override val defaultGlslcArgs: List<String>
-        get() = dslInfo.defaultGlslcArgs
-    override val scopedGlslcArgs: Map<String, List<String>>
-        get() = dslInfo.scopedGlslcArgs
-
     override val ignoredLibraryKeepRules: SetProperty<String>
         get() = internalServices.setPropertyOf(
             String::class.java,

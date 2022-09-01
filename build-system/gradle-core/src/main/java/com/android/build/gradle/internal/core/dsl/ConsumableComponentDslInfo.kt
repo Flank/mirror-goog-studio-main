@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.core.dsl
 
 import com.android.build.api.variant.BuildConfigField
+import com.android.build.gradle.internal.core.dsl.features.ShadersDslInfo
 import java.io.File
 import java.io.Serializable
 
@@ -37,10 +38,6 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
     val renderscriptNdkModeEnabled: Boolean
 
     val renderscriptOptimLevel: Int
-
-    val defaultGlslcArgs: List<String>
-
-    val scopedGlslcArgs: Map<String, List<String>>
 
     /**
      * Returns the component ids of those external library dependencies whose keep rules are ignored
@@ -71,4 +68,8 @@ interface ConsumableComponentDslInfo: ComponentDslInfo {
      * @return the merged manifest placeholders for a build variant.
      */
     val manifestPlaceholders: Map<String, String>
+
+    // optional features
+
+    val shadersDslInfo: ShadersDslInfo?
 }

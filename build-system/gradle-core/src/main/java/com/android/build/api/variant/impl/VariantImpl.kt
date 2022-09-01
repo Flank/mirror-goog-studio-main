@@ -21,6 +21,7 @@ import com.android.build.api.component.impl.UnitTestImpl
 import com.android.build.api.component.impl.features.BuildConfigCreationConfigImpl
 import com.android.build.api.component.impl.features.ManifestPlaceholdersCreationConfigImpl
 import com.android.build.api.component.impl.features.RenderscriptCreationConfigImpl
+import com.android.build.api.component.impl.features.ShadersCreationConfigImpl
 import com.android.build.api.component.impl.warnAboutAccessingVariantApiValueForDisabledFeature
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.BuildConfigField
@@ -40,6 +41,7 @@ import com.android.build.gradle.internal.component.features.BuildConfigCreationC
 import com.android.build.gradle.internal.component.features.FeatureNames
 import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
+import com.android.build.gradle.internal.component.features.ShadersCreationConfig
 import com.android.build.gradle.internal.core.MergedNdkConfig
 import com.android.build.gradle.internal.core.NativeBuiltType
 import com.android.build.gradle.internal.core.VariantSources
@@ -210,6 +212,12 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         )
     }
 
+    override val shadersCreationConfig: ShadersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
+        ShadersCreationConfigImpl(
+            dslInfo.shadersDslInfo!!
+        )
+    }
+
     override val testComponents = mutableMapOf<ComponentType, TestComponentCreationConfig>()
     override var testFixturesComponent: TestFixturesCreationConfig? = null
 
@@ -281,11 +289,6 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
             )
 
     override val ignoreAllLibraryKeepRules: Boolean = dslInfo.ignoreAllLibraryKeepRules
-
-    override val defaultGlslcArgs: List<String>
-        get() = dslInfo.defaultGlslcArgs
-    override val scopedGlslcArgs: Map<String, List<String>>
-        get() = dslInfo.scopedGlslcArgs
 
     override val ndkConfig: MergedNdkConfig
         get() = dslInfo.ndkConfig

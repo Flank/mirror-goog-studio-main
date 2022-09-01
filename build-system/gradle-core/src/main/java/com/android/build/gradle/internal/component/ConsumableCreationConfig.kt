@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.component
 import com.android.build.api.variant.Packaging
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
+import com.android.build.gradle.internal.component.features.ShadersCreationConfig
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
@@ -28,8 +29,6 @@ import org.gradle.api.provider.Provider
  * like APKs or AABs or used by other projects as a versioned reusable logic like AARs.
  */
 interface ConsumableCreationConfig: ComponentCreationConfig {
-    val renderscriptCreationConfig: RenderscriptCreationConfig?
-
     val packaging: Packaging
 
     val proguardFiles: ListProperty<RegularFile>
@@ -53,14 +52,14 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
 
     val postProcessingFeatures: PostprocessingFeatures?
 
-    val defaultGlslcArgs: List<String>
-
-    val scopedGlslcArgs: Map<String, List<String>>
-
     val isAndroidTestCoverageEnabled: Boolean
 
     /**
      * Used by lint to run checks related to core library desugaring.
      */
     val isCoreLibraryDesugaringEnabledLintCheck: Boolean
+
+    // optional features
+    val renderscriptCreationConfig: RenderscriptCreationConfig?
+    val shadersCreationConfig: ShadersCreationConfig?
 }
