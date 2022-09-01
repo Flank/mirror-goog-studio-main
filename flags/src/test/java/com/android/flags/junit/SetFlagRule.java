@@ -18,13 +18,13 @@ package com.android.flags.junit;
 import com.android.flags.Flag;
 
 /**
- * An override of {@link RestoreFlagRule} that allows you to additionally initialize the flag to an
- * initial value.
+ * Sets a flag to the given value before running a test and restores it to the original value
+ * after the test.
  *
  * <pre>
  *   public class MyTest {
- *     @Rule
- *     public SetFlagRule{Boolean} myFlagRule = new SetFlagRule{}(StudioFlags.MY_FLAG, true);
+ *    {@literal @}Rule
+ *     public TestRule myFlagRule = new SetFlagRule&lt;&gt;(StudioFlags.MY_FLAG, true);
  *   }
  * </pre>
  *
