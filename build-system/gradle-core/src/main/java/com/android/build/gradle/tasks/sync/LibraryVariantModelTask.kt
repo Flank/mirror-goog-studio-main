@@ -31,9 +31,9 @@ abstract class LibraryVariantModelTask: ModuleVariantModelTask() {
         super.addVariantContent(variant.libraryVariantPropertiesBuilder.artifactOutputPropertiesBuilder)
     }
 
-    class CreationAction(private val libraryCreationConfig: LibraryCreationConfig):
+    class CreationAction(creationConfig: LibraryCreationConfig):
         AbstractVariantModelTask.CreationAction<LibraryVariantModelTask, LibraryCreationConfig>(
-            creationConfig = libraryCreationConfig,
+            creationConfig,
         ) {
 
         override val type: Class<LibraryVariantModelTask>
@@ -41,7 +41,10 @@ abstract class LibraryVariantModelTask: ModuleVariantModelTask() {
 
         override fun configure(task: LibraryVariantModelTask) {
             super.configure(task)
-            task.manifestPlaceholders.setDisallowChanges(libraryCreationConfig.manifestPlaceholders)
+            task.manifestPlaceholders.setDisallowChanges(
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = { empty() }
+            )
         }
     }
 }

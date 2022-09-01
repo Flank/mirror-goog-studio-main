@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.LibraryVariantBuilder;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
@@ -75,7 +74,6 @@ import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.SourceJarTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.build.gradle.tasks.sync.LibraryVariantModelTask;
-import com.android.builder.errors.IssueReporter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -152,8 +150,7 @@ public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, Libra
                 new ProcessLibraryManifest.CreationAction(
                         libraryVariant,
                         libraryVariant.getTargetSdkVersion(),
-                        libraryVariant.getMaxSdkVersion(),
-                        libraryVariant.getManifestPlaceholders()));
+                        libraryVariant.getMaxSdkVersion()));
 
         createRenderscriptTask(libraryVariant);
 

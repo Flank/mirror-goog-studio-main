@@ -923,7 +923,8 @@ abstract class VariantInputs {
 
         if (creationConfig is ApkCreationConfig) {
             manifestPlaceholders.setDisallowChanges(
-                creationConfig.manifestPlaceholders
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = { empty() }
             )
         }
 

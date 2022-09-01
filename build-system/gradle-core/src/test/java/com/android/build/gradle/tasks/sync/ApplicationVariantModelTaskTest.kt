@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks.sync
 
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
+import com.android.build.gradle.internal.component.features.ManifestPlaceholdersCreationConfig
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.build.gradle.internal.services.createProjectServices
@@ -24,6 +25,7 @@ import com.android.build.gradle.internal.services.createTaskCreationServices
 import com.android.build.gradle.internal.services.getBuildServiceName
 import com.android.ide.common.build.filebasedproperties.variant.VariantProperties
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.MapProperty
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
@@ -58,11 +60,15 @@ internal class ApplicationVariantModelTaskTest: VariantModelTaskAbstractTest<App
     fun testConfigure() {
         val creationConfig = Mockito.mock(ApplicationCreationConfig::class.java)
         Mockito.`when`(creationConfig.applicationId).thenReturn(project.provider { "testAppId" })
-        Mockito.`when`(creationConfig.manifestPlaceholders).thenReturn(
-                project.objects.mapProperty(String::class.java, String::class.java).also {
-                    it.put("key1", "value1")
-                    it.put("key2", "value2")
-                }
+        Mockito.`when`(creationConfig.manifestPlaceholdersCreationConfig).thenReturn(
+            object : ManifestPlaceholdersCreationConfig {
+                override val placeholders: MapProperty<String, String>
+                    get() = project.objects.mapProperty(String::class.java, String::class.java)
+                        .also {
+                            it.put("key1", "value1")
+                            it.put("key2", "value2")
+                        }
+            }
         )
 
         Mockito.`when`(creationConfig.name).thenReturn("debug")

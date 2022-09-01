@@ -267,8 +267,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
     class CreationAction(
         creationConfig: ComponentCreationConfig,
         private val targetSdkVersion: AndroidVersion?,
-        private val maxSdkVersion: Int?,
-        private val manifestPlaceholders: MapProperty<String, String>?
+        private val maxSdkVersion: Int?
     ) : VariantTaskCreationAction<ProcessLibraryManifest, ComponentCreationConfig>(
         creationConfig
     ) {
@@ -332,7 +331,7 @@ abstract class ProcessLibraryManifest : ManifestProcessorTask() {
             task.mainSplit.set(creationConfig.services.provider { creationConfig.outputs.getMainSplit() })
             task.mainSplit.disallowChanges()
             task.isNamespaced = creationConfig.global.namespacedAndroidResources
-            manifestPlaceholders?.let {
+            creationConfig.manifestPlaceholdersCreationConfig?.placeholders?.let {
                 task.manifestPlaceholders.setDisallowChanges(it)
             }
             task.mainManifest

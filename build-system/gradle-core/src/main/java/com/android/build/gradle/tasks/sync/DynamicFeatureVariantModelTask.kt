@@ -31,9 +31,9 @@ abstract class DynamicFeatureVariantModelTask: ModuleVariantModelTask() {
         super.addVariantContent(variant.dynamicFeatureVariantPropertiesBuilder.artifactOutputPropertiesBuilder)
     }
 
-    class CreationAction(private val dynamicFeatureCreationConfig: DynamicFeatureCreationConfig):
+    class CreationAction(creationConfig: DynamicFeatureCreationConfig):
         AbstractVariantModelTask.CreationAction<DynamicFeatureVariantModelTask, DynamicFeatureCreationConfig>(
-            creationConfig = dynamicFeatureCreationConfig,
+            creationConfig,
         ) {
 
         override val type: Class<DynamicFeatureVariantModelTask>
@@ -42,7 +42,8 @@ abstract class DynamicFeatureVariantModelTask: ModuleVariantModelTask() {
         override fun configure(task: DynamicFeatureVariantModelTask) {
             super.configure(task)
             task.manifestPlaceholders.setDisallowChanges(
-                dynamicFeatureCreationConfig.manifestPlaceholders
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = { empty() }
             )
         }
     }

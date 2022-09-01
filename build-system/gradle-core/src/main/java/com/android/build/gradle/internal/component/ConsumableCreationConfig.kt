@@ -83,7 +83,5 @@ interface ConsumableCreationConfig: ComponentCreationConfig {
 
     val scopedGlslcArgs: Map<String, List<String>>
 
-    val manifestPlaceholders: MapProperty<String, String>
-
     val isAndroidTestCoverageEnabled: Boolean
 }

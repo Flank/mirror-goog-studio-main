@@ -530,8 +530,7 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             ProcessLibraryManifest.CreationAction(
                 testFixturesComponent,
                 targetSdkVersion = null,
-                maxSdkVersion = null,
-                manifestPlaceholders = null
+                maxSdkVersion = null
             )
         )
 

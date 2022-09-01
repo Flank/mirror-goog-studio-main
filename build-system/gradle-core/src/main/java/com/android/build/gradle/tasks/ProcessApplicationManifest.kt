@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.manifest.ManifestProviderImpl
 import com.android.build.gradle.internal.tasks.manifest.mergeManifests
-import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
@@ -53,7 +52,6 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
@@ -123,7 +121,7 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
 
     @get:Optional
     @get:Input
-    abstract val manifestPlaceholders: MapProperty<String, Any>
+    abstract val manifestPlaceholders: MapProperty<String, String>
 
     private var isFeatureSplitVariantType = false
     private var buildTypeName: String? = null
@@ -446,7 +444,10 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                     creationConfig.services.projectOptions[StringOption.PROFILING_MODE]
                 ) != ProfilingMode.UNDEFINED
             )
-            task.manifestPlaceholders.set(creationConfig.manifestPlaceholders)
+            task.manifestPlaceholders.setDisallowChanges(
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = { empty() }
+            )
             task.manifestPlaceholders.disallowChanges()
             task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))
             task.manifestOverlays.setDisallowChanges(

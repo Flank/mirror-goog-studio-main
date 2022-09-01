@@ -44,9 +44,9 @@ abstract class ApplicationVariantModelTask: ModuleVariantModelTask() {
         variant.applicationVariantPropertiesBuilder.applicationId = applicationId.get()
     }
 
-    class CreationAction(private val applicationCreationConfig: ApplicationCreationConfig) :
+    class CreationAction(creationConfig: ApplicationCreationConfig) :
         AbstractVariantModelTask.CreationAction<ApplicationVariantModelTask, VariantCreationConfig>(
-            creationConfig = applicationCreationConfig,
+            creationConfig,
         ) {
 
         override val type: Class<ApplicationVariantModelTask>
@@ -54,8 +54,11 @@ abstract class ApplicationVariantModelTask: ModuleVariantModelTask() {
 
         override fun configure(task: ApplicationVariantModelTask) {
             super.configure(task)
-            task.applicationId.setDisallowChanges(applicationCreationConfig.applicationId)
-            task.manifestPlaceholders.setDisallowChanges(applicationCreationConfig.manifestPlaceholders)
+            task.applicationId.setDisallowChanges(creationConfig.applicationId)
+            task.manifestPlaceholders.setDisallowChanges(
+                creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
+                handleNullable = { empty() }
+            )
         }
     }
 }
