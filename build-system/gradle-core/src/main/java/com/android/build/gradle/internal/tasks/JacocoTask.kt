@@ -402,38 +402,6 @@ abstract class JacocoTask : NewIncrementalTask() {
         }
     }
 
-    class CreationActionLegacyTransform(
-        creationConfig: ComponentCreationConfig, private val transformClasses: FileCollection
-    ) : AbstractCreationAction(creationConfig) {
-
-        override fun handleProvider(taskProvider: TaskProvider<JacocoTask>) {
-            super.handleProvider(taskProvider)
-            creationConfig
-                .artifacts
-                .setInitialProvider(taskProvider) { obj: JacocoTask -> obj.outputForDirs }
-                .withName("out")
-                .on(InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES)
-            creationConfig
-                .artifacts
-                .setInitialProvider(taskProvider) { obj: JacocoTask -> obj.outputForJars }
-                .on(InternalArtifactType.LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS)
-        }
-
-        override fun configure(task: JacocoTask) {
-            super.configure(task)
-            val classesFromLegacyTransforms = transformClasses
-
-            task.jarsWithIdentity
-                .inputJars
-                .from(
-                    classesFromLegacyTransforms.getRegularFiles(
-                        creationConfig.services.projectInfo.projectDirectory)
-                )
-            task.classesDir.from(classesFromLegacyTransforms.getDirectories(
-                creationConfig.services.projectInfo.projectDirectory
-            ))
-        }
-    }
     companion object {
         /** Returns which Jacoco version to use.  */
         fun getJacocoVersion(creationConfig: ComponentCreationConfig): String {

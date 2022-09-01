@@ -19,9 +19,7 @@ package com.android.build.gradle.internal.pipeline;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -29,29 +27,18 @@ import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
-import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.errors.IssueReporter;
 import com.android.builder.errors.IssueReporter.Type;
-import com.android.utils.FileUtils;
-import com.android.utils.StringHelper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.TaskProvider;
@@ -153,206 +140,15 @@ public class TransformManager extends FilterableStreamCollection {
             @NonNull TaskFactory taskFactory,
             @NonNull ComponentCreationConfig creationConfig,
             @NonNull T transform) {
-        return addTransform(taskFactory, creationConfig, transform, null, null, null);
+
+        return Optional.empty();
     }
 
-    /**
-     * Adds a Transform.
-     *
-     * <p>This makes the current transform consumes whatever Streams are currently available and
-     * creates new ones for the transform output.
-     *
-     * <p>his also creates a {@link TransformTask} to run the transform and wire it up with the
-     * dependencies of the consumed streams.
-     *
-     * @param taskFactory the task factory
-     * @param creationConfig the current scope
-     * @param transform the transform to add
-     * @param <T> the type of the transform
-     * @return {@code Optional<AndroidTask<TaskProvider<TransformTask>>>} containing the AndroidTask
-     *     for the given transform task if it was able to create it
-     */
-    @NonNull
-    public <T extends Transform> Optional<TaskProvider<TransformTask>> addTransform(
-            @NonNull TaskFactory taskFactory,
-            @NonNull ComponentCreationConfig creationConfig,
-            @NonNull T transform,
-            @Nullable PreConfigAction preConfigAction,
-            @Nullable TaskConfigAction<TransformTask> configAction,
-            @Nullable TaskProviderCallback<TransformTask> providerCallback) {
-
-        if (!validateTransform(transform)) {
-            // validate either throws an exception, or records the problem during sync
-            // so it's safe to just return null here.
-            return Optional.empty();
-        }
-
-        if (!transform.applyToVariant(new VariantInfoImpl(creationConfig))) {
-            return Optional.empty();
-        }
-
-        List<TransformStream> inputStreams = Lists.newArrayList();
-        String taskName = creationConfig.computeTaskName(getTaskNamePrefix(transform), "");
-
-        // get referenced-only streams
-        List<TransformStream> referencedStreams = grabReferencedStreams(transform);
-
-        // find input streams, and compute output streams for the transform.
-        IntermediateStream outputStream =
-                findTransformStreams(
-                        transform,
-                        creationConfig,
-                        inputStreams,
-                        taskName,
-                        creationConfig.getServices().getProjectInfo().getBuildDir());
-
-        if (inputStreams.isEmpty() && referencedStreams.isEmpty()) {
-            // didn't find any match. Means there is a broken order somewhere in the streams.
-            issueReporter.reportError(
-                    Type.GENERIC,
-                    String.format(
-                            "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
-                            transform.getName(),
-                            creationConfig.getName(),
-                            transform.getScopes(),
-                            transform.getReferencedScopes(),
-                            transform.getInputTypes()));
-            return Optional.empty();
-        }
-
-        //noinspection PointlessBooleanExpression
-        if (DEBUG && logger.isEnabled(LogLevel.DEBUG)) {
-            logger.debug("ADDED TRANSFORM(" + creationConfig.getName() + "):");
-            logger.debug("\tName: " + transform.getName());
-            logger.debug("\tTask: " + taskName);
-            for (TransformStream sd : inputStreams) {
-                logger.debug("\tInputStream: " + sd);
-            }
-            for (TransformStream sd : referencedStreams) {
-                logger.debug("\tRef'edStream: " + sd);
-            }
-            if (outputStream != null) {
-                logger.debug("\tOutputStream: " + outputStream);
-            }
-        }
-
-        transforms.add(transform);
-        TaskConfigAction<TransformTask> wrappedConfigAction =
-                t -> {
-                    if (configAction != null) {
-                        configAction.configure(t);
-                    }
-                };
-
-        boolean allowIncremental =
-                !creationConfig
-                        .getServices()
-                        .getProjectOptions()
-                        .get(BooleanOption.LEGACY_TRANSFORM_TASK_FORCE_NON_INCREMENTAL);
-        // create the task...
-        return Optional.of(
-                taskFactory.register(
-                        new TransformTask.CreationAction<>(
-                                creationConfig.getName(),
-                                taskName,
-                                transform,
-                                inputStreams,
-                                referencedStreams,
-                                outputStream,
-                                allowIncremental),
-                        preConfigAction,
-                        wrappedConfigAction,
-                        providerCallback));
-    }
 
     @Override
     @NonNull
     public List<TransformStream> getStreams() {
         return streams;
-    }
-
-    @VisibleForTesting
-    @NonNull
-    static String getTaskNamePrefix(@NonNull Transform transform) {
-        StringBuilder sb = new StringBuilder(100);
-        sb.append("transform");
-
-        sb.append(
-                transform
-                        .getInputTypes()
-                        .stream()
-                        .map(
-                                inputType ->
-                                        CaseFormat.UPPER_UNDERSCORE.to(
-                                                CaseFormat.UPPER_CAMEL, inputType.name()))
-                        .sorted() // Keep the order stable.
-                        .collect(Collectors.joining("And")));
-        sb.append("With");
-        StringHelper.appendCapitalized(sb, transform.getName());
-        sb.append("For");
-
-        return sb.toString();
-    }
-
-    /**
-     * Finds the stream(s) the transform consumes, and return them.
-     *
-     * <p>This also removes them from the instance list. They will be replaced with the output
-     * stream(s) from the transform.
-     *
-     * <p>This returns an optional output stream.
-     *
-     * @param transform the transform.
-     * @param creationConfig the scope the transform is applied to.
-     * @param inputStreams the out list of input streams for the transform.
-     * @param taskName the name of the task that will run the transform
-     * @param buildDir the build dir of the project.
-     * @return the output stream if any.
-     */
-    @Nullable
-    private IntermediateStream findTransformStreams(
-            @NonNull Transform transform,
-            @NonNull ComponentCreationConfig creationConfig,
-            @NonNull List<TransformStream> inputStreams,
-            @NonNull String taskName,
-            @NonNull File buildDir) {
-
-        Set<? super Scope> requestedScopes = transform.getScopes();
-        if (requestedScopes.isEmpty()) {
-            // this is a no-op transform.
-            return null;
-        }
-
-        Set<ContentType> requestedTypes = transform.getInputTypes();
-        consumeStreams(requestedScopes, requestedTypes, inputStreams);
-
-        // create the output stream.
-        // create single combined output stream for all types and scopes
-        Set<ContentType> outputTypes = transform.getOutputTypes();
-
-        File outRootFolder =
-                FileUtils.join(
-                        buildDir,
-                        StringHelper.toStrings(
-                                SdkConstants.FD_INTERMEDIATES,
-                                FD_TRANSFORMS,
-                                transform.getName(),
-                                creationConfig.getPaths().getDirectorySegments()));
-
-        // create the output
-        IntermediateStream outputStream =
-                IntermediateStream.builder(
-                                project,
-                                transform.getName() + "-" + creationConfig.getName(),
-                                taskName)
-                        .addContentTypes(outputTypes)
-                        .addScopes(requestedScopes)
-                        .setRootLocation(outRootFolder)
-                        .build();
-        // and add it to the list of available streams for next transforms.
-        streams.add(outputStream);
-
-        return outputStream;
     }
 
     /**

@@ -146,10 +146,6 @@ InternalArtifactType<T : FileSystemLocation>(
     object JACOCO_INSTRUMENTED_CLASSES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // A folder containing jars with classes instrumented with jacoco
     object JACOCO_INSTRUMENTED_JARS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // A folder containing classes with classes from legacy transform api instrumented with Jacoco.
-    object LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_CLASSES: InternalArtifactType<Directory>(DIRECTORY), Replaceable
-    // A folder containing jars with classes from legacy transform api instrumented with Jacoco.
-    object LEGACY_TRANSFORMED_JACOCO_INSTRUMENTED_JARS: InternalArtifactType<Directory>(DIRECTORY), Replaceable
     // The jacoco code coverage from the connected tests
     object CODE_COVERAGE: InternalArtifactType<Directory>(DIRECTORY, Category.OUTPUTS), Replaceable
     // The jacoco code coverage from unit tests

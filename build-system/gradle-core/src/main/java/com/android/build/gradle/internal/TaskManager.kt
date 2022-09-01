@@ -2366,25 +2366,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
         }
     }
 
-    private fun createJacocoTaskWithLegacyTransformSupport(creationConfig: ComponentCreationConfig) {
-        // Assume the following is true
-        // * test coverage is enabled
-        // * BooleanOption ENABLE_JACOCO_TRANSFORM_INSTRUMENTATION=true
-        // * a legacy transform is registered
-
-        val classesFromLegacyTransforms =
-            creationConfig.transformManager.getPipelineOutputAsFileCollection(
-                { _, _ -> true},
-                { types, _ -> types.contains(
-                    com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES) }
-            )
-
-        if (creationConfig is ApplicationCreationConfig) {
-        taskFactory.register(
-            JacocoTask.CreationActionLegacyTransform(creationConfig, classesFromLegacyTransforms))
-        }
-    }
-
     fun createJacocoTask(creationConfig: ComponentCreationConfig) {
         @Suppress("DEPRECATION") // Legacy support
         creationConfig
