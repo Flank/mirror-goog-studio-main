@@ -850,6 +850,17 @@ coverage_report(
     ],
 )
 
+# TargetSDKVersion Upgrade Assistant
+coverage_report(
+    name = "tsdkv",
+    srcpath_include = [
+        "tools/vendor/google/targetsdkversion-upgrade-assistant",
+    ],
+    tests = [
+        "//tools/vendor/google/targetsdkversion-upgrade-assistant:targetsdkversion-upgrade-assistant_tests",
+    ],
+)
+
 combine_report_definitions(
     prefix = "comps",
     # keep sorted
@@ -896,6 +907,7 @@ combine_report_definitions(
         "systrace-jank-ui",
         "systracev2",
         "templates",
+        "tsdkv",
         "upgrade-assistant",
         "utp",
         "validation",
@@ -1102,5 +1114,6 @@ coverage_report(
         "//tools/vendor/google/android-apk:android-apk.tests_tests",
         "//tools/vendor/google/android-ndk:android-ndk.tests_tests",
         "//tools/vendor/google/firebase:firebase_tests",
+        "//tools/vendor/google/targetsdkversion-upgrade-assistant:targetsdkversion-upgrade-assistant_tests",
     ],
 )
