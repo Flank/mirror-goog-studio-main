@@ -22,6 +22,7 @@ import com.android.tools.profgen.ArtProfileSerializer
 import com.android.tools.profgen.Diagnostics
 import com.android.tools.profgen.HumanReadableProfile
 import com.android.tools.profgen.ObfuscationMap
+import com.android.tools.profgen.dumpProfile
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
@@ -112,7 +113,6 @@ class PrintCommand : Subcommand("print", "Print methods matching profile") {
         val obfFile = obfPath?.let { File(it) }
         require(obfFile?.exists() != false) { "File not found: $obfPath" }
 
-
         val outFile = File(outPath)
         require(outFile.parentFile.exists()) { "Directory does not exist: ${outFile.parent}" }
 
@@ -121,6 +121,32 @@ class PrintCommand : Subcommand("print", "Print methods matching profile") {
         val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
         val profile = ArtProfile(hrp, obf, apk)
         profile.print(System.out, obf)
+    }
+}
+@ExperimentalCli
+class ProfileDumpCommand: Subcommand("dumpProfile", "Dump a binary profile to a HRF") {
+    val binPath by option(ArgType.String, "profile", "p", "File path to the binary profile").required()
+    val apkPath by option(ArgType.String, "apk", "a", "File path to apk").required()
+    val obfPath by option(ArgType.String, "map", "m", "File path to name obfuscation map")
+    val strictMode by option(ArgType.Boolean, "strict", "s", "Strict mode").default(value = true)
+    val outPath by option(ArgType.String, "output", "o", "File path for the HRF").required()
+    override fun execute() {
+        val binFile = File(binPath)
+        require(binFile.exists()) { "File not found: $binPath" }
+
+        val apkFile = File(apkPath)
+        require(apkFile.exists()) { "File not found: $apkPath" }
+
+        val obfFile = obfPath?.let { File(it) }
+        require(obfFile?.exists() != false) { "File not found: $obfPath" }
+
+        val outFile = File(outPath)
+        require(outFile.parentFile.exists()) { "Directory does not exist: ${outFile.parent}" }
+
+        val profile = ArtProfile(binFile)!!
+        val apk = Apk(apkFile)
+        val obf = if (obfFile != null) ObfuscationMap(obfFile) else ObfuscationMap.Empty
+        dumpProfile(outFile, profile, apk, obf, strict = strictMode)
     }
 }
 

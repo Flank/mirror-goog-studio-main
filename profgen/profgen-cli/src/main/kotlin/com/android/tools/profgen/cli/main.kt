@@ -25,6 +25,7 @@ fun main(args: Array<String>) {
     parser.subcommands(
         BinCommand(),
         ValidateCommand(),
+        ProfileDumpCommand()
     )
     parser.parse(args)
 }

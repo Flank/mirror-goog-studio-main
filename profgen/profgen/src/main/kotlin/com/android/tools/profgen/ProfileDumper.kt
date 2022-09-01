@@ -51,6 +51,12 @@ fun dumpProfile(
     }
 }
 
-fun dumpProfile(file: File, profile: ArtProfile, apk: Apk, obf: ObfuscationMap) {
-    dumpProfile(file.outputStream().bufferedWriter(), profile, apk, obf)
+fun dumpProfile(
+        file: File,
+        profile: ArtProfile,
+        apk: Apk,
+        obf: ObfuscationMap,
+        strict: Boolean = true
+) {
+    dumpProfile(file.outputStream().bufferedWriter(), profile, apk, obf, strict = strict)
 }
