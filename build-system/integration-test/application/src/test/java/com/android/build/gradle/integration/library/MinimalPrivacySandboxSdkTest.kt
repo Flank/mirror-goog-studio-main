@@ -114,7 +114,7 @@ class MinimalPrivacySandboxSdkTest {
                     "    A: platformBuildVersionCode=33",
                     "    A: platformBuildVersionName=13",
                     "      E: uses-sdk (line=5)",
-                    "        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=32",
+                    "        A: http://schemas.android.com/apk/res/android:minSdkVersion(0x0101020c)=33",
                     "      E: application (line=7)",
                     "          E: sdk-library (line=0)",
                     "            A: http://schemas.android.com/apk/res/android:name(0x01010003)=\"com.example.emptyprivacysandboxsdk\" (Raw: \"com.example.emptyprivacysandboxsdk\")",
