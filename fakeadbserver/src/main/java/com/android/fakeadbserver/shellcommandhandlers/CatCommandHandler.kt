@@ -46,8 +46,11 @@ class CatCommandHandler : SimpleShellHandler("cat") {
                 val sb = StringBuilder()
                 var ch = reader.read()
                 while (ch != -1) {
-                    sb.append(ch.toChar())
-                    if (ch == '\n'.toInt()) {
+                    // Translate '\n' to '\r\n' on older devices
+                    if (ch != '\n'.code) {
+                        sb.append(ch.toChar())
+                    } else {
+                        sb.append(shellNewLine(device))
                         writer.write(sb.toString())
                         writer.flush()
                         sb.setLength(0)

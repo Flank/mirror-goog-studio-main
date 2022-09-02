@@ -44,15 +44,15 @@ public class GetPropCommandHandler extends SimpleShellHandler {
             OutputStream stream = responseSocket.getOutputStream();
             CommandHandler.writeOkay(stream); // Send ok first.
             StringBuilder buf = new StringBuilder();
-            buf.append("# This is some build info\n");
-            buf.append("# This is more build info\n");
-            buf.append("\n");
+            buf.append("# This is some build info").append(shellNewLine(device));
+            buf.append("# This is more build info").append(shellNewLine(device));
+            buf.append(shellNewLine(device));
             for (Map.Entry<String, String> entry : device.getProperties().entrySet()) {
                 buf.append('[');
                 buf.append(entry.getKey());
                 buf.append("]: [");
                 buf.append(entry.getValue());
-                buf.append("]\n");
+                buf.append("]").append(shellNewLine(device));
             }
             stream.write(buf.toString().getBytes(Charsets.UTF_8));
         } catch (IOException ignored) {

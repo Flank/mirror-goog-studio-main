@@ -45,8 +45,13 @@ public class DeviceCommandHandler extends CommandHandler {
             @NonNull String command,
             @NonNull String args) {
         if (this.command.equals(command)) {
-            invoke(server, socket, device, args);
-            return true;
+            try {
+                invoke(server, socket, device, args);
+                return true;
+            } catch (NextHandlerException e) {
+                // The handler does not want to handle this command
+                return false;
+            }
         }
         return false;
     }
@@ -60,4 +65,10 @@ public class DeviceCommandHandler extends CommandHandler {
             @NonNull Socket socket,
             @NonNull DeviceState device,
             @NonNull String args) {}
+
+    /**
+     * Exception thrown by {@link DeviceCommandHandler} implementations that want to pass the
+     * command to the next handler in line.
+     */
+    public static class NextHandlerException extends UnsupportedOperationException {}
 }

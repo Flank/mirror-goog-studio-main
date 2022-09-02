@@ -62,4 +62,14 @@ public abstract class SimpleShellHandler extends ShellHandler {
             @NonNull Socket responseSocket,
             @NonNull DeviceState device,
             @Nullable String args);
+
+    @NonNull
+    protected String shellNewLine(@NonNull DeviceState device) {
+        // Older devices use "\r\n" for newlines (legacy shell protocol only)
+        if (device.getApiLevel() <= 23) {
+            return "\r\n";
+        } else {
+            return "\n";
+        }
+    }
 }

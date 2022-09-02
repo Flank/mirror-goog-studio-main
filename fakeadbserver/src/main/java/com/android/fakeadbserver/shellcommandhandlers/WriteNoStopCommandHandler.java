@@ -43,7 +43,7 @@ public class WriteNoStopCommandHandler extends SimpleShellHandler {
             try {
                 stream = responseSocket.getOutputStream();
                 CommandHandler.writeOkay(stream); // Send ok first.
-                String testMessage = "write-no-stop test in progress\n";
+                String testMessage = "write-no-stop test in progress" + shellNewLine(device);
                 while (true) {
                     stream.write(testMessage.getBytes(Charsets.UTF_8));
                     Thread.sleep(200);
