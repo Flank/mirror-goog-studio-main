@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 interface ApplicationBaseFlavor :
     BaseFlavor,
     ApplicationVariantDimension {
@@ -52,7 +50,6 @@ interface ApplicationBaseFlavor :
     var targetSdk: Int?
 
     @Deprecated("Replaced by targetSdk property")
-    @Incubating
     fun targetSdkVersion(targetSdkVersion: Int)
 
     /**
@@ -65,11 +62,9 @@ interface ApplicationBaseFlavor :
     var targetSdkPreview: String?
 
     @Deprecated("Replaced by targetSdkPreview property")
-    @Incubating
     fun setTargetSdkVersion(targetSdkVersion: String?)
 
     @Deprecated("Replaced by targetSdkPreview property")
-    @Incubating
     fun targetSdkVersion(targetSdkVersion: String?)
 
     /**
@@ -81,6 +76,5 @@ interface ApplicationBaseFlavor :
     var maxSdk: Int?
 
     @Deprecated("Replaced by maxSdk property")
-    @Incubating
     fun maxSdkVersion(maxSdkVersion: Int)
 }
