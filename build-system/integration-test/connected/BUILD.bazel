@@ -114,6 +114,7 @@ gradle_connected_test(
         "//tools/base/build-system/integration-test:utp_plugins",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_latest_prebuilts",
     ],
+    tags = ["very_flaky"],  # b/244294198
     deps = TEST_DEPS,
 )
 
