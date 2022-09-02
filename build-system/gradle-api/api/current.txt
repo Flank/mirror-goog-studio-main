@@ -456,16 +456,16 @@ package com.android.build.api.dsl {
 
   public interface ApplicationVariantDimension extends com.android.build.api.dsl.VariantDimension {
     method public String? getApplicationIdSuffix();
-    method @org.gradle.api.Incubating public Boolean? getMultiDexEnabled();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.ApkSigningConfig? getSigningConfig();
+    method public Boolean? getMultiDexEnabled();
+    method public com.android.build.api.dsl.ApkSigningConfig? getSigningConfig();
     method public String? getVersionNameSuffix();
     method public void setApplicationIdSuffix(String? applicationIdSuffix);
-    method @org.gradle.api.Incubating public void setMultiDexEnabled(Boolean? multiDexEnabled);
-    method @org.gradle.api.Incubating public void setSigningConfig(com.android.build.api.dsl.ApkSigningConfig? signingConfig);
+    method public void setMultiDexEnabled(Boolean? multiDexEnabled);
+    method public void setSigningConfig(com.android.build.api.dsl.ApkSigningConfig? signingConfig);
     method public void setVersionNameSuffix(String? versionNameSuffix);
     property public abstract String? applicationIdSuffix;
-    property @org.gradle.api.Incubating public abstract Boolean? multiDexEnabled;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.ApkSigningConfig? signingConfig;
+    property public abstract Boolean? multiDexEnabled;
+    property public abstract com.android.build.api.dsl.ApkSigningConfig? signingConfig;
     property public abstract String? versionNameSuffix;
   }
 
