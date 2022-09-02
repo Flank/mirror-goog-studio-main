@@ -25,9 +25,7 @@ import org.gradle.api.Incubating
  *
  * Only the Android Gradle Plugin should create instances of this interface.
  */
-@Incubating
 interface TestedExtension {
-    // TODO(b/140406102)
     /**
      * Specifies the
      * [build type](https://developer.android.com/studio/build/build-variants.html#build-types)
@@ -85,10 +83,12 @@ interface TestedExtension {
     /**
      * Options to configure the test fixtures.
      */
+    @get:Incubating
     val testFixtures: TestFixtures
 
     /**
      * Options to configure the test fixtures.
      */
+    @Incubating
     fun testFixtures(action: TestFixtures.() -> Unit)
 }

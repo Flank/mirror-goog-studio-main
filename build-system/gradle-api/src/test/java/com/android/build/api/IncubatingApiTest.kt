@@ -120,13 +120,7 @@ class IncubatingApiTest {
             }
 
         // TODO: clean these up
-        private val NON_INCUBATING_METHODS_TO_CLEAN_UP = listOf<String>(
-                "com.android.build.api.dsl.TestedExtension#getTestBuildType",
-                "com.android.build.api.dsl.TestedExtension#setTestBuildType",
-                "com.android.build.api.dsl.TestedExtension#getTestNamespace",
-                "com.android.build.api.dsl.TestedExtension#setTestNamespace",
-                "com.android.build.api.dsl.TestedExtension#getTestFixtures",
-                "com.android.build.api.dsl.TestedExtension#testFixtures",
+        private val NON_INCUBATING_METHODS_TO_CLEAN_UP = listOf(
                 "com.android.build.api.dsl.DynamicDelivery#getDeliveryType",
                 "com.android.build.api.dsl.DynamicDelivery#getInstantDeliveryType",
                 "com.android.build.api.dsl.JacocoOptions#getVersion",
