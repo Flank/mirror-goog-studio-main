@@ -194,7 +194,7 @@ abstract class ProcessPackagedManifestTask @Inject constructor(
             super.configure(task)
             task.workersProperty.disallowChanges()
             task.transformationRequest.setDisallowChanges(transformationRequest)
-            if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
+            if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT] && creationConfig.componentType.isBaseModule) {
                 task.privacySandboxSdkManifestSnippets.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
