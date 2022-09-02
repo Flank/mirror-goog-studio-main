@@ -701,6 +701,37 @@ maven_import(
 )
 
 maven_artifact(
+    name = "com.google.apis.google-api-services-oauth2_v2-rev150-1.22.0",
+    pom = "repository/com/google/apis/google-api-services-oauth2/v2-rev150-1.22.0/google-api-services-oauth2-v2-rev150-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-oauth2/v2-rev150-1.22.0",
+    parent = "org.sonatype.oss.oss-parent_7",
+    deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "com.google.apis.google-api-services-oauth2",
+    classifiers = [],
+    parent = "org.sonatype.oss.oss-parent_7",
+    jars = [
+        "repository/com/google/apis/google-api-services-oauth2/v2-rev150-1.22.0/google-api-services-oauth2-v2-rev150-1.22.0.jar"
+    ],
+    exports = [
+        "com.google.api-client.google-api-client",
+    ],
+    original_deps = [
+        "com.google.api-client.google-api-client_1.22.0",
+    ],
+    pom = "repository/com/google/apis/google-api-services-oauth2/v2-rev150-1.22.0/google-api-services-oauth2-v2-rev150-1.22.0.pom",
+    repo_root_path = "repository",
+    repo_path = "com/google/apis/google-api-services-oauth2/v2-rev150-1.22.0",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
     name = "com.google.apis.google-api-services-storage_v1-rev82-1.22.0",
     pom = "repository/com/google/apis/google-api-services-storage/v1-rev82-1.22.0/google-api-services-storage-v1-rev82-1.22.0.pom",
     repo_root_path = "repository",
@@ -4028,6 +4059,29 @@ maven_import(
     repo_root_path = "repository",
     repo_path = "javax/inject/javax.inject/1",
     srcjar = "repository/javax/inject/javax.inject/1/javax.inject-1-sources.jar",
+    visibility = ["//visibility:public"],
+)
+
+maven_artifact(
+    name = "javax.servlet.javax.servlet-api_3.0.1",
+    pom = "repository/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "javax/servlet/javax.servlet-api/3.0.1",
+    parent = "net.java.jvnet-parent_1",
+    visibility = ["//visibility:public"],
+)
+
+maven_import(
+    name = "javax.servlet.javax.servlet-api",
+    classifiers = [],
+    parent = "net.java.jvnet-parent_1",
+    jars = [
+        "repository/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.jar"
+    ],
+    original_deps = [],
+    pom = "repository/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.pom",
+    repo_root_path = "repository",
+    repo_path = "javax/servlet/javax.servlet-api/3.0.1",
     visibility = ["//visibility:public"],
 )
 
