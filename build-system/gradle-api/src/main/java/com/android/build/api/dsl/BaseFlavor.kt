@@ -24,7 +24,6 @@ import org.gradle.api.Incubating
 interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     // TODO(b/140406102)
     /** The name of the flavor. */
-    @Incubating
     fun getName(): String
 
     /**
@@ -44,10 +43,8 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     var minSdk: Int?
 
     @Deprecated("Replaced by minSdk property")
-    @Incubating
     fun setMinSdkVersion(minSdkVersion: Int)
     @Deprecated("Replaced by minSdk property")
-    @Incubating
     fun minSdkVersion(minSdkVersion: Int)
 
     /**
@@ -60,18 +57,14 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
     var minSdkPreview: String?
 
     @Deprecated("Replaced by minSdkPreview property")
-    @Incubating
     fun setMinSdkVersion(minSdkVersion: String?)
     @Deprecated("Replaced by minSdkPreview property")
-    @Incubating
     fun minSdkVersion(minSdkVersion: String?)
 
     /**
      * The renderscript target api, or null if not specified. This is only the value set on this
      * product flavor.
      */
-    @get:Incubating
-    @set:Incubating
     var renderscriptTargetApi: Int?
 
     /**
@@ -80,8 +73,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * True if support mode is enabled, false if not, and null if not specified.
      */
-    @get:Incubating
-    @set:Incubating
     var renderscriptSupportModeEnabled: Boolean?
 
     /**
@@ -90,16 +81,12 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      *
      * True if BLAS support lib is enabled, false if not, and null if not specified.
      */
-    @get:Incubating
-    @set:Incubating
     var renderscriptSupportModeBlasEnabled: Boolean?
 
     /**
      * Whether the renderscript code should be compiled to generate C/C++ bindings.
      * True for C/C++ generation, false for Java, null if not specified.
      */
-    @get:Incubating
-    @set:Incubating
     var renderscriptNdkModeEnabled: Boolean?
 
     /**
@@ -128,17 +115,14 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      */
     val testInstrumentationRunnerArguments: MutableMap<String, String>
 
-    @Incubating
     @Deprecated("Replaced by testInstrumentationRunnerArguments property")
     fun testInstrumentationRunnerArgument(key: String, value: String)
 
-    @Incubating
     @Deprecated("Replaced by testInstrumentationRunnerArguments property")
     fun setTestInstrumentationRunnerArguments(
         testInstrumentationRunnerArguments: MutableMap<String, String>
     ): Any?
 
-    @Incubating
     @Deprecated("Replaced by testInstrumentationRunnerArguments property")
     fun testInstrumentationRunnerArguments(args: Map<String, String>)
 
@@ -147,7 +131,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      */
     var testHandleProfiling: Boolean?
 
-    @Incubating
     @Deprecated("Replaced by testFunctionalTest property")
     fun setTestHandleProfiling(testHandleProfiling: Boolean): Any?
 
@@ -157,7 +140,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      */
     var testFunctionalTest: Boolean?
 
-    @Incubating
     @Deprecated("Replaced by testFunctionalTest property")
     fun setTestFunctionalTest(testFunctionalTest: Boolean): Any?
 
@@ -198,22 +180,17 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      */
     val resourceConfigurations: MutableSet<String>
 
-    @Incubating
     @Deprecated("Replaced by resourceConfigurations field")
     fun resConfigs(config: Collection<String>)
-    @Incubating
     @Deprecated("Replaced by resourceConfigurations field")
     fun resConfig(config: String)
-    @Incubating
     @Deprecated("Replaced by resourceConfigurations field")
     fun resConfigs(vararg config: String)
 
     /** Options to configure the build-time support for `vector` drawables. */
-    @get:Incubating
     val vectorDrawables: VectorDrawables
 
     /** Configures [VectorDrawables]. */
-    @Incubating
     fun vectorDrawables(action: VectorDrawables.() -> Unit)
 
     /**
@@ -283,7 +260,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * }
      * ```
      */
-    @Incubating
     fun missingDimensionStrategy(dimension: String, requestedValue: String)
 
     /**
@@ -348,7 +324,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * }
      * ```
      */
-    @Incubating
     fun missingDimensionStrategy(dimension: String, vararg requestedValues: String)
 
     /**
@@ -412,7 +387,6 @@ interface BaseFlavor : VariantDimension, HasInitWith<BaseFlavor> {
      * }
      * ```
      */
-    @Incubating
     fun missingDimensionStrategy(dimension: String, requestedValues: List<String>)
 
     /**
