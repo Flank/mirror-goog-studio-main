@@ -169,6 +169,7 @@ public class SdkVersionInfoTest extends TestCase {
     public void testGetVersionWithCodename() {
         assertEquals("Android 1.0", getVersionWithCodename(new AndroidVersion(1)));
         assertEquals("Android 2.3.3 (Gingerbread)", getVersionWithCodename(new AndroidVersion(10)));
+        assertEquals("Android API 33 (Tiramisu)", getVersionWithCodename(new AndroidVersion(33)));
         assertEquals("Android API 500", getVersionWithCodename(new AndroidVersion(500)));
         assertEquals(
                 "Android Codename Preview",
