@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * Build types define certain properties that Gradle uses when building and packaging your app, and
  * are typically configured for different stages of your development lifecycle.
@@ -37,8 +35,6 @@ interface ApplicationBuildType :
     BuildType,
     ApplicationVariantDimension {
     /** Whether this build type should generate a debuggable apk. */
-    @get:Incubating
-    @set:Incubating
     var isDebuggable: Boolean
 
     /**
@@ -53,8 +49,6 @@ interface ApplicationBuildType :
      * }
      * ```
      */
-    @get:Incubating
-    @set:Incubating
     var isEmbedMicroApp: Boolean
 
     /**
@@ -66,8 +60,6 @@ interface ApplicationBuildType :
      * PNG crunching is enabled by default in the release build type and disabled by default in
      * the debug build type.
      */
-    @get:Incubating
-    @set:Incubating
     var isCrunchPngs: Boolean?
 
     /** Whether this product flavor should be selected in Studio by default  */
@@ -85,7 +77,5 @@ interface ApplicationBuildType :
      * If a build type is set to be both debuggable and profileable the build system will log a
      * warning.
      */
-    @get:Incubating
-    @set:Incubating
     var isProfileable: Boolean
 }

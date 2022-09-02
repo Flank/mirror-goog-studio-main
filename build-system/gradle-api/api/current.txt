@@ -405,21 +405,21 @@ package com.android.build.api.dsl {
   }
 
   public interface ApplicationBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.ApplicationVariantDimension {
-    method @org.gradle.api.Incubating public Boolean? isCrunchPngs();
-    method @org.gradle.api.Incubating public boolean isDebuggable();
+    method public Boolean? isCrunchPngs();
+    method public boolean isDebuggable();
     method public boolean isDefault();
-    method @org.gradle.api.Incubating public boolean isEmbedMicroApp();
-    method @org.gradle.api.Incubating public boolean isProfileable();
-    method @org.gradle.api.Incubating public void setCrunchPngs(Boolean? isCrunchPngs);
-    method @org.gradle.api.Incubating public void setDebuggable(boolean isDebuggable);
+    method public boolean isEmbedMicroApp();
+    method public boolean isProfileable();
+    method public void setCrunchPngs(Boolean? isCrunchPngs);
+    method public void setDebuggable(boolean isDebuggable);
     method public void setDefault(boolean isDefault);
-    method @org.gradle.api.Incubating public void setEmbedMicroApp(boolean isEmbedMicroApp);
-    method @org.gradle.api.Incubating public void setProfileable(boolean isProfileable);
-    property @org.gradle.api.Incubating public abstract Boolean? isCrunchPngs;
-    property @org.gradle.api.Incubating public abstract boolean isDebuggable;
+    method public void setEmbedMicroApp(boolean isEmbedMicroApp);
+    method public void setProfileable(boolean isProfileable);
+    property public abstract Boolean? isCrunchPngs;
+    property public abstract boolean isDebuggable;
     property public abstract boolean isDefault;
-    property @org.gradle.api.Incubating public abstract boolean isEmbedMicroApp;
-    property @org.gradle.api.Incubating public abstract boolean isProfileable;
+    property public abstract boolean isEmbedMicroApp;
+    property public abstract boolean isProfileable;
   }
 
   public interface ApplicationDefaultConfig extends com.android.build.api.dsl.ApplicationBaseFlavor com.android.build.api.dsl.DefaultConfig {
