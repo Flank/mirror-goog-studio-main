@@ -168,7 +168,7 @@ open class AndroidTestImpl @Inject constructor(
                 value = internalServices.mapPropertyOf(
                     String::class.java,
                     BuildConfigField::class.java,
-                    dslInfo.getBuildConfigFields()
+                    dslInfo.buildConfigDslInfo!!.getBuildConfigFields()
                 )
             )
     }
@@ -232,7 +232,7 @@ open class AndroidTestImpl @Inject constructor(
         if (buildFeatures.buildConfig) {
             BuildConfigCreationConfigImpl(
                 this,
-                dslInfo,
+                dslInfo.buildConfigDslInfo!!,
                 internalServices
             )
         } else {
@@ -243,7 +243,7 @@ open class AndroidTestImpl @Inject constructor(
     override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
-                dslInfo,
+                dslInfo.renderscriptDslInfo!!,
                 internalServices,
                 renderscriptTargetApi = mainVariant.renderscriptCreationConfig!!.renderscriptTargetApi
             )
@@ -254,7 +254,7 @@ open class AndroidTestImpl @Inject constructor(
 
     override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
         ManifestPlaceholdersCreationConfigImpl(
-            dslInfo,
+            dslInfo.manifestPlaceholdersDslInfo!!,
             internalServices
         )
     }

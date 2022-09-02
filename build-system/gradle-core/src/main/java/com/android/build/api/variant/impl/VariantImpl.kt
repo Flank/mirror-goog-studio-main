@@ -129,7 +129,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
                 value = internalServices.mapPropertyOf(
                     String::class.java,
                     BuildConfigField::class.java,
-                    dslInfo.getBuildConfigFields()
+                    dslInfo.buildConfigDslInfo!!.getBuildConfigFields()
                 )
             )
     }
@@ -156,7 +156,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
         if (buildFeatures.buildConfig) {
             BuildConfigCreationConfigImpl(
                 this,
-                dslInfo,
+                dslInfo.buildConfigDslInfo!!,
                 internalServices
             )
         } else {
@@ -167,7 +167,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
     override val renderscriptCreationConfig: RenderscriptCreationConfig? by lazy(LazyThreadSafetyMode.NONE) {
         if (buildFeatures.renderScript) {
             RenderscriptCreationConfigImpl(
-                dslInfo,
+                dslInfo.renderscriptDslInfo!!,
                 internalServices,
                 renderscriptTargetApi = variantBuilder.renderscriptTargetApi
             )
@@ -178,7 +178,7 @@ abstract class VariantImpl<DslInfoT: VariantDslInfo>(
 
     override val manifestPlaceholdersCreationConfig: ManifestPlaceholdersCreationConfig by lazy(LazyThreadSafetyMode.NONE) {
         ManifestPlaceholdersCreationConfigImpl(
-            dslInfo,
+            dslInfo.manifestPlaceholdersDslInfo!!,
             internalServices
         )
     }

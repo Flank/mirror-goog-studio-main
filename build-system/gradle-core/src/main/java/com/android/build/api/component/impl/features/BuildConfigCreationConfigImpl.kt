@@ -20,7 +20,7 @@ import com.android.build.api.variant.BuildConfigField
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.features.BuildConfigCreationConfig
-import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.BuildConfigDslInfo
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.options.BooleanOption
@@ -31,7 +31,7 @@ import java.io.Serializable
 
 class BuildConfigCreationConfigImpl(
     private val component: ConsumableCreationConfig,
-    private val dslInfo: ConsumableComponentDslInfo,
+    private val dslInfo: BuildConfigDslInfo,
     private val internalServices: VariantServices
 ): BuildConfigCreationConfig {
 

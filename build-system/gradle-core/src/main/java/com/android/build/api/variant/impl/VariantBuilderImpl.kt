@@ -120,7 +120,7 @@ abstract class VariantBuilderImpl(
             // if the field has been set, always use  that value, otherwise, calculate it each
             // time in case minSdkVersion changes.
             if (field != -1) return field
-            val targetApi = (dslInfo as VariantDslInfo).renderscriptTarget
+            val targetApi = (dslInfo as VariantDslInfo).renderscriptDslInfo?.renderscriptTarget ?: -1
             // default to -1 if not in build.gradle file.
             val minSdk = mutableMinSdk.getFeatureLevel()
             return if (targetApi > minSdk) targetApi else minSdk

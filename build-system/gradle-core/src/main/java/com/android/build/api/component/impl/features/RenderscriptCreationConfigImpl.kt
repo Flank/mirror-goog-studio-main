@@ -18,11 +18,11 @@ package com.android.build.api.component.impl.features
 
 import com.android.build.api.variant.Renderscript
 import com.android.build.gradle.internal.component.features.RenderscriptCreationConfig
-import com.android.build.gradle.internal.core.dsl.ConsumableComponentDslInfo
+import com.android.build.gradle.internal.core.dsl.features.RenderscriptDslInfo
 import com.android.build.gradle.internal.services.VariantServices
 
 class RenderscriptCreationConfigImpl(
-    private val dslInfo: ConsumableComponentDslInfo,
+    private val dslInfo: RenderscriptDslInfo,
     private val internalServices: VariantServices,
     override val renderscriptTargetApi: Int
 ): RenderscriptCreationConfig {
