@@ -29,12 +29,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
-import com.android.build.gradle.internal.res.shrinker.DummyContent;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.shrinker.DummyContent;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;

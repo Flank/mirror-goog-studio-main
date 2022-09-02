@@ -16,6 +16,7 @@ TEST_DEPS = [
     "//tools/base/build-system/gradle-core",
     "//tools/base/build-system/integration-test/framework",
     "//tools/base/build-system/integration-test/framework/src/main/proto",
+    "//tools/base/build-system/shrinker",
     "//tools/base/common:tools.common",
     "//tools/base/ddmlib:tools.ddmlib",
     "//tools/base/profgen/profgen",

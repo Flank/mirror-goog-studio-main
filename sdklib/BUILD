@@ -42,7 +42,9 @@ java_library(
     name = "tools.sdklib.core",
     srcs = glob(
         ["src/main/java/**/*.java"],
-        exclude = ["src/main/java/**/tool/**/*.java"],
+        exclude = [
+            "src/main/java/**/tool/**/*.java",
+        ],
     ),
     resource_strip_prefix = "tools/base/sdklib/src/main/resources",
     resources = glob(["src/main/resources/**"]),
@@ -161,6 +163,17 @@ sdk_java_binary(
     },
     main_class = "com.android.sdklib.tool.sdkmanager.SdkManagerCli",
     runtime_deps = [":sdkmanager_lib"],
+)
+
+sdk_java_binary(
+    name = "resourceshrinker",
+    default_jvm_opts = {
+        "linux": "-Dcom.android.sdkmanager.toolsdir=$APP_HOME",
+        "mac": "-Dcom.android.sdkmanager.toolsdir=$APP_HOME",
+        "win": "\"-Dcom.android.sdkmanager.toolsdir=%~dp0\\..\"",
+    },
+    main_class = "com.android.build.shrinker.ResourceShrinkerCli",
+    runtime_deps = ["//tools/base/build-system/shrinker"],
 )
 
 sdk_java_binary(

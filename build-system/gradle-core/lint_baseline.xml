@@ -728,30 +728,6 @@
         id="AvoidByLazy"
         message="Avoid `by lazy` for simple lazy initialization">
         <location
-            file="src/main/java/com/android/build/gradle/internal/res/shrinker/graph/ProtoResourcesGraphBuilder.kt"
-            line="92"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/res/shrinker/graph/ProtoResourcesGraphBuilder.kt"
-            line="198"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
-            file="src/main/java/com/android/build/gradle/internal/res/shrinker/graph/ProtoResourcesGraphBuilder.kt"
-            line="199"/>
-    </issue>
-
-    <issue
-        id="AvoidByLazy"
-        message="Avoid `by lazy` for simple lazy initialization">
-        <location
             file="src/main/java/com/android/build/gradle/internal/dependency/ProvidedClasspath.kt"
             line="52"/>
     </issue>

@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import com.android.build.gradle.internal.res.shrinker.DummyContent
+import com.android.build.shrinker.DummyContent
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption

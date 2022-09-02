@@ -56,6 +56,7 @@ kotlin_library(
         "//tools/base/build-system/aaptcompiler",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/build-system/gradle-settings-api",
+        "//tools/base/build-system/shrinker",
         "//tools/base/common:tools.common",  # TODO: Not in the pom, but required to compile (?)
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -172,6 +173,7 @@ kotlin_test(
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/build-system/gradle-api",
+        "//tools/base/build-system/shrinker",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

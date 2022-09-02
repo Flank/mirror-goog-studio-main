@@ -206,6 +206,13 @@ dependencies {
     apiTestImplementation externalTestFixtures.apkanalyzer
     testCompileOnly project(':base:profile')
 
+    includeInJar(project(':base:build-system:shrinker')) {
+        transitive = false
+    }
+    includeInJarSources(project(':base:build-system:shrinker')) {
+        transitive = false
+    }
+
     // mlkit-common
     includeInJar(project(':base:mlkit-common')) {
         transitive = false
@@ -221,7 +228,9 @@ dependencies {
     }
     implementation libs.flatbuffers
     implementation libs.tensorflow_lite_metadata
-
+    provided(project(':base:build-system:shrinker')) {
+        transitive = false
+    }
     provided(files('../../../../prebuilts/r8/r8.jar'))
 }
 

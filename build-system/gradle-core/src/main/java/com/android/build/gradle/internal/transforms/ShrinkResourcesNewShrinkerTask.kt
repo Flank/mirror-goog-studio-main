@@ -22,15 +22,15 @@ import com.android.build.api.variant.BuiltArtifact
 import com.android.build.api.variant.impl.VariantOutputImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
-import com.android.build.gradle.internal.res.shrinker.LoggerAndFileDebugReporter
-import com.android.build.gradle.internal.res.shrinker.ResourceShrinkerImpl
-import com.android.build.gradle.internal.res.shrinker.gatherer.ProtoResourceTableGatherer
-import com.android.build.gradle.internal.res.shrinker.graph.ProtoResourcesGraphBuilder
-import com.android.build.gradle.internal.res.shrinker.obfuscation.ProguardMappingsRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.DexUsageRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.ProtoAndroidManifestUsageRecorder
-import com.android.build.gradle.internal.res.shrinker.usages.ToolsAttributeUsageRecorder
+import com.android.build.shrinker.LinkedResourcesFormat
+import com.android.build.shrinker.LoggerAndFileDebugReporter
+import com.android.build.shrinker.ResourceShrinkerImpl
+import com.android.build.shrinker.gatherer.ProtoResourceTableGatherer
+import com.android.build.shrinker.graph.ProtoResourcesGraphBuilder
+import com.android.build.shrinker.obfuscation.ProguardMappingsRecorder
+import com.android.build.shrinker.usages.DexUsageRecorder
+import com.android.build.shrinker.usages.ProtoAndroidManifestUsageRecorder
+import com.android.build.shrinker.usages.ToolsAttributeUsageRecorder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.services.Aapt2DaemonServiceKey
@@ -51,6 +51,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
+import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -296,7 +297,16 @@ abstract class ShrinkProtoResourcesAction @Inject constructor() :
                 usageRecorders = dexRecorders + manifestRecorder + toolsRecorder,
                 graphBuilders = listOf(graphBuilder),
                 debugReporter = LoggerAndFileDebugReporter(
-                    logger,
+                    logDebug = { debugMessage ->
+                        if (logger.isEnabled(LogLevel.DEBUG)) {
+                            logger.log(LogLevel.DEBUG, debugMessage)
+                        }
+                    },
+                    logInfo = { infoMessage ->
+                        if (logger.isEnabled(LogLevel.DEBUG)) {
+                            logger.log(LogLevel.DEBUG, infoMessage)
+                        }
+                    },
                     parameters.reportFile.orNull?.asFile
                 ),
                 supportMultipackages = false,

@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat.BINARY;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.NO_MATCH;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.convertFormatStringToRegexp;
+import static com.android.build.shrinker.LinkedResourcesFormat.BINARY;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separatorChar;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.res.shrinker.DummyContent;
+import com.android.build.shrinker.DummyContent;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;

@@ -21,10 +21,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.DEBUG
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.Companion.RELEASE
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
-import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_9PNG
-import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PNG
-import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_CONVERTED_TO_BINARY_XML
-import com.android.build.gradle.internal.res.shrinker.DummyContent.TINY_PROTO_XML
+import com.android.build.shrinker.DummyContent.TINY_9PNG
+import com.android.build.shrinker.DummyContent.TINY_PNG
+import com.android.build.shrinker.DummyContent.TINY_PROTO_CONVERTED_TO_BINARY_XML
+import com.android.build.shrinker.DummyContent.TINY_PROTO_XML
 import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat

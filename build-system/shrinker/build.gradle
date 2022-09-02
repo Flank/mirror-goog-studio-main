@@ -1,0 +1,18 @@
+apply plugin: 'com.android.tools.java-library'
+apply plugin: 'com.android.tools.kotlin'
+
+dependencies {
+    implementation project(':base:build-system:aapt2-proto')
+    implementation project(':base:builder')
+    implementation libs.com.android.tools.layoutlib.layoutlibApi
+    implementation libs.com.android.tools.common
+    implementation libs.com.android.tools.sdkCommon
+    implementation libs.protobuf
+    implementation libs.guava
+    implementation libs.kotlin_stdlib
+    testImplementation libs.kotlin_test
+    testImplementation libs.junit
+    testImplementation libs.truth
+    testImplementation libs.com.android.tools.testutils
+    compileOnly files('../../../../prebuilts/r8/r8.jar')
+}

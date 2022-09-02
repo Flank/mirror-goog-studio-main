@@ -21,7 +21,7 @@ import com.android.build.api.variant.VariantOutput
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.res.shrinker.LinkedResourcesFormat
+import com.android.build.shrinker.LinkedResourcesFormat
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
