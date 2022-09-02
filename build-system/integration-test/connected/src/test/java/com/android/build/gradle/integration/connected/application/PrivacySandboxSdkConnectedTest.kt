@@ -57,22 +57,6 @@ class PrivacySandboxSdkConnectedTest {
     }
 
     @Test
-    fun `connectedAndroidTest task, SDK preinstalled`() {
-        project.execute(":app:buildPrivacySandboxSdkApksForDebug")
-        device.installPackage(
-            project.getSubproject("app").getIntermediateFile(
-                "extracted_apks_from_privacy_sandbox_sdks",
-                "debug",
-                "ads-sdk",
-                "standalone.apk"
-            ).path,
-            /* reinstall */ true
-        )
-        project.execute("connectedAndroidTest")
-    }
-
-    @Test
-    @Ignore // This doesn't work because deployment is not handled yet.
     fun `connectedAndroidTest task`() {
         project.execute("connectedAndroidTest")
     }
