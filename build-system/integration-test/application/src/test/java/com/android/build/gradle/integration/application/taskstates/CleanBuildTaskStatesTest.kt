@@ -86,7 +86,6 @@ class CleanBuildTaskStatesTest {
             SKIPPED to setOf(
                 ":app:assembleDebug",
                 ":app:compileDebugAidl",
-                ":app:compileDebugRenderscript",
                 ":app:compileDebugShaders",
                 ":app:generateDebugResources",
                 ":app:mergeDebugNativeDebugMetadata",

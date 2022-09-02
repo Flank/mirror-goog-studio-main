@@ -60,7 +60,6 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         ":clean" to UP_TO_DATE,
         ":compileDebugAidl" to SKIPPED,
         ":compileDebugJavaWithJavac" to FROM_CACHE,
-        ":compileDebugRenderscript" to SKIPPED,
         ":createDebugCompatibleScreenManifests" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.tasks.CompatibleScreensManifest] */
         ":dataBindingGenBaseClassesDebug" to FROM_CACHE,
         ":dataBindingMergeDependencyArtifactsDebug" to DID_WORK, /** Intentionally not cacheable. See [com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask] */

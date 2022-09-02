@@ -7,8 +7,8 @@
       * {ANDROID_SDK}/platforms/android-{COMPILE_SDK_VERSION}/android.jar{F}
    > defaultConfig:
       > sourceProvider:
-         - name                = "main"
-         - manifestFile        = {PROJECT}/test/src/main/AndroidManifest.xml{F}
+         - name                    = "main"
+         - manifestFile            = {PROJECT}/test/src/main/AndroidManifest.xml{F}
          - javaDirectories:
             * {PROJECT}/test/src/main/java{!}
          - kotlinDirectories:
@@ -18,8 +18,7 @@
             * {PROJECT}/test/src/main/resources{!}
          - aidlDirectories:
             * {PROJECT}/test/src/main/aidl{!}
-         - renderscriptDirectories:
-            * {PROJECT}/test/src/main/rs{!}
+         - renderscriptDirectories = (null)
          - resDirectories:
             * {PROJECT}/test/src/main/res{!}
          - assetsDirectories:
@@ -28,8 +27,8 @@
             * {PROJECT}/test/src/main/jniLibs{!}
          - shadersDirectories:
             * {PROJECT}/test/src/main/shaders{!}
-         - mlModelsDirectories = (null)
-         - custom              = []
+         - mlModelsDirectories     = (null)
+         - custom                  = []
       < sourceProvider
       - androidTestSourceProvider  = (null)
       - unitTestSourceProvider     = (null)
@@ -38,8 +37,8 @@
    > buildTypes:
       > debug:
          > sourceProvider:
-            - name                = "debug"
-            - manifestFile        = {PROJECT}/test/src/debug/AndroidManifest.xml{!}
+            - name                    = "debug"
+            - manifestFile            = {PROJECT}/test/src/debug/AndroidManifest.xml{!}
             - javaDirectories:
                * {PROJECT}/test/src/debug/java{!}
             - kotlinDirectories:
@@ -49,8 +48,7 @@
                * {PROJECT}/test/src/debug/resources{!}
             - aidlDirectories:
                * {PROJECT}/test/src/debug/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/test/src/debug/rs{!}
+            - renderscriptDirectories = (null)
             - resDirectories:
                * {PROJECT}/test/src/debug/res{!}
             - assetsDirectories:
@@ -59,8 +57,8 @@
                * {PROJECT}/test/src/debug/jniLibs{!}
             - shadersDirectories:
                * {PROJECT}/test/src/debug/shaders{!}
-            - mlModelsDirectories = (null)
-            - custom              = []
+            - mlModelsDirectories     = (null)
+            - custom                  = []
          < sourceProvider
          - androidTestSourceProvider  = (null)
          - unitTestSourceProvider     = (null)

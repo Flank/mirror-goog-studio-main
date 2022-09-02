@@ -19,7 +19,6 @@
             - generatedSourceFolders:
                * {PROJECT}/test/build/generated/aidl_source_output_dir/debug/out{!}
                * {PROJECT}/test/build/generated/ap_generated_sources/debug/out{!}
-               * {PROJECT}/test/build/generated/renderscript_source_output_dir/debug/out{!}
                * {PROJECT}/test/build/generated/source/buildConfig/debug{!}
             - minSdkVersion:
                - apiLevel = 1
@@ -33,7 +32,6 @@
             - resGenTaskName                = "generateDebugResources"
             - generatedResourceFolders:
                * {PROJECT}/test/build/generated/res/resValues/debug{!}
-               * {PROJECT}/test/build/generated/res/rs/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/test/build/intermediates/apk_ide_redirect_file/debug/redirect.txt{!}
             - testInfo:

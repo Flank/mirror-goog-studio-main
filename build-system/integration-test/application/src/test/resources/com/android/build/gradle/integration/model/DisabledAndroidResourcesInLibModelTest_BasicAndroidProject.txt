@@ -1,50 +1,33 @@
 > BasicAndroidProject:
    > defaultConfig:
       - sourceProvider:
-         - renderscriptDirectories:
-            * {PROJECT}/src/main/rs{!}{REMOVED}
          - resDirectories:
             * {PROJECT}/src/main/res{D}{REMOVED}
       - androidTestSourceProvider:
-         - renderscriptDirectories:
-            * {PROJECT}/src/androidTest/rs{!}{REMOVED}
          - resDirectories:
             * {PROJECT}/src/androidTest/res{!}{REMOVED}
       - unitTestSourceProvider:
-         - renderscriptDirectories:
-            * {PROJECT}/src/test/rs{!}{REMOVED}
          - resDirectories:
             * {PROJECT}/src/test/res{!}{REMOVED}
    < defaultConfig
    > buildTypes:
       > debug:
          - sourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/debug/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/debug/res{!}{REMOVED}
          - androidTestSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/androidTestDebug/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/androidTestDebug/res{!}{REMOVED}
          - unitTestSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testDebug/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/testDebug/res{!}{REMOVED}
       < debug
-      > release:
+      - release:
          - sourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/release/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/release/res{!}{REMOVED}
          - unitTestSourceProvider:
-            - renderscriptDirectories:
-               * {PROJECT}/src/testRelease/rs{!}{REMOVED}
             - resDirectories:
                * {PROJECT}/src/testRelease/res{!}{REMOVED}
-      < release
    < buildTypes
 < BasicAndroidProject

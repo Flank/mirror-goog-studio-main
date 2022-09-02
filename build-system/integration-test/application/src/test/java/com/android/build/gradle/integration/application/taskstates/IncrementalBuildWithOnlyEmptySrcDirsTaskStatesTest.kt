@@ -97,7 +97,6 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                             ":lib:mergeDebugNativeLibs",
                             ":lib:mergeDebugShaders",
                             ":lib:packageDebugAssets",
-                            ":lib:packageDebugRenderscript",
                             ":lib:packageDebugResources",
                             ":lib:parseDebugLocalResources",
                             ":lib:preBuild",
@@ -117,7 +116,6 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                 SKIPPED to
                     setOf(
                         ":app:compileDebugAidl",
-                        ":app:compileDebugRenderscript",
                         ":app:compileDebugShaders",
                         ":app:mergeDebugNativeDebugMetadata",
                         ":app:mergeDebugNativeLibs",
@@ -125,10 +123,8 @@ class IncrementalBuildWithOnlyEmptySrcDirsTaskStatesTest {
                         ":app:stripDebugDebugSymbols",
                         ":lib:bundleLibResDebug",
                         ":lib:compileDebugAidl",
-                        ":lib:compileDebugRenderscript",
                         ":lib:compileDebugShaders",
                         ":lib:mergeDebugNativeLibs",
-                        ":lib:packageDebugRenderscript",
                         ":lib:processDebugJavaRes",
                         ":lib:stripDebugDebugSymbols"))
     }

@@ -9,6 +9,10 @@ android {
         minSdkVersion 17
         renderscriptTargetApi = 17
     }
+
+    buildFeatures {
+        renderScript true
+    }
 }
 
 dependencies {

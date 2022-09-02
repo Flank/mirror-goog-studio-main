@@ -1,8 +1,8 @@
 > BasicAndroidProject:
    > defaultConfig:
       > testFixturesSourceProvider{ADDED}:
-         - name                = "testFixtures"
-         - manifestFile        = {PROJECT}/src/testFixtures/AndroidManifest.xml{!}
+         - name                    = "testFixtures"
+         - manifestFile            = {PROJECT}/src/testFixtures/AndroidManifest.xml{!}
          - javaDirectories:
             * {PROJECT}/src/testFixtures/java{!}
          - kotlinDirectories:
@@ -12,8 +12,7 @@
             * {PROJECT}/src/testFixtures/resources{!}
          - aidlDirectories:
             * {PROJECT}/src/testFixtures/aidl{!}
-         - renderscriptDirectories:
-            * {PROJECT}/src/testFixtures/rs{!}
+         - renderscriptDirectories = (null)
          - resDirectories:
             * {PROJECT}/src/testFixtures/res{!}
          - assetsDirectories:
@@ -22,15 +21,15 @@
             * {PROJECT}/src/testFixtures/jniLibs{!}
          - shadersDirectories:
             * {PROJECT}/src/testFixtures/shaders{!}
-         - mlModelsDirectories = (null)
-         - custom              = []
+         - mlModelsDirectories     = (null)
+         - custom                  = []
       < testFixturesSourceProvider{ADDED}
    < defaultConfig
    > buildTypes:
       > debug:
          > testFixturesSourceProvider{ADDED}:
-            - name                = "testFixturesDebug"
-            - manifestFile        = {PROJECT}/src/testFixturesDebug/AndroidManifest.xml{!}
+            - name                    = "testFixturesDebug"
+            - manifestFile            = {PROJECT}/src/testFixturesDebug/AndroidManifest.xml{!}
             - javaDirectories:
                * {PROJECT}/src/testFixturesDebug/java{!}
             - kotlinDirectories:
@@ -40,8 +39,7 @@
                * {PROJECT}/src/testFixturesDebug/resources{!}
             - aidlDirectories:
                * {PROJECT}/src/testFixturesDebug/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesDebug/rs{!}
+            - renderscriptDirectories = (null)
             - resDirectories:
                * {PROJECT}/src/testFixturesDebug/res{!}
             - assetsDirectories:
@@ -50,14 +48,14 @@
                * {PROJECT}/src/testFixturesDebug/jniLibs{!}
             - shadersDirectories:
                * {PROJECT}/src/testFixturesDebug/shaders{!}
-            - mlModelsDirectories = (null)
-            - custom              = []
+            - mlModelsDirectories     = (null)
+            - custom                  = []
          < testFixturesSourceProvider{ADDED}
       < debug
       > release:
          > testFixturesSourceProvider{ADDED}:
-            - name                = "testFixturesRelease"
-            - manifestFile        = {PROJECT}/src/testFixturesRelease/AndroidManifest.xml{!}
+            - name                    = "testFixturesRelease"
+            - manifestFile            = {PROJECT}/src/testFixturesRelease/AndroidManifest.xml{!}
             - javaDirectories:
                * {PROJECT}/src/testFixturesRelease/java{!}
             - kotlinDirectories:
@@ -67,8 +65,7 @@
                * {PROJECT}/src/testFixturesRelease/resources{!}
             - aidlDirectories:
                * {PROJECT}/src/testFixturesRelease/aidl{!}
-            - renderscriptDirectories:
-               * {PROJECT}/src/testFixturesRelease/rs{!}
+            - renderscriptDirectories = (null)
             - resDirectories:
                * {PROJECT}/src/testFixturesRelease/res{!}
             - assetsDirectories:
@@ -77,8 +74,8 @@
                * {PROJECT}/src/testFixturesRelease/jniLibs{!}
             - shadersDirectories:
                * {PROJECT}/src/testFixturesRelease/shaders{!}
-            - mlModelsDirectories = (null)
-            - custom              = []
+            - mlModelsDirectories     = (null)
+            - custom                  = []
          < testFixturesSourceProvider{ADDED}
       < release
    < buildTypes

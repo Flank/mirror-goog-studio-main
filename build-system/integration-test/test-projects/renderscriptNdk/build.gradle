@@ -61,4 +61,8 @@ android {
             path "Android.mk"
         }
     }
+
+    buildFeatures {
+        renderScript true
+    }
 }

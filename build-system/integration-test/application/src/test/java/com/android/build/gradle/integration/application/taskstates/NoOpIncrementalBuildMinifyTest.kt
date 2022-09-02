@@ -126,11 +126,8 @@ class NoOpIncrementalBuildMinifyTest {
             SKIPPED to setOf(
                 ":compileDebugAidl",
                 ":compileDebugAndroidTestAidl",
-                ":compileDebugAndroidTestRenderscript",
                 ":compileDebugAndroidTestShaders",
-                ":compileDebugRenderscript",
                 ":compileReleaseAidl",
-                ":compileReleaseRenderscript",
                 ":compileReleaseShaders",
                 ":compileReleaseUnitTestJavaWithJavac",
                 ":extractReleaseNativeSymbolTables",

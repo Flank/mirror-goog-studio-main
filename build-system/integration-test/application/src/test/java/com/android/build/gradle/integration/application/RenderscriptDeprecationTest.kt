@@ -46,6 +46,10 @@ class RenderscriptDeprecationTest {
                         renderscriptTargetApi 28
                         renderscriptSupportModeEnabled true
                     }
+
+                    buildFeatures {
+                        renderScript true
+                    }
                 }
             """.trimIndent()
         )

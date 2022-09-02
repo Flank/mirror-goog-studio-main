@@ -116,7 +116,7 @@ public class VariantsApiTest {
                         + dslProperty
                         + ".all {\n"
                         + "    def res = it.getAllRawAndroidResources().getFiles()\n"
-                        + "    assert res.size() == 4"
+                        + "    assert res.size() == 3"
                         + "  }\n"
                         + "}");
 

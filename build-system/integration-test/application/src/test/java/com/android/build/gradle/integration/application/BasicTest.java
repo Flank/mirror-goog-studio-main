@@ -62,7 +62,9 @@ public class BasicTest {
 
     @Test
     public void testRenderscriptDidNotRun() throws Exception {
-        // Execute renderscript task and check if it was skipped
+        // First enable renderscript, then execute renderscript task and check if it was skipped
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "android.buildFeatures.renderScript true");
         project.execute("compileDebugRenderscript");
         assertThat(
                         project.getBuildResult()

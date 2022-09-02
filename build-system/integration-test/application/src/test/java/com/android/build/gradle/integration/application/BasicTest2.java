@@ -35,7 +35,6 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -227,8 +226,8 @@ public class BasicTest2 {
 
         Collection<File> generatedResFolders = debugTestInfo.getGeneratedResourceFolders();
         assertThat(generatedResFolders).named("test generated res folders").isNotNull();
-        // size 2 = rs output + resValue output
-        assertThat(generatedResFolders).named("test generated res folders").hasSize(2);
+        // size 1 because only resValue output (renderscript is disabled by default).
+        assertThat(generatedResFolders).named("test generated res folders").hasSize(1);
 
         BuiltArtifacts androidTestVariantOutputs =
                 outputModels.get(BuilderConstants.DEBUG + ARTIFACT_NAME_ANDROID_TEST);

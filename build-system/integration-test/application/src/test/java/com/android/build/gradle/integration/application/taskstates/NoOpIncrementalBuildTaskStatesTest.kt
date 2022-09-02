@@ -87,7 +87,6 @@ class NoOpIncrementalBuildTaskStatesTest {
             ),
             SKIPPED to setOf(
                 ":app:compileDebugAidl",
-                ":app:compileDebugRenderscript",
                 ":app:compileDebugShaders",
                 ":app:mergeDebugNativeDebugMetadata",
                 ":app:mergeDebugNativeLibs",

@@ -111,8 +111,7 @@ public class ModelTest {
         ImmutableList.Builder<File> expectedGeneratedSourceFolders = ImmutableList.builder();
         expectedGeneratedSourceFolders.add(
                 project.file("build/generated/aidl_source_output_dir/debug/out"),
-                project.file("build/generated/ap_generated_sources/debug/out"),
-                project.file("build/generated/renderscript_source_output_dir/debug/out"));
+                project.file("build/generated/ap_generated_sources/debug/out"));
 
         if (!project.getIntermediateFile(
                         InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
@@ -125,18 +124,14 @@ public class ModelTest {
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
 
         assertThat(debugArtifact.getGeneratedResourceFolders())
-                .containsExactly(
-                        project.file("build/generated/res/resValues/debug"),
-                        project.file("build/generated/res/rs/debug"));
+                .containsExactly(project.file("build/generated/res/resValues/debug"));
 
         AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
         ImmutableList.Builder<File> expectedGeneratedTestSourceFolders = ImmutableList.builder();
         expectedGeneratedTestSourceFolders.add(
                 project.file("build/generated/aidl_source_output_dir/debugAndroidTest/out"),
-                project.file("build/generated/ap_generated_sources/debugAndroidTest/out"),
-                project.file(
-                        "build/generated/renderscript_source_output_dir/debugAndroidTest/out"));
+                project.file("build/generated/ap_generated_sources/debugAndroidTest/out"));
 
         if (!project.getIntermediateFile(
                         InternalArtifactType.COMPILE_BUILD_CONFIG_JAR.INSTANCE.getFolderName())
@@ -149,9 +144,7 @@ public class ModelTest {
                 .containsExactlyElementsIn(expectedGeneratedTestSourceFolders.build());
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())
-                .containsExactly(
-                        project.file("build/generated/res/resValues/androidTest/debug"),
-                        project.file("build/generated/res/rs/androidTest/debug"));
+                .containsExactly(project.file("build/generated/res/resValues/androidTest/debug"));
 
         JavaArtifact unitTestArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
 

@@ -25,7 +25,8 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * tests disabling build features that are normally on by default
+ * tests disabling build features that are normally on by default. Similar to
+ * [EnabledSrcResGenTest].
  */
 class DisabledSrcResGenTest {
     @get:Rule
@@ -48,16 +49,6 @@ class DisabledSrcResGenTest {
     @Test
     fun `test disabling AIDL via build-gradle`() {
         checkViaBuildFile("aidl", "compileDebugAidl")
-    }
-
-    @Test
-    fun `test disabling Renderscript via gradle-properties`() {
-        checkViaGradleProperties(BooleanOption.BUILD_FEATURE_RENDERSCRIPT, "compileDebugRenderscript")
-    }
-
-    @Test
-    fun `test disabling Renderscript via build-gradle`() {
-        checkViaBuildFile("renderScript", "compileDebugRenderscript")
     }
 
     @Test

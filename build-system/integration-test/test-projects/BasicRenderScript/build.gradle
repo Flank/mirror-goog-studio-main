@@ -38,4 +38,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        renderScript true
+    }
 }

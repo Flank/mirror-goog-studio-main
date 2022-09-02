@@ -19,7 +19,6 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proDebug/out{!}
                * {PROJECT}/build/generated/ap_generated_sources/proDebug/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/proDebug/out{!}
                * {PROJECT}/build/generated/source/buildConfig/pro/debug{!}
             - minSdkVersion:
                - apiLevel = 1
@@ -33,7 +32,6 @@
             - resGenTaskName                = "generateProDebugResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/pro/debug{!}
-               * {PROJECT}/build/generated/res/rs/pro/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proDebug/redirect.txt{!}
             - testInfo                      = (null)
@@ -55,7 +53,6 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/ap_generated_sources/proDebugAndroidTest/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/proDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/source/buildConfig/androidTest/pro/debug{!}
             - minSdkVersion:
                - apiLevel = 1
@@ -69,7 +66,6 @@
             - resGenTaskName                = "generateProDebugAndroidTestResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/androidTest/pro/debug{!}
-               * {PROJECT}/build/generated/res/rs/androidTest/pro/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proDebugAndroidTest/redirect.txt{!}
             - testInfo:

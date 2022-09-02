@@ -92,10 +92,8 @@ class LibraryCacheabilityTest {
                 SKIPPED to setOf(
                     ":lib:assembleRelease",
                     ":lib:compileReleaseAidl",
-                    ":lib:compileReleaseRenderscript",
                     ":lib:compileReleaseShaders",
                     ":lib:mergeReleaseNativeLibs",
-                    ":lib:packageReleaseRenderscript",
                     ":lib:processReleaseJavaRes",
                     ":lib:stripReleaseDebugSymbols"
                 ),

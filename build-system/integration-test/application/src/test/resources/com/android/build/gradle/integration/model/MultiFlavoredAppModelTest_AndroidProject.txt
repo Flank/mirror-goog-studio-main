@@ -19,7 +19,6 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebug/out{!}
                * {PROJECT}/build/generated/ap_generated_sources/proPlayDebug/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/proPlayDebug/out{!}
                * {PROJECT}/build/generated/source/buildConfig/proPlay/debug{!}
             - minSdkVersion:
                - apiLevel = 1
@@ -33,7 +32,6 @@
             - resGenTaskName                = "generateProPlayDebugResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/proPlay/debug{!}
-               * {PROJECT}/build/generated/res/rs/proPlay/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proPlayDebug/redirect.txt{!}
             - testInfo                      = (null)
@@ -55,7 +53,6 @@
             - generatedSourceFolders:
                * {PROJECT}/build/generated/aidl_source_output_dir/proPlayDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/ap_generated_sources/proPlayDebugAndroidTest/out{!}
-               * {PROJECT}/build/generated/renderscript_source_output_dir/proPlayDebugAndroidTest/out{!}
                * {PROJECT}/build/generated/source/buildConfig/androidTest/proPlay/debug{!}
             - minSdkVersion:
                - apiLevel = 1
@@ -69,7 +66,6 @@
             - resGenTaskName                = "generateProPlayDebugAndroidTestResources"
             - generatedResourceFolders:
                * {PROJECT}/build/generated/res/resValues/androidTest/proPlay/debug{!}
-               * {PROJECT}/build/generated/res/rs/androidTest/proPlay/debug{!}
             - abiFilters                    = []
             - assembleTaskOutputListingFile = {PROJECT}/build/intermediates/apk_ide_redirect_file/proPlayDebugAndroidTest/redirect.txt{!}
             - testInfo:

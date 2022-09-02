@@ -130,7 +130,7 @@ class DisabledAidlInAppModelTest: ReferenceModelComparator(
     }
 }
 
-class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
+class EnabledRenderScriptInAppModelTest: ReferenceModelComparator(
     referenceConfig = {
         rootProject {
             plugins.add(PluginType.ANDROID_APP)
@@ -143,7 +143,7 @@ class DisabledRenderScriptInAppModelTest: ReferenceModelComparator(
         rootProject {
             android {
                 buildFeatures {
-                    renderScript = false
+                    renderScript = true
                 }
             }
         }
