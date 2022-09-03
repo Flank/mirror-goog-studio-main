@@ -124,7 +124,16 @@ public class ImlToIr {
             if (testModuleProperties != null) {
                 JpsModule jpsFriend = testModuleProperties.getProductionModule();
                 if (jpsFriend != null) {
-                    module.addTestFriend(imlToIr.get(jpsFriend));
+                    boolean friendIsAmongDependencies =
+                            JpsJavaExtensionService.dependencies(jpsModule).getModules().stream()
+                                    .anyMatch(dep -> dep.equals(jpsFriend));
+                    if (friendIsAmongDependencies) {
+                        module.addTestFriend(imlToIr.get(jpsFriend));
+                    } else if (!ignoreWarnings(jpsModule.getName())) {
+                        logger.warning(
+                                "Module %s does not depend on its associated production module %s",
+                                jpsModule.getName(), jpsFriend.getName());
+                    }
                 }
             }
 

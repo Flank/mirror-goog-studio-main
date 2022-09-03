@@ -16,6 +16,7 @@
 
 package com.android.tools.bazel.ir;
 
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class IrModule extends IrNode {
     }
 
     public void addTestFriend(IrModule friend) {
+        Preconditions.checkNotNull(friend);
         testFriends.add(friend);
     }
 
