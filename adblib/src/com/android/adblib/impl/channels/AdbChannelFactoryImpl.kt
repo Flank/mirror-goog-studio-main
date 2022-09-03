@@ -18,12 +18,9 @@ package com.android.adblib.impl.channels
 import com.android.adblib.AdbChannel
 import com.android.adblib.AdbChannelFactory
 import com.android.adblib.AdbInputChannel
-import com.android.adblib.AdbPipedInputChannelImpl
 import com.android.adblib.AdbSessionHost
 import com.android.adblib.AdbOutputChannel
-import com.android.adblib.AdbPipedInputChannel
 import com.android.adblib.AdbServerSocket
-import com.android.adblib.AdbSession
 import com.android.adblib.utils.closeOnException
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
@@ -36,9 +33,7 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.TimeUnit
 
-internal class AdbChannelFactoryImpl(private val session: AdbSession) : AdbChannelFactory {
-    private val host: AdbSessionHost
-        get() = session.host
+internal class AdbChannelFactoryImpl(private val host: AdbSessionHost) : AdbChannelFactory {
 
     override suspend fun openFile(path: Path): AdbInputChannel {
         return openInput(path, StandardOpenOption.READ)
@@ -83,10 +78,6 @@ internal class AdbChannelFactoryImpl(private val session: AdbSession) : AdbChann
                     AdbServerSocketImpl(host, serverSocketChannel)
                 }
         }
-    }
-
-    override fun createPipedChannel(bufferSize: Int): AdbPipedInputChannel {
-        return AdbPipedInputChannelImpl(session, bufferSize)
     }
 
     private suspend fun openOutput(

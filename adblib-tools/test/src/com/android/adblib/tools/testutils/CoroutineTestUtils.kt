@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib.testingutils
+package com.android.adblib.tools.testutils
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.yield
 import java.time.Duration
 import kotlin.math.max
 import kotlin.math.min
@@ -32,11 +31,25 @@ object CoroutineTestUtils {
         block: suspend CoroutineScope.() -> T
     ): T {
         return runBlocking {
+            // The goal with "blockTimeoutException" is to make sure "block" can throw a
+            // TimeoutCancellationException to the caller of this method.
+            var blockTimeoutException: TimeoutCancellationException?  = null
             try {
                 withTimeout(timeout.toMillis()) {
-                    block(this)
+                    try {
+                        block(this)
+                    } catch(e: TimeoutCancellationException) {
+                        blockTimeoutException = e
+                        throw e
+                    }
                 }
             } catch (e: TimeoutCancellationException) {
+                blockTimeoutException?.also {
+                    // If "block" threw a timeout exception, then rethrow it, as the exception
+                    // has nothing to do with our "withTimeout" wrapper
+                    assert(it === e)
+                    throw it
+                }
                 throw AssertionError(
                     "A test did not terminate within the specified timeout ($timeout), " +
                             "there is a bug somewhere (in the test or in the tested code)", e

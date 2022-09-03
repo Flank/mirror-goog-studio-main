@@ -23,8 +23,8 @@ import com.android.adblib.ddmlibcompatibility.testutils.connectTestDevice
 import com.android.adblib.ddmlibcompatibility.testutils.createAdbSession
 import com.android.adblib.ddmlibcompatibility.testutils.disconnectTestDevice
 import com.android.adblib.testingutils.CloseablesRule
-import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
-import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
+import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.testing.FakeAdbRule
 import junit.framework.Assert

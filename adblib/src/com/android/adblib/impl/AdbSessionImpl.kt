@@ -42,7 +42,7 @@ internal class AdbSessionImpl(
 
     override val scope = CoroutineScope(SupervisorJob() + host.ioDispatcher)
 
-    override val channelFactory: AdbChannelFactory = AdbChannelFactoryImpl(this)
+    override val channelFactory: AdbChannelFactory = AdbChannelFactoryImpl(host)
         get() {
             throwIfClosed()
             return field

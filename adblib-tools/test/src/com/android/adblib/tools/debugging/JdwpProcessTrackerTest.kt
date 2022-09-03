@@ -18,8 +18,8 @@ package com.android.adblib.tools.debugging
 import com.android.adblib.DeviceSelector
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
-import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
-import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
+import com.android.adblib.tools.testutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.tools.testutils.CoroutineTestUtils.yieldUntil
 import com.android.fakeadbserver.DeviceState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
