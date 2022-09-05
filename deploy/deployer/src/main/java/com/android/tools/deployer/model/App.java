@@ -55,6 +55,10 @@ public class App {
         this.logger = logger;
     }
 
+    public String getAppId() {
+        return appId;
+    }
+
     public void activateComponent(
             @NonNull ComponentType type,
             @NonNull String componentName,
