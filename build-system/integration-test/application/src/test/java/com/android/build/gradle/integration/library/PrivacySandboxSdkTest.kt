@@ -56,7 +56,7 @@ class PrivacySandboxSdkTest {
             plugins.add(PluginType.ANDROID_LIB)
             android {
                 defaultCompileSdk()
-                namespace = "com.example.androidlib1"
+                namespace = "com.example.androidLib1"
                 minSdk = 12
             }
             dependencies {
@@ -96,7 +96,7 @@ class PrivacySandboxSdkTest {
             plugins.add(PluginType.ANDROID_LIB)
             android {
                 defaultCompileSdk()
-                namespace = "com.example.androidlib2"
+                namespace = "com.example.androidLib2"
                 minSdk = 12
             }
             addFile(
@@ -189,7 +189,6 @@ class PrivacySandboxSdkTest {
             )
             assertThat(dex.classes["Lcom/example/androidlib1/Example;"]!!.methods.map { it.name }).contains("f1")
             assertThat(dex.classes["Lcom/example/androidlib2/Example;"]!!.methods.map { it.name }).contains("f2")
-            assertThat(dex.classes["Lcom/example/androidlib1/R\$string;"]!!.fields.map { it.name }).containsExactly("string_from_android_lib_1")
         }
 
         // Check incremental changes are handled
@@ -258,8 +257,6 @@ class PrivacySandboxSdkTest {
             assertThat(it).containsClass(ANDROID_LIB1_CLASS)
             assertThat(it).containsClass("Lcom/example/androidlib2/Example;")
             assertThat(it).containsClass("Lcom/externaldep/externaljar/ExternalClass;")
-            val rPackageDex = it.secondaryDexFiles.last()
-            assertThat(rPackageDex.classes.keys).containsExactly("Lcom/example/privacysandboxsdk/RPackage;")
         }
 
         // Check building the bundle to deploy to TiramisuPrivacySandbox

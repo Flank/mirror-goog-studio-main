@@ -85,9 +85,10 @@ class L8DexDesugarTest {
         normalSetUp()
         project.executor().run("bundleDebug")
         project.getBundle(GradleTestProject.ApkType.DEBUG).use {
-
+            val dex1 = Dex(it.getEntry("base/dex/classes.dex")!!)
+            val dex2 = Dex(it.getEntry("base/dex/classes2.dex")!!)
             val desugarLibDex: Dex =
-                getDexWithDesugarClass(desugarClass, it.getDexListForModule("base"))
+                getDexWithDesugarClass(desugarClass, listOf(dex1, dex2))
                     ?: fail("Failed to find the dex with desugar lib classes")
             assertThat(desugarLibDex).doesNotContainClasses(normalClass)
         }

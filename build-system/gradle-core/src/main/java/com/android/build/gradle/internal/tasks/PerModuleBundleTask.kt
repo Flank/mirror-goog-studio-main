@@ -46,6 +46,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
 import com.android.builder.packaging.JarMerger
+import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -185,9 +186,9 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             if (dexFilesSet.size == 1) {
                 // Don't rename if there is only one input folder
                 // as this might be the legacy multidex case.
-                addHybridFolder(it, dexFilesSet, Relocator(FD_DEX), excludeJarManifest)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, Relocator(FD_DEX), excludeJarManifest)
             } else {
-                addHybridFolder(it, dexFilesSet, DexRelocator(FD_DEX), excludeJarManifest)
+                addHybridFolder(it, dexFilesSet.sortedBy { it.name }, DexRelocator(FD_DEX), excludeJarManifest)
             }
 
             // we check hasFeatureDexFiles() instead of checking if
@@ -263,10 +264,6 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.dexFiles.fromDisallowChanges(
                 creationConfig.artifacts.get(
                     PrivacySandboxSdkInternalArtifactType.DEX
-                ),
-                // The RPackage dex *must* be last so it can be removed by bundle tool
-                creationConfig.artifacts.get(
-                        PrivacySandboxSdkInternalArtifactType.R_PACKAGE_DEX
                 )
             )
             task.assetsFilesDirectory.setDisallowChanges(

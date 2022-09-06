@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVaria
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.res.Aapt2FromMaven.Companion.create
 import com.android.build.gradle.internal.res.namespaced.Aapt2LinkRunnable
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.Aapt2Input
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.services.getLeasingAapt2
@@ -39,7 +38,6 @@ import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.build.gradle.internal.tasks.TaskCategory
-import com.android.ide.common.symbols.SymbolIo
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -52,14 +50,12 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.nio.file.Files
 
 /**
  * Invokes AAPT2 link on the merged resources of all library dependencies into the .ap_ format.
@@ -88,9 +84,6 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
     @get:OutputFile
     abstract val outputResFile: RegularFileProperty
 
-    @get:OutputFile
-    abstract val runtimeSymbolList: RegularFileProperty
-
     override fun doTaskAction() {
         workerExecutor.noIsolation()
                 .submit(PrivacySandboxSdkLinkAndroidResourcesWorkerAction::class.java) {
@@ -101,7 +94,6 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
             it.resourceDirs.setFrom(mergedResourcesDirectory)
             it.minSdk.setDisallowChanges(minSdk)
             it.outputResFile.setDisallowChanges(outputResFile)
-            it.runtimeSymbolList.setDisallowChanges(runtimeSymbolList)
         }
     }
 
@@ -114,7 +106,6 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
         abstract val resourceDirs: ConfigurableFileCollection
         abstract val minSdk: Property<Int>
         abstract val outputResFile: RegularFileProperty
-        abstract val runtimeSymbolList: RegularFileProperty
     }
 
     abstract class PrivacySandboxSdkLinkAndroidResourcesWorkerAction
@@ -124,7 +115,7 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
             with(parameters!!) {
                 val manifestFile = manifestFile.get().asFile
                 val outputFile = outputResFile.get().asFile
-                val symbolOutputDir = runtimeSymbolList.get().asFile.parentFile
+
                 FileUtils.mkdirs(outputFile.parentFile)
                 val config = AaptPackageConfig(
                         androidJarPath = androidJar.asFile.get().absolutePath,
@@ -135,7 +126,6 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
                         componentType = ComponentTypeImpl.BASE_APK,
                         packageId = null,
                         allowReservedPackageId = minSdk.get() < AndroidVersion.VersionCodes.O,
-                        symbolOutputDir = symbolOutputDir,
                         resourceDirs = ImmutableList.Builder<File>().apply {
                             for (dir in resourceDirs.files) {
                                 val resDir = File(dir, SdkConstants.FD_RES)
@@ -143,14 +133,15 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
                                     add(resDir)
                                 }
                             }
-                        }.build(),
+                        }
+                                .build(),
                 )
                 aapt2.get().getLeasingAapt2()
                         .link(config,
                                 LoggerWrapper(Logging.getLogger(Aapt2LinkRunnable::class.java)))
+                }
             }
         }
-    }
 
     class CreationAction(val creationConfig: PrivacySandboxSdkVariantScope) :
             TaskCreationAction<PrivacySandboxSdkLinkAndroidResourcesTask>() {
@@ -167,10 +158,6 @@ abstract class PrivacySandboxSdkLinkAndroidResourcesTask : NonIncrementalTask() 
                     PrivacySandboxSdkLinkAndroidResourcesTask::outputResFile
             ).withName("bundled-res.ap_")
                     .on(PrivacySandboxSdkInternalArtifactType.LINKED_MERGE_RES_FOR_ASB)
-            creationConfig.artifacts
-                    .setInitialProvider(taskProvider, PrivacySandboxSdkLinkAndroidResourcesTask::runtimeSymbolList)
-                    .withName(SdkConstants.FN_RESOURCE_TEXT)
-                    .on(PrivacySandboxSdkInternalArtifactType.RUNTIME_SYMBOL_LIST)
         }
 
         override fun configure(task: PrivacySandboxSdkLinkAndroidResourcesTask) {
