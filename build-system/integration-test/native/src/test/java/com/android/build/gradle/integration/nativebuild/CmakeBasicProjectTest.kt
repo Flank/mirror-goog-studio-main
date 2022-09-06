@@ -198,7 +198,6 @@ class CmakeBasicProjectTest(
               // -----------------------------------------------------------------------
               applicationVariants.all { variant ->
                 for (def task : variant.getExternalNativeBuildTasks()) {
-                    println("externalNativeBuild objFolder = " + task.objFolder)
                     println("externalNativeBuild soFolder = " + task.soFolder)
                 }
               }
@@ -602,8 +601,7 @@ class CmakeBasicProjectTest(
     @Test
     fun checkModuleBodyReferencesObjAndSo() {
         if (mode != Mode.CMake) return
-        // Checks for whether module body has references to objFolder and soFolder
-        Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".objFolder")
+        // Checks for whether module body has references to soFolder
         Truth.assertThat(moduleBody("CMakeLists.txt")).contains(".soFolder")
     }
 

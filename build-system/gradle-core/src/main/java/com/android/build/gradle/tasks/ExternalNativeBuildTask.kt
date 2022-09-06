@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.model.objFolder
 import com.android.build.gradle.internal.scope.InternalMultipleArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.UnsafeOutputsTask
@@ -58,9 +57,6 @@ abstract class ExternalNativeBuildTask :
 
     @get:Internal
     internal lateinit var variant: CxxVariantModel
-
-    @get:OutputDirectory
-    abstract val objFolder : DirectoryProperty
 
     @get:OutputDirectory
     abstract val soFolder : DirectoryProperty
@@ -108,9 +104,7 @@ fun createRepublishCxxBuildTask(
             errorln(CONFIGURE_MORE_THAN_ONE_SO_FOLDER, "More than one SO folder: ${soParentFolders.joinToString { it.path }}")
         }
         task.soFolder.set(soParentFolders.single())
-        // objFolder is here for backcompat but there is no one, single folder for .o files.
-        // Just use the same folder as soFolder.
-        task.objFolder.set(soParentFolders.single()) // Same as soFolder. There's
+        task.soFolder.disallowChanges()
     }
 }
 
@@ -142,6 +136,5 @@ fun createWorkingCxxBuildTask(
         task.variantName = abi.variant.variantName
         task.variant = abi.variant
         task.soFolder.set(abi.soFolder)
-        task.objFolder.set(abi.objFolder)
     }
 }

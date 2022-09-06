@@ -24,10 +24,6 @@ class ExternalNativeBuildTaskTest {
 
     @Test
     fun `ensure objFolder and soFolder`() {
-        val objFolder =
-            ExternalNativeBuildTask::class.java.methods.single { it.name == "getObjFolder" }
-        Truth.assertThat(Modifier.isPublic(objFolder.modifiers)).isTrue()
-
         val soFolder =
             ExternalNativeBuildTask::class.java.methods.single { it.name == "getSoFolder" }
         Truth.assertThat(Modifier.isPublic(soFolder.modifiers)).isTrue()
