@@ -171,7 +171,7 @@ public final class KeystoreHelper {
             ks.load(null, null);
 
             Pair<PrivateKey, X509Certificate> generated =
-                    generateKeyAndCertificate("RSA", "SHA1withRSA", validityYears, dn, keySize);
+                    generateKeyAndCertificate("RSA", "SHA256withRSA", validityYears, dn, keySize);
             ks.setKeyEntry(keyAlias, generated.getFirst(), keyPassword.toCharArray(),
                     new Certificate[]{generated.getSecond()});
             FileOutputStream fos = new FileOutputStream(storeFile);
@@ -251,7 +251,7 @@ public final class KeystoreHelper {
      * Generates a key and self-signed certificate pair.
      *
      * @param asymmetric the asymmetric encryption algorithm (<em>e.g.,</em> {@code RSA})
-     * @param sign the signature algorithm (<em>e.g.,</em> {@code SHA1withRSA})
+     * @param sign the signature algorithm (<em>e.g.,</em> {@code SHA256withRSA})
      * @param validityYears number of years the certificate should be valid, must be greater than
      *     zero
      * @param dn the distinguished name of the issuer and owner of the certificate

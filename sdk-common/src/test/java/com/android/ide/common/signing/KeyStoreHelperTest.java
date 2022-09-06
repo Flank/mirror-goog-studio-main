@@ -24,15 +24,13 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.ILogger;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.File;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class KeyStoreHelperTest {
 
@@ -45,18 +43,23 @@ public class KeyStoreHelperTest {
         File keystoreFile = new File(tempFolder, "debug.keystore");
         keystoreFile.deleteOnExit();
 
+        // b/185013369: Make sure the password can start with a '-' and have special characters
+        String storePass = "-V8<Q:j|YiP/f+'0VP]a~Z8LG storePass \"!#";
+        String keyPass = "-V8<Q:j|YiP/f+'0VP]a~Z8LG \"quote\" keyPass";
+        String keyAlias = "AndroidDebugKey";
+
         FakeLogger fakeLogger = new FakeLogger();
 
         // "now" is just slightly before the key was created
         long now = System.currentTimeMillis();
 
         // create the keystore
-        KeystoreHelper.createDebugStore(null, keystoreFile, "android", "android", "AndroidDebugKey",
-                                        fakeLogger);
+        KeystoreHelper.createDebugStore(
+                null, keystoreFile, storePass, keyPass, keyAlias, fakeLogger);
 
         // read the key back
-        CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-            null, keystoreFile, "android", "android", "AndroidDebugKey");
+        CertificateInfo certificateInfo =
+                KeystoreHelper.getCertificateInfo(null, keystoreFile, storePass, keyPass, keyAlias);
 
         assertNotNull(certificateInfo);
 
