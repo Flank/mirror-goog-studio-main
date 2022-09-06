@@ -13,14 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.firebase.testlab.gradle
 
 import com.android.build.api.dsl.Device
 import org.gradle.api.Incubating
 
 /**
- * A device DSL for adding support for Firebase TestLab devices in Gradle Managed Device.
+ * Device type for devices that are run through Firebase Testlab.
+ *
+ * These APIs are experimental and may change without notice.
  */
 @Incubating
-interface ManagedDevice : Device
+interface ManagedDevice : Device {
+
+    /**
+     * The model id of the device to be run.
+     *
+     * Specifies the model id to be run in firebase test lab. For a
+     * list of model ids run:
+     *
+     *     gcloud firebase test android models list
+     */
+    var device: String
+
+    /**
+     * The api level of Android to be run on the device.
+     *
+     * This argument is optional and only some apiLevels are available
+     * for each hardware profile. If no value is specified the latest
+     * available api is used.
+     */
+    var apiLevel: Int
+
+    /**
+     * The orientation the device should have when tests are run.
+     */
+    var orientation: Orientation
+
+    /**
+     * The locale that the device should be set to.
+     */
+    var locale: String
+}

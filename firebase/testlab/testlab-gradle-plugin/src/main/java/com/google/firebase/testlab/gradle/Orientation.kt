@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.tools.firebase.testlab.gradle
-
-import com.google.firebase.testlab.gradle.ManagedDevice
-import com.google.firebase.testlab.gradle.Orientation
-import javax.inject.Inject
+package com.google.firebase.testlab.gradle
 
 /**
- * Implementation for [ManagedDevice] to be registered with the
- * Android Plugin for Gradle
+ * Specifies the Orientation that tests should be run on the [ManagedDevice]
  */
-open class ManagedDeviceImpl @Inject constructor(private val name: String): ManagedDevice {
-    override fun getName(): String = name
-
-    override var device = ""
-
-    override var apiLevel = -1
-
-    override var orientation = Orientation.DEFAULT
-
-    override var locale = "en-us"
+enum class Orientation {
+    /** The default orientation for that device. */
+    DEFAULT,
+    /** Explicitly set the orientation to portrait. */
+    PORTRAIT,
+    /** Explicitly set the orientation to landscape. */
+    LANDSCAPE,
 }
