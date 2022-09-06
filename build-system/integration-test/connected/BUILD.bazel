@@ -818,7 +818,7 @@ maven_repository(
     name = "prebuilts",
     # keep sorted
     artifacts = [
-        "@maven//:androidx.activity.activity-compose_1.3.1",
+        "@maven//:androidx.activity.activity-compose_1.5.1",
         "@maven//:androidx.appcompat.appcompat_1.1.0",
         "@maven//:androidx.appcompat.appcompat_1.2.0",
         "@maven//:androidx.appcompat.appcompat_1.3.0-beta01",

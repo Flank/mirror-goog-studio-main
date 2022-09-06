@@ -236,7 +236,7 @@ maven_repository(
         "@maven//:org.jetbrains.kotlin.kotlin-stdlib-jdk8_1.6.10",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-android_1.3.6",
         "@maven//:org.jetbrains.kotlinx.kotlinx-coroutines-core-common_1.3.6",
-        "@maven//:androidx.activity.activity-compose_1.3.1",
+        "@maven//:androidx.activity.activity-compose_1.5.1",
         "@maven//:androidx.compose.compiler.compiler_1.2.0",
         "@maven//:androidx.compose.material.material_1.2.0",
         "@maven//:androidx.compose.animation.animation_1.2.0",

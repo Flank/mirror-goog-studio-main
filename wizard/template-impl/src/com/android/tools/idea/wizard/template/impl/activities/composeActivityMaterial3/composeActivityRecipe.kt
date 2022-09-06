@@ -44,7 +44,7 @@ fun RecipeExecutor.composeActivityRecipe(
   setExtVar(composeUiVersionVarName, COMPOSE_UI_VERSION)
 
   addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
-  addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.1")
+  addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.5.1")
   // Note: Compose versioning is per group. "androidx.compose.ui:ui" group has its own variable
   addDependency(mavenCoordinate = "androidx.compose.ui:ui:\${$composeUiVersionVarName}")
   addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling:\${$composeUiVersionVarName}",

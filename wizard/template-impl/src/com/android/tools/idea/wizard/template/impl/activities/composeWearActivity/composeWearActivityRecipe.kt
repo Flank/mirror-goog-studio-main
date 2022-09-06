@@ -56,8 +56,8 @@ fun RecipeExecutor.composeWearActivityRecipe(
         configuration = "debugImplementation"
     )
     addDependency(mavenCoordinate = "androidx.compose.ui:ui-tooling-preview:\${$composeVersionVarName}")
-    addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
-    addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.3.1")
+    addDependency(mavenCoordinate = "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
+    addDependency(mavenCoordinate = "androidx.activity:activity-compose:1.5.1")
     addDependency(
         mavenCoordinate = "androidx.compose.ui:ui-test-manifest:\${$composeVersionVarName}",
         configuration = "debugImplementation"
