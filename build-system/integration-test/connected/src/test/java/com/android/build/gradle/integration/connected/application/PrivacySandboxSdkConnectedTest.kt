@@ -17,27 +17,19 @@
 package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
+import com.android.build.gradle.integration.common.fixture.installPackage
+import com.android.build.gradle.integration.common.fixture.uninstallPackage
 import com.android.build.gradle.integration.connected.utils.getEmulator
-import com.android.ddmlib.AndroidDebugBridge
-import com.android.ddmlib.IDevice
 import org.junit.Before
 import org.junit.ClassRule
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import java.util.concurrent.TimeUnit
-
 
 /**
  * Connected tests using UTP test executor.
  */
 class PrivacySandboxSdkConnectedTest {
-    init {
-        AndroidDebugBridge.init(true)
-    }
-    // private val adb: AndroidDebugBridge by lazy { AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS) }
-    private val adb: AndroidDebugBridge =  AndroidDebugBridge.createBridge(10, TimeUnit.SECONDS)
-    private lateinit var device: IDevice
 
     @get:Rule var project = builder()
         .fromTestProject("privacySandboxSdk/libraryAndConsumer")
@@ -47,13 +39,11 @@ class PrivacySandboxSdkConnectedTest {
     fun setUp() {
         // fail fast if no response
         project.addAdbTimeout();
-        adb.hasInitialDeviceList()
-        assert(adb.devices.size == 1)
-        device = adb.devices[0]
 
-        device.uninstallPackage("com.example.rubidumconsumer")
-        device.uninstallPackage("com.example.rubidumconsumer.test")
-        device.uninstallPackage("com.myrbsdk_10000")
+        println("Uninstalling packages")
+        uninstallPackage("com.example.rubidumconsumer", ignoreErrors = true)
+        uninstallPackage("com.example.rubidumconsumer.test", ignoreErrors = true)
+        uninstallPackage("com.myrbsdk_10000", ignoreErrors = true)
     }
 
     @Test

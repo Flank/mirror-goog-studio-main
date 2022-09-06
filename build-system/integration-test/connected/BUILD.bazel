@@ -107,14 +107,12 @@ gradle_connected_test(
         "@maven//:junit.junit_4.13.2",
         "@maven//:androidx.test.espresso.espresso-core_3.4.0",
     ],
-    # flaky = True,  # b/148626301 flaky emulator connectivity
     maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = [
         "//tools/base/build-system:android_gradle_plugin_runtime_dependencies",
         "//tools/base/build-system/integration-test:utp_plugins",
         "//tools/base/build-system/integration-test:kotlin_gradle_plugin_latest_prebuilts",
     ],
-    tags = ["very_flaky"],  # b/244294198
     deps = TEST_DEPS,
 )
 
