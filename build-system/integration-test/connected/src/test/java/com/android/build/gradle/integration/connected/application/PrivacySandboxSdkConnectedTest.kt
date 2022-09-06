@@ -17,14 +17,19 @@
 package com.android.build.gradle.integration.connected.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.Companion.builder
-import com.android.build.gradle.integration.common.fixture.installPackage
+import com.android.build.gradle.integration.common.fixture.executeShellCommand
 import com.android.build.gradle.integration.common.fixture.uninstallPackage
 import com.android.build.gradle.integration.connected.utils.getEmulator
+import com.android.ddmlib.MultiLineReceiver
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+
+private const val APP_PACKAGE_NAME = "com.example.rubidumconsumer"
+private const val SDK_PACKAGE_NAME = "com.myrbsdk_10000"
+private const val TEST_PACKAGE_NAME = "com.example.rubidumconsumer.test"
 
 /**
  * Connected tests using UTP test executor.
@@ -41,9 +46,9 @@ class PrivacySandboxSdkConnectedTest {
         project.addAdbTimeout();
 
         println("Uninstalling packages")
-        uninstallPackage("com.example.rubidumconsumer", ignoreErrors = true)
-        uninstallPackage("com.example.rubidumconsumer.test", ignoreErrors = true)
-        uninstallPackage("com.myrbsdk_10000", ignoreErrors = true)
+        uninstallPackage(APP_PACKAGE_NAME, ignoreErrors = true)
+        uninstallPackage(TEST_PACKAGE_NAME, ignoreErrors = true)
+        uninstallPackage(SDK_PACKAGE_NAME, ignoreErrors = true)
     }
 
     @Test
@@ -52,12 +57,24 @@ class PrivacySandboxSdkConnectedTest {
     }
 
     @Test
-    @Ignore // This doesn't work because deployment is not handled yet.
     fun `install and uninstall works for both SDK and APK`() {
         project.execute("installDebug")
-        // Verify both APKs are installed here.
-        project.execute("uninstallAll")
-        // Verify both APKs are deleted
+        verifyInstallation(APP_PACKAGE_NAME)
+        verifyInstallation(SDK_PACKAGE_NAME, isLibrary = true)
+
+        // project.execute("uninstallAll")
+        // TODO: uninstall not supported yet, verify both APKs are deleted here
+    }
+
+    private fun verifyInstallation(packageName: String, isLibrary: Boolean = false) {
+        val type =  if (isLibrary) "libraries" else "packages"
+        val found = executeShellCommand("pm", "list" ,type)
+            .lines()
+            .map { it.substringAfter(":") }
+            // Libraries listed here don't have the version number after the _
+            // So that part is stripped out
+            .any { it == packageName.substringBefore("_") }
+        assertThat(found).isTrue()
     }
 
     companion object {

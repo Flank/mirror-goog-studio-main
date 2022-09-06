@@ -18,21 +18,27 @@ package com.android.build.gradle.integration.common.fixture
 
 import com.android.build.gradle.integration.common.utils.SdkHelper
 import com.google.common.truth.Truth
+import java.nio.charset.Charset
+import java.util.concurrent.TimeUnit
 
-fun uninstallPackage(packageName: String, ignoreErrors : Boolean = false) {
+fun uninstallPackage(packageName: String, ignoreErrors : Boolean = false) =
     execAdb(SdkHelper.getAdb().absolutePath, "uninstall", packageName, ignoreErrors = ignoreErrors)
-}
 
-fun installPackage(path: String, reinstall: Boolean = false, ignoreErrors: Boolean = false) {
-    execAdb("install", if (reinstall) "-r" else "", path, ignoreErrors = ignoreErrors)
-}
+fun executeShellCommand(vararg cmd: String, ignoreErrors: Boolean = false)
+    = execAdb("shell", *cmd, ignoreErrors = ignoreErrors)
 
-private fun execAdb(vararg  cmd: String, ignoreErrors: Boolean = false) {
+private fun execAdb(vararg  cmd: String, ignoreErrors: Boolean = false) =
     exec(SdkHelper.getAdb().absolutePath, *cmd, ignoreErrors = ignoreErrors)
-}
-private fun exec(vararg cmd: String, ignoreErrors : Boolean = false) {
-    val exitCode = ProcessBuilder().command(*cmd).inheritIO().start().waitFor()
+
+private fun exec(vararg cmd: String, ignoreErrors : Boolean = false) : String {
+    val execTimeoutSeconds = 10L
+    val process = ProcessBuilder().command(*cmd).start()
+    val didFinish = process.waitFor(execTimeoutSeconds, TimeUnit.SECONDS)
+    val exitCode = process.exitValue()
+
     if (!ignoreErrors) {
-        Truth.assertWithMessage("Execution failed").that(exitCode).isEqualTo(0)
+        Truth.assertWithMessage("Execution timed out.").that(didFinish).isEqualTo(true)
+        Truth.assertWithMessage("Execution failed.").that(exitCode).isEqualTo(0)
     }
+    return process.inputStream.bufferedReader(Charset.defaultCharset()).readText()
 }

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_APKS;
+import static com.android.build.gradle.internal.tasks.BundleInstallUtils.extractApkFilesBypassingBundleTool;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.SingleArtifact;
@@ -157,23 +158,32 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         int successfulInstallCount = 0;
         List<? extends DeviceConnector> devices = deviceProvider.getDevices();
         for (final DeviceConnector device : devices) {
+            // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
             if (InstallUtils.checkDeviceApiLevel(
                     device, minSkdVersion, iLogger, projectPath, variantName)) {
-                // When InstallUtils.checkDeviceApiLevel returns false, it logs the reason.
-
+                final Collection<String> extraArgs =
+                        MoreObjects.firstNonNull(installOptions, ImmutableList.of());
                 DeviceConfigProviderImpl deviceConfigProvider =
                         new DeviceConfigProviderImpl(device);
-                final ImmutableList.Builder<File> apkFilesBuilder = ImmutableList.builder();
                 privacySandboxSdksApksFiles.forEach(
-                        file -> apkFilesBuilder.addAll(
-                                BundleInstallUtils.extractApkFilesBypassingBundleTool(file.toPath())
-                                        .stream()
-                                        .map(Path::toFile)
-                                        .collect(Collectors.toUnmodifiableList())));
-                apkFilesBuilder.addAll(
+                        file -> {
+                            List<File> apkFiles =
+                                    extractApkFilesBypassingBundleTool(file.toPath()).stream()
+                                            .map(Path::toFile)
+                                            .collect(Collectors.toUnmodifiableList());
+                            try {
+                                device.installPackages(apkFiles, extraArgs, timeOutInMs, iLogger);
+                            } catch (DeviceException e) {
+                                logger.error(
+                                        String.format(
+                                                "Failed to install privacy sandbox SDK APKs from %s",
+                                                file.toPath()),
+                                        e);
+                            }
+                        });
+                List<File> apkFiles =
                         BuiltArtifactsSplitOutputMatcher.INSTANCE.computeBestOutput(
-                                deviceConfigProvider, builtArtifacts, supportedAbis));
-                ImmutableList<File> apkFiles = apkFilesBuilder.build();
+                                deviceConfigProvider, builtArtifacts, supportedAbis);
 
                 if (apkFiles.isEmpty()) {
                     logger.lifecycle(
@@ -192,8 +202,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
                             projectPath,
                             variantName);
 
-                    final Collection<String> extraArgs =
-                            MoreObjects.firstNonNull(installOptions, ImmutableList.of());
 
                     if (apkFiles.size() > 1) {
                         device.installPackages(apkFiles, extraArgs, timeOutInMs, iLogger);
