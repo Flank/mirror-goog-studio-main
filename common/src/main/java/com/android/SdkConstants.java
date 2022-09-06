@@ -2798,7 +2798,7 @@ public final class SdkConstants {
      * The version of NDK to use as default. If no specific version of NDK is specified in
      * build.gradle then this is the version that will be used.
      */
-    public static final String NDK_DEFAULT_VERSION = "23.1.7779620";
+    public static final String NDK_DEFAULT_VERSION = "25.1.8937393";
 
     /** use api or implementation */
     @Deprecated public static final String GRADLE_COMPILE_CONFIGURATION = "compile";

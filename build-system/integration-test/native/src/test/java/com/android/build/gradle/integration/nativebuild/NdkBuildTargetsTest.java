@@ -19,8 +19,10 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dump;
 import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.dumpCompileCommandsJsonBin;
+import static com.android.build.gradle.integration.common.fixture.model.NativeUtilsKt.recoverExistingCxxAbiModels;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.internal.cxx.model.CxxModuleModelKt.getNdkMinPlatform;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -144,6 +146,9 @@ public class NdkBuildTargetsTest {
                 project.modelV2()
                         .fetchNativeModules(
                                 new NativeModuleParams(ImmutableList.of(), ImmutableList.of()));
+        String minPlatform =
+                getNdkMinPlatform(
+                        recoverExistingCxxAbiModels(project).get(0).getVariant().getModule());
         Truth.assertThat(dump(fetchResult))
                 .isEqualTo(
                         "[:]\n"
@@ -209,44 +214,47 @@ public class NdkBuildTargetsTest {
                             dumpCompileCommandsJsonBin(
                                     debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer()))
                     .isEqualTo(
-                            "sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]\n"
-                                    + "\n"
-                                    + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]");
+                            ("sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]\n"
+                                            + "\n"
+                                            + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]")
+                                    .replace("{MIN_PLATFORM}", minPlatform));
         } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_DARWIN) {
             String dump =
                     dumpCompileCommandsJsonBin(
                             debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer());
             assertThat(dump)
                     .isEqualTo(
-                            "sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]\n"
-                                    + "\n"
-                                    + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]");
+                            ("sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]\n"
+                                            + "\n"
+                                            + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]")
+                                    .replace("{MIN_PLATFORM}", minPlatform));
         } else if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             assertThat(
                             dumpCompileCommandsJsonBin(
                                     debugX86Abi.getSourceFlagsFile(), fetchResult.getNormalizer()))
                     .isEqualTo(
-                            "sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]\n"
-                                    + "\n"
-                                    + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
-                                    + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
-                                    + "workingDir: {PROJECT}/{D}\n"
-                                    + "flags:      [-target, i686-none-linux-android16]");
+                            ("sourceFile: {PROJECT}/src/main/cpp/library1/library1.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]\n"
+                                            + "\n"
+                                            + "sourceFile: {PROJECT}/src/main/cpp/library2/library2.cpp{F}\n"
+                                            + "compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe{F}\n"
+                                            + "workingDir: {PROJECT}/{D}\n"
+                                            + "flags:      [-target, i686-none-linux-android{MIN_PLATFORM}]")
+                                    .replace("{MIN_PLATFORM}", minPlatform));
         }
     }
 }

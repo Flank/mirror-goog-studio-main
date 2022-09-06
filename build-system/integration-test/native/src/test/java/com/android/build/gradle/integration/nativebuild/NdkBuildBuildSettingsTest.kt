@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.model.recoverExisting
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
 import com.android.build.gradle.internal.cxx.settings.BuildSettingsConfiguration
 import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.testutils.AssumeUtil
@@ -159,19 +160,15 @@ class NdkBuildBuildSettingsTest {
     @Test
     fun `configuration build command golden flags`() {
         val golden = project.goldenConfigurationFlags(Abi.ARMEABI_V7A)
-            // Special fix to accommodate bug in NDKs <= r16
-            // Until r16 NDK emitted 'android-21' as a default even though
-            // armeabi-v7a supports 'android-16'
-            .replace(
-                "APP_PLATFORM=android-21",
-                "APP_PLATFORM=android-16")
+        val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.ARMEABI_V7A }
+        val minPlatform = abi.variant.module.ndkMinPlatform
         println(golden)
         assertThat(golden).isEqualTo("""
             -B
             -n
             APP_ABI=armeabi-v7a
             APP_BUILD_SCRIPT={PROJECT}/src/main/jni/Android.mk
-            APP_PLATFORM=android-16
+            APP_PLATFORM=android-${minPlatform}
             APP_SHORT_COMMANDS=false
             LOCAL_SHORT_COMMANDS=false
             NDK_ALL_ABIS=armeabi-v7a

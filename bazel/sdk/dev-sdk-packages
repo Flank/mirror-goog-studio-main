@@ -54,3 +54,5 @@ cmake;3.22.1
 
 # Instant apps sdk used in integration tests
 extras;google;instantapps
+
+ndk;25.1.8937393:**:{**/OWNERS,**/BUILD.bazel}

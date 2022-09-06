@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -34,12 +33,15 @@ import org.junit.Test;
 public class RenderscriptNdkTest {
     private static final String thirtyTwoBitAbi = "x86";
     private static final String sixtyFourBitAbi = "x86_64";
+    // Using NDK r20b instead of a more recent version because RenderScript was removed
+    // from the NDK with r24.
+    private static final String NDK_WITH_RENDERSCRIPT_VERSION = "20.1.5948944";
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("renderscriptNdk")
-                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                    .setSideBySideNdkVersion(NDK_WITH_RENDERSCRIPT_VERSION)
                     .create();
 
     private void checkPackagedFiles(boolean checkDotSo, boolean is32Bit, boolean is64Bit)
@@ -95,6 +97,9 @@ public class RenderscriptNdkTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
+                        + "    ndkVersion '"
+                        + NDK_WITH_RENDERSCRIPT_VERSION
+                        + "'\n"
                         + "    defaultConfig {\n"
                         + "        ndk {\n"
                         + "            abiFilters \""
@@ -114,6 +119,9 @@ public class RenderscriptNdkTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
+                        + "    ndkVersion '"
+                        + NDK_WITH_RENDERSCRIPT_VERSION
+                        + "'\n"
                         + "    defaultConfig {\n"
                         + "        ndk {\n"
                         + "            abiFilters \""
@@ -131,6 +139,9 @@ public class RenderscriptNdkTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
+                        + "    ndkVersion '"
+                        + NDK_WITH_RENDERSCRIPT_VERSION
+                        + "'\n"
                         + "    defaultConfig {\n"
                         + "        ndk {\n"
                         + "            abiFilters \""
@@ -145,6 +156,9 @@ public class RenderscriptNdkTest {
 
     @Test
     public void checkEmptyAbiFilter() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n" + "    ndkVersion '" + NDK_WITH_RENDERSCRIPT_VERSION + "'\n" + "}");
         checkPackagedFiles(true, true, true);
     }
 
@@ -154,6 +168,10 @@ public class RenderscriptNdkTest {
                 project.getBuildFile(), "renderscriptTargetApi 28", "renderscriptTargetApi 20");
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(), "minSdkVersion 21", "minSdkVersion 20");
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n" + "    ndkVersion '" + NDK_WITH_RENDERSCRIPT_VERSION + "'\n" + "}");
 
         GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug");
         assertNotNull(result.getException());

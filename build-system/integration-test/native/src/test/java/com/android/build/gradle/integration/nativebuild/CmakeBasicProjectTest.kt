@@ -66,6 +66,7 @@ import com.android.build.gradle.internal.cxx.model.compileCommandsJsonBinFile
 import com.android.build.gradle.internal.cxx.model.cxxBuildHashKeyFile
 import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
 import com.android.build.gradle.internal.cxx.model.miniConfigFile
+import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
 import com.android.build.gradle.internal.cxx.model.ninjaBuildFile
 import com.android.build.gradle.internal.cxx.model.ninjaDepsFile
 import com.android.build.gradle.internal.cxx.model.predictableRepublishFolder
@@ -420,6 +421,7 @@ class CmakeBasicProjectTest(
         Assume.assumeTrue(mode == Mode.CMake && cmakeVersionInDsl != "3.6.0")
         project.execute("configure${mode.buildFolderTag}Debug[x86_64]")
         val abi = project.recoverExistingCxxAbiModels().single { it.abi == Abi.X86_64 }
+        val minPlatform = abi.variant.module.ndkMinPlatform
         val hashKey = abi.cxxBuildHashKeyFile.readText()
         val hashSegment = abi.cxxBuildHashKeyFile.parentFile.name
         val hashKeyExpected =
@@ -436,8 +438,8 @@ class CmakeBasicProjectTest(
             -H${'$'}PROJECT
             -DCMAKE_SYSTEM_NAME=Android
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-            -DCMAKE_SYSTEM_VERSION=16
-            -DANDROID_PLATFORM=android-16
+            -DCMAKE_SYSTEM_VERSION=${minPlatform}
+            -DANDROID_PLATFORM=android-${minPlatform}
             -DANDROID_ABI=${'$'}ABI
             -DCMAKE_ANDROID_ARCH_ABI=${'$'}ABI
             -DANDROID_NDK=${'$'}NDK
@@ -730,11 +732,13 @@ class CmakeBasicProjectTest(
             .replace(
                 "-DANDROID_PLATFORM=android-21",
                 "-DANDROID_PLATFORM=android-16")
+        val minPlatform = project.recoverExistingCxxAbiModels().first().variant.module.ndkMinPlatform
+
         if (mode == Mode.NinjaRedirect) {
             assertEqualsMultiline(golden,
                 """
                 -DANDROID_NDK={NDK}
-                -DANDROID_PLATFORM=android-16
+                -DANDROID_PLATFORM=android-${minPlatform}
                 -DCMAKE_ANDROID_ARCH_ABI=x86_64
                 -DCMAKE_ANDROID_NDK={NDK}
                 -DCMAKE_BUILD_TYPE=Debug
@@ -745,7 +749,7 @@ class CmakeBasicProjectTest(
                 -DCMAKE_MAKE_PROGRAM={NINJA}
                 -DCMAKE_RUNTIME_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
                 -DCMAKE_SYSTEM_NAME=Android
-                -DCMAKE_SYSTEM_VERSION=16
+                -DCMAKE_SYSTEM_VERSION=${minPlatform}
                 -DCMAKE_TOOLCHAIN_FILE={NDK}/build/cmake/android.toolchain.cmake
                 -G{Generator}
                 -H{PROJECT}
@@ -760,7 +764,7 @@ class CmakeBasicProjectTest(
             -B{PROJECT}/.cxx/{DEBUG}/x86_64
             -DANDROID_ABI=x86_64
             -DANDROID_NDK={NDK}
-            -DANDROID_PLATFORM=android-16
+            -DANDROID_PLATFORM=android-${minPlatform}
             -DCMAKE_ANDROID_ARCH_ABI=x86_64
             -DCMAKE_ANDROID_NDK={NDK}
             -DCMAKE_BUILD_TYPE=Debug
@@ -771,7 +775,7 @@ class CmakeBasicProjectTest(
             -DCMAKE_MAKE_PROGRAM={NINJA}
             -DCMAKE_RUNTIME_OUTPUT_DIRECTORY={PROJECT}/build/intermediates/{DEBUG}/obj/x86_64
             -DCMAKE_SYSTEM_NAME=Android
-            -DCMAKE_SYSTEM_VERSION=16
+            -DCMAKE_SYSTEM_VERSION=${minPlatform}
             -DCMAKE_TOOLCHAIN_FILE={NDK}/build/cmake/android.toolchain.cmake
             -G{Generator}
             -H{PROJECT}

@@ -17,8 +17,12 @@
 package com.android.build.gradle.integration.ndk
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.minSdkVersion
+import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth
@@ -91,6 +95,7 @@ class PrefabPublishingTest(
     }
 
     private fun verifyModule(
+        project: GradleTestProject,
         packageDir: File,
         moduleName: String,
         libraryType: LibraryType,
@@ -129,7 +134,8 @@ class PrefabPublishingTest(
             """.trimIndent()
         )
 
-        for (abi in expectedAbis) {
+        for (abiName in expectedAbis) {
+            val abi = project.recoverExistingCxxAbiModels().single { it.abi == abiName }
             verifyLibrariesForAbi(
                 abi,
                 moduleDir,
@@ -141,7 +147,7 @@ class PrefabPublishingTest(
     }
 
     private fun verifyLibrariesForAbi(
-        abi: Abi,
+        abi: CxxAbiModel,
         moduleDir: File,
         moduleName: String,
         libraryName: String?,
@@ -154,18 +160,14 @@ class PrefabPublishingTest(
             LibraryType.HeaderOnly -> return
         }
 
-        val abiDir = moduleDir.resolve("libs/android.${abi.tag}")
+        val abiDir = moduleDir.resolve("libs/android.${abi.abi.tag}")
         val abiMetadata = abiDir.resolve("abi.json").readText()
-        val apiLevel = if (abi.supports64Bits()) {
-            21
-        } else {
-            16
-        }
+        val apiLevel = abi.minSdkVersion
 
         Truth.assertThat(abiMetadata).isEqualTo(
             """
             {
-              "abi": "${abi.tag}",
+              "abi": "${abi.abi.tag}",
               "api": $apiLevel,
               "ndk": $ndkMajor,
               "stl": "c++_shared",
@@ -201,8 +203,8 @@ class PrefabPublishingTest(
             """.trimIndent()
         )
 
-        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.Shared)
-        verifyModule(packageDir, "${gradleModuleName}_static", libraryType = LibraryType.Static)
+        verifyModule(project, packageDir, gradleModuleName, libraryType = LibraryType.Shared)
+        verifyModule(project, packageDir, "${gradleModuleName}_static", libraryType = LibraryType.Static)
     }
 
     @Test
@@ -397,7 +399,7 @@ class PrefabPublishingTest(
 
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
-        verifyModule(packageDir, gradleModuleName, LibraryType.Static, "libfoo_static")
+        verifyModule(project, packageDir, gradleModuleName, LibraryType.Static, "libfoo_static")
         val packageMetadata = packageDir.resolve("prefab.json").readText()
         Truth.assertThat(packageMetadata).isEqualTo(
             """
@@ -439,7 +441,7 @@ class PrefabPublishingTest(
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
 
-        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.Shared)
+        verifyModule(project, packageDir, gradleModuleName, libraryType = LibraryType.Shared)
     }
 
     @Test
@@ -519,6 +521,6 @@ class PrefabPublishingTest(
         val packageDir = project.getSubproject(gradleModuleName)
             .getIntermediateFile("prefab_package", variant, "prefab")
 
-        verifyModule(packageDir, gradleModuleName, libraryType = LibraryType.HeaderOnly)
+        verifyModule(project, packageDir, gradleModuleName, libraryType = LibraryType.HeaderOnly)
     }
 }

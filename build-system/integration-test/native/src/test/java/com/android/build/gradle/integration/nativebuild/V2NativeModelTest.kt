@@ -35,7 +35,9 @@ import com.android.build.gradle.integration.common.fixture.model.dumpCompileComm
 import com.android.build.gradle.integration.common.fixture.model.recoverExistingCxxAbiModels
 import com.android.build.gradle.integration.common.fixture.model.withCxxFileNormalizer
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CMakeVersion
+import com.android.build.gradle.internal.cxx.model.ndkMinPlatform
 import com.android.builder.model.v2.ide.SyncIssue
 import com.google.common.truth.Truth
 import org.junit.Before
@@ -151,22 +153,23 @@ class V2NativeModelTest(private val cmakeVersion: String) : ModelComparator() {
             else -> error(CURRENT_PLATFORM)
         }
         .replace("-O0, ", "") // -O0 was removed some time after r21
+        val minPlatform = abi.variant.module.ndkMinPlatform
         assertEqualsMultiline(deplatformed,
             """
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16]
+                flags:      [--target=i686-none-linux-android${minPlatform}]
 
                 sourceFile: {PROJECT}/src/main/cxx/executable/main.cpp{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang++{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16]
+                flags:      [--target=i686-none-linux-android${minPlatform}]
 
                 sourceFile: {PROJECT}/src/main/cxx/hello-jni.c{F}
                 compiler:   {ANDROID_NDK}/toolchains/llvm/prebuilt/{HOST_PLATFORM}/bin/clang{F}
                 workingDir: {PROJECT}/.cxx/{DEBUG}/x86{D}
-                flags:      [--target=i686-none-linux-android16]
+                flags:      [--target=i686-none-linux-android${minPlatform}]
                 """.trimIndent()
         )
     }

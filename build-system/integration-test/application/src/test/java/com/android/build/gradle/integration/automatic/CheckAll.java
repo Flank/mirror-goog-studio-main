@@ -70,6 +70,10 @@ public class CheckAll {
         if (!testProject.isDirectory()) {
             return false;
         }
+        // RenderScript support is removed after NDK r23 LTS
+        if (testProject.getName().equals("renderscriptNdk")) {
+            return false;
+        }
 
         File buildGradle = new File(testProject, "build.gradle");
         File settingsGradle = new File(testProject, "settings.gradle");

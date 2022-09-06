@@ -26,6 +26,10 @@ NDK = [
     "//prebuilts/studio/sdk:ndk",
 ]
 
+NDK_20 = [
+    "//prebuilts/studio/sdk:ndk-20",
+]
+
 DOLPHIN = [
     "//prebuilts/studio/buildbenchmarks/dolphin.3627ef8a:dolphin.3627ef8a",
 ]
@@ -364,7 +368,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RenderscriptNdkTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + NDK + ["//tools/base/build-system/integration-test:test-projects/renderscriptNdk"],
+    data = DATA + NDK_20 + ["//tools/base/build-system/integration-test:test-projects/renderscriptNdk"],
     maven_repo_zips = MAVEN_REPO_ZIPS,
     maven_repos = MAVEN_REPOS,
     deps = DEPS,
