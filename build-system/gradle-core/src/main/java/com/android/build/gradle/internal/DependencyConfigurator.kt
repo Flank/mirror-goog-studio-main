@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule
 import com.android.build.gradle.internal.dependency.AndroidXDependencyCheck
 import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution.replaceOldSupportLibraries
+import com.android.build.gradle.internal.dependency.ExtractPrivacySandboxSdkApiFromAsarTransform
 import com.android.build.gradle.internal.dependency.AsmClassesTransform.Companion.registerAsmTransformForComponent
 import com.android.build.gradle.internal.dependency.ClassesDirToClassesTransform
 import com.android.build.gradle.internal.dependency.CollectClassesTransform
@@ -42,6 +43,7 @@ import com.android.build.gradle.internal.dependency.EnumerateClassesTransform
 import com.android.build.gradle.internal.dependency.ExtractAarTransform
 import com.android.build.gradle.internal.dependency.ExtractJniTransform
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform
+import com.android.build.gradle.internal.dependency.ExtractSdkShimTransform
 import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform
 import com.android.build.gradle.internal.dependency.GenericTransformParameters
 import com.android.build.gradle.internal.dependency.IdentityTransform
@@ -79,6 +81,7 @@ import com.android.build.gradle.internal.variant.VariantInputModel
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
+import com.android.repository.Revision
 import com.google.common.collect.Maps
 import org.gradle.api.ActionConfiguration
 import org.gradle.api.Project
@@ -90,6 +93,7 @@ import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.AttributesSchema
 import org.gradle.api.attributes.Usage
 import org.gradle.api.internal.artifacts.ArtifactAttributes
+import java.nio.file.Paths
 
 /**
  * configures the dependencies for a set of variant inputs.
@@ -437,8 +441,12 @@ class DependencyConfigurator(
             AndroidArtifacts.ArtifactType.JAR_CLASS_LIST
         )
 
+        return this
+    }
 
-        if (projectOptions.get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
+    fun configurePrivacySandboxSdkConsumerTransforms(
+            compileSdkHashString: String, buildToolsRevision: Revision) {
+        if (projectServices.projectOptions.get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
             registerTransform(
                     AsarToApksTransform::class.java,
                     AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
@@ -452,17 +460,42 @@ class DependencyConfigurator(
                         ).map { it.getDefaultDebugKeystoreSigningConfig() }
                 )
                 params.signingConfigValidationResultDir.set(
-                        ArtifactsImpl(project, "global").get(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
+                        ArtifactsImpl(project,
+                                "global").get(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
                 )
             }
             registerTransform(
-                AsarToManifestSnippetTransform::class.java,
-                AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
-                AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET
+                    AsarToManifestSnippetTransform::class.java,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET
             )
-        }
+            registerTransform(
+                    ExtractPrivacySandboxSdkApiFromAsarTransform::class.java,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
+                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR
+            )
 
-        return this
+            val apiGeneratorCoordinates = projectServices.projectOptions
+                    .get(StringOption.ANDROID_PRIVACY_SANDBOX_SDK_API_GENERATOR)
+            if (apiGeneratorCoordinates != null) {
+                registerTransform(
+                        ExtractSdkShimTransform::class.java,
+                        AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR,
+                        AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES
+                ) { params ->
+                    val apiGeneratorAndRuntimeDependencies =
+                            project.configurations.detachedConfiguration(
+                                    project.dependencies.create(apiGeneratorCoordinates)
+                    )
+                    params.apiGeneratorAndRuntimeDependenciesJars.setFrom(
+                            apiGeneratorAndRuntimeDependencies)
+                    params.buildTools.initialize(
+                            projectServices.buildServiceRegistry,
+                            compileSdkHashString,
+                            buildToolsRevision)
+                }
+            }
+        }
     }
 
     fun configureCalculateStackFramesTransforms(

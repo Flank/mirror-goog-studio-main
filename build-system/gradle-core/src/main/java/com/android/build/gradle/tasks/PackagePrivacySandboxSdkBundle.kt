@@ -67,6 +67,10 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val appMetadata: RegularFileProperty
 
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val interfaceDescriptors: RegularFileProperty
+
     @get:Input
     abstract val bundleToolVersion: Property<String>
 
@@ -130,6 +134,7 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
                     .setOutputPath(outputFile.get().asFile.toPath())
                     .setSdkBundleConfig(sdkBundleConfig)
                     .setSdkModulesConfig(sdkModulesConfig)
+                    .setSdkInterfaceDescriptors(interfaceDescriptors.get().asFile.toPath())
 
         command.addMetadataFile(
             "com.android.tools.build.gradle",
@@ -187,6 +192,9 @@ abstract class PackagePrivacySandboxSdkBundle: NonIncrementalTask() {
 
             // TODO: Add DSL for the following
             task.sdkDependencies.setDisallowChanges(emptyList())
+
+            task.interfaceDescriptors.setDisallowChanges(
+                    creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.STUB_JAR))
         }
     }
 

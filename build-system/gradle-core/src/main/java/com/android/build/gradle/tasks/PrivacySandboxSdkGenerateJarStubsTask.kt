@@ -55,11 +55,15 @@ abstract class PrivacySandboxSdkGenerateJarStubsTask : DefaultTask() {
                 .filterNotNull()
                 .filter { CLASS_MATCHER.test(it.invariantSeparatorsPath) }
         JarOutputStream(FileOutputStream(outputStubJar.get().asFile)).use {
+            outputStream ->
             for (clazz in dotClassFiles) {
                 val zipEntry =
                         ZipEntry(clazz.relativeTo(mergedClasses.singleFile).invariantSeparatorsPath)
-                it.putNextEntry(zipEntry)
-                it.closeEntry()
+                outputStream.putNextEntry(zipEntry)
+                clazz.inputStream().use { inputStream ->
+                    outputStream.write(inputStream.readBytes())
+                }
+                outputStream.closeEntry()
             }
         }
     }
@@ -91,7 +95,7 @@ abstract class PrivacySandboxSdkGenerateJarStubsTask : DefaultTask() {
 
     companion object {
 
-        const val privacySandboxSdkStubJarFilename = "privacy-sandbox-sdk-stub.jar"
+        const val privacySandboxSdkStubJarFilename = "sdk-interface-descriptors.jar"
     }
 }
 

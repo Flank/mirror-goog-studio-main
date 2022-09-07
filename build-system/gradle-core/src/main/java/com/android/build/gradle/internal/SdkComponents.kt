@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
+import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.ServiceRegistrationAction
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -54,6 +55,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.api.services.BuildServiceRegistry
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -505,16 +507,24 @@ abstract class BuildToolsExecutableInput {
 }
 
 fun BuildToolsExecutableInput.initialize(creationConfig: ComponentCreationConfig) {
+    initialize(
+            creationConfig.services.buildServiceRegistry,
+            creationConfig.global.compileSdkHashString,
+            creationConfig.global.buildToolsRevision)
+}
+
+fun BuildToolsExecutableInput.initialize(
+        buildServiceRegistry: BuildServiceRegistry,
+        compileSdkHashString: String,
+        buildToolsRevision: Revision) {
 
     sdkBuildService.setDisallowChanges(
-        getBuildService(creationConfig.services.buildServiceRegistry)
+            getBuildService(buildServiceRegistry)
     )
     this.compileSdkVersion.setDisallowChanges(
-        creationConfig.global.compileSdkHashString
+            compileSdkHashString
     )
-    this.buildToolsRevision.setDisallowChanges(
-        creationConfig.global.buildToolsRevision
-    )
+    this.buildToolsRevision.setDisallowChanges(buildToolsRevision)
 }
 
 /** This can be used by tasks requiring ndk executables as input with [org.gradle.api.tasks.Nested]. */

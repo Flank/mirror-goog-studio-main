@@ -692,6 +692,8 @@ To learn more, go to https://d.android.com/r/tools/java-8-support-message.html
             .configureAttributeMatchingStrategies(variantInputModel)
             .configureJacocoTransforms()
             .configureCalculateStackFramesTransforms(globalConfig)
+            .configurePrivacySandboxSdkConsumerTransforms(
+                    globalConfig.compileSdkHashString, globalConfig.buildToolsRevision)
 
         // Run the old Variant API, after the variants and tasks have been created.
         @Suppress("DEPRECATION")
