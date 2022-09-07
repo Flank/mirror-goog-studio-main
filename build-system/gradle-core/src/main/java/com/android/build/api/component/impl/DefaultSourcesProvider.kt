@@ -20,6 +20,7 @@ import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.LayeredSourceDirectoriesImpl
+import java.io.File
 
 /**
  * Interface to calculate the default list of sources [DirectoryEntry] per source type.
@@ -90,4 +91,12 @@ interface DefaultSourcesProvider {
      * the list of sources [DirectoryEntry] for renderscript or null if the feature is disabled.
      */
     fun getRenderscript(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>?
+
+    val artProfile: File
+
+    val mainManifestFile: File
+
+    val manifestOverlays: List<File>
+
+    val sourceProvidersNames: List<String>
 }

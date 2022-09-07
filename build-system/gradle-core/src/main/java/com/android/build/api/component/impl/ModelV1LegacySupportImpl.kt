@@ -18,12 +18,14 @@ package com.android.build.api.component.impl
 
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.impl.ComponentDslInfoImpl
 import org.gradle.api.provider.Provider
 
 class ModelV1LegacySupportImpl(
-    private val dslInfo: ComponentDslInfo
+    private val dslInfo: ComponentDslInfo,
+    override val variantSources: VariantSources
 ): ModelV1LegacySupport {
 
     override val mergedFlavor: MergedFlavor

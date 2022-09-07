@@ -187,7 +187,7 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public List<SourceProvider> getSourceSets() {
-        return component.getVariantSources().getSortedSourceProviders(true);
+        return oldVariantApiLegacySupport.getVariantSources().getSortedSourceProviders(true);
     }
 
     @NonNull

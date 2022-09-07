@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -89,9 +88,7 @@ abstract class CheckManifest : NonIncrementalTask() {
             super.configure(task)
 
             task.manifestRequired = creationConfig.componentType.requiresManifest
-            task.manifestFile = task.project.provider {
-                creationConfig.variantSources.mainManifestFilePath
-            }
+            task.manifestFile = creationConfig.sources.manifestFile
         }
     }
 }

@@ -18,6 +18,9 @@ package com.android.build.api.variant
 
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.LayeredSourceDirectoriesImpl
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import org.gradle.api.provider.Provider
+import java.io.File
 
 /**
  * Internal representation of the public variant sources API.
@@ -93,4 +96,20 @@ interface InternalSources: Sources {
      * If null, action is not run.
      */
     fun mlModels(action: (LayeredSourceDirectoriesImpl) -> Unit)
+
+    val artProfile: Provider<File>
+    val manifestFile: Provider<File>
+    val manifestOverlays: List<Provider<File>>
+
+    val sourceProviderNames: List<String>
+
+    /**
+     * DO NOT USE, this is public for model support only.
+     */
+    val multiFlavorSourceProvider: DefaultAndroidSourceSet?
+
+    /**
+     * DO NOT USE, this is public for model support only.
+     */
+    val variantSourceProvider: DefaultAndroidSourceSet?
 }

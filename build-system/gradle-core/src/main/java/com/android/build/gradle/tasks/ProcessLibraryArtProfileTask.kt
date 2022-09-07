@@ -83,9 +83,8 @@ abstract class ProcessLibraryArtProfileTask: NonIncrementalTask() {
 
         override fun configure(task: ProcessLibraryArtProfileTask) {
             super.configure(task)
-            val variantSources = creationConfig.variantSources
             task.profileSource
-                .fileProvider(creationConfig.services.provider(variantSources::artProfile))
+                .fileProvider(creationConfig.sources.artProfile)
             task.profileSource.disallowChanges()
         }
     }

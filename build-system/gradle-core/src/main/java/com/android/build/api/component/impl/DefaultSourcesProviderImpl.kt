@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.builder.compiling.BuildConfigType
+import java.io.File
 import java.util.Collections
 
 /**
@@ -83,6 +84,18 @@ class DefaultSourcesProviderImpl(
     override fun getRenderscript(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>? = if (component.buildFeatures.renderScript) {
         flattenSourceProviders(lateAdditionsDelegate) { sourceSet -> sourceSet.renderscript }
     } else null
+
+    override val artProfile: File
+        get() = variantSources.artProfile
+
+    override val mainManifestFile: File
+        get() = variantSources.mainManifestFilePath
+
+    override val manifestOverlays: List<File>
+        get() = variantSources.manifestOverlays
+
+    override val sourceProvidersNames: List<String>
+        get() = variantSources.getSortedSourceProviders().map { it.name }
 
     private fun flattenSourceProviders(
         lateAdditionsDelegate: SourceDirectoriesImpl,

@@ -472,11 +472,10 @@ abstract class ProcessTestManifest : ManifestProcessorTask() {
         ) {
             super.configure(task)
             val project = task.project
-            val variantSources = creationConfig.variantSources
             task.testManifestFile
-                .fileProvider(project.provider(variantSources::mainManifestFilePath))
+                .fileProvider(creationConfig.sources.manifestFile)
             task.testManifestFile.disallowChanges()
-            task.manifestOverlays.set(task.project.provider(variantSources::manifestOverlays))
+            creationConfig.sources.manifestOverlays.forEach(task.manifestOverlays::add)
             task.manifestOverlays.disallowChanges()
             task.apkData.set(creationConfig.outputs.getMainSplit())
             task.componentType.setDisallowChanges(creationConfig.componentType.toString())

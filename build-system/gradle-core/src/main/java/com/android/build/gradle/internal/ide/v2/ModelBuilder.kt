@@ -579,11 +579,9 @@ class ModelBuilder<
         component: ComponentCreationConfig,
         features: BuildFeatureValues
     ): BasicArtifact {
-        val sourceProviders = component.variantSources
-
         return BasicArtifactImpl(
-            variantSourceProvider = sourceProviders.variantSourceProvider?.convert(features, component.sources),
-            multiFlavorSourceProvider = sourceProviders.multiFlavorSourceProvider?.convert(
+            variantSourceProvider = component.sources.variantSourceProvider?.convert(features, component.sources),
+            multiFlavorSourceProvider = component.sources.multiFlavorSourceProvider?.convert(
                 features
             ),
         )
@@ -884,12 +882,13 @@ class ModelBuilder<
             return false
         }
 
-        val variantSources = component.variantSources
-
         // get the manifest in descending order of priority. First one to return
         val manifests = mutableListOf<File>()
-        manifests.addAll(variantSources.manifestOverlays)
-        variantSources.mainManifestIfExists?.let { manifests.add(it) }
+        manifests.addAll(component.sources.manifestOverlays.map { it.get() })
+        val mainManifest = component.sources.manifestFile.get()
+        if (mainManifest.isFile) {
+            manifests.add(mainManifest)
+        }
 
         if (manifests.isEmpty()) {
             return false

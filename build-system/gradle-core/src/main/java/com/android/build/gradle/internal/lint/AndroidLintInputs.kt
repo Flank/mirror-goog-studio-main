@@ -21,6 +21,7 @@ import com.android.SdkConstants
 import com.android.Version
 import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.dsl.Lint
+import com.android.build.api.variant.InternalSources
 import com.android.build.api.variant.ResValue
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -56,7 +57,6 @@ import com.android.builder.core.ComponentTypeImpl
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.IssueReporter
 import com.android.builder.model.ApiVersion
-import com.android.builder.model.SourceProvider
 import com.android.ide.common.repository.GradleVersion
 import com.android.sdklib.AndroidVersion
 import com.android.tools.lint.model.DefaultLintModelAndroidArtifact
@@ -805,14 +805,26 @@ abstract class VariantInputs {
     abstract val consumerProguardFiles: ListProperty<File>
 
     @get:Nested
+    abstract val mainSourceProvider: Property<SourceProviderInput>
+
+    /**
+     * Androidx compose plugin uses this field to add kotlin multiplatform sources sets as there is
+     * no public API to customize lint sources.
+     */
+    @get:Internal
     abstract val sourceProviders: ListProperty<SourceProviderInput>
 
     @get:Nested
-    abstract val testSourceProviders: ListProperty<SourceProviderInput>
+    @get:Optional
+    abstract val unitTestSourceProvider: Property<SourceProviderInput>
 
     @get:Nested
     @get:Optional
-    abstract val testFixturesSourceProviders: ListProperty<SourceProviderInput>
+    abstract val androidTestSourceProvider: Property<SourceProviderInput>
+
+    @get:Nested
+    @get:Optional
+    abstract val testFixturesSourceProvider: Property<SourceProviderInput>
 
     @get:Input
     abstract val debuggable: Property<Boolean>
@@ -931,11 +943,14 @@ abstract class VariantInputs {
             creationConfig.androidResourcesCreationConfig?.resourceConfigurations ?: emptyList()
         )
 
-        sourceProviders.setDisallowChanges(creationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
+        mainSourceProvider.setDisallowChanges(
             creationConfig.services
                 .newInstance(SourceProviderInput::class.java)
-                .initialize(sourceProvider, lintMode)
-        })
+                .initialize(creationConfig.sources, lintMode)
+        )
+
+        sourceProviders.add(mainSourceProvider)
+        sourceProviders.disallowChanges()
 
         proguardFiles.setDisallowChanges(creationConfig.proguardFiles)
 
@@ -946,37 +961,30 @@ abstract class VariantInputs {
         )
         consumerProguardFiles.setDisallowChanges(creationConfig.consumerProguardFiles)
 
-        val testSourceProviderList: MutableList<SourceProviderInput> = mutableListOf()
         variantWithTests.unitTest?.let { unitTestCreationConfig ->
-            testSourceProviderList.addAll(
-                unitTestCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
-                    creationConfig.services
-                        .newInstance(SourceProviderInput::class.java)
-                        .initialize(sourceProvider, lintMode, unitTestOnly = true)
-                }
+            unitTestSourceProvider.set(
+                creationConfig.services
+                    .newInstance(SourceProviderInput::class.java)
+                    .initialize(unitTestCreationConfig.sources, lintMode, unitTestOnly = true)
             )
         }
         variantWithTests.androidTest?.let { androidTestCreationConfig ->
-            testSourceProviderList.addAll(
-                androidTestCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
-                    creationConfig.services
-                        .newInstance(SourceProviderInput::class.java)
-                        .initialize(sourceProvider, lintMode, instrumentationTestOnly = true)
-                }
+            androidTestSourceProvider.set(
+                creationConfig.services
+                    .newInstance(SourceProviderInput::class.java)
+                    .initialize(androidTestCreationConfig.sources, lintMode, instrumentationTestOnly = true)
             )
         }
         variantWithTests.testFixtures?.let { testFixturesCreationConfig ->
-            testFixturesSourceProviders.setDisallowChanges(
-                testFixturesCreationConfig.variantSources.getSortedSourceProviders().map { sourceProvider ->
-                    creationConfig.services
-                        .newInstance(SourceProviderInput::class.java)
-                        .initialize(
-                            sourceProvider,
-                            lintMode
-                        )
-                })
+            testFixturesSourceProvider.set(
+                creationConfig.services
+                    .newInstance(SourceProviderInput::class.java)
+                    .initialize(testFixturesCreationConfig.sources, lintMode)
+            )
         }
-        testSourceProviders.setDisallowChanges(testSourceProviderList.toList())
+        unitTestSourceProvider.disallowChanges()
+        androidTestSourceProvider.disallowChanges()
+        testFixturesSourceProvider.disallowChanges()
         debuggable.setDisallowChanges(
             if (creationConfig is ApkCreationConfig) {
                 creationConfig.debuggable
@@ -1020,7 +1028,7 @@ abstract class VariantInputs {
         mergedManifest.setDisallowChanges(null)
         manifestMergeReport.setDisallowChanges(null)
         minifiedEnabled.setDisallowChanges(false)
-        sourceProviders.setDisallowChanges(listOf(
+        mainSourceProvider.setDisallowChanges(
             project.objects.newInstance(SourceProviderInput::class.java)
                 .initializeForStandalone(
                     project,
@@ -1028,23 +1036,23 @@ abstract class VariantInputs {
                     lintMode,
                     unitTestOnly = false
                 )
-        ))
-        if (fatalOnly) {
-            testSourceProviders.setDisallowChanges(listOf())
-        } else {
-            testSourceProviders.setDisallowChanges(
-                listOf(
-                    project.objects.newInstance(SourceProviderInput::class.java)
-                        .initializeForStandalone(
-                            project,
-                            testSourceSet,
-                            lintMode,
-                            unitTestOnly = true
-                        )
-                )
+        )
+        sourceProviders.add(mainSourceProvider)
+        sourceProviders.disallowChanges()
+        if (!fatalOnly) {
+            unitTestSourceProvider.set(
+                project.objects.newInstance(SourceProviderInput::class.java)
+                    .initializeForStandalone(
+                        project,
+                        testSourceSet,
+                        lintMode,
+                        unitTestOnly = true
+                    )
             )
         }
-        testFixturesSourceProviders.disallowChanges()
+        unitTestSourceProvider.disallowChanges()
+        androidTestSourceProvider.disallowChanges()
+        testFixturesSourceProvider.disallowChanges()
         buildFeatures.initializeForStandalone()
         libraryDependencyCacheBuildService.setDisallowChanges(getBuildService(project.gradle.sharedServices))
         mavenCoordinatesCache.setDisallowChanges(getBuildService(project.gradle.sharedServices))
@@ -1088,11 +1096,12 @@ abstract class VariantInputs {
             resourceConfigurations = resourceConfigurations.get(),
             proguardFiles = proguardFiles.orNull?.map { it.asFile } ?: listOf(),
             consumerProguardFiles = consumerProguardFiles.orNull ?: listOf(),
-            sourceProviders = sourceProviders.get().map { it.toLintModel() },
-            testSourceProviders = testSourceProviders.get().map { it.toLintModel() },
-            testFixturesSourceProviders = testFixturesSourceProviders.getOrElse(emptyList()).map {
-                it.toLintModel()
-            },
+            sourceProviders = mainSourceProvider.get().toLintModels(),
+            testSourceProviders = listOfNotNull(
+                unitTestSourceProvider.orNull?.toLintModels(),
+                androidTestSourceProvider.orNull?.toLintModels(),
+            ).flatten(),
+            testFixturesSourceProviders = testFixturesSourceProvider.orNull?.toLintModels() ?: emptyList(),
             debuggable = debuggable.get(),
             shrinkable = mainArtifact.shrinkable.get(),
             buildFeatures = buildFeatures.toLintModel(),
@@ -1145,8 +1154,8 @@ abstract class BuildFeaturesInput {
 
 abstract class SourceProviderInput {
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    abstract val manifestFile: RegularFileProperty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val manifestFiles: ListProperty<File>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -1182,7 +1191,7 @@ abstract class SourceProviderInput {
 
     @get:Input
     @get:Optional
-    abstract val manifestFilePath: Property<String>
+    abstract val manifestFilePaths: ListProperty<String>
 
     @get:Input
     @get:Optional
@@ -1205,41 +1214,65 @@ abstract class SourceProviderInput {
     @get:Input
     abstract val instrumentationTestOnly: Property<Boolean>
 
-    @get:Input
-    abstract val name: Property<String>
-
     internal fun initialize(
-        sourceProvider: SourceProvider,
+        sources: InternalSources,
         lintMode: LintMode,
         unitTestOnly: Boolean = false,
         instrumentationTestOnly: Boolean = false
     ): SourceProviderInput {
-        this.manifestFile.set(sourceProvider.manifestFile)
-        val javaDirectories = sourceProvider.javaDirectories + sourceProvider.kotlinDirectories
-        this.javaDirectories.fromDisallowChanges(javaDirectories)
-        this.resDirectories.fromDisallowChanges(sourceProvider.resDirectories)
-        this.assetsDirectories.fromDisallowChanges(sourceProvider.assetsDirectories)
+        this.manifestFiles.add(sources.manifestFile)
+        sources.manifestOverlays.forEach { manifest ->
+            this.manifestFiles.add(manifest)
+        }
+        this.manifestFiles.disallowChanges()
+
+        sources.java?.all?.let { this.javaDirectories.from(it) }
+        sources.kotlin?.all?.let { this.javaDirectories.from(it) }
+        this.javaDirectories.disallowChanges()
+
+        sources.res?.all?.let { this.resDirectories.from(it) }
+        this.resDirectories.disallowChanges()
+
+        sources.assets?.all?.let { this.assetsDirectories.from(it) }
+        this.assetsDirectories.disallowChanges()
+
         if (lintMode == LintMode.ANALYSIS) {
             this.javaDirectoriesClasspath.from(javaDirectories)
-            this.resDirectoriesClasspath.from(sourceProvider.resDirectories)
-            this.assetsDirectoriesClasspath.from(sourceProvider.assetsDirectories)
+            this.resDirectoriesClasspath.from(resDirectories)
+            this.assetsDirectoriesClasspath.from(assetsDirectories)
         } else {
-            this.manifestFilePath.set(sourceProvider.manifestFile.absolutePath)
-            this.javaDirectoryPaths.set(javaDirectories.map { it.absolutePath })
-            this.resDirectoryPaths.set(sourceProvider.resDirectories.map { it.absolutePath })
-            this.assetsDirectoryPaths.set(sourceProvider.assetsDirectories.map { it.absolutePath })
+            this.manifestFilePaths.set(manifestFiles.map { files ->
+                files.map {
+                    it.absolutePath
+                }
+            })
+            this.javaDirectoryPaths.set(javaDirectories.elements.map { elements ->
+                elements.map {
+                    it.asFile.absolutePath
+                }
+            })
+            this.resDirectoryPaths.set(resDirectories.elements.map { elements ->
+                elements.map {
+                    it.asFile.absolutePath
+                }
+            })
+            this.assetsDirectoryPaths.set(assetsDirectories.elements.map { elements ->
+                elements.map {
+                    it.asFile.absolutePath
+                }
+            })
         }
-        this.javaDirectoriesClasspath.disallowChanges()
-        this.resDirectoriesClasspath.disallowChanges()
-        this.assetsDirectoriesClasspath.disallowChanges()
-        this.manifestFilePath.disallowChanges()
+
+        this.manifestFilePaths.disallowChanges()
         this.javaDirectoryPaths.disallowChanges()
         this.resDirectoryPaths.disallowChanges()
         this.assetsDirectoryPaths.disallowChanges()
+        this.javaDirectoriesClasspath.disallowChanges()
+        this.resDirectoriesClasspath.disallowChanges()
+        this.assetsDirectoriesClasspath.disallowChanges()
         this.debugOnly.setDisallowChanges(false) //TODO
         this.unitTestOnly.setDisallowChanges(unitTestOnly)
         this.instrumentationTestOnly.setDisallowChanges(instrumentationTestOnly)
-        this.name.setDisallowChanges(sourceProvider.name)
         return this
     }
 
@@ -1251,39 +1284,56 @@ abstract class SourceProviderInput {
     ): SourceProviderInput {
         val fakeManifestFile =
             project.layout.buildDirectory.file("fakeAndroidManifest/${sourceSet.name}/AndroidManifest.xml")
-        this.manifestFile.setDisallowChanges(fakeManifestFile)
+        this.manifestFiles.add(fakeManifestFile.map { it.asFile })
+        this.manifestFiles.disallowChanges()
         this.javaDirectories.fromDisallowChanges(project.provider { sourceSet.allSource.srcDirs })
         this.resDirectories.disallowChanges()
         this.assetsDirectories.disallowChanges()
         if (lintMode == LintMode.ANALYSIS) {
             this.javaDirectoriesClasspath.from(project.provider { sourceSet.allSource.srcDirs })
-        } else {
-            this.javaDirectoryPaths.set(sourceSet.allSource.srcDirs.map { it.absolutePath })
         }
         this.javaDirectoriesClasspath.disallowChanges()
         this.resDirectoriesClasspath.disallowChanges()
         this.assetsDirectoriesClasspath.disallowChanges()
-        this.manifestFilePath.disallowChanges()
-        this.javaDirectoryPaths.disallowChanges()
-        this.resDirectoryPaths.disallowChanges()
-        this.assetsDirectoryPaths.disallowChanges()
         this.debugOnly.setDisallowChanges(false)
         this.unitTestOnly.setDisallowChanges(unitTestOnly)
         this.instrumentationTestOnly.setDisallowChanges(false)
-        this.name.setDisallowChanges(sourceSet.name)
         return this
     }
 
-    internal fun toLintModel(): LintModelSourceProvider {
-        return DefaultLintModelSourceProvider(
-            manifestFile = manifestFile.get().asFile,
-            javaDirectories = javaDirectories.files.toList(),
-            resDirectories = resDirectories.files.toList(),
-            assetsDirectories = assetsDirectories.files.toList(),
-            debugOnly = debugOnly.get(),
-            unitTestOnly = unitTestOnly.get(),
-            instrumentationTestOnly = instrumentationTestOnly.get(),
+    internal fun toLintModels(): List<LintModelSourceProvider> {
+        val manifestFiles = manifestFiles.get()
+        val lintModels = mutableListOf<LintModelSourceProvider>()
+
+        lintModels.add(
+            DefaultLintModelSourceProvider(
+                manifestFile = manifestFiles.first(),
+                javaDirectories = javaDirectories.files.toList(),
+                resDirectories = resDirectories.files.toList(),
+                assetsDirectories = assetsDirectories.files.toList(),
+                debugOnly = debugOnly.get(),
+                unitTestOnly = unitTestOnly.get(),
+                instrumentationTestOnly = instrumentationTestOnly.get(),
+            )
         )
+
+        // Add separate providers for the manifest overlays
+        // TODO: Change manifest file representation in lint models to a list to avoid doing this
+        lintModels.addAll(
+            manifestFiles.subList(1, manifestFiles.size).map { manifestOverlay ->
+                DefaultLintModelSourceProvider(
+                    manifestFile = manifestOverlay,
+                    javaDirectories = emptyList(),
+                    resDirectories = emptyList(),
+                    assetsDirectories = emptyList(),
+                    debugOnly = debugOnly.get(),
+                    unitTestOnly = unitTestOnly.get(),
+                    instrumentationTestOnly = instrumentationTestOnly.get(),
+                )
+            }
+        )
+
+        return lintModels
     }
 }
 

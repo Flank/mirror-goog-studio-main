@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.component.features.ResValuesCreationCon
 import com.android.build.gradle.internal.component.legacy.ModelV1LegacySupport
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.ProductFlavor
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.dependency.VariantDependencies
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -114,14 +113,6 @@ interface ComponentCreationConfig : ComponentIdentity {
     val transformManager: TransformManager
     val paths: VariantPathHelper
     val services: TaskCreationServices
-
-    /**
-     * DO NOT USE, this is still present to support ModelBuilder v1 code that should be deleted
-     * soon. Instead, use [sources] API.
-     */
-
-    val variantSources: VariantSources
-
 
     /**
      * Access to the global task creation configuration

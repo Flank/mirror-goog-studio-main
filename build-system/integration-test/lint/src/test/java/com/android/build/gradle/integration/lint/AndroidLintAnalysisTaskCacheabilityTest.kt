@@ -241,21 +241,21 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                 // There are no lint issues in the java library's build directory, so only check for
                 // the build directory encoding in the android modules.
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
-                    .contains("{$moduleName*buildDir}")
+                    .contains("{$moduleName*debug*sourceProvider*0*javaDir*2}")
                 assertThat(File(partialResultsDir2, lintDefiniteFileName).readText())
-                    .contains("{$moduleName*buildDir}")
+                    .contains("{$moduleName*debug*sourceProvider*0*javaDir*2}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                     .contains("{$moduleName*debug*sourceProvider*1*manifest*0}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
-                    .contains("{$moduleName*debug*sourceProvider*1*javaDir*0}")
+                    .contains("{$moduleName*debug*sourceProvider*0*javaDir*0}")
                 assertThat(File(partialResultsDir1, lintPartialFileName).readText())
-                    .contains("{$moduleName*debug*sourceProvider*1*resDir*0}")
+                    .contains("{$moduleName*debug*sourceProvider*0*resDir*1}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                     .contains("{$moduleName*debug*testSourceProvider*0*javaDir*0}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                     .contains("{$moduleName*debug*testSourceProvider*0*javaDir*1}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
-                    .contains("{$moduleName*debug*testSourceProvider*2*javaDir*0}")
+                    .contains("{$moduleName*debug*testSourceProvider*1*javaDir*0}")
             }
 
             // assert that the lint analysis outputs do not contain the extra source paths.

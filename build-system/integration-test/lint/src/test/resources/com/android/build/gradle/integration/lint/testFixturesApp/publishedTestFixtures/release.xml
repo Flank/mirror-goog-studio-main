@@ -12,52 +12,30 @@
   <sourceProviders>
     <sourceProvider
         manifest="src/main/AndroidManifest.xml"
-        javaDirectories="src/main/java:src/main/kotlin"
-        resDirectories="src/main/res"
-        assetsDirectories="src/main/assets"/>
-    <sourceProvider
-        manifest="src/release/AndroidManifest.xml"
-        javaDirectories="src/release/java:src/release/kotlin"
-        resDirectories="src/release/res"
-        assetsDirectories="src/release/assets"/>
+        javaDirectories="src/main/java:src/release/java:build/generated/source/buildConfig/release:build/generated/aidl_source_output_dir/release/out:src/main/kotlin:src/release/kotlin"
+        resDirectories="build/generated/res/resValues/release:src/release/res:src/main/res"
+        assetsDirectories="src/release/assets:src/main/assets"/>
   </sourceProviders>
   <testSourceProviders>
     <sourceProvider
         manifest="src/test/AndroidManifest.xml"
-        javaDirectories="src/test/java:src/test/kotlin"
-        resDirectories="src/test/res"
-        assetsDirectories="src/test/assets"
-        unitTest="true"/>
-    <sourceProvider
-        manifest="src/testRelease/AndroidManifest.xml"
-        javaDirectories="src/testRelease/java:src/testRelease/kotlin"
-        resDirectories="src/testRelease/res"
-        assetsDirectories="src/testRelease/assets"
+        javaDirectories="src/test/java:src/testRelease/java:src/test/kotlin:src/testRelease/kotlin"
+        resDirectories="src/testRelease/res:src/test/res"
+        assetsDirectories="src/testRelease/assets:src/test/assets"
         unitTest="true"/>
     <sourceProvider
         manifest="src/androidTest/AndroidManifest.xml"
-        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-        resDirectories="src/androidTest/res"
-        assetsDirectories="src/androidTest/assets"
-        androidTest="true"/>
-    <sourceProvider
-        manifest="src/androidTestRelease/AndroidManifest.xml"
-        javaDirectories="src/androidTestRelease/java:src/androidTestRelease/kotlin"
-        resDirectories="src/androidTestRelease/res"
-        assetsDirectories="src/androidTestRelease/assets"
+        javaDirectories="src/androidTest/java:src/androidTestRelease/java:build/generated/source/buildConfig/androidTest/release:build/generated/aidl_source_output_dir/releaseAndroidTest/out:src/androidTest/kotlin:src/androidTestRelease/kotlin"
+        resDirectories="build/generated/res/resValues/androidTest/release:src/androidTestRelease/res:src/androidTest/res"
+        assetsDirectories="src/androidTestRelease/assets:src/androidTest/assets"
         androidTest="true"/>
   </testSourceProviders>
   <testFixturesSourceProviders>
     <sourceProvider
         manifest="src/testFixtures/AndroidManifest.xml"
-        javaDirectories="src/testFixtures/java:src/testFixtures/kotlin"
-        resDirectories="src/testFixtures/res"
-        assetsDirectories="src/testFixtures/assets"/>
-    <sourceProvider
-        manifest="src/testFixturesRelease/AndroidManifest.xml"
-        javaDirectories="src/testFixturesRelease/java:src/testFixturesRelease/kotlin"
-        resDirectories="src/testFixturesRelease/res"
-        assetsDirectories="src/testFixturesRelease/assets"/>
+        javaDirectories="src/testFixtures/java:src/testFixturesRelease/java:src/testFixtures/kotlin:src/testFixturesRelease/kotlin"
+        resDirectories="src/testFixturesRelease/res:src/testFixtures/res"
+        assetsDirectories="src/testFixturesRelease/assets:src/testFixtures/assets"/>
   </testFixturesSourceProviders>
   <mainArtifact
       classOutputs="build/intermediates/javac/release/classes:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar"

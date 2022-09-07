@@ -13,39 +13,22 @@
   <sourceProviders>
     <sourceProvider
         manifest="src/main/AndroidManifest.xml"
-        javaDirectories="src/main/java:src/main/kotlin"
-        resDirectories="src/main/res"
-        assetsDirectories="src/main/assets"/>
-    <sourceProvider
-        manifest="src/debug/AndroidManifest.xml"
-        javaDirectories="src/debug/java:src/debug/kotlin"
-        resDirectories="src/debug/res"
-        assetsDirectories="src/debug/assets"/>
+        javaDirectories="src/main/java:src/debug/java:build/generated/source/buildConfig/debug:build/generated/aidl_source_output_dir/debug/out:src/main/kotlin:src/debug/kotlin"
+        resDirectories="build/generated/res/resValues/debug:src/debug/res:src/main/res"
+        assetsDirectories="src/debug/assets:src/main/assets"/>
   </sourceProviders>
   <testSourceProviders>
     <sourceProvider
         manifest="src/test/AndroidManifest.xml"
-        javaDirectories="src/test/java:src/test/kotlin"
-        resDirectories="src/test/res"
-        assetsDirectories="src/test/assets"
-        unitTest="true"/>
-    <sourceProvider
-        manifest="src/testDebug/AndroidManifest.xml"
-        javaDirectories="src/testDebug/java:src/testDebug/kotlin"
-        resDirectories="src/testDebug/res"
-        assetsDirectories="src/testDebug/assets"
+        javaDirectories="src/test/java:src/testDebug/java:src/test/kotlin:src/testDebug/kotlin"
+        resDirectories="src/testDebug/res:src/test/res"
+        assetsDirectories="src/testDebug/assets:src/test/assets"
         unitTest="true"/>
     <sourceProvider
         manifest="src/androidTest/AndroidManifest.xml"
-        javaDirectories="src/androidTest/java:src/androidTest/kotlin"
-        resDirectories="src/androidTest/res"
-        assetsDirectories="src/androidTest/assets"
-        androidTest="true"/>
-    <sourceProvider
-        manifest="src/androidTestDebug/AndroidManifest.xml"
-        javaDirectories="src/androidTestDebug/java:src/androidTestDebug/kotlin"
-        resDirectories="src/androidTestDebug/res"
-        assetsDirectories="src/androidTestDebug/assets"
+        javaDirectories="src/androidTest/java:src/androidTestDebug/java:build/generated/source/buildConfig/androidTest/debug:build/generated/aidl_source_output_dir/debugAndroidTest/out:src/androidTest/kotlin:src/androidTestDebug/kotlin"
+        resDirectories="build/generated/res/resValues/androidTest/debug:src/androidTestDebug/res:src/androidTest/res"
+        assetsDirectories="src/androidTestDebug/assets:src/androidTest/assets"
         androidTest="true"/>
   </testSourceProviders>
   <testFixturesSourceProviders>

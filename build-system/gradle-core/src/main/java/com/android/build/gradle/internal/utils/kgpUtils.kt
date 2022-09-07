@@ -323,9 +323,9 @@ fun findKaptOrKspConfigurationsForVariant(
     creationConfig: ComponentCreationConfig,
     kaptOrKsp: String
 ): List<Configuration> {
-    return creationConfig.variantSources.getSortedSourceProviders().mapNotNull { sourceSet ->
-        val configurationName = if (sourceSet.name != SourceSet.MAIN_SOURCE_SET_NAME)
-            kaptOrKsp.appendCapitalized(sourceSet.name)
+    return creationConfig.sources.sourceProviderNames.mapNotNull { sourceSetName ->
+        val configurationName = if (sourceSetName != SourceSet.MAIN_SOURCE_SET_NAME)
+            kaptOrKsp.appendCapitalized(sourceSetName)
         else
             kaptOrKsp
         creationConfig.services.configurations.findByName(configurationName)

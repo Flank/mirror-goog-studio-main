@@ -355,7 +355,6 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
             task: ProcessApplicationManifest
         ) {
             super.configure(task)
-            val variantSources = creationConfig.variantSources
             val componentType = creationConfig.componentType
             // This includes the dependent libraries.
             task.manifests = creationConfig
@@ -449,10 +448,9 @@ abstract class ProcessApplicationManifest : ManifestProcessorTask() {
                 handleNullable = { empty() }
             )
             task.manifestPlaceholders.disallowChanges()
-            task.mainManifest.setDisallowChanges(creationConfig.services.provider(variantSources::mainManifestFilePath))
-            task.manifestOverlays.setDisallowChanges(
-                task.project.provider(variantSources::manifestOverlays)
-            )
+            task.mainManifest.setDisallowChanges(creationConfig.sources.manifestFile)
+            creationConfig.sources.manifestOverlays.forEach(task.manifestOverlays::add)
+            task.manifestOverlays.disallowChanges()
             task.isFeatureSplitVariantType = creationConfig.componentType.isDynamicFeature
             task.buildTypeName = creationConfig.buildType
             task.projectBuildFile.set(task.project.buildFile)

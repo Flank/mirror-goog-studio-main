@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.legacy.OldVariantApiLegacySupport
 import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.core.dsl.ApkProducingComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.ComponentDslInfo
 import com.android.build.gradle.internal.core.dsl.MultiVariantComponentDslInfo
@@ -52,7 +53,8 @@ import java.io.Serializable
 class OldVariantApiLegacySupportImpl(
     private val component: ComponentCreationConfig,
     private val dslInfo: ComponentDslInfo,
-    override val variantData: BaseVariantData
+    override val variantData: BaseVariantData,
+    override val variantSources: VariantSources
 ): OldVariantApiLegacySupport {
 
     override val buildTypeObj: BuildType

@@ -17,9 +17,11 @@
 package com.android.build.gradle.internal.component.legacy
 
 import com.android.build.gradle.internal.core.MergedFlavor
+import com.android.build.gradle.internal.core.VariantSources
 import org.gradle.api.provider.Provider
 
 interface ModelV1LegacySupport {
     val mergedFlavor: MergedFlavor
     val dslApplicationId: Provider<String>
+    val variantSources: VariantSources
 }
