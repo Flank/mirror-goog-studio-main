@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.ide.CustomSourceDirectoryImpl
 import com.android.builder.model.v2.CustomSourceDirectory
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
+import com.google.common.base.CaseFormat
 import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -42,7 +43,6 @@ import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.ConfigureUtil
-import org.gradle.util.GUtil
 import java.io.File
 import javax.inject.Inject
 
@@ -65,7 +65,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
     final override val jniLibs: AndroidSourceDirectorySet
     final override val shaders: AndroidSourceDirectorySet
     final override val mlModels: AndroidSourceDirectorySet
-    private val displayName : String = GUtil.toWords(this.name)
+    private val displayName : String = convertNameToDisplayName()
 
     init {
         java = DefaultAndroidSourceDirectorySet(
@@ -407,5 +407,10 @@ open class DefaultAndroidSourceSet @Inject constructor(
                     it.srcDir("src/$sourceSetName/$name")
             }
         }
+    }
+
+    /** Converts name to display name e.g. "fooDebug" (camel case) to "foo debug". */
+    private fun convertNameToDisplayName(): String {
+        return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_HYPHEN, name).replace("-", " ")
     }
 }
