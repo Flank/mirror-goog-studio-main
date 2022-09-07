@@ -23,15 +23,13 @@ import com.android.builder.model.TestOptions.Execution
 import com.android.utils.HelpfulEnumConverter
 import com.google.common.base.Preconditions
 import com.google.common.base.Verify
-import groovy.lang.Closure
 import org.gradle.api.Action
 import org.gradle.api.ExtensiblePolymorphicDomainObjectContainer
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.tasks.testing.Test
-import org.gradle.util.ConfigureUtil
 import javax.inject.Inject
 
-open class TestOptions @Inject constructor(dslServices: DslServices) :
+abstract class TestOptions @Inject constructor(dslServices: DslServices) :
     com.android.build.api.dsl.TestOptions {
     private val executionConverter = HelpfulEnumConverter<Execution>(Execution::class.java)
 
@@ -92,17 +90,13 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
      *
      * @since 1.2.0
      */
-    fun unitTests(closure: Closure<*>) {
-        ConfigureUtil.configure(closure, unitTests)
-    }
-
     fun unitTests(action: Action<UnitTestOptions>) {
         action.execute(unitTests)
     }
 
     fun getExecutionEnum(): Execution = _execution
 
-    open class UnitTestOptions @Inject constructor(dslServices: DslServices) :
+    abstract class UnitTestOptions @Inject constructor(dslServices: DslServices) :
         com.android.build.api.dsl.UnitTestOptions {
         // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
         private val testTasks = dslServices.domainObjectSet(Test::class.java)
@@ -110,10 +104,8 @@ open class TestOptions @Inject constructor(dslServices: DslServices) :
         override var isReturnDefaultValues: Boolean = false
         override var isIncludeAndroidResources: Boolean = false
 
-        fun all(configClosure: Closure<Test>) {
-            testTasks.all {
-                ConfigureUtil.configure(configClosure, it)
-            }
+        fun all(configAction: Action<Test>) {
+            testTasks.all(configAction)
         }
 
         override fun all(configAction: (Test) -> Unit) {

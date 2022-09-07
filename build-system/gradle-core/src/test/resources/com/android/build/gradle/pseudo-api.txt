@@ -1779,8 +1779,8 @@ com.android.build.gradle.internal.dsl.Splits.language: void (org.gradle.api.Acti
 com.android.build.gradle.internal.dsl.TestOptions implements com.android.build.api.dsl.TestOptions
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions implements com.android.build.api.dsl.UnitTestOptions
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.<init>: com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions (com.android.build.gradle.internal.services.DslServices)
-com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (groovy.lang.Closure<org.gradle.api.tasks.testing.Test>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (kotlin.jvm.functions.Function1<? super org.gradle.api.tasks.testing.Test, kotlin.Unit>)
+com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.all: void (org.gradle.api.Action<org.gradle.api.tasks.testing.Test>)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.applyConfiguration: void (org.gradle.api.tasks.testing.Test)
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isIncludeAndroidResources: boolean ()
 com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions.isReturnDefaultValues: boolean ()
@@ -1810,7 +1810,6 @@ com.android.build.gradle.internal.dsl.TestOptions.setAnimationsDisabled: void (b
 com.android.build.gradle.internal.dsl.TestOptions.setExecution: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setReportDir: void (java.lang.String)
 com.android.build.gradle.internal.dsl.TestOptions.setResultsDir: void (java.lang.String)
-com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (groovy.lang.Closure<?>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.UnitTestOptions, kotlin.Unit>)
 com.android.build.gradle.internal.dsl.TestOptions.unitTests: void (org.gradle.api.Action<com.android.build.gradle.internal.dsl.TestOptions$UnitTestOptions>)
 com.android.build.gradle.internal.dsl.ValidationUtilKt
