@@ -16,7 +16,6 @@
 package com.android.sdklib.deviceprovisioner
 
 import com.android.adblib.ConnectedDevice
-import com.android.adblib.deviceInfo
 import com.google.common.base.Stopwatch
 import java.time.Duration
 import kotlinx.coroutines.CoroutineScope
@@ -39,25 +38,10 @@ sealed interface DeviceState {
     get() = null
 }
 
-fun DeviceState.isOnline() =
-  connectedDevice?.deviceInfo?.deviceState == com.android.adblib.DeviceState.ONLINE
-
-inline fun <R> DeviceState.ifOnline(block: (ConnectedDevice) -> R): R? =
-  connectedDevice?.let { connectedDevice ->
-    when (connectedDevice.deviceInfo.deviceState) {
-      com.android.adblib.DeviceState.ONLINE -> block(connectedDevice)
-      else -> null
-    }
-  }
-
 open class Disconnected(override val properties: DeviceProperties) : DeviceState
 
 open class Activating(override val properties: DeviceProperties) : DeviceState
 
-/**
- * The state of a device that is connected to ADB. The device may not be usable yet; most clients
- * will want to wait for it to be [online][isOnline].
- */
 open class Connected(
   override val properties: DeviceProperties,
   override val connectedDevice: ConnectedDevice

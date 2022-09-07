@@ -154,45 +154,6 @@ class DeviceProvisionerTest {
   }
 
   @Test
-  fun unauthorizedPhysicalDevice() {
-    val channel = Channel<List<DeviceHandle>>(1)
-    fakeSession.scope.launch { provisioner.devices.collect { channel.send(it) } }
-
-    runBlockingWithTimeout {
-      // Show the device as unauthorized
-      fakeSession.hostServices.devices =
-        DeviceList(
-          listOf(DeviceInfo(SerialNumbers.physicalUsb, DeviceState.UNAUTHORIZED)),
-          emptyList()
-        )
-
-      val originalHandle =
-        channel.receiveUntilPassing { handles ->
-          assertThat(handles).hasSize(1)
-
-          val handle = handles[0]
-          assertThat(handle.state).isInstanceOf(Connected::class.java)
-          assertThat(handle.state.properties.title())
-            .isEqualTo("Unknown device (${SerialNumbers.physicalUsb})")
-
-          handle
-        }
-
-      // Now show the device as online
-      setDevices(SerialNumbers.physicalUsb)
-
-      channel.receiveUntilPassing { handles ->
-        assertThat(handles).hasSize(1)
-
-        val handle = handles[0]
-        assertThat(handle).isNotSameAs(originalHandle)
-        assertThat(handle.state).isInstanceOf(Connected::class.java)
-        assertThat(handle.state.properties).isInstanceOf(PhysicalDeviceProperties::class.java)
-      }
-    }
-  }
-
-  @Test
   fun defaultDeviceIsDistinctOnReconnection() {
     val channel = Channel<List<DeviceHandle>>(1)
     fakeSession.scope.launch { provisioner.devices.collect { channel.send(it) } }
