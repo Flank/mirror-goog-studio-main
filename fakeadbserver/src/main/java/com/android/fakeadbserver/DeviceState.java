@@ -490,7 +490,8 @@ public class DeviceState {
 
     public enum HostConnectionType {
         USB,
-        LOCAL
+        LOCAL,
+        NETWORK
     }
 
     /**

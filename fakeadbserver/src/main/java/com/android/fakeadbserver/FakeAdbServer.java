@@ -43,6 +43,8 @@ import com.android.fakeadbserver.hostcommandhandlers.KillForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ListDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ListForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.MdnsCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.NetworkConnectCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.NetworkDisconnectCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.PairCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.VersionCommandHandler;
@@ -87,9 +89,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-/**
- * See {@link FakeAdbServerTest#testInteractiveServer()} for example usage.
- */
+/** See {@code FakeAdbServerTest#testInteractiveServer()} for example usage. */
 public final class FakeAdbServer implements AutoCloseable {
 
     private final ServerSocketChannel mServerSocket;
@@ -106,6 +106,9 @@ public final class FakeAdbServer implements AutoCloseable {
     private final List<DeviceCommandHandler> mHandlers = new ArrayList<>();
 
     private final Map<String, DeviceState> mDevices = new HashMap<>();
+
+    // Device ip address to DeviceState. Device may or may not currently be connected to adb.
+    private final Map<String, DeviceState> mNetworkDevices = new HashMap<>();
 
     private final Set<MdnsService> mMdnsServices = new HashSet<>();
 
@@ -250,9 +253,9 @@ public final class FakeAdbServer implements AutoCloseable {
      * for handlers that inherit from {@link CommandHandler}. The purpose of the hub is to propagate
      * server events to existing connections with the server.
      *
-     * <p>For example, if {@link #connectDevice(String, String, String, String, String, Map,
-     * DeviceState.HostConnectionType)} is called, an event will be sent through the {@link
-     * DeviceStateChangeHub} to all open connections waiting on host:track-devices messages.
+     * <p>For example, if {@link #connectDevice(DeviceState)} is called, an event will be sent
+     * through the {@link DeviceStateChangeHub} to all open connections waiting on
+     * host:track-devices messages.
      */
     @NonNull
     public DeviceStateChangeHub getDeviceChangeHub() {
@@ -293,6 +296,12 @@ public final class FakeAdbServer implements AutoCloseable {
                         properties,
                         hostConnectionType,
                         newTransportId());
+        return connectDevice(device);
+    }
+
+    @NonNull
+    private Future<DeviceState> connectDevice(@NonNull DeviceState device) {
+        String deviceId = device.getDeviceId();
         if (mConnectionHandlerTask == null) {
             assert !mDevices.containsKey(deviceId);
             mDevices.put(deviceId, device);
@@ -329,6 +338,48 @@ public final class FakeAdbServer implements AutoCloseable {
     void addDevice(DeviceStateConfig deviceConfig) {
         DeviceState device = new DeviceState(this, this.newTransportId(), deviceConfig);
         this.mDevices.put(device.getDeviceId(), device);
+    }
+
+    public void registerNetworkDevice(
+            @NonNull String address,
+            @NonNull String deviceId,
+            @NonNull String manufacturer,
+            @NonNull String deviceModel,
+            @NonNull String release,
+            @NonNull String sdk,
+            @NonNull DeviceState.HostConnectionType hostConnectionType) {
+        DeviceState device =
+                new DeviceState(
+                        this,
+                        deviceId,
+                        manufacturer,
+                        deviceModel,
+                        release,
+                        sdk,
+                        "x86_64",
+                        Collections.emptyMap(),
+                        hostConnectionType,
+                        newTransportId());
+        mNetworkDevices.put(address, device);
+    }
+
+    public @NonNull Future<DeviceState> connectNetworkDevice(String address) {
+        DeviceState device = mNetworkDevices.get(address);
+        if (device != null) {
+            return connectDevice(device);
+        } else {
+            return Futures.immediateFailedFuture(new Exception("Device " + address + " not found"));
+        }
+    }
+
+    public @NonNull Future<?> disconnectNetworkDevice(String address) {
+        DeviceState device = mNetworkDevices.get(address);
+        if (device != null) {
+            return disconnectDevice(device.getDeviceId());
+        } else {
+            // The real adb will disconnect ongoing sessions, but this is an edge case.
+            return Futures.immediateFuture(null);
+        }
     }
 
     public Future<?> addMdnsService(@NonNull MdnsService service) {
@@ -499,6 +550,10 @@ public final class FakeAdbServer implements AutoCloseable {
             setHostCommandHandler(GetStateCommandHandler.COMMAND, GetStateCommandHandler::new);
             setHostCommandHandler(GetSerialNoCommandHandler.COMMAND, GetSerialNoCommandHandler::new);
             setHostCommandHandler(GetDevPathCommandHandler.COMMAND, GetDevPathCommandHandler::new);
+            setHostCommandHandler(
+                    NetworkConnectCommandHandler.COMMAND, NetworkConnectCommandHandler::new);
+            setHostCommandHandler(
+                    NetworkDisconnectCommandHandler.COMMAND, NetworkDisconnectCommandHandler::new);
 
             addDeviceHandler(new TrackJdwpCommandHandler());
             addDeviceHandler(new FakeSyncCommandHandler());
