@@ -3,14 +3,12 @@ package com.myrbsdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
-
 import androidx.annotation.RequiresApi;
-
+import com.example.ads_sdk_implementation.R;
 import java.util.concurrent.Executor;
 
 @RequiresApi(api = 34)
@@ -32,7 +30,7 @@ public class MyAdsSdkEntryPoint extends SandboxedSdkProvider {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT
         ));
-        layout.setBackgroundColor(Color.RED);
+        layout.setBackgroundColor(windowContext.getResources().getColor(R.color.box_color));
         return layout;
     }
 

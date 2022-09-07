@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryVariantScope
+import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
@@ -124,12 +125,14 @@ abstract class FusedLibraryMergeClasses: DefaultTask() {
         }
 
         override fun configure(task: FusedLibraryMergeClasses) {
-            task.incoming.setFrom(
+            task.incoming.from(
                     creationConfig.dependencies.getArtifactFileCollection(
                             Usage.JAVA_RUNTIME,
                             creationConfig.mergeSpec,
                             AndroidArtifacts.ArtifactType.CLASSES_JAR)
             )
+            task.incoming.from(creationConfig.artifacts.get(PrivacySandboxSdkInternalArtifactType.RUNTIME_R_CLASS))
+            task.incoming.disallowChanges()
         }
     }
 }
