@@ -20,6 +20,7 @@ import com.android.adblib.deviceProperties
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Plugin which provides handles for devices when no other plugin claims them. This will offer a
@@ -32,20 +33,20 @@ class DefaultProvisionerPlugin : DeviceProvisionerPlugin {
   private val _devices = MutableStateFlow<List<DefaultDeviceHandle>>(emptyList())
   override val devices: StateFlow<List<DeviceHandle>> = _devices.asStateFlow()
 
-  override suspend fun claim(device: ConnectedDevice): Boolean {
+  override suspend fun claim(device: ConnectedDevice): DeviceHandle {
     val properties = device.deviceProperties().allReadonly()
     val deviceProperties =
       DeviceProperties.Builder().apply { readCommonProperties(properties) }.buildBase()
     val handle = DefaultDeviceHandle(Connected(deviceProperties, device))
 
-    _devices.value += handle
+    _devices.update { it + handle }
 
     device.invokeOnDisconnection {
       handle.stateFlow.value = Disconnected(deviceProperties)
-      _devices.value -= handle
+      _devices.update { it - handle }
     }
 
-    return true
+    return handle
   }
 
   private class DefaultDeviceHandle(state: Connected) : DeviceHandle {

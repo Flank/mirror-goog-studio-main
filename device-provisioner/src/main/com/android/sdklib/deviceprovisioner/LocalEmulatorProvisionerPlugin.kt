@@ -124,9 +124,9 @@ class LocalEmulatorProvisionerPlugin(
       }
     }
 
-  override suspend fun claim(device: ConnectedDevice): Boolean {
-    val result = LOCAL_EMULATOR_REGEX.matchEntire(device.serialNumber) ?: return false
-    val port = result.groupValues[1].toIntOrNull() ?: return false
+  override suspend fun claim(device: ConnectedDevice): DeviceHandle? {
+    val result = LOCAL_EMULATOR_REGEX.matchEntire(device.serialNumber) ?: return null
+    val port = result.groupValues[1].toIntOrNull() ?: return null
 
     val emulatorConsole =
       adbSession.openEmulatorConsole(
@@ -142,7 +142,7 @@ class LocalEmulatorProvisionerPlugin(
     if (path == null) {
       // If we can't connect to the emulator console, this isn't operationally a local emulator
       emulatorConsoles.remove(device)?.close()
-      return false
+      return null
     }
 
     // Try to link this device to an existing handle.
@@ -156,7 +156,7 @@ class LocalEmulatorProvisionerPlugin(
       // Apparently this emulator is not on disk, or it is not in the directory that we scan for
       // AVDs. (Perhaps GMD or Crow failed to pick it up.)
       emulatorConsoles.remove(device)?.close()
-      return false
+      return null
     }
 
     // We need to make sure that emulators change to Disconnected state once they are terminated.
@@ -165,7 +165,7 @@ class LocalEmulatorProvisionerPlugin(
       emulatorConsoles.remove(device)?.close()
     }
 
-    return true
+    return handle
   }
 
   private suspend fun tryConnect(
@@ -217,8 +217,8 @@ class LocalEmulatorProvisionerPlugin(
     }
 
   /**
-   * These can be created in two circumstances: when reading the AVD off the disk, or when a
-   * connection is made and identified as a local device.
+   * A handle for a local AVD stored in the SDK's AVD directory. These are only created when reading
+   * an AVD off the disk; only devices that have already been read from disk will be claimed.
    */
   private inner class LocalEmulatorDeviceHandle(
     initialState: DeviceState,

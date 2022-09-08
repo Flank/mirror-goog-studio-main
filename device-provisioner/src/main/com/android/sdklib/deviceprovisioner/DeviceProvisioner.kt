@@ -131,7 +131,7 @@ private constructor(
     (connectedDevices - currentConnectedDevices).forEach { newDevice ->
       provisioners.firstOrNull {
         try {
-          it.claim(newDevice)
+          it.claim(newDevice) != null
         } catch (t: Throwable) {
           logger.error(t, "Offering ${newDevice.deviceInfo.serialNumber}")
           false

@@ -31,7 +31,7 @@ class PhysicalDeviceProvisionerPlugin(val scope: CoroutineScope) : DeviceProvisi
   private val _devices = MutableStateFlow(emptyList<DeviceHandle>())
   override val devices = _devices.asStateFlow()
 
-  override suspend fun claim(device: ConnectedDevice): Boolean {
+  override suspend fun claim(device: ConnectedDevice): DeviceHandle? {
     val properties = device.deviceProperties().allReadonly()
 
     val deviceProperties =
@@ -50,7 +50,7 @@ class PhysicalDeviceProvisionerPlugin(val scope: CoroutineScope) : DeviceProvisi
     // to have their ADB serial number match their device serial number.
     val isUsb = deviceProperties.connectionType == ConnectionType.USB
     if (isUsb && serialNumber != device.serialNumber) {
-      return false
+      return null
     }
 
     val newState = Connected(deviceProperties, device)
@@ -68,7 +68,7 @@ class PhysicalDeviceProvisionerPlugin(val scope: CoroutineScope) : DeviceProvisi
 
     // Update device state on termination. We keep it around in case it reconnects.
     device.invokeOnDisconnection { handle.stateFlow.value = Disconnected(handle.state.properties) }
-    return true
+    return handle
   }
 
   private fun updateDevices() {

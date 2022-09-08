@@ -34,10 +34,10 @@ interface DeviceProvisionerPlugin {
   val priority: Int
 
   /**
-   * Offers the given [ConnectedDevice] to the plugin. If the plugin accepts, returns true, and adds
-   * a new [DeviceHandle] to [devices].
+   * Offers the given [ConnectedDevice] to the plugin. If the plugin accepts, it returns the
+   * [DeviceHandle] that is now linked to the offered device, otherwise null.
    */
-  suspend fun claim(device: ConnectedDevice): Boolean
+  suspend fun claim(device: ConnectedDevice): DeviceHandle?
 
   /**
    * The [device handles][DeviceHandle] that this [DeviceProvisionerPlugin] is aware of and manages.
