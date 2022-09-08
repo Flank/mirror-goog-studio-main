@@ -19,20 +19,26 @@ import com.android.adblib.AdbSession
 import com.android.adblib.ConnectedDevice
 import com.android.adblib.DeviceSelector
 import com.android.adblib.connectedDevicesTracker
-import com.android.adblib.deviceInfo
+import com.android.adblib.scope
 import com.android.adblib.serialNumber
 import com.android.adblib.thisLogger
+import com.android.sdklib.deviceprovisioner.SetChange.Add
 import java.time.Duration
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.time.withTimeoutOrNull
 
 /**
@@ -49,11 +55,14 @@ private constructor(
     fun create(adbSession: AdbSession, provisioners: List<DeviceProvisionerPlugin>) =
       DeviceProvisioner(
         adbSession,
-        (provisioners + DefaultProvisionerPlugin()).sortedByDescending { it.priority }
+        (provisioners + OfflineDeviceProvisionerPlugin() + DefaultProvisionerPlugin())
+          .sortedByDescending { it.priority }
       )
   }
 
   private val logger = thisLogger(adbSession)
+
+  private val offerMutex = Mutex()
 
   private val combinedDevices = combine(provisioners.map { it.devices }) { it.flatMap { it } }
   private val combinedTemplates = combine(provisioners.map { it.templates }) { it.flatMap { it } }
@@ -102,46 +111,58 @@ private constructor(
     }
 
   init {
-    // Track changes in ADB-connected devices
     adbSession.scope.launch {
-      // We want to update whenever the ConnectedDevicesTracker updates, or when one of the
-      // devices' deviceInfoFlow updates (to know when the device comes online, since it will
-      // often appear initially in an offline state, and we ignore offline devices).
       adbSession
         .connectedDevicesTracker
         .connectedDevices
-        .flatMapLatest { devices ->
-          combine(devices.map { device -> device.deviceInfoFlow.map { Pair(device, it) } }) {
-            it.mapNotNull { (device, info) ->
-              when (info.deviceState) {
-                com.android.adblib.DeviceState.ONLINE -> device
-                else -> null
-              }
-            }
+        .map { it.toSet() }
+        .trackSetChanges()
+        .collect {
+          if (it is Add) {
+            offerWhileConnected(it.value)
           }
         }
-        .collect(::updateDevicesFromAdb)
     }
   }
 
-  /** Indicates that the list of devices connected to ADB has changed. */
-  private suspend fun updateDevicesFromAdb(connectedDevices: List<ConnectedDevice>) {
-    // Do we have any new devices that we need to identify?
-    val currentConnectedDevices = devices.value.mapNotNull { it.state.connectedDevice }.toSet()
-    (connectedDevices - currentConnectedDevices).forEach { newDevice ->
-      provisioners.firstOrNull {
-        try {
-          it.claim(newDevice) != null
-        } catch (t: Throwable) {
-          logger.error(t, "Offering ${newDevice.deviceInfo.serialNumber}")
-          false
-        }
+  /**
+   * Launches a coroutine that runs for the lifetime of the device, offering it to the plugins in
+   * priority order. When it is claimed, wait to see if it becomes unclaimed, then offer it again.
+   */
+  private suspend fun offerWhileConnected(device: ConnectedDevice) {
+    device.scope.launch {
+      logger.debug { "Offering ${device.serialNumber}" }
+      while (currentCoroutineContext().isActive) {
+        val handle = offer(device)
+        handle.stateFlow.takeWhile { it.connectedDevice == device }.collect()
+        logger.debug { "Re-offering ${device.serialNumber}" }
       }
     }
-
-    // We don't actually update the states here: the plugin updates its own list when
-    // it claims a device
   }
+
+  /**
+   * Offers the device to the plugins in priority order. It is expected to be claimed by the default
+   * plugin if no other plugin claims it first.
+   *
+   * To simplify plugin implementation, we only offer one device to one plugin at a time; we may
+   * want to relax this in the future to support identifying devices in parallel.
+   */
+  private suspend fun offer(device: ConnectedDevice): DeviceHandle =
+    offerMutex.withLock {
+      provisioners.firstNotNullOfOrNull {
+        try {
+          it.claim(device)
+        } catch (e: CancellationException) {
+          throw e
+        } catch (t: Throwable) {
+          logger.warn(t, "Offering ${device.serialNumber}")
+          null
+        }
+      }
+        ?: throw IllegalStateException(
+          "Device ${device.serialNumber} not claimed by any provisioner"
+        )
+    }
 
   /**
    * A composite list of the [CreateDeviceAction]s from all plugins that support device creation.
