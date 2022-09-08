@@ -694,6 +694,8 @@ class ModelBuilder<
 
         val coreLibDesugaring = (component as? ConsumableCreationConfig)?.isCoreLibraryDesugaringEnabled
                 ?: false
+        val outputsAreSigned = component.oldVariantApiLegacySupport?.variantData?.outputsAreSigned ?: false
+        val isSigned = (signingConfig?.hasConfig() ?: false) || outputsAreSigned
 
         return AndroidArtifactImpl(
             minSdkVersion = minSdkVersion,
@@ -701,7 +703,7 @@ class ModelBuilder<
             maxSdkVersion = maxSdkVersion,
 
             signingConfigName = signingConfig?.name,
-            isSigned = signingConfig?.hasConfig() ?: false,
+            isSigned = isSigned,
 
             applicationId = getApplicationId(component),
 

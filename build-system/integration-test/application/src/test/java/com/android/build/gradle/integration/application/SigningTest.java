@@ -16,6 +16,16 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.builder.core.BuilderConstants.RELEASE;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
+import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import com.android.annotations.NonNull;
 import com.android.apksig.ApkVerifier;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -26,7 +36,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtilsV2;
 import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
-import com.android.build.gradle.integration.common.utils.IgnoredTests;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.SigningHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -45,30 +54,18 @@ import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
 import com.google.common.io.Resources;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.builder.core.BuilderConstants.RELEASE;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
-import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
-import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
-import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Integration test for all signing-related features. */
 @RunWith(FilterableParameterized.class)
@@ -229,16 +226,16 @@ public class SigningTest {
         assertThat(result.getTasks()).contains(":writeReleaseSigningConfigVersions");
     }
 
-    @Ignore(IgnoredTests.BUG_243127865)
     @Test
     public void checkCustomSigning() throws Exception {
         Collection<Variant> variants =
-                Objects.requireNonNull(project.modelV2()
-                                .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                                .fetchModels(null, null)
-                                .getContainer()
-                                .getProject(null, ":")
-                                .getAndroidProject())
+                Objects.requireNonNull(
+                                project.modelV2()
+                                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                                        .fetchModels(null, null)
+                                        .getContainer()
+                                        .getProject(null, ModelContainerV2.ROOT_BUILD_ID)
+                                        .getAndroidProject())
                         .getVariants();
 
         for (Variant variant : variants) {
@@ -258,11 +255,12 @@ public class SigningTest {
     @Test
     public void signingConfigsModel() throws Exception {
         ModelBuilderV2 modelBuilder = project.modelV2();
-        ModelContainerV2.ModelInfo moduleInfo = modelBuilder
-                .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                .fetchModels()
-                .getContainer()
-                .getProject(null, ":");
+        ModelContainerV2.ModelInfo moduleInfo =
+                modelBuilder
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchModels()
+                        .getContainer()
+                        .getProject(null, ModelContainerV2.ROOT_BUILD_ID);
         AndroidDsl androidDsl = moduleInfo.getAndroidDsl();
         AndroidProject androidProject = moduleInfo.getAndroidProject();
 
