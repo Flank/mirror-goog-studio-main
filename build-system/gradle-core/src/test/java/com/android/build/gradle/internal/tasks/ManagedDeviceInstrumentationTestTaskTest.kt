@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.api.dsl.Device
 import com.android.build.api.variant.impl.TestVariantImpl
 import com.android.build.gradle.internal.AvdComponentsBuildService
 import com.android.build.gradle.internal.SdkComponentsBuildService
@@ -39,8 +40,6 @@ import com.android.testutils.MockitoKt
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.MockitoKt.argThat
 import com.android.testutils.MockitoKt.eq
-import com.android.testutils.SystemPropertyOverrides
-import com.android.utils.Environment
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import java.util.logging.Level
@@ -130,8 +129,6 @@ class ManagedDeviceInstrumentationTestTaskTest {
 
     @Before
     fun setup() {
-        Environment.initialize()
-
         `when`(creationConfig.computeTaskName(any(), any())).then {
             val prefix = it.getArgument<String>(0)
             val suffix = it.getArgument<String>(0)
@@ -206,10 +203,12 @@ class ManagedDeviceInstrumentationTestTaskTest {
         doReturn(FakeGradleProperty(avdService)).`when`(runnerFactory).avdComponents
         doReturn(FakeGradleProperty(testData)).`when`(task).testData
         doReturn(mock(ListProperty::class.java)).`when`(task).installOptions
-        doReturn(FakeGradleProperty("testDevice1")).`when`(task).deviceName
-        doReturn(FakeGradleProperty("avd_for_test_device")).`when`(task).avdName
-        doReturn(FakeGradleProperty(29)).`when`(task).apiLevel
-        doReturn(FakeGradleProperty("x86")).`when`(task).abi
+        val mockManagedDevice = mock(ManagedVirtualDevice::class.java)
+        doReturn("testDevice1").`when`(mockManagedDevice).getName()
+        doReturn(29).`when`(mockManagedDevice).apiLevel
+        doReturn("aosp").`when`(mockManagedDevice).systemImageSource
+        doReturn(false).`when`(mockManagedDevice).require64Bit
+        doReturn(FakeGradleProperty(mockManagedDevice)).`when`(task).device
         doReturn(FakeGradleProperty(false)).`when`(task).enableEmulatorDisplay
         doReturn(FakeGradleProperty(false)).`when`(task).getAdditionalTestOutputEnabled()
         doReturn(dependencies).`when`(task).dependencies
@@ -258,6 +257,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         `when`(factory.emulatorGpuFlag).thenReturn(FakeGradleProperty("auto-no-window"))
         `when`(factory.showEmulatorKernelLoggingFlag).thenReturn(FakeGradleProperty(false))
         `when`(factory.installApkTimeout).thenReturn(FakeGradleProperty(0))
+        `when`(factory.enableEmulatorDisplay).thenReturn(FakeGradleProperty(false))
 
         val testRunner = factory.createTestRunner(workerExecutor, null)
         assertThat(testRunner).isInstanceOf(ManagedDeviceTestRunner::class.java)
@@ -278,113 +278,78 @@ class ManagedDeviceInstrumentationTestTaskTest {
 
     @Test
     fun creationConfig_testTaskConfiguration() {
-        try {
-            // Need to use a custom set up environment to ensure deterministic behavior.
-            SystemPropertyOverrides().use { systemPropertyOverrides ->
-                // This will ensure the config believes we are running on an x86_64 Linux machine.
-                // This will guarantee the x86 system-image is selected.
-                systemPropertyOverrides.setProperty("os.name", "Linux")
-                Environment.instance = object : Environment() {
-                    override fun getVariable(name: EnvironmentVariable): String? =
-                        if (name.key == "HOSTTYPE") "x86_64" else null
-                }
-                systemPropertyOverrides.setProperty("os.arch", "x86_64")
-
-                // Parameters for config class.
-                val resultsDir = temporaryFolderRule.newFolder("resultsDir")
-                val reportsDir = temporaryFolderRule.newFolder("reportsDir")
-                val additionalTestOutputDir = temporaryFolderRule.newFolder("additionalTestOutputDir")
-                val coverageOutputDir = temporaryFolderRule.newFolder("coverageOutputDir")
-                val device = ManagedVirtualDevice("someNameHere").also {
-                    it.device = "Pixel 2"
-                    it.apiLevel = 27
-                    it.systemImageSource = "aosp"
-                }
-                // Needed for cast from api class to internal class
-                val snapshots = mock(EmulatorSnapshots::class.java)
-                `when`(creationConfig.global.testOptions.emulatorSnapshots).thenReturn(snapshots)
-                // Needed to ensure that UTP is active
-                `when`(
-                    creationConfig.services
-                        .projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM])
-                    .thenReturn(true)
-                // Needed to ensure the ExecutionEnum
-                `when`(creationConfig.global.testOptionExecutionEnum)
-                    .thenReturn(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR)
-                val config = ManagedDeviceInstrumentationTestTask.CreationAction(
-                    creationConfig,
-                    device,
-                    testData,
-                    resultsDir,
-                    reportsDir,
-                    additionalTestOutputDir,
-                    coverageOutputDir,
-                    ""
-                )
-
-                val task =
-                    mock(ManagedDeviceInstrumentationTestTask::class.java, RETURNS_DEEP_STUBS)
-
-                // We need to create mock properties to verify/capture values in the task as
-                // RETURNS_DEEP_STUBS does not work as expected with verify. Also, we can't use
-                // FakeGradleProperties because they do not support disallowChanges().
-
-                val unifiedTestPlatform = mockEmptyProperty<Boolean>()
-                `when`(task.testRunnerFactory.unifiedTestPlatform).thenReturn(unifiedTestPlatform)
-                val executionEnum = mockEmptyProperty<TestOptions.Execution>()
-                `when`(task.testRunnerFactory.executionEnum).thenReturn(executionEnum)
-                val sdkBuildService = mockEmptyProperty<SdkComponentsBuildService>()
-                `when`(task.testRunnerFactory.sdkBuildService).thenReturn(sdkBuildService)
-                val avdComponents = mockEmptyProperty<AvdComponentsBuildService>()
-                `when`(task.testRunnerFactory.avdComponents).thenReturn(avdComponents)
-
-                val deviceName = mockEmptyProperty<String>()
-                `when`(task.deviceName).thenReturn(deviceName)
-                val avdName = mockEmptyProperty<String>()
-                `when`(task.avdName).thenReturn(avdName)
-                val apiLevel = mockEmptyProperty<Int>()
-                `when`(task.apiLevel).thenReturn(apiLevel)
-                val abi = mockEmptyProperty<String>()
-                `when`(task.abi).thenReturn(abi)
-
-                config.configure(task)
-
-                verify(unifiedTestPlatform).set(true)
-                verify(unifiedTestPlatform).disallowChanges()
-                verifyNoMoreInteractions(unifiedTestPlatform)
-
-                verify(executionEnum).set(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR)
-                verify(executionEnum).disallowChanges()
-                verifyNoMoreInteractions(executionEnum)
-
-                verify(sdkBuildService).set(any<Provider<SdkComponentsBuildService>>())
-                verify(sdkBuildService).disallowChanges()
-                verifyNoMoreInteractions(sdkBuildService)
-
-                verify(deviceName).set("someNameHere")
-                verify(deviceName).disallowChanges()
-                verifyNoMoreInteractions(deviceName)
-
-                // Should be x86, as require64Bit is not set and api is 27
-                verify(avdName).set("dev27_default_x86_Pixel_2")
-                verify(avdName).disallowChanges()
-                verifyNoMoreInteractions(avdName)
-
-                verify(apiLevel).set(27)
-                verify(apiLevel).disallowChanges()
-                verifyNoMoreInteractions(apiLevel)
-
-                verify(abi).set("x86")
-                verify(abi).disallowChanges()
-                verifyNoMoreInteractions(abi)
-
-                verify(avdComponents).set(any<Provider<AvdComponentsBuildService>>())
-                verify(avdComponents).disallowChanges()
-                verifyNoMoreInteractions(avdComponents)
-            }
-        } finally {
-            Environment.instance = Environment.SYSTEM
+        // Parameters for config class.
+        val resultsDir = temporaryFolderRule.newFolder("resultsDir")
+        val reportsDir = temporaryFolderRule.newFolder("reportsDir")
+        val additionalTestOutputDir = temporaryFolderRule.newFolder("additionalTestOutputDir")
+        val coverageOutputDir = temporaryFolderRule.newFolder("coverageOutputDir")
+        val managedDevice = ManagedVirtualDevice("someNameHere").also {
+            it.device = "Pixel 2"
+            it.apiLevel = 27
+            it.systemImageSource = "aosp"
         }
+        // Needed for cast from api class to internal class
+        val snapshots = mock(EmulatorSnapshots::class.java)
+        `when`(creationConfig.global.testOptions.emulatorSnapshots).thenReturn(snapshots)
+        // Needed to ensure that UTP is active
+        `when`(
+            creationConfig.services
+                .projectOptions[BooleanOption.ANDROID_TEST_USES_UNIFIED_TEST_PLATFORM])
+            .thenReturn(true)
+        // Needed to ensure the ExecutionEnum
+        `when`(creationConfig.global.testOptionExecutionEnum)
+            .thenReturn(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR)
+        val config = ManagedDeviceInstrumentationTestTask.CreationAction(
+            creationConfig,
+            managedDevice,
+            testData,
+            resultsDir,
+            reportsDir,
+            additionalTestOutputDir,
+            coverageOutputDir,
+            ""
+        )
+
+        val task =
+            mock(ManagedDeviceInstrumentationTestTask::class.java, RETURNS_DEEP_STUBS)
+
+        // We need to create mock properties to verify/capture values in the task as
+        // RETURNS_DEEP_STUBS does not work as expected with verify. Also, we can't use
+        // FakeGradleProperties because they do not support disallowChanges().
+
+        val unifiedTestPlatform = mockEmptyProperty<Boolean>()
+        `when`(task.testRunnerFactory.unifiedTestPlatform).thenReturn(unifiedTestPlatform)
+        val executionEnum = mockEmptyProperty<TestOptions.Execution>()
+        `when`(task.testRunnerFactory.executionEnum).thenReturn(executionEnum)
+        val sdkBuildService = mockEmptyProperty<SdkComponentsBuildService>()
+        `when`(task.testRunnerFactory.sdkBuildService).thenReturn(sdkBuildService)
+        val avdComponents = mockEmptyProperty<AvdComponentsBuildService>()
+        `when`(task.testRunnerFactory.avdComponents).thenReturn(avdComponents)
+
+        val device = mockEmptyProperty<Device>()
+        `when`(task.device).thenReturn(device)
+
+        config.configure(task)
+
+        verify(unifiedTestPlatform).set(true)
+        verify(unifiedTestPlatform).disallowChanges()
+        verifyNoMoreInteractions(unifiedTestPlatform)
+
+        verify(executionEnum).set(TestOptions.Execution.ANDROIDX_TEST_ORCHESTRATOR)
+        verify(executionEnum).disallowChanges()
+        verifyNoMoreInteractions(executionEnum)
+
+        verify(sdkBuildService).set(any<Provider<SdkComponentsBuildService>>())
+        verify(sdkBuildService).disallowChanges()
+        verifyNoMoreInteractions(sdkBuildService)
+
+        verify(device).set(managedDevice)
+        verify(device).disallowChanges()
+        verifyNoMoreInteractions(device)
+
+        verify(avdComponents).set(any<Provider<AvdComponentsBuildService>>())
+        verify(avdComponents).disallowChanges()
+        verifyNoMoreInteractions(avdComponents)
     }
 
     @Test
@@ -394,6 +359,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         val testRunner = mock(ManagedDeviceTestRunner::class.java)
         doReturn(true).`when`(testRunner).runTests(
             managedDevice = any(),
+            runId = any(),
             outputDirectory = any(),
             coverageOutputDirectory = any(),
             additionalTestOutputDir = eq(null),
@@ -415,11 +381,12 @@ class ManagedDeviceInstrumentationTestTaskTest {
 
         verify(testRunner).runTests(
             managedDevice = argThat {
-                it.deviceName == "testDevice1"
-                        && it.avdName == "avd_for_test_device"
-                        && it.api == 29
-                        && it.abi == "x86"
+                it.getName() == "testDevice1"
+                        && it.apiLevel == 29
+                        && it.systemImageSource == "aosp"
+                        && it.require64Bit == false
             },
+            runId = any(),
             outputDirectory = eq(resultsFolder),
             coverageOutputDirectory = eq(codeCoverage),
             additionalTestOutputDir = eq(null),
@@ -442,6 +409,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         val testRunner = mock(ManagedDeviceTestRunner::class.java)
         doReturn(false).`when`(testRunner).runTests(
             managedDevice = any(),
+            runId = any(),
             outputDirectory = any(),
             coverageOutputDirectory = any(),
             additionalTestOutputDir = eq(null),
@@ -471,11 +439,12 @@ class ManagedDeviceInstrumentationTestTaskTest {
 
         verify(testRunner).runTests(
             managedDevice = argThat {
-                it.deviceName == "testDevice1"
-                        && it.avdName == "avd_for_test_device"
-                        && it.api == 29
-                        && it.abi == "x86"
+                it.getName() == "testDevice1"
+                        && it.apiLevel == 29
+                        && it.systemImageSource == "aosp"
+                        && it.require64Bit == false
             },
+            runId = any(),
             outputDirectory = eq(resultsFolder),
             coverageOutputDirectory = eq(codeCoverage),
             additionalTestOutputDir = eq(null),
@@ -498,6 +467,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         val testRunner = mock(ManagedDeviceTestRunner::class.java)
         doReturn(false).`when`(testRunner).runTests(
             managedDevice = any(),
+            runId = any(),
             outputDirectory = any(),
             coverageOutputDirectory = any(),
             additionalTestOutputDir = eq(null),

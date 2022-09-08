@@ -901,7 +901,7 @@ package com.android.build.api.dsl {
     property public abstract boolean includeInBundle;
   }
 
-  @org.gradle.api.Incubating public interface Device extends org.gradle.api.Named {
+  @org.gradle.api.Incubating public interface Device extends org.gradle.api.Named java.io.Serializable {
   }
 
   @org.gradle.api.Incubating public interface DeviceGroup extends org.gradle.api.Named {

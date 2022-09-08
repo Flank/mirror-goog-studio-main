@@ -18,9 +18,16 @@ package com.android.build.api.dsl
 
 import org.gradle.api.Incubating
 import org.gradle.api.Named
+import org.gradle.api.tasks.Internal
+import java.io.Serializable
 
 /**
  * Top-level interface for all devices to run applications by tasks in the Android Gradle Plugin.
  */
 @Incubating
-interface Device : Named
+interface Device : Named, Serializable {
+
+    @Incubating
+    @Internal
+    override fun getName(): String
+}
