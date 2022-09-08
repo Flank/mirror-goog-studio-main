@@ -1709,14 +1709,16 @@ open class LintCliClient : LintClient {
         var mainManifest: File? = null
         if (target != null) {
             for (provider in target.sourceProviders) {
-                val manifestFile = provider.manifestFile
-                if (manifestFile.exists()) { // model returns path whether or not it exists
-                    if (mainManifest == null) {
-                        mainManifest = manifestFile
-                    } else {
-                        manifests.add(manifestFile)
+                provider.manifestFiles.forEach { manifestFile ->
+                    if (manifestFile.exists()) { // model returns path whether or not it exists
+                        if (mainManifest == null) {
+                            mainManifest = manifestFile
+                        } else {
+                            manifests.add(manifestFile)
+                        }
                     }
                 }
+
             }
             if (mainManifest == null) {
                 return null

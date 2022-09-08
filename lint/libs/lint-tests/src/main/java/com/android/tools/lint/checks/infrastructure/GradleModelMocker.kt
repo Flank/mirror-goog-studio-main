@@ -1982,7 +1982,9 @@ class GradleModelMocker @JvmOverloads constructor(
                 _isUnitTest = isUnitTest,
                 _isInstrumentationTest = isInstrumentationTest,
                 _isDebugOnly = isDebugOnly,
-                manifestFile = File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML),
+                manifestFiles = listOf(
+                    File(root, "src/" + name + "/" + SdkConstants.ANDROID_MANIFEST_XML)
+                ),
                 javaDirectories = listOf(
                     File(root, "src/$name/java"),
                     File(root, "src/$name/kotlin")
@@ -2369,7 +2371,7 @@ private data class TestLintModelSourceProvider(
     val _isUnitTest: Boolean,
     val _isInstrumentationTest: Boolean,
     val _isDebugOnly: Boolean,
-    override val manifestFile: File,
+    override val manifestFiles: Collection<File>,
     override val javaDirectories: Collection<File>,
     override val resDirectories: Collection<File>,
     override val assetsDirectories: Collection<File>

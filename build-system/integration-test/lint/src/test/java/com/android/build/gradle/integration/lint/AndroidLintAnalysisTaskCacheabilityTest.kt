@@ -245,7 +245,7 @@ class AndroidLintAnalysisTaskCacheabilityTest {
                 assertThat(File(partialResultsDir2, lintDefiniteFileName).readText())
                     .contains("{$moduleName*debug*sourceProvider*0*javaDir*2}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
-                    .contains("{$moduleName*debug*sourceProvider*1*manifest*0}")
+                    .contains("{$moduleName*debug*sourceProvider*0*manifest*1}")
                 assertThat(File(partialResultsDir1, lintDefiniteFileName).readText())
                     .contains("{$moduleName*debug*sourceProvider*0*javaDir*0}")
                 assertThat(File(partialResultsDir1, lintPartialFileName).readText())

@@ -216,33 +216,33 @@ class LintModelSerializationTest {
                       viewBinding="true"/>
                   <sourceProviders>
                     <sourceProvider
-                        manifest="src/main/AndroidManifest.xml"
+                        manifests="src/main/AndroidManifest.xml"
                         javaDirectories="src/main/java:src/main/kotlin"
                         resDirectories="src/main/res"
                         assetsDirectories="src/main/assets"/>
                     <sourceProvider
-                        manifest="src/beta/AndroidManifest.xml"
+                        manifests="src/beta/AndroidManifest.xml"
                         javaDirectories="src/beta/java:src/beta/kotlin"
                         resDirectories="src/beta/res"
                         assetsDirectories="src/beta/assets"/>
                     <sourceProvider
-                        manifest="src/free/AndroidManifest.xml"
+                        manifests="src/free/AndroidManifest.xml"
                         javaDirectories="src/free/java:src/free/kotlin"
                         resDirectories="src/free/res"
                         assetsDirectories="src/free/assets"/>
                     <sourceProvider
-                        manifest="src/freeBeta/AndroidManifest.xml"
+                        manifests="src/freeBeta/AndroidManifest.xml"
                         javaDirectories="src/freeBeta/java:src/freeBeta/kotlin"
                         resDirectories="src/freeBeta/res"
                         assetsDirectories="src/freeBeta/assets"/>
                     <sourceProvider
-                        manifest="src/debug/AndroidManifest.xml"
+                        manifests="src/debug/AndroidManifest.xml"
                         javaDirectories="src/debug/java:src/debug/kotlin"
                         resDirectories="src/debug/res"
                         assetsDirectories="src/debug/assets"
                         debugOnly="true"/>
                     <sourceProvider
-                        manifest="src/freeBetaDebug/AndroidManifest.xml"
+                        manifests="src/freeBetaDebug/AndroidManifest.xml"
                         javaDirectories="src/freeBetaDebug/java:src/freeBetaDebug/kotlin"
                         resDirectories="src/freeBetaDebug/res"
                         assetsDirectories="src/freeBetaDebug/assets"
@@ -250,37 +250,37 @@ class LintModelSerializationTest {
                   </sourceProviders>
                   <testSourceProviders>
                     <sourceProvider
-                        manifest="src/androidTest/AndroidManifest.xml"
+                        manifests="src/androidTest/AndroidManifest.xml"
                         javaDirectories="src/androidTest/java:src/androidTest/kotlin"
                         resDirectories="src/androidTest/res"
                         assetsDirectories="src/androidTest/assets"
                         androidTest="true"/>
                     <sourceProvider
-                        manifest="src/test/AndroidManifest.xml"
+                        manifests="src/test/AndroidManifest.xml"
                         javaDirectories="src/test/java:src/test/kotlin"
                         resDirectories="src/test/res"
                         assetsDirectories="src/test/assets"
                         unitTest="true"/>
                     <sourceProvider
-                        manifest="src/androidTestBeta/AndroidManifest.xml"
+                        manifests="src/androidTestBeta/AndroidManifest.xml"
                         javaDirectories="src/androidTestBeta/java:src/androidTestBeta/kotlin"
                         resDirectories="src/androidTestBeta/res"
                         assetsDirectories="src/androidTestBeta/assets"
                         androidTest="true"/>
                     <sourceProvider
-                        manifest="src/testBeta/AndroidManifest.xml"
+                        manifests="src/testBeta/AndroidManifest.xml"
                         javaDirectories="src/testBeta/java:src/testBeta/kotlin"
                         resDirectories="src/testBeta/res"
                         assetsDirectories="src/testBeta/assets"
                         unitTest="true"/>
                     <sourceProvider
-                        manifest="src/androidTestFree/AndroidManifest.xml"
+                        manifests="src/androidTestFree/AndroidManifest.xml"
                         javaDirectories="src/androidTestFree/java:src/androidTestFree/kotlin"
                         resDirectories="src/androidTestFree/res"
                         assetsDirectories="src/androidTestFree/assets"
                         androidTest="true"/>
                     <sourceProvider
-                        manifest="src/testFree/AndroidManifest.xml"
+                        manifests="src/testFree/AndroidManifest.xml"
                         javaDirectories="src/testFree/java:src/testFree/kotlin"
                         resDirectories="src/testFree/res"
                         assetsDirectories="src/testFree/assets"
@@ -288,17 +288,17 @@ class LintModelSerializationTest {
                   </testSourceProviders>
                   <testFixturesSourceProviders>
                     <sourceProvider
-                        manifest="src/testFixtures/AndroidManifest.xml"
+                        manifests="src/testFixtures/AndroidManifest.xml"
                         javaDirectories="src/testFixtures/java:src/testFixtures/kotlin"
                         resDirectories="src/testFixtures/res"
                         assetsDirectories="src/testFixtures/assets"/>
                     <sourceProvider
-                        manifest="src/testFixturesBeta/AndroidManifest.xml"
+                        manifests="src/testFixturesBeta/AndroidManifest.xml"
                         javaDirectories="src/testFixturesBeta/java:src/testFixturesBeta/kotlin"
                         resDirectories="src/testFixturesBeta/res"
                         assetsDirectories="src/testFixturesBeta/assets"/>
                     <sourceProvider
-                        manifest="src/testFixturesFree/AndroidManifest.xml"
+                        manifests="src/testFixturesFree/AndroidManifest.xml"
                         javaDirectories="src/testFixturesFree/java:src/testFixturesFree/kotlin"
                         resDirectories="src/testFixturesFree/res"
                         assetsDirectories="src/testFixturesFree/assets"/>
@@ -643,69 +643,69 @@ class LintModelSerializationTest {
                           viewBinding="true"/>
                       <sourceProviders>
                         <sourceProvider
-                            manifest="src/main/AndroidManifest.xml"
+                            manifests="src/main/AndroidManifest.xml"
                             javaDirectories="src/main/java:src/main/kotlin"
                             resDirectories="src/main/res"
                             assetsDirectories="src/main/assets"/>
                         <sourceProvider
-                            manifest="src/normal/AndroidManifest.xml"
+                            manifests="src/normal/AndroidManifest.xml"
                             javaDirectories="src/normal/java:src/normal/kotlin"
                             resDirectories="src/normal/res"
                             assetsDirectories="src/normal/assets"/>
                         <sourceProvider
-                            manifest="src/paid/AndroidManifest.xml"
+                            manifests="src/paid/AndroidManifest.xml"
                             javaDirectories="src/paid/java:src/paid/kotlin"
                             resDirectories="src/paid/res"
                             assetsDirectories="src/paid/assets"/>
                         <sourceProvider
-                            manifest="src/paidNormal/AndroidManifest.xml"
+                            manifests="src/paidNormal/AndroidManifest.xml"
                             javaDirectories="src/paidNormal/java:src/paidNormal/kotlin"
                             resDirectories="src/paidNormal/res"
                             assetsDirectories="src/paidNormal/assets"/>
                         <sourceProvider
-                            manifest="src/release/AndroidManifest.xml"
+                            manifests="src/release/AndroidManifest.xml"
                             javaDirectories="src/release/java:src/release/kotlin"
                             resDirectories="src/release/res"
                             assetsDirectories="src/release/assets"/>
                         <sourceProvider
-                            manifest="src/paidNormalRelease/AndroidManifest.xml"
+                            manifests="src/paidNormalRelease/AndroidManifest.xml"
                             javaDirectories="src/paidNormalRelease/java:src/paidNormalRelease/kotlin"
                             resDirectories="src/paidNormalRelease/res"
                             assetsDirectories="src/paidNormalRelease/assets"/>
                       </sourceProviders>
                       <testSourceProviders>
                         <sourceProvider
-                            manifest="src/androidTest/AndroidManifest.xml"
+                            manifests="src/androidTest/AndroidManifest.xml"
                             javaDirectories="src/androidTest/java:src/androidTest/kotlin"
                             resDirectories="src/androidTest/res"
                             assetsDirectories="src/androidTest/assets"
                             androidTest="true"/>
                         <sourceProvider
-                            manifest="src/test/AndroidManifest.xml"
+                            manifests="src/test/AndroidManifest.xml"
                             javaDirectories="src/test/java:src/test/kotlin"
                             resDirectories="src/test/res"
                             assetsDirectories="src/test/assets"
                             unitTest="true"/>
                         <sourceProvider
-                            manifest="src/androidTestNormal/AndroidManifest.xml"
+                            manifests="src/androidTestNormal/AndroidManifest.xml"
                             javaDirectories="src/androidTestNormal/java:src/androidTestNormal/kotlin"
                             resDirectories="src/androidTestNormal/res"
                             assetsDirectories="src/androidTestNormal/assets"
                             androidTest="true"/>
                         <sourceProvider
-                            manifest="src/testNormal/AndroidManifest.xml"
+                            manifests="src/testNormal/AndroidManifest.xml"
                             javaDirectories="src/testNormal/java:src/testNormal/kotlin"
                             resDirectories="src/testNormal/res"
                             assetsDirectories="src/testNormal/assets"
                             unitTest="true"/>
                         <sourceProvider
-                            manifest="src/androidTestPaid/AndroidManifest.xml"
+                            manifests="src/androidTestPaid/AndroidManifest.xml"
                             javaDirectories="src/androidTestPaid/java:src/androidTestPaid/kotlin"
                             resDirectories="src/androidTestPaid/res"
                             assetsDirectories="src/androidTestPaid/assets"
                             androidTest="true"/>
                         <sourceProvider
-                            manifest="src/testPaid/AndroidManifest.xml"
+                            manifests="src/testPaid/AndroidManifest.xml"
                             javaDirectories="src/testPaid/java:src/testPaid/kotlin"
                             resDirectories="src/testPaid/res"
                             assetsDirectories="src/testPaid/assets"
@@ -713,17 +713,17 @@ class LintModelSerializationTest {
                       </testSourceProviders>
                       <testFixturesSourceProviders>
                         <sourceProvider
-                            manifest="src/testFixtures/AndroidManifest.xml"
+                            manifests="src/testFixtures/AndroidManifest.xml"
                             javaDirectories="src/testFixtures/java:src/testFixtures/kotlin"
                             resDirectories="src/testFixtures/res"
                             assetsDirectories="src/testFixtures/assets"/>
                         <sourceProvider
-                            manifest="src/testFixturesNormal/AndroidManifest.xml"
+                            manifests="src/testFixturesNormal/AndroidManifest.xml"
                             javaDirectories="src/testFixturesNormal/java:src/testFixturesNormal/kotlin"
                             resDirectories="src/testFixturesNormal/res"
                             assetsDirectories="src/testFixturesNormal/assets"/>
                         <sourceProvider
-                            manifest="src/testFixturesPaid/AndroidManifest.xml"
+                            manifests="src/testFixturesPaid/AndroidManifest.xml"
                             javaDirectories="src/testFixturesPaid/java:src/testFixturesPaid/kotlin"
                             resDirectories="src/testFixturesPaid/res"
                             assetsDirectories="src/testFixturesPaid/assets"/>
@@ -1183,7 +1183,7 @@ class LintModelSerializationTest {
             readDependencies = false
         )
 
-        val manifestFile = module.defaultVariant()!!.sourceProviders.first().manifestFile
+        val manifestFile = module.defaultVariant()!!.sourceProviders.first().manifestFiles.first()
         assertWithMessage("Source file should be resolved relative to the project directory, not the source directory")
             .about(PathSubject.paths())
             .that(manifestFile.toPath())

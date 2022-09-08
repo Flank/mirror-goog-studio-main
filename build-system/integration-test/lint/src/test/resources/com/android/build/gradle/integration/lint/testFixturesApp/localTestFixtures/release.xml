@@ -11,20 +11,20 @@
       namespacing="REQUIRED"/>
   <sourceProviders>
     <sourceProvider
-        manifest="src/main/AndroidManifest.xml"
+        manifests="src/main/AndroidManifest.xml"
         javaDirectories="src/main/java:src/release/java:build/generated/source/buildConfig/release:build/generated/aidl_source_output_dir/release/out:src/main/kotlin:src/release/kotlin"
         resDirectories="build/generated/res/resValues/release:src/release/res:src/main/res"
         assetsDirectories="src/release/assets:src/main/assets"/>
   </sourceProviders>
   <testSourceProviders>
     <sourceProvider
-        manifest="src/test/AndroidManifest.xml"
+        manifests="src/test/AndroidManifest.xml"
         javaDirectories="src/test/java:src/testRelease/java:src/test/kotlin:src/testRelease/kotlin"
         resDirectories="src/testRelease/res:src/test/res"
         assetsDirectories="src/testRelease/assets:src/test/assets"
         unitTest="true"/>
     <sourceProvider
-        manifest="src/androidTest/AndroidManifest.xml"
+        manifests="src/androidTest/AndroidManifest.xml"
         javaDirectories="src/androidTest/java:src/androidTestRelease/java:build/generated/source/buildConfig/androidTest/release:build/generated/aidl_source_output_dir/releaseAndroidTest/out:src/androidTest/kotlin:src/androidTestRelease/kotlin"
         resDirectories="build/generated/res/resValues/androidTest/release:src/androidTestRelease/res:src/androidTest/res"
         assetsDirectories="src/androidTestRelease/assets:src/androidTest/assets"
@@ -32,7 +32,7 @@
   </testSourceProviders>
   <testFixturesSourceProviders>
     <sourceProvider
-        manifest="src/testFixtures/AndroidManifest.xml"
+        manifests="src/testFixtures/AndroidManifest.xml"
         javaDirectories="src/testFixtures/java:src/testFixturesRelease/java:src/testFixtures/kotlin:src/testFixturesRelease/kotlin"
         resDirectories="src/testFixturesRelease/res:src/testFixtures/res"
         assetsDirectories="src/testFixturesRelease/assets:src/testFixtures/assets"/>

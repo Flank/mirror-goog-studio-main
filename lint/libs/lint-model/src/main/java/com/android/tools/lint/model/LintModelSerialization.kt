@@ -595,7 +595,7 @@ private open class LintModelWriter(
         indent(indent)
         printer.print("<")
         printer.print(tag)
-        printer.printFile("manifest", sourceProvider.manifestFile, indent)
+        printer.printFiles("manifests", sourceProvider.manifestFiles, indent)
         printer.printFiles("javaDirectories", sourceProvider.javaDirectories, indent)
         printer.printFiles("resDirectories", sourceProvider.resDirectories, indent)
         printer.printFiles("assetsDirectories", sourceProvider.assetsDirectories, indent)
@@ -1262,7 +1262,10 @@ private abstract class LintModelReader(
 
     protected fun readSourceProvider(tag: String = "sourceProvider"): LintModelSourceProvider {
         expectTag(tag)
-        val manifestFile = getRequiredFile("manifest")
+        val manifestFiles = getFiles("manifests").ifEmpty {
+            // This field exists for backward compatibility as old AGP versions will write a single manifest entry
+            listOf(getRequiredFile("manifest"))
+        }
         val javaDirectories = getFiles("javaDirectories")
         val resDirectories = getFiles("resDirectories")
         val assetsDirectories = getFiles("assetsDirectories")
@@ -1272,7 +1275,7 @@ private abstract class LintModelReader(
         finishTag(tag)
 
         return DefaultLintModelSourceProvider(
-            manifestFile = manifestFile,
+            manifestFiles = manifestFiles,
             javaDirectories = javaDirectories,
             resDirectories = resDirectories,
             assetsDirectories = assetsDirectories,

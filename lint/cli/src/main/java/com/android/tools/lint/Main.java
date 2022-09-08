@@ -360,7 +360,7 @@ public class Main {
             String variantName) {
         addSourceProviderPathVariables(
                 pathVariables,
-                Arrays.asList(sourceProvider.getManifestFile()),
+                sourceProvider.getManifestFiles(),
                 modulePath,
                 variantName,
                 sourceProviderType,

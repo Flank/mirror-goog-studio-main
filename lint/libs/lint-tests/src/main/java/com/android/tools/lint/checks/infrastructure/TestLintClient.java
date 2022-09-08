@@ -2027,13 +2027,15 @@ public class TestLintClient extends LintCliClient {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
                     for (LintModelSourceProvider provider : getSourceProviders()) {
-                        File manifestFile = provider.getManifestFile();
-                        if (manifestFile.exists()) { // model returns path whether or not it exists
-                            if (manifestFiles == null) {
-                                manifestFiles = Lists.newArrayList();
-                            }
-                            manifestFiles.add(manifestFile);
-                        }
+                        provider.getManifestFiles().stream()
+                                .filter(File::exists) // model returns path whether or not it exists
+                                .forEach(
+                                        manifestFile -> {
+                                            if (manifestFiles == null) {
+                                                manifestFiles = Lists.newArrayList();
+                                            }
+                                            manifestFiles.add(manifestFile);
+                                        });
                     }
                 }
 

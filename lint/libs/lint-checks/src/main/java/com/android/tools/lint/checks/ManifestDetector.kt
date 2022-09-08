@@ -1493,7 +1493,7 @@ class ManifestDetector :
             for (provider in variant.sourceProviders) {
                 if (provider.isDebugOnly() || provider.isTest()) {
                     //noinspection FileComparisons
-                    if (manifestFile == provider.manifestFile) {
+                    if (provider.manifestFiles.any { it == manifestFile }) {
                         return true
                     }
                 }

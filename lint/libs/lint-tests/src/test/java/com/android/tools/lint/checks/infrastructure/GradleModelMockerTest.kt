@@ -250,7 +250,7 @@ android {
         Truth.assertThat(module.type).isEqualTo(LintModelModuleType.APP)
 
         val mainSourceProvider = variant.sourceProviders.first()
-        val manifestFile = mainSourceProvider.manifestFile
+        val manifestFile = mainSourceProvider.manifestFiles.first()
         Truth.assertThat(manifestFile.path).endsWith("AndroidManifest.xml")
         Truth.assertThat(manifestFile.path.portablePath())
             .endsWith("src/main/AndroidManifest.xml")

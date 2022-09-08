@@ -19,7 +19,7 @@ package com.android.tools.lint.model
 import java.io.File
 
 interface LintModelSourceProvider {
-    val manifestFile: File
+    val manifestFiles: Collection<File>
     val javaDirectories: Collection<File>
     val resDirectories: Collection<File>
     val assetsDirectories: Collection<File>
@@ -49,7 +49,7 @@ interface LintModelSourceProvider {
 }
 
 class DefaultLintModelSourceProvider(
-    override val manifestFile: File,
+    override val manifestFiles: Collection<File>,
     override val javaDirectories: Collection<File>,
     override val resDirectories: Collection<File>,
     override val assetsDirectories: Collection<File>,
@@ -62,6 +62,6 @@ class DefaultLintModelSourceProvider(
     override fun isDebugOnly(): Boolean = debugOnly
 
     override fun toString(): String {
-        return manifestFile.parentFile?.path ?: "?"
+        return manifestFiles.first().parentFile?.path ?: "?"
     }
 }

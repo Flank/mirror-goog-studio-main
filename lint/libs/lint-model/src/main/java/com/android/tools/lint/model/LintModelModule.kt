@@ -112,14 +112,14 @@ interface LintModelModule {
     fun getInactiveSourceProviders(active: LintModelVariant): List<LintModelSourceProvider> {
         val seen = HashSet<File>()
         for (provider in active.sourceProviders) {
-            seen.add(provider.manifestFile)
+            seen.add(provider.manifestFiles.first())
         }
 
         val providers: MutableList<LintModelSourceProvider> = mutableListOf()
         for (variant in variants) {
             if (variant != active) {
                 for (provider in active.sourceProviders) {
-                    if (seen.add(provider.manifestFile)) {
+                    if (seen.add(provider.manifestFiles.first())) {
                         providers.add(provider)
                     }
                 }

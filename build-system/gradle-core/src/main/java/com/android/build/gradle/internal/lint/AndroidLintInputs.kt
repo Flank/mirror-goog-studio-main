@@ -1302,12 +1302,9 @@ abstract class SourceProviderInput {
     }
 
     internal fun toLintModels(): List<LintModelSourceProvider> {
-        val manifestFiles = manifestFiles.get()
-        val lintModels = mutableListOf<LintModelSourceProvider>()
-
-        lintModels.add(
+        return listOf(
             DefaultLintModelSourceProvider(
-                manifestFile = manifestFiles.first(),
+                manifestFiles = manifestFiles.get(),
                 javaDirectories = javaDirectories.files.toList(),
                 resDirectories = resDirectories.files.toList(),
                 assetsDirectories = assetsDirectories.files.toList(),
@@ -1316,24 +1313,6 @@ abstract class SourceProviderInput {
                 instrumentationTestOnly = instrumentationTestOnly.get(),
             )
         )
-
-        // Add separate providers for the manifest overlays
-        // TODO: Change manifest file representation in lint models to a list to avoid doing this
-        lintModels.addAll(
-            manifestFiles.subList(1, manifestFiles.size).map { manifestOverlay ->
-                DefaultLintModelSourceProvider(
-                    manifestFile = manifestOverlay,
-                    javaDirectories = emptyList(),
-                    resDirectories = emptyList(),
-                    assetsDirectories = emptyList(),
-                    debugOnly = debugOnly.get(),
-                    unitTestOnly = unitTestOnly.get(),
-                    instrumentationTestOnly = instrumentationTestOnly.get(),
-                )
-            }
-        )
-
-        return lintModels
     }
 }
 
