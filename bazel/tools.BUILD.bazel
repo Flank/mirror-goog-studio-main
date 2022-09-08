@@ -3,6 +3,7 @@ filegroup(
     srcs = ["build.gradle"],
     visibility = [
         "//tools/base/build-system:__pkg__",
+        "//tools/base/firebase/testlab/testlab-gradle-plugin:__pkg__",
         "//tools/base/utp:__pkg__",
     ],
 )
@@ -16,6 +17,7 @@ filegroup(
     ],
     visibility = [
         "//tools/base/build-system:__pkg__",
+        "//tools/base/firebase/testlab/testlab-gradle-plugin:__pkg__",
         "//tools/base/utp:__pkg__",
     ],
 )

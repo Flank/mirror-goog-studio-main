@@ -1,32 +1,60 @@
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/bazel:maven.bzl", "maven_library")
-load("//tools/base/bazel:utils.bzl", "fileset")
+load("//tools/base/bazel:gradle.bzl", "gradle_build")
+load("//tools/base/bazel:maven.bzl", "maven_repository")
 
-fileset(
-    name = "resources",
+filegroup(
+    name = "agp_gradle_build_files",
     srcs = glob([
+        "src/main/**/*.java",
+        "src/main/**/*.kt",
         "src/main/resources/**",
-    ]),
-    mappings = {
-        "src/main/resources/": "",
-    },
+    ]) + [
+        "build.gradle",
+    ],
+    visibility = ["//visibility:private"],
 )
 
-kotlin_library(
-    name = "testlab-gradle-plugin",
-    srcs = glob([
-        "src/main/java/**/*.kt",
-        "src/main/java/**/*.java",
-    ]),
-    module_name = "testlab-gradle-plugin",
-    resource_strip_prefix = "tools/base/firebase/testlab/testlab-gradle-plugin",
-    resources = [":resources"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tools/base/build-system:gradle-api_neverlink",
-        "//tools/base/build-system/gradle-api",
+# keep sorted
+FTL_GRADLE_PLUGIN_SOURCE_FILES = [
+    ":agp_gradle_build_files",
+    "//tools:agp_gradle_build_files",
+    "//tools/base/build-system/builder-model:agp_gradle_build_files",
+    "//tools/base/build-system/builder-test-api:agp_gradle_build_files",
+    "//tools/base/build-system/gradle-api:agp_gradle_build_files",
+    "//tools/buildSrc:agp_gradle_build_files",
+    "//tools/buildSrc/base:agp_gradle_build_files",
+]
+
+maven_repository(
+    name = "maven_dependencies",
+    # keep sorted
+    artifacts = [
         "@maven//:com.google.apis.google-api-services-storage",
         "@maven//:com.google.apis.google-api-services-testing",
         "@maven//:com.google.apis.google-api-services-toolresults",
+    ],
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
+)
+
+gradle_build(
+    name = "testlab-gradle-plugin",
+    build_file = "//tools:agp_gradle_build_root_build_file",
+    data = ["//prebuilts/studio/jdk:jdk11"] + FTL_GRADLE_PLUGIN_SOURCE_FILES,
+    gradle_properties = {
+        "hybrid-build-embedded-in-bazel": "true",
+        "release": "true",
+    },
+    output_file = "testlab-gradle-plugin.zip",
+    output_file_source = "dist/repo.zip",
+    repos = [
+        ":maven_dependencies",
+        "//tools/base:agp_artifacts",
+        "//tools/base:agp_dependencies",
+    ],
+    tasks = [":zipPlugin"],
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+        "//tools/base/gmaven:__pkg__",
     ],
 )

@@ -85,5 +85,8 @@ filegroup(
         "build.gradle",
         "NOTICE",
     ],
-    visibility = ["//tools/base/build-system:__pkg__"],
+    visibility = [
+        "//tools/base/build-system:__pkg__",
+        "//tools/base/firebase/testlab/testlab-gradle-plugin:__pkg__",
+    ],
 )
