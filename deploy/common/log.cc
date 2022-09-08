@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <cstdio>
+#include <ctime>
 
 #include "tools/base/deploy/common/env.h"
 
