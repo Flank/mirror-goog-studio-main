@@ -40,13 +40,13 @@ class LoggerAndFileDebugReporter(
     private val writer: PrintWriter? = reportFile?.let { PrintWriter(it) }
 
     override fun debug(f: () -> String) {
-        var message = f()
+        val message = f()
         writer?.println(message)
         logDebug(message)
     }
 
     override fun info(f: () -> String) {
-        var message = f()
+        val message = f()
         writer?.println(message)
         logInfo(message)
     }

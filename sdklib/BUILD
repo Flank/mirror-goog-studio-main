@@ -167,11 +167,6 @@ sdk_java_binary(
 
 sdk_java_binary(
     name = "resourceshrinker",
-    default_jvm_opts = {
-        "linux": "-Dcom.android.sdkmanager.toolsdir=$APP_HOME",
-        "mac": "-Dcom.android.sdkmanager.toolsdir=$APP_HOME",
-        "win": "\"-Dcom.android.sdkmanager.toolsdir=%~dp0\\..\"",
-    },
     main_class = "com.android.build.shrinker.ResourceShrinkerCli",
     runtime_deps = ["//tools/base/build-system/shrinker"],
 )
@@ -188,6 +183,7 @@ sdk_package(
         ":avdmanager",
         ":sdkmanager",
         ":retrace",
+        ":resourceshrinker",
         "//tools/base/apkparser/cli:apkanalyzer",
         # b/135688047
         # "//tools/base/jobb:jobb",

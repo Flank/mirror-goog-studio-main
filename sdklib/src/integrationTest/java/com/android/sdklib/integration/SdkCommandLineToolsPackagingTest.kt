@@ -43,6 +43,7 @@ class SdkCommandLineToolsPackagingTest(private val platform: AndroidSdkCommandLi
             "cmdline-tools/bin/lint$suffix",
             "cmdline-tools/bin/profgen$suffix",
             "cmdline-tools/bin/retrace$suffix",
+            "cmdline-tools/bin/resourceshrinker$suffix",
             "cmdline-tools/bin/screenshot2$suffix",
             "cmdline-tools/bin/sdkmanager$suffix",
             "cmdline-tools/NOTICE.txt",
