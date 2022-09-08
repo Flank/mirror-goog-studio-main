@@ -15,6 +15,7 @@ dependencies {
     testImplementation project(':base:builder')
     testImplementation project(':base:builder-model')
     testImplementation project(':base:build-system:gradle-core')
+    testImplementation project(':base:build-system:shrinker')
     testImplementation project(':base:profgen')
     testImplementation libs.com.android.tools.sdkCommon
     testImplementation libs.com.android.tools.sdklib
