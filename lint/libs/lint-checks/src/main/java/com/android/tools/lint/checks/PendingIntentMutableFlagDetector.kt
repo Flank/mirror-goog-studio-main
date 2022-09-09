@@ -18,15 +18,21 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Incident
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LintFix
+import com.android.tools.lint.detector.api.LintMap
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UExpression
 
 class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames() = METHOD_NAMES
@@ -37,13 +43,27 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
         val flagsArgument = node.getArgumentForParameter(FLAG_ARGUMENT_POSITION) ?: return
         val flags = ConstantEvaluator.evaluate(context, flagsArgument) as? Int ?: return
         if (flags and FLAG_MASK == 0) {
-            context.report(
-                ISSUE,
-                node,
-                context.getLocation(flagsArgument),
-                "Missing `PendingIntent` mutability flag"
+            val fix = fix().alternatives(
+                buildMutabilityFlagFix(context, flagsArgument),
+                buildMutabilityFlagFix(context, flagsArgument, mutable = true)
             )
+            val incident = Incident(
+                issue = ISSUE,
+                scope = node,
+                location = context.getLocation(flagsArgument),
+                message = "Missing `PendingIntent` mutability flag",
+                fix,
+            )
+            context.report(incident, map())
         }
+    }
+
+    override fun filterIncident(context: Context, incident: Incident, map: LintMap): Boolean {
+        if (context.mainProject.targetSdk < 23) return false
+        if (context.mainProject.targetSdk < 31) {
+            incident.overrideSeverity(Severity.WARNING)
+        }
+        return true
     }
 
     companion object {
@@ -52,7 +72,8 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
         private const val FLAG_ARGUMENT_POSITION = 3
         private const val FLAG_IMMUTABLE = 1 shl 26
         private const val FLAG_MUTABLE = 1 shl 25
-        private const val FLAG_MASK = FLAG_IMMUTABLE or FLAG_MUTABLE
+        private const val FLAG_UPDATE_CURRENT = 1 shl 27
+        private const val FLAG_MASK = FLAG_IMMUTABLE or FLAG_MUTABLE or FLAG_UPDATE_CURRENT
 
         @JvmField
         val ISSUE = Issue.create(
@@ -61,15 +82,49 @@ class PendingIntentMutableFlagDetector : Detector(), SourceCodeScanner {
             explanation = """
                 Apps targeting Android 12 and higher must specify either `FLAG_IMMUTABLE` or \
                 `FLAG_MUTABLE` when constructing a `PendingIntent`.
+
+                `FLAG_IMMUTABLE` is available since target SDK 23, and is almost always the best choice. \
+                See https://developer.android.com/guide/components/intents-filters#CreateImmutablePendingIntents \
+                for a list of common exceptions to this rule.
             """,
             category = Category.SECURITY,
             priority = 5,
-            severity = Severity.WARNING,
+            /**
+             * The severity of this issue is reported conditionally.  See the overridden `filterIncident` method.
+             * - targetSdk >= 31: ERROR
+             * - 23 <= targetSdk < 31: WARNING
+             * - targetSdk < 23: not reported
+             */
+            severity = Severity.ERROR,
             implementation = Implementation(
                 PendingIntentMutableFlagDetector::class.java,
                 Scope.JAVA_FILE_SCOPE
             ),
+            androidSpecific = true,
             moreInfo = "https://developer.android.com/about/versions/12/behavior-changes-12#pending-intent-mutability"
         )
+
+        const val FLAG_IMMUTABLE_STR = "android.app.PendingIntent.FLAG_IMMUTABLE"
+        const val FLAG_MUTABLE_STR = "android.app.PendingIntent.FLAG_MUTABLE"
+        private fun buildMutabilityFlagFix(context: JavaContext, originalArg: UExpression, mutable: Boolean = false): LintFix {
+            val addFlagText = if (mutable) FLAG_MUTABLE_STR else FLAG_IMMUTABLE_STR
+            val name = if (mutable) "Add FLAG_MUTABLE" else "Add FLAG_IMMUTABLE (preferred)"
+            val isKotlin = context.uastFile?.lang == KotlinLanguage.INSTANCE
+            val originalArgString = originalArg.asSourceString()
+
+            val fixText =
+                if (originalArgString == "0") addFlagText
+                else if (isKotlin) "$originalArgString or $addFlagText"
+                else "$originalArgString | $addFlagText"
+
+            return LintFix.create()
+                .name(name)
+                .replace()
+                .reformat(true)
+                .shortenNames()
+                .range(context.getLocation(originalArg))
+                .with(fixText)
+                .build()
+        }
     }
 }

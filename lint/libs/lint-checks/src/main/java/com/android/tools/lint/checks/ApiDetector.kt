@@ -2879,6 +2879,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return true
             }
 
+            if (equivalentName(
+                    owner, "android/app/PendingIntent"
+                ) && ("FLAG_MUTABLE" == name || "FLAG_IMMUTABLE" == name)
+            ) {
+                return true
+            }
+
             if (node == null) {
                 return false
             }
