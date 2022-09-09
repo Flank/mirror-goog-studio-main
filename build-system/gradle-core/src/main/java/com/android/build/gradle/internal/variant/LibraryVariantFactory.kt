@@ -161,7 +161,8 @@ class LibraryVariantFactory(
             projectOptions,
             dataBindingOverride = null,
             mlModelBindingOverride = false,
-            includeAndroidResources = includeAndroidResources
+            includeAndroidResources = includeAndroidResources,
+            testedComponent = componentType
         )
     }
 

@@ -152,7 +152,8 @@ internal class DynamicFeatureVariantFactory(
                 null // means whatever is default.
             },
             mlModelBindingOverride = false,
-            includeAndroidResources = includeAndroidResources
+            includeAndroidResources = includeAndroidResources,
+            testedComponent = componentType
         )
     }
 
