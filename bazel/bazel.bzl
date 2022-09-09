@@ -214,16 +214,18 @@ def _iml_module_jar_impl(
         allow_duplicates = True,
     )
 
-    providers = []
-    providers = [JavaInfo(
+    main_provider = JavaInfo(
         output_jar = output_jar,
         compile_jar = full_ijar or output_jar,
         deps = java_deps,
         runtime_deps = java_runtime_deps,
-    )]
-    providers += exports
-
-    return java_common.merge(providers), forms
+    )
+    main_provider = java_common.merge([main_provider] + exports)
+    main_provider_no_deps = JavaInfo(
+        output_jar = output_jar,
+        compile_jar = full_ijar or output_jar,
+    )
+    return main_provider, main_provider_no_deps, forms
 
 def merge_runfiles(deps):
     return depset(transitive = [
@@ -298,7 +300,7 @@ def _iml_module_impl(ctx):
 
     # If multiple modules we use the label, otherwise use the exact module name
     module_name = names[0] if len(names) == 1 else ctx.label.name
-    main_provider, main_forms = _iml_module_jar_impl(
+    main_provider, main_provider_no_deps, main_forms = _iml_module_jar_impl(
         ctx = ctx,
         name = ctx.label.name,
         roots = ctx.attr.roots,
@@ -320,7 +322,7 @@ def _iml_module_impl(ctx):
     for test_friend in ctx.attr.test_friends:
         friend_jars += test_friend[JavaInfo].compile_jars.to_list()
 
-    test_provider, test_forms = _iml_module_jar_impl(
+    test_provider, _, test_forms = _iml_module_jar_impl(
         ctx = ctx,
         name = ctx.label.name + "_test",
         roots = ctx.attr.test_roots,
@@ -330,7 +332,7 @@ def _iml_module_impl(ctx):
         resources = ctx.files.test_resources,
         res_zips = [],
         output_jar = ctx.outputs.test_jar,
-        java_deps = [main_provider] + test_java_deps,
+        java_deps = [main_provider_no_deps] + test_java_deps,
         java_runtime_deps = [],  # Runtime deps already inherited from prod module.
         form_deps = test_form_deps,
         exports = exports + test_exports,
