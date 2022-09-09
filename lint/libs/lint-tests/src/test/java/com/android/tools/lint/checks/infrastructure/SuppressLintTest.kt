@@ -35,7 +35,9 @@ import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.XmlScanner
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UField
 import org.jetbrains.uast.UImportStatement
+import org.jetbrains.uast.UMethod
 import org.junit.Test
 import org.w3c.dom.Attr
 
@@ -528,6 +530,32 @@ class SuppressLintTest {
             )
     }
 
+    @Test
+    fun testSuppressProperty() {
+        lint()
+            .allowCompilationErrors()
+            .files(
+                kotlin(
+                    """
+                    class Test {
+                        @Suppress("_PropertyIssue") var forbidden1: String = ""
+                        @Suppress("_PropertyIssue") val forbidden2: String
+                          get() = ""
+                        @Suppress("_PropertyIssue") var forbidden3 : String
+                            get() = field
+                            set(value) { field = value }
+                        @Suppress("MyId", "_PropertyIssue") val forbidden4: String
+                          get() = ""
+                    }
+                    """
+                ).indented()
+            )
+            .issues(MyPropertyDetector.PROPERTY_ISSUE)
+            .sdkHome(TestUtils.getSdk().toFile())
+            .run()
+            .expectClean()
+    }
+
     // Sample detector which just flags calls to a method called "forbidden"
     @SuppressWarnings("ALL")
     class MySecurityDetector : Detector(), SourceCodeScanner, XmlScanner {
@@ -548,9 +576,9 @@ class SuppressLintTest {
             context.report(TEST_ISSUE_NEVER_SUPPRESSIBLE, node, location, message)
         }
 
-        override fun createUastHandler(context: JavaContext) = AssertjDetectorHandler(context)
+        override fun createUastHandler(context: JavaContext): UElementHandler = Handler(context)
 
-        class AssertjDetectorHandler(private val context: JavaContext) : UElementHandler() {
+        private class Handler(private val context: JavaContext) : UElementHandler() {
             override fun visitImportStatement(node: UImportStatement) {
                 node.importReference?.let { importReference ->
                     if (importReference.asSourceString().contains("forbidden")) {
@@ -599,6 +627,52 @@ class SuppressLintTest {
                 implementation = Implementation(
                     MySecurityDetector::class.java,
                     Scope.JAVA_AND_RESOURCE_FILES
+                )
+            )
+        }
+    }
+
+    // Sample detector which just flags the property accessors named forbidden
+    @SuppressWarnings("ALL")
+    class MyPropertyDetector : Detector(), SourceCodeScanner, XmlScanner {
+        override fun getApplicableUastTypes() = listOf(UImportStatement::class.java, UMethod::class.java, UField::class.java)
+
+        override fun createUastHandler(context: JavaContext): UElementHandler = Handler(context)
+
+        private class Handler(private val context: JavaContext) : UElementHandler() {
+            override fun visitImportStatement(node: UImportStatement) {
+            }
+
+            override fun visitField(node: UField) {
+                val name = node.name
+                if (name == "forbidden") {
+                    val message = "Some error message here"
+                    val location = context.getLocation(node)
+                    context.report(PROPERTY_ISSUE, node, location, message)
+                }
+            }
+
+            override fun visitMethod(node: UMethod) {
+                val name = node.name
+                if (name.startsWith("getForbidden") || name.startsWith("setForbidden")) {
+                    val message = "Some error message here"
+                    val location = context.getLocation(node)
+                    context.report(PROPERTY_ISSUE, node, location, message)
+                }
+            }
+        }
+
+        companion object {
+            @Suppress("SpellCheckingInspection")
+            @JvmField
+            val PROPERTY_ISSUE = Issue.create(
+                id = "_PropertyIssue",
+                briefDescription = "Some issue",
+                explanation = "Blahdiblah",
+                category = Category.CORRECTNESS, priority = 10, severity = Severity.WARNING,
+                implementation = Implementation(
+                    MyPropertyDetector::class.java,
+                    Scope.JAVA_FILE_SCOPE
                 )
             )
         }

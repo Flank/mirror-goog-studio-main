@@ -41,12 +41,14 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.ide.common.util.PathString
 import com.android.resources.ResourceFolderType
 import com.android.sdklib.IAndroidTarget
+import com.android.tools.lint.client.api.LintDriver.DriverMode.ANALYSIS_ONLY
+import com.android.tools.lint.client.api.LintDriver.DriverMode.MERGE
 import com.android.tools.lint.client.api.LintListener.EventType
 import com.android.tools.lint.detector.api.BinaryResourceScanner
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
-import com.android.tools.lint.detector.api.SourceSetType
+import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Constraint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Desugaring
@@ -69,6 +71,7 @@ import com.android.tools.lint.detector.api.ResourceFolderScanner
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.tools.lint.detector.api.SourceSetType
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.getContainingFile
 import com.android.tools.lint.detector.api.XmlContext
@@ -106,6 +109,12 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiParenthesizedExpression
 import org.jetbrains.annotations.Contract
 import org.jetbrains.kotlin.config.LanguageVersionSettings
+import org.jetbrains.kotlin.psi.KtAnnotationEntry
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtParenthesizedExpression
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -116,6 +125,7 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UImportStatement
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.expressions.UInjectionHost
 import org.jetbrains.uast.getParentOfType
@@ -3474,11 +3484,25 @@ class LintDriver(
                 }
                 return true
             }
-            currentScope = currentScope.getParentOfType(UAnnotated::class.java) ?: return false
-            if (currentScope is PsiFile) {
-                return false
+            currentScope = currentScope.getParentOfType(UAnnotated::class.java) ?: break
+        }
+
+        // When you have something like
+        //    @Suppress("id") var foo: Foo
+        // in Kotlin, the annotation will only get placed on the private backing field
+        // of the properties, NOT the getters and setters -- and that's where it shows
+        // up in UAST. If there is no backing field, there is no visible annotation in
+        // UAST. Therefore, in this case, we dip into the Kotlin PSI and look for annotations
+        // there.
+        val sourcePsi = scope.sourcePsi
+        if ((sourcePsi is KtProperty || sourcePsi is KtPropertyAccessor) && scope is UMethod) {
+            val property = if (sourcePsi is KtPropertyAccessor) sourcePsi.property else sourcePsi as KtProperty
+            if (isSuppressedKt(issue, property.annotationEntries)) {
+                return true
             }
         }
+
+        return false
     }
 
     private fun flagInvalidSuppress(
@@ -3503,7 +3527,7 @@ class LintDriver(
         if (scope is UAnnotated) {
             //noinspection ExternalAnnotations
             scope.uAnnotations.forEach() {
-                if (it.qualifiedName?.contains("Suppress") == true) {
+                if (it.qualifiedName?.contains(SUPPRESS) == true) {
                     context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
                     return
                 }
@@ -3511,7 +3535,7 @@ class LintDriver(
         } else if (scope is PsiModifierListOwner) {
             //noinspection ExternalAnnotations
             scope.annotations.forEach() {
-                if (it.qualifiedName?.contains("Suppress") == true) {
+                if (it.qualifiedName?.contains(SUPPRESS) == true) {
                     context.report(IssueRegistry.LINT_ERROR, context.getLocation(it), message)
                     return
                 }
@@ -3647,6 +3671,8 @@ class LintDriver(
         const val STUDIO_ID_PREFIX = "AndroidLint"
 
         private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
+        private const val SUPPRESS = "Suppress"
+        private const val SUPPRESS_WARNINGS = "SuppressWarnings"
 
         const val KEY_THROWABLE = "throwable"
 
@@ -4218,6 +4244,27 @@ class LintDriver(
             return false
         }
 
+        @JvmStatic
+        fun isSuppressedKt(issue: Issue, annotations: List<KtAnnotationEntry>): Boolean {
+            if (annotations.isEmpty()) {
+                return false
+            }
+
+            for (annotation in annotations) {
+                val name = annotation.shortName?.identifier ?: continue
+                if (name == SUPPRESS_WARNINGS || name == SUPPRESS || name == SUPPRESS_LINT) {
+                    val attributeList = annotation.valueArgumentList ?: continue
+                    for (attribute in attributeList.arguments) {
+                        if (isSuppressedExpression(issue, attribute.getArgumentExpression())) {
+                            return true
+                        }
+                    }
+                }
+            }
+
+            return false
+        }
+
         private fun isAnnotatedWith(
             annotated: UAnnotated,
             names: Set<String>
@@ -4328,6 +4375,24 @@ class LintDriver(
                     }
                 }
                 is UParenthesizedExpression -> {
+                    return isSuppressedExpression(issue, value.expression)
+                }
+            }
+
+            return false
+        }
+
+        @JvmStatic
+        private fun isSuppressedExpression(issue: Issue, value: KtExpression?): Boolean {
+            when (value) {
+                is KtStringTemplateExpression -> {
+                    val literalValue = ConstantEvaluator.evaluateString(null, value, false)
+                        ?: value.text.removeSurrounding("\"\"\"").removeSurrounding("\"")
+                    if (isSuppressed(issue, literalValue)) {
+                        return true
+                    }
+                }
+                is KtParenthesizedExpression -> {
                     return isSuppressedExpression(issue, value.expression)
                 }
             }
