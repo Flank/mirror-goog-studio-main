@@ -18,11 +18,15 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.sdklib.AndroidVersion
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
 import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import java.io.File
 import java.io.FileReader
 import java.io.IOException
@@ -40,7 +44,7 @@ class FeatureSetMetadata private constructor(
             maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO,
     )
 
-    private constructor(featureSplits: Set<FeatureInfo>, sourceFile: File) : this(
+    private constructor(featureSplits: Set<FeatureInfo>, sourceFile: File?) : this(
             maxNumberOfSplitsBeforeO = Integer.max(MAX_NUMBER_OF_SPLITS_BEFORE_O,
                     featureSplits.size),
             featureSplits = ImmutableSet.copyOf(featureSplits),
@@ -83,9 +87,9 @@ class FeatureSetMetadata private constructor(
 
     @Throws(IOException::class)
     fun save(outputFile: File) {
-        val gsonBuilder = GsonBuilder()
-        val gson = gsonBuilder.create()
-        Files.asCharSink(outputFile, Charsets.UTF_8).write(gson.toJson(featureSplits))
+        JsonWriter(outputFile.bufferedWriter()).use {
+            FeatureSetMetadataTypeAdapter(outputFile).write(it, this)
+        }
     }
 
     private class FeatureInfo(
@@ -118,11 +122,71 @@ class FeatureSetMetadata private constructor(
         @Throws(IOException::class)
         fun load(input: File): FeatureSetMetadata {
             val inputFile = if (input.isDirectory) File(input, OUTPUT_FILE_NAME) else input
-            val gson = GsonBuilder().create()
-            val typeToken = object : TypeToken<HashSet<FeatureInfo?>?>() {}.type
-            FileReader(inputFile).use { fileReader ->
-                val featureIds = gson.fromJson<Set<FeatureInfo>>(fileReader, typeToken)
-                return FeatureSetMetadata(featureIds, inputFile)
+            JsonReader(inputFile.bufferedReader()).use {
+                return FeatureSetMetadataTypeAdapter(inputFile).read(it)
+            }
+        }
+
+
+    }
+
+    private class FeatureSetMetadataTypeAdapter(private val sourceFile: File?) : TypeAdapter<FeatureSetMetadata>() {
+
+        override fun write(writer: JsonWriter, metadata: FeatureSetMetadata) {
+            with(writer) {
+                beginArray()
+                for (split in metadata.featureSplits) {
+                    FeatureInfoTypeAdapter.write(writer, split)
+                }
+                writer.endArray()
+            }
+        }
+
+        override fun read(reader: JsonReader): FeatureSetMetadata {
+            val splits = ImmutableSet.builder<FeatureInfo>()
+            with(reader) {
+                beginArray()
+                while (hasNext()) {
+                    splits.add(FeatureInfoTypeAdapter.read(reader))
+                }
+                endArray()
+            }
+            return FeatureSetMetadata(splits.build(), sourceFile)
+        }
+    }
+
+    private object FeatureInfoTypeAdapter : TypeAdapter<FeatureInfo>() {
+
+        override fun write(writer: JsonWriter, featureInfo: FeatureInfo) {
+            with(writer) {
+                beginObject()
+                name("modulePath").value(featureInfo.modulePath)
+                name("featureName").value(featureInfo.featureName)
+                name("resOffset").value(featureInfo.resOffset)
+                name("namespace").value(featureInfo.namespace)
+                endObject()
+            }
+        }
+
+        override fun read(reader: JsonReader): FeatureInfo {
+            with(reader) {
+                beginObject()
+                var modulePath: String? = null
+                var featureName: String? = null
+                var resOffset: Int? = null
+                var namespace: String? = null
+                while (hasNext()) {
+                    when (nextName()) {
+                        "modulePath" -> modulePath = nextString()
+                        "featureName" -> featureName = nextString()
+                        "resOffset" -> resOffset = nextInt()
+                        "namespace" -> namespace = nextString()
+                        else -> skipValue()
+                    }
+                }
+                val featureInfo = FeatureInfo(modulePath!!, featureName!!, resOffset!!, namespace!!)
+                endObject()
+                return featureInfo
             }
         }
     }
