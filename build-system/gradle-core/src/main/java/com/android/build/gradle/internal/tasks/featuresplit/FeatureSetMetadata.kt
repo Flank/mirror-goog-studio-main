@@ -17,42 +17,30 @@ package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.sdklib.AndroidVersion
 import com.google.common.annotations.VisibleForTesting
-import com.google.common.base.Charsets
-import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
-import com.google.common.io.Files
-import com.google.gson.GsonBuilder
 import com.google.gson.TypeAdapter
-import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import java.io.File
-import java.io.FileReader
 import java.io.IOException
 
 /** Container for all the feature split metadata.  */
 class FeatureSetMetadata private constructor(
         val sourceFile: File?,
         private val featureSplits: MutableSet<FeatureInfo>,
+        private val minSdkVersion: Int,
         private val maxNumberOfSplitsBeforeO: Int,
 ) {
 
-    constructor(maxNumberOfSplitsBeforeO: Int) : this(
+    constructor(minSdkVersion: Int, maxNumberOfSplitsBeforeO: Int) : this(
             sourceFile = null,
             featureSplits = HashSet(),
+            minSdkVersion = minSdkVersion,
             maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO,
     )
 
-    private constructor(featureSplits: Set<FeatureInfo>, sourceFile: File?) : this(
-            maxNumberOfSplitsBeforeO = Integer.max(MAX_NUMBER_OF_SPLITS_BEFORE_O,
-                    featureSplits.size),
-            featureSplits = ImmutableSet.copyOf(featureSplits),
-            sourceFile = sourceFile,
-    )
-
     fun addFeatureSplit(
-            minSdkVersion: Int,
             modulePath: String,
             featureName: String,
             packageName: String) {
@@ -123,35 +111,54 @@ class FeatureSetMetadata private constructor(
         fun load(input: File): FeatureSetMetadata {
             val inputFile = if (input.isDirectory) File(input, OUTPUT_FILE_NAME) else input
             JsonReader(inputFile.bufferedReader()).use {
-                return FeatureSetMetadataTypeAdapter(inputFile).read(it)
+                try {
+                    return FeatureSetMetadataTypeAdapter(inputFile).read(it)
+                } catch (e: Exception) {
+                    throw IOException("Failed loading feature set metadata from $inputFile", e)
+                }
             }
         }
-
-
     }
 
     private class FeatureSetMetadataTypeAdapter(private val sourceFile: File?) : TypeAdapter<FeatureSetMetadata>() {
 
         override fun write(writer: JsonWriter, metadata: FeatureSetMetadata) {
             with(writer) {
-                beginArray()
+                beginObject()
+                name("minSdkVersion").value(metadata.minSdkVersion)
+                name("maxNumberOfSplitsBeforeO").value(metadata.maxNumberOfSplitsBeforeO)
+                name("featureSplits").beginArray()
                 for (split in metadata.featureSplits) {
                     FeatureInfoTypeAdapter.write(writer, split)
                 }
                 writer.endArray()
+                endObject()
             }
         }
 
         override fun read(reader: JsonReader): FeatureSetMetadata {
             val splits = ImmutableSet.builder<FeatureInfo>()
+            var minSdkVersion: Int? = null
+            var maxNumberOfSplitsBeforeO: Int? = null
             with(reader) {
-                beginArray()
-                while (hasNext()) {
-                    splits.add(FeatureInfoTypeAdapter.read(reader))
+                beginObject()
+                while(hasNext()) {
+                    when (nextName()) {
+                        "minSdkVersion" -> minSdkVersion = nextInt()
+                        "maxNumberOfSplitsBeforeO" -> maxNumberOfSplitsBeforeO = nextInt()
+                        "featureSplits" -> {
+                            beginArray()
+                            while (hasNext()) {
+                                splits.add(FeatureInfoTypeAdapter.read(reader))
+                            }
+                            endArray()
+                        }
+                        else -> skipValue()
+                    }
                 }
-                endArray()
+                endObject()
             }
-            return FeatureSetMetadata(splits.build(), sourceFile)
+            return FeatureSetMetadata(sourceFile, splits.build(), minSdkVersion!!, maxNumberOfSplitsBeforeO!!)
         }
     }
 

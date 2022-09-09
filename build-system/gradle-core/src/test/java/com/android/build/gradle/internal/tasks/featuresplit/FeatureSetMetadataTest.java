@@ -63,10 +63,10 @@ public class FeatureSetMetadataTest {
     @Test
     public void testPersistence() throws IOException {
         FeatureSetMetadata featureSetMetadata =
-                new FeatureSetMetadata(FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":one", "one", "example.one");
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":two", "two", "example.two");
-        featureSetMetadata.addFeatureSplit(minSdkVersion, ":three", "three", "example.three");
+                new FeatureSetMetadata(minSdkVersion, FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
+        featureSetMetadata.addFeatureSplit(":one", "one", "example.one");
+        featureSetMetadata.addFeatureSplit(":two", "two", "example.two");
+        featureSetMetadata.addFeatureSplit(":three", "three", "example.three");
         featureSetMetadata.save(
                 new File(temporaryFolder.getRoot(), FeatureSetMetadata.OUTPUT_FILE_NAME));
         File[] files = temporaryFolder.getRoot().listFiles();
