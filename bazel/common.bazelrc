@@ -146,7 +146,6 @@ build:sponge --workspace_status_command="python3 tools/base/bazel/workspace.py"
 # NOTE: Bazel invocations must still supply --build_metadata values for ab_target and ab_build_id
 # to be create a successful AnTS result.
 build:ants --bes_keywords=android-test-storage
-build:ants --bes_keywords=use_module_info
 build:ants --build_metadata="test_definition_name=android_studio/bazel"
 build:ants --build_metadata=generate_test_uri=fusion
 build:ants --build_metadata=run_type=critical
