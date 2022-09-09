@@ -70,18 +70,20 @@ class LocalEmulatorProvisionerPluginTest {
 
     val runningDevices = mutableSetOf<FakeEmulatorConsole>()
 
-    override suspend fun rescanAvds(): List<AvdInfo> = avds
+    override suspend fun rescanAvds(): List<AvdInfo> = synchronized(avds) { avds.toList() }
 
-    override suspend fun createAvd(): Boolean {
-      avds += makeAvdInfo(avdIndex++)
-      return true
-    }
+    override suspend fun createAvd(): Boolean =
+      synchronized(avds) {
+        avds += makeAvdInfo(avdIndex++)
+        return true
+      }
 
-    override suspend fun editAvd(avdInfo: AvdInfo): Boolean {
-      avds.remove(avdInfo)
-      createAvd()
-      return true
-    }
+    override suspend fun editAvd(avdInfo: AvdInfo): Boolean =
+      synchronized(avds) {
+        avds.remove(avdInfo)
+        avds += makeAvdInfo(avdIndex++)
+        return true
+      }
 
     override suspend fun startAvd(avdInfo: AvdInfo) {
       val device = FakeEmulatorConsole(avdInfo.name, avdInfo.dataFolderPath.toString())
