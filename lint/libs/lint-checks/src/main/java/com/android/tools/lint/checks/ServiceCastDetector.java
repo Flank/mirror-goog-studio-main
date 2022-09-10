@@ -179,10 +179,16 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
                         return;
                     }
 
+                    String actual = stripPackage(castType);
+                    String expected = stripPackage(expectedClass);
+                    if (actual.equals(expected) && expectedClass.contains(".")) {
+                        actual = castType;
+                        expected = expectedClass;
+                    }
                     String message =
                             String.format(
                                     "Suspicious cast to `%1$s` for a `%2$s`: expected `%3$s`",
-                                    stripPackage(castType), name, stripPackage(expectedClass));
+                                    actual, name, expected);
                     context.report(ISSUE, call, context.getLocation(cast), message);
                 }
             }
@@ -432,7 +438,7 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
             case "CONSUMER_IR_SERVICE":
                 return "android.hardware.ConsumerIrManager";
             case "CROSS_PROFILE_APPS_SERVICE":
-                return "content.pm.CrossProfileApps";
+                return "android.content.pm.CrossProfileApps";
             case "EUICC_SERVICE":
                 return "android.telephony.euicc.EuiccManager";
             case "DEVICE_POLICY_SERVICE":

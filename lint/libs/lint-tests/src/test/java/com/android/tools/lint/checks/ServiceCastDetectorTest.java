@@ -290,6 +290,35 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testCrossProfile() {
+        // Regression test for b/245337893
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.app.Activity;\n"
+                                        + "import android.content.Context;\n"
+                                        + "import android.preference.PreferenceActivity;\n"
+                                        + "\n"
+                                        + "public class Test {\n"
+                                        + "    public void testErrors(PreferenceActivity someActivity) {\n"
+                                        + "        (android.content.pm.CrossProfileApps)someActivity.getSystemService(Context.CROSS_PROFILE_APPS_SERVICE); // OK\n"
+                                        + "        (test.pkg.CrossProfileApps)someActivity.getSystemService(Context.CROSS_PROFILE_APPS_SERVICE); // ERROR\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        java("package test.pkg;\n" + "public class CrossProfileApps { }"),
+                        // Android N:
+                        manifest().minSdk(24))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/Test.java:10: Error: Suspicious cast to test.pkg.CrossProfileApps for a CROSS_PROFILE_APPS_SERVICE: expected android.content.pm.CrossProfileApps [ServiceCast]\n"
+                                + "        (test.pkg.CrossProfileApps)someActivity.getSystemService(Context.CROSS_PROFILE_APPS_SERVICE); // ERROR\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     public void testLookup() {
         assertEquals(
                 "android.view.accessibility.AccessibilityManager",
