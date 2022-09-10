@@ -43,7 +43,7 @@ interface DefaultSourcesProvider {
      * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
      * overridden by the 2nd one and so on.
      */
-    fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>
+    fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>?
 
     /**
      * the list of sources [DirectoryEntry] for java resources.
@@ -85,7 +85,7 @@ interface DefaultSourcesProvider {
      * The [List] is ordered in ascending order of importance, meaning the first set is meant to be
      * overridden by the 2nd one and so on.
      */
-    fun getMlModels(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>
+    fun getMlModels(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>?
 
     /**
      * the list of sources [DirectoryEntry] for renderscript or null if the feature is disabled.

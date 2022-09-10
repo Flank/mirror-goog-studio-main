@@ -308,8 +308,7 @@
                - aidlDirectories:
                   * {PROJECT}/src/testProDebug/aidl{!}
                - renderscriptDirectories = (null)
-               - resDirectories:
-                  * {PROJECT}/src/testProDebug/res{!}
+               - resDirectories          = []
                - assetsDirectories:
                   * {PROJECT}/src/testProDebug/assets{!}
                - jniLibsDirectories:

@@ -429,8 +429,7 @@
                - aidlDirectories:
                   * {PROJECT}/src/testProPlayDebug/aidl{!}
                - renderscriptDirectories = (null)
-               - resDirectories:
-                  * {PROJECT}/src/testProPlayDebug/res{!}
+               - resDirectories          = []
                - assetsDirectories:
                   * {PROJECT}/src/testProPlayDebug/assets{!}
                - jniLibsDirectories:

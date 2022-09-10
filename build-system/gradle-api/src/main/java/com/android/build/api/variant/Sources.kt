@@ -37,7 +37,9 @@ interface Sources {
     val kotlin: SourceDirectories.Flat?
 
     /**
-     * Access to the Android resources sources folders.
+     * Access to the Android resources sources folders if the component supports android resources
+     * or if [com.android.build.api.dsl.LibraryBuildFeatures.androidResources] is true for library
+     * variants, otherwise null.
      */
     val res: SourceDirectories.Layered?
 
@@ -63,7 +65,8 @@ interface Sources {
     val shaders: SourceDirectories.Layered?
 
     /**
-     * Access to the machine learning models folders.
+     * Access to the machine learning models folders if [com.android.build.api.dsl.ApplicationBuildFeatures.mlModelBinding]
+     * is true otherwise null
      */
     val mlModels: SourceDirectories.Layered?
 

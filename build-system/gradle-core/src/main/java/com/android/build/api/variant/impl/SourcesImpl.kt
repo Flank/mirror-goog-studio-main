@@ -77,13 +77,15 @@ class SourcesImpl(
             SourceType.RES.folder,
             variantServices,
             variantSourceProvider?.res?.filter
-        ).also { sourceDirectoriesImpl ->
-            defaultSourceProvider.getRes(sourceDirectoriesImpl).run {
+        ).let { sourceDirectoriesImpl ->
+            val defaultResDirectories = defaultSourceProvider.getRes(sourceDirectoriesImpl) ?: return@let null
+            defaultResDirectories.run {
                 forEach {
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceProvider?.res)
+            return@let sourceDirectoriesImpl
         }
 
     override val resources =
@@ -151,13 +153,15 @@ class SourcesImpl(
             SourceType.ML_MODELS.folder,
             variantServices,
             variantSourceProvider?.mlModels?.filter
-        ).also { sourceDirectoriesImpl ->
-            defaultSourceProvider.getMlModels(sourceDirectoriesImpl).run {
+        ).let { sourceDirectoriesImpl ->
+            val defaultMlModelsDirectories = defaultSourceProvider.getMlModels(sourceDirectoriesImpl) ?: return@let null
+            defaultMlModelsDirectories.run {
                 forEach {
                     sourceDirectoriesImpl.addSources(it)
                 }
             }
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceProvider?.mlModels)
+            return@let sourceDirectoriesImpl
         }
 
     override val aidl by lazy(LazyThreadSafetyMode.NONE) {
@@ -208,11 +212,11 @@ class SourcesImpl(
     override fun renderscript(action: (FlatSourceDirectoriesImpl) -> Unit) {
         renderscript?.let(action)
     }
-    override fun res(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(res) }
+    override fun res(action: (LayeredSourceDirectoriesImpl) -> Unit) { res?.let(action) }
     override fun assets(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(assets) }
     override fun jniLibs(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(jniLibs) }
     override fun shaders(action: (LayeredSourceDirectoriesImpl) -> Unit) { shaders?.let(action) }
-    override fun mlModels(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(mlModels) }
+    override fun mlModels(action: (LayeredSourceDirectoriesImpl) -> Unit) { mlModels?.let(action) }
 
     override val artProfile = variantServices.provider {
         defaultSourceProvider.artProfile

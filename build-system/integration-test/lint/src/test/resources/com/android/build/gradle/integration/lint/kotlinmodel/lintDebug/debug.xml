@@ -21,7 +21,6 @@
     <sourceProvider
         manifests="src/test/AndroidManifest.xml"
         javaDirectories="src/test/java:src/testDebug/java:src/test/kotlin:src/testDebug/kotlin"
-        resDirectories="src/testDebug/res:src/test/res"
         assetsDirectories="src/testDebug/assets:src/test/assets"
         unitTest="true"/>
     <sourceProvider

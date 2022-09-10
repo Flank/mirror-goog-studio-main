@@ -20,7 +20,6 @@
     <sourceProvider
         manifests="src/test/AndroidManifest.xml"
         javaDirectories="src/test/java:src/testRelease/java:src/test/kotlin:src/testRelease/kotlin"
-        resDirectories="src/testRelease/res:src/test/res"
         assetsDirectories="src/testRelease/assets:src/test/assets"
         unitTest="true"/>
     <sourceProvider
@@ -34,7 +33,6 @@
     <sourceProvider
         manifests="src/testFixtures/AndroidManifest.xml"
         javaDirectories="src/testFixtures/java:src/testFixturesRelease/java:src/testFixtures/kotlin:src/testFixturesRelease/kotlin"
-        resDirectories="src/testFixturesRelease/res:src/testFixtures/res"
         assetsDirectories="src/testFixturesRelease/assets:src/testFixtures/assets"/>
   </testFixturesSourceProviders>
   <mainArtifact

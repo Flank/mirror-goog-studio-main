@@ -63,7 +63,10 @@ class DefaultSourcesProviderImpl(
         }
     }
 
-    override fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> = component.defaultResSources(lateAdditionsDelegate)
+    override fun getRes(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>? =
+        if (component.buildFeatures.androidResources) {
+            component.defaultResSources(lateAdditionsDelegate)
+        } else null
     override fun getResources(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>  = flattenSourceProviders(lateAdditionsDelegate) { sourceSet -> sourceSet.resources }
     override fun getAssets(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> = defaultAssetsSources(lateAdditionsDelegate)
     override fun getJniLibs(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> =
@@ -78,8 +81,10 @@ class DefaultSourcesProviderImpl(
         flattenSourceProviders(lateAdditionsDelegate) { sourceSet -> sourceSet.aidl }
     } else null
 
-    override fun getMlModels(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries> =
-            getSourceList(lateAdditionsDelegate) { sourceProvider -> sourceProvider.mlModels }
+    override fun getMlModels(lateAdditionsDelegate: LayeredSourceDirectoriesImpl): List<DirectoryEntries>? =
+            if (component.buildFeatures.mlModelBinding) {
+                getSourceList(lateAdditionsDelegate) { sourceProvider -> sourceProvider.mlModels }
+            } else null
 
     override fun getRenderscript(lateAdditionsDelegate: FlatSourceDirectoriesImpl): List<DirectoryEntry>? = if (component.buildFeatures.renderScript) {
         flattenSourceProviders(lateAdditionsDelegate) { sourceSet -> sourceSet.renderscript }
