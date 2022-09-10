@@ -30,11 +30,6 @@ licenseReport {
     ignored = libs.trove4j
 }
 
-// Set the version of the plugin in the manifest. This is used by 3rd party plugin (like Kotlin)
-jar.manifest.attributes("Plugin-Version": version)
-jar.manifest.attributes("Inception-Date": DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDate.now()));
-
-
 // Incremental update test support
 File classesDir = new File(project.buildDir, "classes/incremental-test")
 File baseClasses = new File(classesDir, "base")
@@ -321,6 +316,19 @@ tasks.jar {
     from {
         configurations.includeInJar.collect({zipTree(it)})
     }
+    // Set the version of the plugin in the manifest. This is used by 3rd party plugin (like Kotlin)
+    manifest.attributes("Plugin-Version": version)
+    manifest.attributes("Inception-Date": DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDate.now()));
+    // make sure we use the NOTICE coming from this module as some dependencies are repackaged inside
+    // the jar file with the "includeInJar" configuration. Such dependencies like 'shrinker' also
+    // have a NOTICE file.
+    // We could use 'jar.duplicatesStrategy' = EXCLUDE but it will do this to all files which could
+    // lead to other problems if we had '.class' duplicates and just picked up the first one.
+    filesMatching("NOTICE", {
+        // only pick up NOTICE coming from gradle-core module
+        if (!it.toString().contains("gradle-core"))
+            it.exclude()
+    })
 }
 
 tasks.sourcesJar {
