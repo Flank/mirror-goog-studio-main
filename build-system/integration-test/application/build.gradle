@@ -81,7 +81,16 @@ configure([test, testPrebuilts]) {
 
     outputs.upToDateWhen { false }
 
-    maxParallelForks = Runtime.runtime.availableProcessors() / 3
+    Float maxParallelForksRatio = 3.0
+    if (System.properties["os.arch"] == "aarch64") {
+        maxParallelForksRatio = 1.5
+    }
+    if (project.hasProperty("com.android.build.integ-tests.parallelForkRatio")) {
+        maxParallelForksRatio = Float.parseFloat(
+                project.getProperties().get("com.android.build.integ-tests.parallelForkRatio")
+        )
+    }
+    maxParallelForks = Runtime.runtime.availableProcessors() / maxParallelForksRatio
 
     useJUnit {
         String includedCategories = System.getProperty('test.includeCategories')
