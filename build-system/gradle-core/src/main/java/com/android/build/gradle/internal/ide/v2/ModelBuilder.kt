@@ -580,7 +580,9 @@ class ModelBuilder<
         features: BuildFeatureValues
     ): BasicArtifact {
         return BasicArtifactImpl(
-            variantSourceProvider = component.sources.variantSourceProvider?.convert(features, component.sources),
+            variantSourceProvider = component.sources.variantSourceProvider?.convert(
+                component.sources
+            ),
             multiFlavorSourceProvider = component.sources.multiFlavorSourceProvider?.convert(
                 features
             ),

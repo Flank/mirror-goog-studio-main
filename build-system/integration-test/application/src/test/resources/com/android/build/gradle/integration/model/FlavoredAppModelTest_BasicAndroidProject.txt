@@ -253,7 +253,7 @@
                   * {PROJECT}/src/proDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/proDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories:
                   * {PROJECT}/src/proDebug/res{!}
                - assetsDirectories:
@@ -262,7 +262,7 @@
                   * {PROJECT}/src/proDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/proDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)
@@ -280,7 +280,7 @@
                   * {PROJECT}/src/androidTestProDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/androidTestProDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories:
                   * {PROJECT}/src/androidTestProDebug/res{!}
                - assetsDirectories:
@@ -289,7 +289,7 @@
                   * {PROJECT}/src/androidTestProDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/androidTestProDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)
@@ -307,7 +307,7 @@
                   * {PROJECT}/src/testProDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/testProDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories          = []
                - assetsDirectories:
                   * {PROJECT}/src/testProDebug/assets{!}
@@ -315,7 +315,7 @@
                   * {PROJECT}/src/testProDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/testProDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             - multiFlavorSourceProvider = (null)

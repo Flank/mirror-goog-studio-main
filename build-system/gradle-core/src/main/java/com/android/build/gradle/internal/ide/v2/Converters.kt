@@ -214,7 +214,6 @@ internal fun DefaultAndroidSourceSet.convert(
 }
 
 internal fun DefaultAndroidSourceSet.convert(
-    features: BuildFeatureValues,
     sources: InternalSources,
 ) = SourceProviderImpl(
     name = name,
@@ -222,13 +221,13 @@ internal fun DefaultAndroidSourceSet.convert(
     javaDirectories = variantSourcesForModel(sources.java),
     kotlinDirectories = variantSourcesForModel(sources.kotlin),
     resourcesDirectories = variantSourcesForModel(sources.resources),
-    aidlDirectories = if (features.aidl) aidlDirectories else null,
-    renderscriptDirectories = if (features.renderScript) renderscriptDirectories else null,
-    resDirectories = if (features.androidResources) variantSourcesForModel(sources.res) else null,
+    aidlDirectories = variantSourcesForModel(sources.aidl),
+    renderscriptDirectories = variantSourcesForModel(sources.renderscript),
+    resDirectories = variantSourcesForModel(sources.res),
     assetsDirectories = variantSourcesForModel(sources.assets),
     jniLibsDirectories = variantSourcesForModel(sources.jniLibs),
-    shadersDirectories = sources.shaders?.let { variantSourcesForModel(it) },
-    mlModelsDirectories = if (features.mlModelBinding) mlModelsDirectories else null,
+    shadersDirectories = variantSourcesForModel(sources.shaders),
+    mlModelsDirectories = variantSourcesForModel(sources.mlModels),
     customDirectories = customDirectories,
 )
 

@@ -328,7 +328,7 @@
                   * {PROJECT}/src/proPlayDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/proPlayDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories:
                   * {PROJECT}/src/proPlayDebug/res{!}
                - assetsDirectories:
@@ -337,7 +337,7 @@
                   * {PROJECT}/src/proPlayDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/proPlayDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             > multiFlavorSourceProvider:
@@ -378,7 +378,7 @@
                   * {PROJECT}/src/androidTestProPlayDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/androidTestProPlayDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories:
                   * {PROJECT}/src/androidTestProPlayDebug/res{!}
                - assetsDirectories:
@@ -387,7 +387,7 @@
                   * {PROJECT}/src/androidTestProPlayDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/androidTestProPlayDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             > multiFlavorSourceProvider:
@@ -428,7 +428,7 @@
                   * {PROJECT}/src/testProPlayDebug/resources{!}
                - aidlDirectories:
                   * {PROJECT}/src/testProPlayDebug/aidl{!}
-               - renderscriptDirectories = (null)
+               - renderscriptDirectories = []
                - resDirectories          = []
                - assetsDirectories:
                   * {PROJECT}/src/testProPlayDebug/assets{!}
@@ -436,7 +436,7 @@
                   * {PROJECT}/src/testProPlayDebug/jniLibs{!}
                - shadersDirectories:
                   * {PROJECT}/src/testProPlayDebug/shaders{!}
-               - mlModelsDirectories     = (null)
+               - mlModelsDirectories     = []
                - custom                  = []
             < variantSourceProvider
             > multiFlavorSourceProvider:
