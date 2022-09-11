@@ -1559,10 +1559,16 @@ fun getLocale(parent: String): LocaleQualifier? {
  *     providing the language and possibly region
  */
 fun getLocale(context: XmlContext): LocaleQualifier? {
+    // If the resource is in a folder specifying a locale, use that
+    getLocale(context.file.parentFile.name)?.let {
+        return it
+    }
+
+    // Users can specify a custom locale using tools:locale
     val root = context.document.documentElement
     if (root != null) {
         val locale = root.getAttributeNS(TOOLS_URI, ATTR_LOCALE)
-        if (locale != null && !locale.isEmpty()) {
+        if (locale.isNotEmpty()) {
             if (locale.indexOf('-') == -1) {
                 return LocaleQualifier.getQualifier(locale)
             }
@@ -1573,7 +1579,7 @@ fun getLocale(context: XmlContext): LocaleQualifier? {
         }
     }
 
-    return getLocale(context.file.parentFile.name)
+    return null
 }
 
 /**

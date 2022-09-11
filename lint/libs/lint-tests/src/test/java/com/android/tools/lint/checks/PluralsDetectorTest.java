@@ -203,7 +203,11 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                                 "res/values-fr/plurals.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                                        + "<resources>\n"
+                                        // bug 110085455: also make sure we ignore tools:locale
+                                        // attributes in a folder which
+                                        // implies a specific locale (these are usually copy/paste
+                                        // errors)
+                                        + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
                                         + "  <plurals name=\"draft\">\n"
                                         + "    <item quantity=\"one\">\"brouillon\"</item>\n"
                                         + "  </plurals>\n"

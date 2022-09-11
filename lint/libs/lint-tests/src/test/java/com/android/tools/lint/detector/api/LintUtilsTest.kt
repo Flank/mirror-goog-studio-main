@@ -394,15 +394,15 @@ class LintUtilsTest : TestCase() {
         assertEquals("nb", getLocale(context)!!.language)
         dispose(context)
 
-        // tools:locale wins over folder location
+        // folder location wins over tools:locale wins
         xml = TestFiles.xml(
-            "res/values-fr/strings.xml",
+            "res/values-fr-rUS/strings.xml",
             "" +
                 "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n" +
                 "</resources>\n"
         )
         context = createXmlContext(xml.getContents()!!, File(xml.targetPath))
-        assertEquals("nb", getLocale(context)!!.language)
+        assertEquals("fr", getLocale(context)!!.language)
         dispose(context)
 
         UastEnvironment.disposeApplicationEnvironment()
