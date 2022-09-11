@@ -13,483 +13,435 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.build.gradle.internal
 
-package com.android.build.gradle.internal;
+import com.android.SdkConstants
+import com.android.build.api.artifact.SingleArtifact
+import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.variant.LibraryVariantBuilder
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.LibraryCreationConfig
+import com.android.build.gradle.internal.component.TestComponentCreationConfig
+import com.android.build.gradle.internal.component.TestFixturesCreationConfig
+import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping
+import com.android.build.gradle.internal.pipeline.OriginalStream
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
+import com.android.build.gradle.internal.publishing.ComponentPublishingInfo
+import com.android.build.gradle.internal.publishing.PublishedConfigSpec
+import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask
+import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.services.DokkaParallelBuildService
+import com.android.build.gradle.internal.tasks.AarMetadataTask
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir
+import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar
+import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes
+import com.android.build.gradle.internal.tasks.CheckManifest
+import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask
+import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
+import com.android.build.gradle.internal.tasks.LibraryJniLibsTask.ProjectAndLocalJarsCreationAction
+import com.android.build.gradle.internal.tasks.LibraryJniLibsTask.ProjectOnlyCreationAction
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask
+import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction
+import com.android.build.gradle.internal.tasks.PackageRenderscriptTask
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask
+import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig
+import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig
+import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback
+import com.android.build.gradle.internal.variant.ComponentInfo
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.tasks.BundleAar.LibraryCreationAction
+import com.android.build.gradle.tasks.BundleAar.LibraryLocalLintCreationAction
+import com.android.build.gradle.tasks.CompileLibraryResourcesTask
+import com.android.build.gradle.tasks.ExtractAnnotations
+import com.android.build.gradle.tasks.ExtractDeepLinksTask
+import com.android.build.gradle.tasks.ExtractDeepLinksTask.AarCreationAction
+import com.android.build.gradle.tasks.JavaDocGenerationTask
+import com.android.build.gradle.tasks.JavaDocJarTask
+import com.android.build.gradle.tasks.MergeResources
+import com.android.build.gradle.tasks.MergeSourceSetFolders.LibraryAssetCreationAction
+import com.android.build.gradle.tasks.ProcessLibraryArtProfileTask
+import com.android.build.gradle.tasks.ProcessLibraryManifest
+import com.android.build.gradle.tasks.SourceJarTask
+import com.android.build.gradle.tasks.ZipMergingTask
+import com.android.build.gradle.tasks.sync.LibraryVariantModelTask
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Sets
+import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.component.AdhocComponentWithVariants
+import org.gradle.api.tasks.TaskProvider
 
-import static com.android.SdkConstants.FN_PUBLIC_TXT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.JAVA_DOC_PUBLICATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.SOURCE_PUBLICATION;
-
-import com.android.annotations.NonNull;
-import com.android.build.api.artifact.SingleArtifact;
-import com.android.build.api.transform.QualifiedContent.ScopeType;
-import com.android.build.api.variant.LibraryVariantBuilder;
-import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.component.ComponentCreationConfig;
-import com.android.build.gradle.internal.component.LibraryCreationConfig;
-import com.android.build.gradle.internal.component.TestComponentCreationConfig;
-import com.android.build.gradle.internal.component.TestFixturesCreationConfig;
-import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.pipeline.OriginalStream;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.publishing.ComponentPublishingInfo;
-import com.android.build.gradle.internal.publishing.PublishedConfigSpec;
-import com.android.build.gradle.internal.publishing.VariantPublishingInfo;
-import com.android.build.gradle.internal.res.GenerateApiPublicTxtTask;
-import com.android.build.gradle.internal.res.GenerateEmptyResourceFilesTask;
-import com.android.build.gradle.internal.scope.BuildFeatureValues;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.services.DokkaParallelBuildService;
-import com.android.build.gradle.internal.tasks.AarMetadataTask;
-import com.android.build.gradle.internal.tasks.BundleLibraryClassesDir;
-import com.android.build.gradle.internal.tasks.BundleLibraryClassesJar;
-import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
-import com.android.build.gradle.internal.tasks.CheckManifest;
-import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
-import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
-import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
-import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
-import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
-import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
-import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
-import com.android.build.gradle.internal.tasks.factory.GlobalTaskCreationConfig;
-import com.android.build.gradle.internal.tasks.factory.TaskManagerConfig;
-import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
-import com.android.build.gradle.internal.variant.ComponentInfo;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.tasks.BundleAar;
-import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
-import com.android.build.gradle.tasks.ExtractAnnotations;
-import com.android.build.gradle.tasks.ExtractDeepLinksTask;
-import com.android.build.gradle.tasks.JavaDocGenerationTask;
-import com.android.build.gradle.tasks.JavaDocJarTask;
-import com.android.build.gradle.tasks.MergeResources;
-import com.android.build.gradle.tasks.MergeSourceSetFolders;
-import com.android.build.gradle.tasks.ProcessLibraryArtProfileTask;
-import com.android.build.gradle.tasks.ProcessLibraryManifest;
-import com.android.build.gradle.tasks.SourceJarTask;
-import com.android.build.gradle.tasks.ZipMergingTask;
-import com.android.build.gradle.tasks.sync.LibraryVariantModelTask;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.component.AdhocComponentWithVariants;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.JavaCompile;
-import org.jetbrains.annotations.NotNull;
-
-/** TaskManager for creating tasks in an Android library project. */
-public class LibraryTaskManager extends TaskManager<LibraryVariantBuilder, LibraryCreationConfig> {
-
-    public LibraryTaskManager(
-            @NonNull Project project,
-            @NonNull
-                    Collection<
-                                    ? extends
-                                            ComponentInfo<
-                                                    LibraryVariantBuilder, LibraryCreationConfig>>
-                            variants,
-            @NonNull Collection<? extends TestComponentCreationConfig> testComponents,
-            @NonNull Collection<? extends TestFixturesCreationConfig> testFixturesComponents,
-            @NonNull GlobalTaskCreationConfig globalConfig,
-            @NonNull TaskManagerConfig localConfig,
-            @NonNull BaseExtension extension) {
-        super(
-                project,
-                variants,
-                testComponents,
-                testFixturesComponents,
-                globalConfig,
-                localConfig,
-                extension);
-    }
-
-    @Override
-    protected void doCreateTasksForVariant(
-            @NotNull ComponentInfo<LibraryVariantBuilder, LibraryCreationConfig> variantInfo) {
-
-        LibraryCreationConfig libraryVariant = variantInfo.getVariant();
-        BuildFeatureValues buildFeatures = libraryVariant.getBuildFeatures();
-
-        createAnchorTasks(libraryVariant);
-
-        taskFactory.register(new LibraryVariantModelTask.CreationAction(libraryVariant));
+/** TaskManager for creating tasks in an Android library project.  */
+class LibraryTaskManager(
+    project: Project,
+    variants: Collection<ComponentInfo<LibraryVariantBuilder, LibraryCreationConfig>>,
+    testComponents: Collection<TestComponentCreationConfig>,
+    testFixturesComponents: Collection<TestFixturesCreationConfig>,
+    globalConfig: GlobalTaskCreationConfig,
+    localConfig: TaskManagerConfig,
+    extension: BaseExtension
+) : TaskManager<LibraryVariantBuilder, LibraryCreationConfig>(
+    project,
+    variants,
+    testComponents,
+    testFixturesComponents,
+    globalConfig,
+    localConfig,
+    extension
+) {
+    override fun doCreateTasksForVariant(
+        variantInfo: ComponentInfo<LibraryVariantBuilder, LibraryCreationConfig>
+    ) {
+        val libraryVariant = variantInfo.variant
+        val buildFeatures = libraryVariant.buildFeatures
+        createAnchorTasks(libraryVariant)
+        taskFactory.register(LibraryVariantModelTask.CreationAction(libraryVariant))
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(libraryVariant);
-
-        if (buildFeatures.getAndroidResources()) {
-            createGenerateResValuesTask(libraryVariant);
-            taskFactory.register(new ExtractDeepLinksTask.CreationAction(libraryVariant));
-            taskFactory.register(new ExtractDeepLinksTask.AarCreationAction(libraryVariant));
+        createDependencyStreams(libraryVariant)
+        if (buildFeatures.androidResources) {
+            createGenerateResValuesTask(libraryVariant)
+            taskFactory.register(ExtractDeepLinksTask.CreationAction(libraryVariant))
+            taskFactory.register(AarCreationAction(libraryVariant))
         } else { // Resource processing is disabled.
             // TODO(b/147579629): add a warning for manifests containing resource references.
-            if (globalConfig.getNamespacedAndroidResources()) {
-                getLogger()
-                        .error(
-                                "Disabling resource processing in resource namespace aware "
-                                        + "modules is not supported currently.");
+            if (globalConfig.namespacedAndroidResources) {
+                logger
+                    .error(
+                        "Disabling resource processing in resource namespace aware "
+                                + "modules is not supported currently."
+                    )
             }
 
             // Create a task to generate empty/mock required resource artifacts.
-            taskFactory.register(new GenerateEmptyResourceFilesTask.CreateAction(libraryVariant));
+            taskFactory.register(GenerateEmptyResourceFilesTask.CreateAction(libraryVariant))
         }
 
         // Add a task to check the manifest
-        taskFactory.register(new CheckManifest.CreationAction(libraryVariant));
-
+        taskFactory.register(CheckManifest.CreationAction(libraryVariant))
         taskFactory.register(
-                new ProcessLibraryManifest.CreationAction(
-                        libraryVariant,
-                        libraryVariant.getTargetSdkVersion(),
-                        libraryVariant.getMaxSdkVersion()));
-
-        createRenderscriptTask(libraryVariant);
-
-        if (buildFeatures.getAndroidResources()) {
-            createMergeResourcesTasks(libraryVariant);
-
-            createCompileLibraryResourcesTask(libraryVariant);
+            ProcessLibraryManifest.CreationAction(
+                libraryVariant,
+                libraryVariant.targetSdkVersion,
+                libraryVariant.maxSdkVersion
+            )
+        )
+        createRenderscriptTask(libraryVariant)
+        if (buildFeatures.androidResources) {
+            createMergeResourcesTasks(libraryVariant)
+            createCompileLibraryResourcesTask(libraryVariant)
         }
-
-        createShaderTask(libraryVariant);
+        createShaderTask(libraryVariant)
 
         // Add tasks to merge the assets folders
-        createMergeAssetsTask(libraryVariant);
-        createLibraryAssetsTask(libraryVariant);
+        createMergeAssetsTask(libraryVariant)
+        createLibraryAssetsTask(libraryVariant)
 
         // Add a task to create the BuildConfig class
-        createBuildConfigTask(libraryVariant);
-
-        if (buildFeatures.getAndroidResources()) {
+        createBuildConfigTask(libraryVariant)
+        if (buildFeatures.androidResources) {
             // Add a task to generate resource source files, directing the location
             // of the r.txt file to be directly in the bundle.
             createProcessResTask(
-                    libraryVariant,
-                    null,
-                    // Switch to package where possible so we stop merging resources in
-                    // libraries
-                    MergeType.PACKAGE,
-                    libraryVariant.getServices().getProjectInfo().getProjectBaseName());
+                libraryVariant,
+                null,  // Switch to package where possible so we stop merging resources in
+                // libraries
+                MergeType.PACKAGE,
+                libraryVariant.services.projectInfo.getProjectBaseName()
+            )
 
             // Only verify resources if in Release and not namespaced.
-            if (!libraryVariant.getDebuggable() && !globalConfig.getNamespacedAndroidResources()) {
-                createVerifyLibraryResTask(libraryVariant);
+            if (!libraryVariant.debuggable && !globalConfig.namespacedAndroidResources) {
+                createVerifyLibraryResTask(libraryVariant)
             }
-
-            registerLibraryRClassTransformStream(libraryVariant);
+            registerLibraryRClassTransformStream(libraryVariant)
         }
 
         // process java resources only, the merge is setup after
         // the task to generate intermediate jars for project to project publishing.
-        createProcessJavaResTask(libraryVariant);
-
-        createAidlTask(libraryVariant);
+        createProcessJavaResTask(libraryVariant)
+        createAidlTask(libraryVariant)
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(libraryVariant);
+        createDataBindingTasksIfNecessary(libraryVariant)
 
         // Add a task to auto-generate classes for ML model files.
-        createMlkitTask(libraryVariant);
+        createMlkitTask(libraryVariant)
 
         // Add a compile task
-        TaskProvider<? extends JavaCompile> javacTask = createJavacTask(libraryVariant);
-        addJavacClassesStream(libraryVariant);
-        TaskManager.setJavaCompilerTask(javacTask, libraryVariant);
-
-        taskFactory.register(new MergeGeneratedProguardFilesCreationAction(libraryVariant));
-
-        createMergeJniLibFoldersTasks(libraryVariant);
-
-        taskFactory.register(new StripDebugSymbolsTask.CreationAction(libraryVariant));
-
-        taskFactory.register(new PackageRenderscriptTask.CreationAction(libraryVariant));
+        val javacTask = createJavacTask(libraryVariant)
+        addJavacClassesStream(libraryVariant)
+        setJavaCompilerTask(javacTask, libraryVariant)
+        taskFactory.register(MergeGeneratedProguardFilesCreationAction(libraryVariant))
+        createMergeJniLibFoldersTasks(libraryVariant)
+        taskFactory.register(StripDebugSymbolsTask.CreationAction(libraryVariant))
+        taskFactory.register(PackageRenderscriptTask.CreationAction(libraryVariant))
 
         // merge consumer proguard files from different build types and flavors
-        taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(libraryVariant));
-
-        taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(libraryVariant));
+        taskFactory.register(MergeConsumerProguardFilesTask.CreationAction(libraryVariant))
+        taskFactory.register(ExportConsumerProguardFilesTask.CreationAction(libraryVariant))
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
         // b/37564303
         if (libraryVariant
-                .getServices()
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
-            taskFactory.register(new ExtractAnnotations.CreationAction(libraryVariant));
+                .services
+                .projectOptions[BooleanOption.ENABLE_EXTRACT_ANNOTATIONS]
+        ) {
+            taskFactory.register(ExtractAnnotations.CreationAction(libraryVariant))
         }
-
-        final boolean instrumented = libraryVariant.isAndroidTestCoverageEnabled();
+        val instrumented = libraryVariant.isAndroidTestCoverageEnabled
 
         // ----- Code Coverage first -----
         if (instrumented) {
-            createJacocoTask(libraryVariant);
+            createJacocoTask(libraryVariant)
         }
-
-        maybeCreateTransformClassesWithAsmTask(libraryVariant);
+        maybeCreateTransformClassesWithAsmTask(libraryVariant)
 
         // Create jar with library classes used for publishing to runtime elements.
         taskFactory.register(
-                new BundleLibraryClassesJar.CreationAction(
-                        libraryVariant, AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS));
+            BundleLibraryClassesJar.CreationAction(
+                libraryVariant, PublishedConfigType.RUNTIME_ELEMENTS
+            )
+        )
 
         // Also create a directory containing the same classes for incremental dexing
-        taskFactory.register(new BundleLibraryClassesDir.CreationAction(libraryVariant));
-
-        taskFactory.register(new BundleLibraryJavaRes.CreationAction(libraryVariant));
+        taskFactory.register(BundleLibraryClassesDir.CreationAction(libraryVariant))
+        taskFactory.register(BundleLibraryJavaRes.CreationAction(libraryVariant))
 
         // Create a jar with both classes and java resources.  This artifact is not
         // used by the Android application plugin and the task usually don't need to
         // be executed.  The artifact is useful for other Gradle users who needs the
         // 'jar' artifact as API dependency.
-        taskFactory.register(new ZipMergingTask.CreationAction(libraryVariant));
+        taskFactory.register(ZipMergingTask.CreationAction(libraryVariant))
 
         // now add a task that will take all the native libs and package
         // them into an intermediary folder. This processes only the PROJECT
         // scope.
         taskFactory.register(
-                new LibraryJniLibsTask.ProjectOnlyCreationAction(
-                        libraryVariant, InternalArtifactType.LIBRARY_JNI.INSTANCE));
+            ProjectOnlyCreationAction(
+                libraryVariant, InternalArtifactType.LIBRARY_JNI
+            )
+        )
 
         // Now go back to fill the pipeline with transforms used when
         // publishing the AAR
 
         // first merge the java resources.
-        createMergeJavaResTask(libraryVariant);
+        createMergeJavaResTask(libraryVariant)
 
         // ----- Minify next -----
-        maybeCreateJavaCodeShrinkerTask(libraryVariant);
+        maybeCreateJavaCodeShrinkerTask(libraryVariant)
 
         // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.
         // This is used for building the AAR.
-
         taskFactory.register(
-                new LibraryAarJarsTask.CreationAction(
-                        libraryVariant, libraryVariant.getMinifiedEnabled()));
+            LibraryAarJarsTask.CreationAction(
+                libraryVariant, libraryVariant.minifiedEnabled
+            )
+        )
 
         // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT
         // and the LOCAL_PROJECT scopes
         taskFactory.register(
-                new LibraryJniLibsTask.ProjectAndLocalJarsCreationAction(
-                        libraryVariant, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI.INSTANCE));
+            ProjectAndLocalJarsCreationAction(
+                libraryVariant, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
+            )
+        )
 
         // Add a task to create the AAR metadata file
-        taskFactory.register(new AarMetadataTask.CreationAction(libraryVariant));
+        taskFactory.register(AarMetadataTask.CreationAction(libraryVariant))
 
         // Add a task to write the local lint AAR file
-        taskFactory.register(new BundleAar.LibraryLocalLintCreationAction(libraryVariant));
-
-        createBundleTask(libraryVariant);
+        taskFactory.register(LibraryLocalLintCreationAction(libraryVariant))
+        createBundleTask(libraryVariant)
     }
 
-    private void createBundleTask(@NonNull LibraryCreationConfig variant) {
-        taskFactory.register(new BundleAar.LibraryCreationAction(variant));
-
-        variant.getTaskContainer()
-                .getAssembleTask()
-                .configure(
-                        task -> {
-                            task.dependsOn(variant.getArtifacts().get(SingleArtifact.AAR.INSTANCE));
-                        });
-
-        VariantPublishingInfo publishInfo = variant.getPublishInfo();
+    private fun createBundleTask(variant: LibraryCreationConfig) {
+        taskFactory.register(LibraryCreationAction(variant))
+        variant.taskContainer
+            .assembleTask
+            .configure { task: Task -> task.dependsOn(variant.artifacts.get(SingleArtifact.AAR)) }
+        val publishInfo = variant.publishInfo
         if (publishInfo != null) {
-            List<ComponentPublishingInfo> components = publishInfo.getComponents();
+            val components = publishInfo.components
 
             // Checks all components which the current variant is published to and see if there is
             // any component that is configured to publish source or javadoc.
-            if (components.stream().anyMatch(ComponentPublishingInfo::getWithSourcesJar)) {
-                taskFactory.register(new SourceJarTask.CreationAction(variant));
+            if (components.stream().anyMatch(ComponentPublishingInfo::withSourcesJar)) {
+                taskFactory.register(SourceJarTask.CreationAction(variant))
             }
-            if (components.stream().anyMatch(ComponentPublishingInfo::getWithJavadocJar)) {
-                new DokkaParallelBuildService.RegistrationAction(project).execute();
-                taskFactory.register(new JavaDocGenerationTask.CreationAction(variant));
-                taskFactory.register(new JavaDocJarTask.CreationAction(variant));
+            if (components.stream().anyMatch(ComponentPublishingInfo::withJavadocJar)) {
+                DokkaParallelBuildService.RegistrationAction(project).execute()
+                taskFactory.register(JavaDocGenerationTask.CreationAction(variant))
+                taskFactory.register(JavaDocJarTask.CreationAction(variant))
             }
-
-            for (ComponentPublishingInfo component : components) {
+            components.forEach {
                 createComponent(
-                        variant, component.getComponentName(), component.isClassifierRequired());
+                    variant, it.componentName, it.isClassifierRequired
+                )
             }
         }
     }
 
-    private void createComponent(
-            @NonNull LibraryCreationConfig variant,
-            @NonNull String componentName,
-            boolean isClassifierRequired) {
-        final VariantDependencies variantDependencies = variant.getVariantDependencies();
-
-        AdhocComponentWithVariants component =
-                (AdhocComponentWithVariants) project.getComponents().findByName(componentName);
+    private fun createComponent(
+        variant: LibraryCreationConfig,
+        componentName: String,
+        isClassifierRequired: Boolean
+    ) {
+        val variantDependencies = variant.variantDependencies
+        var component = project.components.findByName(componentName) as AdhocComponentWithVariants?
         if (component == null) {
-            component = localConfig.getComponentFactory().adhoc(componentName);
-            project.getComponents().add(component);
+            component = localConfig.componentFactory.adhoc(componentName)
+            project.components.add(component)
         }
-        final Configuration apiPub =
-                variantDependencies.getElements(
-                        new PublishedConfigSpec(
-                                API_PUBLICATION, componentName, isClassifierRequired));
-        final Configuration runtimePub =
-                variantDependencies.getElements(
-                        new PublishedConfigSpec(
-                                RUNTIME_PUBLICATION, componentName, isClassifierRequired));
-
-        final Configuration sourcePub =
-                variantDependencies.getElements(
-                        new PublishedConfigSpec(
-                                SOURCE_PUBLICATION, componentName, isClassifierRequired));
-
-        final Configuration javaDocPub =
-                variantDependencies.getElements(
-                        new PublishedConfigSpec(
-                                JAVA_DOC_PUBLICATION, componentName, isClassifierRequired));
-
+        val apiPub = variantDependencies.getElements(
+            PublishedConfigSpec(PublishedConfigType.API_PUBLICATION, componentName, isClassifierRequired)
+        )
+        val runtimePub = variantDependencies.getElements(
+            PublishedConfigSpec(PublishedConfigType.RUNTIME_PUBLICATION, componentName, isClassifierRequired)
+        )
+        val sourcePub = variantDependencies.getElements(
+            PublishedConfigSpec(PublishedConfigType.SOURCE_PUBLICATION, componentName, isClassifierRequired)
+        )
+        val javaDocPub = variantDependencies.getElements(
+            PublishedConfigSpec(PublishedConfigType.JAVA_DOC_PUBLICATION, componentName, isClassifierRequired)
+        )
+        component!!.addVariantsFromConfiguration(
+            apiPub, ConfigurationVariantMapping("compile", isClassifierRequired)
+        )
         component.addVariantsFromConfiguration(
-                apiPub, new ConfigurationVariantMapping("compile", isClassifierRequired));
-        component.addVariantsFromConfiguration(
-                runtimePub, new ConfigurationVariantMapping("runtime", isClassifierRequired));
-
+            runtimePub, ConfigurationVariantMapping("runtime", isClassifierRequired)
+        )
         if (sourcePub != null) {
             component.addVariantsFromConfiguration(
-                    sourcePub, new ConfigurationVariantMapping("runtime", true));
+                sourcePub, ConfigurationVariantMapping("runtime", true)
+            )
         }
-
         if (javaDocPub != null) {
             component.addVariantsFromConfiguration(
-                    javaDocPub, new ConfigurationVariantMapping("runtime", true));
+                javaDocPub, ConfigurationVariantMapping("runtime", true)
+            )
         }
     }
 
-    @Override
-    protected void createDependencyStreams(@NonNull ComponentCreationConfig creationConfig) {
-        super.createDependencyStreams(creationConfig);
+    override fun createDependencyStreams(creationConfig: ComponentCreationConfig) {
+        super.createDependencyStreams(creationConfig)
 
         // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
         // so that filtering of duplicates in proguard can work.
         creationConfig
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder("local-deps-classes")
-                                .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(InternalScope.LOCAL_DEPS)
-                                .setFileCollection(creationConfig.computeLocalPackagedJars())
-                                .build());
+            .transformManager
+            .addStream(
+                OriginalStream.builder("local-deps-classes")
+                    .addContentTypes(TransformManager.CONTENT_CLASS)
+                    .addScope(InternalScope.LOCAL_DEPS)
+                    .setFileCollection(creationConfig.computeLocalPackagedJars())
+                    .build()
+            )
     }
 
-    private static class MergeResourceCallback implements TaskProviderCallback<MergeResources> {
-        @NonNull private final LibraryCreationConfig variant;
-
-        private MergeResourceCallback(@NonNull LibraryCreationConfig variant) {
-            this.variant = variant;
-        }
-
-        @Override
-        public void handleProvider(@NonNull TaskProvider<MergeResources> taskProvider) {
-            variant.getArtifacts()
-                    .setInitialProvider(taskProvider, MergeResources::getPublicFile)
-                    .withName(FN_PUBLIC_TXT)
-                    .on(InternalArtifactType.PUBLIC_RES.INSTANCE);
+    private class MergeResourceCallback(private val variant: LibraryCreationConfig) :
+        TaskProviderCallback<MergeResources> {
+        override fun handleProvider(taskProvider: TaskProvider<MergeResources>) {
+            variant.artifacts
+                .setInitialProvider(taskProvider, MergeResources::publicFile)
+                .withName(SdkConstants.FN_PUBLIC_TXT)
+                .on(InternalArtifactType.PUBLIC_RES)
         }
     }
 
-    private void createMergeResourcesTasks(@NonNull LibraryCreationConfig variant) {
-        ImmutableSet<MergeResources.Flag> flags;
-        if (globalConfig.getNamespacedAndroidResources()) {
-            flags =
-                    Sets.immutableEnumSet(
-                            MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
-                            MergeResources.Flag.PROCESS_VECTOR_DRAWABLES);
+    private fun createMergeResourcesTasks(variant: LibraryCreationConfig) {
+        val flags: ImmutableSet<MergeResources.Flag> = if (globalConfig.namespacedAndroidResources) {
+            Sets.immutableEnumSet(
+                MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES,
+                MergeResources.Flag.PROCESS_VECTOR_DRAWABLES
+            )
         } else {
-            flags = Sets.immutableEnumSet(MergeResources.Flag.PROCESS_VECTOR_DRAWABLES);
+            Sets.immutableEnumSet(
+                MergeResources.Flag.PROCESS_VECTOR_DRAWABLES
+            )
         }
-
-        MergeResourceCallback callback = new MergeResourceCallback(variant);
+        val callback = MergeResourceCallback(variant)
 
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
         basicCreateMergeResourcesTask(
-                variant,
-                MergeType.PACKAGE,
-                false,
-                false,
-                false,
-                flags,
-                callback);
+            creationConfig = variant,
+            mergeType = MergeType.PACKAGE,
+            includeDependencies = false,
+            processResources = false,
+            alsoOutputNotCompiledResources = false,
+            flags = flags,
+            taskProviderCallback = callback
+        )
 
         // This task merges all the resources, including the dependencies of this library.
         // This should be unused, except that external libraries might consume it.
         // Also used by the VerifyLibraryResourcesTask (only ran in release builds).
-        createMergeResourcesTask(variant, false /*processResources*/, ImmutableSet.of());
+        createMergeResourcesTask(variant, false /*processResources*/, ImmutableSet.of())
 
         // Task to generate the public.txt for the API that always exists
         // Unlike the internal one which is packaged in the AAR which only exists if the
         // developer has explicitly marked resources as public.
-        taskFactory.register(new GenerateApiPublicTxtTask.CreationAction(variant));
+        taskFactory.register(GenerateApiPublicTxtTask.CreationAction(variant))
     }
 
-    private void createCompileLibraryResourcesTask(@NonNull LibraryCreationConfig variant) {
-        if (variant.getAndroidResourcesCreationConfig() != null
-                && variant.getAndroidResourcesCreationConfig()
-                        .isPrecompileDependenciesResourcesEnabled()) {
-            taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variant));
+    private fun createCompileLibraryResourcesTask(variant: LibraryCreationConfig) {
+        if (variant.androidResourcesCreationConfig != null
+            && variant.androidResourcesCreationConfig!!
+                .isPrecompileDependenciesResourcesEnabled
+        ) {
+            taskFactory.register(CompileLibraryResourcesTask.CreationAction(variant))
         }
     }
 
-    @Override
-    protected void postJavacCreation(@NonNull ComponentCreationConfig creationConfig) {
-        super.postJavacCreation(creationConfig);
-
+    override fun postJavacCreation(creationConfig: ComponentCreationConfig) {
+        super.postJavacCreation(creationConfig)
         if (creationConfig
-                .getServices()
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_ART_PROFILES)) {
-            taskFactory.register(new ProcessLibraryArtProfileTask.CreationAction(creationConfig));
+                .services
+                .projectOptions[BooleanOption.ENABLE_ART_PROFILES]
+        ) {
+            taskFactory.register(ProcessLibraryArtProfileTask.CreationAction(creationConfig))
         }
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(
-                new BundleLibraryClassesJar.CreationAction(
-                        creationConfig, AndroidArtifacts.PublishedConfigType.API_ELEMENTS));
+            BundleLibraryClassesJar.CreationAction(
+                creationConfig, PublishedConfigType.API_ELEMENTS
+            )
+        )
     }
 
-    public void createLibraryAssetsTask(@NonNull LibraryCreationConfig variant) {
-        taskFactory.register(new MergeSourceSetFolders.LibraryAssetCreationAction(variant));
+    fun createLibraryAssetsTask(variant: LibraryCreationConfig) {
+        taskFactory.register(LibraryAssetCreationAction(variant))
     }
 
-    @NonNull
-    @Override
-    protected Set<ScopeType> getJavaResMergingScopes(
-            @NonNull ComponentCreationConfig creationConfig) {
-        if (creationConfig.getComponentType().isTestComponent()) {
-            return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
-        }
-        return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
+    override fun getJavaResMergingScopes(
+        creationConfig: ComponentCreationConfig
+    ): Set<QualifiedContent.ScopeType> {
+        return if (creationConfig.componentType.isTestComponent) {
+            TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS
+        } else TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS
     }
 
-    @Override
-    protected void createPrepareLintJarForPublishTask() {
-        super.createPrepareLintJarForPublishTask();
+    override fun createPrepareLintJarForPublishTask() {
+        super.createPrepareLintJarForPublishTask()
 
         // publish the local lint.jar to all the variants.
         // This takes the global jar (output of PrepareLintJar) and publishes to each variants
         // as we don't have variant-free publishing at the moment.
-        for (LibraryCreationConfig variant : variantPropertiesList) {
-            variant.getArtifacts()
-                    .copy(
-                            InternalArtifactType.LINT_PUBLISH_JAR.INSTANCE,
-                            globalConfig.getGlobalArtifacts());
+        for (variant in variantPropertiesList) {
+            variant.artifacts
+                .copy(
+                    InternalArtifactType.LINT_PUBLISH_JAR,
+                    globalConfig.globalArtifacts
+                )
         }
     }
 }
