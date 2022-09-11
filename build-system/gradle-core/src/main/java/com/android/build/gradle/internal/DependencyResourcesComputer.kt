@@ -16,8 +16,8 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.gradle.internal.component.ComponentCreationConfig
+import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.utils.setDisallowChanges
@@ -196,6 +196,7 @@ abstract class DependencyResourcesComputer {
 
     fun initFromVariantScope(
         creationConfig: ComponentCreationConfig,
+        androidResourcesCreationConfig: AndroidResourcesCreationConfig,
         microApkResDir: FileCollection,
         libraryDependencies: ArtifactCollection?,
         relativeLocalResources: Boolean,
@@ -211,29 +212,31 @@ abstract class DependencyResourcesComputer {
         this.libraries.disallowChanges()
         this.librarySourceSets.disallowChanges()
 
-        addResourceSets(
-            creationConfig.sources.res.getLocalSourcesAsFileCollection().get(),
-            relativeLocalResources
-        ) {
-            services.newInstance(ResourceSourceSetInput::class.java)
+        creationConfig.sources.res { resSources ->
+            addResourceSets(
+                resSources.getLocalSourcesAsFileCollection().get(),
+                relativeLocalResources
+            ) {
+                services.newInstance(ResourceSourceSetInput::class.java)
+            }
+
+            // Add the user added generated directories to the extraGeneratedResFolders.
+            // this should be cleaned up once the old variant API is removed.
+            resSources.getVariantSources().get().forEach { directoryEntries ->
+                directoryEntries.directoryEntries
+                    .filter {
+                        it.isUserAdded && it.isGenerated
+                    }
+                    .forEach {
+                        extraGeneratedResFolders.from(
+                            it.asFiles(
+                                creationConfig.services::directoryProperty
+                            )
+                        )
+                    }
+            }
         }
         resources.disallowChanges()
-
-        // Add the user added generated directories to the extraGeneratedResFolders.
-        // this should be cleaned up once the old variant API is removed.
-        creationConfig.sources.res.getVariantSources().get().forEach { directoryEntries ->
-            directoryEntries.directoryEntries
-                .filter {
-                    it.isUserAdded && it.isGenerated
-                }
-                .forEach {
-                    extraGeneratedResFolders.from(
-                        it.asFiles(
-                            creationConfig.services::directoryProperty
-                        )
-                    )
-                }
-        }
 
         creationConfig.oldVariantApiLegacySupport?.variantData?.extraGeneratedResFolders?.let {
             extraGeneratedResFolders.from(it)

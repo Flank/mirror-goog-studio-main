@@ -183,7 +183,7 @@ abstract class AidlCompile : NonIncrementalTask() {
             super.configure(task)
             val services = creationConfig.services
 
-            creationConfig.sources.aidl?.let {
+            creationConfig.sources.aidl {
                 task.sourceDirs.setDisallowChanges(it.all)
                 // This is because aidl may be in the same folder as Java and we want to restrict to
                 // .aidl files and not java files.

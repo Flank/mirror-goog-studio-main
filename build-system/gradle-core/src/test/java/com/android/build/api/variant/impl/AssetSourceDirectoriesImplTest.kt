@@ -16,7 +16,6 @@
 
 package com.android.build.api.variant.impl
 
-import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.services.VariantServices
 import com.google.common.truth.Truth
@@ -32,11 +31,7 @@ import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
-import java.io.File
 
-/**
- * Unit tests for [AssetSourceDirectoriesImpl]
- */
 internal class AssetSourceDirectoriesImplTest {
 
     @get:Rule
@@ -65,7 +60,7 @@ internal class AssetSourceDirectoriesImplTest {
 
     @Test
     fun asAssetSetEmptyTest() {
-        val testTarget = AssetSourceDirectoriesImpl(
+        val testTarget = LayeredSourceDirectoriesImpl(
             "unit_test",
             variantServices,
             null
@@ -90,7 +85,7 @@ internal class AssetSourceDirectoriesImplTest {
             }
         }
 
-        val testTarget = AssetSourceDirectoriesImpl(
+        val testTarget = LayeredSourceDirectoriesImpl(
             "unit_test",
             variantServices,
             null

@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.PublishingSpecs.Companion.getVariantPublishingSpec
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.BaseServices
-import com.android.build.gradle.internal.services.VariantServices
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.errors.IssueReporter
@@ -200,34 +199,39 @@ class OldVariantApiLegacySupportImpl(
         if (allRawAndroidResources != null) {
             return allRawAndroidResources!!
         }
-        allRawAndroidResources = component.services.fileCollection()
+        allRawAndroidResources = component.services.fileCollection().also { fileCollection ->
+            fileCollection.from(
+                component.variantDependencies
+                    .getArtifactCollection(
+                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.ANDROID_RES
+                    )
+                    .artifactFiles
+            )
 
-        allRawAndroidResources!!.from(
-            component.variantDependencies
-                .getArtifactCollection(
-                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.ANDROID_RES
+            fileCollection.from(
+                component.services.fileCollection(
+                    variantData.extraGeneratedResFolders
+                ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
+            )
+
+            component.taskContainer.generateApkDataTask?.let {
+                fileCollection.from(component.artifacts.get(InternalArtifactType.MICRO_APK_RES))
+            }
+
+            component.sources.res { resSources ->
+                fileCollection.from(
+                    resSources.getVariantSources().map { allRes ->
+                        allRes.map { directoryEntries ->
+                            directoryEntries.directoryEntries
+                                .map { it.asFiles(component.services::directoryProperty) }
+                        }
+                    }
                 )
-                .artifactFiles
-        )
-
-        allRawAndroidResources!!.from(
-            component.services.fileCollection(
-                variantData.extraGeneratedResFolders
-            ).builtBy(listOfNotNull(variantData.extraGeneratedResFolders.builtBy))
-        )
-
-        component.taskContainer.generateApkDataTask?.let {
-            allRawAndroidResources!!.from(component.artifacts.get(InternalArtifactType.MICRO_APK_RES))
+            }
         }
 
-        allRawAndroidResources!!.from(component.sources.res.getVariantSources().map { allRes ->
-            allRes.map { directoryEntries ->
-                directoryEntries.directoryEntries
-                    .map { it.asFiles(component.services::directoryProperty) }
-            }
-        })
         return allRawAndroidResources!!
     }
 

@@ -22,11 +22,11 @@ import com.android.build.api.extension.impl.VariantApiOperationsRegistrar
 import com.android.build.api.variant.AndroidVersion
 import com.android.build.api.variant.Component
 import com.android.build.api.variant.ComponentIdentity
+import com.android.build.api.variant.InternalSources
 import com.android.build.api.variant.JavaCompilation
 import com.android.build.api.variant.Variant
 import com.android.build.api.variant.VariantBuilder
 import com.android.build.api.variant.VariantOutputConfiguration
-import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.api.variant.impl.VariantOutputList
 import com.android.build.gradle.internal.component.features.AndroidResourcesCreationConfig
 import com.android.build.gradle.internal.component.features.AssetsCreationConfig
@@ -109,7 +109,7 @@ interface ComponentCreationConfig : ComponentIdentity {
     val buildFeatures: BuildFeatureValues
     val variantDependencies: VariantDependencies
     val artifacts: ArtifactsImpl
-    val sources: SourcesImpl
+    val sources: InternalSources
     val taskContainer: MutableTaskContainer
     val transformManager: TransformManager
     val paths: VariantPathHelper

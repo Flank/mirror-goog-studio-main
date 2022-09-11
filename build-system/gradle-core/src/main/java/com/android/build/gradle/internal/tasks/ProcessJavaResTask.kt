@@ -73,7 +73,9 @@ abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            task.from(creationConfig.sources.resources.getAsFileTrees())
+            creationConfig.sources.resources {
+                task.from(it.getAsFileTrees())
+            }
             task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         }
     }

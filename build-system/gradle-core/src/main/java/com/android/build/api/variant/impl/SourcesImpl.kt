@@ -17,6 +17,7 @@
 package com.android.build.api.variant.impl
 
 import com.android.build.api.component.impl.DefaultSourcesProvider
+import com.android.build.api.variant.InternalSources
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.api.variant.Sources
 import com.android.build.gradle.api.AndroidSourceDirectorySet
@@ -43,9 +44,9 @@ class SourcesImpl(
     private val projectDirectory: Directory,
     private val variantServices: VariantServices,
     private val variantSourceSet: DefaultAndroidSourceSet?,
-): Sources {
+): InternalSources {
 
-    override val java: FlatSourceDirectoriesImpl =
+    override val java =
         FlatSourceDirectoriesImpl(
             SourceType.JAVA.folder,
             variantServices,
@@ -58,7 +59,7 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.java)
         }
 
-    override val kotlin: FlatSourceDirectoriesImpl =
+    override val kotlin =
         FlatSourceDirectoriesImpl(
             SourceType.KOTLIN.folder,
             variantServices,
@@ -73,7 +74,7 @@ class SourcesImpl(
                 variantSourceSet?.kotlin as DefaultAndroidSourceDirectorySet?)
         }
 
-    override val res: ResSourceDirectoriesImpl =
+    override val res =
         ResSourceDirectoriesImpl(
             SourceType.RES.folder,
             variantServices,
@@ -87,9 +88,9 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.res)
         }
 
-    override val resources: FlatSourceDirectoriesImpl =
+    override val resources =
         FlatSourceDirectoriesImpl(
-            SourceType.JAVA_RESOURCES.name,
+            SourceType.JAVA_RESOURCES.folder,
             variantServices,
             variantSourceSet?.resources?.filter,
         ).also { sourceDirectoriesImpl ->
@@ -100,8 +101,8 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.resources)
         }
 
-    override val assets: AssetSourceDirectoriesImpl =
-        AssetSourceDirectoriesImpl(
+    override val assets =
+        LayeredSourceDirectoriesImpl(
             SourceType.ASSETS.folder,
             variantServices,
             variantSourceSet?.assets?.filter
@@ -115,8 +116,8 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.assets)
         }
 
-    override val jniLibs: AssetSourceDirectoriesImpl =
-        AssetSourceDirectoriesImpl(
+    override val jniLibs =
+        LayeredSourceDirectoriesImpl(
             SourceType.JNI_LIBS.folder,
             variantServices,
             variantSourceSet?.jniLibs?.filter
@@ -130,8 +131,8 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.jniLibs)
         }
 
-    override val shaders: AssetSourceDirectoriesImpl? =
-            AssetSourceDirectoriesImpl(
+    override val shaders =
+        LayeredSourceDirectoriesImpl(
                 SourceType.SHADERS.folder,
                 variantServices,
                 variantSourceSet?.shaders?.filter
@@ -147,8 +148,8 @@ class SourcesImpl(
                 return@let sourceDirectoriesImpl
             }
 
-    override val mlModels: AssetSourceDirectoriesImpl =
-        AssetSourceDirectoriesImpl(
+    override val mlModels =
+        LayeredSourceDirectoriesImpl(
             SourceType.ML_MODELS.folder,
             variantServices,
             variantSourceSet?.mlModels?.filter
@@ -161,7 +162,7 @@ class SourcesImpl(
             updateSourceDirectories(sourceDirectoriesImpl, variantSourceSet?.mlModels)
         }
 
-    override val aidl: SourceDirectories.Flat? by lazy(LazyThreadSafetyMode.NONE) {
+    override val aidl by lazy(LazyThreadSafetyMode.NONE) {
         FlatSourceDirectoriesImpl(
                 SourceType.AIDL.folder,
                 variantServices,
@@ -176,7 +177,7 @@ class SourcesImpl(
     }
 
 
-    override val renderscript: SourceDirectories.Flat? by lazy(LazyThreadSafetyMode.NONE) {
+    override val renderscript by lazy(LazyThreadSafetyMode.NONE) {
         FlatSourceDirectoriesImpl(
                 SourceType.RENDERSCRIPT.folder,
                 variantServices,
@@ -202,6 +203,19 @@ class SourcesImpl(
     }
 
     override fun getByName(name: String): SourceDirectories.Flat = extras.maybeCreate(name)
+
+    override fun java(action: (FlatSourceDirectoriesImpl) -> Unit) { action(java) }
+    override fun kotlin(action: (FlatSourceDirectoriesImpl) -> Unit) { action(kotlin) }
+    override fun resources(action: (FlatSourceDirectoriesImpl) -> Unit) { action(resources) }
+    override fun aidl(action: (FlatSourceDirectoriesImpl) -> Unit) { aidl?.let(action) }
+    override fun renderscript(action: (FlatSourceDirectoriesImpl) -> Unit) {
+        renderscript?.let(action)
+    }
+    override fun res(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(res) }
+    override fun assets(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(assets) }
+    override fun jniLibs(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(jniLibs) }
+    override fun shaders(action: (LayeredSourceDirectoriesImpl) -> Unit) { shaders?.let(action) }
+    override fun mlModels(action: (LayeredSourceDirectoriesImpl) -> Unit) { action(mlModels) }
 
     class SourceProviderFactory(
         private val variantServices: VariantServices,

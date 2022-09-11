@@ -20,9 +20,6 @@ import com.android.build.api.variant.ComponentIdentity
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.services.VariantServices
 import com.android.builder.core.ComponentType
-import org.gradle.api.Task
-import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /** Data about a variant that produce a Library bundle (.aar)  */
 class LibraryVariantData(
@@ -44,25 +41,5 @@ class LibraryVariantData(
 
     override fun setTestVariantData(testVariantData: TestVariantData, type: ComponentType) {
         testVariants[type] = testVariantData
-    }
-
-    // Overridden to add source folders to a generateAnnotationsTask, if it exists.
-    override fun registerJavaGeneratingTask(
-        taskProvider: TaskProvider<out Task>,
-        generatedSourceFolders: Collection<File>
-    ) {
-        super.registerJavaGeneratingTask(taskProvider, generatedSourceFolders)
-        addSourcesToGenerateAnnotationsTask(generatedSourceFolders)
-    }
-
-    // TODO: remove and use a normal dependency on the final list of source files.
-    private fun addSourcesToGenerateAnnotationsTask(sourceFolders: Collection<File>) {
-        taskContainer.generateAnnotationsTask?.let { taskProvider ->
-            taskProvider.configure { task ->
-                for (f in sourceFolders) {
-                    task.source(f)
-                }
-            }
-        }
     }
 }

@@ -72,14 +72,14 @@ abstract class SourceJarTask : Jar(), VariantAwareTask {
             task.isReproducibleFileOrder = true
             task.isPreserveFileTimestamps = false
 
-            val javaSource = computeJavaSource(creationConfig, task.project)
-            val kotlinSource = task.project.files(
-                creationConfig.sources.kotlin.all
-            ).asFileTree.matching(
-                PatternSet().include("**/*.kt")
-            )
-
-            task.from(javaSource, kotlinSource)
+            task.from(computeJavaSource(creationConfig))
+            creationConfig.sources.kotlin { kotlinSources ->
+                task.from(
+                    task.project.files(kotlinSources.all).asFileTree.matching(
+                        PatternSet().include("**/*.kt")
+                    )
+                )
+            }
 
             val outputFile =
                 InternalArtifactType.SOURCE_JAR

@@ -83,12 +83,6 @@ abstract class BaseVariantData(
         extraGeneratedSourceFoldersOnlyInModel.addAll(generatedSourceFolders)
     }
 
-    open fun registerJavaGeneratingTask(
-        taskProvider: TaskProvider<out Task>,
-        generatedSourceFolders: Collection<File>
-    ) {
-    }
-
     fun registerGeneratedResFolders(folders: FileCollection) {
         extraGeneratedResFolders.from(folders)
     }

@@ -257,10 +257,9 @@ abstract class JavaDocGenerationTask : NonIncrementalTask() {
             )
             task.dokkaCoreClasspath.fromDisallowChanges(dokkaCore)
 
-            task.sources.fromDisallowChanges(
-                creationConfig.sources.java.all,
-                creationConfig.sources.kotlin.all,
-            )
+            creationConfig.sources.java { javaSources -> task.sources.from(javaSources.all) }
+            creationConfig.sources.kotlin { kotlinSources -> task.sources.from(kotlinSources.all) }
+            task.sources.disallowChanges()
 
             task.classpath.fromDisallowChanges(
                 creationConfig.global.bootClasspath,

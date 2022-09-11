@@ -886,10 +886,11 @@ abstract class MergeResources : NewIncrementalTask() {
                 creationConfig.artifacts.get(InternalArtifactType.RENDERSCRIPT_GENERATED_RES))
 
             task.resourcesComputer.initFromVariantScope(
-                    creationConfig = creationConfig,
-                    microApkResDir = microApk,
-                    libraryDependencies = libraryArtifacts,
-                    relativeLocalResources = true
+                creationConfig = creationConfig,
+                androidResourcesCreationConfig = androidResourcesCreationConfig,
+                microApkResDir = microApk,
+                libraryDependencies = libraryArtifacts,
+                relativeLocalResources = true
             )
             val features = creationConfig.buildFeatures
             val isDataBindingEnabled = features.dataBinding

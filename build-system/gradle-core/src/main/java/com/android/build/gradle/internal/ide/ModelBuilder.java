@@ -140,6 +140,7 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.EndElement;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
+import kotlin.Unit;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -1168,14 +1169,19 @@ public class ModelBuilder<Extension extends BaseExtension>
     private static FileCollection getGeneratedSourceFoldersFileCollectionForUnitTests(
             @NonNull ComponentCreationConfig component) {
         ConfigurableFileCollection fileCollection = component.getServices().fileCollection();
-        fileCollection.from(
-                component
-                        .getSources()
-                        .getJava()
-                        .variantSourcesForModel$gradle_core(
-                                directoryEntry ->
-                                        directoryEntry.isGenerated()
-                                                && directoryEntry.getShouldBeAddedToIdeModel()));
+
+        component
+                .getSources()
+                .java(
+                        javaSources -> {
+                            fileCollection.from(
+                                    javaSources.variantSourcesForModel$gradle_core(
+                                            directoryEntry ->
+                                                    directoryEntry.isGenerated()
+                                                            && directoryEntry
+                                                                    .getShouldBeAddedToIdeModel()));
+                            return Unit.INSTANCE;
+                        });
         if (component.getOldVariantApiLegacySupport() != null) {
             fileCollection.from(
                     component

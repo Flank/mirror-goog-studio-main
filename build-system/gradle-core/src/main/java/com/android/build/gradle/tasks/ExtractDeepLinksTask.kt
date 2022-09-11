@@ -24,6 +24,8 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.features.AndroidResourcesTaskCreationActionImpl
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.manifmerger.NavigationXmlDocumentData
@@ -125,6 +127,8 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
         creationConfig: ComponentCreationConfig
     ) : VariantTaskCreationAction<ExtractDeepLinksTask, ComponentCreationConfig>(
         creationConfig
+    ), AndroidResourcesTaskCreationAction by AndroidResourcesTaskCreationActionImpl(
+        creationConfig
     ) {
 
         abstract val forAar: Boolean
@@ -147,15 +151,18 @@ abstract class ExtractDeepLinksTask: NonIncrementalTask() {
             task: ExtractDeepLinksTask
         ) {
             super.configure(task)
-            task.navFilesFolders.set(
-                creationConfig.sources.res.all.map {
-                    it.flatten()
-                }.map { directories ->
-                    directories.map { directory ->
-                        directory.dir(FD_RES_NAVIGATION)
+            creationConfig.sources.res { resSources ->
+                task.navFilesFolders.set(
+                    resSources.all.map {
+                        it.flatten()
+                    }.map { directories ->
+                        directories.map { directory ->
+                            directory.dir(FD_RES_NAVIGATION)
+                        }
                     }
-                }
-            )
+                )
+            }
+            task.navFilesFolders.disallowChanges()
             task.manifestPlaceholders.setDisallowChanges(
                 creationConfig.manifestPlaceholdersCreationConfig?.placeholders,
                 handleNullable = {

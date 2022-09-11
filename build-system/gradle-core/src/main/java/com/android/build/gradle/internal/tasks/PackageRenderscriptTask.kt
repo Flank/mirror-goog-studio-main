@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.component.VariantCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -70,10 +69,9 @@ abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
         ) {
             super.configure(task)
 
-            // package from 3 sources. the order is important to make sure the override works well.
-            task
-                .from(creationConfig.sources.renderscript?.all)
-                .include("**/*.rsh")
+            creationConfig.sources.renderscript {
+                task.from(it.all).include("**/*.rsh")
+            }
             task.into(task.headersDir)
         }
     }

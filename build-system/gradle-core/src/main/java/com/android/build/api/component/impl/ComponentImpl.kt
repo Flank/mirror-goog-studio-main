@@ -138,7 +138,7 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             buildFeatures.dataBinding,
             internalServices)
 
-    override val sources: SourcesImpl by lazy {
+    override val sources by lazy {
         SourcesImpl(
             DefaultSourcesProviderImpl(this, variantSources),
             internalServices.projectInfo.projectDirectory,

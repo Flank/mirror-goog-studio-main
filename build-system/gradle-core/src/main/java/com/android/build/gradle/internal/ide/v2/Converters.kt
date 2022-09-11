@@ -19,12 +19,10 @@ package com.android.build.gradle.internal.ide.v2
 import com.android.build.api.dsl.AndroidResources
 import com.android.build.api.dsl.CompileOptions
 import com.android.build.api.dsl.Lint
-import com.android.build.api.variant.Sources
+import com.android.build.api.variant.InternalSources
 import com.android.build.api.variant.impl.SourceDirectoriesImpl
-import com.android.build.api.variant.impl.SourcesImpl
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.core.VariantSources
 import com.android.build.gradle.internal.scope.BuildFeatureValues
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
@@ -217,7 +215,7 @@ internal fun DefaultAndroidSourceSet.convert(
 
 internal fun DefaultAndroidSourceSet.convert(
     features: BuildFeatureValues,
-    sources: SourcesImpl,
+    sources: InternalSources,
 ) = SourceProviderImpl(
     name = name,
     manifestFile = manifestFile,

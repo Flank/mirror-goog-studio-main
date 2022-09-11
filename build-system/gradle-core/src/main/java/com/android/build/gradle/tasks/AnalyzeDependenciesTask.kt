@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentTypeImpl
-import com.android.builder.model.SourceProvider
 import com.android.build.gradle.internal.tasks.TaskCategory
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
@@ -47,7 +46,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
 import java.io.File
-import java.util.function.Function
 
 // TODO: Make incremental
 @DisableCachingByDefault
@@ -199,7 +197,6 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             task: AnalyzeDependenciesTask
         ) {
             super.configure(task)
-            val resDirFunction = Function<SourceProvider, Collection<File>> { it.resDirectories }
 
             task.variantArtifact.from(
                 creationConfig.artifacts
@@ -232,7 +229,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             // ResourceSets from main and generated directories of default, flavors,
             // multiflavor and buildtype sources (if they exist).
             // TODO(lukeedgar) Use merged resources.
-            task.resourceSourceSets.from(creationConfig.sources.res.all)
+            creationConfig.sources.res { task.resourceSourceSets.from(it.all) }
+            task.resourceSourceSets.disallowChanges()
 
             creationConfig
                     .artifacts

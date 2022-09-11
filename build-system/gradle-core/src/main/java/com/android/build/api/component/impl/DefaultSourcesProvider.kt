@@ -16,12 +16,10 @@
 
 package com.android.build.api.component.impl
 
-import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
 import com.android.build.api.variant.impl.DirectoryEntries
 import com.android.build.api.variant.impl.DirectoryEntry
 import com.android.build.api.variant.impl.FlatSourceDirectoriesImpl
 import com.android.build.api.variant.impl.LayeredSourceDirectoriesImpl
-import com.android.build.api.variant.impl.ResSourceDirectoriesImpl
 
 /**
  * Interface to calculate the default list of sources [DirectoryEntry] per source type.

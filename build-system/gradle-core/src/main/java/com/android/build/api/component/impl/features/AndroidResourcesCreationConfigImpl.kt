@@ -44,7 +44,7 @@ class AndroidResourcesCreationConfigImpl(
     private val component: ComponentCreationConfig,
     private val dslInfo: ComponentDslInfo,
     private val androidResourcesDsl: AndroidResourcesDslInfo,
-    private val internalServices: VariantServices
+    private val internalServices: VariantServices,
 ): AndroidResourcesCreationConfig {
 
     override val androidResources: AndroidResources by lazy {

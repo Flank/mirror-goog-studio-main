@@ -182,7 +182,10 @@ abstract class JacocoReportTask : NonIncrementalTask() {
                     .forScope(ScopedArtifacts.Scope.PROJECT)
                     .getFinalArtifacts(ScopedArtifact.CLASSES)
             )
-            task.javaSources.setDisallowChanges(creationConfig.mainVariant.sources.java.getAsFileTrees())
+            creationConfig.mainVariant.sources.java { javaSources ->
+                task.javaSources.set(javaSources.getAsFileTrees())
+            }
+            task.javaSources.disallowChanges()
         }
     }
 

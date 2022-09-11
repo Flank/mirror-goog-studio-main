@@ -70,7 +70,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.process.ExecOperations
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.Callable
 import javax.inject.Inject
 import kotlin.math.min
 
@@ -344,9 +343,12 @@ abstract class RenderscriptCompile : NdkTask() {
             task.ndkMode.setDisallowChanges(renderscriptCreationConfig.renderscript.ndkModeEnabled)
             task.optimLevel.setDisallowChanges(renderscriptCreationConfig.renderscript.optimLevel)
 
-            task.sourceDirs =
-                creationConfig.services.fileCollection(Callable {
-                    creationConfig.sources.renderscript?.all })
+            task.sourceDirs = creationConfig.services.fileCollection().also { fileCollection ->
+                creationConfig.sources.renderscript {
+                    fileCollection.from(it.all)
+                }
+            }
+
             task.importDirs = creationConfig.variantDependencies.getArtifactFileCollection(
                 COMPILE_CLASSPATH, ALL, RENDERSCRIPT
             )

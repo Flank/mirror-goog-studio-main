@@ -16,8 +16,11 @@
 
 package com.android.build.api.variant.impl
 
+import com.android.SdkConstants
 import com.android.build.api.variant.SourceDirectories
 import com.android.build.gradle.internal.services.VariantServices
+import com.android.builder.core.BuilderConstants
+import com.android.ide.common.resources.AssetSet
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.ListProperty
@@ -103,6 +106,34 @@ open class LayeredSourceDirectoriesImpl(
                 }
             }
         return files
+    }
+
+    /**
+     * Returns the dynamic list of [AssetSet] based on the current list of [DirectoryEntry]
+     *
+     * The list is ordered in ascending order of importance, meaning the first set is meant to be
+     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in an
+     * asset merger
+     *
+     * @param aaptEnv the value of "ANDROID_AAPT_IGNORE" environment variable.
+     * @return a [Provider] of a [List] of [AssetSet].
+     */
+    fun getAscendingOrderAssetSets(
+        aaptEnv: Provider<String>
+    ): Provider<List<AssetSet>> {
+
+        return variantSources.map { allDirectories ->
+            allDirectories.map { directoryEntries ->
+                val assetName = if (directoryEntries.name == SdkConstants.FD_MAIN)
+                    BuilderConstants.MAIN else directoryEntries.name
+
+                AssetSet(assetName, aaptEnv.orNull).also {
+                    it.addSources(directoryEntries.directoryEntries.map { directoryEntry ->
+                        directoryEntry.asFiles(variantServices::directoryProperty).get().asFile
+                    })
+                }
+            }
+        }
     }
 
 }

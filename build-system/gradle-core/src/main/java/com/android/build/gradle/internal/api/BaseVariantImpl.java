@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import kotlin.Unit;
 import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
@@ -192,14 +193,14 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
     @NonNull
     @Override
     public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
-        switch (folderType) {
-            case JAVA:
+        if (folderType == SourceKind.JAVA) {
+            if (component.getSources().getJava() != null) {
                 return component.getSources().getJava().getAsFileTrees$gradle_core().get();
-            default:
-                services.getIssueReporter()
-                        .reportError(
-                                IssueReporter.Type.GENERIC,
-                                "Unknown SourceKind value: " + folderType);
+            }
+        } else {
+            services.getIssueReporter()
+                    .reportError(
+                            IssueReporter.Type.GENERIC, "Unknown SourceKind value: " + folderType);
         }
 
         return ImmutableList.of();
@@ -618,26 +619,31 @@ public abstract class BaseVariantImpl implements BaseVariant, InternalBaseVarian
 
             component
                     .getSources()
-                    .getJava()
-                    .addSource$gradle_core(
-                            new TaskProviderBasedDirectoryEntryImpl(
-                                    "legacy_" + taskProvider.getName(),
-                                    mappedDirectory,
-                                    true, /* isGenerated */
-                                    true, /*isUserProvided */
-                                    true /* shouldBeAddedToIdeModel */));
+                    .java(
+                            javaSources -> {
+                                javaSources.addSource$gradle_core(
+                                        new TaskProviderBasedDirectoryEntryImpl(
+                                                "legacy_" + taskProvider.getName(),
+                                                mappedDirectory,
+                                                true, /* isGenerated */
+                                                true, /*isUserProvided */
+                                                true /* shouldBeAddedToIdeModel */));
+                                return Unit.INSTANCE;
+                            });
         }
-        getVariantData().registerJavaGeneratingTask(taskProvider, sourceFolders);
-
     }
 
     @Override
     public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
         component
                 .getSources()
-                .getJava()
-                .addSource$gradle_core(
-                        new ConfigurableFileTreeBasedDirectoryEntryImpl("legacy_api_apt", folder));
+                .java(
+                        javaSources -> {
+                            javaSources.addSource$gradle_core(
+                                    new ConfigurableFileTreeBasedDirectoryEntryImpl(
+                                            "legacy_api_apt", folder));
+                            return Unit.INSTANCE;
+                        });
     }
 
     @Override

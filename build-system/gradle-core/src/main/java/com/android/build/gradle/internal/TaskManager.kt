@@ -40,9 +40,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
-import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.component.InstrumentedTestCreationConfig
-import com.android.build.gradle.internal.component.LibraryCreationConfig
 import com.android.build.gradle.internal.component.NestedComponentCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.TestCreationConfig
@@ -986,14 +984,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             )
 
             if (!renderscriptCreationConfig.renderscript.ndkModeEnabled.get()) {
-                creationConfig.sources.java.addSource(
-                    TaskProviderBasedDirectoryEntryImpl(
-                        name = "generated_renderscript",
-                        directoryProvider = creationConfig.artifacts.get(
-                            InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
-                        ),
+                creationConfig.sources.java {
+                    it.addSource(
+                        TaskProviderBasedDirectoryEntryImpl(
+                            name = "generated_renderscript",
+                            directoryProvider = creationConfig.artifacts.get(
+                                InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+                            ),
+                        )
                     )
-                )
+                }
             }
             taskContainer.resourceGenTask.dependsOn(rsTask)
             // since rs may generate Java code, always set the dependency.
@@ -1192,11 +1192,14 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         .needsMainDexList)
         if (globalConfig.namespacedAndroidResources) {
             // TODO: make sure we generate the proguard rules in the namespaced case.
-            NamespacedResourcesTaskManager(taskFactory, creationConfig)
-                    .createNamespacedResourceTasks(
-                            packageOutputType,
-                            baseName,
-                            useAaptToGenerateLegacyMultidexMainDexProguardRules)
+            NamespacedResourcesTaskManager(
+                taskFactory,
+                creationConfig
+            ).createNamespacedResourceTasks(
+                packageOutputType,
+                baseName,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules
+            )
             val rFiles: FileCollection = project.files(
                     creationConfig.artifacts.get(RUNTIME_R_CLASS_CLASSES))
             @Suppress("DEPRECATION") // Legacy support
@@ -2447,14 +2450,16 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                 }
             }
             taskFactory.register(DataBindingTriggerTask.CreationAction(creationConfig))
-            creationConfig.sources.java.addSource(
-                TaskProviderBasedDirectoryEntryImpl(
-                    name = "databinding_generated",
-                    directoryProvider = creationConfig.artifacts.get(
-                        InternalArtifactType.DATA_BINDING_TRIGGER
-                    ),
+            creationConfig.sources.java {
+                it.addSource(
+                    TaskProviderBasedDirectoryEntryImpl(
+                        name = "databinding_generated",
+                        directoryProvider = creationConfig.artifacts.get(
+                            InternalArtifactType.DATA_BINDING_TRIGGER
+                        ),
+                    )
                 )
-            )
+            }
             setDataBindingAnnotationProcessorParams(creationConfig)
         }
     }

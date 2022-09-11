@@ -195,17 +195,23 @@ abstract class MapSourceSetPathsTask : NonIncrementalTask() {
                     ).artifactFiles
                 )
             }
-            task.allGeneratedRes.setDisallowChanges(creationConfig.sources.res.getVariantSources().map { allRes ->
-                allRes.map { directoryEntries ->
-                    directoryEntries.directoryEntries
-                        .filter { it.isGenerated }
-                        .map { it.asFiles(task.project.objects::directoryProperty) }
-                        .map { it.get().asFile.absolutePath }
-                }
-            })
-            task.localResources.setDisallowChanges(
-                creationConfig.sources.res.getLocalSourcesAsFileCollection()
-            )
+            creationConfig.sources.res { resSources ->
+                task.allGeneratedRes.set(
+                    resSources.getVariantSources().map { allRes ->
+                        allRes.map { directoryEntries ->
+                            directoryEntries.directoryEntries
+                                .filter { it.isGenerated }
+                                .map { it.asFiles(task.project.objects::directoryProperty) }
+                                .map { it.get().asFile.absolutePath }
+                        }
+                    }
+                )
+                task.localResources.set(
+                    resSources.getLocalSourcesAsFileCollection()
+                )
+            }
+            task.allGeneratedRes.disallowChanges()
+            task.localResources.disallowChanges()
             if (androidResourcesCreationConfig.vectorDrawables.useSupportLibrary == false) {
                 task.generatedPngsOutputDir.setDisallowChanges(
                     (creationConfig.artifacts.get(InternalArtifactType.GENERATED_PNGS_RES)

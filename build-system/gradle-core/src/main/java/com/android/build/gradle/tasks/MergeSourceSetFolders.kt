@@ -16,7 +16,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.SingleArtifact
-import com.android.build.api.variant.impl.AssetSourceDirectoriesImpl
+import com.android.build.api.variant.impl.LayeredSourceDirectoriesImpl
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.ConsumableCreationConfig
@@ -362,7 +362,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
 
         protected fun configureWithAssets(
             task: MergeSourceSetFolders,
-            assets: AssetSourceDirectoriesImpl
+            assets: LayeredSourceDirectoriesImpl
         ) {
             task.aaptEnv.setDisallowChanges(
                 creationConfig.services.gradleEnvironmentProvider.getEnvVariable(
@@ -396,7 +396,9 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            super.configureWithAssets(task, creationConfig.sources.assets)
+            creationConfig.sources.assets {
+                super.configureWithAssets(task, it)
+            }
 
             creationConfig.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.SHADER_ASSETS,
@@ -484,7 +486,9 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            super.configureWithAssets(task, creationConfig.sources.jniLibs)
+            creationConfig.sources.jniLibs {
+                super.configureWithAssets(task, it)
+            }
         }
     }
 
@@ -508,7 +512,7 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            creationConfig.sources.shaders?.let {
+            creationConfig.sources.shaders {
                 super.configureWithAssets(task, it)
             }
         }
@@ -534,7 +538,9 @@ abstract class MergeSourceSetFolders : NewIncrementalTask() {
             task: MergeSourceSetFolders
         ) {
             super.configure(task)
-            super.configureWithAssets(task, creationConfig.sources.mlModels)
+            creationConfig.sources.mlModels {
+                super.configureWithAssets(task, it)
+            }
         }
     }
 }

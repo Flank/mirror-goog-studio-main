@@ -17,9 +17,11 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.api.variant.InternalSources;
+import com.android.build.api.variant.impl.DirectoryEntry;
 import com.android.build.api.variant.impl.SourceDirectoriesImpl;
-import com.android.build.api.variant.impl.SourcesImpl;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.v2.CustomSourceDirectory;
 import com.google.common.base.MoreObjects;
@@ -82,7 +84,7 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
      *     null if there is no variant attached to this instance.
      */
     public SourceProviderImpl(
-            @NonNull SourceProvider sourceProvider, @NonNull SourcesImpl variantSources) {
+            @NonNull SourceProvider sourceProvider, @NonNull InternalSources variantSources) {
         this.name = sourceProvider.getName();
         this.manifestFile = sourceProvider.getManifestFile();
         this.javaDirs = getSourcesForIdeModel(variantSources.getJava());
@@ -99,9 +101,13 @@ final class SourceProviderImpl implements SourceProvider, Serializable {
         this.customDirectories = sourceProvider.getCustomDirectories();
     }
 
-    private Collection<File> getSourcesForIdeModel(SourceDirectoriesImpl sourceDirectories) {
+    private Collection<File> getSourcesForIdeModel(
+            @Nullable SourceDirectoriesImpl sourceDirectories) {
+        if (sourceDirectories == null) {
+            return Collections.emptyList();
+        }
         return sourceDirectories.variantSourcesForModel$gradle_core(
-                directoryEntry -> directoryEntry.getShouldBeAddedToIdeModel());
+                DirectoryEntry::getShouldBeAddedToIdeModel);
     }
 
     @NonNull
