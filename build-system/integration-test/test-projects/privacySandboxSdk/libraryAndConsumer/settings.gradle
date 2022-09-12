@@ -1,5 +1,7 @@
 apply from: "../commonLocalRepo.gradle", to: pluginManagement
 
 include ':app'
+include ':app-with-dynamic-feature'
 include ':ads-sdk-implementation'
 include ':ads-sdk'
+include ':feature'

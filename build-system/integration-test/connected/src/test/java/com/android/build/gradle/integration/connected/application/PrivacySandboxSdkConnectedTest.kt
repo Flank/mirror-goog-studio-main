@@ -24,6 +24,7 @@ import com.android.ddmlib.MultiLineReceiver
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -52,17 +53,22 @@ class PrivacySandboxSdkConnectedTest {
     }
 
     @Test
-    fun `connectedAndroidTest task`() {
-        project.execute("connectedAndroidTest")
+    fun `connectedAndroidTest task for application`() {
+        project.execute(":app:connectedAndroidTest")
     }
 
     @Test
-    fun `install and uninstall works for both SDK and APK`() {
-        project.execute("installDebug")
+    fun `connectedAndroidTest task for application with dynamic feature`() {
+        project.execute(":app-with-dynamic-feature:connectedAndroidTest")
+    }
+
+    @Test
+    fun `install and uninstall works for both SDK and APK for application`() {
+        project.execute(":app:installDebug")
         verifyInstallation(APP_PACKAGE_NAME)
         verifyInstallation(SDK_PACKAGE_NAME, isLibrary = true)
 
-        // project.execute("uninstallAll")
+        // project.execute(":app:uninstallAll")
         // TODO: uninstall not supported yet, verify both APKs are deleted here
     }
 
