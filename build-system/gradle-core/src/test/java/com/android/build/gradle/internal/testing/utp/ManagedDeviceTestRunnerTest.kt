@@ -82,7 +82,7 @@ class ManagedDeviceTestRunnerTest {
     @Before
     fun setupMocks() {
         `when`(mockTestData.minSdkVersion).thenReturn(AndroidVersionImpl(28))
-        `when`(mockTestData.testedApkFinder).thenReturn { _, _ -> listOf(mockAppApk) }
+        `when`(mockTestData.testedApkFinder).thenReturn { listOf(mockAppApk) }
         `when`(mockUtpConfigFactory.createRunnerConfigProtoForManagedDevice(
                 any(),
                 any(),

@@ -20,7 +20,6 @@ import com.android.build.api.variant.BuiltArtifacts
 import com.android.build.api.variant.impl.BuiltArtifactsLoaderImpl
 import com.android.build.gradle.internal.component.TestVariantCreationConfig
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -51,10 +50,7 @@ class TestApplicationTestData constructor(
     override val testedApplicationId: Provider<String> =
         testedApksDir.elements.map { BuiltArtifactsLoaderImpl().load(it.single())?.applicationId!! }
 
-    override fun findTestedApks(
-        deviceConfigProvider: DeviceConfigProvider,
-        logger: ILogger
-    ): List<File> {
+    override fun findTestedApks(deviceConfigProvider: DeviceConfigProvider): List<File> {
         testedApksDir ?: return emptyList()
 
         // retrieve all the published files.

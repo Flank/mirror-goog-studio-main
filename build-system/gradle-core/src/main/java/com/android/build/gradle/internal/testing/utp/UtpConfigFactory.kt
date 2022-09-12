@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_HOST_RETENTION
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_TEST_PLUGIN_RESULT_LISTENER_GRADLE
-import com.android.build.gradle.options.IntegerOption
 import com.android.builder.testing.api.DeviceConnector
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.utp.plugins.deviceprovider.ddmlib.proto.AndroidDeviceProviderDdmlibConfigProto.DdmlibAndroidDeviceProviderConfig
@@ -56,7 +55,6 @@ import com.google.testing.platform.proto.api.service.ServerConfigProto
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.gradle.api.logging.Logging
-import java.time.Duration
 
 // This is an arbitrary string. This ID is used to lookup test results from UTP.
 // UTP can run multiple test fixtures at a time so we have to give a name for
@@ -349,13 +347,9 @@ class UtpConfigFactory {
                     .getOrDefault("debug", "false")
                     .toBoolean())
             if (retentionConfig.enabled && !debug) {
-                val retentionTestData = testData.copy(
-                    instrumentationRunnerArguments = testData.instrumentationRunnerArguments
-                        .toMutableMap()
-                        .apply { put("debug", "true") })
                 testDriver = createTestDriver(
-                    retentionTestData, utpDependencies, useOrchestrator,
-                    additionalTestOutputOnDeviceDir, shardConfig
+                    testData, utpDependencies, useOrchestrator,
+                    additionalTestOutputOnDeviceDir, shardConfig, mapOf("debug" to "true")
                 )
                 addHostPlugin(
                     createIceboxPlugin(
@@ -470,7 +464,8 @@ class UtpConfigFactory {
         useOrchestrator: Boolean,
         additionalTestOutputOnDeviceDir: String?,
         // TODO(b/201577913): remove
-        shardConfig: ShardConfig?
+        shardConfig: ShardConfig?,
+        additionalTestParams: Map<String, String> = mapOf(),
     ): ExtensionProto.Extension {
         return ANDROID_DRIVER_INSTRUMENTATION.toExtensionProto(
             utpDependencies, AndroidInstrumentationDriver::newBuilder) {
@@ -482,6 +477,7 @@ class UtpConfigFactory {
                 }
                 instrumentationArgsBuilder.apply {
                     putAllArgsMap(testData.instrumentationRunnerArguments)
+                    putAllArgsMap(additionalTestParams)
 
                     useTestStorageService = testData.instrumentationRunnerArguments.getOrDefault(
                         "useTestStorageService", "false").toBoolean()

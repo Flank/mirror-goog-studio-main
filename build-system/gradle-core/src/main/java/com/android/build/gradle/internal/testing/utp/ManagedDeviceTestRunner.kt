@@ -241,7 +241,7 @@ class ManagedDeviceTestRunner(
             val deviceConfigProvider = ManagedDeviceConfigProvider(device)
             if (!testData.isLibrary) {
                 val testedApks =
-                    testData.testedApkFinder.invoke(deviceConfigProvider, logger)
+                    testData.testedApkFinder.invoke(deviceConfigProvider)
 
                 if (testedApks.isEmpty()) {
                     logger.warning("No matching Apks found for ${device.deviceName}.")

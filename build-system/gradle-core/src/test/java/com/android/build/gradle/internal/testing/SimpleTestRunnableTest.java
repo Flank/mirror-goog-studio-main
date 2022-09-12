@@ -593,7 +593,7 @@ public class SimpleTestRunnableTest {
                 flavorName,
                 testApk,
                 testDirectories,
-                (@NonNull DeviceConfigProvider deviceConfigProvider, ILogger logger) ->
+                (@NonNull DeviceConfigProvider deviceConfigProvider) ->
                         ImmutableList.copyOf(testedApks));
     }
 

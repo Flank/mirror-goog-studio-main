@@ -82,7 +82,7 @@ class UtpConfigFactoryTest {
         flavorName = "",
         testApk = mockFile("testApk.apk"),
         testDirectories = emptyList(),
-        testedApkFinder = { _, _ -> emptyList() }
+        testedApkFinder = { emptyList() }
     )
 
     private val utpDependencies: UtpDependencies = mock(UtpDependencies::class.java) {

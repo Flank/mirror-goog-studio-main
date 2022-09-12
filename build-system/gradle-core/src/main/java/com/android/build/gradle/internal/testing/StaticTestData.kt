@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.testing
 
 import com.android.build.api.variant.AndroidVersion
 import com.android.builder.testing.api.DeviceConfigProvider
-import com.android.utils.ILogger
 import java.io.File
 
 /**
@@ -62,5 +61,5 @@ data class StaticTestData(
      * Returns APK files to install based on given density and abis. If none match,
      * empty list is returned.
      */
-    val testedApkFinder: (DeviceConfigProvider, ILogger) -> List<File>
+    val testedApkFinder: (DeviceConfigProvider) -> List<File>
 )
