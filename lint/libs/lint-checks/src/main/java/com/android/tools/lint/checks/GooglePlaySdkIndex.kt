@@ -79,8 +79,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
                 readDataErrorType = if (index != null) ReadDataErrorType.NO_ERROR else ReadDataErrorType.INDEX_PARSE_NULL_ERROR
                 return ReadDataResult(index, readDataErrorType, exception = null)
             }
-        }
-        catch (exception: Exception) {
+        } catch (exception: Exception) {
             return ReadDataResult(index = null, readDataErrorType, exception)
         }
         return ReadDataResult(index = null, readDataErrorType = ReadDataErrorType.DATA_FUNCTION_NULL_ERROR, exception = null)
@@ -103,15 +102,13 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
             lastReadSourceType = DataSourceType.TEST_DATA
             indexDataSource = lastReadSourceType
             index = Index.parseFrom(overriddenData)
-        }
-        else {
+        } else {
             lastReadResult = readIndexData { findData(GOOGLE_PLAY_SDK_INDEX_SNAPSHOT_FILE) }
             if (lastReadResult.index != null) {
                 // Using data from cache
                 indexDataSource = lastReadSourceType
                 index = lastReadResult.index
-            }
-            else {
+            } else {
                 if (lastReadSourceType != DataSourceType.DEFAULT_DATA) {
                     lastReadSourceType = DataSourceType.UNKNOWN_SOURCE
                     val offlineResult = readIndexData {
@@ -124,8 +121,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
                         indexDataSource = DataSourceType.UNKNOWN_SOURCE
                         logErrorInDefaultData(offlineResult)
                     }
-                }
-                else {
+                } else {
                     indexDataSource = DataSourceType.UNKNOWN_SOURCE
                     logErrorInDefaultData(lastReadResult)
                 }
@@ -386,7 +382,7 @@ abstract class GooglePlaySdkIndex(cacheDir: Path? = null) : NetworkCache(
         // Exception while parsing decompressed data
         INDEX_PARSE_EXCEPTION,
         // Resulted Index was null after parsing
-        INDEX_PARSE_NULL_ERROR,;
+        INDEX_PARSE_NULL_ERROR;
     }
 
     protected class ReadDataResult(val index: Index?, val readDataErrorType: ReadDataErrorType, val exception: Exception?)

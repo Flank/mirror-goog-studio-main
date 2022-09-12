@@ -2177,8 +2177,8 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}\n"
                                         + "fun getScore() = Unknown(42)"), // deliberately unknown
-                                                                           // method with unknown
-                                                                           // return type
+                        // method with unknown
+                        // return type
                         java(
                                 ""
                                         + "/*HIDE-FROM-DOCUMENTATION*/public class R {\n"

@@ -566,8 +566,9 @@ open class GradleDetector : Detector(), GradleScanner {
             mDeclaredSourceCompatibility = true
         } else if ((parent == "" || parent == "java") && property == "targetCompatibility") {
             mDeclaredTargetCompatibility = true
-        } else if (property == "include" && parent == "abi"
-            || property == "abiFilters" && parent == "ndk") {
+        } else if (property == "include" && parent == "abi" ||
+            property == "abiFilters" && parent == "ndk"
+        ) {
             checkForChromeOSAbiSplits(context, valueCookie, value)
         }
     }
@@ -584,7 +585,8 @@ open class GradleDetector : Detector(), GradleScanner {
     private fun checkForChromeOSAbiSplits(
         context: GradleContext,
         valueCookie: Any,
-        value: String) {
+        value: String
+    ) {
         val abis = value.split(',')
         var hasX86 = false
         var hasX8664 = false

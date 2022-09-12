@@ -26,7 +26,6 @@ import com.intellij.pom.java.LanguageLevel
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiRecursiveElementVisitor
 import com.intellij.psi.PsiTypeParameter
-import junit.framework.AssertionFailedError
 import junit.framework.TestCase
 import org.jetbrains.kotlin.asJava.elements.KotlinLightTypeParameterBuilder
 import org.jetbrains.kotlin.asJava.unwrapped

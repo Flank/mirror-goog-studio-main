@@ -20,7 +20,6 @@ import com.android.tools.lint.detector.api.SourceSetType
 import com.android.utils.SdkUtils.urlToFile
 import com.google.common.annotations.VisibleForTesting
 import org.jetbrains.annotations.TestOnly
-import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
 import java.io.IOException
 import java.net.JarURLConnection

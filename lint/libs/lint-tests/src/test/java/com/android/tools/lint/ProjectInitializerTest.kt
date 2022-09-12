@@ -1776,13 +1776,13 @@ class ProjectInitializerTest {
             val badFiles =
                 java.nio.file.Files.list(dir.toPath())
                     .filter {
-                        it.isRegularFile()
-                                && it.readText(Charsets.UTF_8).contains("buildRoot")
+                        it.isRegularFile() &&
+                            it.readText(Charsets.UTF_8).contains("buildRoot")
                     }
                     .toList()
             assertTrue(
                 "The following files contain the buildRoot directory, " +
-                        "which should not happen: ${badFiles.joinToString()}",
+                    "which should not happen: ${badFiles.joinToString()}",
                 badFiles.isEmpty()
             )
         }
@@ -2116,7 +2116,6 @@ class ProjectInitializerTest {
             """
         )
         File(root, "out/java/com/google/c/lint_partial_results").mkdirs()
-
 
         // Analyze project a.
         MainTest.checkDriver(

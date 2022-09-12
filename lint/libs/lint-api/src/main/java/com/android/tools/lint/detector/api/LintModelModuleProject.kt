@@ -199,7 +199,7 @@ open class LintModelModuleProject(
     }
 
     override fun getInstrumentationTestSourceFolders(): List<File> {
-        if(instrumentationTestSourceFolders == null) {
+        if (instrumentationTestSourceFolders == null) {
             instrumentationTestSourceFolders = mutableListOf()
             testSourceProviders.filter { it.isInstrumentationTest() }.forEach { provider ->
                 // model returns path whether or not it exists
@@ -212,7 +212,7 @@ open class LintModelModuleProject(
     }
 
     override fun getUnitTestSourceFolders(): List<File> {
-        if(unitTestSourceFolders == null) {
+        if (unitTestSourceFolders == null) {
             unitTestSourceFolders = mutableListOf()
             testSourceProviders.filter { it.isUnitTest() }.forEach { provider ->
                 // model returns path whether or not it exists

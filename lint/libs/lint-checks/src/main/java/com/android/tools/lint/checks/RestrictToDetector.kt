@@ -122,14 +122,14 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             for (annotation in owner.uAnnotations) {
                 val name = annotation.qualifiedName ?: continue
                 when {
-                  RESTRICT_TO_ANNOTATION.isEquals(name) -> {
-                      val restrictionScope = getRestrictionScope(annotation)
-                      if (restrictionScope and RESTRICT_TO_TESTS != 0) {
-                          return true
-                      }
-                  }
-                  name.endsWith(VISIBLE_FOR_TESTING_SUFFIX) -> return true
-                  name.endsWith(".TestOnly") -> return true
+                    RESTRICT_TO_ANNOTATION.isEquals(name) -> {
+                        val restrictionScope = getRestrictionScope(annotation)
+                        if (restrictionScope and RESTRICT_TO_TESTS != 0) {
+                            return true
+                        }
+                    }
+                    name.endsWith(VISIBLE_FOR_TESTING_SUFFIX) -> return true
+                    name.endsWith(".TestOnly") -> return true
                 }
             }
 

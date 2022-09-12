@@ -1087,44 +1087,44 @@ class GradleDetectorTest : AbstractCheckTest() {
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "    defaultConfig {\n" +
-                        "       minSdkVersion 15\n" +
-                        "       targetSdkVersion 17\n" +
-                        "       ndk {\n" +
-                        "           abiFilters 'arm64-v8a', 'x86_64', 'x86'\n" +
-                        "       }\n" +
-                        "   }\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "    defaultConfig {\n" +
+                    "       minSdkVersion 15\n" +
+                    "       targetSdkVersion 17\n" +
+                    "       ndk {\n" +
+                    "           abiFilters 'arm64-v8a', 'x86_64', 'x86'\n" +
+                    "       }\n" +
+                    "   }\n" +
+                    "}\n"
             )
         ).issues(CHROMEOS_ABI_SUPPORT).run().expectClean()
     }
 
     fun testChromeOSAbiFiltersMissingX86() {
         val expected = "build.gradle:10: Warning: Missing x86 and x86_64 ABI support for ChromeOS [ChromeOsAbiSupport]\n" +
-                "           abiFilters 'arm64-v8a'\n" +
-                "                      ~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings"
+            "           abiFilters 'arm64-v8a'\n" +
+            "                      ~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings"
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "    defaultConfig {\n" +
-                        "       minSdkVersion 15\n" +
-                        "       targetSdkVersion 17\n" +
-                        "       ndk {\n" +
-                        "           abiFilters 'arm64-v8a'\n" +
-                        "       }\n" +
-                        "   }\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "    defaultConfig {\n" +
+                    "       minSdkVersion 15\n" +
+                    "       targetSdkVersion 17\n" +
+                    "       ndk {\n" +
+                    "           abiFilters 'arm64-v8a'\n" +
+                    "       }\n" +
+                    "   }\n" +
+                    "}\n"
             )
         ).issues(CHROMEOS_ABI_SUPPORT).run().expect(expected)
     }
@@ -1133,65 +1133,65 @@ class GradleDetectorTest : AbstractCheckTest() {
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "    splits {\n" +
-                        "       abi {\n" +
-                        "           include 'arm64-v8a', 'x86_64', 'x86'\n" +
-                        "       }\n" +
-                        "   }\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "    splits {\n" +
+                    "       abi {\n" +
+                    "           include 'arm64-v8a', 'x86_64', 'x86'\n" +
+                    "       }\n" +
+                    "   }\n" +
+                    "}\n"
             )
         ).issues(CHROMEOS_ABI_SUPPORT).run().expectClean()
     }
 
     fun testChromeOSAbiSplitsMissingX86() {
         val expected = "build.gradle:8: Warning: Missing x86 and x86_64 ABI support for ChromeOS [ChromeOsAbiSupport]\n" +
-                "           include 'arm64-v8a'\n" +
-                "                   ~~~~~~~~~~~\n" +
-                "0 errors, 1 warnings"
+            "           include 'arm64-v8a'\n" +
+            "                   ~~~~~~~~~~~\n" +
+            "0 errors, 1 warnings"
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "    splits {\n" +
-                        "       abi {\n" +
-                        "           include \'arm64-v8a\'\n" +
-                        "       }\n" +
-                        "   }\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "    splits {\n" +
+                    "       abi {\n" +
+                    "           include \'arm64-v8a\'\n" +
+                    "       }\n" +
+                    "   }\n" +
+                    "}\n"
             )
         ).issues(CHROMEOS_ABI_SUPPORT).run().expect(expected)
     }
     fun testLargeScreenIncorrectDependencies() {
         val expected = "build.gradle:9: Warning: Upgrade androidx.slidingpanelayout for keyboard and mouse support [GradleDependency]\n" +
-                "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
-                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:10: Warning: Upgrade androidx.compose.foundation for keyboard and mouse support [GradleDependency]\n" +
-                "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
-                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 2 warnings"
+            "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "build.gradle:10: Warning: Upgrade androidx.compose.foundation for keyboard and mouse support [GradleDependency]\n" +
+            "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
+            "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+            "0 errors, 2 warnings"
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "}\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
-                        "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.1.0'\n" +
+                    "    compile 'androidx.compose.foundation:foundation:1.1.1'\n" +
+                    "}\n"
             )
         ).issues(DEPENDENCY).run().expect(expected)
     }
@@ -1200,17 +1200,17 @@ class GradleDetectorTest : AbstractCheckTest() {
         lint().files(
             gradle(
                 "" +
-                        "apply plugin: 'com.android.application'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "    compileSdkVersion 21\n" +
-                        "    buildToolsVersion \"21.1.2\"\n" +
-                        "}\n" +
-                        "\n" +
-                        "dependencies {\n" +
-                        "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.2'\n" +
-                        "    compile 'androidx.compose.foundation:foundation:1.2.1'\n" +
-                        "}\n"
+                    "apply plugin: 'com.android.application'\n" +
+                    "\n" +
+                    "android {\n" +
+                    "    compileSdkVersion 21\n" +
+                    "    buildToolsVersion \"21.1.2\"\n" +
+                    "}\n" +
+                    "\n" +
+                    "dependencies {\n" +
+                    "    compile 'androidx.slidingpanelayout:slidingpanelayout:1.2'\n" +
+                    "    compile 'androidx.compose.foundation:foundation:1.2.1'\n" +
+                    "}\n"
             )
         ).issues(DEPENDENCY).run().expectClean()
     }

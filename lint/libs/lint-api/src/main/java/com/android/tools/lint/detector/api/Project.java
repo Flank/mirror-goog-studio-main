@@ -1480,7 +1480,4 @@ public class Project {
     public LintClient getClient() {
         return client;
     }
-
-
-
 }

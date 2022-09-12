@@ -36,10 +36,10 @@ class DesugaredMethodLookupTest {
     fun `test desugaring works with inner classes`() {
         val desc1 =
             "" +
-                    "java/util/Map\$Entry#comparingByKey()Ljava/util/Comparator;\n" +
-                    "java/util/Map\$Entry#comparingByKey(Ljava/util/Comparator;)Ljava/util/Comparator;\n" +
-                    "java/util/Map\$Entry#comparingByValue()Ljava/util/Comparator;\n" +
-                    "java/util/Map\$Entry#comparingByValue(Ljava/util/Comparator;)Ljava/util/Comparator;\n"
+                "java/util/Map\$Entry#comparingByKey()Ljava/util/Comparator;\n" +
+                "java/util/Map\$Entry#comparingByKey(Ljava/util/Comparator;)Ljava/util/Comparator;\n" +
+                "java/util/Map\$Entry#comparingByValue()Ljava/util/Comparator;\n" +
+                "java/util/Map\$Entry#comparingByValue(Ljava/util/Comparator;)Ljava/util/Comparator;\n"
 
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
@@ -66,9 +66,9 @@ class DesugaredMethodLookupTest {
     fun `test simple use case with CollectionStream`() {
         val desc1 =
             "" +
-                    "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
-                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
-                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n"
+                "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
+                "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                "java/util/Collection#stream()Ljava/util/stream/Stream;\n"
 
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
@@ -77,7 +77,6 @@ class DesugaredMethodLookupTest {
             DesugaredMethodLookup.isDesugared(
                 "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
             )
-
         } finally {
             DesugaredMethodLookup.reset()
         }
@@ -87,18 +86,18 @@ class DesugaredMethodLookupTest {
     fun `test complex use case with CollectionStream - right of pivot`() {
         val desc1 =
             "" +
-                    "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
-                    "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
-                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
-                    "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
-                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
-                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
-                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
-                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
-                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
+                "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
+                "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
+                "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                "java/util/Collection#spliterator()Ljava/util/Spliterator;\n" +
+                "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
+                "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
+                "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
 
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
@@ -107,7 +106,6 @@ class DesugaredMethodLookupTest {
             DesugaredMethodLookup.isDesugared(
                 "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
             )
-
         } finally {
             DesugaredMethodLookup.reset()
         }
@@ -117,22 +115,22 @@ class DesugaredMethodLookupTest {
     fun `test complex use case with CollectionStream - left of pivot`() {
         val desc1 =
             "" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
-                    "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
-                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
-                    "java/util/Collect#spliterator()Ljava/util/Spliterator;\n" +
-                    "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
-                    "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
-                    "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
-                    "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
-                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
-                    "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Collections#emptyIterator()Ljava/util/Iterator;\n" +
+                "java/util/Collections#emptyListIterator()Ljava/util/ListIterator;\n" +
+                "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                "java/util/Collect#spliterator()Ljava/util/Spliterator;\n" +
+                "java/util/Collections#emptyEnumeration()Ljava/util/Enumeration;\n" +
+                "java/util/Collection#stream()Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Arrays#stream([Ljava/lang/Object;II)Ljava/util/stream/Stream;\n" +
+                "java/util/Calendar#toInstant()Ljava/time/Instant;\n" +
+                "java/util/Collections#synchronizedMap(Ljava/util/Map;)Ljava/util/Map;\n" +
+                "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n" +
+                "java/util/Collections#synchronizedSortedMap(Ljava/util/SortedMap;)Ljava/util/SortedMap;\n"
 
         val file1 = File.createTempFile("desc1", ".txt")
         file1.writeText(desc1)
@@ -143,7 +141,6 @@ class DesugaredMethodLookupTest {
                     "java.util.Collection", "stream", "()", SourceSetType.INSTRUMENTATION_TESTS
                 )
             )
-
         } finally {
             DesugaredMethodLookup.reset()
         }
@@ -178,12 +175,12 @@ class DesugaredMethodLookupTest {
     fun `test file`() {
         val desc1 =
             "" +
-                    "abc/def/GHI\$JKL#abc(III)Z\n" +
-                    "def/gh/IJ\n"
+                "abc/def/GHI\$JKL#abc(III)Z\n" +
+                "def/gh/IJ\n"
         val desc2 =
             "" +
-                    "g/hijk/l/MN#op\n" +
-                    "hij/kl/mn/O#pQr()Z\n"
+                "g/hijk/l/MN#op\n" +
+                "hij/kl/mn/O#pQr()Z\n"
 
         fun check() {
             assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.INSTRUMENTATION_TESTS))
@@ -256,12 +253,12 @@ class DesugaredMethodLookupTest {
     fun `test desugaring from model - fallback desugaredMethodsFiles`() {
         val desc1 =
             "" +
-                    "abc/def/GHI\$JKL#abc(III)Z\n" +
-                    "def/gh/IJ\n"
+                "abc/def/GHI\$JKL#abc(III)Z\n" +
+                "def/gh/IJ\n"
         val desc2 =
             "" +
-                    "g/hijk/l/MN#op\n" +
-                    "hij/kl/mn/O#pQr()Z\n"
+                "g/hijk/l/MN#op\n" +
+                "hij/kl/mn/O#pQr()Z\n"
 
         val file1 = File.createTempFile("desc1", ".txt").apply { writeText(desc1) }
         val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }
@@ -271,7 +268,7 @@ class DesugaredMethodLookupTest {
         whenever(project.buildVariant).thenReturn(variant)
         whenever(variant.mainArtifact).thenReturn(mainArtifact)
         whenever(mainArtifact.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
-        //whenever(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
+        // whenever(variant.desugaredMethodsFiles).thenReturn(listOf(file2, file1))
 
         assertFalse(DesugaredMethodLookup.isDesugared("foo/Bar", "baz", "()", SourceSetType.MAIN, project))
         assertTrue(DesugaredMethodLookup.isDesugared("abc/def/GHI\$JKL", "abc", "(III)", SourceSetType.MAIN, project))
@@ -296,12 +293,12 @@ class DesugaredMethodLookupTest {
     fun `test desugaring from model when source set desugaredMethodsFiles is not null`() {
         val desc1 =
             "" +
-                    "abc/def/GHI\$JKL#abc(III)Z\n" +
-                    "def/gh/IJ\n"
+                "abc/def/GHI\$JKL#abc(III)Z\n" +
+                "def/gh/IJ\n"
         val desc2 =
             "" +
-                    "g/hijk/l/MN#op\n" +
-                    "hij/kl/mn/O#pQr()Z\n"
+                "g/hijk/l/MN#op\n" +
+                "hij/kl/mn/O#pQr()Z\n"
 
         val file1 = File.createTempFile("desc1", ".txt").apply { writeText(desc1) }
         val file2 = File.createTempFile("desc2", ".txt").apply { writeText(desc2) }

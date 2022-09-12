@@ -2355,7 +2355,7 @@ class VersionChecksTest : AbstractCheckTest() {
                 }"""
             ).indented()
         ).run().expect(
-           """
+            """
            src/test.kt:8: Warning: Field requires API level 24 (current min is 4): android.text.Html#FROM_HTML_MODE_LEGACY [InlinedApi]
                    false || SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)
                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2371,7 +2371,7 @@ class VersionChecksTest : AbstractCheckTest() {
            2 errors, 2 warnings
            """
         )
-            //.expectClean() // Should be same as [testKotlinWhenStatement]
+        // .expectClean() // Should be same as [testKotlinWhenStatement]
     }
 
     fun testKotlinWhenStatement2() {
