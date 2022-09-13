@@ -9,8 +9,6 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
-local target_name="qa-fast"
-
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/../bazel" clean --async
 
@@ -30,7 +28,7 @@ target_filters=qa_fast,qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   --define=meta_android_build_number=${build_number} \
   --build_tag_filters=${target_filters} \
   --build_metadata=ab_build_id="${build_number}" \
-  --build_metadata=ab_target="${target_name}" \
+  --build_metadata=ab_target="qa-fast" \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
   -- \
