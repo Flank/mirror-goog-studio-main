@@ -132,7 +132,7 @@ public abstract class AbstractInstaller extends AbstractPackageOperation
         LocalPackage conflicting = findConflictingPackage(dir, progress);
         String warning =
                 "Package \""
-                        + mPackage
+                        + mPackage.getDisplayName()
                         + "\" ("
                         + mPackage.getPath()
                         + ") "

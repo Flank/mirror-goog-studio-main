@@ -135,7 +135,13 @@ public class AbstractInstallerTest {
         assertTrue(installer.prepare(progress));
         assertTrue(
                 progress.getWarnings().stream()
-                        .anyMatch(warning -> warning.contains("(foo;notbar)")));
+                        .anyMatch(warning -> warning.contains("\"fake package\" (foo;bar)")));
+        assertTrue(
+                progress.getWarnings().stream()
+                        .anyMatch(
+                                warning ->
+                                        warning.contains(
+                                                "\"The first Android platform ever\" (foo;notbar)")));
         assertEquals(sdkRoot.resolve("foo/bar-2"), installer.getLocation(progress));
     }
 
