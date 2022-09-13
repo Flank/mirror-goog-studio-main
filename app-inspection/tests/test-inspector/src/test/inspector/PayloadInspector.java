@@ -32,7 +32,7 @@ public final class PayloadInspector extends TestInspector {
     PayloadInspector(@NonNull Connection connection) {
         super(connection);
 
-        LARGE_PAYLOAD = new byte[1024 * 1024];
+        LARGE_PAYLOAD = new byte[4 * 1024 * 1024];
         for (int i = 0; i < LARGE_PAYLOAD.length; i++) {
             LARGE_PAYLOAD[i] = (byte) i;
         }

@@ -46,9 +46,11 @@ import java.util.zip.ZipEntry;
 
 final class InspectorContext {
     /**
-     * A reasonable size for a chunk (in bytes), to be used by {@link NativeTransport#sendPayload}.
+     * Since gRPC 1.22.0, the max size per gRPC message is 4 MB. In each message, we set the max
+     * size of the |bytes| field slightly under 4 MB to leave some space for other fields such as
+     * |name| and the overhead from protobuf message packaging and serialization.
      */
-    private static final int CHUNK_SIZE = 50 * 1024;
+    private static final int CHUNK_SIZE = 4 * 1000 * 1000;
 
     private final String mInspectorId;
     private Inspector mInspector;

@@ -549,7 +549,7 @@ public final class AppInspectionTest {
             List<Byte> payload =
                     appInspectionRule.removePayload(response.getRawResponse().getPayloadId());
 
-            assertThat(payload).hasSize(1024 * 1024);
+            assertThat(payload).hasSize(4 * 1024 * 1024);
             for (int i = 0; i < payload.size(); i++) {
                 assertThat(payload.get(i)).isEqualTo((byte) i);
             }
@@ -566,7 +566,7 @@ public final class AppInspectionTest {
             List<Byte> payload =
                     appInspectionRule.removePayload(event.getRawEvent().getPayloadId());
 
-            assertThat(payload).hasSize(1024 * 1024);
+            assertThat(payload).hasSize(4 * 1024 * 1024);
             for (int i = 0; i < payload.size(); i++) {
                 assertThat(payload.get(i)).isEqualTo((byte) i);
             }
