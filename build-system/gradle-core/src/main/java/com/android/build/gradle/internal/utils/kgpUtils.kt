@@ -19,6 +19,7 @@
 package com.android.build.gradle.internal.utils
 
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.api.DefaultAndroidSourceDirectorySet
 import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.component.ComponentCreationConfig
@@ -33,7 +34,6 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.SourceDirectorySet
-import org.gradle.api.internal.HasConvention
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.SourceSet
@@ -261,19 +261,56 @@ fun addComposeArgsToKotlinCompile(
  * Get information about Kotlin sources from KGP, until there is a KGP version that can work
  * with AGP which supports Kotlin source directories.
  */
-fun syncAgpAndKgpSources(project: Project, sourceSets: NamedDomainObjectContainer<out com.android.build.gradle.api.AndroidSourceSet>) {
+@Suppress("UNCHECKED_CAST")
+fun syncAgpAndKgpSources(
+    project: Project, sourceSets: NamedDomainObjectContainer<out AndroidSourceSet>
+) {
     val hasMpp = KOTLIN_MPP_PLUGIN_IDS.any { project.pluginManager.hasPlugin(it) }
-    sourceSets.all {
-        val kotlinConvention = (it as HasConvention).convention.plugins["kotlin"]
-        if (kotlinConvention!=null) {
-            val sourceDir =
-                    kotlinConvention::class.java.getMethod("getKotlin")
-                            .invoke(kotlinConvention) as SourceDirectorySet
+    // TODO(b/246910305): Remove once it is gone from Gradle
+    val hasConventionSupport = try {
+        Class.forName("org.gradle.api.internal.HasConvention")
+        true
+    } catch (ignored: Throwable) {
+        false
+    }
 
-            if (!hasMpp) {
-                sourceDir.srcDirs((it.kotlin as DefaultAndroidSourceDirectorySet).srcDirs)
+    val kotlinSourceSets by lazy {
+        val kotlinExtension = project.extensions.findByName("kotlin") ?: return@lazy null
+
+        kotlinExtension::class.java.getMethod("getSourceSets")
+            .invoke(kotlinExtension) as NamedDomainObjectContainer<Any>
+    }
+
+    fun AndroidSourceSet.findKotlinSourceSet(): SourceDirectorySet? {
+        if (hasMpp) {
+            if (!hasConventionSupport) {
+                // Newer versions of MPP will invoke AGP APIs to add the kotlin src dirs,
+                // so we can skip doing that.
+                return null
             }
-            it.kotlin.setSrcDirs(sourceDir.srcDirs)
+            val convention = this::class.java.getMethod("getConvention").invoke(this)
+            val plugins =
+                convention::class.java.getMethod("getPlugins")
+                    .invoke(convention) as Map<String, Any>
+            val kotlinConvention = plugins["kotlin"] ?: return null
+
+            return kotlinConvention::class.java.getMethod("getKotlin")
+                .invoke(kotlinConvention) as SourceDirectorySet
+        } else {
+            val kotlinSourceSet: Any = kotlinSourceSets?.findByName(this.name) ?: return null
+
+            return kotlinSourceSet::class.java.getMethod("getKotlin")
+                .invoke(kotlinSourceSet) as SourceDirectorySet
+        }
+    }
+
+    sourceSets.all {
+        val kotlinSourceSet = it.findKotlinSourceSet()
+        if (kotlinSourceSet != null) {
+            if (!hasMpp) {
+                kotlinSourceSet.srcDirs((it.kotlin as DefaultAndroidSourceDirectorySet).srcDirs)
+            }
+            it.kotlin.setSrcDirs(kotlinSourceSet.srcDirs)
         }
     }
 }
