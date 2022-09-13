@@ -337,9 +337,6 @@ class ApplicationVariantFactory(
                 || globalConfig.splits.abi.isEnable
             ) projectOptions[StringOption.IDE_BUILD_TARGET_ABI] else null)
                 ?: return
-        val buildTargetDensity =
-            projectOptions[StringOption.IDE_BUILD_TARGET_DENSITY]
-        val density = Density.getEnum(buildTargetDensity)
         val genericBuiltArtifacts = variantOutputs
             .map { variantOutput ->
                 GenericBuiltArtifact(
