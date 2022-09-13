@@ -12,6 +12,8 @@ readonly script_name="$(basename "$0")"
 readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
 readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
+local target_name="linux-smoke"
+
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/../bazel" clean --async  --expunge
 
@@ -65,7 +67,7 @@ if [[ $lsb_release == "crostini" ]]; then
     --define=meta_android_build_number=${build_number} \
     --build_event_binary_file="${dist_dir:-/tmp}/bazel-${build_number}.bes" \
     --build_tag_filters=${target_filters} \
-    --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+    --build_metadata=ab_build_id="${build_number}" \
     --build_metadata=ab_target="${target_name}" \
     --test_tag_filters=${target_filters} \
     --tool_tag=${script_name} \
@@ -127,7 +129,7 @@ else #Executes normally on linux as before
     --define=meta_android_build_number=${build_number} \
     --build_tag_filters=${target_filters} \
     --test_tag_filters=${target_filters} \
-    --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+    --build_metadata=ab_build_id="${build_number}" \
     --build_metadata=ab_target="${target_name}" \
     --tool_tag=${script_name} \
     --flaky_test_attempts=//tools/adt/idea/android-uitests:.*@2 \

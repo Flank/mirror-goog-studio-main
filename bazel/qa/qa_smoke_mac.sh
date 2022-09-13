@@ -6,6 +6,8 @@ readonly out_dir="$1"
 readonly dist_dir="$2"
 readonly build_number="$3"
 
+local target_name="mac-smoke"
+
 # TODO: Remove this block once we have enough Mac bots to run all
 # post-submit builds
 # Use flag file, skip all builds within 12 hours of last ran build
@@ -43,7 +45,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
         --strategy=TestRunner=local \
         --invocation_id=${invocation_id} \
         --define=meta_android_build_number=${build_number} \
-        --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+        --build_metadata=ab_build_id="${build_number}" \
         --build_metadata=ab_target="${target_name}" \
         --build_tag_filters=${target_filters} \
         --test_tag_filters=${target_filters} \

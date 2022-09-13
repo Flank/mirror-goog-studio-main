@@ -12,6 +12,8 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
+local target_name="linux-smoke-multirun"
+
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/../bazel" clean --async
 
@@ -31,7 +33,7 @@ target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-require
   ${config_options} --config=ants \
   --invocation_id=${invocation_id_smoke_longrunning} \
   --define=meta_android_build_number=${build_number} \
-  --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+  --build_metadata=ab_build_id="${build_number}" \
   --build_metadata=ab_target="${target_name}" \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
