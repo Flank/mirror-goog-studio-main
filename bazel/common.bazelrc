@@ -34,6 +34,7 @@ test:jdk17 --jvmopt='--add-opens=java.desktop/javax.swing=ALL-UNNAMED'
 test:jdk17 --jvmopt='--add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED'
 test:jdk17 --jvmopt='--add-opens=java.desktop/sun.awt=ALL-UNNAMED'
 test:jdk17 --jvmopt='--add-opens=java.desktop/sun.font=ALL-UNNAMED'
+test:jdk17 --jvmopt='--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED'
 
 build:jdk17 --jvmopt='--add-exports java.base/jdk.internal.vm=ALL-UNNAMED'
 build:jdk17 --jvmopt='--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
