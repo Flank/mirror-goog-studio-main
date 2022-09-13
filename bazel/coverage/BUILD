@@ -166,17 +166,6 @@ coverage_report(
 )
 
 coverage_report(
-    name = "workmanager-inspector",
-    srcpath_include = [
-        "tools/adt/idea/app-inspection/inspectors/workmanager",
-    ],
-    tests = [
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
-    ],
-)
-
-coverage_report(
     name = "network-inspector",
     srcpath_include = [
         "tools/adt/idea/app-inspection/inspectors/network/ide/src",
@@ -913,7 +902,6 @@ combine_report_definitions(
         "validation",
         "visual-lint",
         "wear-pairing-assistant",
-        "workmanager-inspector",
     ],
 )
 
@@ -946,8 +934,6 @@ coverage_report(
         "//tools/adt/idea/app-inspection/inspectors/network/ide:app-inspection.inspectors.network.ide.tests_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/model:app-inspection.inspectors.network.model_tests",
         "//tools/adt/idea/app-inspection/inspectors/network/view:app-inspection.inspectors.network.view.tests_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/model:app-inspection.inspectors.workmanager.model_tests",
-        "//tools/adt/idea/app-inspection/inspectors/workmanager/view:app-inspection.inspectors.workmanager.view.tests_tests",
         "//tools/adt/idea/assistant:assistant-test_tests",
         "//tools/adt/idea/build-attribution:intellij.android.build-attribution.tests_tests",
         "//tools/adt/idea/build-common:intellij.android.buildCommon_tests",
