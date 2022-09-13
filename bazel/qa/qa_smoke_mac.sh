@@ -6,7 +6,7 @@ readonly out_dir="$1"
 readonly dist_dir="$2"
 readonly build_number="$3"
 
-local target_name="mac-smoke"
+local target_name="qa-mac_smoke"
 
 # TODO: Remove this block once we have enough Mac bots to run all
 # post-submit builds

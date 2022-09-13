@@ -12,7 +12,7 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly script_name="$(basename "$0")"
 
-local target_name="linux-smoke-multirun"
+local target_name="qa-studio_smoke_multirun"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/../bazel" clean --async

@@ -12,7 +12,7 @@ readonly script_name="$(basename "$0")"
 readonly lsb_release="$(grep -oP '(?<=DISTRIB_CODENAME=).*' /etc/lsb-release)"
 readonly crostini_timestamp_file="/buildbot/lastrun.out"
 
-local target_name="linux-smoke"
+local target_name="qa-smoke"
 
 # Invalidate local cache to avoid picking up obsolete test result xmls
 "${script_dir}/../bazel" clean --async  --expunge
