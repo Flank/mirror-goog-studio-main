@@ -55,7 +55,7 @@ import ${getMaterialComponentName("android.support.annotation.Nullable", useAndr
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.FullScreenContentCallback;

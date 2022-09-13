@@ -79,6 +79,7 @@ fun RecipeExecutor.loginFragmentRecipe(
       fragmentClass = fragmentClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBinndingSupported
     )
@@ -86,6 +87,7 @@ fun RecipeExecutor.loginFragmentRecipe(
       fragmentClass = fragmentClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBinndingSupported
     )

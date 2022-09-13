@@ -27,6 +27,7 @@ fun loginFragmentJava(
   fragmentClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -59,7 +60,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 import ${packageName}.R;
 

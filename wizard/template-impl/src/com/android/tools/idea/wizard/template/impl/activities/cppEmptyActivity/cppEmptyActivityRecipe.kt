@@ -62,6 +62,7 @@ fun RecipeExecutor.generateCppEmptyActivity(
   val simpleActivity = when (projectData.language) {
     Language.Kotlin -> cppEmptyActivityKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       activityClass = activityClass,
       layoutName = layoutName,
       useAndroidX = useAndroidX,
@@ -70,6 +71,7 @@ fun RecipeExecutor.generateCppEmptyActivity(
     )
     Language.Java -> cppEmptyActivityJava(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       activityClass = activityClass,
       layoutName = layoutName,
       useAndroidX = useAndroidX,

@@ -69,12 +69,14 @@ fun RecipeExecutor.googleMapsActivityRecipe(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported)
     Language.Kotlin -> mapActivityKt(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported)
   }

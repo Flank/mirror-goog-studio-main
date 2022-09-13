@@ -108,12 +108,14 @@ fun RecipeExecutor.googlePayActivityRecipe(
       viewModelClass = viewModelClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       isViewBindingSupported = isViewBindingSupported)
     Language.Kotlin -> checkoutActivityKt(
       activityClass = activityClass,
       viewModelClass = viewModelClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       isViewBindingSupported = isViewBindingSupported)
   }
 

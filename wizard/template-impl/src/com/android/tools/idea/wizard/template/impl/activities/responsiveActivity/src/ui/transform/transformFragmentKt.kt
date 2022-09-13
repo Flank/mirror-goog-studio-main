@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.impl.activities.common.layoutToVie
 
 fun transformFragmentKt(
   packageName: String,
+  applicationPackage: String?,
   fragmentClassName: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
@@ -46,8 +47,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ${escapeKotlinIdentifier(packageName)}.R
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
-${importViewBindingClass(isViewBindingSupported, packageName, "item_transform", Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, "item_transform", Language.Kotlin)}
 
 /**
  * Fragment that demonstrates a responsive layout pattern where the format of the content

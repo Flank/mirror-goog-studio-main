@@ -28,6 +28,7 @@ fun loginActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -54,7 +55,7 @@ ${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import android.widget.EditText
 ${renderIf(!isViewBindingSupported) {"""import android.widget.ProgressBar"""}}
 import android.widget.Toast
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 import ${escapeKotlinIdentifier(packageName)}.R
 

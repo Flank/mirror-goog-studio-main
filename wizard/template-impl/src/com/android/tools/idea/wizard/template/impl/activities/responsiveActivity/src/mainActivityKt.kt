@@ -23,6 +23,7 @@ import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun mainActivityKt(
   packageName: String,
+  applicationPackage: String?,
   activityClass: String,
   appBarLayoutName: String,
   contentMainLayoutName: String,
@@ -49,7 +50,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.appcompat.app.AppCompatActivity
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class $activityClass : AppCompatActivity() {
 

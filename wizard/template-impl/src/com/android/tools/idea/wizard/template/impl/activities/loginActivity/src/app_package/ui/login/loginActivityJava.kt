@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.renderIf
 fun loginActivityJava(
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -58,7 +59,7 @@ import android.widget.Toast;
 import ${packageName}.R;
 import ${packageName}.ui.login.LoginViewModel;
 import ${packageName}.ui.login.LoginViewModelFactory;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class LoginActivity extends AppCompatActivity {
 

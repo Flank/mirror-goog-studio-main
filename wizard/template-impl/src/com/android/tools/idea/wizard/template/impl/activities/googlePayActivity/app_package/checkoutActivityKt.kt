@@ -27,6 +27,7 @@ fun checkoutActivityKt(
   viewModelClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   isViewBindingSupported: Boolean
 ): String {
 
@@ -58,7 +59,7 @@ import org.json.JSONObject
 
 import $packageName.R
 import $packageName.viewmodel.$viewModelClass
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 /**
  * Checkout implementation for the app

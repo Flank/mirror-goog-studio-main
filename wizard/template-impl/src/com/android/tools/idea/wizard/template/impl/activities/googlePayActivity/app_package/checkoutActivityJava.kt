@@ -26,6 +26,7 @@ fun checkoutActivityJava(
   viewModelClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   isViewBindingSupported: Boolean
 ): String {
 
@@ -63,7 +64,7 @@ import java.util.Locale;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 /**
  * Checkout implementation for the app

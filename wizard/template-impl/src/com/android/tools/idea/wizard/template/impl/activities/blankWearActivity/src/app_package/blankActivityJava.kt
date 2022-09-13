@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun blankActivityJava(
   activityClass: String,
+  applicationPackage: String?,
   layoutName: String,
   packageName: String,
   isViewBindingSupported: Boolean
@@ -40,7 +41,7 @@ package ${packageName};
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${activityClass} extends Activity {
 

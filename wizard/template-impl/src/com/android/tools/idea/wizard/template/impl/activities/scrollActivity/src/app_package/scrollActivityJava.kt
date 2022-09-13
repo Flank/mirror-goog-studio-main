@@ -35,7 +35,7 @@ fun scrollActivityJava(
 ): String {
   val newModuleImportBlock = renderIf(isNewModule) {"""
 import android.view.Menu;
-import android.view.MenuItem; 
+import android.view.MenuItem;
   """}
   val newModuleBlock = renderIf(isNewModule) {"""
     @Override
@@ -57,7 +57,7 @@ import android.view.MenuItem;
             return true;
         }
         return super.onOptionsItemSelected(item);
-    } 
+    }
   """}
   val applicationPackageBlock = renderIf(applicationPackage != null) {"import ${applicationPackage}.R;"}
 
@@ -77,7 +77,7 @@ import ${getMaterialComponentName("android.support.v7.widget.Toolbar", useAndroi
 import android.view.View;
 $newModuleImportBlock
 $applicationPackageBlock
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

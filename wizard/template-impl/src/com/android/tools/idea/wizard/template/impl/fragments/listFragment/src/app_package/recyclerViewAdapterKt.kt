@@ -68,7 +68,7 @@ import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 
 import ${kotlinEscapedPackageName}.placeholder.PlaceholderContent.PlaceholderItem
-${importViewBindingClass(isViewBindingSupported, kotlinEscapedPackageName, fragmentLayout, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, kotlinEscapedPackageName, applicationPackage, fragmentLayout, Language.Kotlin)}
 
 /**
  * [RecyclerView.Adapter] that can display a [PlaceholderItem].

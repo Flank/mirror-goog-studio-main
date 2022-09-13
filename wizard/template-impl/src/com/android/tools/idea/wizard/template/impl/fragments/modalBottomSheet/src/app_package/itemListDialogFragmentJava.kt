@@ -50,19 +50,19 @@ fun itemListDialogFragmentJava(
     ViewHolder(${layoutToViewBindingClass(itemLayout)} binding) {
       super(binding.getRoot());
       text = binding.text;
-    }  
+    }
   """ else """
     ViewHolder(LayoutInflater inflater, ViewGroup parent) {
       // TODO: Customize the item layout
       super(inflater.inflate(R.layout.${itemLayout}, parent, false));
       text = itemView.findViewById(R.id.text);
-    } 
+    }
   """
 
   val onCreateViewHolderBlock = if (isViewBindingSupported) """
-    return new ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.getContext()), parent, false)); 
+    return new ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.getContext()), parent, false));
   """ else """
-    return new ViewHolder(LayoutInflater.from(parent.getContext()), parent); 
+    return new ViewHolder(LayoutInflater.from(parent.getContext()), parent);
   """
 
   return """
@@ -79,8 +79,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-${importViewBindingClass(isViewBindingSupported, packageName, itemLayout, Language.Java)}
-${importViewBindingClass(isViewBindingSupported, packageName, listLayout, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, itemLayout, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, listLayout, Language.Java)}
 
 /**
  * <p>A fragment that shows a list of items as a modal bottom sheet.</p>
@@ -124,7 +124,7 @@ ${renderIf(isViewBindingSupported) {"""
 
         final TextView text;
 
-        $viewHolderBlock 
+        $viewHolderBlock
     }
 
     private class ${objectKind}Adapter extends RecyclerView.Adapter<ViewHolder> {

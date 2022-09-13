@@ -28,6 +28,7 @@ fun mainActivityJava(
   layoutName: String,
   navHostFragmentId: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -48,7 +49,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

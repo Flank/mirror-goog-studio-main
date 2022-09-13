@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun drawerActivityKt(
   packageName: String,
+  applicationPackage: String?,
   activityClass: String,
   appBarLayoutName: String,
   layoutName: String,
@@ -56,7 +57,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

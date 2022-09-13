@@ -30,6 +30,7 @@ fun mainActivityKt(
   layoutName: String,
   navHostFragmentId: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -49,7 +50,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

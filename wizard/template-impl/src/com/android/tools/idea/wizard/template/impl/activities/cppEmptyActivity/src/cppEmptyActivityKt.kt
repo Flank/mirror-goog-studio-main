@@ -25,6 +25,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun cppEmptyActivityKt(
     packageName: String,
+    applicationPackage: String?,
     activityClass: String,
     layoutName: String,
     useAndroidX: Boolean,
@@ -43,7 +44,7 @@ package ${escapeKotlinIdentifier(packageName)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 import android.os.Bundle
 import android.widget.TextView
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class $activityClass : AppCompatActivity() {
 

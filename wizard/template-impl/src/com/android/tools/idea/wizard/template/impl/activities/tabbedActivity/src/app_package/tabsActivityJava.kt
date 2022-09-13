@@ -27,6 +27,7 @@ fun tabsActivityJava(
   activityClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -48,7 +49,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import ${packageName}.ui.main.SectionsPagerAdapter;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

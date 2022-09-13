@@ -165,6 +165,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     when (projectTemplateData.language) {
       Language.Java -> mainActivityJava(
         packageName = packageName,
+        applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
         activityClass = activityClass,
         appBarLayoutName = appBarMainLayoutName,
         contentMainLayoutName = contentLayoutName,
@@ -174,6 +175,7 @@ fun RecipeExecutor.generateResponsiveActivity(
       )
       Language.Kotlin -> mainActivityKt(
         packageName = packageName,
+        applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
         activityClass = activityClass,
         appBarLayoutName = appBarMainLayoutName,
         contentMainLayoutName = contentLayoutName,
@@ -188,6 +190,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     when (projectTemplateData.language) {
       Language.Java -> transformFragmentJava(
         packageName = packageName,
+        applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
         fragmentClassName = "TransformFragment",
         navFragmentPrefix = "transform",
         navViewModelClass = "TransformViewModel",
@@ -195,6 +198,7 @@ fun RecipeExecutor.generateResponsiveActivity(
       )
       Language.Kotlin -> transformFragmentKt(
         packageName = packageName,
+        applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
         fragmentClassName = "TransformFragment",
         navFragmentPrefix = "transform",
         navViewModelClass = "TransformViewModel",
@@ -224,6 +228,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
     fragmentPrefix = "reflow",
     useAndroidX = true,
     isViewBindingSupported = isViewBindingSupported)
@@ -232,6 +237,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
     fragmentPrefix = "slideshow",
     useAndroidX = true,
     isViewBindingSupported = isViewBindingSupported)
@@ -240,6 +246,7 @@ fun RecipeExecutor.generateResponsiveActivity(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = moduleTemplateData.projectTemplateData.applicationPackage,
     fragmentPrefix = "settings",
     useAndroidX = true,
     isViewBindingSupported = isViewBindingSupported)

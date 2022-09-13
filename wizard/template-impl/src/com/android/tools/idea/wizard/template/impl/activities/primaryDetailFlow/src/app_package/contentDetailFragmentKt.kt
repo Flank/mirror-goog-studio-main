@@ -54,7 +54,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 import ${packageName}.placeholder.PlaceholderContent
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 /**
  * A fragment representing a single $objectKind detail screen.

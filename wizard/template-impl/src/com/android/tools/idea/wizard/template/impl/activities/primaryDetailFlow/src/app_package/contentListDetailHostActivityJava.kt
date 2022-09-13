@@ -22,6 +22,7 @@ import com.android.tools.idea.wizard.template.impl.activities.common.layoutToVie
 
 fun contentListDetailHostActivityJava(
   packageName: String,
+  applicationPackage: String?,
   collection: String,
   activityLayout: String,
   navHostFragmentId: String,
@@ -44,7 +45,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${collection}DetailHostActivity extends AppCompatActivity {
 

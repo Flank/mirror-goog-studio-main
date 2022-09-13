@@ -71,6 +71,7 @@ fun RecipeExecutor.recyclerViewAdapterRecipe(
       adapterClassName = adapterClassName,
       fragmentLayout = fragmentLayout,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

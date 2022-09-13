@@ -117,6 +117,7 @@ fun RecipeExecutor.generateBasicActivity(
   val firstFragmentClassContent = when (projectData.language) {
     Language.Java -> firstFragmentJava(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
@@ -125,6 +126,7 @@ fun RecipeExecutor.generateBasicActivity(
     )
     Language.Kotlin -> firstFragmentKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
       firstFragmentLayoutName = firstFragmentLayoutName,
@@ -135,6 +137,7 @@ fun RecipeExecutor.generateBasicActivity(
   val secondFragmentClassContent = when (projectData.language) {
     Language.Java -> secondFragmentJava(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
@@ -143,6 +146,7 @@ fun RecipeExecutor.generateBasicActivity(
     )
     Language.Kotlin -> secondFragmentKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,

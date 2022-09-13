@@ -28,6 +28,7 @@ fun tabsActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -48,7 +49,7 @@ import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", us
 import android.view.Menu
 import android.view.MenuItem
 import ${packageName}.ui.main.SectionsPagerAdapter
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

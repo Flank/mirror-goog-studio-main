@@ -57,6 +57,7 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
       fragmentClass = fragmentClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
@@ -64,6 +65,7 @@ fun RecipeExecutor.fullscreenFragmentRecipe(
       fragmentClass = fragmentClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

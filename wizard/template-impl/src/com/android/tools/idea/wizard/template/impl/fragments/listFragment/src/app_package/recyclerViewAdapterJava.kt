@@ -25,6 +25,7 @@ fun recyclerViewAdapterJava(
   adapterClassName: String,
   fragmentLayout: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -59,7 +60,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import ${packageName}.placeholder.PlaceholderContent.PlaceholderItem;
-${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayout, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, fragmentLayout, Language.Java)}
 
 import java.util.List;
 

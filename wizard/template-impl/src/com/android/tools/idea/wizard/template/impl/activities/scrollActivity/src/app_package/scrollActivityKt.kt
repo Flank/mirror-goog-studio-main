@@ -30,6 +30,7 @@ fun scrollActivityKt(
   layoutName: String,
   menuName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -55,7 +56,7 @@ import android.view.MenuItem
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
-    } 
+    }
   """}
 
   val contentViewBlock = if (isViewBindingSupported) """
@@ -71,7 +72,7 @@ import ${getMaterialComponentName("android.support.design.widget.FloatingActionB
 import ${getMaterialComponentName("android.support.design.widget.Snackbar", useAndroidX)}
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)}
 $newModuleImportBlock
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${activityClass} : AppCompatActivity() {
 

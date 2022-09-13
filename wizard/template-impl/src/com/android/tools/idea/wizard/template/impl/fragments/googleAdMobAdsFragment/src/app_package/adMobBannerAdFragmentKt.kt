@@ -52,7 +52,7 @@ import android.view.ViewGroup
 import android.view.View
 import android.widget.Toast
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${fragmentClass} : Fragment() {
 

@@ -99,6 +99,7 @@ fun RecipeExecutor.scrollActivityRecipe(
       layoutName = layoutName,
       menuName = menuName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

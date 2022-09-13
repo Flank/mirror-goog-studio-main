@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.renderIf
 fun placeholderFragmentKt(
   fragmentLayoutName: String,
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   isViewBindingSupported: Boolean
 ): String {
@@ -49,7 +50,7 @@ import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX
 import ${getMaterialComponentName("android.arch.lifecycle.Observer", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
 import ${packageName}.R
-${importViewBindingClass(isViewBindingSupported, packageName, fragmentLayoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, fragmentLayoutName, Language.Kotlin)}
 
 /**
  * A placeholder fragment containing a simple view.

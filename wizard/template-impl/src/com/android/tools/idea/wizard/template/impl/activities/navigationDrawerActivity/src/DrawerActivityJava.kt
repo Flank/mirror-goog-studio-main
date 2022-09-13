@@ -25,6 +25,7 @@ import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun drawerActivityJava(
   packageName: String,
+  applicationPackage: String?,
   activityClass: String,
   appBarLayoutName: String,
   layoutName: String,
@@ -54,7 +55,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import ${getMaterialComponentName("android.support.v4.widget.DrawerLayout", useAndroidX)};
 import ${getMaterialComponentName("android.support.v7.app.AppCompatActivity", useAndroidX)};
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${activityClass} extends AppCompatActivity {
 

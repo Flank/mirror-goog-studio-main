@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentJava(
   packageName: String,
+  applicationPackage: String?,
   firstFragmentClass: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
@@ -51,7 +52,7 @@ import android.widget.TextView;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)};
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class $firstFragmentClass extends Fragment {
 

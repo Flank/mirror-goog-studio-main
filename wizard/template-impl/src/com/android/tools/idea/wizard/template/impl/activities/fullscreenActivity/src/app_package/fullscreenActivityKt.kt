@@ -51,7 +51,7 @@ import android.view.WindowInsets
 ${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import android.widget.LinearLayout
 import android.widget.TextView
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 $applicationPackageBlock
 
 /**

@@ -91,6 +91,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
@@ -98,6 +99,7 @@ fun RecipeExecutor.tabbedActivityRecipe(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
@@ -114,12 +116,14 @@ fun RecipeExecutor.tabbedActivityRecipe(
     Language.Java -> placeholderFragmentJava(
       fragmentLayoutName = fragmentLayoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
     Language.Kotlin -> placeholderFragmentKt(
       fragmentLayoutName = fragmentLayoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

@@ -52,19 +52,19 @@ fun itemListDialogFragmentKt(
         : RecyclerView.ViewHolder(binding.root) {
 
         internal val text: TextView = binding.text
-    }  
+    }
   """ else """
     private inner class ViewHolder internal constructor(inflater: LayoutInflater, parent: ViewGroup)
         : RecyclerView.ViewHolder(inflater.inflate(R.layout.${itemLayout}, parent, false)) {
 
         internal val text: TextView = itemView.findViewById(R.id.text)
-    } 
+    }
   """
 
   val onCreateViewHolderBlock = if (isViewBindingSupported) """
-    return ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.context), parent, false)) 
+    return ViewHolder(${layoutToViewBindingClass(itemLayout)}.inflate(LayoutInflater.from(parent.context), parent, false))
   """ else """
-    return ViewHolder(LayoutInflater.from(parent.context), parent) 
+    return ViewHolder(LayoutInflater.from(parent.context), parent)
   """
 
   return """
@@ -79,8 +79,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-${importViewBindingClass(isViewBindingSupported, packageName, itemLayout, Language.Kotlin)}
-${importViewBindingClass(isViewBindingSupported, packageName, listLayout, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, itemLayout, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, listLayout, Language.Kotlin)}
 
 // TODO: Customize parameter argument names
 const val ARG_ITEM_COUNT = "item_count"
@@ -113,7 +113,7 @@ ${renderIf(isViewBindingSupported) {"""
         activity?.findViewById<RecyclerView>(R.id.list)?.adapter = arguments?.getInt(ARG_ITEM_COUNT)?.let { ItemAdapter(it) }
     }
 
-    $viewHolderBlock 
+    $viewHolderBlock
 
     private inner class ${objectKind}Adapter internal constructor(private val mItemCount: Int) : RecyclerView.Adapter<ViewHolder>() {
 

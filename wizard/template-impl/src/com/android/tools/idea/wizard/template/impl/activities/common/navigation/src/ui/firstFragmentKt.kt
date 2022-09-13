@@ -26,6 +26,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentKt(
   packageName: String,
+  applicationPackage: String?,
   firstFragmentClass: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
@@ -52,7 +53,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 import ${getMaterialComponentName("android.arch.lifecycle.ViewModelProvider", useAndroidX)}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class $firstFragmentClass : Fragment() {
 

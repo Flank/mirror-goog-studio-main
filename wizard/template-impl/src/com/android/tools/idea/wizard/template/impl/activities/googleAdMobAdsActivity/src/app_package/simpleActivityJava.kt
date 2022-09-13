@@ -212,7 +212,7 @@ import java.util.Locale;
 """}}
 
 import android.widget.Toast;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
 
 public class ${activityClass} extends AppCompatActivity {

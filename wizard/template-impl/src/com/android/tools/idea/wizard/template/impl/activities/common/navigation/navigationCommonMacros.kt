@@ -31,6 +31,7 @@ fun RecipeExecutor.saveFragmentAndViewModel(
   srcOut: File,
   language: Language,
   packageName: String,
+  applicationPackage: String?,
   fragmentPrefix: String,
   useAndroidX: Boolean = true,
   isViewBindingSupported: Boolean
@@ -47,6 +48,7 @@ fun RecipeExecutor.saveFragmentAndViewModel(
     if (generateKotlin)
       firstFragmentKt(
         packageName = packageName,
+        applicationPackage = applicationPackage,
         firstFragmentClass = firstFragmentClass,
         navFragmentPrefix = fragmentPrefix,
         navViewModelClass = viewModelClass,
@@ -55,6 +57,7 @@ fun RecipeExecutor.saveFragmentAndViewModel(
     else
       firstFragmentJava(
         packageName = packageName,
+        applicationPackage = applicationPackage,
         firstFragmentClass = firstFragmentClass,
         navFragmentPrefix = fragmentPrefix,
         navViewModelClass = viewModelClass,

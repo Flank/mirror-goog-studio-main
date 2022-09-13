@@ -139,6 +139,7 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
   val mainActivity = when (projectData.language) {
     Language.Java -> contentListDetailHostActivityJava(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       collection = collection,
       activityLayout = detailNameLayout,
       navHostFragmentId = navHostFragmentId,
@@ -147,6 +148,7 @@ fun RecipeExecutor.primaryDetailFlowRecipe(
     )
     Language.Kotlin -> contentListDetailHostActivityKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       collection = collection,
       activityLayout = detailNameLayout,
       navHostFragmentId = navHostFragmentId,

@@ -95,6 +95,7 @@ fun RecipeExecutor.loginActivityRecipe(
     Language.Java -> loginActivityJava(
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
@@ -102,6 +103,7 @@ fun RecipeExecutor.loginActivityRecipe(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

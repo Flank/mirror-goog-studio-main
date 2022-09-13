@@ -23,6 +23,7 @@ import com.android.tools.idea.wizard.template.impl.activities.common.layoutToVie
 
 fun contentListDetailHostActivityKt(
   packageName: String,
+  applicationPackage: String?,
   collection: String,
   activityLayout: String,
   navHostFragmentId: String,
@@ -46,7 +47,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${collection}DetailHostActivity : AppCompatActivity() {
 

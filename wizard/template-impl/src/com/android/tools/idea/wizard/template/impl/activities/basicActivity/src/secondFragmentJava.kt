@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun secondFragmentJava(
   packageName: String,
+  applicationPackage: String?,
   useAndroidX: Boolean,
   firstFragmentClass: String,
   secondFragmentClass: String,
@@ -45,7 +46,7 @@ import android.view.ViewGroup;
 import ${getMaterialComponentName("android.support.annotation.NonNull", useAndroidX)};
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)};
 import androidx.navigation.fragment.NavHostFragment;
-${importViewBindingClass(isViewBindingSupported, packageName, secondFragmentLayoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, secondFragmentLayoutName, Language.Java)}
 
 public class ${secondFragmentClass} extends Fragment {
 

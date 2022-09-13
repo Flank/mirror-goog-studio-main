@@ -82,8 +82,8 @@ import androidx.navigation.findNavController
 import ${getMaterialComponentName("android.support.v7.widget.RecyclerView", useAndroidX)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
 import ${packageName}.placeholder.PlaceholderContent;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
-${importViewBindingClass(isViewBindingSupported, packageName, itemListContentLayout, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, itemListContentLayout, Language.Kotlin)}
 
 /**
  * A Fragment representing a list of Pings. This fragment

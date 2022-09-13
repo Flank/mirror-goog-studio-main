@@ -69,6 +69,7 @@ fun RecipeExecutor.listFragmentRecipe(
       adapterClassName = adapterClassName,
       fragmentLayout = fragmentLayout,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )

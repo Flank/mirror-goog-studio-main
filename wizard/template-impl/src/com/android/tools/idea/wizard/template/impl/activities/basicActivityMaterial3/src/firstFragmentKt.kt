@@ -24,6 +24,7 @@ import com.android.tools.idea.wizard.template.renderIf
 
 fun firstFragmentKt(
   packageName: String,
+  applicationPackage: String?,
   firstFragmentClass: String,
   secondFragmentClass: String,
   firstFragmentLayoutName: String,
@@ -44,7 +45,7 @@ import android.view.View
 import android.view.ViewGroup
 ${renderIf(!isViewBindingSupported) {"""import android.widget.Button"""}}
 import androidx.navigation.fragment.findNavController
-${importViewBindingClass(isViewBindingSupported, packageName, firstFragmentLayoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, firstFragmentLayoutName, Language.Kotlin)}
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

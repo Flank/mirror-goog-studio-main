@@ -110,6 +110,7 @@ fun RecipeExecutor.generateBasicActivity(
   val secondFragmentClass = layoutToFragment(secondFragmentLayoutName)
   val firstFragmentClassContent = firstFragmentKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
       firstFragmentLayoutName = firstFragmentLayoutName,
@@ -117,6 +118,7 @@ fun RecipeExecutor.generateBasicActivity(
   )
   val secondFragmentClassContent = secondFragmentKt(
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       firstFragmentClass = firstFragmentClass,
       secondFragmentClass = secondFragmentClass,
       secondFragmentLayoutName = secondFragmentLayoutName,

@@ -57,12 +57,14 @@ fun RecipeExecutor.blankWearActivityRecipe(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       isViewBindingSupported = isViewBindingSupported
     )
     Language.Kotlin -> blankActivityKt(
       activityClass = activityClass,
       layoutName = layoutName,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       isViewBindingSupported = isViewBindingSupported
     )
   }

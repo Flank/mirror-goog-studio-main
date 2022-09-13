@@ -54,7 +54,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R;" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class ${fragmentClass} extends Fragment {
     // Remove the below line after defining your own ad unit ID.

@@ -46,7 +46,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.EditText
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layout, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layout, Language.Kotlin)}
 
 /**
  * The configuration screen for the [${className}] AppWidget.

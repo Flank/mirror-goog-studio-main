@@ -26,6 +26,7 @@ fun blankActivityKt(
   activityClass: String,
   layoutName: String,
   packageName: String,
+  applicationPackage: String?,
   isViewBindingSupported: Boolean
 ): String {
 
@@ -39,7 +40,7 @@ package ${escapeKotlinIdentifier(packageName)}
 
 import android.app.Activity
 import android.os.Bundle
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 
 class ${activityClass} : Activity() {
 

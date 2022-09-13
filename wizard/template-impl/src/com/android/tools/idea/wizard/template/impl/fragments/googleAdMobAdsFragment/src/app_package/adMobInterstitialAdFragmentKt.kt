@@ -52,7 +52,7 @@ import android.widget.TextView
 import android.widget.Toast
 import ${getMaterialComponentName("android.support.v4.app.Fragment", useAndroidX)}
 ${renderIf(applicationPackage != null) { "import ${applicationPackage}.R" }}
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Kotlin)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Kotlin)}
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback

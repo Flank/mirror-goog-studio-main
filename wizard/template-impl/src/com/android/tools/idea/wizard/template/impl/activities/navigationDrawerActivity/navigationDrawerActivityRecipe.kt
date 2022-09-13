@@ -112,6 +112,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = data.projectTemplateData.applicationPackage,
     fragmentPrefix = "home",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -120,6 +121,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = data.projectTemplateData.applicationPackage,
     fragmentPrefix = "gallery",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -128,6 +130,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = data.projectTemplateData.applicationPackage,
     fragmentPrefix = "slideshow",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -167,6 +170,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     if (generateKotlin)
       drawerActivityKt(
         packageName = packageName,
+        applicationPackage = data.projectTemplateData.applicationPackage,
         activityClass = activityClass,
         appBarLayoutName = appBarLayoutName,
         layoutName = layoutName,
@@ -178,6 +182,7 @@ fun RecipeExecutor.generateNavigationDrawer(
     else
       drawerActivityJava(
         packageName = packageName,
+        applicationPackage = data.projectTemplateData.applicationPackage,
         activityClass = activityClass,
         appBarLayoutName = appBarLayoutName,
         layoutName = layoutName,

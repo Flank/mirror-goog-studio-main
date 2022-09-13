@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.impl.activities.common.layoutToVie
 
 fun transformFragmentJava(
   packageName: String,
+  applicationPackage: String?,
   fragmentClassName: String,
   navFragmentPrefix: String,
   navViewModelClass: String,
@@ -48,8 +49,8 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import $packageName.R;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
-${importViewBindingClass(isViewBindingSupported, packageName, "item_transform", Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, "item_transform", Language.Java)}
 
 import java.util.Arrays;
 import java.util.List;

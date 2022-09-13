@@ -21,6 +21,7 @@ import com.android.tools.idea.wizard.template.underscoreToLowerCamelCase
 
 fun mainActivityJava(
   packageName: String,
+  applicationPackage: String?,
   activityClass: String,
   appBarLayoutName: String,
   contentMainLayoutName: String,
@@ -48,7 +49,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 import androidx.appcompat.app.AppCompatActivity;
-${importViewBindingClass(isViewBindingSupported, packageName, layoutName, Language.Java)}
+${importViewBindingClass(isViewBindingSupported, packageName, applicationPackage, layoutName, Language.Java)}
 
 public class $activityClass extends AppCompatActivity {
 

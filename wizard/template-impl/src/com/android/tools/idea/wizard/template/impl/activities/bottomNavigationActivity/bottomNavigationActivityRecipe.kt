@@ -74,6 +74,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = projectData.applicationPackage,
     fragmentPrefix = "home",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -82,6 +83,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = projectData.applicationPackage,
     fragmentPrefix = "dashboard",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -90,6 +92,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
     srcOut = srcOut,
     language = language,
     packageName = packageName,
+    applicationPackage = projectData.applicationPackage,
     fragmentPrefix = "notifications",
     useAndroidX = useAndroidX,
     isViewBindingSupported = isViewBindingSupported)
@@ -117,6 +120,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
       layoutName = layoutName,
       navHostFragmentId = navHostFragmentId,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
@@ -125,6 +129,7 @@ fun RecipeExecutor.bottomNavigationActivityRecipe(
       layoutName = layoutName,
       navHostFragmentId = navHostFragmentId,
       packageName = packageName,
+      applicationPackage = projectData.applicationPackage,
       useAndroidX = useAndroidX,
       isViewBindingSupported = isViewBindingSupported
     )
