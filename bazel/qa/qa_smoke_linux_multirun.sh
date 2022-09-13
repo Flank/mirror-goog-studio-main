@@ -28,9 +28,11 @@ target_filters=qa_smoke,ui_test,-qa_unreliable,-no_linux,-no_test_linux,-require
   --runs_per_test_detects_flakes \
   --jobs=200 \
   --keep_going \
-  ${config_options} \
+  ${config_options} --config=ants \
   --invocation_id=${invocation_id_smoke_longrunning} \
   --define=meta_android_build_number=${build_number} \
+  --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+  --build_metadata=ab_target="${target_name}" \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \

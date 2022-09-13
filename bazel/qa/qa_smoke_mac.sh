@@ -38,11 +38,13 @@ export GOOGLE_APPLICATION_CREDENTIALS=$BAZEL_GOOGLE_APPLICATION_CREDENTIALS
         --max_idle_secs=60 \
         test \
         --keep_going \
-        ${config_options} \
+        ${config_options} --config=ants \
         --test_strategy=exclusive \
         --strategy=TestRunner=local \
         --invocation_id=${invocation_id} \
         --define=meta_android_build_number=${build_number} \
+        --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+        --build_metadata=ab_target="${target_name}" \
         --build_tag_filters=${target_filters} \
         --test_tag_filters=${target_filters} \
         --tool_tag=${script_name} \

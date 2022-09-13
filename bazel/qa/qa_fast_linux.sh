@@ -23,10 +23,12 @@ target_filters=qa_fast,qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
   --max_idle_secs=60 \
   test \
   --keep_going \
-  ${config_options} \
+  ${config_options} --config=ants \
   --invocation_id=${invocation_id} \
   --define=meta_android_build_number=${build_number} \
   --build_tag_filters=${target_filters} \
+  --build_metadata=ab_build_id="${BUILD_NUMBER}" \
+  --build_metadata=ab_target="${target_name}" \
   --test_tag_filters=${target_filters} \
   --tool_tag=${script_name} \
   -- \
