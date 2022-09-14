@@ -1631,19 +1631,19 @@ package com.android.build.api.dsl {
   }
 
   public interface TestBaseFlavor extends com.android.build.api.dsl.BaseFlavor com.android.build.api.dsl.TestVariantDimension {
-    method @org.gradle.api.Incubating public Integer? getMaxSdk();
-    method @org.gradle.api.Incubating public Integer? getTargetSdk();
-    method @org.gradle.api.Incubating public String? getTargetSdkPreview();
-    method @Deprecated @org.gradle.api.Incubating public void maxSdkVersion(int maxSdkVersion);
-    method @org.gradle.api.Incubating public void setMaxSdk(Integer? maxSdk);
-    method @org.gradle.api.Incubating public void setTargetSdk(Integer? targetSdk);
-    method @org.gradle.api.Incubating public void setTargetSdkPreview(String? targetSdkPreview);
-    method @Deprecated @org.gradle.api.Incubating public void setTargetSdkVersion(String? targetSdkVersion);
-    method @Deprecated @org.gradle.api.Incubating public void targetSdkVersion(int targetSdkVersion);
-    method @Deprecated @org.gradle.api.Incubating public void targetSdkVersion(String? targetSdkVersion);
-    property @org.gradle.api.Incubating public abstract Integer? maxSdk;
-    property @org.gradle.api.Incubating public abstract Integer? targetSdk;
-    property @org.gradle.api.Incubating public abstract String? targetSdkPreview;
+    method public Integer? getMaxSdk();
+    method public Integer? getTargetSdk();
+    method public String? getTargetSdkPreview();
+    method @Deprecated public void maxSdkVersion(int maxSdkVersion);
+    method public void setMaxSdk(Integer? maxSdk);
+    method public void setTargetSdk(Integer? targetSdk);
+    method public void setTargetSdkPreview(String? targetSdkPreview);
+    method @Deprecated public void setTargetSdkVersion(String? targetSdkVersion);
+    method @Deprecated public void targetSdkVersion(int targetSdkVersion);
+    method @Deprecated public void targetSdkVersion(String? targetSdkVersion);
+    property public abstract Integer? maxSdk;
+    property public abstract Integer? targetSdk;
+    property public abstract String? targetSdkPreview;
   }
 
   public interface TestBuildFeatures extends com.android.build.api.dsl.BuildFeatures {
