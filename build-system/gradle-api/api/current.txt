@@ -1668,9 +1668,9 @@ package com.android.build.api.dsl {
   }
 
   public interface TestExtension extends com.android.build.api.dsl.CommonExtension<com.android.build.api.dsl.TestBuildFeatures,com.android.build.api.dsl.TestBuildType,com.android.build.api.dsl.TestDefaultConfig,com.android.build.api.dsl.TestProductFlavor> {
-    method @org.gradle.api.Incubating public String? getTargetProjectPath();
-    method @org.gradle.api.Incubating public void setTargetProjectPath(String? targetProjectPath);
-    property @org.gradle.api.Incubating public abstract String? targetProjectPath;
+    method public String? getTargetProjectPath();
+    method public void setTargetProjectPath(String? targetProjectPath);
+    property public abstract String? targetProjectPath;
   }
 
   @org.gradle.api.Incubating public interface TestFixtures {

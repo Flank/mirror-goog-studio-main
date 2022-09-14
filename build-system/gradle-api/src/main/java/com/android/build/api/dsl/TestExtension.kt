@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * Extension for the Android Test Gradle Plugin.
  *
@@ -35,7 +33,5 @@ interface TestExtension :
     /**
      * The Gradle path of the project that this test project tests.
      */
-    @get:Incubating
-    @set:Incubating
     var targetProjectPath: String?
 }
