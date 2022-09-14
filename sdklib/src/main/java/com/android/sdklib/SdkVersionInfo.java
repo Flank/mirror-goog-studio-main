@@ -35,7 +35,7 @@ public class SdkVersionInfo {
      *
      * <p>Make sure to keep this in sync with the value in TestUtils.
      */
-    public static final int HIGHEST_KNOWN_STABLE_API = 32;
+    public static final int HIGHEST_KNOWN_STABLE_API = 33;
 
     /**
      * The highest supported version of the Android platform (as an API level) that this version of
@@ -185,6 +185,8 @@ public class SdkVersionInfo {
             case 30: return "11.0";
             case 31: return "12.0";
             case 32: return "12L";
+            case 33:
+                return "13.0";
                 // If you add more versions here, also update #HIGHEST_KNOWN_STABLE_API
             default:
                 return null;

@@ -31,6 +31,7 @@ platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
 
 # Sources
+sources;android-33:{package.xml,android/view/View.java}
 sources;android-31:{package.xml,android/view/View.java}
 sources;android-30:{package.xml,android/view/View.java}
 sources;android-27:{package.xml,android/view/View.java}

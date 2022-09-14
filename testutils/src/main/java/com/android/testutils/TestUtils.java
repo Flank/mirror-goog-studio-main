@@ -542,7 +542,7 @@ public class TestUtils {
         if (testType == TestType.AGP) {
             return "android-" + ANDROID_PLATFORM_FOR_AGP_UNIT_TESTS;
         }
-        return "android-32";
+        return "android-33";
     }
 
     /**

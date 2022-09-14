@@ -51,12 +51,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 30: Android 11.0 (R)", SdkVersionInfo.getAndroidName(30));
         assertEquals("API 31: Android 12.0 (S)", SdkVersionInfo.getAndroidName(31));
         assertEquals("API 32: Android 12L (Sv2)", SdkVersionInfo.getAndroidName(32));
-        assertEquals(
-                // "13.0" here is a future guess to make the test likely to continue passing
-                // after whoever updates HIGHEST_KNOWN_STABLE_API, not an exclusive announcement :-)
-                HIGHEST_KNOWN_STABLE_API < 33 ? "API 33: Android Tiramisu" : "API 33: Android 13.0 (T)",
-                SdkVersionInfo.getAndroidName(33)
-        );
+        assertEquals("API 33: Android 13.0 (Tiramisu)", SdkVersionInfo.getAndroidName(33));
 
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
@@ -169,7 +164,7 @@ public class SdkVersionInfoTest extends TestCase {
     public void testGetVersionWithCodename() {
         assertEquals("Android 1.0", getVersionWithCodename(new AndroidVersion(1)));
         assertEquals("Android 2.3.3 (Gingerbread)", getVersionWithCodename(new AndroidVersion(10)));
-        assertEquals("Android API 33 (Tiramisu)", getVersionWithCodename(new AndroidVersion(33)));
+        assertEquals("Android 13.0 (Tiramisu)", getVersionWithCodename(new AndroidVersion(33)));
         assertEquals("Android API 500", getVersionWithCodename(new AndroidVersion(500)));
         assertEquals(
                 "Android Codename Preview",
