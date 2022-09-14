@@ -14,10 +14,12 @@ import java.util.concurrent.Executor;
 @RequiresApi(api = 34)
 public class MyAdsSdkEntryPoint extends SandboxedSdkProvider {
 
+    private SandboxedSdkContext sandboxedSdkContext;
     @Override
     public void initSdk(SandboxedSdkContext sandboxedSdkContext, Bundle bundle,
                         Executor executor, InitSdkCallback initSdkCallback) {
         Log.i("SDK", "initSdk");
+        this.sandboxedSdkContext = sandboxedSdkContext;
         executor.execute(() -> initSdkCallback.onInitSdkFinished(new Bundle()));
     }
 
@@ -30,7 +32,7 @@ public class MyAdsSdkEntryPoint extends SandboxedSdkProvider {
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.MATCH_PARENT
         ));
-        layout.setBackgroundColor(windowContext.getResources().getColor(R.color.box_color));
+        layout.setBackgroundColor(sandboxedSdkContext.getResources().getColor(R.color.box_color));
         return layout;
     }
 

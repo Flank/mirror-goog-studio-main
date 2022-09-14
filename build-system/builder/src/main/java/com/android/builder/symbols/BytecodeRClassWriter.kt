@@ -212,10 +212,12 @@ private fun generateResourceTypeClass(
                     } else {
                         clinit.dup()
                         clinit.push(i)
-                        clinit.push(value)
                         if (rPackage != null) {
+                            clinit.push(value - 0x7f000000)
                             clinit.loadLocal(1)
                             clinit.visitInsn(Opcodes.IADD)
+                        } else {
+                            clinit.push(value)
                         }
                         clinit.arrayStore(INT_TYPE)
                     }
@@ -223,7 +225,7 @@ private fun generateResourceTypeClass(
 
                 clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "[I")
             } else {
-                clinit.push(s.intValue)
+                clinit.push(s.intValue - 0x7f000000)
                 clinit.loadLocal(1)
                 clinit.visitInsn(Opcodes.IADD)
                 clinit.visitFieldInsn(PUTSTATIC, internalName, s.canonicalName, "I")

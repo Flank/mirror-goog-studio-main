@@ -288,11 +288,11 @@ class BytecodeRClassWriterTest {
 
         val symbols = SymbolTable.builder()
                 .tablePackage("com.example.privacysandboxenabledsdk")
-                .add(Symbol.normalSymbol(ResourceType.ID, "foo", 0x1))
+                .add(Symbol.normalSymbol(ResourceType.ID, "foo", 0x7f000001))
                 .add(
                         Symbol.styleableSymbol(
                                 "styles",
-                                ImmutableList.of(0x2, 0x4),
+                                ImmutableList.of(0x7f000002, 0x7f000003),
                                 ImmutableList.of("style1", "style2")))
                 .build()
 
@@ -309,7 +309,7 @@ class BytecodeRClassWriterTest {
                     .containsExactly("int foo = 0x7F000001")
             assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$styleable"))
                     .containsExactly(
-                            "int[] styles = [0x7F000002,0x7F000004]",
+                            "int[] styles = [0x7F000002,0x7F000003]",
                             "int styles_style1 = 0",
                             "int styles_style2 = 1",
                     )
@@ -319,7 +319,7 @@ class BytecodeRClassWriterTest {
                     .containsExactly("int foo = 0x7E000001")
             assertThat(loadFields(it, "com.example.privacysandboxenabledsdk.R\$styleable"))
                     .containsExactly(
-                            "int[] styles = [0x7E000002,0x7E000004]",
+                            "int[] styles = [0x7E000002,0x7E000003]",
                             "int styles_style1 = 0",
                             "int styles_style2 = 1",
                     )
