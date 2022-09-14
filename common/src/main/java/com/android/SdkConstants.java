@@ -2909,14 +2909,17 @@ public final class SdkConstants {
                         + "by third-party plugins) should be removed.");
     }
 
+    public static final String META_INF = "meta-inf";
+    public static final String PROGUARD_RULES_FOLDER_NAME = "proguard";
     /** Folder where proguard rules are located in jar, aar and project generated resources */
-    public static final String PROGUARD_RULES_FOLDER = "meta-inf/proguard";
+    public static final String PROGUARD_RULES_FOLDER = META_INF + "/" + PROGUARD_RULES_FOLDER_NAME;
 
     /** Folder where configuration files for R8 and other tools are located in jar files */
     public static final String COM_ANDROID_TOOLS_FOLDER = "com.android.tools";
 
     /** Folder where configuration files for R8 and other tools are located in jar files */
-    public static final String TOOLS_CONFIGURATION_FOLDER = "meta-inf/" + COM_ANDROID_TOOLS_FOLDER;
+    public static final String TOOLS_CONFIGURATION_FOLDER =
+            META_INF + "/" + COM_ANDROID_TOOLS_FOLDER;
 
     public static final String FD_PREFAB_PACKAGE = "prefab";
 }

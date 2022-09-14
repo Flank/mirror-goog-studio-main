@@ -21,10 +21,15 @@ import com.android.build.api.artifact.ScopedArtifact
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getDirectories
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.builder.dexing.isProguardRule
+import org.gradle.api.file.Directory
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
+import java.util.StringTokenizer
 
 /**
  * Configuration action for a task to merge generated proguard files.
@@ -59,13 +64,36 @@ class MergeGeneratedProguardFilesCreationAction(
         val allClasses = creationConfig.artifacts
             .forScope(ScopedArtifacts.Scope.PROJECT)
             .getFinalArtifacts(ScopedArtifact.CLASSES)
-        val proguardFiles = allClasses.elements.map { _ ->
-            allClasses.asFileTree.filter { f ->
-                val baseFolders = allClasses.files
-                val baseFolder = baseFolders.first { it -> f.startsWith(it) }
-                isProguardRule(f.relativeTo(baseFolder).invariantSeparatorsPath)
+
+        task.inputFiles.fromDisallowChanges(
+            allClasses.getDirectories(creationConfig.services.projectInfo.projectDirectory).map {
+                it.mapNotNull { directory ->
+                    getSubFolder(
+                        directory,
+                        SdkConstants.META_INF,
+                        SdkConstants.PROGUARD_RULES_FOLDER_NAME
+                    )
+                }
+                    .map {
+                        it.asFileTree
+                    }
             }
+        )
+    }
+
+    companion object {
+        internal fun getSubFolder(directory: Directory, vararg paths: String): Directory? {
+            var current = directory
+            for (path in paths) {
+                val subFolder = current.asFile.listFiles()?.firstOrNull {
+                    it.name.lowercase() == path.lowercase()
+                }
+                if (subFolder != null) {
+                    current = current.dir(subFolder.name)
+                } else
+                    return null
+            }
+            return current
         }
-        task.inputFiles.fromDisallowChanges(proguardFiles)
     }
 }
