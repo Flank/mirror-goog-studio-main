@@ -33,5 +33,5 @@ open class ManagedDeviceImpl @Inject constructor(private val name: String): Mana
 
     override var orientation = Orientation.DEFAULT
 
-    override var locale = "en-us"
+    override var locale = "en-US"
 }

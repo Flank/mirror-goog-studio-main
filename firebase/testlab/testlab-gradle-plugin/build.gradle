@@ -37,6 +37,7 @@ dependencies {
     implementation libs.google_toolresults_client
     implementation libs.google_storage_client
     compileOnly project(':base:gradle-api')
+    compileOnly project(':base:builder-test-api')
     testImplementation libs.junit
     testImplementation libs.truth
     testImplementation libs.truth_java8_extension

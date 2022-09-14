@@ -16,20 +16,39 @@
 
 package com.android.tools.firebase.testlab.gradle.services
 
+import com.android.build.api.instrumentation.StaticTestData
+import com.android.builder.testing.api.DeviceConfigProvider
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.googleapis.util.Utils
 import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.http.InputStreamContent
 import com.google.api.client.json.GenericJson
 import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.testing.Testing
+import com.google.api.services.testing.model.AndroidDevice
 import com.google.api.services.testing.model.AndroidDeviceCatalog
+import com.google.api.services.testing.model.AndroidDeviceList
+import com.google.api.services.testing.model.AndroidInstrumentationTest
+import com.google.api.services.testing.model.ClientInfo
+import com.google.api.services.testing.model.EnvironmentMatrix
+import com.google.api.services.testing.model.FileReference
+import com.google.api.services.testing.model.GoogleCloudStorage
+import com.google.api.services.testing.model.ResultStorage
+import com.google.api.services.testing.model.TestMatrix
+import com.google.api.services.testing.model.TestSpecification
+import com.google.api.services.storage.Storage
+import com.google.api.services.storage.model.StorageObject
+import com.google.api.services.toolresults.ToolResults
+import com.google.firebase.testlab.gradle.ManagedDevice
 import java.io.File
+import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 import java.util.UUID
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
@@ -44,7 +63,12 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
     companion object {
         const val clientApplicationName: String = "Firebase TestLab Gradle Plugin"
         const val xGoogUserProjectHeaderKey: String = "X-Goog-User-Project"
+        val cloudStorageUrlRegex = Regex("""gs://(.*?)/(.*)""")
+
+        const val CHECK_TEST_STATE_WAIT_MS = 10 * 1000L;
     }
+
+    private val logger = Logging.getLogger(this.javaClass)
 
     /**
      * Parameters of [TestLabBuildService].
@@ -63,10 +87,144 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         request.headers[xGoogUserProjectHeaderKey] = parameters.quotaProjectName.get()
     }
 
+    private val jacksonFactory: JacksonFactory
+        get() = JacksonFactory.getDefaultInstance()
+
+    fun runTestsOnDevice(
+        device: ManagedDevice,
+        testData: StaticTestData,
+        resultsOutDir: File,
+    ) {
+        val projectName = parameters.quotaProjectName.get()
+
+        val toolResultsClient = ToolResults.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            jacksonFactory,
+            httpRequestInitializer
+        ).apply {
+            applicationName = clientApplicationName
+        }.build()
+
+        val defaultBucketName = toolResultsClient.projects().initializeSettings(projectName)
+            .execute().defaultBucket
+
+        val storageClient = Storage.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            jacksonFactory,
+            httpRequestInitializer
+        ).apply {
+            applicationName = clientApplicationName
+        }.build()
+
+        val testApkStorageObject = uploadToCloudStorage(
+            testData.testApk, storageClient, defaultBucketName
+        )
+
+        val deviceId = device.device
+        val deviceApiLevel = device.apiLevel
+        val deviceLocale = Locale.forLanguageTag(device.locale)
+        val deviceOrientation = device.orientation
+
+        val configProvider = createConfigProvider(
+            deviceId, deviceLocale, deviceApiLevel
+        )
+        val appApkStorageObject = uploadToCloudStorage(
+            testData.testedApkFinder(configProvider).first(), storageClient, defaultBucketName
+        )
+
+        val testingClient = Testing.Builder(
+            GoogleNetHttpTransport.newTrustedTransport(),
+            jacksonFactory,
+            httpRequestInitializer
+        ).apply {
+            applicationName = clientApplicationName
+        }.build()
+
+        val testMatricesClient = testingClient.projects().testMatrices()
+        val requestId = UUID.randomUUID().toString()
+
+        val testMatrix = TestMatrix().apply {
+            projectId = projectName
+            clientInfo = ClientInfo().apply {
+                name = clientApplicationName
+            }
+            testSpecification = TestSpecification().apply {
+                androidInstrumentationTest = AndroidInstrumentationTest().apply {
+                    testApk = FileReference().apply {
+                        gcsPath = "gs://$defaultBucketName/${testApkStorageObject.name}"
+                    }
+                    appApk = FileReference().apply {
+                        gcsPath = "gs://$defaultBucketName/${appApkStorageObject.name}"
+                    }
+                    appPackageId = testData.testedApplicationId
+                    testPackageId = testData.applicationId
+                    testRunnerClass = testData.instrumentationRunner
+                }
+                environmentMatrix = EnvironmentMatrix().apply {
+                    androidDeviceList = AndroidDeviceList().apply {
+                        androidDevices = listOf(
+                            AndroidDevice().apply {
+                                androidModelId = deviceId
+                                androidVersionId = deviceApiLevel.toString()
+                                locale = deviceLocale.toString()
+                                orientation = deviceOrientation.toString().lowercase()
+                            }
+                        )
+                    }
+                }
+                resultStorage = ResultStorage().apply {
+                    googleCloudStorage = GoogleCloudStorage().apply {
+                        gcsPath = "gs://$defaultBucketName/$requestId/results"
+                    }
+                }
+            }
+        }
+        val updatedTestMatrix = testMatricesClient.create(projectName, testMatrix).apply {
+            this.requestId = requestId
+        }.execute()
+
+        lateinit var resultTestMatrix: TestMatrix
+        while (true) {
+            val latestTestMatrix = testMatricesClient.get(
+                projectName, updatedTestMatrix.testMatrixId).execute()
+            val testFinished = when (latestTestMatrix.state) {
+                "VALIDATING", "PENDING", "RUNNING" -> false
+                else -> true
+            }
+            logger.info("Test execution: ${latestTestMatrix.state}")
+            if (testFinished) {
+                resultTestMatrix = latestTestMatrix
+                break
+            }
+            Thread.sleep (CHECK_TEST_STATE_WAIT_MS)
+        }
+
+        resultTestMatrix.testExecutions.forEach { testExecution ->
+            val executionStep = toolResultsClient.projects().histories().executions().steps().get(
+                testExecution.toolResultsStep.projectId,
+                testExecution.toolResultsStep.historyId,
+                testExecution.toolResultsStep.executionId,
+                testExecution.toolResultsStep.stepId
+            ).execute()
+            executionStep.testExecutionStep.testSuiteOverviews?.forEach { suiteOverview ->
+                val matchResult = cloudStorageUrlRegex.find(suiteOverview.xmlSource.fileUri)
+                if (matchResult != null) {
+                    val (bucketName, objectName) = matchResult.destructured
+                    File(resultsOutDir, "TEST-${objectName.replace("/", "_")}").apply {
+                        parentFile.mkdirs()
+                        createNewFile()
+                    }.outputStream().use {
+                        storageClient.objects().get(bucketName, objectName).executeMediaAndDownloadTo(it)
+                    }
+                }
+            }
+        }
+    }
+
     fun catalog(): AndroidDeviceCatalog {
         val testingClient = Testing.Builder(
             GoogleNetHttpTransport.newTrustedTransport(),
-            JacksonFactory.getDefaultInstance(),
+            jacksonFactory,
             httpRequestInitializer,
         ).apply {
             applicationName = clientApplicationName
@@ -77,6 +235,63 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         }.execute()
 
         return catalog.androidDeviceCatalog
+    }
+
+    /**
+     * Uploads the given file to cloud storage.
+     *
+     * @param file the file to be uploaded
+     * @param storageClient the storage connection for the file to be written to.
+     * @param bucketName a unique id for the set of files to be associated with this test.
+     * @return a handle to the Storage object in the cloud.
+     */
+    private fun uploadToCloudStorage(
+        file: File, storageClient: Storage, bucketName: String
+    ): StorageObject =
+        FileInputStream(file).use { fileInputStream ->
+            storageClient.objects().insert(
+                bucketName,
+                StorageObject(),
+                InputStreamContent("application/octet-stream", fileInputStream).apply {
+                    length = file.length()
+                }
+            ).apply {
+                name = file.name
+            }.execute()
+        }
+
+    private fun createConfigProvider(
+        deviceId: String, locale: Locale, apiLevel: Int
+    ): DeviceConfigProvider {
+        val deviceModel = catalog().models.firstOrNull {
+            it.id == deviceId
+        } ?: error("Could not find device: $deviceId")
+
+        if (!deviceModel.supportedVersionIds.contains(apiLevel.toString())) {
+            error("""
+                $apiLevel is not supported by $deviceModel. Available Api levels are:
+                ${deviceModel.supportedVersionIds}
+            """.trimIndent())
+        }
+        return object : DeviceConfigProvider {
+            override fun getConfigFor(abi: String?): String {
+                return requireNotNull(abi)
+            }
+
+            override fun getDensity(): Int = deviceModel.screenDensity
+
+            override fun getLanguage(): String {
+                return locale.language
+            }
+
+            override fun getRegion(): String? {
+                return locale.country
+            }
+
+            override fun getAbis() = deviceModel.supportedAbis
+
+            override fun getApiLevel() = apiLevel
+        }
     }
 
     /**
