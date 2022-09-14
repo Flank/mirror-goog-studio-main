@@ -50,6 +50,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.work.DisableCachingByDefault
+import java.io.File
 import java.nio.file.Path
 
 /**
@@ -93,6 +94,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
             it.variantName.set(variantName)
             it.minApiCodeName.set(minSdkCodename)
             it.minSdkVersion.set(minSdkVersion)
+            it.privacySandboxSdkApksFiles.set(privacySandboxSdkApksFiles.files)
         }
     }
 
@@ -104,7 +106,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
         abstract val variantName: Property<String>
         abstract val minApiCodeName: Property<String?>
         abstract val minSdkVersion: Property<Int>
-        abstract val privacySandboxSdkApksFiles: FileCollection
+        abstract val privacySandboxSdkApksFiles: ListProperty<File>
     }
 
     abstract class InstallRunnable : ProfileAwareWorkAction<Params>() {
@@ -127,7 +129,7 @@ abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
                     }
 
                     val deviceConfigProvider = DeviceConfigProviderImpl(device)
-                    for (apk in parameters.privacySandboxSdkApksFiles) {
+                    for (apk in parameters.privacySandboxSdkApksFiles.get()) {
                         val apks = getPrivacySandboxSdkApkFiles(apk.toPath())
 
                         logger.lifecycle(

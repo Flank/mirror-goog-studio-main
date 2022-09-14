@@ -90,9 +90,9 @@ class InstallVariantViaBundleTaskTest {
                 get() = project.objects.property(String::class.java).value("workerKey")
             override val analyticsService: Property<AnalyticsService>
                 get() = FakeGradleProperty(FakeNoOpAnalyticsService())
-            override val privacySandboxSdkApksFiles: FileCollection
-                get() = project.objects.fileCollection()
-                    .also { it.setFrom(privacySandboxSdkApksFiles) }
+            override val privacySandboxSdkApksFiles: ListProperty<File>
+                get() = project.objects.listProperty(File::class.java)
+                    .also { it.addAll(privacySandboxSdkApksFiles) }
 
         }
 

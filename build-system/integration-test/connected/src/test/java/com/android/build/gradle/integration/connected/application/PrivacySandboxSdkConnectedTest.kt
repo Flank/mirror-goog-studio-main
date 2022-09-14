@@ -71,6 +71,16 @@ class PrivacySandboxSdkConnectedTest {
         // TODO: uninstall not supported yet, verify both APKs are deleted here
     }
 
+    @Test
+    fun `install and uninstall works for both SDK and APK for application with dynamic feature`() {
+        project.execute(":app-with-dynamic-feature:installDebug")
+        assertThat(packageExists(APP_PACKAGE_NAME)).isTrue()
+        assertThat(packageExists(SDK_PACKAGE_NAME, isLibrary = true)).isTrue()
+
+        // project.execute(":app-with-dynamic-feature:uninstallAll")
+        // TODO: uninstall not supported yet, verify both APKs are deleted here
+    }
+
     private fun packageExists(packageName: String, isLibrary: Boolean = false) : Boolean {
         val type =  if (isLibrary) "libraries" else "packages"
         return executeShellCommand("pm", "list" ,type)
