@@ -17,12 +17,14 @@
 package com.android.build.gradle.internal.testing.utp
 
 import com.android.SdkConstants.FN_EMULATOR
+import com.android.build.api.dsl.Device
+import com.android.build.api.instrumentation.StaticTestData
 import com.android.build.gradle.internal.AvdComponentsBuildService
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.computeAbiFromArchitecture
 import com.android.build.gradle.internal.computeAvdName
 import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
-import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.builder.testing.api.DeviceException
 import com.android.builder.testing.api.TestException
 import com.android.utils.ILogger
@@ -30,6 +32,7 @@ import com.google.common.base.Preconditions
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import java.io.File
 import java.util.logging.Level
+import org.gradle.api.logging.Logger
 import org.gradle.workers.WorkerExecutor
 
 class ManagedDeviceTestRunner(
@@ -53,13 +56,13 @@ class ManagedDeviceTestRunner(
             runnerConfigs, workerExecutor, projectPath, variantName, resultsDir, logger,
             null, utpDependencies)
     }
-) {
+): com.android.build.api.instrumentation.ManagedDeviceTestRunner {
 
     /**
      * @param additionalTestOutputDir output directory for additional test output, or null if disabled
      */
-    fun runTests(
-        managedDevice: ManagedVirtualDevice,
+    override fun runTests(
+        managedDevice: Device,
         runId: String,
         outputDirectory: File,
         coverageOutputDirectory: File,
@@ -69,8 +72,10 @@ class ManagedDeviceTestRunner(
         testData: StaticTestData,
         additionalInstallOptions: List<String>,
         helperApks: Set<File>,
-        logger: ILogger
+        logger: Logger
     ): Boolean {
+        managedDevice as ManagedVirtualDevice
+        val logger = LoggerWrapper(logger)
         val emulatorProvider = avdComponents.emulatorDirectory
         Preconditions.checkArgument(
             emulatorProvider.isPresent(),

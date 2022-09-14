@@ -382,6 +382,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         verify(testRunner).runTests(
             managedDevice = argThat {
                 it.getName() == "testDevice1"
+                        && it is ManagedVirtualDevice
                         && it.apiLevel == 29
                         && it.systemImageSource == "aosp"
                         && it.require64Bit == false
@@ -440,6 +441,7 @@ class ManagedDeviceInstrumentationTestTaskTest {
         verify(testRunner).runTests(
             managedDevice = argThat {
                 it.getName() == "testDevice1"
+                        && it is ManagedVirtualDevice
                         && it.apiLevel == 29
                         && it.systemImageSource == "aosp"
                         && it.require64Bit == false

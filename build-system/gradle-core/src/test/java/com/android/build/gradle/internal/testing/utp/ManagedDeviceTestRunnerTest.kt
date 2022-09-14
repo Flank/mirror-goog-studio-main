@@ -24,10 +24,8 @@ import com.android.build.gradle.internal.dsl.ManagedVirtualDevice
 import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.testutils.MockitoKt.any
 import com.android.testutils.SystemPropertyOverrides
-import com.android.testutils.truth.PathSubject
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.Environment
-import com.android.utils.ILogger
 import com.google.common.truth.Truth.assertThat
 import com.google.testing.platform.proto.api.config.RunnerConfigProto
 import com.google.testing.platform.proto.api.core.TestSuiteResultProto
@@ -36,6 +34,7 @@ import com.google.testing.platform.proto.api.service.ServerConfigProto.ServerCon
 import java.io.File
 import java.util.logging.Level
 import org.gradle.api.file.Directory
+import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.workers.WorkQueue
 import org.gradle.workers.WorkerExecutor
@@ -44,13 +43,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Answers
-import org.mockito.ArgumentMatchers.eq
 import org.mockito.ArgumentMatchers.nullable
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
-import org.mockito.quality.Strictness
 
 /**
  * Unit tests for [ManagedDeviceTestRunner].
@@ -67,7 +64,7 @@ class ManagedDeviceTestRunnerTest {
     @Mock lateinit var mockTestData: StaticTestData
     @Mock lateinit var mockAppApk: File
     @Mock lateinit var mockHelperApk: File
-    @Mock lateinit var mockLogger: ILogger
+    @Mock lateinit var mockLogger: Logger
     @Mock lateinit var mockUtpConfigFactory: UtpConfigFactory
     @Mock lateinit var mockRetentionConfig: RetentionConfig
     @Mock lateinit var mockCoverageOutputDir: File

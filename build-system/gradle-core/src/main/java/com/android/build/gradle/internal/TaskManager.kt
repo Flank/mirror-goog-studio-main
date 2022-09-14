@@ -27,6 +27,7 @@ import com.android.build.api.dsl.DataBinding
 import com.android.build.api.dsl.Device
 import com.android.build.api.dsl.DeviceGroup
 import com.android.build.api.instrumentation.FramesComputationMode
+import com.android.build.api.instrumentation.ManagedDeviceTestRunnerFactory
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.variant.ScopedArtifacts
 import com.android.build.api.variant.VariantBuilder
@@ -1791,9 +1792,11 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
                         setupTaskName(device),
                         device,
                         globalConfig))
-                else -> null
+                else -> {
+                    taskFactory.register(setupTaskName(device))
+                }
             }
-            setupTask?.configure {
+            setupTask.configure {
                 it.mustRunAfter(cleanTask)
             }
 
@@ -1886,21 +1889,24 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
 
         val deviceToProvider = mutableMapOf<String, TaskProvider<out Task>>()
         for (managedDevice in managedDevices) {
-            val managedDeviceTestTask = when (managedDevice) {
-                is ManagedVirtualDevice -> taskFactory.register(
-                    ManagedDeviceInstrumentationTestTask.CreationAction(
-                        creationConfig,
-                        managedDevice,
-                        testData,
-                        File(resultsDir, managedDevice.name),
-                        File(reportDir, managedDevice.name),
-                        File(additionalTestOutputDir, managedDevice.name),
-                        File(coverageOutputDir, managedDevice.name),
-                        testTaskSuffix
-                    )
-                )
-                else -> error("Unsupported managed device type: ${managedDevice.javaClass}")
+            if (managedDevice !is ManagedVirtualDevice
+                && (managedDevice !is ManagedDeviceTestRunnerFactory
+                        || !globalConfig.services.projectOptions[
+                                BooleanOption.GRADLE_MANAGED_DEVICE_CUSTOM_DEVICE])) {
+                error("Unsupported managed device type: ${managedDevice.javaClass}")
             }
+            val managedDeviceTestTask = taskFactory.register(
+                ManagedDeviceInstrumentationTestTask.CreationAction(
+                    creationConfig,
+                    managedDevice,
+                    testData,
+                    File(resultsDir, managedDevice.name),
+                    File(reportDir, managedDevice.name),
+                    File(additionalTestOutputDir, managedDevice.name),
+                    File(coverageOutputDir, managedDevice.name),
+                    testTaskSuffix,
+                )
+            )
             managedDeviceTestTask.dependsOn(setupTaskName(managedDevice))
             allDevicesVariantTask.dependsOn(managedDeviceTestTask)
             taskFactory.configure(

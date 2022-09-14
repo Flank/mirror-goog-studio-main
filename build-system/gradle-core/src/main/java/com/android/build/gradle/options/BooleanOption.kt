@@ -157,6 +157,12 @@ enum class BooleanOption(
      */
     GRADLE_MANAGED_DEVICE_ALLOW_OLD_API_LEVEL_DEVICES("android.experimental.testOptions.managedDevices.allowOldApiLevelDevices", false, FeatureStage.Experimental),
 
+    /**
+     * When enabled, Gradle Managed Device allows a custom managed device type that can be provided
+     * by a plugin by implementing ManagedDeviceTestRunner APIs.
+     */
+    GRADLE_MANAGED_DEVICE_CUSTOM_DEVICE("android.experimental.testOptions.managedDevices.customDevice", false, FeatureStage.Experimental),
+
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     ENABLE_ADDITIONAL_ANDROID_TEST_OUTPUT("android.enableAdditionalTestOutput", true, FeatureStage.Experimental),
 
