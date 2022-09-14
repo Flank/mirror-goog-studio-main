@@ -33,33 +33,33 @@ import java.io.File
  *     [testedApplicationId].
  */
 data class StaticTestData(
-    val applicationId: String,
+    override val applicationId: String,
 
-    val testedApplicationId: String?,
+    override val testedApplicationId: String?,
 
-    val instrumentationTargetPackageId: String,
+    override val instrumentationTargetPackageId: String,
 
-    val instrumentationRunner: String,
+    override val instrumentationRunner: String,
 
-    val instrumentationRunnerArguments: Map<String, String>,
+    override val instrumentationRunnerArguments: Map<String, String>,
 
-    val animationsDisabled: Boolean,
+    override val animationsDisabled: Boolean,
 
-    val isTestCoverageEnabled: Boolean,
+    override val isTestCoverageEnabled: Boolean,
 
-    val minSdkVersion: AndroidVersion,
+    override val minSdkVersion: AndroidVersion,
 
-    val isLibrary: Boolean,
+    override val isLibrary: Boolean,
 
-    val flavorName: String,
+    override val flavorName: String,
 
-    val testApk: File,
+    override val testApk: File,
 
-    val testDirectories: List<File?>,
+    override val testDirectories: List<File?>,
 
     /**
      * Returns APK files to install based on given density and abis. If none match,
      * empty list is returned.
      */
-    val testedApkFinder: (DeviceConfigProvider) -> List<File>
-)
+    override val testedApkFinder: (DeviceConfigProvider) -> List<File>
+) : com.android.build.api.instrumentation.StaticTestData

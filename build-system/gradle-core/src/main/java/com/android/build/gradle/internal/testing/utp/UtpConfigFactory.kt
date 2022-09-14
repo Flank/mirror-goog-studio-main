@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.testing.utp
 
+import com.android.build.api.instrumentation.StaticTestData
 import com.android.build.gradle.internal.SdkComponentsBuildService
-import com.android.build.gradle.internal.testing.StaticTestData
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_DDMLIB
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DEVICE_PROVIDER_GRADLE
 import com.android.build.gradle.internal.testing.utp.UtpDependency.ANDROID_DRIVER_INSTRUMENTATION

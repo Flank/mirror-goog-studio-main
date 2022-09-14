@@ -16,16 +16,10 @@
 
 package com.android.build.gradle.internal.testing.utp
 
-import com.android.build.gradle.internal.testing.StaticTestData
+import com.android.build.api.instrumentation.StaticTestData
 import com.android.builder.testing.api.DeviceConnector
-import com.android.ddmlib.AdbCommandRejectedException
 import com.android.ddmlib.DdmPreferences
-import com.android.ddmlib.InstallException
 import com.android.ddmlib.MultiLineReceiver
-import com.android.ddmlib.ShellCommandUnresponsiveException
-import com.android.ddmlib.TimeoutException
-import java.io.File
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 import org.gradle.api.logging.Logging.getLogger
 
