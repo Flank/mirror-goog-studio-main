@@ -29,6 +29,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.`when`
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.mockito.quality.Strictness
@@ -82,8 +84,10 @@ internal class ProguardConfigurableTaskTest {
         Truth.assertThat(task).isNotNull()
         val fileCollection = Mockito.mock(FileCollection::class.java)
         val folder = temporaryFolder.newFolder("proguard_files")
-        Mockito.`when`(fileCollection.files).thenReturn(setOf(
-            File(folder, "android.txt")
+        val file1 = spy(File(folder, "android.txt"))
+        `when`(file1.isFile).thenReturn(true)
+        `when`(fileCollection.files).thenReturn(setOf(
+            file1
         ))
         task.componentType.set(ComponentTypeImpl.JAVA_LIBRARY)
         val result = task.reconcileDefaultProguardFile(
@@ -92,7 +96,7 @@ internal class ProguardConfigurableTaskTest {
                 folder.absolutePath)))
         Truth.assertThat(result).hasSize(1)
         Truth.assertThat(result.single()).isEqualTo(
-            File(folder, "android.txt")
+            file1
         )
     }
 
@@ -107,10 +111,15 @@ internal class ProguardConfigurableTaskTest {
             ProguardFiles.ProguardFile.OPTIMIZE.fileName,
             project.layout.buildDirectory
         )
-        Mockito.`when`(fileCollection.files).thenReturn(setOf(
-            File(srcFolder, "user1.txt"),
-            File(srcFolder, "user2.txt"),
-            defaultFile
+        val file1 = spy(File(srcFolder, "user1.txt"))
+        `when`(file1.isFile).thenReturn(true)
+        val file2 = spy(File(srcFolder, "user2.txt"))
+        `when`(file2.isFile).thenReturn(true)
+
+        `when`(fileCollection.files).thenReturn(setOf(
+                file1,
+                file2,
+                defaultFile
         ))
         task.componentType.set(ComponentTypeImpl.BASE_APK)
         val result = task.reconcileDefaultProguardFile(
@@ -136,10 +145,17 @@ internal class ProguardConfigurableTaskTest {
             ProguardFiles.ProguardFile.OPTIMIZE.fileName,
             project.layout.buildDirectory
         )
-        Mockito.`when`(fileCollection.files).thenReturn(setOf(
-            File(srcFolder, "user1.txt"),
-            File(srcFolder, "user2.txt"),
-            File(srcFolder, defaultFile.name),
+        val file1 = spy(File(srcFolder, "user1.txt"))
+        `when`(file1.isFile).thenReturn(true)
+        val file2 = spy(File(srcFolder, "user2.txt"))
+        `when`(file2.isFile).thenReturn(true)
+        val file3 = spy(File(srcFolder, defaultFile.name))
+        `when`(file3.isFile).thenReturn(true)
+
+        `when`(fileCollection.files).thenReturn(setOf(
+                file1,
+                file2,
+                file3
         ))
         task.componentType.set(ComponentTypeImpl.BASE_APK)
         val result = task.reconcileDefaultProguardFile(
@@ -152,5 +168,30 @@ internal class ProguardConfigurableTaskTest {
         }
         Truth.assertThat(substitutedFile).isNotNull()
         Truth.assertThat(substitutedFile!!.parentFile).isEqualTo(srcFolder)
+    }
+
+    @Test
+    fun `test files which do not exist are filtered out`() {
+        Truth.assertThat(task).isNotNull()
+        val fileCollection = Mockito.mock(FileCollection::class.java)
+        val srcFolder = temporaryFolder.newFolder("proguard_files")
+        val finalDefaultFolder = temporaryFolder.newFolder("default_proguard_files")
+
+        val file1 = spy(File(srcFolder, "user1.txt"))
+        `when`(file1.isFile).thenReturn(true)
+        val file2 = spy(File(srcFolder, "user2.txt"))
+        `when`(file2.isFile).thenReturn(false)
+
+        `when`(fileCollection.files).thenReturn(setOf(
+                file1,
+                file2,
+        ))
+        task.componentType.set(ComponentTypeImpl.BASE_APK)
+        val result = task.reconcileDefaultProguardFile(
+                fileCollection,
+                FakeGradleProvider(project.layout.projectDirectory.dir(
+                        finalDefaultFolder.absolutePath)))
+        Truth.assertThat(result).hasSize(1)
+        Truth.assertThat(result.find { it.name.equals("user1.txt") }).isNotNull()
     }
 }

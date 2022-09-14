@@ -477,10 +477,12 @@ abstract class R8Task @Inject constructor(
                 |Current version is: ${getR8Version()}.
                 |""".trimMargin()
             )
+
         val finalListOfConfigurationFiles = projectLayout.files(
                 configurationFiles,
                 generatedProguardFile.asFileTree,
         )
+
         val workerAction = { it: R8Runnable.Params ->
             it.bootClasspath.from(bootClasspath.toList())
             it.minSdkVersion.set(minSdkVersion.get())

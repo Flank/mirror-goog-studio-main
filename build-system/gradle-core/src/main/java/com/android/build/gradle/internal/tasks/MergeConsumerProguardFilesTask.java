@@ -25,9 +25,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.HasConfigurableValuesKt;
 import com.android.builder.errors.EvalIssueException;
+import java.io.File;
 import java.io.IOException;
-
-import com.android.build.gradle.internal.tasks.TaskCategory;
+import java.util.Set;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Input;
@@ -71,16 +71,28 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     @Override
     public void doTaskAction() throws IOException {
+        Set<File> consumerProguardFiles = getConsumerProguardFiles().getFiles();
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseModule) {
             ExportConsumerProguardFilesTask.checkProguardFiles(
                     getBuildDirectory(),
                     isDynamicFeature,
-                    getConsumerProguardFiles().getFiles(),
+                    consumerProguardFiles,
                     errorMessage -> {
                         throw new EvalIssueException(errorMessage);
                     });
         }
+
+        consumerProguardFiles.forEach(
+                file -> {
+                    if (!file.isFile()) {
+                        getLogger()
+                                .warn(
+                                        String.format(
+                                                "Supplied consumer proguard configuration file does not exist: %s",
+                                                file.getPath()));
+                    }
+                });
         super.doTaskAction();
     }
 

@@ -38,9 +38,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentType
-import com.android.build.gradle.internal.tasks.TaskCategory
 import com.android.build.gradle.internal.utils.fromDisallowChanges
-import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
@@ -55,7 +53,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -143,14 +140,23 @@ abstract class ProguardConfigurableTask(
      * with the final location from [InternalArtifactType.DEFAULT_PROGUARD_FILES]
      */
     internal fun reconcileDefaultProguardFile(
-        incomingProguardFile: FileCollection,
+        proguardFiles: FileCollection,
         extractedDefaultProguardFile: Provider<Directory>
     ): Collection<File> {
+
+
 
         // if this is not a base module, there should not be any default proguard files so just
         // return.
         if (!componentType.get().isBaseModule) {
-            return incomingProguardFile.files
+            return proguardFiles.files.mapNotNull { proguardFile ->
+                if (!proguardFile.isFile) {
+                    logger.warn("Supplied proguard configuration file does not exist: ${proguardFile.path}")
+                    null
+                } else {
+                    proguardFile
+                }
+            }
         }
 
         // get the default proguard files default locations.
@@ -161,13 +167,18 @@ abstract class ProguardConfigurableTask(
             )
         }
 
-        return incomingProguardFile.files.map { proguardFile ->
+        return proguardFiles.files.mapNotNull { proguardFile ->
             // if the file is a default proguard file, swap its location with the directory
             // where the final artifacts are.
             if (defaultFiles.contains(proguardFile)) {
                extractedDefaultProguardFile.get().file(proguardFile.name).asFile
             } else {
-                proguardFile
+                if(!proguardFile.isFile) {
+                    logger.warn("Supplied proguard configuration file does not exist: ${proguardFile.path}")
+                    null
+                } else {
+                    proguardFile
+                }
             }
         }
     }
@@ -374,7 +385,7 @@ abstract class ProguardConfigurableTask(
                     // This is a test-only module and the app being tested was obfuscated with ProGuard.
                     applyProguardDefaultsForTest()
 
-                    // All -dontwarn rules for test dependencies should go in here:
+                    // All -dontwarn rules for test dependen]cies should go in here:
                     val configurationFiles = task.project.files(
                         creationConfig.proguardFiles,
                         task.libraryKeepRules.artifactFiles
