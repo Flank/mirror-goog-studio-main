@@ -22,7 +22,7 @@ import java.nio.charset.Charset
 import java.util.concurrent.TimeUnit
 
 fun uninstallPackage(packageName: String, ignoreErrors : Boolean = false) =
-    execAdb(SdkHelper.getAdb().absolutePath, "uninstall", packageName, ignoreErrors = ignoreErrors)
+    execAdb("uninstall", packageName, ignoreErrors = ignoreErrors)
 
 fun executeShellCommand(vararg cmd: String, ignoreErrors: Boolean = false)
     = execAdb("shell", *cmd, ignoreErrors = ignoreErrors)
@@ -38,7 +38,8 @@ private fun exec(vararg cmd: String, ignoreErrors : Boolean = false) : String {
 
     if (!ignoreErrors) {
         Truth.assertWithMessage("Execution timed out.").that(didFinish).isEqualTo(true)
-        Truth.assertWithMessage("Execution failed.").that(exitCode).isEqualTo(0)
+        val error = process.errorStream.bufferedReader(Charset.defaultCharset()).readText()
+        Truth.assertWithMessage("Execution failed with error: $error").that(exitCode).isEqualTo(0)
     }
     return process.inputStream.bufferedReader(Charset.defaultCharset()).readText()
 }

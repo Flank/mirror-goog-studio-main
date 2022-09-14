@@ -15,11 +15,18 @@ class MainActivityTest {
 
     @Test
     fun viewIsUpdatedBySdk() {
-        InstrumentationRegistry.getInstrumentation().apply {
-            waitForIdle {
-                val bitmap = uiAutomation.takeScreenshot()
-                assert(bitmap.getPixel(bitmap.width / 2, bitmap.height / 2) == Color.RED)
+        val numRetries = 30
+        val sleepDuration = 1000L
+        repeat(numRetries) {
+            val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+            if (bitmap == null) {
+                return@repeat // Continue looping in case the screenshot fails
             }
+            if (bitmap.getPixel(bitmap.width / 2, bitmap.height / 2) == Color.RED) {
+                return@viewIsUpdatedBySdk
+            }
+            Thread.sleep(sleepDuration)
         }
+        throw Exception("View not updated after $numRetries attempts.")
     }
 }

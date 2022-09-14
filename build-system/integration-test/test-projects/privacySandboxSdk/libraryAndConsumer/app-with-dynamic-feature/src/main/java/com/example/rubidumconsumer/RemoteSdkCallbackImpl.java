@@ -44,6 +44,7 @@ public class RemoteSdkCallbackImpl
 
     @Override
     public void onSurfacePackageError(int errorCode, String errorMessage) {
-        Log.i("App", "onSurfacePackageError");
+        Log.i("App", String.format("onSurfacePackageError. Error code: %d, Error message: %s", errorCode, errorMessage));
+        mainActivity.handleError(errorCode, errorMessage);
     }
 }

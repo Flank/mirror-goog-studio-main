@@ -59,4 +59,10 @@ public class MainActivity extends AppCompatActivity {
             renderedView.setVisibility(View.VISIBLE);
         });
     }
+
+    void handleError(int errorCode, String errorMessage) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            throw new RuntimeException(String.format("onSurfacePackageError. Error code: %d, Error message: %s", errorCode, errorMessage));
+        });
+    }
 }
