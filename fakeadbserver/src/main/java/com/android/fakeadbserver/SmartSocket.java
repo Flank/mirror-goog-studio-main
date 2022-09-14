@@ -48,7 +48,7 @@ public class SmartSocket implements AutoCloseable {
 
         byte[] payloadBytes = new byte[requestLength];
         readFully(payloadBytes);
-        String payload = new String(payloadBytes, US_ASCII);
+        String payload = new String(payloadBytes, UTF_8);
         return new ServiceRequest(payload);
     }
 
