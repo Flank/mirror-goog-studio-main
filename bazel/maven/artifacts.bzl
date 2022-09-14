@@ -221,6 +221,7 @@ DATA = [
     "androidx.navigation:navigation-fragment-ktx:2.3.5",
     "androidx.navigation:navigation-fragment-ktx:2.4.1",
     "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1",
+    "androidx.navigation:navigation-safe-args-gradle-plugin:2.5.2",
     "androidx.navigation:navigation-ui-ktx:2.3.5",
     "androidx.navigation:navigation-ui-ktx:2.4.1",
     "androidx.palette:palette-ktx:1.0.0",
