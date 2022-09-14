@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_PERFETTO_H_
-#define PERFD_CPU_PERFETTO_H_
+#ifndef PERFD_COMMON_PERFETTO_PERFETTO_H_
+#define PERFD_COMMON_PERFETTO_PERFETTO_H_
 
 #include <set>
 #include <string>
@@ -49,7 +49,7 @@ class Perfetto {
   static const int FAILED_LAUNCH_TRACED = 2;
   static const int FAILED_LAUNCH_TRACED_PROBES = 4;
   static const int FAILED_LAUNCH_TRACER = 8;
-  
+
   explicit Perfetto();
   virtual ~Perfetto() { Shutdown(); }
 
@@ -119,4 +119,4 @@ class Perfetto {
 
 }  // namespace profiler
 
-#endif  // PERFD_CPU_PERFETTO_H_
+#endif  // PERFD_COMMON_PERFETTO_PERFETTO_H_

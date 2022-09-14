@@ -17,7 +17,7 @@
 #define PERFD_COMMANDS_START_CPU_TRACE_H
 
 #include "daemon/daemon.h"
-#include "perfd/cpu/trace_manager.h"
+#include "perfd/common/trace_manager.h"
 #include "proto/commands.pb.h"
 
 namespace profiler {

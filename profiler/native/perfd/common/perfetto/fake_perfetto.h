@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_FAKE_PERFETTO_H_
-#define PERFD_CPU_FAKE_PERFETTO_H_
+#ifndef PERFD_COMMON_PERFETTO_FAKE_PERFETTO_H_
+#define PERFD_COMMON_PERFETTO_FAKE_PERFETTO_H_
 
 #include "perfetto.h"
 
@@ -108,4 +108,4 @@ class FakePerfetto : public Perfetto {
 
 }  // namespace profiler
 
-#endif  // PERFD_CPU_FAKE_PERFETTO_H_
+#endif  // PERFD_COMMON_PERFETTO_FAKE_PERFETTO_H_

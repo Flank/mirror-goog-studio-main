@@ -16,8 +16,8 @@
 #include "stop_cpu_trace.h"
 
 #include <sstream>
+#include "perfd/common/profiling_app.h"
 #include "perfd/cpu/commands/trace_command_utils.h"
-#include "perfd/cpu/profiling_app.h"
 #include "proto/cpu.pb.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/process_manager.h"

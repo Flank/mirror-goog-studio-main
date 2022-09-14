@@ -17,8 +17,8 @@
 
 #include <stdio.h>
 
+#include "perfd/common/profiling_app.h"
 #include "perfd/cpu/cpu_config.h"
-#include "perfd/cpu/profiling_app.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/current_process.h"

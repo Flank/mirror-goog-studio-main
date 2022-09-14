@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/cpu/simpleperf_manager.h"
-#include "perfd/cpu/fake_simpleperf.h"
+#include "perfd/common/simpleperf/simpleperf_manager.h"
+#include "perfd/common/simpleperf/fake_simpleperf.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

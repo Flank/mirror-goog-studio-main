@@ -20,10 +20,10 @@
 #include <map>
 #include <string>
 
+#include "perfd/common/trace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "perfd/cpu/trace_manager.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/transport.grpc.pb.h"
 #include "utils/current_process.h"

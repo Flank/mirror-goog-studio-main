@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "atrace_manager.h"
-#include "fake_atrace.h"
+#include "perfd/common/atrace/atrace_manager.h"
+#include "perfd/common/atrace/fake_atrace.h"
 #include "utils/current_process.h"
 #include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"

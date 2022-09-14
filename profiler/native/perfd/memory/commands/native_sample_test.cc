@@ -20,13 +20,13 @@
 #include <gtest/gtest.h>
 
 #include "daemon/event_writer.h"
-#include "perfd/common/fake_perfetto.h"
-#include "perfd/common/perfetto_manager.h"
+#include "perfd/common/perfetto/fake_perfetto.h"
+#include "perfd/common/perfetto/perfetto_manager.h"
 #include "perfd/memory/native_heap_manager.h"
+#include "utils/device_info.h"
+#include "utils/device_info_helper.h"
 #include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"
-#include "utils/device_info_helper.h"
-#include "utils/device_info.h"
 
 #include <condition_variable>
 #include <mutex>

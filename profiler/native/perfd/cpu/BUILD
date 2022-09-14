@@ -3,8 +3,6 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 cc_library(
     name = "profiler_cpu",
     srcs = [
-        "atrace.cc",
-        "atrace_manager.cc",
         "commands/start_cpu_trace.cc",
         "commands/stop_cpu_trace.cc",
         "commands/trace_command_utils.cc",
@@ -14,15 +12,10 @@ cc_library(
         "cpu_service.cc",
         "cpu_usage_sampler.cc",
         "internal_cpu_service.cc",
-        "simpleperf.cc",
-        "simpleperf_manager.cc",
         "thread_monitor.cc",
         "thread_parser.cc",
-        "trace_manager.cc",
     ],
     hdrs = [
-        "atrace.h",
-        "atrace_manager.h",
         "commands/start_cpu_trace.h",
         "commands/stop_cpu_trace.h",
         "commands/trace_command_utils.h",
@@ -33,13 +26,9 @@ cc_library(
         "cpu_service.h",
         "cpu_usage_sampler.h",
         "internal_cpu_service.h",
-        "profiling_app.h",
-        "simpleperf.h",
-        "simpleperf_manager.h",
         "thread_monitor.h",
         "thread_parser.h",
         "threads_sample.h",
-        "trace_manager.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
@@ -50,7 +39,10 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
+        "//tools/base/profiler/native/perfd/common:atrace",
         "//tools/base/profiler/native/perfd/common:perfetto",
+        "//tools/base/profiler/native/perfd/common:simpleperf",
+        "//tools/base/profiler/native/perfd/common:trace_manager",
         "//tools/base/profiler/native/perfd/common:trace_utils",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/native/utils",
@@ -62,16 +54,10 @@ cc_library(
 cc_test(
     name = "perfd_cpu_tests",
     srcs = [
-        "atrace_manager_test.cc",
         "commands/cpu_trace_commands_test.cc",
         "cpu_config_test.cc",
         "cpu_usage_sampler_test.cc",
-        "fake_atrace.h",
-        "fake_simpleperf.h",
-        "simpleperf_manager_test.cc",
-        "simpleperf_test.cc",
         "thread_parser_test.cc",
-        "trace_manager_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",
@@ -89,6 +75,7 @@ cc_test(
     deps = [
         ":profiler_cpu",
         "//tools/base/profiler/native/perfd",
+        "//tools/base/profiler/native/perfd/common:perfd_atrace_tests",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/native/utils",

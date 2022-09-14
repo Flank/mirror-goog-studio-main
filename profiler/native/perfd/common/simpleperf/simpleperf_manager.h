@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_SIMPLEPERFMANAGER_H_
-#define PERFD_CPU_SIMPLEPERFMANAGER_H_
+#ifndef PERFD_COMMON_SIMPLEPERF_SIMPLEPERFMANAGER_H_
+#define PERFD_COMMON_SIMPLEPERF_SIMPLEPERFMANAGER_H_
 
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 
-#include "perfd/cpu/simpleperf.h"
+#include "perfd/common/simpleperf/simpleperf.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/fs/file_system.h"
@@ -119,4 +119,4 @@ class SimpleperfManager {
 };
 }  // namespace profiler
 
-#endif  // PERFD_CPU_SIMPLEPERFMANAGER_H_
+#endif  // PERFD_COMMON_SIMPLEPERF_SIMPLEPERFMANAGER_H_

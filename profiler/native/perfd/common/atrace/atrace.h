@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_ATRACE_H_
-#define PERFD_CPU_ATRACE_H_
+#ifndef PERFD_COMMON_ATRACE_ATRACE_H_
+#define PERFD_COMMON_ATRACE_ATRACE_H_
 
 #include <set>
 #include <string>
@@ -77,4 +77,4 @@ class Atrace {
 };
 }  // namespace profiler
 
-#endif  // PERFD_CPU_ATRACE_MANAGER_H_
+#endif  // PERFD_COMMON_ATRACE_ATRACE_H_

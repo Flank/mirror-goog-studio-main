@@ -18,7 +18,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <queue>
-#include "perfd/cpu/atrace.h"
+#include "perfd/common/atrace/atrace.h"
 #include "utils/fake_clock.h"
 #include "utils/tokenizer.h"
 

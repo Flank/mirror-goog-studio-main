@@ -18,7 +18,7 @@
 
 #include <grpc++/grpc++.h>
 
-#include "perfd/cpu/trace_manager.h"
+#include "perfd/common/trace_manager.h"
 #include "utils/file_cache.h"
 
 #include "proto/cpu.grpc.pb.h"

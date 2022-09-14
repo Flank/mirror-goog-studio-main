@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_ATRACE_MANAGER_H_
-#define PERFD_CPU_ATRACE_MANAGER_H_
+#ifndef PERFD_COMMON_ATRACE_ATRACE_MANAGER_H_
+#define PERFD_COMMON_ATRACE_ATRACE_MANAGER_H_
 
 #include <condition_variable>
 #include <map>
@@ -24,7 +24,7 @@
 #include <string>
 #include <thread>
 
-#include "perfd/cpu/atrace.h"
+#include "perfd/common/atrace/atrace.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/fs/file_system.h"
@@ -112,4 +112,4 @@ class AtraceManager {
 };
 }  // namespace profiler
 
-#endif  // PERFD_CPU_ATRACE_MANAGER_H_
+#endif  // PERFD_COMMON_ATRACE_ATRACE_MANAGER_H_

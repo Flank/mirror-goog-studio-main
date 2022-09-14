@@ -16,7 +16,7 @@
 #ifndef PERFD_CPU_COMMANDS_TRACE_COMMAND_UTILS_H_
 #define PERFD_CPU_COMMANDS_TRACE_COMMAND_UTILS_H_
 
-#include "perfd/cpu/profiling_app.h"
+#include "perfd/common/profiling_app.h"
 #include "proto/commands.pb.h"
 #include "proto/common.pb.h"
 

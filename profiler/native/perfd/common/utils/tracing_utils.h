@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PERFD_CPU_UTILS_TRACING_UTILS_H_
-#define PERFD_CPU_UTILS_TRACING_UTILS_H_
+#ifndef PERFD_COMMON_UTILS_TRACING_UTILS_H_
+#define PERFD_COMMON_UTILS_TRACING_UTILS_H_
 
 #include <stdint.h>
 
@@ -49,4 +49,4 @@ class TracingUtils {
 };
 }  // namespace profiler
 
-#endif  // PERFD_CPU_UTILS_TRACING_UTILS_H_
+#endif  // PERFD_COMMON_UTILS_TRACING_UTILS_H_

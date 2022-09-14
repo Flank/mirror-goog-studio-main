@@ -18,12 +18,12 @@
 
 #include "daemon/daemon.h"
 #include "daemon/service_component.h"
+#include "perfd/common/trace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_collector.h"
 #include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/internal_cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "perfd/cpu/trace_manager.h"
 #include "proto/transport.grpc.pb.h"
 
 namespace profiler {

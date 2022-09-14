@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_CPU_PROFILING_APP_H_
-#define PERFD_CPU_PROFILING_APP_H_
+#ifndef PERFD_COMMON_PROFILING_APP_H_
+#define PERFD_COMMON_PROFILING_APP_H_
 
 #include "proto/cpu.grpc.pb.h"
 
@@ -45,4 +45,4 @@ struct ProfilingApp {
 
 }  // namespace profiler
 
-#endif  // PERFD_CPU_PROFILING_APP_H_
+#endif  // PERFD_COMMON_PROFILING_APP_H_

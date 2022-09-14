@@ -16,7 +16,7 @@
 #ifndef PERFD_MEMORY_NATIVE_HEAP_MANAGER_H_
 #define PERFD_MEMORY_NATIVE_HEAP_MANAGER_H_
 
-#include "perfd/common/perfetto_manager.h"
+#include "perfd/common/perfetto/perfetto_manager.h"
 #include "proto/transport.grpc.pb.h"
 #include "utils/file_cache.h"
 

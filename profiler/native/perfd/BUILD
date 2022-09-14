@@ -115,6 +115,7 @@ cc_test(
     tags = ["no_windows"],
     deps = [
         ":perfd",
+        "//tools/base/profiler/native/perfd/common:perfd_atrace_tests",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/native/daemon",
         "//tools/base/transport/proto:cc_proto",

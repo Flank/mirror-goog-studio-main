@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_CPU_TRACE_MANAGER_H_
-#define PERFD_CPU_TRACE_MANAGER_H_
+#ifndef PERFD_COMMON_TRACE_MANAGER_H_
+#define PERFD_COMMON_TRACE_MANAGER_H_
 
 #include <cstdint>
 #include <memory>
@@ -22,11 +22,11 @@
 #include <string>
 #include <vector>
 
-#include "perfd/common/perfetto_manager.h"
-#include "perfd/cpu/atrace_manager.h"
-#include "perfd/cpu/profiling_app.h"
-#include "perfd/cpu/simpleperf.h"
-#include "perfd/cpu/simpleperf_manager.h"
+#include "perfd/common/atrace/atrace_manager.h"
+#include "perfd/common/perfetto/perfetto_manager.h"
+#include "perfd/common/simpleperf/simpleperf.h"
+#include "perfd/common/simpleperf/simpleperf_manager.h"
+#include "profiling_app.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/transport.grpc.pb.h"
 #include "utils/activity_manager.h"
@@ -147,4 +147,4 @@ class TraceManager final {
 
 }  // namespace profiler
 
-#endif  // PERFD_CPU_TRACE_MANAGER_H_
+#endif  // PERFD_COMMON_TRACE_MANAGER_H_
