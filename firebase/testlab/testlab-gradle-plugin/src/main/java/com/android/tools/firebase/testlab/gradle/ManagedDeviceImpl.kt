@@ -16,22 +16,48 @@
 
 package com.android.tools.firebase.testlab.gradle
 
+import com.android.build.api.instrumentation.ManagedDeviceTestRunner
+import com.android.build.api.instrumentation.ManagedDeviceTestRunnerFactory
+import com.android.tools.firebase.testlab.gradle.services.TestLabBuildService
 import com.google.firebase.testlab.gradle.ManagedDevice
 import com.google.firebase.testlab.gradle.Orientation
 import javax.inject.Inject
+import org.gradle.api.Project
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
+import org.gradle.workers.WorkerExecutor
 
 /**
  * Implementation for [ManagedDevice] to be registered with the
  * Android Plugin for Gradle
  */
-open class ManagedDeviceImpl @Inject constructor(private val name: String): ManagedDevice {
+open class ManagedDeviceImpl @Inject constructor(private val name: String)
+    : ManagedDevice,
+      ManagedDeviceTestRunnerFactory {
+    @Internal
     override fun getName(): String = name
 
+    @get:Input
     override var device = ""
 
+    @get:Input
     override var apiLevel = -1
 
+    @get:Input
     override var orientation = Orientation.DEFAULT
 
+    @get:Input
     override var locale = "en-US"
+
+    override fun createTestRunner(
+        project: Project,
+        workerExecutor: WorkerExecutor,
+        useOrchestrator: Boolean,
+        enableEmulatorDisplay: Boolean,
+    ): ManagedDeviceTestRunner {
+        return ManagedDeviceTestRunner(
+            TestLabBuildService.RegistrationAction()
+                .registerIfAbsent(project.gradle.sharedServices)
+        )
+    }
 }
