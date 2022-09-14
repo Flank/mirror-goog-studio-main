@@ -1650,12 +1650,12 @@ package com.android.build.api.dsl {
   }
 
   public interface TestBuildType extends com.android.build.api.dsl.BuildType com.android.build.api.dsl.TestVariantDimension {
-    method @org.gradle.api.Incubating public Boolean? isCrunchPngs();
-    method @org.gradle.api.Incubating public boolean isDebuggable();
-    method @org.gradle.api.Incubating public void setCrunchPngs(Boolean? isCrunchPngs);
-    method @org.gradle.api.Incubating public void setDebuggable(boolean isDebuggable);
-    property @org.gradle.api.Incubating public abstract Boolean? isCrunchPngs;
-    property @org.gradle.api.Incubating public abstract boolean isDebuggable;
+    method public Boolean? isCrunchPngs();
+    method public boolean isDebuggable();
+    method public void setCrunchPngs(Boolean? isCrunchPngs);
+    method public void setDebuggable(boolean isDebuggable);
+    property public abstract Boolean? isCrunchPngs;
+    property public abstract boolean isDebuggable;
   }
 
   public interface TestCoverage {
