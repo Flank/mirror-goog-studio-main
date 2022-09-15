@@ -18,9 +18,12 @@ package com.android.adblib.tools.debugging.impl
 import com.android.adblib.ByteBufferAdbOutputChannel
 import com.android.adblib.DeviceSelector
 import com.android.adblib.createDeviceScope
+import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
+import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.testingutils.FakeAdbServerProvider
-import com.android.adblib.tools.debugging.JdwpSessionHandler
+import com.android.adblib.tools.debugging.JdwpSession
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
+import com.android.adblib.tools.debugging.packets.JdwpPacketView
 import com.android.adblib.tools.debugging.packets.MutableJdwpPacket
 import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkTypes
 import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkView
@@ -31,11 +34,9 @@ import com.android.adblib.tools.debugging.packets.ddms.ddmsChunks
 import com.android.adblib.tools.debugging.packets.ddms.writeToChannel
 import com.android.adblib.tools.debugging.properties
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
-import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
-import com.android.adblib.testingutils.CoroutineTestUtils.waitNonNull
-import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.utils.ResizableBuffer
 import com.android.fakeadbserver.DeviceState
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -94,13 +95,17 @@ class JdwpSessionProxyTest : AdbLibToolsTestBase() {
         val deviceScope = session.createDeviceScope(deviceSelector)
 
         // Act
-        val process = registerCloseable(JdwpProcessImpl(session, deviceSelector, deviceScope, 10))
+        val process =
+            registerCloseable(JdwpProcessImpl(session, deviceSelector, deviceScope, 10))
         process.startMonitoring()
         yieldUntil {
-            process.properties.jdwpSessionProxyStatus.socketAddress != null
+            process.properties.jdwpSessionProxyStatus.socketAddress != null &&
+            process.properties.processName != null
         }
-        val clientSocket = registerCloseable(session.channelFactory.connectSocket(process.properties.jdwpSessionProxyStatus.socketAddress!!))
-        val jdwpSession = registerCloseable(JdwpSessionHandler.wrapSocketChannel(session, clientSocket, 10))
+        val clientSocket =
+            registerCloseable(session.channelFactory.connectSocket(process.properties.jdwpSessionProxyStatus.socketAddress!!))
+        val jdwpSession =
+            registerCloseable(JdwpSession.wrapSocketChannel(session, clientSocket, 10, 2_000))
 
         val heloChunk = MutableDdmsChunk()
         heloChunk.type = DdmsChunkTypes.HELO
@@ -115,18 +120,26 @@ class JdwpSessionProxyTest : AdbLibToolsTestBase() {
         packet.cmd = DdmsPacketConstants.DDMS_CMD
         packet.payload = heloChunk.toBufferedInputChannel()
 
+        val reply = async {
+            val replyPacket: JdwpPacketView
+            while (true) {
+                val r = jdwpSession.receivePacket()
+                if (r.id == packet.id) {
+                    replyPacket = r
+                    break
+                }
+            }
+            replyPacket
+        }
+
         jdwpSession.sendPacket(packet)
 
-        val reply = waitNonNull {
-            val r = jdwpSession.receivePacket()
-            if (r.id == packet.id) r else null
-        }
-        val heloReply = reply.ddmsChunks().first()
+        val heloReply = reply.await().ddmsChunks().first()
         val heloReplyChunk = DdmsHeloChunk.parse(heloReply)
 
         // Assert
-        assertTrue(reply.isReply)
-        assertEquals(packet.id, reply.id)
+        assertTrue(reply.await().isReply)
+        assertEquals(packet.id, reply.await().id)
         assertEquals(10, heloReplyChunk.pid)
     }
 

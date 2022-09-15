@@ -17,6 +17,8 @@
 package com.android.fakeadbserver;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import java.net.Socket;
 
 public class ClientState {
 
@@ -31,6 +33,8 @@ public class ClientState {
 
     // Whether this client is waiting for a debugger connection or not
     private boolean mWaiting;
+
+    @Nullable private Socket jdwpSocket;
 
     ClientState(
             int pid,
@@ -65,5 +69,26 @@ public class ClientState {
 
     public boolean getIsWaiting() {
         return mWaiting;
+    }
+
+    public synchronized boolean startJdwpSession(@NonNull Socket socket) {
+        if (this.jdwpSocket != null) {
+            return false;
+        }
+        this.jdwpSocket = socket;
+        return true;
+    }
+
+    public synchronized void stopJdwpSession() {
+        if (this.jdwpSocket != null) {
+            try {
+                this.jdwpSocket.shutdownOutput();
+                Thread.sleep(10); // So that FIN is received by peer
+                this.jdwpSocket.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        this.jdwpSocket = null;
     }
 }

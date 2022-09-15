@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -95,6 +96,7 @@ public class JdwpClientManagerTest {
     }
 
     @Test
+    @Ignore("This test creates 2 JDWP sessions to the same PID")
     public void connectionRegistorsSelector() throws Throwable {
         myFakeAdb.before();
         Selector selector = Selector.open();
@@ -160,6 +162,7 @@ public class JdwpClientManagerTest {
     }
 
     @Test
+    @Ignore("This test creates 2 JDWP sessions to the same PID")
     public void dontWriteWhenFiltered() throws Throwable {
         // Need to start a server before FakeAdb so we have the actual server instead of the
         // fallback.

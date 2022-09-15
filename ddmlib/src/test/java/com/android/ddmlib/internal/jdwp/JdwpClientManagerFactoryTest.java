@@ -24,6 +24,7 @@ import com.android.fakeadbserver.DeviceState;
 import java.io.IOException;
 import java.nio.channels.Selector;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,8 +40,9 @@ public class JdwpClientManagerFactoryTest {
         myFactory = new JdwpClientManagerFactory(selector);
   }
 
-  @Test
-  public void duplicateKeyReturnsSameInstance() throws Exception {
+    @Test
+    @Ignore("This test creates 2 JDWP sessions to the same PID")
+    public void duplicateKeyReturnsSameInstance() throws Exception {
     DeviceState state = myAdb.connectAndWaitForDevice();
     ClientImpl client = FakeAdbTestRule.launchAndWaitForProcess(state, true);
     JdwpClientManager connection =
@@ -56,8 +58,9 @@ public class JdwpClientManagerFactoryTest {
     }
   }
 
-  @Test
-  public void terminatingConnectionRemovesItFromFactory() throws Exception {
+    @Test
+    @Ignore("This test creates 2 JDWP sessions to the same PID")
+    public void terminatingConnectionRemovesItFromFactory() throws Exception {
     DeviceState state = myAdb.connectAndWaitForDevice();
     ClientImpl client = FakeAdbTestRule.launchAndWaitForProcess(state, true);
     JdwpClientManager connection =

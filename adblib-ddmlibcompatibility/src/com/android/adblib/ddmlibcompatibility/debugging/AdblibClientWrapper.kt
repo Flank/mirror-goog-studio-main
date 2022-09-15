@@ -65,7 +65,7 @@ internal class AdblibClientWrapper(
      */
     override fun isValid(): Boolean {
         return jdwpProcess.scope.isActive &&
-                jdwpProcess.properties.exception == null
+                jdwpProcess.properties.vmIdentifier != null
     }
 
     /**

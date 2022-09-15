@@ -18,11 +18,11 @@ package com.android.adblib.tools.debugging.impl
 import com.android.adblib.AdbChannel
 import com.android.adblib.AdbInputChannel
 import com.android.adblib.AdbInputChannelSlice
-import com.android.adblib.AdbSession
 import com.android.adblib.AdbOutputChannel
+import com.android.adblib.AdbSession
 import com.android.adblib.skipRemaining
 import com.android.adblib.thisLogger
-import com.android.adblib.tools.debugging.JdwpSessionHandler
+import com.android.adblib.tools.debugging.JdwpSession
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_BYTE_ORDER
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_HEADER_LENGTH
@@ -36,11 +36,16 @@ import kotlinx.coroutines.sync.withLock
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class JdwpSessionHandlerImpl(
-  session: AdbSession,
-  private val channel: AdbChannel,
-  private val pid: Int
-) : JdwpSessionHandler {
+internal class JdwpSessionImpl(
+    session: AdbSession,
+    private val channel: AdbChannel,
+    private val pid: Int,
+    /**
+     *  This value is from DDMLIB, using it should help avoid potential back compat issues
+     *  if someone depends on this somehow
+     */
+    firstPacketId: Int = 100
+) : JdwpSession {
 
     private val logger = thisLogger(session)
 
@@ -60,7 +65,7 @@ internal class JdwpSessionHandlerImpl(
 
     private val receiveMutex = Mutex()
 
-    private val atomicPacketId = AtomicInteger(100)
+    private val atomicPacketId = AtomicInteger(firstPacketId)
 
     override fun close() {
         logger.debug { "pid=$pid: Closing JDWP session handler (and underlying channel)" }
@@ -73,7 +78,7 @@ internal class JdwpSessionHandlerImpl(
         // We serialize sending packets to the channel so that we always send fully formed packets
         sendMutex.withLock {
             sendHandshake()
-            logger.debug { "pid=$pid: Sending JDWP packet: $packet" }
+            logger.verbose { "pid=$pid: Sending JDWP packet: $packet" }
             sender.sendPacket(packet)
         }
     }
@@ -82,8 +87,9 @@ internal class JdwpSessionHandlerImpl(
         // We serialize reading packets from the channel so that we always read fully formed packets
         receiveMutex.withLock {
             waitForHandshake()
+            logger.verbose { "pid=$pid: Waiting for next JDWP packet from channel" }
             val packet = receiver.receivePacket()
-            logger.debug { "pid=$pid: Receiving JDWP packet: $packet" }
+            logger.verbose { "pid=$pid: Received JDWP packet: $packet" }
             return packet
         }
     }
@@ -99,10 +105,10 @@ internal class JdwpSessionHandlerImpl(
     }
 
     class HandshakeHandler(
-      session: AdbSession,
-      private val pid: Int,
-      private val inputChannel: AdbInputChannel,
-      private val outputChannel: AdbOutputChannel
+        session: AdbSession,
+        private val pid: Int,
+        private val inputChannel: AdbInputChannel,
+        private val outputChannel: AdbOutputChannel
     ) {
 
         private val logger = thisLogger(session)
@@ -226,11 +232,13 @@ internal class JdwpSessionHandlerImpl(
         private val workBuffer = ResizableBuffer().order(PACKET_BYTE_ORDER)
 
         private val jdwpPacket = MutableJdwpPacket()
+        private var previousPayload = AdbBufferedInputChannel.empty()
 
         suspend fun receivePacket(): JdwpPacketView {
-            // Ensure we consume all bytes from the previous packet
-            jdwpPacket.payload.finalRewind()
-            jdwpPacket.payload.skipRemaining(workBuffer)
+            // Ensure we consume all bytes from the previous payload
+            previousPayload.finalRewind()
+            previousPayload.skipRemaining(workBuffer)
+            previousPayload = AdbBufferedInputChannel.empty()
 
             // Read next packet
             readOnePacket(workBuffer, jdwpPacket)
@@ -248,6 +256,7 @@ internal class JdwpSessionHandlerImpl(
                         packet.length - PACKET_HEADER_LENGTH
                     )
                 )
+            previousPayload = packet.payload
         }
     }
 

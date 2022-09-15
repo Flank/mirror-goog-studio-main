@@ -30,7 +30,7 @@ interface AdbBufferedInputChannel : AdbInputChannel {
      * Rewind this [AdbBufferedInputChannel] to the beginning, so that [read] operations can
      * be executed again.
      */
-    fun rewind()
+    suspend fun rewind()
 
     /**
      * Similar to [rewind] but gives implementors a hint this is the last time a [rewind]
@@ -38,7 +38,7 @@ interface AdbBufferedInputChannel : AdbInputChannel {
      * as an optimization. After this call, it is legal to [read] the contents of this
      * [AdbBufferedInputChannel] until EOF, but it is illegal to call [rewind] or [finalRewind] again.
      */
-    fun finalRewind() {
+    suspend fun finalRewind() {
         rewind()
     }
 
@@ -73,7 +73,7 @@ interface AdbBufferedInputChannel : AdbInputChannel {
          */
         private object Empty : AdbBufferedInputChannel {
 
-            override fun rewind() {
+            override suspend fun rewind() {
                 // Nothing to do
             }
 
@@ -91,7 +91,7 @@ interface AdbBufferedInputChannel : AdbInputChannel {
             private val rewindPosition = buffer.position()
             private val input = ByteBufferAdbInputChannel(buffer)
 
-            override fun rewind() {
+            override suspend fun rewind() {
                 buffer.position(rewindPosition)
             }
 
@@ -132,14 +132,14 @@ interface AdbBufferedInputChannel : AdbInputChannel {
              */
             private var buffering: Boolean = true
 
-            override fun rewind() {
+            override suspend fun rewind() {
                 if (!buffering) {
                     throw IllegalStateException("Rewinding is not supported after finalRewind has been invoked")
                 }
                 _bufferedData?.position(0)
             }
 
-            override fun finalRewind() {
+            override suspend fun finalRewind() {
                 if (!buffering) {
                     throw IllegalStateException("finalRewind can only be invoked once")
                 }

@@ -88,7 +88,7 @@ fun ResizableBuffer.appendJdwpHeader(jdwpPacketView: JdwpPacketView) {
  */
 internal suspend fun JdwpPacketView.clone(
     workBuffer: ResizableBuffer = ResizableBuffer()
-): JdwpPacketView {
+): MutableJdwpPacket {
 
     // Copy header
     workBuffer.clear()
