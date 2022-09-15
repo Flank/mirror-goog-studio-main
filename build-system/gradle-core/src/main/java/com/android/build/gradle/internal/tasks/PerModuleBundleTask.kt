@@ -27,8 +27,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.component.DynamicFeatureCreationConfig
 import com.android.build.gradle.internal.dependency.AndroidAttributes
 import com.android.build.gradle.internal.fusedlibrary.FusedLibraryInternalArtifactType
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkInternalArtifactType
 import com.android.build.gradle.internal.privaysandboxsdk.PrivacySandboxSdkVariantScope
@@ -45,7 +43,7 @@ import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarCreator
-import com.android.builder.packaging.JarMerger
+import com.android.builder.packaging.JarFlinger
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -142,72 +140,69 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val privacySandboxSdkRuntimeConfigFile: RegularFileProperty
 
-    @get:Input
-    val jarCreatorType: Property<JarCreatorType> = objects.property(JarCreatorType::class.java)
-
     public override fun doTaskAction() {
         val outputPath =
                 (outputFile.orNull?.asFile ?: File(outputDir.get().asFile, fileName.get())).toPath()
-        val jarCreator =
-                JarCreatorFactory.make(
-                        jarFile = outputPath,
-                type = jarCreatorType.get()
+        JarFlinger(outputPath, null).use { jarCreator ->
+            // Disable compression for module zips, since this will only be used in bundletool and it
+            // will need to uncompress them anyway.
+            jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
+
+            val filters = baseModuleMetadata.singleOrNull()?.let {
+                ModuleMetadata.load(it).abiFilters.toSet()
+            } ?: abiFilters.get()
+
+            val abiFilter = filters?.let { NativeLibraryAbiPredicate(it, false) }
+
+            // https://b.corp.google.com/issues/140219742
+            val excludeJarManifest =
+                Predicate { path: String ->
+                    !path.uppercase(Locale.US).endsWith("MANIFEST.MF")
+                }
+
+
+            jarCreator.addDirectory(
+                assetsFilesDirectory.get().asFile.toPath(),
+                null,
+                null,
+                Relocator(FD_ASSETS)
             )
 
-        // Disable compression for module zips, since this will only be used in bundletool and it
-        // will need to uncompress them anyway.
-        jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
-
-        val filters = baseModuleMetadata.singleOrNull()?.let {
-            ModuleMetadata.load(it).abiFilters.toSet()
-        } ?: abiFilters.get()
-
-        val abiFilter = filters?.let { NativeLibraryAbiPredicate(it, false) }
-
-        // https://b.corp.google.com/issues/140219742
-        val excludeJarManifest =
-            Predicate { path: String ->
-                !path.uppercase(Locale.US).endsWith("MANIFEST.MF")
-            }
-
-        jarCreator.use {
-            it.addDirectory(
-                    assetsFilesDirectory.get().asFile.toPath(),
-                    null,
-                    null,
-                    Relocator(FD_ASSETS)
-            )
-
-            it.addJar(resFiles.get().asFile.toPath(), excludeJarManifest, ResRelocator())
+            jarCreator.addJar(resFiles.get().asFile.toPath(), excludeJarManifest, ResRelocator())
 
             // dex files
             val dexFilesSet = if (hasFeatureDexFiles()) featureDexFiles.files else dexFiles.files
             if (dexFilesSet.size == 1) {
                 // Don't rename if there is only one input folder
                 // as this might be the legacy multidex case.
-                addHybridFolder(it, dexFilesSet, Relocator(FD_DEX), excludeJarManifest)
+                addHybridFolder(jarCreator, dexFilesSet, Relocator(FD_DEX), excludeJarManifest)
             } else {
-                addHybridFolder(it, dexFilesSet, DexRelocator(FD_DEX), excludeJarManifest)
+                addHybridFolder(jarCreator, dexFilesSet, DexRelocator(FD_DEX), excludeJarManifest)
             }
 
             // we check hasFeatureDexFiles() instead of checking if
             // featureJavaResFiles.files.isNotEmpty() because we want to use featureJavaResFiles
             // even if it's empty (which will be the case when using proguard)
             val javaResFilesSet =
-                    if (hasFeatureDexFiles()) featureJavaResFiles.files else javaResFiles.files
-            addHybridFolder(it, javaResFilesSet, Relocator("root"), JarMerger.EXCLUDE_CLASSES)
+                if (hasFeatureDexFiles()) featureJavaResFiles.files else javaResFiles.files
             addHybridFolder(
-                    it,
-                    appMetadata.orNull?.asFile?.let { metadataFile -> setOf(metadataFile) }
-                            ?: setOf(),
-                    Relocator("root/META-INF/com/android/build/gradle"),
-                    JarMerger.EXCLUDE_CLASSES)
+                jarCreator, javaResFilesSet, Relocator("root"),
+                JarCreator.EXCLUDE_CLASSES
+            )
+            addHybridFolder(
+                jarCreator,
+                appMetadata.orNull?.asFile?.let { metadataFile -> setOf(metadataFile) }
+                    ?: setOf(),
+                Relocator("root/META-INF/com/android/build/gradle"),
+                JarCreator.EXCLUDE_CLASSES)
 
-            addHybridFolder(it, nativeLibsFiles.files, fileFilter = abiFilter)
+            addHybridFolder(jarCreator, nativeLibsFiles.files, fileFilter = abiFilter)
 
             if (privacySandboxSdkRuntimeConfigFile.isPresent) {
-                it.addFile("runtime_enabled_sdk_config.pb",
-                        privacySandboxSdkRuntimeConfigFile.get().asFile.toPath())
+                jarCreator.addFile(
+                    "runtime_enabled_sdk_config.pb",
+                    privacySandboxSdkRuntimeConfigFile.get().asFile.toPath()
+                )
             }
         }
     }
@@ -286,14 +281,6 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
             task.featureJavaResFiles.fromDisallowChanges()
             task.nativeLibsFiles.fromDisallowChanges()
             task.abiFilters.setDisallowChanges(emptySet())
-
-            task.jarCreatorType.setDisallowChanges(
-                if (creationConfig.services.projectOptions.get(BooleanOption.USE_NEW_JAR_CREATOR)) {
-                    JarCreatorType.JAR_FLINGER
-                } else {
-                    JarCreatorType.JAR_MERGER
-                }
-            )
         }
     }
 
@@ -414,8 +401,6 @@ abstract class PerModuleBundleTask @Inject constructor(objects: ObjectFactory) :
                 )
             }
 
-            task.jarCreatorType.set(creationConfig.global.jarCreatorType)
-            task.jarCreatorType.disallowChanges()
             if (creationConfig.services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT] && creationConfig.componentType.isBaseModule) {
                 artifacts.setTaskInputToFinalProduct(
                         InternalArtifactType.PRIVACY_SANDBOX_SDK_RUNTIME_CONFIG_FILE,
