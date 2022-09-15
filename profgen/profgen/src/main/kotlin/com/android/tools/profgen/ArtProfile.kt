@@ -25,7 +25,7 @@ internal val MAGIC = byteArrayOf('p', 'r', 'o', '\u0000')
 
 
 class ArtProfile internal constructor(
-    internal val profileData: Map<DexFile, DexFileData>,
+    val profileData: Map<DexFile, DexFileData>,
     private val apkName: String = ""
 ) {
     fun print(os: PrintStream, obf: ObfuscationMap) {
@@ -81,7 +81,7 @@ class ArtProfile internal constructor(
             keys += key
             val source = files[key]
             outFiles += if (source != null) {
-                key to source.addMetadata(file, version)
+                key to source.addMedata(file, version)
             } else {
                 key to file
             }
@@ -99,7 +99,7 @@ class ArtProfile internal constructor(
         return ArtProfile(combinedMap, apkName)
     }
 
-    private fun DexFile.addMetadata(other: DexFile, version: MetadataVersion): DexFile {
+    private fun DexFile.addMedata(other: DexFile, version: MetadataVersion): DexFile {
         return when (version) {
             MetadataVersion.V_001 -> this
             MetadataVersion.V_002 -> {
@@ -109,7 +109,7 @@ class ArtProfile internal constructor(
                 // Ensure it's the same DexFile
                 if (name == other.name) {
                     DexFile(
-                        header = this.header.addMetadata(other.header),
+                        header = this.header.addMedata(other.header),
                         name = name,
                         dexChecksum = dexChecksum
                     )
@@ -120,7 +120,7 @@ class ArtProfile internal constructor(
         }
     }
 
-    private fun DexHeader.addMetadata(other: DexHeader): DexHeader {
+    private fun DexHeader.addMedata(other: DexHeader): DexHeader {
         return DexHeader(
             nonEmptySpan(stringIds, other.stringIds),
             nonEmptySpan(typeIds, other.typeIds),
