@@ -29,10 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * See  https://github.com/gradle/gradle/issues/2298
  */
 fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
-    val warn = projectOptions[BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
     val fail = projectOptions[BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION]
 
-    if (skipDependencyCheck(project, projectOptions, warn, fail)) {
+    if (skipDependencyCheck(projectOptions)) {
         return
     }
 
@@ -65,10 +64,8 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
             if (fail) {
                 throw RuntimeException(errorMessage)
             } else {
-                if (warn) {
-                    project.logger.warn("$errorMessage\nRun with --info for a stacktrace.")
-                    // TODO b/80230357: Heuristically sanitized stacktrace to show what triggered the resolution.
-                }
+                project.logger.warn("$errorMessage\nRun with --info for a stacktrace.")
+                // TODO b/80230357: Heuristically sanitized stacktrace to show what triggered the resolution.
                 if (project.logger.isEnabled(LogLevel.INFO)) {
                     project.logger.info(
                         Throwables.getStackTraceAsString(
@@ -83,16 +80,9 @@ fun registerDependencyCheck(project: Project, projectOptions: ProjectOptions) {
     }
 }
 
-private fun skipDependencyCheck(
-    project: Project,
-    projectOptions: ProjectOptions,
-    warn: Boolean,
-    fail: Boolean
-): Boolean {
-    val modelOnly = projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY]
+private fun skipDependencyCheck(projectOptions: ProjectOptions): Boolean {
+    return projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY]
             || projectOptions[BooleanOption.IDE_BUILD_MODEL_ONLY_V2]
-    val silentMode = !warn && !fail && !project.logger.isEnabled(LogLevel.INFO)
-    return modelOnly || silentMode
 }
 
 private fun errorMessage(configurationName: String): String {

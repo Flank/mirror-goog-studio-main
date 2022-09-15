@@ -50,10 +50,6 @@ class DependencyCheckerTest {
         val warning =
             app.executor()
             .with(BooleanOption.DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION, false)
-            .with(
-                BooleanOption.WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION,
-                true
-            )
             .run("tasks")
         warning.stdout.use {
             ScannerSubject.assertThat(it)

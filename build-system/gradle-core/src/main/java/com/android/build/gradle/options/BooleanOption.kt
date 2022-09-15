@@ -234,12 +234,6 @@ enum class BooleanOption(
 
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
-    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION(
-        "android.dependencyResolutionAtConfigurationTime.warn",
-        true,
-        FeatureStage.SoftlyEnforced(VERSION_8_0)
-    ),
-
     ENABLE_DEXING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
     ENABLE_DEXING_ARTIFACT_TRANSFORM_FOR_EXTERNAL_LIBS("android.enableDexingArtifactTransformForExternalLibs", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
@@ -506,6 +500,12 @@ enum class BooleanOption(
         FeatureStage.Enforced(Version.VERSION_8_0)
     ),
 
+    WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION(
+        "android.dependencyResolutionAtConfigurationTime.warn",
+        true,
+        FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+    
     /* ----------------
      * REMOVED FEATURES
      */
