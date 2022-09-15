@@ -129,11 +129,18 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
          * A handle returned by a system that does continuous capturing, which, when closed, tells
          * the system to stop as soon as possible.
          */
-        val handle: AutoCloseable,
-        val capturingType: Screenshot.Type,
-        val root: View,
+        val callbackHandle: AutoCloseable,
+        val screenshotType: Screenshot.Type,
+        val rootView: View,
+        /**
+         * An [Executor] used to execute the code that does the screen capturing.
+         * It runs some code before and after executing the screen capture logic.
+         */
         val captureExecutor: Executor,
-        val os: OutputStream,
+        /**
+         * The output stream on which the screen capture is written.
+         */
+        val captureOutputStream: OutputStream,
         /**
          * Executor used during capture
          */
@@ -144,7 +151,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         var isLastCapture: Boolean = false,
     ) {
         fun shutdown() {
-            handle.close()
+            callbackHandle.close()
             executorService.shutdown()
         }
     }
@@ -162,9 +169,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
     private class InspectorState {
         /**
-         * A mapping of root view IDs to data that should be accessed across multiple threads.
+         * A mapping of root view IDs to screen capture data that should be accessed across multiple threads.
          */
-        val contextMap = mutableMapOf<Long, CaptureContext>()
+        val captureContextMap = mutableMapOf<Long, CaptureContext>()
 
         /**
          * When true, the inspector will keep generating layout events as the screen changes.
@@ -242,7 +249,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private fun onRootsChanged(added: List<Long>, removed: List<Long>, roots: Map<Long, View>) {
         synchronized(stateLock) {
             for (toRemove in removed) {
-                state.contextMap.remove(toRemove)?.shutdown()
+                state.captureContextMap.remove(toRemove)?.shutdown()
             }
             added.mapNotNull { roots[it] }.forEach { foldSupport?.start(it) }
             removed.mapNotNull { roots[it] }.forEach { foldSupport?.stop(it) }
@@ -253,7 +260,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // with views already being captured, so we don't need to start
                     // capturing them again.
                     val actuallyAdded = added.toMutableList().apply {
-                        removeAll { id -> state.contextMap.containsKey(id) }
+                        removeAll { id -> state.captureContextMap.containsKey(id) }
                     }
                     if (actuallyAdded.isNotEmpty()) {
                         ThreadUtils.runOnMainThread {
@@ -289,10 +296,10 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     private fun forceStopAllCaptures() {
         rootsDetector.stop()
         synchronized(stateLock) {
-            for (context in state.contextMap.values) {
+            for (context in state.captureContextMap.values) {
                 context.shutdown()
             }
-            state.contextMap.clear()
+            state.captureContextMap.clear()
         }
     }
 
@@ -305,97 +312,105 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             }
         }
 
-        val os = ByteArrayOutputStream()
+        val captureOutputStream = ByteArrayOutputStream()
         val currentRequestId = AtomicLong()
+
         val captureExecutor = basicExecutorFactory { command ->
             val requestId = currentRequestId.incrementAndGet()
             checkpoint = ProgressCheckpoint.VIEW_INVALIDATION_CALLBACK
-            val executor =
-                state.contextMap[root.uniqueDrawingId]?.executorService
-                    ?: return@basicExecutorFactory
+            val executorService = state.captureContextMap[root.uniqueDrawingId]?.executorService ?: return@basicExecutorFactory
 
             try {
-                executor.execute {
+                executorService.execute {
                     if (requestId != currentRequestId.get()) {
                         // This request is obsolete, just return
                         command.run()
-                        os.reset()
+                        captureOutputStream.reset()
                         return@execute
                     }
-                    executeCapture(command, os, root)
+                    executeCapture(command, captureOutputStream, root)
                 }
             } catch (exception: RejectedExecutionException) {
                 // this can happen if we stop capture and then start again immediately: "executor"
                 // above can be shutdown in between when it's retrieved and when the execution
                 // starts on the next line.
                 connection.sendEvent {
-                    errorEventBuilder.message =
-                        "ViewLayoutInspector got RejectedExecutionException during capture: " +
-                                exception.message
+                    errorEventBuilder.message = "ViewLayoutInspector got RejectedExecutionException during capture: ${exception.message}"
                 }
             }
         }
-        updateViewChangeNotification(root, captureExecutor, os)
+        updateCapturingCallback(root, captureExecutor, captureOutputStream)
         checkpoint = ProgressCheckpoint.STARTED
         root.invalidate() // Force a re-render so we send the current screen
     }
 
-    private fun updateAllViewChangeNotifications() {
-        for ((_, _, root, captureExecutor, os, _, _) in state.contextMap.values) {
-            updateViewChangeNotification(root, captureExecutor, os)
+    private fun updateAllCapturingCallbacks() {
+        for ((_, _, root, captureExecutor, captureOutputStream, _, _) in state.captureContextMap.values) {
+            updateCapturingCallback(root, captureExecutor, captureOutputStream)
         }
     }
 
-    private fun updateViewChangeNotification(root: View, executor: Executor, os: OutputStream) {
+    /**
+     * Creates or updates the capturing callback associated with [rootView].
+     * The capturing callback can be to capture SKP or BITMAP.
+     * The function creates a new [CaptureContext] associated with [rootView].
+     */
+    private fun updateCapturingCallback(rootView: View, captureExecutor: Executor, captureOutputStream: OutputStream) {
         // Starting rendering captures must be called on the View thread or else it throws
         ThreadUtils.runOnMainThread {
             synchronized(stateLock) {
-                var type =
-                    if (state.snapshotRequests.isNotEmpty()) Screenshot.Type.SKP
-                    else state.screenshotSettings.type
-                if (type == state.contextMap[root.uniqueDrawingId]?.capturingType) {
-                    // We already have this rendering type, just return
+                var screenshotType = if (state.snapshotRequests.isNotEmpty()) {
+                    // snapshots only support SKP. If there is a snapshot request, use SKP.
+                    Screenshot.Type.SKP
+                }
+                else {
+                    state.screenshotSettings.type
+                }
+
+                if (screenshotType == state.captureContextMap[rootView.uniqueDrawingId]?.screenshotType) {
+                    // There is already a callback registered for this view and capture type.
                     return@runOnMainThread
                 }
 
+                // Stop the existing callback.
                 // The AutoClose implementation in ViewDebug will set the picture capture callback
                 // to null in the renderer. Do not call this after creating a new callback.
-                state.contextMap[root.uniqueDrawingId]?.handle?.close()
+                state.captureContextMap[rootView.uniqueDrawingId]?.callbackHandle?.close()
 
-                var handle = if (type == Screenshot.Type.SKP) {
+                var capturingCallbackHandle = if (screenshotType == Screenshot.Type.SKP) {
                     try {
-                        // If we get null the view is gone. It will be removed by the roots detector
-                        // later.
-                        registerSkpCallback(root, executor, os) ?: return@runOnMainThread
+                        // If we get null, it means the view is gone. It will be removed by the roots detector later.
+                        registerSkpCallback(rootView, captureExecutor, captureOutputStream) ?: return@runOnMainThread
                     }
                     catch (exception: Exception) {
                         connection.sendEvent {
-                            errorEventBuilder.message =
-                                "Unable to register listener for 3d mode images: ${exception.message}"
+                            errorEventBuilder.message = "Unable to register listener for 3d mode images: ${exception.message}"
                         }
-                        state.screenshotSettings =
-                            ScreenshotSettings(Screenshot.Type.BITMAP, state.screenshotSettings.scale)
+                        state.screenshotSettings = ScreenshotSettings(Screenshot.Type.BITMAP, state.screenshotSettings.scale)
                         null
                     }
-                } else null
+                }
+                else {
+                    null
+                }
 
-                if (handle == null) {
-                    handle = registerScreenshotCallback(root, executor, os)
-                    type = Screenshot.Type.BITMAP
+                if (capturingCallbackHandle == null) {
+                    capturingCallbackHandle = registerScreenshotCallback(rootView, captureExecutor, captureOutputStream)
+                    screenshotType = Screenshot.Type.BITMAP
                 }
 
                 // We might get multiple callbacks for the same view while still processing an earlier
-                // one. Let's avoid processing these in parallel to avoid confusion.
+                // one. Let's process them sequentially to avoid confusion.
                 val sequentialExecutor =
                     Executors.newSingleThreadExecutor { r -> ThreadUtils.newThread(r) }
 
-                state.contextMap[root.uniqueDrawingId] =
+                state.captureContextMap[rootView.uniqueDrawingId] =
                     CaptureContext(
-                        handle,
-                        type,
-                        root,
-                        executor,
-                        os,
+                        capturingCallbackHandle,
+                        screenshotType,
+                        rootView,
+                        captureExecutor,
+                        captureOutputStream,
                         sequentialExecutor,
                         isLastCapture = (!state.fetchContinuously)
                     )
@@ -404,24 +419,27 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
     }
 
     private fun registerSkpCallback(
-        root: View,
-        executor: Executor,
+        rootView: View,
+        captureExecutor: Executor,
         os: OutputStream
-    ) = if (Build.VERSION.SDK_INT > 32 ||
-        (Build.VERSION.SDK_INT == 32  && Build.VERSION.PREVIEW_SDK_INT > 0)) {
-        // This method is only accessible on T+ (or Q, but there it's broken).
-        ViewDebug::class.java.getDeclaredMethod(
-            "startRenderingCommandsCapture", View::class.java, Executor::class.java,
-            Callable::class.java
-        ).invoke(null, root, executor, Callable { os }) as AutoCloseable
-    } else {
-        SkiaQWorkaround.startRenderingCommandsCapture(root, executor) { os }
+    ): AutoCloseable? {
+        return if (Build.VERSION.SDK_INT > 32 || (Build.VERSION.SDK_INT == 32  && Build.VERSION.PREVIEW_SDK_INT > 0)) {
+            // This method is only accessible on T+ (or Q, but there it's broken).
+            ViewDebug::class.java.getDeclaredMethod(
+                "startRenderingCommandsCapture",
+                View::class.java,
+                Executor::class.java,
+                Callable::class.java
+            ).invoke(null, rootView, captureExecutor, Callable { os }) as AutoCloseable
+        } else {
+            SkiaQWorkaround.startRenderingCommandsCapture(rootView, captureExecutor) { os }
+        }
     }
 
     private fun registerScreenshotCallback(
-        root: View,
+        rootView: View,
         captureExecutor: Executor,
-        os: OutputStream
+        captureOutputStream: OutputStream
     ): AutoCloseable {
         val timer = Timer("ViewLayoutInspectorTimer")
         var stop = false
@@ -431,12 +449,12 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                     // If this is the lowest z-index window (the normal case) we can be more
                     // efficient because we don't need alpha information.
                     val bitmapType =
-                        if (root.uniqueDrawingId == rootsDetector.lastRootIds.firstOrNull())
+                        if (rootView.uniqueDrawingId == rootsDetector.lastRootIds.firstOrNull())
                             BitmapType.RGB_565 else BitmapType.ABGR_8888
-                    root.takeScreenshot(state.screenshotSettings.scale, bitmapType)
+                    rootView.takeScreenshot(state.screenshotSettings.scale, bitmapType)
                         ?.toByteArray()
                         ?.compress()
-                        ?.let { os.write(it) }
+                        ?.let { captureOutputStream.write(it) }
                 }
             }
         }
@@ -457,23 +475,26 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             timer.schedule(task, 500L)
 
             if (!stop) {
-                root.viewTreeObserver.registerFrameCommitCallback(callback)
+                rootView.viewTreeObserver.registerFrameCommitCallback(callback)
             }
         }
-        root.viewTreeObserver.registerFrameCommitCallback(callback)
+        rootView.viewTreeObserver.registerFrameCommitCallback(callback)
         return AutoCloseable {
-            root.viewTreeObserver.unregisterFrameCommitCallback(callback)
+            rootView.viewTreeObserver.unregisterFrameCommitCallback(callback)
             stop = true
         }
 
     }
 
-    private fun executeCapture(command: Runnable, os: ByteArrayOutputStream, root: View) {
+    /**
+     * @param doCapture Triggers a capture, the output of which is written into [captureOutputStream].
+     */
+    private fun executeCapture(doCapture: Runnable, captureOutputStream: ByteArrayOutputStream, rootView: View) {
         var snapshotRequest: SnapshotRequest?
         var context: CaptureContext
         var screenshotSettings: ScreenshotSettings
         synchronized(stateLock) {
-            snapshotRequest = state.snapshotRequests[root.uniqueDrawingId]
+            snapshotRequest = state.snapshotRequests[rootView.uniqueDrawingId]
             if (snapshotRequest?.state?.compareAndSet(
                     SnapshotRequest.State.NEW, SnapshotRequest.State.PROCESSING
                 ) != true
@@ -491,9 +512,9 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             // Note: We copy the context instead of returning it directly, to avoid rare
             // but potential threading issues as other threads can modify the context, e.g.
             // handling the stop fetch command.
-            context = state.contextMap[root.uniqueDrawingId]?.copy() ?: return
+            context = state.captureContextMap[rootView.uniqueDrawingId]?.copy() ?: return
             if (snapshotRequest == null && context.isLastCapture) {
-                state.contextMap.remove(root.uniqueDrawingId)
+                state.captureContextMap.remove(rootView.uniqueDrawingId)
             }
         }
 
@@ -510,22 +531,22 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
             // Triggers image fetch into `os`
             // We always have to do this even if we don't use the bytes it gives us,
             // because otherwise an internal queue backs up
-            command.run()
+            doCapture.run()
 
             // If we have a snapshot request, we can remove it from the request map now that
             // it's no longer needed to indicate that SKPs need to be collected.
             if (snapshotRequest != null) {
-                state.snapshotRequests.remove(root.uniqueDrawingId)
+                state.snapshotRequests.remove(rootView.uniqueDrawingId)
             }
 
             // This root is no longer visible. Ignore this update.
-            if (!rootsDetector.lastRootIds.contains(root.uniqueDrawingId)) {
+            if (!rootsDetector.lastRootIds.contains(rootView.uniqueDrawingId)) {
                 return@run
             }
-            sendLayoutEvent(root, context, screenshotSettings, os, snapshotResponse)
+            sendLayoutEvent(rootView, context, screenshotSettings, captureOutputStream, snapshotResponse)
         }
         if (snapshotResponse != null || context.isLastCapture) {
-            sendAllPropertiesEvent(root, snapshotResponse)
+            sendAllPropertiesEvent(rootView, snapshotResponse)
 
             // Send the updated fold state, in case we haven't been sending it continuously.
             foldSupport?.sendFoldStateEventNow()
@@ -720,7 +741,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
         }
 
         if (changed) {
-            updateAllViewChangeNotifications()
+            updateAllCapturingCallbacks()
             ThreadUtils.runOnMainThread {
                 for (rootView in getRootViews()) {
                     rootView.invalidate()
@@ -737,7 +758,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
 
         rootsDetector.stop()
         synchronized(stateLock) {
-            val contextMap = state.contextMap
+            val contextMap = state.captureContextMap
             for (context in contextMap.values) {
                 context.isLastCapture = true
             }
@@ -787,7 +808,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 }.result
             }
             // At this point we need to switch to capturing SKPs if we aren't already.
-            updateAllViewChangeNotifications()
+            updateAllCapturingCallbacks()
             ThreadUtils.runOnMainThread { roots.forEach { it.invalidate() } }
             val reply = LayoutInspectorViewProtocol.CaptureSnapshotResponse.newBuilder().apply {
                 windowRoots = WindowRootsEvent.newBuilder().apply {
@@ -796,7 +817,7 @@ class ViewLayoutInspector(connection: Connection, private val environment: Inspe
                 addAllWindowSnapshots(windowSnapshots.awaitAll())
             }.build()
             // And now we need to switch back to bitmaps, if we were before.
-            updateAllViewChangeNotifications()
+            updateAllCapturingCallbacks()
             callback.reply {
                 captureSnapshotResponse = reply
             }
