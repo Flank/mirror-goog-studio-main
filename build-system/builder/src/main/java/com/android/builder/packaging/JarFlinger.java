@@ -44,6 +44,8 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class JarFlinger implements JarCreator {
     private final ZipArchive zipArchive;
@@ -140,6 +142,29 @@ public class JarFlinger implements JarCreator {
     @Override
     public void addJar(@NonNull Path file) throws IOException {
         addJar(file, filter, null);
+    }
+
+    @Override
+    public void addJar(@NonNull InputStream inputJar) throws IOException {
+        try (ZipInputStream zis = new ZipInputStream(inputJar)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                // do not take directories
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String name = entry.getName();
+                if (filter != null && !filter.test(name)) {
+                    continue;
+                }
+                if (name.contains("../")) {
+                    throw new InvalidPathException(name, "Entry name contains invalid characters");
+                }
+                // b/246948010: Read all bytes and create a new input stream as ZipFlinger closes
+                // the stream once it is done reading entry.
+                addEntry(entry.getName(), new ByteArrayInputStream(zis.readAllBytes()));
+            }
+        }
     }
 
     @Override

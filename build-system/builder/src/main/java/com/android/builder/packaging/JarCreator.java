@@ -56,6 +56,8 @@ public interface JarCreator extends Closeable {
 
     void addJar(@NonNull Path file) throws IOException;
 
+    void addJar(@NonNull InputStream file) throws IOException;
+
     void addJar(
             @NonNull Path file,
             @Nullable Predicate<String> filterOverride,
