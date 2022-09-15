@@ -18,13 +18,9 @@ package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.builder.internal.packaging.ApkCreatorType
-import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
-import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
@@ -34,19 +30,10 @@ import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
 
-@RunWith(FilterableParameterized::class)
-class NoCompressTest(apkCreatorType: ApkCreatorType) {
-
-    companion object {
-        @Parameterized.Parameters(name = "apkCreatorType_{0}")
-        @JvmStatic
-        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
-    }
+class NoCompressTest {
 
     private val content = ByteArray(1000)
 
@@ -114,7 +101,7 @@ class NoCompressTest(apkCreatorType: ApkCreatorType) {
                 .withFile("src/main/res/raw/r_not_weird_chars2.ac", content)
                 .withFile("src/main/res/raw/r_not_weird_chars3.aa(b)c", content)
                 .withFile("src/main/res/raw/r_jpg.jpg", content)
-        ).setApkCreatorType(apkCreatorType)
+        )
         .create()
 
     @Test

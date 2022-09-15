@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.LoggedProcessOutputHandler
@@ -280,7 +279,7 @@ internal fun generateModuleDescriptor(
 
 @VisibleForTesting
 internal fun createJar(moduleInfoClass: File, inJars: List<File>, outputJar: File) {
-    JarCreatorFactory.make(outputJar.toPath()).use {
+    JarFlinger(outputJar.toPath(), null).use {
         it.setCompressionLevel(Deflater.NO_COMPRESSION)
         it.addFile(moduleInfoClass.name, moduleInfoClass.toPath())
         inJars.forEach { inJar ->

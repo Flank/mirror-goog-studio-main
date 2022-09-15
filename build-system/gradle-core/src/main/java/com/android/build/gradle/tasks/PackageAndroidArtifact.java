@@ -78,7 +78,6 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.files.SerializableChange;
 import com.android.builder.files.SerializableInputChanges;
 import com.android.builder.files.ZipCentralDirectory;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.DexPackagingMode;
 import com.android.builder.packaging.PackagingUtils;
@@ -407,14 +406,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         return new File(outputDirectory, variantOutput.getOutputFileName().get());
     }
 
-    protected ApkCreatorType apkCreatorType;
-
-    @NonNull
-    @Input
-    public ApkCreatorType getApkCreatorType() {
-        return apkCreatorType;
-    }
-
     @Override
     public void doTaskAction(@NonNull InputChanges changes) {
         if (!changes.isIncremental()) {
@@ -452,7 +443,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     .getAndroidResourcesChanged()
                     .set(changedResourceFiles.contains(new File(builtArtifact.getOutputFile())));
             parameter.getProjectPath().set(getProjectPath().get());
-            parameter.getApkCreatorType().set(apkCreatorType);
             parameter.getOutputFile().set(outputFile);
             parameter.getIncrementalFolder().set(getIncrementalFolder());
             if (getFeatureDexFolder().isEmpty()) {
@@ -708,9 +698,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         @NonNull
         public abstract Property<IncrementalPackagerBuilder.BuildType> getPackagerMode();
 
-        @NonNull
-        public abstract Property<ApkCreatorType> getApkCreatorType();
-
         @Optional
         public abstract RegularFileProperty getDependencyDataFile();
 
@@ -882,7 +869,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                         .withDeterministicEntryOrder(params.getIsDeterministicEntryOrder().get())
                         .withAcceptedAbis(getAcceptedAbis(params))
                         .withJniDebuggableBuild(params.getIsJniDebuggableBuild().get())
-                        .withApkCreatorType(params.getApkCreatorType().get())
                         .withChangedDexFiles(changedDex)
                         .withChangedJavaResources(changedJavaResources)
                         .withChangedAssets(changedAssets)
@@ -1315,8 +1301,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     creationConfig.getGlobal().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
                             : null;
-
-            packageAndroidArtifact.apkCreatorType = creationConfig.getGlobal().getApkCreatorType();
 
             packageAndroidArtifact.getCreatedBy().set(creationConfig.getGlobal().getCreatedBy());
 

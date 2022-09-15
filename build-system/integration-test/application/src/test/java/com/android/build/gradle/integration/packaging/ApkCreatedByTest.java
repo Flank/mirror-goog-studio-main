@@ -16,45 +16,25 @@
 
 package com.android.build.gradle.integration.packaging;
 
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.testutils.apk.Apk;
 import com.android.tools.build.apkzlib.zip.StoredEntry;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import java.io.InputStream;
 import java.util.Properties;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(FilterableParameterized.class)
 public class ApkCreatedByTest {
-
-    @FilterableParameterized.Parameters(name = "apkCreatorType_{0}")
-    public static ApkCreatorType[] params() {
-        return new ApkCreatorType[] {APK_Z_FILE_CREATOR, APK_FLINGER};
-    }
-
-    @FilterableParameterized.Parameter() public ApkCreatorType apkCreatorType;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
             .create();
-
-    @Before
-    public void setup() {
-        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
-    }
 
     @Test
     public void checkCreatedByInApk() throws Exception {

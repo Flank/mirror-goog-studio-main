@@ -18,20 +18,15 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -42,18 +37,9 @@ import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /** test for packaging of asset files. */
-@RunWith(FilterableParameterized.class)
 public class NativeSoPackagingTest {
-
-    @FilterableParameterized.Parameters(name = "apkCreatorType_{0}")
-    public static ApkCreatorType[] params() {
-        return new ApkCreatorType[] {APK_Z_FILE_CREATOR, APK_FLINGER};
-    }
-
-    @FilterableParameterized.Parameter() public ApkCreatorType apkCreatorType;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -114,8 +100,6 @@ public class NativeSoPackagingTest {
                         + "    targetProjectPath ':app'\n"
                         + "    targetVariant 'debug'\n"
                         + "}\n");
-
-        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.

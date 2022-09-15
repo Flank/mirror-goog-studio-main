@@ -17,37 +17,16 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.options.BooleanOption
-import com.android.builder.internal.packaging.ApkCreatorType
-import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
-import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.truth.PathSubject.assertThat
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 
-@RunWith(FilterableParameterized::class)
-class NoMappingTest(val apkCreatorType: ApkCreatorType) {
+class NoMappingTest {
 
     @Rule
     @JvmField
     val project = GradleTestProject.builder().fromTestProject("minify").create()
-
-    companion object {
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun data() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
-    }
-
-    @Before
-    fun updateGradleProperties() {
-        TestFileUtils.appendToFile(project.gradlePropertiesFile, getGradleProperties())
-    }
 
     @Test
     fun checkEmptyMapping() {
@@ -56,10 +35,5 @@ class NoMappingTest(val apkCreatorType: ApkCreatorType) {
         project.executor().run("assembleMinified")
         val mappingFile = project.file("build/outputs/mapping/minified/mapping.txt")
         assertThat(mappingFile).contains("com.android.tests.basic.Main -> com.android.tests.basic.Main")
-    }
-
-    private fun getGradleProperties() = when (apkCreatorType) {
-        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=false"
-        APK_FLINGER -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=true"
     }
 }

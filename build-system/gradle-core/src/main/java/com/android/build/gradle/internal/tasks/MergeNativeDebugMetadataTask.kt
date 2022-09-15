@@ -20,13 +20,12 @@ import com.android.SdkConstants.DOT_DBG
 import com.android.SdkConstants.DOT_SYM
 import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.dsl.NdkOptions.DebugSymbolLevel
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.ConfigurableFileCollection
@@ -93,7 +92,7 @@ abstract class MergeNativeDebugMetadataTask : NonIncrementalTask() {
         @VisibleForTesting
         internal fun mergeFiles(inputFiles: Collection<File>, outputFile: File) {
             FileUtils.deleteIfExists(outputFile)
-            JarCreatorFactory.make(jarFile = outputFile.toPath()).use { zipCreator ->
+            JarFlinger(outputFile.toPath(), null).use { zipCreator ->
                 inputFiles.forEach {
                     zipCreator.addFile("${it.parentFile.name}/${it.name}", it.toPath())
                 }

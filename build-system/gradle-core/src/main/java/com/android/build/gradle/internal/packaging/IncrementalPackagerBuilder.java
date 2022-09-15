@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.signing.SigningConfigData;
 import com.android.build.gradle.internal.signing.SigningConfigVersions;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.SerializableChange;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
@@ -122,8 +121,6 @@ public class IncrementalPackagerBuilder {
     private Set<String> abiFilters;
 
     @NonNull private BuildType buildType;
-
-    @NonNull private ApkCreatorType apkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
 
     @NonNull private Map<RelativeFile, FileStatus> changedDexFiles = new HashMap<>();
     @NonNull private Map<RelativeFile, FileStatus> changedJavaResources = new HashMap<>();
@@ -356,17 +353,6 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the {@link ApkCreatorType}
-     *
-     * @param apkCreatorType the {@link ApkCreatorType}
-     * @return {@code this} for use with fluent-style notation
-     */
-    public IncrementalPackagerBuilder withApkCreatorType(@NonNull ApkCreatorType apkCreatorType) {
-        this.apkCreatorType = apkCreatorType;
-        return this;
-    }
-
-    /**
      * Sets the changed dex files
      *
      * @param changedDexFiles the changed dex files
@@ -483,7 +469,6 @@ public class IncrementalPackagerBuilder {
                     deterministicEntryOrder,
                     enableV3Signing,
                     enableV4Signing,
-                    apkCreatorType,
                     changedDexFiles,
                     changedJavaResources,
                     changedAssets,

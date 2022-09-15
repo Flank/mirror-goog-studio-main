@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.feature
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.instrumentation.FramesComputationMode
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -29,11 +27,11 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.fromDisallowChanges
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -72,16 +70,11 @@ abstract class BundleAllClasses : NonIncrementalTask() {
     lateinit var modulePath: String
         private set
 
-    @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        private set
-
     public override fun doTaskAction() {
         workerExecutor.noIsolation().submit(BundleAllClassesWorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.inputDirs.from(inputDirs)
             it.inputJars.from(inputJars)
-            it.jarCreatorType.set(jarCreatorType)
             it.outputJar.set(outputJar)
         }
     }
@@ -91,7 +84,6 @@ abstract class BundleAllClasses : NonIncrementalTask() {
         abstract class Parameters : ProfileAwareWorkAction.Parameters() {
             abstract val inputDirs: ConfigurableFileCollection
             abstract val inputJars: ConfigurableFileCollection
-            abstract val jarCreatorType: Property<JarCreatorType>
             abstract val outputJar: RegularFileProperty
         }
 
@@ -112,10 +104,9 @@ abstract class BundleAllClasses : NonIncrementalTask() {
             }
             parameters.inputDirs.asFileTree.visit(collector)
 
-            JarCreatorFactory.make(
+            JarFlinger(
                 parameters.outputJar.asFile.get().toPath(),
-                null,
-                parameters.jarCreatorType.get()
+                null
             ).use { out ->
                 // Don't compress because compressing takes extra time, and this jar doesn't go
                 // into any APKs or AARs.
@@ -224,7 +215,6 @@ abstract class BundleAllClasses : NonIncrementalTask() {
                 }
             }
             task.modulePath = task.project.path
-            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }

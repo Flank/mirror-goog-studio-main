@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.SdkConstants
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.SdkConstants.FN_API_JAR
@@ -24,7 +23,7 @@ import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.SdkConstants.FN_RESOURCE_TEXT
 import com.android.SdkConstants.LIBS_FOLDER
 import com.android.builder.packaging.JarCreator
-import com.android.builder.packaging.JarMerger
+import com.android.builder.packaging.JarFlinger
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.rTxtToSymbolTable
 import com.android.ide.common.xml.AndroidManifestParser
@@ -94,11 +93,11 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
             generateRClassJar: Boolean
         ) {
             val ignoreFilter = if (forCompileUse) {
-                JarMerger.allIgnoringDuplicateResources()
+                JarCreator.allIgnoringDuplicateResources()
             } else {
-                JarMerger.CLASSES_ONLY
+                JarCreator.CLASSES_ONLY
             }
-            JarMerger(outputJar, ignoreFilter).use { outputApiJar ->
+            JarFlinger(outputJar, ignoreFilter).use { outputApiJar ->
                 // NO_COMPRESSION because the resulting jar isn't packaged into final APK or AAR
                 outputApiJar.setCompressionLevel(NO_COMPRESSION)
                 if (forCompileUse) {
@@ -118,15 +117,17 @@ abstract class AarToClassTransform : TransformAction<AarToClassTransform.Params>
 
         private const val LIBS_FOLDER_SLASH = "$LIBS_FOLDER/"
 
-        private fun ZipFile.copyAllClassesJarsTo(outputApiJar: JarMerger) {
+        private fun ZipFile.copyAllClassesJarsTo(outputApiJar: JarCreator) {
             entries()
                 .asSequence()
                 .filter(::isClassesJar)
                 .forEach { copyEntryTo(it, outputApiJar) }
         }
 
-        private fun ZipFile.copyEntryTo(entry: ZipEntry, outputApiJar: JarMerger) {
-            getInputStream(entry).use { outputApiJar.addJar(it) }
+        private fun ZipFile.copyEntryTo(entry: ZipEntry, outputApiJar: JarCreator) {
+            getInputStream(entry).use {
+                outputApiJar.addJar(it)
+            }
         }
 
         private fun generateRClassJarFromRTxt(

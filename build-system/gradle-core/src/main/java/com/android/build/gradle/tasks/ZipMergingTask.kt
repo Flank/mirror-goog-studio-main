@@ -18,18 +18,15 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.utils.FileUtils
-import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -56,15 +53,10 @@ abstract class ZipMergingTask : NonIncrementalTask() {
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    @VisibleForTesting
-    @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        internal set
-
     public override fun doTaskAction() {
         val destinationFile = outputFile.get().asFile
         FileUtils.cleanOutputDir(destinationFile.parentFile)
-        val usedNamesPredicate = object:Predicate<String> {
+        val usedNamesPredicate = object : Predicate<String> {
             val usedNames = mutableSetOf<String>()
 
             override fun test(t: String): Boolean {
@@ -72,10 +64,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             }
         }
 
-        JarCreatorFactory.make(
+        JarFlinger(
             destinationFile.toPath(),
-            usedNamesPredicate,
-            jarCreatorType
+            usedNamesPredicate
         ).use {
             // Don't compress because compressing takes extra time, and this jar doesn't go into any
             // APKs or AARs.
@@ -123,7 +114,6 @@ abstract class ZipMergingTask : NonIncrementalTask() {
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )
-            task.jarCreatorType = creationConfig.global.jarCreatorType
         }
     }
 }

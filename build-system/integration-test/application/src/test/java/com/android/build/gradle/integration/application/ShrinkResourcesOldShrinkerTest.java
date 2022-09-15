@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.testutils.truth.ZipFileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
@@ -30,11 +28,9 @@ import static org.junit.Assert.assertTrue;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.shrinker.DummyContent;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -72,26 +68,21 @@ public class ShrinkResourcesOldShrinkerTest {
                     .fromTestProject("shrink")
                     .create();
 
-    @Parameterized.Parameters(name = "bundle={0} apkCreatorType={1} useRTxt={2}")
+    @Parameterized.Parameters(name = "bundle={0} useRTxt={1}")
     public static Iterable<Object[]> data() {
         return ImmutableList.of(
                 // R classes and old resource shrinker.
-                new Object[] {ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, false},
-                new Object[] {ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, false},
-                new Object[] {ApkPipeline.NO_BUNDLE, APK_FLINGER, false},
+                new Object[] {ApkPipeline.NO_BUNDLE, false},
+                new Object[] {ApkPipeline.BUNDLE, false},
                 // R text files and old resource shrinker.
-                new Object[] {ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR, true},
-                new Object[] {ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR, true},
-                new Object[] {ApkPipeline.NO_BUNDLE, APK_FLINGER, true});
+                new Object[] {ApkPipeline.NO_BUNDLE, true},
+                new Object[] {ApkPipeline.BUNDLE, true});
     }
 
     @Parameterized.Parameter
     public ApkPipeline apkPipeline;
 
     @Parameterized.Parameter(1)
-    public ApkCreatorType apkCreatorType;
-
-    @Parameterized.Parameter(2)
     public Boolean useRTxt;
 
     private enum ApkPipeline {
@@ -197,8 +188,6 @@ public class ShrinkResourcesOldShrinkerTest {
 
     @Test
     public void checkShrinkResources() throws Exception {
-        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
-
         project.executor()
                 .with(BooleanOption.ENABLE_R_TXT_RESOURCE_SHRINKING, useRTxt)
                 .with(BooleanOption.ENABLE_NEW_RESOURCE_SHRINKER, false)

@@ -19,12 +19,10 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants.FN_ANDROID_MANIFEST_XML
 import com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY
 import com.android.SdkConstants.FN_R_DEF_TXT
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.res.runAapt2Compile
-import com.android.build.gradle.internal.services.getErrorFormatMode
-import com.android.build.gradle.internal.services.registerAaptService
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.builder.packaging.JarCreator
+import com.android.builder.packaging.JarFlinger
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -125,13 +123,14 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
                 .log(LogLevel.INFO, "Failed to parse resource in AAR $inputAar", it)
         }
 
-        JarCreatorFactory.make(jarFile = outputZip.toPath()).use { out: JarCreator ->
+        JarFlinger(outputZip.toPath(), null).use { out ->
             out.setCompressionLevel(Deflater.NO_COMPRESSION)
             val symbolTableBuilder = SymbolTable.builder().tablePackage(packageName)
             for (entry in inputAar.entries()) {
                 when {
                     entry.isDirectory -> {
                     }
+
                     entry.name.startsWith("res/") -> {
                         // TODO(b/139525286): Performance: Could the defined symbol table be
                         //  directly read from the proto Resource table for namespaced AARs?
@@ -160,6 +159,7 @@ abstract class AutoNamespacePreProcessTransform : TransformAction<AutoNamespaceP
                             }
                         }
                     }
+
                     else -> {
                         out.addEntry(entry.name, inputAar.getInputStream(entry))
                     }

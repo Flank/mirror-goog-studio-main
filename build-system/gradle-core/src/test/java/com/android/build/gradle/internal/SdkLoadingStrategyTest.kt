@@ -19,9 +19,9 @@ package com.android.build.gradle.internal
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_CORE_FOR_SYSTEM_MODULES
 import com.android.build.gradle.internal.fixtures.FakeSyncIssueReporter
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.internal.compiler.RenderScriptProcessor
+import com.android.builder.packaging.JarFlinger
 import com.android.prefs.AndroidLocationsSingleton
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
@@ -365,7 +365,7 @@ class SdkLoadingStrategyTest {
     private fun createCoreForSystemModulesJar(jarFile: Path, platformApiLevel: Int) {
         // A empty fake jar represents core-for-system-modules.jar available from android sdk 30
         if (platformApiLevel >= 30) {
-            JarCreatorFactory.make(jarFile).use {  }
+            JarFlinger(jarFile, null).use { }
         }
     }
 

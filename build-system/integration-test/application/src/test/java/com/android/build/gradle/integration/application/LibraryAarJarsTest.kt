@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Zip
@@ -151,7 +150,6 @@ class LibraryAarJarsTest {
             jars["classes.jar"]!!,
             excludes,
             null,
-            JarCreatorType.JAR_FLINGER,
             Deflater.BEST_SPEED
         )
 

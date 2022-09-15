@@ -25,7 +25,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.util.zip.ZipEntry
-import java.util.zip.ZipException
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 import kotlin.test.assertFailsWith
@@ -82,7 +81,7 @@ class AarToClassTransformTest {
         val outputJar = temporaryFolder.newFolder().toPath().resolve("output.jar")
 
         ZipFile(aar).use { inputAar ->
-            val exception = assertFailsWith<ZipException> {
+            val exception = assertFailsWith<IllegalStateException> {
                 AarToClassTransform.mergeJars(
                     outputJar = outputJar,
                     inputAar = inputAar,

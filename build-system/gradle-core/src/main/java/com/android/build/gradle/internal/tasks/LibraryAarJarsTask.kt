@@ -20,15 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.android.builder.packaging.JarCreator
-import com.android.builder.packaging.JarMerger
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.tools.lint.typedefs.TypedefRemover
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
@@ -97,9 +94,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
     abstract val localJarsLocation: DirectoryProperty
 
     @get:Input
-    abstract val jarCreatorType: Property<JarCreatorType>
-
-    @get:Input
     abstract val debugBuild: Property<Boolean>
 
     override fun doTaskAction() {
@@ -130,7 +124,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             } else {
                 null
             },
-            jarCreatorType.get(),
             if (debugBuild.get()) Deflater.BEST_SPEED else null
         )
     }
@@ -158,7 +151,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             toFile: File,
             filter: Predicate<String>,
             typedefRemover: JarCreator.Transformer?,
-            jarCreatorType: JarCreatorType,
             compressionLevel: Int?) {
 
             // process main scope.
@@ -168,19 +160,17 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                 toFile,
                 filter,
                 typedefRemover,
-                jarCreatorType,
                 compressionLevel
             )
 
             // process local scope
-            processLocalJars(localJars, localJarsLocation, jarCreatorType, compressionLevel)
+            processLocalJars(localJars, localJarsLocation, compressionLevel)
         }
 
 
         private fun processLocalJars(
             inputs: MutableSet<File>,
             localJarsLocation: File,
-            jarCreatorType: JarCreatorType,
             compressionLevel: Int?
         ) {
 
@@ -198,22 +188,21 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             for (jar in jarInputs) {
                 // we need to copy the jars but only take the class files as the resources have
                 // been merged into the main jar.
-                JarCreatorFactory.make(
+                JarFlinger(
                     File(localJarsLocation, jar.name).toPath(),
-                    JarMerger.CLASSES_ONLY,
-                    jarCreatorType
+                    JarCreator.CLASSES_ONLY
                 ).use { jarCreator ->
                     compressionLevel?.let { jarCreator.setCompressionLevel(it) }
-                    jarCreator.addJar(jar.toPath()) }
+                    jarCreator.addJar(jar.toPath())
+                }
             }
 
             // now handle the folders.
             if (dirInputs.isNotEmpty()) {
-                JarCreatorFactory.make(
+                JarFlinger(
                     File(localJarsLocation, "otherclasses.jar").toPath(),
-                    JarMerger.CLASSES_ONLY,
-                    jarCreatorType
-                ).use {jarCreator ->
+                    JarCreator.CLASSES_ONLY
+                ).use { jarCreator ->
                     for (dir in dirInputs) {
                         jarCreator.addDirectory(dir.toPath())
                     }
@@ -227,16 +216,12 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             toFile: File,
             filter: Predicate<String>,
             typedefRemover: JarCreator.Transformer?,
-            jarCreatorType: JarCreatorType,
             compressionLevel: Int?
         ) {
-            val filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter)
+            val filterAndOnlyClasses = JarCreator.CLASSES_ONLY.and(filter)
 
-            JarCreatorFactory.make(
-                jarFile = toFile.toPath(),
-                type = jarCreatorType
-            ).use { jarCreator ->
-                compressionLevel?.let { jarCreator.setCompressionLevel(it) }
+            JarFlinger(toFile.toPath(), null).use { jarFlinger ->
+                compressionLevel?.let { jarFlinger.setCompressionLevel(it) }
                 // Merge only class files on CLASS type inputs
                 for (input in classFiles) {
                     // Skip if file doesn't exist
@@ -245,10 +230,11 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     }
 
                     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
-                        jarCreator.addJar(input.toPath(), filterAndOnlyClasses, null)
+                        jarFlinger.addJar(input.toPath(), filterAndOnlyClasses, null)
                     } else {
-                        jarCreator.addDirectory(
-                            input.toPath(), filterAndOnlyClasses, typedefRemover, null)
+                        jarFlinger.addDirectory(
+                            input.toPath(), filterAndOnlyClasses, typedefRemover, null
+                        )
                     }
                 }
 
@@ -259,10 +245,11 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
                     }
 
                     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
-                        jarCreator.addJar(input.toPath(), filter, null)
+                        jarFlinger.addJar(input.toPath(), filter, null)
                     } else {
-                        jarCreator.addDirectory(
-                            input.toPath(), filter, typedefRemover, null)
+                        jarFlinger.addDirectory(
+                            input.toPath(), filter, typedefRemover, null
+                        )
                     }
                 }
             }
@@ -321,7 +308,6 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
             )
 
             task.namespace.setDisallowChanges(creationConfig.namespace)
-            task.jarCreatorType.setDisallowChanges(creationConfig.global.jarCreatorType)
             task.debugBuild.setDisallowChanges(creationConfig.debuggable)
 
             /*

@@ -16,16 +16,35 @@
 
 package com.android.builder.packaging;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public interface JarCreator extends Closeable {
+
+    Predicate<String> CLASSES_ONLY = archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
+    Predicate<String> EXCLUDE_CLASSES =
+            archivePath -> !archivePath.endsWith(SdkConstants.DOT_CLASS);
+
+    /**
+     * A filter that keeps everything but ignores duplicate resources.
+     *
+     * <p>Stateful, hence a factory method rather than an instance.
+     */
+    static Predicate<String> allIgnoringDuplicateResources() {
+        // Keep track of resources to avoid failing on collisions.
+        Set<String> resources = new HashSet<>();
+        return archivePath ->
+                archivePath.endsWith(SdkConstants.DOT_CLASS) || resources.add(archivePath);
+    }
 
     interface Transformer {
         /**

@@ -23,8 +23,6 @@ import com.android.build.gradle.internal.component.ComponentCreationConfig
 import com.android.build.gradle.internal.databinding.DataBindingExcludeDelegate
 import com.android.build.gradle.internal.databinding.configureFrom
 import com.android.build.gradle.internal.dependency.getClassesDirFormat
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES_DIR
@@ -38,7 +36,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.toSerializable
 import com.android.builder.dexing.isJarFile
 import com.android.builder.files.SerializableFileChanges
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -81,9 +79,6 @@ interface BundleLibraryClassesInputs {
     @get:Nested
     @get:Optional
     val dataBindingExcludeDelegate: Property<DataBindingExcludeDelegate>
-
-    @get:Input
-    val jarCreatorType: Property<JarCreatorType>
 }
 
 private fun BundleLibraryClassesInputs.configure(
@@ -99,7 +94,6 @@ private fun BundleLibraryClassesInputs.configure(
         )
     }
     this.packageRClass.setDisallowChanges(packageRClass)
-    jarCreatorType.setDisallowChanges(creationConfig.global.jarCreatorType)
 
     dataBindingExcludeDelegate.configureFrom(creationConfig)
 }
@@ -125,7 +119,6 @@ private fun BundleLibraryClassesInputs.configureWorkerActionParams(
     params.incremental.set(inputChanges?.isIncremental ?: false)
     params.inputChanges.set(incrementalChanges.toSerializable())
     params.packageRClass.set(packageRClass)
-    params.jarCreatorType.set(jarCreatorType)
 }
 
 /**
@@ -295,7 +288,6 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
         abstract val incremental: Property<Boolean>
         abstract val inputChanges: Property<SerializableFileChanges>
         abstract val packageRClass: Property<Boolean>
-        abstract val jarCreatorType: Property<JarCreatorType>
     }
 
     override fun run() {
@@ -314,7 +306,7 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
 
 
         if (isJarFile(parameters.output.get())) {
-            zipFilesNonIncrementally(parameters.input.files, parameters.output.get(), predicate, parameters.jarCreatorType.get())
+            zipFilesNonIncrementally(parameters.input.files, parameters.output.get(), predicate)
         } else {
             when (getClassesDirFormat(parameters.input.files)) {
                 CONTAINS_SINGLE_JAR -> {
@@ -324,7 +316,6 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
                         parameters.input.files,
                         parameters.output.get().resolve(FN_CLASSES_JAR),
                         predicate,
-                        parameters.jarCreatorType.get()
                     )
                 }
                 CONTAINS_CLASS_FILES_ONLY -> {
@@ -362,11 +353,10 @@ abstract class BundleLibraryClassesWorkAction : ProfileAwareWorkAction<BundleLib
         input: Set<File>,
         outputJar: File,
         filter: Predicate<String>,
-        jarCreatorType: JarCreatorType
     ) {
         FileUtils.deleteIfExists(outputJar)
         FileUtils.mkdirs(outputJar.parentFile)
-        JarCreatorFactory.make(outputJar.toPath(), filter, jarCreatorType).use { jarCreator ->
+        JarFlinger(outputJar.toPath(), filter).use { jarCreator ->
             // Don't compress because compressing takes extra time, and this jar doesn't go into any
             // APKs or AARs
             jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)

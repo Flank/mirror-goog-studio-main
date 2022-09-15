@@ -16,39 +16,18 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.internal.packaging.ApkCreatorType;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /** test for building a test APK for a library module with dependencies. */
-@RunWith(FilterableParameterized.class)
 public class TestLibraryWithDep {
-
-    @FilterableParameterized.Parameters(name = "apkCreatorType_{0}")
-    public static ApkCreatorType[] params() {
-        return new ApkCreatorType[] {APK_Z_FILE_CREATOR, APK_FLINGER};
-    }
-
-    @FilterableParameterized.Parameter public ApkCreatorType apkCreatorType;
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libTestDep").create();
-
-    @Before
-    public void setup() {
-        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
-    }
 
     @Test
     public void checkLibDependencyJarIsPackaged() throws Exception {

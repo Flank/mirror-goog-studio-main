@@ -20,17 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.AabSubject.Companion.assertThat
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
-import com.android.build.gradle.options.BooleanOption
-import com.android.builder.internal.packaging.ApkCreatorType
-import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
-import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
@@ -41,13 +36,10 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.truth.Truth
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.nio.file.Files
 import kotlin.test.fail
 
@@ -69,19 +61,7 @@ import kotlin.test.fail
  *      library2  depends on  library1
  * </pre>
  */
-@RunWith(FilterableParameterized::class)
-class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
-
-    companion object {
-
-        @JvmStatic
-        @Parameterized.Parameters(name = "{0}")
-        fun getConfigurations(): Collection<Array<Enum<*>>> =
-            listOf(
-                arrayOf(APK_Z_FILE_CREATOR),
-                arrayOf(APK_FLINGER),
-            )
-    }
+class MinifyFeaturesTest {
 
     private val otherFeature2GradlePath = ":otherFeature2"
 
@@ -568,11 +548,6 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @Before
-    fun updateGradleProperties() {
-        TestFileUtils.appendToFile(project.gradlePropertiesFile, getGradleProperties())
-    }
-
     // TODO(b/205264185): To re-enable
     @Ignore
     @Test
@@ -881,10 +856,5 @@ class MinifyFeaturesTest(val apkCreatorType: ApkCreatorType) {
                 ?: fail("Failed to get output model for $baseGradlePath module")
 
         return outputAppModel.getOutputByName(variantName)
-    }
-
-    private fun getGradleProperties() = when (apkCreatorType) {
-        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=false"
-        APK_FLINGER -> "${BooleanOption.USE_NEW_APK_CREATOR.propertyName}=true"
     }
 }

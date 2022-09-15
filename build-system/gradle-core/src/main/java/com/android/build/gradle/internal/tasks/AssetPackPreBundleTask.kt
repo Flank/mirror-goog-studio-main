@@ -20,13 +20,12 @@ import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.build.api.artifact.impl.ArtifactsImpl
 import com.android.build.gradle.internal.component.VariantCreationConfig
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarCreator
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -162,7 +161,7 @@ abstract class AssetPackPreBundleTaskRunnable :
     override fun run() {
         parameters.packDir.asFile.get().mkdirs()
         FileUtils.cleanOutputDir(parameters.packDir.asFile.get())
-        val jarCreator = JarCreatorFactory.make(jarFile = parameters.packFile.asFile.get().toPath())
+        val jarCreator = JarFlinger(parameters.packFile.asFile.get().toPath(), null)
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
@@ -178,7 +177,11 @@ abstract class AssetPackPreBundleTaskRunnable :
                 )
             }
 
-            it.addJar(parameters.manifestFile.asFile.get().toPath(), Predicate { file -> file.endsWith(SdkConstants.FN_ANDROID_MANIFEST_XML) }, ManifestRelocator())
+            it.addJar(
+                parameters.manifestFile.asFile.get().toPath(),
+                Predicate { file -> file.endsWith(SdkConstants.FN_ANDROID_MANIFEST_XML) },
+                ManifestRelocator()
+            )
         }
     }
 

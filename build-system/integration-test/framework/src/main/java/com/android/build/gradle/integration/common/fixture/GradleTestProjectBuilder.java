@@ -26,8 +26,6 @@ import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.testutils.MavenRepoGenerator;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
@@ -373,19 +371,6 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder addGradleProperties(@NonNull String property) {
         gradleProperties.add(property);
         return this;
-    }
-
-    public GradleTestProjectBuilder setApkCreatorType(@NonNull ApkCreatorType apkCreatorType) {
-        switch (apkCreatorType) {
-            case APK_Z_FILE_CREATOR:
-                gradleProperties.add(
-                        BooleanOption.USE_NEW_APK_CREATOR.getPropertyName() + "=false");
-                return this;
-            case APK_FLINGER:
-                gradleProperties.add(BooleanOption.USE_NEW_APK_CREATOR.getPropertyName() + "=true");
-                return this;
-        }
-        throw new IllegalStateException();
     }
 
     /**

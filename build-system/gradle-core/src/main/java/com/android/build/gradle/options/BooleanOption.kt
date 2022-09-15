@@ -207,11 +207,6 @@ enum class BooleanOption(
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
-
-    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
-
-    USE_NEW_APK_CREATOR("android.useNewApkCreator", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
-
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
@@ -495,6 +490,18 @@ enum class BooleanOption(
     @Suppress("unused")
     R8_FAIL_ON_MISSING_CLASSES(
         "android.r8.failOnMissingClasses",
+        true,
+        FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
+    USE_NEW_JAR_CREATOR(
+        "android.useNewJarCreator",
+        true,
+        FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
+    USE_NEW_APK_CREATOR(
+        "android.useNewApkCreator",
         true,
         FeatureStage.Enforced(Version.VERSION_8_0)
     ),

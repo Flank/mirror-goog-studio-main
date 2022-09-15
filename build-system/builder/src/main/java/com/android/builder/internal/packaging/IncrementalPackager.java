@@ -30,7 +30,6 @@ import com.android.builder.files.SerializableChange;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zfile.ApkCreator;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
-import com.android.zipflinger.ZipArchive;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -126,46 +125,20 @@ public class IncrementalPackager implements Closeable {
     @NonNull
     private ApkCreator getApkCreator() {
         if (mApkCreator == null) {
-            switch (mApkCreatorType) {
-                case APK_Z_FILE_CREATOR:
-                    Preconditions.checkState(
-                            !mEnableV3Signing,
-                            ""
-                                    + "enableV3Signing cannot be true unless "
-                                    + "android.useNewApkCreator is also true.");
-                    Preconditions.checkState(
-                            !mEnableV4Signing,
-                            ""
-                                    + "enableV4Signing cannot be true unless "
-                                    + "android.useNewApkCreator is also true.");
-                    mApkCreator = mApkCreatorFactory.make(mCreationData);
-                    break;
-                case APK_FLINGER:
-                    int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : DEFAULT_COMPRESSION;
-                    mApkCreator =
-                            new ApkFlinger(
-                                    mCreationData,
-                                    compressionLevel,
-                                    mDeterministicEntryOrder,
-                                    mEnableV3Signing,
-                                    mEnableV4Signing);
-                    break;
-                default:
-                    throw new RuntimeException("unexpected apkCreatorType");
-            }
+            int compressionLevel = mIsDebuggableBuild ? BEST_SPEED : DEFAULT_COMPRESSION;
+            mApkCreator =
+                    new ApkFlinger(
+                            mCreationData,
+                            compressionLevel,
+                            mDeterministicEntryOrder,
+                            mEnableV3Signing,
+                            mEnableV4Signing);
         }
         return mApkCreator;
     }
 
     /** False until {@link IncrementalPackager::close} method called, and true thereafter. */
     private boolean mClosed;
-
-    /**
-     * APK creator type. We make calls differently depending on {@link ApkCreatorType} because
-     * {@link ZipArchive} requires that existing entries be deleted before an entry with the same
-     * path is added.
-     */
-    @NonNull private final ApkCreatorType mApkCreatorType;
 
     /**
      * Class that manages the renaming of dex files.
@@ -209,7 +182,6 @@ public class IncrementalPackager implements Closeable {
      * @param deterministicEntryOrder will APK entries be ordered deterministically?
      * @param enableV3Signing is v3 signing enabled?
      * @param enableV4Signing is v4 signing enabled?
-     * @param apkCreatorType the {@link ApkCreatorType}
      * @param changedDexFiles the changed dex files
      * @param changedJavaResources the changed java resources
      * @param changedAssets the changed assets
@@ -230,7 +202,6 @@ public class IncrementalPackager implements Closeable {
             boolean deterministicEntryOrder,
             boolean enableV3Signing,
             boolean enableV4Signing,
-            @NonNull ApkCreatorType apkCreatorType,
             @NonNull Map<RelativeFile, FileStatus> changedDexFiles,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
             @NonNull List<SerializableChange> changedAssets,
@@ -253,7 +224,6 @@ public class IncrementalPackager implements Closeable {
         mEnableV3Signing = enableV3Signing;
         mEnableV4Signing = enableV4Signing;
         mClosed = false;
-        mApkCreatorType = apkCreatorType;
         mChangedDexFiles = changedDexFiles;
         mChangedJavaResources = changedJavaResources;
         mChangedAssets = changedAssets;
@@ -312,11 +282,9 @@ public class IncrementalPackager implements Closeable {
             @NonNull Collection<SerializableChange> changes) throws IOException {
         Preconditions.checkState(!mClosed, "IncrementalPackager has already been closed.");
 
-        // We first delete all REMOVED (and maybe CHANGED) jars
+        // We first delete all REMOVED and  CHANGED jars
         Predicate<SerializableChange> deletePredicate =
-                mApkCreatorType == ApkCreatorType.APK_FLINGER
-                        ? it -> it.getFileStatus() == REMOVED || it.getFileStatus() == CHANGED
-                        : it -> it.getFileStatus() == REMOVED;
+                it -> it.getFileStatus() == REMOVED || it.getFileStatus() == CHANGED;
 
         Iterable<String> deletedJars =
                 changes.stream()
@@ -406,9 +374,7 @@ public class IncrementalPackager implements Closeable {
         Preconditions.checkState(!mClosed, "IncrementalPackager has already been closed.");
 
         Predicate<PackagedFileUpdate> deletePredicate =
-                mApkCreatorType == ApkCreatorType.APK_FLINGER
-                        ? (p) -> p.getStatus() == REMOVED || p.getStatus() == CHANGED
-                        : (p) -> p.getStatus() == REMOVED;
+                (p) -> p.getStatus() == REMOVED || p.getStatus() == CHANGED;
 
         Iterable<String> deletedPaths =
                 updates.stream()

@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import org.gradle.api.provider.Property
@@ -54,7 +53,6 @@ class BundleLibraryJavaResRunnableTest {
                 return object : Params() {
                     override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
                     override val inputs = FakeConfigurableFileCollection(input)
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
                     override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
@@ -87,7 +85,6 @@ class BundleLibraryJavaResRunnableTest {
                 return object : Params() {
                     override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
                     override val inputs = FakeConfigurableFileCollection(input)
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
                     override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
@@ -123,7 +120,6 @@ class BundleLibraryJavaResRunnableTest {
                 return object : Params() {
                     override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
                     override val inputs = FakeConfigurableFileCollection(inputJar)
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
                     override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")
@@ -157,7 +153,6 @@ class BundleLibraryJavaResRunnableTest {
                 return object : Params() {
                     override val output = FakeObjectFactory.factory.fileProperty().fileValue(output)
                     override val inputs = FakeConfigurableFileCollection(inputDirWithJar)
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val compressionLevel = FakeGradleProperty(Deflater.BEST_SPEED)
                     override val projectPath = FakeGradleProperty("project")
                     override val taskOwner = FakeGradleProperty("task")

@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.PathSubject.assertThat
@@ -71,7 +70,6 @@ class MergeClassesTaskTest {
                 return object : Parameters() {
                     override val inputFiles = FakeConfigurableFileCollection(inputFiles)
                     override val outputFile = FakeObjectFactory.factory.fileProperty().fileValue(outputFile)
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val projectPath = FakeGradleProperty("projectName")
                     override val taskOwner = FakeGradleProperty("taskOwner")
                     override val workerKey = FakeGradleProperty("workerKey")

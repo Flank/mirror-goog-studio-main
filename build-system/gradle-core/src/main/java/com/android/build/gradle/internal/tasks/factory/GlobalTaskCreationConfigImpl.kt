@@ -31,7 +31,6 @@ import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.dsl.TestOptions
-import com.android.build.api.transform.Transform
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.SettingsOptions
@@ -39,7 +38,6 @@ import com.android.build.gradle.internal.dsl.CommonExtensionImpl
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
 import com.android.build.gradle.internal.instrumentation.ASM_API_VERSION_FOR_INSTRUMENTATION
 import com.android.build.gradle.internal.lint.getLocalCustomLintChecks
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.BaseServices
@@ -47,7 +45,6 @@ import com.android.build.gradle.internal.services.VersionedSdkLoaderService
 import com.android.build.gradle.internal.services.getBuildService
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.LibraryRequest
-import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.repository.Revision
@@ -233,18 +230,4 @@ class GlobalTaskCreationConfigImpl(
             .get()
             .versionedNdkHandler(compileSdkHashString, ndkVersion, ndkPath)
     }
-
-    override val jarCreatorType: JarCreatorType
-        get() = if (services.projectOptions.get(BooleanOption.USE_NEW_JAR_CREATOR)) {
-            JarCreatorType.JAR_FLINGER
-        } else {
-            JarCreatorType.JAR_MERGER
-        }
-
-    override val apkCreatorType: ApkCreatorType
-        get() = if (services.projectOptions.get(BooleanOption.USE_NEW_APK_CREATOR)) {
-            ApkCreatorType.APK_FLINGER
-        } else {
-            ApkCreatorType.APK_Z_FILE_CREATOR
-        }
 }

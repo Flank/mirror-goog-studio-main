@@ -21,8 +21,7 @@ import com.android.build.gradle.internal.component.ApkCreationConfig
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.packaging.JarMerger
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -76,7 +75,7 @@ abstract class ApkZipPackagingTask : NonIncrementalTask() {
 
             val sourceFiles = parameters.apkFolder.asFile.get().listFiles() ?: emptyArray<File>()
 
-            JarMerger(parameters.zipOutputFile.asFile.get().toPath()).use { jar ->
+            JarFlinger(parameters.zipOutputFile.asFile.get().toPath()).use { jar ->
                 for (sourceFile in sourceFiles) {
                     jar.addFile(sourceFile.name, sourceFile.toPath())
                 }

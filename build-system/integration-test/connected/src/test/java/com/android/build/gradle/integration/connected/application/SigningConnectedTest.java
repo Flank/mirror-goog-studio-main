@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.integration.connected.application;
 
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
-import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.DSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.ECDSA;
 import static com.android.tools.build.apkzlib.sign.SignatureAlgorithm.RSA;
@@ -30,11 +28,9 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.AbiMatcher;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
-import com.android.build.gradle.integration.common.utils.GradleTestProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.connected.utils.EmulatorUtils;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.ddmlib.IDevice;
 import com.android.tools.build.apkzlib.sign.DigestAlgorithm;
 import com.google.common.io.Resources;
@@ -66,9 +62,6 @@ public class SigningConnectedTest {
     @Parameterized.Parameter(2)
     public int minSdkVersion;
 
-    @Parameterized.Parameter(3)
-    public ApkCreatorType apkCreatorType;
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -78,34 +71,17 @@ public class SigningConnectedTest {
     @Rule public Adb adb = new Adb();
     @ClassRule public static final ExternalResource EMULATOR = EmulatorUtils.getEmulator();
 
-    @Parameterized.Parameters(name = "{0}, {3}")
+    @Parameterized.Parameters(name = "{0}, {2}")
     public static Collection<Object[]> data() {
         return Arrays.asList(
-                new Object[] {
-                    "rsa_keystore.jks", "CERT.RSA", max(RSA.minSdkVersion, 9), APK_FLINGER
-                },
-                new Object[] {
-                    "rsa_keystore.jks", "CERT.RSA", max(RSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
-                },
-                new Object[] {
-                    "dsa_keystore.jks", "CERT.DSA", max(DSA.minSdkVersion, 9), APK_FLINGER
-                },
-                new Object[] {
-                    "dsa_keystore.jks", "CERT.DSA", max(DSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
-                },
-                new Object[] {
-                    "ec_keystore.jks", "CERT.EC", max(ECDSA.minSdkVersion, 9), APK_FLINGER
-                },
-                new Object[] {
-                    "ec_keystore.jks", "CERT.EC", max(ECDSA.minSdkVersion, 9), APK_Z_FILE_CREATOR
-                });
+                new Object[] {"rsa_keystore.jks", "CERT.RSA", max(RSA.minSdkVersion, 9)},
+                new Object[] {"dsa_keystore.jks", "CERT.DSA", max(DSA.minSdkVersion, 9)},
+                new Object[] {"ec_keystore.jks", "CERT.EC", max(ECDSA.minSdkVersion, 9)});
     }
 
     @Before
     public void setUp() throws Exception {
         createKeystoreFile(keystoreName, project.file("the.keystore"));
-
-        GradleTestProjectUtils.setApkCreatorType(project, apkCreatorType);
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

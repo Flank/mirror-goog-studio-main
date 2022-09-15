@@ -18,16 +18,12 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
-import com.android.builder.internal.packaging.ApkCreatorType
-import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
-import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
@@ -35,24 +31,14 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
 
-@RunWith(FilterableParameterized::class)
-class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
-
-    companion object {
-        @Parameterized.Parameters(name = "apkCreatorType_{0}")
-        @JvmStatic
-        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
-    }
+class MergeResourcesTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("projectWithModules")
-        .setApkCreatorType(apkCreatorType)
         .create()
 
     @Test

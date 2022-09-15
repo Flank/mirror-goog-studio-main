@@ -20,7 +20,6 @@ import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeNoOpAnalyticsService
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.profile.AnalyticsService
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.provider.Property
@@ -42,7 +41,6 @@ class BundleAllClassesTest {
                     override val inputDirs =
                         FakeObjectFactory.factory.fileCollection().from(testFolder.newFolder())
                     override val inputJars = FakeObjectFactory.factory.fileCollection()
-                    override val jarCreatorType = FakeGradleProperty(JarCreatorType.JAR_FLINGER)
                     override val outputJar =
                         FakeObjectFactory.factory.fileProperty().fileValue(outputJar)
                     override val projectPath = FakeGradleProperty("projectName")

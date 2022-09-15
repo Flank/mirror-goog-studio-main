@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.testutils.truth.ZipFileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
@@ -56,7 +55,6 @@ class PerModuleBundleTaskTest {
         }
         task.resFiles.set(resFile)
         task.fileName.set("bar.zip")
-        task.jarCreatorType.set(JarCreatorType.JAR_FLINGER)
         task.outputDir.set(testFolder.newFolder("out"))
     }
 

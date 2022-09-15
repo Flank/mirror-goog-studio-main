@@ -19,14 +19,11 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
 import com.android.build.gradle.internal.component.ComponentCreationConfig
-import com.android.build.gradle.internal.packaging.JarCreatorFactory
-import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.setDisallowChanges
-import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.builder.packaging.JarFlinger
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -55,10 +52,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
     abstract val output: RegularFileProperty
 
     @get:Input
-    lateinit var jarCreatorType: JarCreatorType
-        private set
-
-    @get:Input
     abstract val debuggable: Property<Boolean>
 
     // The runnable implementing the processing is not able to deal with fine-grained file but
@@ -72,7 +65,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
             it.initializeFromAndroidVariantTask(this)
             it.output.set(output)
             it.inputs.from(unfilteredResources)
-            it.jarCreatorType.set(jarCreatorType)
             it.compressionLevel.set(if (debuggable.get()) Deflater.BEST_SPEED else null)
         }
     }
@@ -111,7 +103,6 @@ abstract class BundleLibraryJavaRes : NonIncrementalTask() {
                 .skipWhenEmpty()
                 .ignoreEmptyDirectories(false)
                 .withPathSensitivity(PathSensitivity.RELATIVE)
-            task.jarCreatorType = creationConfig.global.jarCreatorType
             task.debuggable
                 .setDisallowChanges(creationConfig.debuggable)
         }
@@ -122,7 +113,6 @@ abstract class BundleLibraryJavaResRunnable : ProfileAwareWorkAction<BundleLibra
     abstract class Params : Parameters() {
         abstract val output: RegularFileProperty
         abstract val inputs: ConfigurableFileCollection
-        abstract val jarCreatorType: Property<JarCreatorType>
         abstract val compressionLevel: Property<Int>
     }
 
@@ -132,10 +122,9 @@ abstract class BundleLibraryJavaResRunnable : ProfileAwareWorkAction<BundleLibra
             parentFile.mkdirs()
         }
 
-        JarCreatorFactory.make(
+        JarFlinger(
             parameters.output.asFile.get().toPath(),
-            MergeJavaResourceTask.predicate,
-            parameters.jarCreatorType.get()
+            MergeJavaResourceTask.predicate
         ).use { jarCreator ->
             parameters.compressionLevel.orNull?.let { jarCreator.setCompressionLevel(it) }
             parameters.inputs.forEach { base ->

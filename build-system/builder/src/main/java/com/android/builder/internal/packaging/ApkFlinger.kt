@@ -243,11 +243,6 @@ class ApkFlinger(
     }
 }
 
-enum class ApkCreatorType {
-    APK_FLINGER,
-    APK_Z_FILE_CREATOR
-}
-
 private const val DEFAULT_ALIGNMENT = 4L
 private const val PAGE_ALIGNMENT = 4096L
 

@@ -28,15 +28,12 @@ import com.android.build.api.dsl.PrefabPackagingOptions
 import com.android.build.api.dsl.Splits
 import com.android.build.api.dsl.TestCoverage
 import com.android.build.api.dsl.TestOptions
-import com.android.build.api.transform.Transform
 import com.android.build.gradle.internal.SdkComponentsBuildService
 import com.android.build.gradle.internal.core.SettingsOptions
 import com.android.build.gradle.internal.dsl.LanguageSplitOptions
-import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.BaseServices
 import com.android.builder.core.LibraryRequest
-import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import com.android.repository.Revision
@@ -130,10 +127,6 @@ interface GlobalTaskCreationConfig: BootClasspathConfig {
     // configurations that may need to be accessible
     val lintPublish: Configuration
     val lintChecks: Configuration
-
-    val jarCreatorType: JarCreatorType
-
-    val apkCreatorType: ApkCreatorType
 
     // Options from the settings plugin
     val settingsOptions: SettingsOptions
