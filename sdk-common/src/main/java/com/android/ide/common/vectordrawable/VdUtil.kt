@@ -70,19 +70,13 @@ fun parseColorValue(color: String): Int {
     4 -> {
       // #RGB
       val v = Integer.parseUnsignedInt(color.substring(1), 16)
-      var k = (v shr 8 and 0xF) * 0x110000
-      k = k or (v shr 4 and 0xF) * 0x1100
-      k = k or (v and 0xF) * 0x11
-      k or ALPHA_MASK
+      (v shr 8 and 0xF) * 0x110000 or (v shr 4 and 0xF) * 0x1100 or (v and 0xF) * 0x11 or ALPHA_MASK
     }
     5 -> {
       // #ARGB
       val v = Integer.parseUnsignedInt(color.substring(1), 16)
-      var k = (v shr 12 and 0xF) * 0x11000000
-      k = k or (v shr 8 and 0xF) * 0x110000
-      k = k or (v shr 4 and 0xF) * 0x1100
-      k = k or (v and 0xF) * 0x11
-      k or ALPHA_MASK
+      (v shr 12 and 0xF) * 0x11000000 or (v shr 8 and 0xF) * 0x110000 or
+              (v shr 4 and 0xF) * 0x1100 or (v and 0xF) * 0x11
     }
     else -> ALPHA_MASK
   }
