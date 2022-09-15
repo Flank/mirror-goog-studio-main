@@ -153,6 +153,7 @@ public final class DeviceImpl implements IDevice {
     private Set<String> mHardwareCharacteristics;
 
     @Nullable private Set<String> mAdbFeatures;
+    private Object mAdbFeaturesLock = new Object();
 
     @Nullable private AndroidVersion mVersion;
     private String mName;
@@ -394,22 +395,24 @@ public final class DeviceImpl implements IDevice {
 
     @NonNull
     Set<String> getAdbFeatures() {
-        if (mAdbFeatures != null) {
+        synchronized (mAdbFeaturesLock) {
+            if (mAdbFeatures != null) {
+                return mAdbFeatures;
+            }
+
+            try {
+                String response = AdbHelper.getFeatures(this);
+                mAdbFeatures = new HashSet<>(Arrays.asList(response.split(",")));
+                response = AdbHelper.getHostFeatures();
+                // We want features supported by both device and host.
+                mAdbFeatures.retainAll(Arrays.asList(response.split(",")));
+            } catch (TimeoutException | AdbCommandRejectedException | IOException e) {
+                Log.e(LOG_TAG, "Error obtaining features: " + e);
+                return new HashSet<>();
+            }
+
             return mAdbFeatures;
         }
-
-        try {
-            String response = AdbHelper.getFeatures(this);
-            mAdbFeatures = new HashSet<>(Arrays.asList(response.split(",")));
-            response = AdbHelper.getHostFeatures();
-            // We want features supported by both device and host.
-            mAdbFeatures.retainAll(Arrays.asList(response.split(",")));
-        } catch (TimeoutException | AdbCommandRejectedException | IOException e) {
-            Log.e(LOG_TAG, "Error obtaining features: " + e);
-            return new HashSet<>();
-        }
-
-        return mAdbFeatures;
     }
 
     // The full list of features can be obtained from /etc/permissions/features*
