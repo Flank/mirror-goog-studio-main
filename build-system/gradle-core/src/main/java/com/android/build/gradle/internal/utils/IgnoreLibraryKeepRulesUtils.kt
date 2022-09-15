@@ -31,7 +31,7 @@ fun getFilteredConfigurationFiles(
         ignoreList: Set<String>,
         ignoreAll: Boolean,
         libraryKeepRules: ArtifactCollection,
-        configurationFiles: ConfigurableFileCollection,
+        configurationFiles: FileCollection,
         logger: LoggerWrapper
 ) : FileCollection {
     val matchedArtifacts = mutableSetOf<String>()

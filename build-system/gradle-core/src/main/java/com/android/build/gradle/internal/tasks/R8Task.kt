@@ -49,6 +49,7 @@ import com.android.utils.FileUtils
 import com.android.zipflinger.ZipArchive
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
@@ -71,6 +72,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkAction
 import org.gradle.workers.WorkParameters
+import org.jetbrains.kotlin.gradle.utils.`is`
 import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
@@ -462,6 +464,10 @@ abstract class R8Task @Inject constructor(
                 |Current version is: ${getR8Version()}.
                 |""".trimMargin()
             )
+        val finalListOfConfigurationFiles = projectLayout.files(
+                configurationFiles,
+                generatedProguardFile.asFileTree,
+        )
         val workerAction = { it: R8Runnable.Params ->
             it.bootClasspath.from(bootClasspath.toList())
             it.minSdkVersion.set(minSdkVersion.get())
@@ -489,7 +495,7 @@ abstract class R8Task @Inject constructor(
                         ignoredLibraryKeepRules.get(),
                         ignoreAllLibraryKeepRules.get(),
                         libraryKeepRules,
-                        configurationFiles,
+                        finalListOfConfigurationFiles,
                         LoggerWrapper.getLogger(R8Task::class.java)),
                     extractedDefaultProguardFile))
             it.inputProguardMapping.set(

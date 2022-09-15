@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PR
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.ComponentType
 import com.android.build.gradle.internal.tasks.TaskCategory
+import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.build.gradle.internal.utils.setDisallowChanges
 import com.google.common.base.Preconditions
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
@@ -53,6 +55,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -72,7 +75,8 @@ import java.io.File
 @DisableCachingByDefault
 @BuildAnalyzer(primaryTaskCategory = TaskCategory.OPTIMIZATION)
 abstract class ProguardConfigurableTask(
-    private val projectLayout: ProjectLayout
+    @get:Internal
+    val projectLayout: ProjectLayout
 ) : NonIncrementalTask() {
 
     @get:Input
@@ -103,6 +107,11 @@ abstract class ProguardConfigurableTask(
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val extractedDefaultProguardFile: DirectoryProperty
+
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val generatedProguardFile: ConfigurableFileCollection
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -387,7 +396,6 @@ abstract class ProguardConfigurableTask(
             // It is enabled in Proguard since it would ignore the mapping file otherwise.
             // R8 does not have that issue, so we disable obfuscation when running R8.
             setActions(PostprocessingFeatures(false, defaultObfuscate, false))
-
             keep("class * {*;}")
             keep("interface * {*;}")
             keep("enum * {*;}")
@@ -411,10 +419,13 @@ abstract class ProguardConfigurableTask(
                     )
                 }
 
+            task.generatedProguardFile.fromDisallowChanges(
+                creationConfig.artifacts.get(GENERATED_PROGUARD_FILE)
+            )
+
             val configurationFiles = task.project.files(
                 creationConfig.proguardFiles,
                 aaptProguardFile,
-                creationConfig.artifacts.get(GENERATED_PROGUARD_FILE),
                 task.libraryKeepRules.artifactFiles
             )
 
