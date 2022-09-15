@@ -134,6 +134,7 @@ enum class StringOption(
 
     ANDROID_PRIVACY_SANDBOX_SDK_API_GENERATOR("android.privacySandboxSdk.apiGenerator", ApiStage.Experimental),
 
+    ANDROID_PRIVACY_SANDBOX_SDK_API_GENERATOR_GENERATED_RUNTIME_DEPENDENCIES("android.privacySandboxSdk.apiGenerator.generatedRuntimeDependencies", ApiStage.Experimental),
     /* ---------------
      * DEPRECATED APIs
      */

@@ -93,7 +93,6 @@ import org.gradle.api.artifacts.type.ArtifactTypeDefinition
 import org.gradle.api.attributes.AttributesSchema
 import org.gradle.api.attributes.Usage
 import org.gradle.api.internal.artifacts.ArtifactAttributes
-import java.nio.file.Paths
 
 /**
  * configures the dependencies for a set of variant inputs.
@@ -445,7 +444,7 @@ class DependencyConfigurator(
     }
 
     fun configurePrivacySandboxSdkConsumerTransforms(
-            compileSdkHashString: String, buildToolsRevision: Revision) {
+            compileSdkHashString: String, buildToolsRevision: Revision, bootstrapCreationConfig : BootClasspathConfig) {
         if (projectServices.projectOptions.get(BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT)) {
             registerTransform(
                     AsarToApksTransform::class.java,
@@ -483,16 +482,37 @@ class DependencyConfigurator(
                         AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR,
                         AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES
                 ) { params ->
+
+                    val runtimeDependenciesForShimSdk =
+                            projectServices.projectOptions
+                            .get(StringOption.ANDROID_PRIVACY_SANDBOX_SDK_API_GENERATOR_GENERATED_RUNTIME_DEPENDENCIES)
+                            ?.split(",") ?: emptyList()
+
                     val apiGeneratorAndRuntimeDependencies =
                             project.configurations.detachedConfiguration(
-                                    project.dependencies.create(apiGeneratorCoordinates)
-                    )
+                                    project.dependencies.create(apiGeneratorCoordinates))
+                    // Runtime dependencies of the sources created by the api generator
+                    val apiGeneratorOutputSourceDependencies =
+                        project.configurations.detachedConfiguration(
+                               *runtimeDependenciesForShimSdk.map {
+                                   project.dependencies.create(it)
+                               }.toTypedArray())
+
                     params.apiGeneratorAndRuntimeDependenciesJars.setFrom(
                             apiGeneratorAndRuntimeDependencies)
                     params.buildTools.initialize(
                             projectServices.buildServiceRegistry,
                             compileSdkHashString,
                             buildToolsRevision)
+
+                    // For kotlin compilation
+                    params.bootstrapClasspath.from(bootstrapCreationConfig.fullBootClasspath)
+
+                    val kotlinCompiler = project.configurations.detachedConfiguration(
+                            project.dependencies.create("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.7.10")
+                    )
+                    params.kotlinCompiler.from(kotlinCompiler)
+                    params.runtimeDependencies.from(apiGeneratorOutputSourceDependencies)
                 }
             }
         }
