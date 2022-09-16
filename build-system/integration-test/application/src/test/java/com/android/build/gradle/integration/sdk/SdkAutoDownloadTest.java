@@ -455,7 +455,18 @@ public class SdkAutoDownloadTest {
                         + System.lineSeparator()
                         + "dependencies { api 'foo:bar:baz' }");
 
-        GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
+        BaseGradleExecutor.ConfigurationCaching configCacheOption =
+                BaseGradleExecutor.ConfigurationCaching.ON;
+        // todo re-enable config caching b/247126887
+        if (Runtime.version().feature() == 17) {
+            configCacheOption = BaseGradleExecutor.ConfigurationCaching.OFF;
+        }
+
+        GradleBuildResult result =
+                getExecutor()
+                        .withConfigurationCaching(configCacheOption)
+                        .expectFailure()
+                        .run("assembleDebug");
         assertNotNull(result.getException());
 
         // Make sure the standard gradle error message is what the user sees.

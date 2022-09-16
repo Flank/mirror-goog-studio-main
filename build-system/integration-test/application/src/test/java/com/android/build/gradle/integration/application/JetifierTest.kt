@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.ANDROID_ARCH_VERSION
+import com.android.build.gradle.integration.common.fixture.BaseGradleExecutor
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
@@ -254,7 +255,15 @@ class JetifierTest(private val withKotlin: Boolean) {
                 """.trimIndent()
         )
 
+        // todo re-enable config caching b/247126887
+        val configCacheOption =
+            if (Runtime.version().feature() == 17)
+                BaseGradleExecutor.ConfigurationCaching.OFF
+            else
+                BaseGradleExecutor.ConfigurationCaching.ON
+
         val result = project.executor()
+                .withConfigurationCaching(configCacheOption)
                 .with(BooleanOption.USE_ANDROID_X, true)
                 .with(BooleanOption.ENABLE_JETIFIER, true)
                 .expectFailure()
