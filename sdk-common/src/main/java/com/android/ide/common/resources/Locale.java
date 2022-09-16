@@ -16,6 +16,9 @@
 package com.android.ide.common.resources;
 
 import static com.android.ide.common.resources.configuration.LocaleQualifier.FAKE_VALUE;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsFirst;
 
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
@@ -143,87 +146,41 @@ public class Locale {
         return qualifier.getTag();
     }
 
+    /** Comparator for comparing locales by region names */
+    public static final Comparator<Locale> REGION_NAME_COMPARATOR =
+            comparing(
+                    locale -> locale.qualifier.getRegion(),
+                    nullsFirst(comparing(LocaleManager::getRegionName)));
+
     /**
      * Comparator for comparing locales by language names (and as a secondary key, the region names)
      */
     public static final Comparator<Locale> LANGUAGE_NAME_COMPARATOR =
-            new Comparator<Locale>() {
-                @Override
-                public int compare(Locale locale1, Locale locale2) {
-                    String language1 = locale1.qualifier.getLanguage();
-                    String language2 = locale2.qualifier.getLanguage();
-                    if (!locale1.qualifier.hasLanguage()) {
-                        return !locale2.qualifier.hasLanguage() ? 0 : -1;
-                    } else if (locale2.qualifier.hasFakeValue()) {
-                        return 1;
-                    }
-                    assert language1 != null && language2 != null; // hasLanguage above.
-                    String name1 = LocaleManager.getLanguageName(language1);
-                    String name2 = LocaleManager.getLanguageName(language2);
-                    int compare = compareNullableStrings(name1, name2);
-                    if (compare == 0) {
-                        return REGION_NAME_COMPARATOR.compare(locale1, locale2);
-                    }
-                    return compare;
-                }
-            };
+            comparing(
+                            (Locale locale) ->
+                                    locale.qualifier.hasLanguage()
+                                            ? LocaleManager.getLanguageName(
+                                                    locale.qualifier.getLanguage())
+                                            : null,
+                            nullsFirst(naturalOrder()))
+                    .thenComparing(REGION_NAME_COMPARATOR);
+
+    /** Comparator for comparing locales by region ISO codes */
+    public static final Comparator<Locale> REGION_CODE_COMPARATOR =
+            comparing(locale -> locale.qualifier.getRegion(), nullsFirst(naturalOrder()));
 
     /**
      * Comparator for comparing locales by language ISO codes (and as a secondary key, the region
      * ISO codes)
      */
     public static final Comparator<Locale> LANGUAGE_CODE_COMPARATOR =
-            new Comparator<Locale>() {
-                @Override
-                public int compare(Locale locale1, Locale locale2) {
-                    String language1 = locale1.qualifier.getLanguage();
-                    String language2 = locale2.qualifier.getLanguage();
-                    if (locale1.qualifier.hasFakeValue()) {
-                        return locale2.qualifier.hasFakeValue() ? 0 : -1;
-                    } else if (locale2.qualifier.hasFakeValue()) {
-                        return 1;
-                    }
-                    int compare = compareNullableStrings(language1, language2);
-                    if (compare == 0) {
-                        return REGION_CODE_COMPARATOR.compare(locale1, locale2);
-                    }
-                    return compare;
-                }
-            };
-
-    /** Comparator for comparing locales by region names */
-    public static final Comparator<Locale> REGION_NAME_COMPARATOR =
-            new Comparator<Locale>() {
-                @Override
-                public int compare(Locale locale1, Locale locale2) {
-                    String region1 = locale1.qualifier.getRegion();
-                    String region2 = locale2.qualifier.getRegion();
-                    if (region1 == null) {
-                        return region2 == null ? 0 : -1;
-                    } else if (region2 == null) {
-                        return 1;
-                    }
-                    String regionName1 = LocaleManager.getRegionName(region1);
-                    String regionName2 = LocaleManager.getRegionName(region2);
-                    return compareNullableStrings(regionName1, regionName2);
-                }
-            };
-
-    /** Comparator for comparing locales by region ISO codes */
-    public static final Comparator<Locale> REGION_CODE_COMPARATOR =
-            new Comparator<Locale>() {
-                @Override
-                public int compare(Locale locale1, Locale locale2) {
-                    String region1 = locale1.qualifier.getRegion();
-                    String region2 = locale2.qualifier.getRegion();
-                    if (region1 == null) {
-                        return region2 == null ? 0 : -1;
-                    } else if (region2 == null) {
-                        return 1;
-                    }
-                    return compareNullableStrings(region1, region2);
-                }
-            };
+            comparing(
+                            (Locale locale) ->
+                                    locale.qualifier.hasLanguage()
+                                            ? locale.qualifier.getLanguage()
+                                            : null,
+                            nullsFirst(naturalOrder()))
+                    .thenComparing(REGION_CODE_COMPARATOR);
 
     /**
      * Returns a suitable label to use to display the given locale
@@ -270,12 +227,5 @@ public class Locale {
             }
             return String.format("%1$s (%2$s / %3$s)", languageName, languageCode, regionCode);
         }
-    }
-
-    private static int compareNullableStrings(@Nullable String s1, @Nullable String s2) {
-        if (s1 == s2) return 0;
-        if (s1 == null) return -1;
-        if (s2 == null) return 1;
-        return s1.compareTo(s2);
     }
 }

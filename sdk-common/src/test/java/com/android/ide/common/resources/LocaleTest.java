@@ -15,8 +15,11 @@
  */
 package com.android.ide.common.resources;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
+import java.util.stream.Stream;
 import junit.framework.TestCase;
 
 public class LocaleTest extends TestCase {
@@ -96,5 +99,27 @@ public class LocaleTest extends TestCase {
         assertEquals(Locale.create("en"), Locale.create(config));
         config.setLocaleQualifier(LocaleQualifier.getQualifier("en-rUS"));
         assertEquals(Locale.create("en-rUS"), Locale.create(config));
+    }
+
+    public void testLanguageNameComparator() {
+        assertArrayEquals(
+                Stream.of("", "zh", "zh-rCN", "zh-rTW", "hr", "en", "en-rGB")
+                        .map(Locale::create)
+                        .toArray(),
+                Stream.of("b+en+GB", "", "en", "zh-rCN", "zh-rTW", "hr", "zh")
+                        .map(Locale::create)
+                        .sorted(Locale.LANGUAGE_NAME_COMPARATOR)
+                        .toArray());
+    }
+
+    public void testLanguageCodeComparator() {
+        assertArrayEquals(
+                Stream.of("", "en", "en-rGB", "hr", "zh", "zh-rCN", "zh-rTW")
+                        .map(Locale::create)
+                        .toArray(),
+                Stream.of("b+en+GB", "", "en", "zh-rTW", "zh-rCN", "hr", "zh")
+                        .map(Locale::create)
+                        .sorted(Locale.LANGUAGE_CODE_COMPARATOR)
+                        .toArray());
     }
 }
