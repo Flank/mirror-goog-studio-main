@@ -114,6 +114,7 @@ public class DeployerRunner {
                     waitForDevices(
                             parameters.getAdbExecutablePath(),
                             parameters.getTargetDevices(),
+                            parameters.getJdwpClientSupport(),
                             logger);
 
             if (devices.isEmpty()) {
@@ -247,7 +248,10 @@ public class DeployerRunner {
     }
 
     private Map<String, IDevice> waitForDevices(
-            String adbExecutablePath, List<String> deviceSerials, ILogger logger) {
+            String adbExecutablePath,
+            List<String> deviceSerials,
+            boolean jdwpClientSupport,
+            ILogger logger) {
         try (Trace unused = Trace.begin("waitForDevices()")) {
             int expectedDevices = deviceSerials.isEmpty() ? 1 : deviceSerials.size();
             CountDownLatch latch = new CountDownLatch(expectedDevices);
@@ -272,7 +276,16 @@ public class DeployerRunner {
                         public void deviceChanged(IDevice device, int changeMask) {}
                     };
 
-            AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
+            if (jdwpClientSupport) {
+                AndroidDebugBridge.init(AdbInitOptions.DEFAULT);
+            } else {
+                AndroidDebugBridge.init(
+                        AdbInitOptions.builder()
+                                .setClientSupportEnabled(false)
+                                .useJdwpProxyService(false)
+                                .build());
+            }
+
             AndroidDebugBridge.addDeviceChangeListener(listener);
 
             // This needs to be done *after* we add the listener, or else we risk missing devices.

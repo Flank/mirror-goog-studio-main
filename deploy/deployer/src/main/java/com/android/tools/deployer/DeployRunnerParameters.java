@@ -37,6 +37,7 @@ public class DeployRunnerParameters {
     private boolean optimisticInstall = false;
     private boolean skipPostInstallTasks = false;
     private boolean useRootPushInstall = false;
+    private boolean jdwpClientSupport = true;
     private String installersPath = null;
     private String adbExecutablePath = null;
     private String targetUserId = null;
@@ -66,6 +67,8 @@ public class DeployRunnerParameters {
             skipPostInstallTasks = true;
         } else if (arg.startsWith("--use-root-push-install")) {
             useRootPushInstall = true;
+        } else if (arg.startsWith("--no-jdwp-client-support")) {
+            jdwpClientSupport = false;
         } else {
             throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
@@ -153,6 +156,10 @@ public class DeployRunnerParameters {
 
     public boolean getUseRootPushInstall() {
         return useRootPushInstall;
+    }
+
+    public boolean getJdwpClientSupport() {
+        return jdwpClientSupport;
     }
 
     public String getTargetUserId() {
