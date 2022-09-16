@@ -52,17 +52,32 @@ class FeatureSetMetadata private constructor(
             val namespace: String,
     )
 
-    class Builder constructor(
+    class Builder private constructor(
             private val minSdkVersion: Int,
-            private val maxNumberOfSplitsBeforeO: Int
+            private val maxNumberOfSplitsBeforeO: Int,
+            private val featureSplits: MutableSet<FeatureInfo>,
     ) {
 
-        private val featureSplits = mutableSetOf<FeatureInfo>()
+        constructor(
+                minSdkVersion: Int,
+                maxNumberOfSplitsBeforeO: Int
+        ) : this(
+                minSdkVersion,
+                maxNumberOfSplitsBeforeO,
+                mutableSetOf<FeatureInfo>()
+        )
+
+        constructor(featureSetMetadata: FeatureSetMetadata) : this(
+                featureSetMetadata.minSdkVersion,
+                featureSetMetadata.maxNumberOfSplitsBeforeO,
+                featureSetMetadata.featureSplits.toMutableSet(),
+        )
 
         fun addFeatureSplit(
                 modulePath: String,
                 featureName: String,
-                packageName: String) {
+                packageName: String,
+        ) : Int {
             val id: Int = if (minSdkVersion < AndroidVersion.VersionCodes.O) {
                 if (featureSplits.size >= maxNumberOfSplitsBeforeO) {
                     throw RuntimeException("You have reached the maximum number of feature splits : "
@@ -79,6 +94,7 @@ class FeatureSetMetadata private constructor(
                 BASE_ID + 1 + featureSplits.size
             }
             featureSplits.add(FeatureInfo(modulePath, featureName, id, packageName))
+            return id
         }
 
         @Throws(IOException::class)
@@ -96,6 +112,10 @@ class FeatureSetMetadata private constructor(
                     maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO,
             )
         }
+    }
+
+    fun toBuilder() : Builder {
+        return Builder(this)
     }
 
     companion object {

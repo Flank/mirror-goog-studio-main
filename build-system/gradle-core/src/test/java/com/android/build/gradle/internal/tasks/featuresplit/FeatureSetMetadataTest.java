@@ -111,5 +111,14 @@ public class FeatureSetMetadataTest {
         assertThat(loaded.getFeatureNameToNamespaceMap())
                 .containsExactly(
                         "one", "example.one", "two", "example.two", "three", "example.three");
+
+        FeatureSetMetadata.Builder builder = loaded.toBuilder();
+        int four = builder.addFeatureSplit(":four", "four", "example.four");
+        assertThat(four)
+                .named("allocated res offset for four")
+                .isEqualTo(
+                        minSdkVersion < 26
+                                ? FeatureSetMetadata.BASE_ID - 4
+                                : FeatureSetMetadata.BASE_ID + 4);
     }
 }

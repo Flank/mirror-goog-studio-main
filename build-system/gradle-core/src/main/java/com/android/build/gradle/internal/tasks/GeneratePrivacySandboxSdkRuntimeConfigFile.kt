@@ -21,18 +21,16 @@ import com.android.build.gradle.internal.profile.ProfileAwareWorkAction
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.fromDisallowChanges
+import com.android.builder.symbols.writeRPackages
 import com.android.bundle.RuntimeEnabledSdkConfigProto.RuntimeEnabledSdkConfig
 import com.android.bundle.SdkMetadataOuterClass.SdkMetadata
-import com.android.zipflinger.ZipArchive
-import com.google.protobuf.TextFormat
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -41,50 +39,73 @@ import org.gradle.api.tasks.TaskProvider
 @CacheableTask
 abstract class GeneratePrivacySandboxSdkRuntimeConfigFile : NonIncrementalTask() {
 
-    @get:Classpath
-    abstract val asars: ConfigurableFileCollection
+    @get:OutputFile
+    abstract val generatedRPackage: RegularFileProperty
 
     @get:OutputFile
     abstract val privacySandboxSdkRuntimeConfigFile: RegularFileProperty
+
+    @get:Classpath // Classpath as the output is brittle to the order
+    abstract val sdkArchiveMetadata: ConfigurableFileCollection
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val featureSetMetadata: RegularFileProperty
 
     override fun doTaskAction() {
         workerExecutor.noIsolation().submit(WorkAction::class.java) {
             it.initializeFromAndroidVariantTask(this)
             it.privacySandboxSdkRuntimeConfigFile.set(privacySandboxSdkRuntimeConfigFile)
-            it.asars.from(asars)
+            it.generatedRPackage.set(generatedRPackage)
+            it.sdkArchiveMetadata.from(sdkArchiveMetadata)
+            it.featureSetMetadata.set(featureSetMetadata)
         }
     }
 
     abstract class WorkAction: ProfileAwareWorkAction<WorkAction.Parameters>() {
 
         abstract class Parameters: ProfileAwareWorkAction.Parameters() {
-            abstract val asars: ConfigurableFileCollection
             abstract val privacySandboxSdkRuntimeConfigFile: RegularFileProperty
+            abstract val generatedRPackage: RegularFileProperty
+            abstract val sdkArchiveMetadata: ConfigurableFileCollection
+            abstract val featureSetMetadata: RegularFileProperty
         }
 
         override fun run() {
-            // TODO(b/235469089): Check compatibility with dynamic features
-            var resourcesPackage = 0x7e
+            val privacySandboxSdkPackages = parameters.sdkArchiveMetadata.files.map {
+                it.inputStream().buffered().use { input -> SdkMetadata.parseFrom(input) }
+            }
+            val featureSetMetadata =
+                    FeatureSetMetadata.load(parameters.featureSetMetadata.get().asFile).toBuilder()
+            val configProto = RuntimeEnabledSdkConfig.newBuilder().also { runtimeEnabledSdkConfig ->
+                for (sdkMetadata in privacySandboxSdkPackages) {
 
-            val proto = RuntimeEnabledSdkConfig.newBuilder().also { runtimeEnabledSdkConfig ->
-                for (asar in parameters.asars) {
-                    val sdkMetadata = ZipArchive(asar.toPath()).use { zip ->
-                         SdkMetadata.parseFrom(zip.getInputStream("SdkMetadata.pb"))
-                    }
+                    val resPackageId =
+                            featureSetMetadata.addFeatureSplit(
+                                    modulePath = PRIVACY_SANDBOX_PREFIX + sdkMetadata.packageName,
+                                    featureName = PRIVACY_SANDBOX_PREFIX + sdkMetadata.packageName,
+                                    packageName = sdkMetadata.packageName,
+                            )
                     runtimeEnabledSdkConfig.addRuntimeEnabledSdkBuilder().apply {
                         packageName = sdkMetadata.packageName
                         versionMajor = sdkMetadata.sdkVersion.major
                         versionMinor = sdkMetadata.sdkVersion.minor
                         certificateDigest = sdkMetadata.certificateDigest
-                        resourcesPackageId = resourcesPackage
+                        resourcesPackageId = resPackageId
                     }
-                    resourcesPackage--
                 }
             }.build()
 
-            parameters.privacySandboxSdkRuntimeConfigFile.get().asFile.outputStream().buffered().use {
-                proto.writeTo(it)
-            }
+            val configFile = parameters.privacySandboxSdkRuntimeConfigFile.get().asFile
+            configFile.outputStream().buffered().use { configProto.writeTo(it) }
+            writeRPackages(
+                    packageNameToId = configProto.runtimeEnabledSdkList.associateBy({it.packageName}) { it.resourcesPackageId.shl(24) },
+                    outJar = parameters.generatedRPackage.get().asFile.toPath(),
+            )
+        }
+
+        companion object {
+            private const val PRIVACY_SANDBOX_PREFIX = "PrivacySandboxSdk_"
         }
     }
 
@@ -100,20 +121,22 @@ abstract class GeneratePrivacySandboxSdkRuntimeConfigFile : NonIncrementalTask()
 
         override fun handleProvider(taskProvider: TaskProvider<GeneratePrivacySandboxSdkRuntimeConfigFile>) {
             super.handleProvider(taskProvider)
+            creationConfig.artifacts.setInitialProvider(taskProvider, GeneratePrivacySandboxSdkRuntimeConfigFile::generatedRPackage)
+                    .on(InternalArtifactType.PRIVACY_SANDBOX_SDK_R_PACKAGE_JAR)
             creationConfig.artifacts.setInitialProvider(taskProvider, GeneratePrivacySandboxSdkRuntimeConfigFile::privacySandboxSdkRuntimeConfigFile)
                     .on(InternalArtifactType.PRIVACY_SANDBOX_SDK_RUNTIME_CONFIG_FILE)
         }
 
         override fun configure(task: GeneratePrivacySandboxSdkRuntimeConfigFile) {
             super.configure(task)
-
-            task.asars.fromDisallowChanges(
+            task.sdkArchiveMetadata.fromDisallowChanges(
                     creationConfig.variantDependencies.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE
+                            AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_METADATA_PROTO
                     )
             )
+            creationConfig.artifacts.setTaskInputToFinalProduct(InternalArtifactType.FEATURE_SET_METADATA, task.featureSetMetadata)
         }
     }
 }

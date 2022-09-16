@@ -301,6 +301,11 @@ class PrivacySandboxSdkTest {
         Apk(baseMasterApk).use {
             assertThat(it).exists()
             assertThat(it).containsClass("Lcom/example/privacysandboxsdk/consumer/R;")
+            assertThat(it).hasClass("Lcom/example/privacysandboxsdk/RPackage;")
+                    .that()
+                    .hasExactFields(mutableSetOf("packageId"))
+            val rPackageClass = it.getClass("Lcom/example/privacysandboxsdk/RPackage;")
+            assertThat(rPackageClass.fields.single().initialValue?.toString()).isEqualTo("0x7e000000")
             assertThat(it).doesNotContainClass(ANDROID_LIB1_CLASS)
             val manifestContent = ApkSubject.getManifestContent(it.file).joinToString("\n")
             assertThat(manifestContent).doesNotContain(USES_SDK_LIBRARY_MANIFEST_ELEMENT)

@@ -73,6 +73,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.services.AndroidLocationsBuildService
 import com.android.build.gradle.internal.services.ProjectServices
 import com.android.build.gradle.internal.services.getBuildService
+import com.android.build.gradle.internal.tasks.AsarMetadataExtractionTransform
 import com.android.build.gradle.internal.tasks.AsarToApksTransform
 import com.android.build.gradle.internal.tasks.AsarToManifestSnippetTransform
 import com.android.build.gradle.internal.tasks.factory.BootClasspathConfig
@@ -469,6 +470,11 @@ class DependencyConfigurator(
                     AsarToManifestSnippetTransform::class.java,
                     AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
                     AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET
+            )
+            registerTransform(
+                AsarMetadataExtractionTransform::class.java,
+                AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_ARCHIVE,
+                AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_METADATA_PROTO
             )
             registerTransform(
                     ExtractPrivacySandboxSdkApiFromAsarTransform::class.java,

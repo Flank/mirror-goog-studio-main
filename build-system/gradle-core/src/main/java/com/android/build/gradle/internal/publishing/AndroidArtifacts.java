@@ -171,6 +171,9 @@ public class AndroidArtifacts {
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS =
             "android-privacy-sandbox-sdk-apks";
 
+
+    private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_METADATA_PROTO =
+            "android-privacy-sandbox-sdk-extracted-metadata";
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR =
             "android-privacy-sandbox-sdk-interface-descriptor";
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET =
@@ -530,6 +533,10 @@ public class AndroidArtifacts {
         // The artifact-transform derived APKs from a privacy sandbox SDK
         ANDROID_PRIVACY_SANDBOX_SDK_APKS(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_APKS),
 
+        // The metadata proto from the privacy sandbox SDK, used by the package numbering task
+        ANDROID_PRIVACY_SANDBOX_SDK_METADATA_PROTO(
+                TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_METADATA_PROTO),
+
         // The sdk-apis.jar containing client API stubs packaged in the ASB.
         ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR(
                 TYPE_ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR),
@@ -537,6 +544,8 @@ public class AndroidArtifacts {
         // The artifact-transform derived manifest snippet from a privacy sandbox SDK
         ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET(
                 TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET);
+
+
         @NonNull private final String type;
 
         ArtifactType(@NonNull String type) {

@@ -442,6 +442,7 @@ InternalArtifactType<T : FileSystemLocation>(
 
     // The proto passed to bundle tool to instruct which privacy sandbox SDKs are used
     object PRIVACY_SANDBOX_SDK_RUNTIME_CONFIG_FILE: InternalArtifactType<RegularFile>(FILE)
+    object PRIVACY_SANDBOX_SDK_R_PACKAGE_JAR: InternalArtifactType<RegularFile>(FILE)
 
     // file containing the metadata for the full feature set. This contains the feature names: InternalArtifactType<RegularFile>(FILE), Replaceable
     // the res ID offset: InternalArtifactType<RegularFile>(FILE), Replaceable both tied to the feature module path. Published by the base for the
