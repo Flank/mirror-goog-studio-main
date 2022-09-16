@@ -62,8 +62,8 @@ public class FeatureSetMetadataTest {
 
     @Test
     public void testPersistence() throws IOException {
-        FeatureSetMetadata featureSetMetadata =
-                new FeatureSetMetadata(minSdkVersion, FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
+        FeatureSetMetadata.Builder featureSetMetadata =
+                new FeatureSetMetadata.Builder(minSdkVersion, FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O);
         featureSetMetadata.addFeatureSplit(":one", "one", "example.one");
         featureSetMetadata.addFeatureSplit(":two", "two", "example.two");
         featureSetMetadata.addFeatureSplit(":three", "three", "example.three");

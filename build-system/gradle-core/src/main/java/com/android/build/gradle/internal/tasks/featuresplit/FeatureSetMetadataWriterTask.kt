@@ -84,7 +84,7 @@ abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
         override fun run() {
             val features = mutableListOf<FeatureSplitDeclaration>()
 
-            val featureMetadata = FeatureSetMetadata(
+            val featureMetadata = FeatureSetMetadata.Builder(
                     parameters.minSdkVersion.get(),
                     parameters.maxNumberOfFeaturesBeforeOreo.get())
 

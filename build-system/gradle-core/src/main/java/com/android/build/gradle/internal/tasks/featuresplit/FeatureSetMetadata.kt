@@ -28,39 +28,11 @@ import java.io.IOException
 /** Container for all the feature split metadata.  */
 class FeatureSetMetadata private constructor(
         val sourceFile: File?,
-        private val featureSplits: MutableSet<FeatureInfo>,
+        featureSplits: Set<FeatureInfo>,
         private val minSdkVersion: Int,
         private val maxNumberOfSplitsBeforeO: Int,
 ) {
-
-    constructor(minSdkVersion: Int, maxNumberOfSplitsBeforeO: Int) : this(
-            sourceFile = null,
-            featureSplits = HashSet(),
-            minSdkVersion = minSdkVersion,
-            maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO,
-    )
-
-    fun addFeatureSplit(
-            modulePath: String,
-            featureName: String,
-            packageName: String) {
-        val id: Int = if (minSdkVersion < AndroidVersion.VersionCodes.O) {
-            if (featureSplits.size >= maxNumberOfSplitsBeforeO) {
-                throw RuntimeException("You have reached the maximum number of feature splits : "
-                        + maxNumberOfSplitsBeforeO)
-            }
-            // allocate split ID backwards excluding BASE_ID.
-            BASE_ID - 1 - featureSplits.size
-        } else {
-            if (featureSplits.size >= MAX_NUMBER_OF_SPLITS_STARTING_IN_O) {
-                throw RuntimeException("You have reached the maximum number of feature splits : "
-                        + MAX_NUMBER_OF_SPLITS_STARTING_IN_O)
-            }
-            // allocated forward excluding BASE_ID
-            BASE_ID + 1 + featureSplits.size
-        }
-        featureSplits.add(FeatureInfo(modulePath, featureName, id, packageName))
-    }
+    private val featureSplits = ImmutableSet.copyOf(featureSplits)
 
     fun getResOffsetFor(modulePath: String): Int? {
         return featureSplits.firstOrNull { it.modulePath == modulePath }?.resOffset
@@ -73,19 +45,58 @@ class FeatureSetMetadata private constructor(
     val featureNameToNamespaceMap: Map<String, String>
         get() = ImmutableMap.copyOf(featureSplits.associateBy({ it.featureName }) { it.namespace })
 
-    @Throws(IOException::class)
-    fun save(outputFile: File) {
-        JsonWriter(outputFile.bufferedWriter()).use {
-            FeatureSetMetadataTypeAdapter(outputFile).write(it, this)
-        }
-    }
-
     private class FeatureInfo(
             val modulePath: String,
             val featureName: String,
             val resOffset: Int,
             val namespace: String,
     )
+
+    class Builder constructor(
+            private val minSdkVersion: Int,
+            private val maxNumberOfSplitsBeforeO: Int
+    ) {
+
+        private val featureSplits = mutableSetOf<FeatureInfo>()
+
+        fun addFeatureSplit(
+                modulePath: String,
+                featureName: String,
+                packageName: String) {
+            val id: Int = if (minSdkVersion < AndroidVersion.VersionCodes.O) {
+                if (featureSplits.size >= maxNumberOfSplitsBeforeO) {
+                    throw RuntimeException("You have reached the maximum number of feature splits : "
+                            + maxNumberOfSplitsBeforeO)
+                }
+                // allocate split ID backwards excluding BASE_ID.
+                BASE_ID - 1 - featureSplits.size
+            } else {
+                if (featureSplits.size >= MAX_NUMBER_OF_SPLITS_STARTING_IN_O) {
+                    throw RuntimeException("You have reached the maximum number of feature splits : "
+                            + MAX_NUMBER_OF_SPLITS_STARTING_IN_O)
+                }
+                // allocated forward excluding BASE_ID
+                BASE_ID + 1 + featureSplits.size
+            }
+            featureSplits.add(FeatureInfo(modulePath, featureName, id, packageName))
+        }
+
+        @Throws(IOException::class)
+        fun save(outputFile: File) {
+            JsonWriter(outputFile.bufferedWriter()).use { writer ->
+                FeatureSetMetadataTypeAdapter(outputFile).write(writer, build())
+            }
+        }
+
+        private fun build(): FeatureSetMetadata {
+            return FeatureSetMetadata(
+                    sourceFile = null,
+                    featureSplits = ImmutableSet.copyOf(featureSplits),
+                    minSdkVersion = minSdkVersion,
+                    maxNumberOfSplitsBeforeO = maxNumberOfSplitsBeforeO,
+            )
+        }
+    }
 
     companion object {
 
