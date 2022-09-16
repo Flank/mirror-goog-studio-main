@@ -69,18 +69,18 @@ public class DeployerRunner {
         // Disable this for now: b/240616844
         // Only use adblib when DeployerRunner is invoked from CLI
         // System.setProperty(AdbClient.ALLOW_ADBLIB_PROP_KEY, AdbClient.ALLOW_ADBLIB_PROP_VALUE);
-        int errorCode = tracedMain(args, new StdLogger(StdLogger.Level.VERBOSE));
+        int errorCode = tracedMain(args);
         Trace.end();
         Trace.flush();
         System.exit(errorCode);
     }
 
-    public static int tracedMain(String[] args, ILogger logger) {
+    public static int tracedMain(String[] args) {
 
         DeployerRunner runner =
                 new DeployerRunner(
                         new File(DEPLOY_DB_PATH), new File(DEX_DB_PATH), new CommandLineService());
-        return runner.run(args, logger);
+        return runner.run(args);
     }
 
     public DeployerRunner(File deployCacheFile, File databaseFile, UIService service) {
@@ -99,17 +99,18 @@ public class DeployerRunner {
         this.metrics = new MetricsRecorder();
     }
 
-    public int run(String[] args, ILogger logger) {
+    public int run(String[] args) {
         if (args.length < 3) {
             // The values for --user come directly from the framework's package manager, and is
             // passed directly through to pm.
-            logger.info(
+            System.out.println(
                     "Usage: {install | codeswap | fullswap} [--device=<serial>] [--user=<user id>|all|current] [--adb=<path>] packageName baseApk [splitApk1, splitApk2, ...]");
             return ERR_BAD_ARGS;
         }
 
         try {
             DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
+            ILogger logger = new StdLogger(parameters.getLogLevel());
             Map<String, IDevice> devices =
                     waitForDevices(
                             parameters.getAdbExecutablePath(),

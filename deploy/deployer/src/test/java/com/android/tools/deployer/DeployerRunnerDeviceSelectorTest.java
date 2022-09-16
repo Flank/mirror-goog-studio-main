@@ -51,7 +51,6 @@ public class DeployerRunnerDeviceSelectorTest {
     private DeploymentCacheDatabase cacheDb;
     private SqlApkFileDatabase dexDb;
     private UIService service;
-    private ILogger logger;
 
     private FakeDevice device0;
     private FakeDevice device1;
@@ -76,7 +75,6 @@ public class DeployerRunnerDeviceSelectorTest {
         dexDb = new SqlApkFileDatabase(dbFile, null);
         cacheDb = new DeploymentCacheDatabase(2);
         service = Mockito.mock(UIService.class);
-        logger = new TestLogger();
 
         fakeAdbServer =
                 new FakeAdbServer.Builder()
@@ -114,7 +112,7 @@ public class DeployerRunnerDeviceSelectorTest {
             "--installers-path=" + installersPath,
             "--device=2"
         };
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertTrue(device0.getApps().isEmpty());
         assertTrue(device1.getApps().isEmpty());
         assertEquals(1, device2.getApps().size());
@@ -143,7 +141,7 @@ public class DeployerRunnerDeviceSelectorTest {
             "--device=1",
             "--device=2"
         };
-        assertEquals(1003, runner.run(args, logger));
+        assertEquals(1003, runner.run(args));
         assertTrue(device0.getApps().isEmpty());
         assertTrue(device1.getApps().isEmpty());
         assertTrue(device2.getApps().isEmpty());
@@ -171,7 +169,7 @@ public class DeployerRunnerDeviceSelectorTest {
             "--device=2",
             "--device=0"
         };
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertEquals(1, device0.getApps().size());
         assertTrue(device1.getApps().isEmpty());
         assertEquals(1, device2.getApps().size());
@@ -192,7 +190,7 @@ public class DeployerRunnerDeviceSelectorTest {
             "--installers-path=" + installersPath,
             "--device=2"
         };
-        assertEquals(1003, runner.run(args, logger));
+        assertEquals(1003, runner.run(args));
 
         String[] otherArgs = {
             "install",
@@ -201,7 +199,7 @@ public class DeployerRunnerDeviceSelectorTest {
             "--force-full-install",
             "--installers-path=" + installersPath
         };
-        assertEquals(1003, runner.run(otherArgs, logger));
+        assertEquals(1003, runner.run(otherArgs));
     }
 
     @After

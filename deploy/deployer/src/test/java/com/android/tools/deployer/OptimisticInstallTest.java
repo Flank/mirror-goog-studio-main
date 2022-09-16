@@ -58,7 +58,6 @@ public class OptimisticInstallTest {
     private DeploymentCacheDatabase cacheDb;
     private SqlApkFileDatabase dexDb;
     private UIService service;
-    private ILogger logger;
 
     @BeforeClass
     public static void prepare() throws Exception {
@@ -78,7 +77,6 @@ public class OptimisticInstallTest {
     public void setUp() throws Exception {
         device = connection.getDevice();
         service = Mockito.mock(UIService.class);
-        logger = new TestLogger();
 
         File dbFile = File.createTempFile("test_db", ".bin");
         dbFile.deleteOnExit();
@@ -196,7 +194,7 @@ public class OptimisticInstallTest {
     private int runDeployCommand(String... args) {
         args = Arrays.copyOf(args, args.length + 1);
         args[args.length - 1] = "--installers-path=" + installersPath.getAbsolutePath();
-        return runner.run(args, logger);
+        return runner.run(args);
     }
 
     public void assertInstalled(String packageName, Path... files) throws IOException {

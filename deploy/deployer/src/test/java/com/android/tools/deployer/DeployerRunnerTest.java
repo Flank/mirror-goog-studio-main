@@ -102,8 +102,6 @@ public class DeployerRunnerTest {
     private SqlApkFileDatabase dexDB;
     private UIService service;
     private FakeDevice device;
-    private ILogger logger;
-
     private Benchmark benchmark;
     private long startTime;
 
@@ -125,7 +123,6 @@ public class DeployerRunnerTest {
     public void setUp() throws Exception {
         this.device = connection.getDevice();
         this.service = Mockito.mock(UIService.class);
-        logger = new TestLogger();
 
         File dbFile = File.createTempFile("test_db", ".bin");
         dbFile.deleteOnExit();
@@ -184,7 +181,7 @@ public class DeployerRunnerTest {
             "--force-full-install",
             "--installers-path=" + installersPath.toString()
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.helloworld", file);
@@ -211,7 +208,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString(),
             "--skip-post-install"
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.helloworld", file);
@@ -240,7 +237,7 @@ public class DeployerRunnerTest {
             file.toString(),
             "--installers-path=" + installersPath.toString()
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
 
@@ -266,7 +263,7 @@ public class DeployerRunnerTest {
             file.toString(),
             "--installers-path=" + installersPath.toString()
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
 
@@ -375,7 +372,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -392,7 +389,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
 
@@ -461,7 +458,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -479,7 +476,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
 
@@ -562,7 +559,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", v2);
         assertMetrics(
                 runner.getMetrics(),
@@ -584,7 +581,7 @@ public class DeployerRunnerTest {
 
         Mockito.when(service.prompt(ArgumentMatchers.anyString())).thenReturn(false);
 
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), retcode);
         assertEquals(1, device.getApps().size());
 
@@ -675,7 +672,7 @@ public class DeployerRunnerTest {
             "--force-full-install"
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -710,7 +707,7 @@ public class DeployerRunnerTest {
             "--force-full-install"
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
         if (device.getApi() < 21) {
             assertMetrics(
@@ -744,7 +741,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -773,7 +770,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        code = runner.run(args, logger);
+        code = runner.run(args);
 
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
@@ -868,7 +865,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -897,7 +894,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        code = runner.run(args, logger);
+        code = runner.run(args);
 
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
@@ -999,7 +996,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -1029,7 +1026,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        code = runner.run(args, logger);
+        code = runner.run(args);
 
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
@@ -1146,7 +1143,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -1174,7 +1171,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        code = runner.run(args, logger);
+        code = runner.run(args);
 
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
@@ -1282,7 +1279,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -1300,7 +1297,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
 
@@ -1385,7 +1382,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        int code = runner.run(args, logger);
+        int code = runner.run(args);
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
             assertMetrics(
@@ -1414,7 +1411,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        code = runner.run(args, logger);
+        code = runner.run(args);
 
         if (device.getApi() < 21) {
             assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
@@ -1512,7 +1509,7 @@ public class DeployerRunnerTest {
             file.toString(),
             "--installers-path=" + installersPath.toString()
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.simpleapp", file);
@@ -1563,7 +1560,7 @@ public class DeployerRunnerTest {
             file.toString(),
             "--installers-path=" + installersPath.toString()
         };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.simpleapp", file);
@@ -1597,7 +1594,7 @@ public class DeployerRunnerTest {
         dexDB = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
         device.getShell().clearHistory();
         runner = new DeployerRunner(cacheDb, dexDB, service);
-        retcode = runner.run(args, logger);
+        retcode = runner.run(args);
         if (device.supportsJvmti()) {
             // TODO WIP. This is WRONG, this is where optimistic swap should fail because of
             // OverlayID mismatch.
@@ -1654,6 +1651,7 @@ public class DeployerRunnerTest {
             Thread.sleep(100);
         }
         IDevice iDevice = bridge.getDevices()[0];
+        ILogger logger = new TestLogger();
         AdbClient adb = new AdbClient(iDevice, logger);
         ArrayList<DeployMetric> metrics = new ArrayList<>();
         Installer installer = new AdbInstaller(installersPath.toString(), adb, metrics, logger);
@@ -1672,7 +1670,7 @@ public class DeployerRunnerTest {
                 file.toString(),
                 "--installers-path=" + installersPath.toString()
             };
-            int retcode = runner.run(args, logger);
+            int retcode = runner.run(args);
             assertEquals(0, retcode);
             assertEquals(1, device.getApps().size());
             assertInstalled(packageName, file);
@@ -1714,7 +1712,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -1732,7 +1730,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
 
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
@@ -1821,7 +1819,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -1844,7 +1842,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         String logcat = getLogcatContent(device);
 
         if (device.getApi() < 26) {
@@ -2001,7 +1999,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", oldApk);
 
         args =
@@ -2014,7 +2012,7 @@ public class DeployerRunnerTest {
                     "--skip-post-install"
                 };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", newApk);
         assertMetrics(
                 runner.getMetrics(),
@@ -2045,7 +2043,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", oldApk);
 
         String cmd =
@@ -2063,7 +2061,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
 
         // Stop the app so we can restart it and attach a startup agent.
         device.stopApp("com.example.simpleapp");
@@ -2127,7 +2125,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", oldApk);
 
         String cmd =
@@ -2145,7 +2143,7 @@ public class DeployerRunnerTest {
                     "--installers-path=" + installersPath.toString()
                 };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
 
         // Stop the app so we can restart it and attach a startup agent.
         device.stopApp("com.example.simpleapp");
@@ -2172,7 +2170,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -2195,7 +2193,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
 
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
@@ -2280,7 +2278,7 @@ public class DeployerRunnerTest {
             "--installers-path=" + installersPath.toString()
         };
 
-        assertEquals(0, runner.run(args, logger));
+        assertEquals(0, runner.run(args));
         assertInstalled("com.example.simpleapp", file);
         assertMetrics(
                 runner.getMetrics(),
@@ -2303,7 +2301,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
         String logcat = getLogcatContent(device);
 
         if (device.getApi() < 26) {
@@ -2443,7 +2441,7 @@ public class DeployerRunnerTest {
                     file.toString(),
                     "--installers-path=" + installersPath.toString()
                 };
-        int retcode = runner.run(args, logger);
+        int retcode = runner.run(args);
 
         if (device.getApi() < 26) {
             assertEquals(CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
