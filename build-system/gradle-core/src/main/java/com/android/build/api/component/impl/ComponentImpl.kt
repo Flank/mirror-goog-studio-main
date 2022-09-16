@@ -281,7 +281,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
                     androidResourcesCreationConfig?.getCompiledRClasses(configType),
                     buildConfigCreationConfig?.compiledBuildConfig,
                     getCompiledManifest(),
-                    getGeneratedPrivacySandboxSdkClasses(),
                     mainCollection
                 ).toTypedArray()
             )
@@ -357,18 +356,6 @@ abstract class ComponentImpl<DslInfoT: ComponentDslInfo>(
             internalServices.fileCollection(artifacts.get(InternalArtifactType.COMPILE_MANIFEST_JAR))
         } else {
             internalServices.fileCollection()
-        }
-    }
-
-    private fun getGeneratedPrivacySandboxSdkClasses() : FileCollection? {
-        return if (services.projectOptions[BooleanOption.PRIVACY_SANDBOX_SDK_SUPPORT]) {
-            internalServices.fileCollection(variantDependencies.getArtifactFileCollection(
-                    ConsumedConfigType.COMPILE_CLASSPATH,
-                    ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES
-            ))
-        } else {
-            null
         }
     }
 

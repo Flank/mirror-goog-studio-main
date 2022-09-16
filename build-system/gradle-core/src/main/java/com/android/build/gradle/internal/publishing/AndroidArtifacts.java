@@ -173,9 +173,6 @@ public class AndroidArtifacts {
 
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR =
             "android-privacy-sandbox-sdk-interface-descriptor";
-
-    private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES =
-            "android-privacy-sandbox-sdk-shim-classes";
     private static final String TYPE_ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET =
             "android-privacy-sandbox-sdk-extracted-manifest-snippet";
 
@@ -536,7 +533,6 @@ public class AndroidArtifacts {
         // The sdk-apis.jar containing client API stubs packaged in the ASB.
         ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR(
                 TYPE_ANDROID_PRIVACY_SANDBOX_SDK_INTERFACE_DESCRIPTOR),
-        ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES(TYPE_ANDROID_PRIVACY_SANDBOX_SDK_SHIM_CLASSES),
 
         // The artifact-transform derived manifest snippet from a privacy sandbox SDK
         ANDROID_PRIVACY_SANDBOX_SDK_EXTRACTED_MANIFEST_SNIPPET(

@@ -21,6 +21,7 @@ import com.android.ide.common.process.BaseProcessOutputHandler
 import com.android.ide.common.process.CachedProcessOutputHandler
 import com.android.ide.common.process.DefaultProcessExecutor
 import com.android.ide.common.process.ProcessInfoBuilder
+import com.android.utils.FileUtils
 import com.android.utils.LineCollector
 import com.android.utils.StdLogger
 import org.gradle.api.artifacts.transform.InputArtifact
@@ -49,7 +50,7 @@ import kotlin.streams.toList
 @DisableCachingByDefault
 abstract class ExtractSdkShimTransform: TransformAction<ExtractSdkShimTransform.Parameters> {
 
-    interface Parameters : GenericTransformParameters {
+    interface Parameters: GenericTransformParameters {
 
         // This is temporary until permanent method of getting apigenerator dependencies is finished.
         @get:InputFiles
@@ -83,8 +84,7 @@ abstract class ExtractSdkShimTransform: TransformAction<ExtractSdkShimTransform.
         val sdkInterfaceDescriptorJar = inputArtifact.get().asFile
         val output =
                 transformOutputs.file("${sdkInterfaceDescriptorJar.nameWithoutExtension}-generated.jar")
-        val tempDirForApiGeneratorOutputs =
-                java.nio.file.Files.createTempDirectory("extract-shim-transform")
+        val tempDirForApiGeneratorOutputs = Files.createTempDirectory("extract-shim-transform")
         try {
             if (!sdkInterfaceDescriptorJar.isFile) {
                 throw IOException("${sdkInterfaceDescriptorJar.absolutePath} must be a file.")
@@ -120,12 +120,11 @@ abstract class ExtractSdkShimTransform: TransformAction<ExtractSdkShimTransform.
                         "-d=${output.path}")
             }
         } finally {
-            com.android.utils.FileUtils.cleanOutputDir(tempDirForApiGeneratorOutputs.toFile())
+            FileUtils.cleanOutputDir(tempDirForApiGeneratorOutputs.toFile())
         }
     }
 
     class Generator(val classLoader: URLClassLoader) {
-
         private val apiGeneratorPackage = "androidx.privacysandbox.tools.apigenerator"
         private val privacySandboxApiGeneratorClass =
                 loadClass("$apiGeneratorPackage.PrivacySandboxApiGenerator")
@@ -140,9 +139,14 @@ abstract class ExtractSdkShimTransform: TransformAction<ExtractSdkShimTransform.
                 aidlCompiler: Path,
                 outputDirectory: Path) {
             generateMethod.invoke(privacySandboxSdkGenerator,
-                    sdkInterfaceDescriptors, aidlCompiler, outputDirectory)
+                            sdkInterfaceDescriptors, aidlCompiler, outputDirectory)
         }
-
         private fun loadClass(classToLoad: String) = classLoader.loadClass(classToLoad)
     }
 }
+
+@DisableCachingByDefault
+abstract class ExtractCompileSdkShimTransform : ExtractSdkShimTransform()
+
+@DisableCachingByDefault
+abstract class ExtractRuntimeSdkShimTransform : ExtractSdkShimTransform()
