@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -41,8 +40,7 @@ import org.junit.runners.Parameterized;
 public class DesugarMultiProjectTest {
 
     private enum Tool {
-        D8_WITH_ARTIFACT_TRANSFORMS,
-        D8_WITHOUT_ARTIFACT_TRANSFORMS,
+        D8,
         R8
     }
 
@@ -258,9 +256,6 @@ public class DesugarMultiProjectTest {
 
     @NonNull
     private GradleTaskExecutor executor() {
-        return project.executor()
-                .with(
-                        BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
-                        tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS);
+        return project.executor();
     }
 }

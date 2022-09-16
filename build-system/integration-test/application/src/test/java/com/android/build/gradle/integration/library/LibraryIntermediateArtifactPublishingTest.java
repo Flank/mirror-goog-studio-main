@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -37,6 +36,7 @@ import org.junit.Test;
 
 /** Test published intermediate artifacts. */
 public class LibraryIntermediateArtifactPublishingTest {
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create();
@@ -50,10 +50,7 @@ public class LibraryIntermediateArtifactPublishingTest {
 
     @Test
     public void fullJarArtifactIsNotNormallyCreated() throws IOException, InterruptedException {
-        GradleBuildResult result =
-                project.executor()
-                        .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, false)
-                        .run(":app:assembleDebug");
+        GradleBuildResult result = project.executor().run(":app:assembleDebug");
         Truth.assertThat(result.findTask(":lib:createFullJarDebug")).isNull();
         assertThat(getJar("full.jar")).doesNotExist();
     }

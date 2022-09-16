@@ -26,56 +26,36 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyGradleProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import org.jf.dexlib2.AccessFlags;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedMethod;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Test desugaring using D8. */
-@RunWith(FilterableParameterized.class)
 public class D8DesugaringTest {
 
-    @Parameterized.Parameters(name = "withDexingArtifactTransform_{0}")
-    public static List<Object> parameters() {
-        return ImmutableList.of(true, false);
-    }
-
     @Rule
-    public GradleTestProject project;
-
-    public D8DesugaringTest(boolean withDexingArtifactTransform) {
-        project =
-                GradleTestProject.builder()
-                        .fromTestApp(
-                                new MultiModuleTestProject(
-                                        ImmutableMap.of(
-                                                ":app",
-                                                HelloWorldApp.noBuildFile(),
-                                                ":lib",
-                                                new EmptyGradleProject())))
-                        .addGradleProperties(
-                                BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM.getPropertyName()
-                                        + "="
-                                        + withDexingArtifactTransform)
-                        .create();
-    }
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(
+                            new MultiModuleTestProject(
+                                    ImmutableMap.of(
+                                            ":app",
+                                            HelloWorldApp.noBuildFile(),
+                                            ":lib",
+                                            new EmptyGradleProject())))
+                    .create();
 
     @Before
     public void setUp() throws IOException {

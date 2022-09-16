@@ -210,26 +210,6 @@ class DexingArtifactTransformMultiModuleTest {
         assertThatApk(apk).containsClass("Llib/Data;")
     }
 
-    /** Regression test for b/130965921. */
-    @Test
-    fun testArtifactTransformDisabledMultiDex() {
-        project.getSubproject("app").buildFile.appendText(
-            """
-            android.defaultConfig.multiDexEnabled = true
-            android.defaultConfig.minSdkVersion = 21
-        """.trimIndent()
-        )
-        addSourceToJavaLib()
-        project.executor().with(
-            BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM,
-            false
-        ).run(":app:assembleDebug")
-
-        project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG).use {
-            assertThatApk(it).containsClass("Lcom/Data;")
-        }
-    }
-
     /** Regression test for b/154545489. */
     @Test
     fun testAndroidTestDependencySubtraction() {
