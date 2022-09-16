@@ -146,6 +146,10 @@ public class Locale {
         return qualifier.getTag();
     }
 
+    /** Comparator for comparing locales by script codes */
+    public static final Comparator<Locale> SCRIPT_CODE_COMPARATOR =
+            comparing(locale -> locale.qualifier.getScript(), nullsFirst(naturalOrder()));
+
     /** Comparator for comparing locales by region names */
     public static final Comparator<Locale> REGION_NAME_COMPARATOR =
             comparing(
@@ -153,7 +157,8 @@ public class Locale {
                     nullsFirst(comparing(LocaleManager::getRegionName)));
 
     /**
-     * Comparator for comparing locales by language names (and as a secondary key, the region names)
+     * Comparator for comparing locales, first by language names, then by region names, then by
+     * script codes.
      */
     public static final Comparator<Locale> LANGUAGE_NAME_COMPARATOR =
             comparing(
@@ -163,15 +168,16 @@ public class Locale {
                                                     locale.qualifier.getLanguage())
                                             : null,
                             nullsFirst(naturalOrder()))
-                    .thenComparing(REGION_NAME_COMPARATOR);
+                    .thenComparing(REGION_NAME_COMPARATOR)
+                    .thenComparing(SCRIPT_CODE_COMPARATOR);
 
     /** Comparator for comparing locales by region ISO codes */
     public static final Comparator<Locale> REGION_CODE_COMPARATOR =
             comparing(locale -> locale.qualifier.getRegion(), nullsFirst(naturalOrder()));
 
     /**
-     * Comparator for comparing locales by language ISO codes (and as a secondary key, the region
-     * ISO codes)
+     * Comparator for comparing locales, first by language ISO codes, then by region codes, then by
+     * script codes.
      */
     public static final Comparator<Locale> LANGUAGE_CODE_COMPARATOR =
             comparing(
@@ -180,7 +186,8 @@ public class Locale {
                                             ? locale.qualifier.getLanguage()
                                             : null,
                             nullsFirst(naturalOrder()))
-                    .thenComparing(REGION_CODE_COMPARATOR);
+                    .thenComparing(REGION_CODE_COMPARATOR)
+                    .thenComparing(SCRIPT_CODE_COMPARATOR);
 
     /**
      * Returns a suitable label to use to display the given locale
@@ -191,6 +198,25 @@ public class Locale {
      * @return the label
      */
     public static String getLocaleLabel(@Nullable Locale locale, boolean brief) {
+        String label = getLocaleLabelWithoutScript(locale, brief);
+
+        // TODO: Consider using the script name rather than the script code.
+        //  This would require changing generate-locale-data to add script names.
+        return locale != null && locale.qualifier.hasScript()
+                ? label + " [" + locale.qualifier.getScript() + "]"
+                : label;
+    }
+
+    /**
+     * Returns a suitable label to use to display the given locale, omitting the script (if
+     * present).
+     *
+     * @param locale the locale to look up a label for
+     * @param brief if true, generate a brief label (suitable for a toolbar button), otherwise a
+     *     fuller name (suitable for a menu item)
+     * @return the label
+     */
+    public static String getLocaleLabelWithoutScript(@Nullable Locale locale, boolean brief) {
         if (locale == null || !locale.hasLanguage()) {
             return DEFAULT_LOCALE_LABEL;
         }

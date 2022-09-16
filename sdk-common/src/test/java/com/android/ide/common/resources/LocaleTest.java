@@ -103,10 +103,28 @@ public class LocaleTest extends TestCase {
 
     public void testLanguageNameComparator() {
         assertArrayEquals(
-                Stream.of("", "zh", "zh-rCN", "zh-rTW", "hr", "en", "en-rGB")
+                Stream.of(
+                                "",
+                                "zh",
+                                "b+zh+Hant",
+                                "zh-rCN",
+                                "hr",
+                                "en",
+                                "en-rGB",
+                                "b+sr+Cyrl+RS",
+                                "b+sr+Latn+RS")
                         .map(Locale::create)
                         .toArray(),
-                Stream.of("b+en+GB", "", "en", "zh-rCN", "zh-rTW", "hr", "zh")
+                Stream.of(
+                                "b+en+GB",
+                                "b+sr+Latn+RS",
+                                "",
+                                "en",
+                                "zh-rCN",
+                                "b+zh+Hant",
+                                "hr",
+                                "zh",
+                                "b+sr+Cyrl+RS")
                         .map(Locale::create)
                         .sorted(Locale.LANGUAGE_NAME_COMPARATOR)
                         .toArray());
@@ -121,5 +139,31 @@ public class LocaleTest extends TestCase {
                         .map(Locale::create)
                         .sorted(Locale.LANGUAGE_CODE_COMPARATOR)
                         .toArray());
+    }
+
+    public void testLocaleShortLabel() {
+        assertEquals("Serbian (sr)", Locale.getLocaleLabel(Locale.create("b+sr"), true));
+        assertEquals("Serbian (sr / RS)", Locale.getLocaleLabel(Locale.create("sr-rRS"), true));
+        assertEquals("Serbian (sr / RS)", Locale.getLocaleLabel(Locale.create("b+sr+RS"), true));
+        assertEquals(
+                "Serbian (sr) [Latn]", Locale.getLocaleLabel(Locale.create("b+sr+Latn"), true));
+        assertEquals(
+                "Serbian (sr / RS) [Latn]",
+                Locale.getLocaleLabel(Locale.create("b+sr+Latn+RS"), true));
+    }
+
+    public void testLocaleLongLabel() {
+        assertEquals("Serbian (sr)", Locale.getLocaleLabel(Locale.create("b+sr"), false));
+        assertEquals(
+                "Serbian (sr) in Serbia (RS)",
+                Locale.getLocaleLabel(Locale.create("sr-rRS"), false));
+        assertEquals(
+                "Serbian (sr) in Serbia (RS)",
+                Locale.getLocaleLabel(Locale.create("b+sr+RS"), false));
+        assertEquals(
+                "Serbian (sr) [Latn]", Locale.getLocaleLabel(Locale.create("b+sr+Latn"), false));
+        assertEquals(
+                "Serbian (sr) in Serbia (RS) [Latn]",
+                Locale.getLocaleLabel(Locale.create("b+sr+Latn+RS"), false));
     }
 }

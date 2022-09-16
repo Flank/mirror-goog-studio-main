@@ -413,6 +413,10 @@ public final class LocaleQualifier extends ResourceQualifier {
         return mRegion != null && !FAKE_VALUE.equals(mRegion);
     }
 
+    public boolean hasScript() {
+        return mScript != null;
+    }
+
     @Override
     public boolean checkAndSet(@NonNull String value, @NonNull FolderConfiguration config) {
         LocaleQualifier qualifier = getQualifier(value);
