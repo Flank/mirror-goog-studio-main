@@ -178,15 +178,15 @@ public class SdkAutoDownloadTest {
 
         // Installed build tools.
         assertThat(buildTools).isDirectory();
-        File dxFile =
+        File aidl =
                 FileUtils.join(
                         mSdkHome,
                         SdkConstants.FD_BUILD_TOOLS,
                         BUILD_TOOLS_VERSION,
                         SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
-                                ? "dx.bat"
-                                : "dx");
-        assertThat(dxFile).exists();
+                                ? "aidl.exe"
+                                : "aidl");
+        assertThat(aidl).exists();
     }
 
     /**

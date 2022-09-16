@@ -41,11 +41,26 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/30.0.3",
+    srcs = sdk_glob(
+        include = ["build-tools/30.0.3/**"],
+    ),
+    visibility = [
+        "//tools/adt/idea/build-attribution:__pkg__",
+        "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
+    ],
+)
+
+filegroup(
     name = "build-tools/30.0.2",
     srcs = glob(
         include = ["*/build-tools/30.0.2/**"],
     ),
-    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
+    visibility = [
+        "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
+    ],
 )
 
 filegroup(
@@ -56,6 +71,7 @@ filegroup(
     visibility = [
         "//prebuilts/studio/buildbenchmarks:__pkg__",
         "//tools/adt/idea/old-agp-tests:__pkg__",
+        "//tools/adt/idea/project-system-gradle-upgrade:__pkg__",
         "//tools/adt/idea/sync-perf-tests:__pkg__",
         "//tools/base/build-system/previous-versions:__pkg__",
     ],
@@ -77,14 +93,6 @@ filegroup(
     name = "build-tools/minimum",
     srcs = [":build-tools/25.0.0"],
     visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "build-tools/30.0.3",
-    srcs = sdk_glob(
-        include = ["build-tools/30.0.3/**"],
-    ),
-    visibility = ["//tools/adt/idea/old-agp-tests:__pkg__"],
 )
 
 filegroup(

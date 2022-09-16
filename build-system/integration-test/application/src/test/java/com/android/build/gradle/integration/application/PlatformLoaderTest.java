@@ -76,12 +76,6 @@ public class PlatformLoaderTest {
                         GradleTestProject.DEFAULT_BUILD_TOOL_VERSION, "renderscript"),
                 FileUtils.join(mPrebuiltSdk, "tools"));
 
-        FileUtils.copyFileToDirectory(
-                FileUtils.join(
-                        realAndroidHome, SdkConstants.FD_BUILD_TOOLS,
-                        GradleTestProject.DEFAULT_BUILD_TOOL_VERSION, "dx"),
-                FileUtils.join(mPrebuiltSdk, "tools"));
-
         FileUtils.copyDirectoryContentToDirectory(
                 FileUtils.join(
                         realAndroidHome, SdkConstants.FD_BUILD_TOOLS,
