@@ -1221,8 +1221,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                             .from(packageAndroidArtifact.getAppMetadata());
                 }
 
-                if (projectOptions.get(BooleanOption.ENABLE_ART_PROFILES)
-                        && !creationConfig.getDebuggable()) {
+                if (!creationConfig.getDebuggable()) {
                     creationConfig
                             .getArtifacts()
                             .setTaskInputToFinalProduct(

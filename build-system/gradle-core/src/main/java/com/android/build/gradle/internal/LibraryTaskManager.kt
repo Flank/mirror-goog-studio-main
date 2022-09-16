@@ -403,12 +403,7 @@ class LibraryTaskManager(
 
     override fun postJavacCreation(creationConfig: ComponentCreationConfig) {
         super.postJavacCreation(creationConfig)
-        if (creationConfig
-                .services
-                .projectOptions[BooleanOption.ENABLE_ART_PROFILES]
-        ) {
-            taskFactory.register(ProcessLibraryArtProfileTask.CreationAction(creationConfig))
-        }
+        taskFactory.register(ProcessLibraryArtProfileTask.CreationAction(creationConfig))
 
         // Create jar used for publishing to API elements (for other projects to compile against).
         taskFactory.register(

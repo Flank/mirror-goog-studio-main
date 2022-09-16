@@ -20,7 +20,6 @@ import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Zip
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
@@ -125,7 +124,6 @@ class ArtProfileSingleLibraryTest {
         )
 
         val result = project.executor()
-                .with(BooleanOption.ENABLE_ART_PROFILES, true)
                 .run(":lib:bundleReleaseAar", ":app:assembleRelease")
         Truth.assertThat(result.failedTasks).isEmpty()
 

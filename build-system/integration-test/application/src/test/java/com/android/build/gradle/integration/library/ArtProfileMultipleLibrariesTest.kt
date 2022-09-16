@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.aarEntryName
 import com.android.build.gradle.integration.library.ArtProfileSingleLibraryTest.Companion.apkEntryName
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.options.BooleanOption
 import com.android.tools.profgen.ArtProfile
 import com.android.tools.profgen.HumanReadableProfile
 import com.android.utils.FileUtils
@@ -125,7 +124,6 @@ class ArtProfileMultipleLibrariesTest {
         }
 
         val result = project.executor()
-                .with(BooleanOption.ENABLE_ART_PROFILES, true)
                 .run(
                     ":lib1:bundleReleaseAar",
                     ":lib2:bundleReleaseAar",

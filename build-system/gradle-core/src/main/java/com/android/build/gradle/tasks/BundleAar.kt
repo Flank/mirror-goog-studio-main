@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.testFixtures.testFixturesClassifier
-import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.BuilderConstants
 import com.android.build.gradle.internal.tasks.TaskCategory
 import org.gradle.api.Action
@@ -384,11 +383,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     prependToCopyPath(SdkConstants.FD_PREFAB_PACKAGE)
                 )
             }
-            if (creationConfig.services.projectOptions[BooleanOption.ENABLE_ART_PROFILES]) {
-                task.from(
-                        creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ART_PROFILE)
-                )
-            }
+
+            task.from(creationConfig.artifacts.get(InternalArtifactType.LIBRARY_ART_PROFILE))
         }
     }
 
