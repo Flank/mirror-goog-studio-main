@@ -163,20 +163,9 @@ class Java11CompileTest {
 
     @Test
     fun testCompatibilityWithJavaToolChain() {
-        val platform = when(OsType.getHostOs()) {
-            OsType.LINUX -> "linux"
-            OsType.WINDOWS -> "win64"
-            OsType.DARWIN -> "mac/Contents/Home"
-            else -> throw IllegalStateException("Unsupported operating system")
-        }
-
-        val customJdkLocation =
-            TestUtils.resolveWorkspacePath("prebuilts/studio/jdk/${platform}").toString()
-                .replace("\\", "/")
-
         TestFileUtils.appendToFile(
             project.gradlePropertiesFile,
-            "org.gradle.java.installations.paths=${customJdkLocation}"
+            "org.gradle.java.installations.paths=${customJdkLocation(JdkVersion.JDK8)}"
         )
         // jdk 8 is going to be used to create the jdk image(configured through java toolChain)
         // we expect it to fail because jdk 8 doesn't have the jlink tool to create jdk image
@@ -203,8 +192,28 @@ class Java11CompileTest {
             "JavaLanguageVersion.of(8)",
             "JavaLanguageVersion.of(11)"
         )
+
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            "org.gradle.java.installations.paths=${customJdkLocation(JdkVersion.JDK11)}"
+        )
         executor().run("assembleDebug")
     }
 
-    private fun executor() = project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+    private fun customJdkLocation(jdkVersion: JdkVersion): String {
+        return when(jdkVersion) {
+            JdkVersion.JDK8 -> TestUtils.getJava8Jdk()
+            JdkVersion.JDK11 -> TestUtils.getJava11Jdk()
+        }.toString().replace("\\", "/")
+    }
+
+    private fun executor() =
+        project.executor().with(BooleanOption.INCLUDE_DEPENDENCY_INFO_IN_APKS, false)
+
+    companion object {
+        enum class JdkVersion {
+            JDK11,
+            JDK8
+        }
+    }
 }

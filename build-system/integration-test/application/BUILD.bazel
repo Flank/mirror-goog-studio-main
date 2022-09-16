@@ -299,7 +299,10 @@ gradle_integration_test(
             "src/test/java/com/android/build/gradle/integration/application/JavaCompileWithToolChainTest.kt",
         ],
     ),
-    data = TEST_DATA + ["//prebuilts/studio/jdk"],
+    data = TEST_DATA + [
+        "//prebuilts/studio/jdk",
+        "//prebuilts/studio/jdk/jdk11",
+    ],
     maven_repo_zips = [
         "//tools/base/build-system:android_gradle_plugin",
     ],
