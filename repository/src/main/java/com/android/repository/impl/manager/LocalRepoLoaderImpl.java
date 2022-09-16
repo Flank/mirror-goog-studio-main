@@ -16,6 +16,9 @@
 
 package com.android.repository.impl.manager;
 
+import static com.google.common.base.Predicates.in;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
+
 import com.android.ProgressManagerAdapter;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,6 +36,7 @@ import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
@@ -76,6 +80,12 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
      */
     @VisibleForTesting
     static final String KNOWN_PACKAGES_HASH_FN = ".knownPackages";
+
+    /**
+     * Top-level directories where resources are cached; these should not be scanned for packages.
+     */
+    private static final ImmutableSet<String> RESOURCE_CACHE_DIRS =
+            ImmutableSet.of("fonts", "icons", "skins");
 
     /**
      * Cache of found packages.
@@ -236,6 +246,7 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         } else {
             try (Stream<Path> contents = CancellableFileIo.list(root)) {
                 contents.filter(CancellableFileIo::isDirectory)
+                        .filter(in(resourceCachePaths()).negate())
                         .forEach(f -> collectPackages(collector, f, depth + 1));
             } catch (IOException e) {
                 // don't add anything
@@ -471,4 +482,8 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         return latest;
     }
 
+    /** Returns the paths where we cache resources. */
+    private ImmutableSet<Path> resourceCachePaths() {
+        return RESOURCE_CACHE_DIRS.stream().map(mRoot::resolve).collect(toImmutableSet());
+    }
 }

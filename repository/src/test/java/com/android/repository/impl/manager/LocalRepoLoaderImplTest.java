@@ -147,4 +147,22 @@ public class LocalRepoLoaderImplTest {
         assertEquals(1, localPackages.size());
         assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation());
     }
+
+    @Test
+    public void testNoScanningResourceCacheFolders() {
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        Path repoRoot = InMemoryFileSystems.createInMemoryFileSystemAndFolder("repo");
+        RepoManager mgr = new RepoManagerImpl();
+
+        // Check that the resource cache folders are not scanned for packages.
+        Path package1 = repoRoot.resolve("icons/package.xml");
+        InMemoryFileSystems.recordExistingFile(package1, LOCAL_PACKAGE);
+        Path package2 = repoRoot.resolve("foo/icons/package.xml");
+        InMemoryFileSystems.recordExistingFile(package2, LOCAL_PACKAGE_2);
+
+        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null);
+        Map<String, LocalPackage> localPackages = loader.getPackages(progress);
+        assertEquals(1, localPackages.size());
+        assertEquals(package2.getParent(), localPackages.values().iterator().next().getLocation());
+    }
 }
