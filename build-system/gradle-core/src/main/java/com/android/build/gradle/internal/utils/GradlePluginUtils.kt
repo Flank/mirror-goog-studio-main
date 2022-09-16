@@ -73,7 +73,15 @@ private val pluginList = listOf(
         "kotlin-gradle-plugin",
         GradleVersion.parse("1.6.20"),
         "org.jetbrains.kotlin.android.extensions"
-    )
+    ),
+
+    // https://issuetracker.google.com/233119646
+    DependencyInfo(
+        "Navigation Safe Args",
+        "androidx.navigation",
+        "navigation-safe-args-gradle-plugin",
+        GradleVersion.parse("2.5.0")
+    ),
 )
 
 
@@ -194,10 +202,16 @@ internal class ViolatingPluginDetector(
             buildscriptClasspath.getPathToComponent(component)
                 .getPathString(projectDisplayName)
                 .takeIf {
-                    // Ignore Safe-args plugin for now (bug 175379963).
-                    !it.contains("androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1")
+                    // Ignore Safe-args plugin 2.3.1 KGP dependency for now (bug 175379963), but
+                    // don't ignore Safe-args plugin 2.3.1 itself (bug 233119646).
+                    !it.contains(SAFE_ARGS_2_3_1) || it.endsWith(SAFE_ARGS_2_3_1)
                 }
         }
+    }
+
+    companion object {
+        private const val SAFE_ARGS_2_3_1 =
+            "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1"
     }
 }
 

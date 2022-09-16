@@ -174,4 +174,78 @@ class PluginVersionCheckTest {
 
         project.executor().run("assembleDebug")
     }
+
+    @Test
+    fun testSafeArgsTooOld() {
+        // Use an old version of the Navigation Safe Args plugin, expect sync issues
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                buildscript {
+                    dependencies {
+                        classpath 'androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1'
+                    }
+                }
+                """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("lib").buildFile,
+            "apply plugin: 'androidx.navigation.safeargs'"
+        )
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            """
+                android.useAndroidX=true
+            """.trimIndent()
+        )
+
+        val model = project.modelV2().ignoreSyncIssues().fetchModels()
+        val syncIssues = model.container.getNonDeprecationIssues()
+        assertThat(syncIssues).hasSize(1)
+        val syncIssue = syncIssues.single()
+
+        assertThat(syncIssue.type).isEqualTo(SyncIssue.TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
+        assertThat(syncIssue.severity).isEqualTo(SyncIssue.SEVERITY_ERROR)
+        val expected = "The Android Gradle plugin supports only Navigation Safe Args Gradle " +
+                "plugin version 2.5.0 and higher.\n" +
+                "The following dependencies do not satisfy the required version:\n" +
+                "root project 'project' -> " +
+                "androidx.navigation:navigation-safe-args-gradle-plugin:2.3.1"
+        assertThat(syncIssue.message).isEqualTo(expected)
+
+        val failure = project.executor().expectFailure().run("assembleDebug")
+        failure.stderr.use {
+            ScannerSubject.assertThat(it).contains(expected)
+        }
+    }
+
+    @Test
+    fun testSafeArgsOk() {
+        // Use a sufficiently new version of the Navigation Safe Args plugin, expect no sync issues
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+                buildscript {
+                    dependencies {
+                        classpath 'androidx.navigation:navigation-safe-args-gradle-plugin:2.5.2'
+                    }
+                }
+                """.trimIndent()
+        )
+        TestFileUtils.appendToFile(
+            project.getSubproject("lib").buildFile,
+            "apply plugin: 'androidx.navigation.safeargs'"
+        )
+        TestFileUtils.appendToFile(
+            project.gradlePropertiesFile,
+            """
+                android.useAndroidX=true
+            """.trimIndent()
+        )
+
+        val model = project.modelV2().fetchModels()
+        assertThat(model.container.getNonDeprecationIssues()).isEmpty()
+
+        project.executor().run("assembleDebug")
+    }
 }
