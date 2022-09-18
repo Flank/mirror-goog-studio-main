@@ -16,13 +16,6 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.intellij.psi.PsiElement;
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor;
-import org.jetbrains.kotlin.psi.KtElement;
-import org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt;
-
 // Class which contains some code which cannot be expressed in Kotlin;
 // not public since the public LintUtils methods will more directly expose them
 class LintJavaUtils {
@@ -32,15 +25,5 @@ class LintJavaUtils {
         boolean assertionsEnabled = false;
         assert assertionsEnabled = true; // Intentional side-effect
         return assertionsEnabled;
-    }
-
-    @Nullable
-    static PsiElement resolveToPsiMethod(
-            @NonNull KtElement context,
-            @NonNull DeclarationDescriptor descriptor,
-            @Nullable PsiElement source) {
-        // TODO(kotlin-uast-cleanup): avoid using "internal" utils
-        //noinspection KotlinInternalInJava
-        return KotlinInternalUastUtilsKt.resolveToPsiMethod(context, descriptor, source);
     }
 }

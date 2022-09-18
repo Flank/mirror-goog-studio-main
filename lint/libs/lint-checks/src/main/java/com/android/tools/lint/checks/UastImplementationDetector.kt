@@ -89,9 +89,7 @@ class UastImplementationDetector : Detector(), SourceCodeScanner {
             "org.jetbrains.uast.kotlin.kinds.KotlinSpecialExpressionKinds", // and again
             "org.jetbrains.uast.java.JavaUDeclarationsExpression", // no plugin API to create this
             "org.jetbrains.uast.java.UnknownJavaExpression", // no common interface (yet)
-            "org.jetbrains.uast.kotlin.UnknownKotlinExpression", // no common interface (yet)
-            // TODO(kotlin-uast-cleanup): these are literally "internal" utils
-            "org.jetbrains.uast.kotlin.KotlinInternalUastUtilsKt" -> true
+            "org.jetbrains.uast.kotlin.UnknownKotlinExpression" -> true // no common interface (yet)
             else -> false
         }
     }
