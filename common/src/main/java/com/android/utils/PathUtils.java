@@ -128,12 +128,16 @@ public final class PathUtils {
                 break;
             }
             if (failedAttempts >= EMPTY_DIRECTORY_DELETION_ATTEMPTS) {
-                throw new RuntimeException(
+                throw new IOException(
                         String.format(
                                 "Unable to delete directory '%s' after %d attempts",
                                 path, failedAttempts),
                         exception);
             }
+        }
+        // Safety check to make sure the delete happened in the end.
+        if (CancellableFileIo.exists(path)) {
+            throw new IOException("Failed to delete " + path);
         }
     }
 

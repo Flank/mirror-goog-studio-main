@@ -27,6 +27,7 @@ import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.testutils.file.InMemoryFileSystems;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.nio.file.Files;
@@ -636,8 +637,8 @@ public class InstallerUtilTest extends TestCase {
             assertEquals("content3", new String(Files.readAllBytes(resultFile3)));
         }
         finally {
-            FileOpUtils.deleteFileOrFolder(root);
-            FileOpUtils.deleteFileOrFolder(outRoot);
+            PathUtils.deleteRecursivelyIfExists(root);
+            PathUtils.deleteRecursivelyIfExists(outRoot);
         }
     }
 }

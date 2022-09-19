@@ -26,11 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -139,7 +136,7 @@ public final class FileOpUtils {
                 try {
                     // Merge in case some things had been moved and some not.
                     recursiveCopy(destBackup, dest, true, null, progress);
-                    FileOpUtils.deleteFileOrFolder(destBackup);
+                    PathUtils.deleteRecursivelyIfExists(destBackup);
                 }
                 catch (IOException e) {
                     // we're already throwing the exception from the original "try", and there's
@@ -162,17 +159,20 @@ public final class FileOpUtils {
         } finally {
             if (!success) {
                 // It failed. Now we have to restore the backup.
-                FileOpUtils.deleteFileOrFolder(dest);
-                if (CancellableFileIo.exists(dest)) {
-                    // Failed to delete the new stuff. Move it away and delete later.
-                    Path toDelete = getTempDir(dest, "delete");
-                    Files.move(dest, toDelete);
-                    PathUtils.addRemovePathHook(toDelete);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(dest);
+                } catch (IOException exception) {
+                    if (CancellableFileIo.exists(dest)) {
+                        // Failed to delete the new stuff. Move it away and delete later.
+                        Path toDelete = getTempDir(dest, "delete");
+                        Files.move(dest, toDelete);
+                        PathUtils.addRemovePathHook(toDelete);
+                    }
                 }
                 try {
                     if (CancellableFileIo.exists(dest)) {
-                        // Couldn't get rid of the new, partial stuff. Try merging the old ones back
-                        // over.
+                        // Couldn't get rid of the new, partial stuff. Try merging the old ones
+                        // back over.
                         recursiveCopy(destBackup, dest, true, null, progress);
                     } else {
                         // dest is cleared. Move temp stuff back into place
@@ -181,15 +181,21 @@ public final class FileOpUtils {
                 } catch (IOException e) {
                     // we're already throwing the exception from the original "try", and there's
                     // nothing more to be done here. Just log it.
-                    progress.logWarning(String.format(
-                            "Failed to move original content of %s back into place! "
-                                    + "It should be available at %s", dest, destBackup), e);
+                    progress.logWarning(
+                            String.format(
+                                    "Failed to move original content of %s back into place! "
+                                            + "It should be available at %s",
+                                    dest, destBackup),
+                            e);
                 }
             }
         }
 
         // done, delete the backup
-        deleteFileOrFolder(destBackup);
+        try {
+            PathUtils.deleteRecursivelyIfExists(destBackup);
+        } catch (IOException ignore) {
+        }
     }
 
     private static void moveOrCopyAndDelete(
@@ -199,9 +205,7 @@ public final class FileOpUtils {
         } catch (IOException ignore) {
             // Failed to move. Try copy/delete, with merge in case something already got moved.
             recursiveCopy(src, dest, true, null, progress);
-            if (!FileOpUtils.deleteFileOrFolder(src)) {
-                throw new IOException("Failed to delete" + src);
-            }
+            PathUtils.deleteRecursivelyIfExists(src);
         }
     }
 
@@ -210,10 +214,13 @@ public final class FileOpUtils {
         int i = 1;
         while (CancellableFileIo.exists(result)) {
             // The dir is already there. Try to delete it.
-            deleteFileOrFolder(result);
-            if (!CancellableFileIo.exists(result)) {
+            try {
+                PathUtils.deleteRecursivelyIfExists(result);
                 break;
+            } catch (IOException ignore) {
+                // continue
             }
+
             // We couldn't delete it. Make a new dir.
             result = orig.getFileSystem().getPath(result + "-" + i++);
         }
@@ -335,50 +342,6 @@ public final class FileOpUtils {
 
     public static boolean isWindows() {
         return IS_WINDOWS;
-    }
-
-    /**
-     * Helper to delete a file or a directory. For a directory, recursively deletes all of its
-     * content. It's ok for the file or folder to not exist at all.
-     *
-     * @return true if the delete was successful
-     */
-    public static boolean deleteFileOrFolder(@NonNull Path fileOrFolder) {
-        boolean[] sawException = new boolean[1];
-        try {
-            CancellableFileIo.walkFileTree(
-                    fileOrFolder,
-                    new SimpleFileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                            try {
-                                Files.delete(file);
-                            } catch (IOException ignore) {
-                                sawException[0] = true;
-                            }
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-                            sawException[0] = true;
-                            return FileVisitResult.CONTINUE;
-                        }
-
-                        @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-                            try {
-                                Files.delete(dir);
-                            } catch (IOException ignore) {
-                                sawException[0] = true;
-                            }
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
-        } catch (IOException e) {
-            return false;
-        }
-        return !sawException[0];
     }
 
     public static void setExecutablePermission(@NonNull Path path) throws IOException {

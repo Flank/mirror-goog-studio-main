@@ -25,7 +25,6 @@ import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
@@ -205,7 +204,10 @@ public abstract class AbstractPackageOperation implements PackageOperation {
                             result ? InstallStatus.COMPLETE : InstallStatus.FAILED,
                             mCompleteProgress);
             if (result && installTemp != null) {
-                FileOpUtils.deleteFileOrFolder(installTemp);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(installTemp);
+                } catch (IOException ignore) {
+                }
             }
             getRepoManager().installEnded(getPackage());
             getRepoManager().markLocalCacheInvalid();
@@ -287,8 +289,11 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     }
 
     protected void cleanup(@NonNull ProgressIndicator progress) {
-        FileOpUtils.deleteFileOrFolder(
-                getLocation(progress).resolve(InstallerUtil.INSTALLER_DIR_FN));
+        try {
+            PathUtils.deleteRecursivelyIfExists(
+                    getLocation(progress).resolve(InstallerUtil.INSTALLER_DIR_FN));
+        } catch (IOException ignore) {
+        }
     }
 
     /**
@@ -440,7 +445,10 @@ public abstract class AbstractPackageOperation implements PackageOperation {
         for (int i = 1; i < MAX_PACKAGE_OPERATION_TEMP_DIRS; i++) {
             Path dir = getPackageOperationTempDir(getRepoManager(), base, i);
             if (CancellableFileIo.exists(dir) && !retain.contains(dir)) {
-                FileOpUtils.deleteFileOrFolder(dir);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(dir);
+                } catch (IOException ignore) {
+                }
             }
         }
     }

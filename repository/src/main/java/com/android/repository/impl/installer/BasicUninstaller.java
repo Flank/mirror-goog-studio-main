@@ -23,7 +23,8 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.io.FileOpUtils;
+import com.android.utils.PathUtils;
+import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -49,7 +50,11 @@ class BasicUninstaller extends AbstractUninstaller {
     protected boolean doComplete(@Nullable Path tempPath, @NonNull ProgressIndicator progress) {
         Path location = getPackage().getLocation();
 
-        FileOpUtils.deleteFileOrFolder(location);
+        try {
+            PathUtils.deleteRecursivelyIfExists(location);
+        } catch (IOException ignore) {
+        }
+
         getRepoManager().markLocalCacheInvalid();
 
         boolean successfullyDeleted = CancellableFileIo.notExists(location);

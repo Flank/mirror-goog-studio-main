@@ -52,6 +52,7 @@ import com.android.utils.GrabProcessOutput;
 import com.android.utils.GrabProcessOutput.IProcessOutput;
 import com.android.utils.GrabProcessOutput.Wait;
 import com.android.utils.ILogger;
+import com.android.utils.PathUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +65,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
@@ -403,7 +406,7 @@ public class AvdManager {
 
     public static final String HARDWARE_INI = "hardware.ini"; //$NON-NLS-1$
 
-    private static class AvdMgrException extends Exception {};
+    private static class AvdMgrException extends Exception {}
 
     /** A key containing all the values that will make an AvdManager unique. */
     protected static final class AvdManagerCacheKey {
@@ -1027,8 +1030,10 @@ public class AvdManager {
                 mLog.warning(
                         "Removing previous AVD directory at %s", oldAvdInfo.getDataFolderPath());
                 // Remove the old data directory
-                if (!FileOpUtils.deleteFileOrFolder(
-                        mBaseAvdFolder.resolve(oldAvdInfo.getDataFolderPath()))) {
+                try {
+                    PathUtils.deleteRecursivelyIfExists(
+                            mBaseAvdFolder.resolve(oldAvdInfo.getDataFolderPath()));
+                } catch (IOException exception) {
                     mLog.warning("Failed to delete %1$s: %2$s", oldAvdInfo.getDataFolderPath());
                 }
             }
@@ -1042,12 +1047,15 @@ public class AvdManager {
         } finally {
             if (needCleanup) {
                 if (iniFile != null) {
-                    FileOpUtils.deleteFileOrFolder(iniFile);
+                    try {
+                        PathUtils.deleteRecursivelyIfExists(iniFile);
+                    } catch (IOException ignore) {
+                    }
                 }
 
                 try {
-                    FileOpUtils.deleteFileOrFolder(avdFolder);
-                } catch (SecurityException e) {
+                    PathUtils.deleteRecursivelyIfExists(avdFolder);
+                } catch (Exception e) {
                     mLog.warning("Failed to delete %1$s: %2$s", avdFolder.toAbsolutePath(), e);
                 }
             }
@@ -1212,7 +1220,10 @@ public class AvdManager {
             if (CancellableFileIo.isRegularFile(iniFile)) {
                 Files.delete(iniFile);
             } else if (CancellableFileIo.isDirectory(iniFile)) {
-                FileOpUtils.deleteFileOrFolder(iniFile);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(iniFile);
+                } catch (IOException ignore) {
+                }
             }
         }
 
@@ -1285,11 +1296,14 @@ public class AvdManager {
 
             Path path = avdInfo.getDataFolderPath();
             f = mBaseAvdFolder.resolve(path);
-            if (!FileOpUtils.deleteFileOrFolder(f)) {
-                if (CancellableFileIo.exists(f)) {
-                    mLog.warning("Failed to delete %1$s\n", f);
-                    error = true;
-                }
+            try {
+                PathUtils.deleteRecursivelyIfExists(f);
+            } catch (IOException exception) {
+                mLog.warning("Failed to delete %1$s\n", f);
+                StringWriter writer = new StringWriter();
+                exception.printStackTrace(new PrintWriter(writer));
+                mLog.warning(writer.toString());
+                error = true;
             }
 
             removeAvd(avdInfo);
@@ -1395,7 +1409,11 @@ public class AvdManager {
         boolean success = true;
         try (DirectoryStream<Path> entries = Files.newDirectoryStream(folder)) {
             for (Path entry : entries) {
-                success &= FileOpUtils.deleteFileOrFolder(entry);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(entry);
+                } catch (IOException ignore) {
+                    success = false;
+                }
             }
         } catch (IOException exception) {
             return false;
@@ -1659,7 +1677,7 @@ public class AvdManager {
 
     /**
      * Writes a .ini file from a set of properties, using UTF-8 encoding. The keys are sorted. The
-     * file should be read back later by {@link #parseIniFile(IAbstractFile)}.
+     * file should be read back later by {@link #parseIniFile(IAbstractFile, ILogger)}.
      *
      * @param iniFile The file to generate.
      * @param values The properties to place in the ini file.

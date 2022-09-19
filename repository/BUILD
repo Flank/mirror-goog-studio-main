@@ -95,6 +95,7 @@ coverage_java_test(
         ":tools.repository",
         ":tools.testlib",
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
         "@maven//:com.google.guava.guava",
         "@maven//:com.google.jimfs.jimfs",

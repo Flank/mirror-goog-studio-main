@@ -27,6 +27,7 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.impl.meta.Archive;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
+import com.android.utils.PathUtils;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.URL;
@@ -96,7 +97,10 @@ class BasicInstaller extends AbstractInstaller {
             if (progress.isCanceled()) {
                 return false;
             }
-            FileOpUtils.deleteFileOrFolder(downloadLocation);
+            try {
+                PathUtils.deleteRecursivelyIfExists(downloadLocation);
+            } catch (IOException ignore) {
+            }
 
             return true;
         } catch (IOException e) {
@@ -114,9 +118,15 @@ class BasicInstaller extends AbstractInstaller {
     @Override
     protected void cleanup(@NonNull ProgressIndicator progress) {
         super.cleanup(progress);
-        FileOpUtils.deleteFileOrFolder(getLocation(progress));
-        if (myUnzipDir != null) {
-            FileOpUtils.deleteFileOrFolder(myUnzipDir);
+        try {
+            PathUtils.deleteRecursivelyIfExists(getLocation(progress));
+        } catch (IOException ignore) {
+        }
+        try {
+            if (myUnzipDir != null) {
+                PathUtils.deleteRecursivelyIfExists(myUnzipDir);
+            }
+        } catch (IOException ignore) {
         }
     }
 
