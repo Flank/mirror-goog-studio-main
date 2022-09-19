@@ -17,14 +17,12 @@ package com.android.tools.lint.detector.api
 
 import com.android.tools.lint.client.api.TYPE_OBJECT
 import com.android.tools.lint.client.api.TYPE_STRING
+import com.android.tools.lint.detector.api.ConstantEvaluator.ArrayReference
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.findLastAssignment
 import com.android.tools.lint.detector.api.UastLintUtils.Companion.findLastValue
-import com.google.common.collect.Lists
-import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.JavaTokenType
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiAssignmentExpression
-import com.intellij.psi.PsiBinaryExpression
 import com.intellij.psi.PsiBlockStatement
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiConditionalExpression
@@ -34,7 +32,6 @@ import com.intellij.psi.PsiExpression
 import com.intellij.psi.PsiExpressionStatement
 import com.intellij.psi.PsiField
 import com.intellij.psi.PsiIfStatement
-import com.intellij.psi.PsiJavaCodeReferenceElement
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiModifier
@@ -87,15 +84,11 @@ import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 import org.jetbrains.uast.util.isTypeCast
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import java.util.Objects
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.experimental.inv
-import kotlin.text.trimIndent
-import kotlin.text.trimMargin
 
 /** Evaluates constant expressions  */
-class ConstantEvaluator
-/** Creates a new constant evaluator  */ {
+class ConstantEvaluator {
     private var allowUnknown = false
     private var allowFieldInitializers = false
 
@@ -105,15 +98,8 @@ class ConstantEvaluator
      *
      * @return this for constructor chaining
      */
-    fun allowUnknowns(): ConstantEvaluator {
-        allowUnknown = true
-        return this
-    }
-
-    fun allowFieldInitializers(): ConstantEvaluator {
-        allowFieldInitializers = true
-        return this
-    }
+    fun allowUnknowns(): ConstantEvaluator = this.also { allowUnknown = true }
+    fun allowFieldInitializers(): ConstantEvaluator = this.also { allowFieldInitializers = true }
 
     /**
      * Evaluates the given node and returns the constant value it resolves to, if any
@@ -121,824 +107,271 @@ class ConstantEvaluator
      * @param node the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
      */
-    fun evaluate(node: UElement?): Any? {
-        if (node == null) {
-            return null
+    fun evaluate(node: UElement?): Any? = when {
+        node == null -> null
+        node is ULiteralExpression -> node.value
+        node is UPrefixExpression -> evaluate(node.operand)?.let { operand ->
+            when (node.operator) {
+                UastPrefixOperator.LOGICAL_NOT -> operand.tryOn(Boolean::not)
+                UastPrefixOperator.UNARY_PLUS -> operand
+                UastPrefixOperator.BITWISE_NOT -> operand.tryInv()
+                UastPrefixOperator.UNARY_MINUS -> operand.tryUnaryMinus()
+                else -> null
+            }
         }
-        if (node is ULiteralExpression) {
-            return node.value
-        } else if (node is UPrefixExpression) {
-            val operator = node.operator
-            val operand = evaluate(node.operand) ?: return null
-            if (operator == UastPrefixOperator.LOGICAL_NOT) {
-                if (operand is Boolean) {
-                    return !operand
-                }
-            } else if (operator == UastPrefixOperator.UNARY_PLUS) {
-                return operand
-            } else if (operator == UastPrefixOperator.BITWISE_NOT) {
-                if (operand is Int) {
-                    return operand.toInt().inv()
-                } else if (operand is Long) {
-                    return operand.toLong().inv()
-                } else if (operand is Short) {
-                    return operand.toShort().inv().toInt()
-                } else if (operand is Char) {
-                    return operand.toChar().inv()
-                } else if (operand is Byte) {
-                    return operand.toByte().inv().toInt()
-                }
-            } else if (operator == UastPrefixOperator.UNARY_MINUS) {
-                if (operand is Int) {
-                    return -operand
-                } else if (operand is Long) {
-                    return -operand
-                } else if (operand is Double) {
-                    return -operand
-                } else if (operand is Float) {
-                    return -operand
-                } else if (operand is Short) {
-                    return -operand.toShort()
-                } else if (operand is Char) {
-                    return -operand.toChar()
-                } else if (operand is Byte) {
-                    return -operand.toByte()
-                }
+        node is UIfExpression -> when (node.getExpressionType()) {
+            null -> null
+            else -> when (evaluate(node.condition)) {
+                true -> node.thenExpression?.let(::evaluate)
+                false -> node.elseExpression?.let(::evaluate)
+                else -> null
             }
-        } else if (node is UIfExpression &&
-            node.getExpressionType() != null
-        ) {
-            val expression = node
-            val known = evaluate(expression.condition)
-            if (known == java.lang.Boolean.TRUE && expression.thenExpression != null) {
-                return evaluate(expression.thenExpression)
-            } else if (known == java.lang.Boolean.FALSE && expression.elseExpression != null) {
-                return evaluate(expression.elseExpression)
-            }
-        } else if (node is UParenthesizedExpression) {
-            val expression = node.expression
-            return evaluate(expression)
-        } else if (node is UPolyadicExpression) {
-            val polyadicExpression = node
-            val operator = polyadicExpression.operator
-            val operands = polyadicExpression.operands
-            if (operands.isEmpty()) {
+        }
+        node is UParenthesizedExpression -> evaluate(node.expression)
+        node is UPolyadicExpression -> node.operands.map(::evaluate).let(::ArgList).let { operands ->
+            when {
                 // For empty strings the Kotlin string template will return an empty operand list
-                if (node.sourcePsi is KtStringTemplateExpression) {
-                    return ""
+                operands.values.isEmpty() && node.sourcePsi is KtStringTemplateExpression -> ""
+                else -> when (node.operator) {
+                    UastBinaryOperator.LOGICAL_OR -> operands.logicalOr()
+                    UastBinaryOperator.LOGICAL_AND -> operands.logicalAnd()
+                    // TODO Wrong below. ConstantEvaluator can't be used to check referential equality.
+                    UastBinaryOperator.IDENTITY_EQUALS, UastBinaryOperator.EQUALS -> operands.ifAll<Any>()?.isOrdered(Any::equals)
+                    UastBinaryOperator.IDENTITY_NOT_EQUALS, UastBinaryOperator.NOT_EQUALS -> operands.tryOn(Any::notEquals)
+                    UastBinaryOperator.BITWISE_OR -> operands.bitwiseOr()
+                    UastBinaryOperator.BITWISE_XOR -> operands.bitwiseXor()
+                    UastBinaryOperator.BITWISE_AND -> operands.bitwiseAnd()
+                    UastBinaryOperator.GREATER -> operands.isOrdered(Double::gt, Long::gt)
+                    UastBinaryOperator.GREATER_OR_EQUALS -> operands.isOrdered(Double::ge, Long::ge)
+                    UastBinaryOperator.LESS -> operands.isOrdered(Double::lt, Long::lt)
+                    UastBinaryOperator.LESS_OR_EQUALS -> operands.isOrdered(Double::le, Long::le)
+                    UastBinaryOperator.SHIFT_LEFT -> operands.shl()
+                    UastBinaryOperator.SHIFT_RIGHT -> operands.shr()
+                    UastBinaryOperator.UNSIGNED_SHIFT_RIGHT -> operands.ushr()
+                    UastBinaryOperator.PLUS -> operands.plus(allowUnknown)
+                    UastBinaryOperator.MINUS -> operands.minus()
+                    UastBinaryOperator.MULTIPLY -> operands.times()
+                    UastBinaryOperator.DIV -> operands.div()
+                    UastBinaryOperator.MOD -> operands.mod()
+                    else -> null
                 }
             }
-            assert(!operands.isEmpty())
-            var result = evaluate(operands[0])
-            var i = 1
-            val n = operands.size
-            while (i < n) {
-                val rhs = evaluate(operands[i])
-                result = evaluateBinary(operator, result, rhs)
-                i++
-            }
-            if (result != null) {
-                return result
-            }
-        } else if (node is UBinaryExpressionWithType &&
-            node.operationKind === UastBinaryExpressionWithTypeKind.TypeCast.INSTANCE
-        ) {
-            val cast = node
-            val operandValue = evaluate(cast.operand)
-            if (operandValue is Number) {
-                val number = operandValue
-                val type = cast.type
-                if (PsiType.FLOAT == type) {
-                    return number.toFloat()
-                } else if (PsiType.DOUBLE == type) {
-                    return number.toDouble()
-                } else if (PsiType.INT == type) {
-                    return number.toInt()
-                } else if (PsiType.LONG == type) {
-                    return number.toLong()
-                } else if (PsiType.SHORT == type) {
-                    return number.toShort()
-                } else if (PsiType.BYTE == type) {
-                    return number.toByte()
-                }
-            }
-            return operandValue
-        } else if (node is UReferenceExpression) {
-            val resolved = node.resolve()
-            if (resolved is PsiVariable) {
-
-                // Handle fields specially: we can't look for last assignment
-                // on fields since the modifications are often in different methods
-                // Only take the field constant or initializer value if it's final,
-                // or if allowFieldInitializers is true
-                if (resolved is PsiField) {
-                    val field = resolved
-                    if ("length" == field.name && node is UQualifiedReferenceExpression &&
-                        node
-                            .receiver
-                            .getExpressionType() is PsiArrayType
-                    ) {
-                        // It's an array.length expression
-                        val array = evaluate(node.receiver)
-                        val size = getArraySize(array)
-                        return if (size != -1) {
-                            size
-                        } else null
-                    }
-                    var value = field.computeConstantValue()
-                    if (value != null) {
-                        return value
-                    }
-                    if (field.initializer != null &&
-                        (
-                                allowFieldInitializers ||
-                                        (
-                                                field.hasModifierProperty(PsiModifier.STATIC) &&
-                                                        field.hasModifierProperty(PsiModifier.FINAL)
-                                                )
-                                )
-                    ) {
-                        value = evaluate(field.initializer)
-                        if (value != null) {
-                            return if (surroundedByVariableCheck(node, field)) {
-                                null
-                            } else value
+        }
+        node is UBinaryExpressionWithType -> when (node.operationKind) {
+            UastBinaryExpressionWithTypeKind.TypeCast.INSTANCE -> evaluate(node.operand).tryToNum(node.type)
+            else -> null
+        }
+        node is UReferenceExpression -> node.resolve().let { resolved ->
+            when {
+                resolved is PsiVariable -> {
+                    when {
+                        // Handle fields specially: we can't look for last assignment
+                        // on fields since the modifications are often in different methods
+                        // Only take the field constant or initializer value if it's final,
+                        // or if allowFieldInitializers is true
+                        resolved !is PsiField -> findLastValue(resolved, node, this).let { value ->
+                            when {
+                                // Special return value: the variable *was* assigned something but we don't know
+                                // the value. In that case we should not continue to look at the initializer
+                                // since the initial value is no longer relevant.
+                                value == LastAssignmentFinder.LastAssignmentValueUnknown -> null
+                                surroundedByVariableCheck(node, resolved) -> null
+                                else -> value ?: resolved.initializer?.let(::evaluate)
+                            }
                         }
+                        resolved.name == "length" -> // It's an array.length expression
+                            node.tryOn(UQualifiedReferenceExpression::receiver)
+                                ?.takeIf(UExpression::getExpressionType then { it is PsiArrayType })
+                                ?.let(::evaluate)
+                                ?.let(::getArraySize)
+                                ?.takeUnless { it == -1 }
+                        else -> resolved.computeConstantValue()
+                            ?: resolved.getAllowedInitializer()
+                                ?.let(::evaluate)
+                                ?.takeUnless { surroundedByVariableCheck(node, resolved) }
+                            ?: (resolved as? KtLightField)?.let(::evaluate)
                     }
-                    if (field is KtLightField) {
-                        val fieldValue = evaluate(field)
-                        if (fieldValue != null) {
-                            return fieldValue
+                }
+                node is UQualifiedReferenceExpression -> {
+                    fun UExpression.simpleRefId(): String? = tryOn(USimpleNameReferenceExpression::identifier)
+                    val selector = node.selector
+                    when {
+                        node.receiver.simpleRefId() == "kotlin" -> evaluate(selector) // such as kotlin.IntArray(x)
+                        selector is USimpleNameReferenceExpression -> {
+                            val receiver = node.receiver.let { r ->
+                                when {
+                                    // "kotlin.<N>Array".size ?
+                                    r is UQualifiedReferenceExpression && r.receiver.simpleRefId() == "kotlin" -> r.selector
+                                    else -> r
+                                }
+                            }
+                            // TODO: Handle listOf, arrayListOf etc as well!
+                            when {
+                                "size" == selector.identifier && receiver is UCallExpression ->
+                                    getMethodName(receiver)?.let { name ->
+                                        when (name) {
+                                            "Array", in kotlinPrimArrayFixedArgConstructors, "arrayOfNulls" ->
+                                                evaluateFirstArg(receiver).tryOn(Number::toInt)
+                                            "arrayOf", in kotlinPrimArrayVarargConstructors ->
+                                                receiver.valueArgumentCount
+                                            else -> null
+                                        }
+                                    }
+                                else -> null
+                            }
                         }
-                    }
-                    return null
-                }
-                val variable = resolved
-                val value = findLastValue(variable, node, this)
-
-                // Special return value: the variable *was* assigned something but we don't know
-                // the value. In that case we should not continue to look at the initializer
-                // since the initial value is no longer relevant.
-                if (value == LastAssignmentFinder.LastAssignmentValueUnknown) {
-                    return null
-                }
-                if (value != null) {
-                    return if (surroundedByVariableCheck(node, variable)) {
-                        null
-                    } else value
-                }
-                if (variable.initializer != null) {
-                    val initializedValue = evaluate(variable.initializer)
-                    return if (surroundedByVariableCheck(node, variable)) {
-                        null
-                    } else initializedValue
-                }
-                return null
-            }
-            if (node is UQualifiedReferenceExpression) {
-                val expression = node
-                val selector = expression.selector
-                var receiver = expression.receiver
-                if (receiver is USimpleNameReferenceExpression) {
-                    // such as kotlin.IntArray(x)
-                    if (receiver.identifier == "kotlin") {
-                        return evaluate(selector)
-                    }
-                }
-                if (selector is USimpleNameReferenceExpression) {
-                    val identifier = selector.identifier
-                    // "kotlin.<N>Array".size ?
-                    if (receiver is UQualifiedReferenceExpression) {
-                        val expression1 = receiver
-                        if (expression1.receiver is USimpleNameReferenceExpression &&
-                            (
-                                    (expression1.receiver as USimpleNameReferenceExpression)
-                                        .identifier
-                                            == "kotlin"
+                        selector is UCallExpression -> {
+                            val receiver = node.receiver
+                            when {
+                                selector.methodName == "trimIndent" -> evaluate(receiver).tryOn(String::trimIndent)
+                                selector.methodName == "trimMargin" -> evaluate(receiver)?.tryOn { s: String ->
+                                    val prefix = when (selector.valueArguments.size) {
+                                        1 -> evaluate(selector.valueArguments[0])?.toString() ?: "|"
+                                        else -> "|"
+                                    }
+                                    s.trimMargin(prefix)
+                                }
+                                // In String#format attempt to pick out at least the formatting string.
+                                // In theory we could also evaluate all the arguments and try passing them
+                                // in but there's some risk of invalid formatting string combinations.
+                                selector.methodName == "format" && allowUnknown && selector.valueArguments.size >= 2 -> {
+                                    val (first, second) = selector.valueArguments
+                                    evaluate(
+                                        when (first.getExpressionType()?.canonicalText) {
+                                            "java.util.Locale" -> second
+                                            else -> first
+                                        }
                                     )
-                        ) {
-                            receiver = expression1.selector
-                        }
-                    }
-
-                    // TODO: Handle listOf, arrayListOf etc as well!
-                    if ("size" == identifier && receiver is UCallExpression) {
-                        val receiverCall = receiver
-                        val name = getMethodName(receiverCall)
-                        if (name != null) {
-                            if (name.endsWith("Array") &&
-                                (name == "Array" || getKotlinPrimitiveArrayType(name) != null)
-                            ) {
-                                val size = getKotlinArrayConstructionSize(receiverCall)
-                                if (size != -1) {
-                                    return size
                                 }
-                            } else if (name.endsWith("rrayOf") &&
-                                (name == "arrayOf" || getKotlinPrimitiveArrayType(name) != null)
-                            ) {
-                                return receiverCall.valueArgumentCount
-                            } else if ("arrayOfNulls" == name) {
-                                val size = getKotlinArrayConstructionSize(receiverCall)
-                                if (size != -1) {
-                                    return size
-                                }
+                                else -> null
                             }
                         }
+                        else -> null
                     }
                 }
-                if (receiver != null && selector is UCallExpression) {
-                    val call = selector
-                    val methodName = call.methodName
-                    if ("trimIndent" == methodName) {
-                        val s = evaluate(receiver)
-                        if (s is String) {
-                            return s.trimIndent()
-                        }
-                    } else if ("trimMargin" == methodName) {
-                        val s = evaluate(receiver)
-                        if (s is String) {
-                            var prefix = "|"
-                            val valueArguments = call.valueArguments
-                            if (valueArguments.size == 1) {
-                                val arg = evaluate(valueArguments[0])
-                                if (arg != null) {
-                                    prefix = arg.toString()
-                                }
-                            }
-                            return s.trimMargin(prefix)
-                        }
-                    } else if (allowUnknown && "format" == methodName) {
-                        // In String#format attempt to pick out at least the formatting string.
-                        // In theory we could also evaluate all the arguments and try passing them
-                        // in but there's some risk of invalid formatting string combinations.
-                        val arguments = call.valueArguments
-                        if (arguments.size >= 2) {
-                            val first = arguments[0]
-                            val second = arguments[1]
-                            val expressionType = first.getExpressionType()
-                            return if (expressionType != null &&
-                                (
-                                        "java.util.Locale"
-                                                == expressionType.canonicalText
-                                        )
-                            ) {
-                                evaluate(second)
-                            } else {
-                                evaluate(first)
-                            }
-                        }
-                    }
-                }
+                else -> node.evaluate()
             }
-        } else if (node.isNewArrayWithDimensions()) {
+        }
+        node.isNewArrayWithDimensions() -> {
             val call = node as UCallExpression
             val arrayType = call.getExpressionType()
-            if (arrayType is PsiArrayType) {
-                val type = arrayType.getDeepComponentType()
+            (arrayType as? PsiArrayType)?.deepComponentType?.let { type ->
                 // Single-dimension array
                 if (type !is PsiArrayType && call.valueArgumentCount == 1) {
-                    val lengthObj = evaluate(call.valueArguments[0])
-                    if (lengthObj is Number) {
-                        val size = lengthObj.toInt()
-                        val dimensions = arrayType.getArrayDimensions()
-                        return getArray(type, size, dimensions)
+                    evaluate(call.valueArguments[0])?.tryOn(Number::toInt)?.let { length ->
+                        freshArray(type, length, arrayType.getArrayDimensions())
                     }
-                }
+                } else null
             }
-        } else if (node.isNewArrayWithInitializer()) {
-            val array = createInitializedArray(node as UCallExpression)
-            if (array != null) {
-                return array
+        }
+        node.isNewArrayWithInitializer() -> evalAsArray(node as UCallExpression)
+        node is UCallExpression -> getMethodName(node)?.let { name ->
+            fun <A> withFixedSize(k: (Int) -> A): A? = evaluateFirstArg(node)?.tryOn(Number::toInt)?.let(k)
+            fun freshObjArray() = when (val type = node.getExpressionType()) {
+                is PsiArrayType -> withFixedSize { freshArray(type.deepComponentType, it, type.arrayDimensions) }
+                else -> null
             }
-        } else if (node is UCallExpression) {
-            val call = node
-            val name = getMethodName(call)
-            if (name != null) {
-                if (name.endsWith("Array") && call.isConstructorCall()) {
-                    val size = getKotlinArrayConstructionSize(call)
-                    if (size != -1) {
-                        if (name == "Array") {
-                            val type = call.getExpressionType()
-                            if (type is PsiArrayType) {
-                                val dimensions = type.getArrayDimensions()
-                                val componentType = type.getDeepComponentType()
-                                return getArray(componentType, size, dimensions)
-                            }
-                        } else {
-                            val type = getKotlinPrimitiveArrayType(name)
-                            if (type != null) {
-                                val dimensions = 1
-                                return getArray(type, size, dimensions)
-                            }
-                        }
-                    }
-                } else if ("arrayOf" == name || name.endsWith("ArrayOf") && getKotlinPrimitiveArrayType(name) != null) {
-                    val array = createInitializedArray(call)
-                    if (array != null) {
-                        return array
-                    }
-                } else if ("arrayOfNulls" == name) {
-                    val type = call.getExpressionType()
-                    if (type is PsiArrayType) {
-                        val size = getKotlinArrayConstructionSize(call)
-                        if (size != -1) {
-                            val dimensions = type.getArrayDimensions()
-                            val componentType = type.getDeepComponentType()
-                            return getArray(componentType, size, dimensions)
-                        }
-                    }
-                }
+            when {
+                name == "arrayOf" || name in kotlinPrimArrayVarargConstructors -> evalAsArray(node)
+                name == "arrayOfNulls" -> freshObjArray()
+                !node.isConstructorCall() -> null
+                name == "Array" -> freshObjArray()
+                name in kotlinPrimArrayFixedArgConstructors ->
+                    withFixedSize { n -> freshArray(kotlinPrimArrayTypeByConstructor[name]!!, n, 1) }
+                else -> null
             }
-        } else if (node is UArrayAccessExpression) {
-            val expression = node
-            val indices = expression.indices
+        }
+        node is UArrayAccessExpression -> {
+            val indices = node.indices
             if (indices.size == 1) {
-                val indexValue = evaluate(indices[0])
-                if (indexValue is Number) {
-                    val array = evaluate(expression.receiver)
-                    if (array != null) {
-                        val index = indexValue.toInt()
-                        if (array is Array<*>) {
-                            val objArray = array
-                            if (index >= 0 && index < objArray.size) {
-                                return objArray[index]
-                            }
-                        } else if (array is IntArray) {
-                            val intArray = array
-                            if (index >= 0 && index < intArray.size) {
-                                return intArray[index]
-                            }
-                        } else if (array is BooleanArray) {
-                            val booleanArray = array
-                            if (index >= 0 && index < booleanArray.size) {
-                                return booleanArray[index]
-                            }
-                        } else if (array is CharArray) {
-                            val charArray = array
-                            if (index >= 0 && index < charArray.size) {
-                                return charArray[index]
-                            }
-                        } else if (array is LongArray) {
-                            val longArray = array
-                            if (index >= 0 && index < longArray.size) {
-                                return longArray[index]
-                            }
-                        } else if (array is FloatArray) {
-                            val floatArray = array
-                            if (index >= 0 && index < floatArray.size) {
-                                return floatArray[index]
-                            }
-                        } else if (array is DoubleArray) {
-                            val doubleArray = array
-                            if (index >= 0 && index < doubleArray.size) {
-                                return doubleArray[index]
-                            }
-                        } else if (array is ByteArray) {
-                            val byteArray = array
-                            if (index >= 0 && index < byteArray.size) {
-                                return byteArray[index]
-                            }
-                        } else if (array is ShortArray) {
-                            val shortArray = array
-                            if (index >= 0 && index < shortArray.size) {
-                                return shortArray[index]
-                            }
-                        }
-                    }
+                (evaluate(indices[0]) as? Number)?.toInt()?.let { index ->
+                    evaluate(node.receiver)?.let { array ->
+                        array.asArray(Array<*>::indices, Array<*>::get)
+                            ?: array.asArray(IntArray::indices, IntArray::get)
+                            ?: array.asArray(BooleanArray::indices, BooleanArray::get)
+                            ?: array.asArray(CharArray::indices, CharArray::get)
+                            ?: array.asArray(LongArray::indices, LongArray::get)
+                            ?: array.asArray(FloatArray::indices, FloatArray::get)
+                            ?: array.asArray(DoubleArray::indices, DoubleArray::get)
+                            ?: array.asArray(ByteArray::indices, ByteArray::get)
+                            ?: array.asArray(ShortArray::indices, ShortArray::get)
+                    }?.invoke(index)
                 }
-            }
+            } else null
         }
-        if (node is UExpression) {
-            val evaluated = node.evaluate()
-            if (evaluated != null) {
-                return evaluated
-            }
-        }
-
         // TODO: Check for MethodInvocation and perform some common operations -
         // Math.* methods, String utility methods like notNullize, etc
-        return null
+        else -> null
     }
 
-    private fun createInitializedArray(call: UCallExpression): Any? {
-        val arrayType = call.getExpressionType()
-        if (arrayType is PsiArrayType) {
-            val componentType = arrayType.getDeepComponentType()
-            if (componentType !is PsiArrayType) {
-                val length = call.valueArgumentCount
-                val evaluatedArgs: MutableList<Any?> = ArrayList(length)
-                var count = 0
-                for (arg in call.valueArguments) {
-                    val evaluatedArg = evaluate(arg)
-                    if (!allowUnknown && evaluatedArg == null) {
-                        // Inconclusive
-                        return null
-                    }
-                    evaluatedArgs.add(evaluatedArg)
-                    count++
-                    if (count == 40) { // avoid large initializers
-                        return getArray(componentType, length, 1)
-                    }
-                }
-                if (componentType === PsiType.BOOLEAN) {
-                    val arr = BooleanArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Boolean) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (isObjectType(componentType)) {
-                    val arr = arrayOfNulls<Any>(length)
-                    for (i in 0 until length) {
-                        arr[i] = evaluatedArgs[i]
-                    }
-                    return arr
-                } else if (componentType == PsiType.CHAR) {
-                    val arr = CharArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Char) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.BYTE) {
-                    val arr = ByteArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Byte) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.DOUBLE) {
-                    val arr = DoubleArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Double) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.FLOAT) {
-                    val arr = FloatArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Float) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.INT) {
-                    val arr = IntArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Int) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.SHORT) {
-                    val arr = ShortArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Short) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (componentType == PsiType.LONG) {
-                    val arr = LongArray(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is Long) {
-                            arr[i] = o
-                        }
-                    }
-                    return arr
-                } else if (isStringType(componentType)) {
-                    val arr = arrayOfNulls<String>(length)
-                    for (i in 0 until length) {
-                        val o = evaluatedArgs[i]
-                        if (o is String) {
-                            arr[i] = o as String?
-                        }
-                    }
-                    return arr
-                }
+    private fun evaluateFirstArg(call: UCallExpression) = call.valueArguments.firstOrNull()?.let(::evaluate)
 
-                // Try to instantiate base type
-                if (!evaluatedArgs.isEmpty()) {
-                    val first = evaluatedArgs[0]
-                    for (o in evaluatedArgs) {
-                        if (o!!.javaClass != first!!.javaClass) {
-                            return null
-                        }
-                    }
-                    return evaluatedArgs.toArray<Any> { n -> java.lang.reflect.Array.newInstance(first!!.javaClass, n) as Array<*> }
-                }
-            }
-        }
-        return null
-    }
+    private fun evalAsArray(call: UCallExpression): Any? =
+        (call.getExpressionType() as? PsiArrayType)
+            ?.deepComponentType
+            ?.takeUnless { it is PsiArrayType }
+            ?.let { componentType -> evalAsArray(call.valueArguments, componentType, ::evaluate) }
 
-    private fun getKotlinArrayConstructionSize(call: UCallExpression): Int {
-        val valueArguments = call.valueArguments
-        if (!valueArguments.isEmpty()) {
-            val lengthObj = evaluate(call.valueArguments[0])
-            if (lengthObj is Number) {
-                return lengthObj.toInt()
-            }
-        }
-        return -1
-    }
-
-    private fun evaluateBinary(
-        operator: UastBinaryOperator,
-        operandLeft: Any?,
-        operandRight: Any?
-    ): Any? {
-        if (operandLeft == null || operandRight == null) {
-            return if (allowUnknown) {
-                operandLeft ?: operandRight
-            } else null
-        }
-        if (operandLeft is String &&
-            (operandRight is String || operandRight is Char) ||
-            operandRight is String && operandLeft is Char
-        ) {
-            return if (operator === UastBinaryOperator.PLUS) {
-                operandLeft.toString() + operandRight.toString()
-            } else null
-        } else if (operandLeft is Boolean && operandRight is Boolean) {
-            val left = operandLeft
-            val right = operandRight
-            if (operator === UastBinaryOperator.LOGICAL_OR) {
-                return left || right
-            } else if (operator === UastBinaryOperator.LOGICAL_AND) {
-                return left && right
-            } else if (operator === UastBinaryOperator.BITWISE_OR) {
-                return left or right
-            } else if (operator === UastBinaryOperator.BITWISE_XOR) {
-                return left xor right
-            } else if (operator === UastBinaryOperator.BITWISE_AND) {
-                return left and right
-            } else if (operator === UastBinaryOperator.IDENTITY_EQUALS ||
-                operator === UastBinaryOperator.EQUALS
-            ) {
-                return left == right
-            } else if (operator === UastBinaryOperator.IDENTITY_NOT_EQUALS ||
-                operator === UastBinaryOperator.NOT_EQUALS
-            ) {
-                return left != right
-            }
-        } else if (operandLeft is Number && operandRight is Number) {
-            val left = operandLeft
-            val right = operandRight
-            val isInteger = !(
-                    left is Float ||
-                            left is Double ||
-                            right is Float ||
-                            right is Double
-                    )
-            val isWide = if (isInteger) left is Long || right is Long else left is Double || right is Double
-            return if (operator === UastBinaryOperator.BITWISE_OR) {
-                if (isWide) {
-                    left.toLong() or right.toLong()
-                } else {
-                    left.toInt() or right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.BITWISE_XOR) {
-                if (isWide) {
-                    left.toLong() xor right.toLong()
-                } else {
-                    left.toInt() xor right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.BITWISE_AND) {
-                if (isWide) {
-                    left.toLong() and right.toLong()
-                } else {
-                    left.toInt() and right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.EQUALS ||
-                operator === UastBinaryOperator.IDENTITY_EQUALS
-            ) {
-                if (isInteger) {
-                    left.toLong() == right.toLong()
-                } else {
-                    left.toDouble() == right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.NOT_EQUALS ||
-                operator === UastBinaryOperator.IDENTITY_NOT_EQUALS
-            ) {
-                if (isInteger) {
-                    left.toLong() != right.toLong()
-                } else {
-                    left.toDouble() != right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.GREATER) {
-                if (isInteger) {
-                    left.toLong() > right.toLong()
-                } else {
-                    left.toDouble() > right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.GREATER_OR_EQUALS) {
-                if (isInteger) {
-                    left.toLong() >= right.toLong()
-                } else {
-                    left.toDouble() >= right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.LESS) {
-                if (isInteger) {
-                    left.toLong() < right.toLong()
-                } else {
-                    left.toDouble() < right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.LESS_OR_EQUALS) {
-                if (isInteger) {
-                    left.toLong() <= right.toLong()
-                } else {
-                    left.toDouble() <= right.toDouble()
-                }
-            } else if (operator === UastBinaryOperator.SHIFT_LEFT) {
-                if (isWide) {
-                    left.toLong() shl right.toInt()
-                } else {
-                    left.toInt() shl right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.SHIFT_RIGHT) {
-                if (isWide) {
-                    left.toLong() shr right.toInt()
-                } else {
-                    left.toInt() shr right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.UNSIGNED_SHIFT_RIGHT) {
-                if (isWide) {
-                    left.toLong() ushr right.toInt()
-                } else {
-                    left.toInt() ushr right.toInt()
-                }
-            } else if (operator === UastBinaryOperator.PLUS) {
-                if (isInteger) {
-                    if (isWide) {
-                        left.toLong() + right.toLong()
-                    } else {
-                        left.toInt() + right.toInt()
-                    }
-                } else {
-                    if (isWide) {
-                        left.toDouble() + right.toDouble()
-                    } else {
-                        left.toFloat() + right.toFloat()
-                    }
-                }
-            } else if (operator === UastBinaryOperator.MINUS) {
-                if (isInteger) {
-                    if (isWide) {
-                        left.toLong() - right.toLong()
-                    } else {
-                        left.toInt() - right.toInt()
-                    }
-                } else {
-                    if (isWide) {
-                        left.toDouble() - right.toDouble()
-                    } else {
-                        left.toFloat() - right.toFloat()
-                    }
-                }
-            } else if (operator === UastBinaryOperator.MULTIPLY) {
-                if (isInteger) {
-                    if (isWide) {
-                        left.toLong() * right.toLong()
-                    } else {
-                        left.toInt() * right.toInt()
-                    }
-                } else {
-                    if (isWide) {
-                        left.toDouble() * right.toDouble()
-                    } else {
-                        left.toFloat() * right.toFloat()
-                    }
-                }
-            } else if (operator === UastBinaryOperator.DIV) {
-                if (isInteger) {
-                    if (right.toLong() == 0L) {
-                        null
-                    } else if (isWide) {
-                        left.toLong() / right.toLong()
-                    } else {
-                        left.toInt() / right.toInt()
-                    }
-                } else {
-                    if (isWide) {
-                        left.toDouble() / right.toDouble()
-                    } else {
-                        left.toFloat() / right.toFloat()
-                    }
-                }
-            } else if (operator === UastBinaryOperator.MOD) {
-                if (isInteger) {
-                    if (right.toLong() == 0L) {
-                        null
-                    } else if (isWide) {
-                        left.toLong() % right.toLong()
-                    } else {
-                        left.toInt() % right.toInt()
-                    }
-                } else {
-                    if (isWide) {
-                        left.toDouble() % right.toDouble()
-                    } else {
-                        left.toFloat() % right.toFloat()
-                    }
-                }
-            } else {
-                null
-            }
-        }
-        return null
+    private fun <E> evalAsArray(elems: List<E>, elemType: PsiType, eval: (E) -> Any?): Any? = when {
+        // avoid large initializers
+        elems.size > 40 -> freshArray(elemType, elems.size, 1)
+        else -> elems.map { arg ->
+            eval(arg).also { if (!allowUnknown && it == null) return null /* Inconclusive */ }
+        }.reifiedAsArray(elemType)
     }
 
     class LastAssignmentFinder(
-        private val mVariable: PsiVariable,
-        private val mEndAt: UElement,
-        constantEvaluator: ConstantEvaluator?,
-        variableLevel: Int
+        private val variable: PsiVariable,
+        private val endAt: UElement,
+        private val constantEvaluator: ConstantEvaluator?,
+        private var variableLevel: Int
     ) : AbstractUastVisitor() {
-        private val mConstantEvaluator: ConstantEvaluator?
-        private var mDone = false
-        private var mCurrentLevel = 0
-        private var mVariableLevel = -1
-        var currentValue: Any? = null
+        private var isDone = false
+        private var currentLevel = 0
+        var lastAssignment: UElement? = UastFacade.getInitializerBody(variable)
             private set
-        var lastAssignment: UElement?
+        var currentValue: Any? = lastAssignment?.let { constantEvaluator?.evaluate(it) }
             private set
-
-        init {
-            val initializer = UastFacade.getInitializerBody(mVariable)
-            lastAssignment = initializer
-            mConstantEvaluator = constantEvaluator
-            if (initializer != null && constantEvaluator != null) {
-                currentValue = constantEvaluator.evaluate(initializer)
-            }
-            mVariableLevel = variableLevel
-        }
 
         override fun visitElement(node: UElement): Boolean {
-            if (elementHasLevel(node)) {
-                mCurrentLevel++
+            if (node.hasLevel()) {
+                currentLevel++
             }
-            if (node == mEndAt) {
-                mDone = true
+            if (node == endAt) {
+                isDone = true
             }
-            return mDone || super.visitElement(node)
+            return isDone || super.visitElement(node)
         }
 
         override fun visitVariable(node: UVariable): Boolean {
-            if (mVariableLevel < 0 && node.psi.isEquivalentTo(mVariable)) {
-                mVariableLevel = mCurrentLevel
+            if (variableLevel < 0 && node.psi.isEquivalentTo(variable)) {
+                variableLevel = currentLevel
             }
             return super.visitVariable(node)
         }
 
         override fun afterVisitBinaryExpression(node: UBinaryExpression) {
-            if ((
-                        !mDone &&
-                                node.operator is UastBinaryOperator.AssignOperator
-                        ) && mVariableLevel >= 0
-            ) {
-                val leftOperand = node.leftOperand
-                val operator = node.operator
-                if (operator !is UastBinaryOperator.AssignOperator ||
-                    leftOperand !is UResolvable
-                ) {
+            if (!isDone && node.operator is UastBinaryOperator.AssignOperator && variableLevel >= 0) {
+                if (variable != (node.leftOperand as? UResolvable)?.resolve()) {
                     return
                 }
-                val resolved = (leftOperand as UResolvable).resolve()
-                if (mVariable != resolved) {
-                    return
-                }
-                val rightOperand = node.rightOperand
-                val constantEvaluator = mConstantEvaluator
-                lastAssignment = rightOperand
+                lastAssignment = node.rightOperand
 
                 // Last assigned value cannot be determined if we see an assignment inside
                 // some conditional or loop statement.
-                if (mCurrentLevel >= mVariableLevel + 1) {
+                if (currentLevel >= variableLevel + 1) {
                     currentValue = null
                     return
                 } else {
-                    currentValue = constantEvaluator?.evaluate(rightOperand)
+                    currentValue = constantEvaluator?.evaluate(node.rightOperand)
                 }
             }
             super.afterVisitBinaryExpression(node)
         }
 
         override fun afterVisitElement(node: UElement) {
-            if (elementHasLevel(node)) {
-                mCurrentLevel--
+            if (node.hasLevel()) {
+                currentLevel--
             }
             super.afterVisitElement(node)
         }
@@ -947,17 +380,10 @@ class ConstantEvaluator
          * Special marker value from [findLastValue] to indicate that a node was assigned to, but
          * the value is unknown
          */
-        internal object LastAssignmentValueUnknown: Any()
+        internal object LastAssignmentValueUnknown : Any()
 
-        companion object {
-            private fun elementHasLevel(node: UElement): Boolean {
-                return !(
-                        node is UBlockExpression ||
-                                node is UDeclarationsExpression ||
-                                node is UParenthesizedExpression
-                        )
-            }
-        }
+        private fun UElement.hasLevel() =
+            this !is UBlockExpression && this !is UDeclarationsExpression && this !is UParenthesizedExpression
     }
 
     /**
@@ -966,1607 +392,183 @@ class ConstantEvaluator
      * @param node the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
      */
-    fun evaluate(node: PsiElement?): Any? {
-        if (node == null) {
-            return null
+    fun evaluate(node: PsiElement?): Any? = when (node) {
+        null -> null
+        is PsiLiteral ->
+            node.value
+                ?: (node as? KtLightPsiLiteral)?.kotlinOrigin?.let { origin ->
+                (convertElement(origin, null, UExpression::class.java) as? UExpression)?.evaluate()
+            }
+        is PsiPrefixExpression -> evaluate(node.operand)?.let { operand ->
+            when (node.operationTokenType) {
+                JavaTokenType.EXCL -> operand.tryOn(Boolean::not)
+                JavaTokenType.PLUS -> operand
+                JavaTokenType.TILDE -> operand.tryInv()
+                JavaTokenType.MINUS -> operand.tryUnaryMinus()
+                else -> null
+            }
         }
-        if (node is PsiLiteral) {
-            var value = node.value
-            if (value == null && node is KtLightPsiLiteral) {
-                val origin = node.kotlinOrigin
-                val uastExpression = convertElement(origin, null, UExpression::class.java) as UExpression?
-                if (uastExpression != null) {
-                    value = uastExpression.evaluate()
-                }
+        is PsiConditionalExpression -> when (evaluate(node.condition)) {
+            true -> node.thenExpression?.let(::evaluate)
+            false -> node.elseExpression?.let(::evaluate)
+            else -> null
+        }
+        is PsiParenthesizedExpression -> node.expression?.let(::evaluate)
+        is PsiPolyadicExpression -> ArgList(node.operands.map(::evaluate)).let { operands ->
+            when (node.operationTokenType) {
+                JavaTokenType.OROR -> operands.logicalOr()
+                JavaTokenType.ANDAND -> operands.logicalAnd()
+                JavaTokenType.EQEQ -> operands.ifAll<Any>()?.isOrdered(Any::equals)
+                JavaTokenType.NE -> operands.tryOn(Any::notEquals)
+                JavaTokenType.OR -> operands.bitwiseOr()
+                JavaTokenType.XOR -> operands.bitwiseXor()
+                JavaTokenType.AND -> operands.bitwiseAnd()
+                JavaTokenType.GT -> operands.isOrdered(Double::gt, Long::gt)
+                JavaTokenType.GE -> operands.isOrdered(Double::ge, Long::ge)
+                JavaTokenType.LT -> operands.isOrdered(Double::lt, Long::lt)
+                JavaTokenType.LE -> operands.isOrdered(Double::le, Long::le)
+                JavaTokenType.LTLT -> operands.shl()
+                JavaTokenType.GTGT -> operands.shr()
+                JavaTokenType.GTGTGT -> operands.ushr()
+                JavaTokenType.PLUS -> operands.plus(allowUnknown)
+                JavaTokenType.MINUS -> operands.minus()
+                JavaTokenType.ASTERISK -> operands.times()
+                JavaTokenType.DIV -> operands.div()
+                JavaTokenType.PERC -> operands.mod()
+                else -> null
             }
-            return value
-        } else if (node is PsiPrefixExpression) {
-            val operator = node.operationTokenType
-            val operand = evaluate(node.operand) ?: return null
-            if (operator === JavaTokenType.EXCL) {
-                if (operand is Boolean) {
-                    return !operand
-                }
-            } else if (operator === JavaTokenType.PLUS) {
-                return operand
-            } else if (operator === JavaTokenType.TILDE) {
-                if (operand is Int) {
-                    return operand.toInt().inv()
-                } else if (operand is Long) {
-                    return operand.toLong().inv()
-                } else if (operand is Short) {
-                    return operand.toShort().inv().toInt()
-                } else if (operand is Char) {
-                    return operand.toChar().inv()
-                } else if (operand is Byte) {
-                    return operand.toByte().inv().toInt()
-                }
-            } else if (operator === JavaTokenType.MINUS) {
-                if (operand is Int) {
-                    return -operand
-                } else if (operand is Long) {
-                    return -operand
-                } else if (operand is Double) {
-                    return -operand
-                } else if (operand is Float) {
-                    return -operand
-                } else if (operand is Short) {
-                    return -operand.toShort()
-                } else if (operand is Char) {
-                    return -operand as Char?
-                } else if (operand is Byte) {
-                    return -operand.toByte()
-                }
+        }
+        is PsiTypeCastExpression -> evaluate(node.operand).let { v -> node.castType?.type?.let(v::tryToNum) ?: v }
+        is PsiReference -> when (val resolved = (node as PsiReference).resolve()) {
+            is PsiField -> when (resolved.name) {
+                // It's an array.length expression
+                "length" -> node.tryOn(PsiReferenceExpression::getQualifierExpression)
+                    ?.takeIf(PsiExpression::getType then { it is PsiArrayType })
+                    ?.let(::evaluate)
+                    ?.let(::getArraySize)
+                    ?.takeUnless { it == -1 }
+                else -> resolved.computeConstantValue()
+                    ?: resolved.getAllowedInitializer()?.let(::evaluate)
             }
-        } else if (node is PsiConditionalExpression) {
-            val expression = node
-            val known = evaluate(expression.condition)
-            if (known == java.lang.Boolean.TRUE && expression.thenExpression != null) {
-                return evaluate(expression.thenExpression)
-            } else if (known == java.lang.Boolean.FALSE && expression.elseExpression != null) {
-                return evaluate(expression.elseExpression)
-            }
-        } else if (node is PsiParenthesizedExpression) {
-            val expression = node.expression
-            if (expression != null) {
-                return evaluate(expression)
-            }
-        } else if (node is PsiBinaryExpression) {
-            val expression = node
-            val operator = expression.operationTokenType
-            val operandLeft = evaluate(expression.lOperand)
-            val operandRight = evaluate(expression.rOperand)
-            if (operandLeft == null || operandRight == null) {
-                return if (allowUnknown) {
-                    operandLeft ?: operandRight
-                } else null
-            }
-            if (operandLeft is String &&
-                (operandRight is String || operandRight is Char) ||
-                operandRight is String && operandLeft is Char
-            ) {
-                return if (operator === JavaTokenType.PLUS) {
-                    operandLeft.toString() + operandRight.toString()
-                } else null
-            } else if (operandLeft is Boolean && operandRight is Boolean) {
-                val left = operandLeft
-                val right = operandRight
-                if (operator === JavaTokenType.OROR) {
-                    return left || right
-                } else if (operator === JavaTokenType.ANDAND) {
-                    return left && right
-                } else if (operator === JavaTokenType.OR) {
-                    return left or right
-                } else if (operator === JavaTokenType.XOR) {
-                    return left xor right
-                } else if (operator === JavaTokenType.AND) {
-                    return left and right
-                } else if (operator === JavaTokenType.EQEQ) {
-                    return left == right
-                } else if (operator === JavaTokenType.NE) {
-                    return left != right
-                }
-            } else if (operandLeft is Number && operandRight is Number) {
-                val left = operandLeft
-                val right = operandRight
-                val isInteger = !(
-                        left is Float ||
-                                left is Double ||
-                                right is Float ||
-                                right is Double
-                        )
-                val isWide = if (isInteger) left is Long || right is Long else left is Double || right is Double
-                return if (operator === JavaTokenType.OR) {
-                    if (isWide) {
-                        left.toLong() or right.toLong()
-                    } else {
-                        left.toInt() or right.toInt()
-                    }
-                } else if (operator === JavaTokenType.XOR) {
-                    if (isWide) {
-                        left.toLong() xor right.toLong()
-                    } else {
-                        left.toInt() xor right.toInt()
-                    }
-                } else if (operator === JavaTokenType.AND) {
-                    if (isWide) {
-                        left.toLong() and right.toLong()
-                    } else {
-                        left.toInt() and right.toInt()
-                    }
-                } else if (operator === JavaTokenType.EQEQ) {
-                    if (isInteger) {
-                        left.toLong() == right.toLong()
-                    } else {
-                        left.toDouble() == right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.NE) {
-                    if (isInteger) {
-                        left.toLong() != right.toLong()
-                    } else {
-                        left.toDouble() != right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.GT) {
-                    if (isInteger) {
-                        left.toLong() > right.toLong()
-                    } else {
-                        left.toDouble() > right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.GE) {
-                    if (isInteger) {
-                        left.toLong() >= right.toLong()
-                    } else {
-                        left.toDouble() >= right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.LT) {
-                    if (isInteger) {
-                        left.toLong() < right.toLong()
-                    } else {
-                        left.toDouble() < right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.LE) {
-                    if (isInteger) {
-                        left.toLong() <= right.toLong()
-                    } else {
-                        left.toDouble() <= right.toDouble()
-                    }
-                } else if (operator === JavaTokenType.LTLT) {
-                    if (isWide) {
-                        left.toLong() shl right.toInt()
-                    } else {
-                        left.toInt() shl right.toInt()
-                    }
-                } else if (operator === JavaTokenType.GTGT) {
-                    if (isWide) {
-                        left.toLong() shr right.toInt()
-                    } else {
-                        left.toInt() shr right.toInt()
-                    }
-                } else if (operator === JavaTokenType.GTGTGT) {
-                    if (isWide) {
-                        left.toLong() ushr right.toInt()
-                    } else {
-                        left.toInt() ushr right.toInt()
-                    }
-                } else if (operator === JavaTokenType.PLUS) {
-                    if (isInteger) {
-                        if (isWide) {
-                            left.toLong() + right.toLong()
-                        } else {
-                            left.toInt() + right.toInt()
-                        }
-                    } else {
-                        if (isWide) {
-                            left.toDouble() + right.toDouble()
-                        } else {
-                            left.toFloat() + right.toFloat()
-                        }
-                    }
-                } else if (operator === JavaTokenType.MINUS) {
-                    if (isInteger) {
-                        if (isWide) {
-                            left.toLong() - right.toLong()
-                        } else {
-                            left.toInt() - right.toInt()
-                        }
-                    } else {
-                        if (isWide) {
-                            left.toDouble() - right.toDouble()
-                        } else {
-                            left.toFloat() - right.toFloat()
-                        }
-                    }
-                } else if (operator === JavaTokenType.ASTERISK) {
-                    if (isInteger) {
-                        if (isWide) {
-                            left.toLong() * right.toLong()
-                        } else {
-                            left.toInt() * right.toInt()
-                        }
-                    } else {
-                        if (isWide) {
-                            left.toDouble() * right.toDouble()
-                        } else {
-                            left.toFloat() * right.toFloat()
-                        }
-                    }
-                } else if (operator === JavaTokenType.DIV) {
-                    if (isInteger) {
-                        if (right.toLong() == 0L) {
-                            null
-                        } else if (isWide) {
-                            left.toLong() / right.toLong()
-                        } else {
-                            left.toInt() / right.toInt()
-                        }
-                    } else {
-                        if (isWide) {
-                            left.toDouble() / right.toDouble()
-                        } else {
-                            left.toFloat() / right.toFloat()
-                        }
-                    }
-                } else if (operator === JavaTokenType.PERC) {
-                    if (isInteger) {
-                        if (right.toLong() == 0L) {
-                            null
-                        } else if (isWide) {
-                            left.toLong() % right.toLong()
-                        } else {
-                            left.toInt() % right.toInt()
-                        }
-                    } else {
-                        if (isWide) {
-                            left.toDouble() % right.toDouble()
-                        } else {
-                            left.toFloat() % right.toFloat()
-                        }
-                    }
-                } else {
-                    null
-                }
-            }
-        } else if (node is PsiPolyadicExpression) {
-            val expression = node
-            val operator = expression.operationTokenType
-            val operands = expression.operands
-            val values: MutableList<Any> = ArrayList(operands.size)
-            var hasString = false
-            var hasBoolean = false
-            var hasNumber = false
-            var isFloat = false
-            var isWide = false
-            for (operand in operands) {
-                val value = evaluate(operand)
-                if (value != null) {
-                    values.add(value)
-                    if (value is String) {
-                        hasString = true
-                    } else if (value is Boolean) {
-                        hasBoolean = true
-                    } else if (value is Number) {
-                        if (value is Float) {
-                            isFloat = true
-                        } else if (value is Double) {
-                            isFloat = true
-                            isWide = true
-                        } else if (value is Long) {
-                            isWide = true
-                        }
-                        hasNumber = true
-                    }
-                }
-            }
-            if (values.isEmpty()) {
-                return null
-            }
-            if (hasString) {
-                if (operator === JavaTokenType.PLUS) {
-                    // String concatenation
-                    val sb = StringBuilder()
-                    for (value in values) {
-                        sb.append(value.toString())
-                    }
-                    return sb.toString()
-                }
-                return null
-            }
-            if (!allowUnknown && operands.size != values.size) {
-                return null
-            }
-            if (hasBoolean) {
-                if (operator === JavaTokenType.OROR) {
-                    var result = false
-                    for (value in values) {
-                        if (value is Boolean) {
-                            result = result || value
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.ANDAND) {
-                    var result = true
-                    for (value in values) {
-                        if (value is Boolean) {
-                            result = result && value
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.OR) {
-                    var result = false
-                    for (value in values) {
-                        if (value is Boolean) {
-                            result = result or value
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.XOR) {
-                    var result = false
-                    for (value in values) {
-                        if (value is Boolean) {
-                            result = result xor value
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.AND) {
-                    var result = true
-                    for (value in values) {
-                        if (value is Boolean) {
-                            result = result and value
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.EQEQ) {
-                    var result = false
-                    for (i in values.indices) {
-                        val value = values[i]
-                        if (value is Boolean) {
-                            val b = value
-                            result = if (i == 0) {
-                                b
-                            } else {
-                                result == b
-                            }
-                        }
-                    }
-                    return result
-                } else if (operator === JavaTokenType.NE) {
-                    var result = false
-                    for (i in values.indices) {
-                        val value = values[i]
-                        if (value is Boolean) {
-                            val b = value
-                            result = if (i == 0) {
-                                b
-                            } else {
-                                result != b
-                            }
-                        }
-                    }
-                    return result
-                }
-                return null
-            }
-            if (hasNumber) {
-                // TODO: This is super redundant. Switch to lambdas!
-                return if (operator === JavaTokenType.OR) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result or l
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result or l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.XOR) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result xor l
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result xor l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.AND) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result and l
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result and l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.EQEQ) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev == l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev == l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.NE) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev != l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev != l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.GT) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev > l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev > l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.GE) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev >= l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev >= l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.LT) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev < l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev < l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.LE) {
-                    if (isWide) {
-                        var result = false
-                        var prev: Long = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                if (i != 0) {
-                                    result = prev <= l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    } else {
-                        var result = false
-                        var prev = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                if (i != 0) {
-                                    result = prev <= l
-                                }
-                                prev = l
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.LTLT) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result shl l.toInt()
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result shl l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.GTGT) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result shr l.toInt()
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result shr l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.GTGTGT) {
-                    if (isWide) {
-                        var result = 0L
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toLong()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result ushr l.toInt()
-                                }
-                            }
-                        }
-                        result
-                    } else {
-                        var result = 0
-                        for (i in values.indices) {
-                            val value = values[i]
-                            if (value is Number) {
-                                val l = value.toInt()
-                                result = if (i == 0) {
-                                    l
-                                } else {
-                                    result ushr l
-                                }
-                            }
-                        }
-                        result
-                    }
-                } else if (operator === JavaTokenType.PLUS) {
-                    if (isFloat) {
-                        if (isWide) {
-                            var result = 0.0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toDouble()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result + l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0f
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toFloat()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result + l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    } else {
-                        if (isWide) {
-                            var result = 0L
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toLong()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result + l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toInt()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result + l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    }
-                } else if (operator === JavaTokenType.MINUS) {
-                    if (isFloat) {
-                        if (isWide) {
-                            var result = 0.0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toDouble()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result - l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0f
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toFloat()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result - l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    } else {
-                        if (isWide) {
-                            var result = 0L
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toLong()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result - l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toInt()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result - l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    }
-                } else if (operator === JavaTokenType.ASTERISK) {
-                    if (isFloat) {
-                        if (isWide) {
-                            var result = 0.0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toDouble()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result * l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0f
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toFloat()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result * l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    } else {
-                        if (isWide) {
-                            var result = 0L
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toLong()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result * l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toInt()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result * l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    }
-                } else if (operator === JavaTokenType.DIV) {
-                    if (isFloat) {
-                        if (isWide) {
-                            var result = 0.0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toDouble()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result / l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0f
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toFloat()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result / l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    } else {
-                        if (isWide) {
-                            var result = 0L
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toLong()
-                                    result = if (i == 0) {
-                                        l
-                                    } else if (l == 0L) {
-                                        return null
-                                    } else {
-                                        result / l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toInt()
-                                    result = if (i == 0) {
-                                        l
-                                    } else if (l == 0) {
-                                        return null
-                                    } else {
-                                        result / l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    }
-                } else if (operator === JavaTokenType.PERC) {
-                    if (isFloat) {
-                        if (isWide) {
-                            var result = 0.0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toDouble()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result % l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0f
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toFloat()
-                                    result = if (i == 0) {
-                                        l
-                                    } else {
-                                        result % l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    } else {
-                        if (isWide) {
-                            var result = 0L
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toLong()
-                                    result = if (i == 0) {
-                                        l
-                                    } else if (l == 0L) {
-                                        return null
-                                    } else {
-                                        result % l
-                                    }
-                                }
-                            }
-                            result
-                        } else {
-                            var result = 0
-                            for (i in values.indices) {
-                                val value = values[i]
-                                if (value is Number) {
-                                    val l = value.toInt()
-                                    result = if (i == 0) {
-                                        l
-                                    } else if (l == 0) {
-                                        return null
-                                    } else {
-                                        result % l
-                                    }
-                                }
-                            }
-                            result
-                        }
-                    }
-                } else {
-                    null
-                }
-            }
-        } else if (node is PsiTypeCastExpression) {
-            val cast = node
-            val operandValue = evaluate(cast.operand)
-            if (operandValue is Number) {
-                val number = operandValue
-                val typeElement = cast.castType
-                if (typeElement != null) {
-                    val type = typeElement.type
-                    if (PsiType.FLOAT == type) {
-                        return number.toFloat()
-                    } else if (PsiType.DOUBLE == type) {
-                        return number.toDouble()
-                    } else if (PsiType.INT == type) {
-                        return number.toInt()
-                    } else if (PsiType.LONG == type) {
-                        return number.toLong()
-                    } else if (PsiType.SHORT == type) {
-                        return number.toShort()
-                    } else if (PsiType.BYTE == type) {
-                        return number.toByte()
-                    }
-                }
-            }
-            return operandValue
-        } else if (node is PsiReference) {
-            val resolved = (node as PsiReference).resolve()
-            if (resolved is PsiField) {
-                val field = resolved
-
-                // array.length expression?
-                if ("length" == field.name && node is PsiReferenceExpression) {
-                    val expression = node.qualifierExpression
-                    if (expression != null && expression.type is PsiArrayType) {
-                        // It's an array.length expression
-                        val array = evaluate(expression)
-                        val size = getArraySize(array)
-                        return if (size != -1) {
-                            size
-                        } else null
-                    }
-                }
-                var value = field.computeConstantValue()
-                if (value != null) {
-                    return value
-                }
-                if (field.initializer != null &&
-                    (
-                            allowFieldInitializers ||
-                                    (
-                                            field.hasModifierProperty(PsiModifier.STATIC) &&
-                                                    field.hasModifierProperty(PsiModifier.FINAL)
-                                            )
-                            )
-                ) {
-                    value = evaluate(field.initializer)
-                    if (value != null) {
-                        // See if it looks like the value has been clamped locally
-                        var curr = PsiTreeUtil.getParentOfType(node, PsiIfStatement::class.java)
-                        while (curr != null) {
-                            if (curr.condition != null
-                                && references(curr.condition!!, field)
-                            ) {
-                                // Field is referenced surrounding this reference; don't
-                                // take the field initializer since the value may have been
-                                // value checked for some other later assigned value
-                                // ...but only if it's not the condition!
-                                val condition = curr.condition
-                                if (!PsiTreeUtil.isAncestor(condition, node, true)) {
-                                    return value
-                                }
-                            }
-                            curr = PsiTreeUtil.getParentOfType(curr, PsiIfStatement::class.java, true)
-                        }
-                        return value
-                    }
-                }
-                return null
-            } else if (resolved is PsiLocalVariable) {
-                val last = findLastAssignment(node, resolved)
-                if (last != null) {
-                    // TODO: Clamp value as is done for UAST?
-                    return evaluate(last)
-                }
-            }
-        } else if (node is PsiNewExpression) {
-            val creation = node
-            val initializer = creation.arrayInitializer
-            var type = creation.type
-            if (type is PsiArrayType) {
-                return if (initializer != null) {
-                    val initializers = initializer.initializers
-                    var commonType: Class<*>? = null
-                    val values: MutableList<Any> = Lists.newArrayListWithExpectedSize(initializers.size)
-                    var count = 0
-                    for (expression in initializers) {
-                        val value = evaluate(expression)
-                        if (value != null) {
-                            values.add(value)
-                            if (commonType == null) {
-                                commonType = value.javaClass
-                            } else {
-                                while (!commonType!!.isAssignableFrom(value.javaClass)) {
-                                    commonType = commonType.superclass
-                                }
-                            }
-                        } else if (!allowUnknown) {
-                            // Inconclusive
-                            return null
-                        }
-                        count++
-                        if (count == 40) { // avoid large initializers
-                            return getArray(type.getDeepComponentType(), initializers.size, 1)
-                        }
-                    }
-                    type = type.getDeepComponentType()
-                    if (type === PsiType.INT) {
-                        if (!values.isEmpty()) {
-                            val array = IntArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Int) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        IntArray(0)
-                    } else if (type === PsiType.BOOLEAN) {
-                        if (!values.isEmpty()) {
-                            val array = BooleanArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Boolean) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        BooleanArray(0)
-                    } else if (type === PsiType.DOUBLE) {
-                        if (!values.isEmpty()) {
-                            val array = DoubleArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Double) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        DoubleArray(0)
-                    } else if (type === PsiType.LONG) {
-                        if (!values.isEmpty()) {
-                            val array = LongArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Long) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        LongArray(0)
-                    } else if (type === PsiType.FLOAT) {
-                        if (!values.isEmpty()) {
-                            val array = FloatArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Float) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        FloatArray(0)
-                    } else if (type === PsiType.CHAR) {
-                        if (!values.isEmpty()) {
-                            val array = CharArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Char) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        CharArray(0)
-                    } else if (type === PsiType.BYTE) {
-                        if (!values.isEmpty()) {
-                            val array = ByteArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Byte) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        ByteArray(0)
-                    } else if (type === PsiType.SHORT) {
-                        if (!values.isEmpty()) {
-                            val array = ShortArray(values.size)
-                            for (i in values.indices) {
-                                val o = values[i]
-                                if (o is Short) {
-                                    array[i] = o
-                                }
-                            }
-                            return array
-                        }
-                        ShortArray(0)
-                    } else {
-                        if (!values.isEmpty()) {
-                            return values.toArray<Any> { n -> java.lang.reflect.Array.newInstance(commonType, n) as Array<*> }
-                        }
-                        null
-                    }
-                } else {
+            // TODO: Clamp value as is done for UAST?
+            is PsiLocalVariable -> findLastAssignment(node, resolved)?.let(::evaluate)
+            else -> null
+        }
+        is PsiNewExpression -> when (val type = node.type) {
+            is PsiArrayType -> when (val initializer = node.arrayInitializer) {
+                null -> node.arrayDimensions.firstOrNull()?.let(::evaluate)?.tryOn(Number::toInt)?.let { size ->
                     // something like "new byte[3]" but with no initializer.
                     // Look up the size and only if small, use it. E.g. if it was byte[3]
                     // we return a byte[3] array, but if it's say byte[1024*1024] we don't
                     // want to do that.
-                    val arrayDimensions = creation.arrayDimensions
-                    var size = 0
-                    if (arrayDimensions.size > 0) {
-                        val fixedSize = evaluate(arrayDimensions[0])
-                        if (fixedSize is Number) {
-                            size = fixedSize.toInt()
-                        }
-                    }
-                    val dimensions = type.getArrayDimensions()
-                    type = type.getDeepComponentType()
-                    getArray(type, size, dimensions)
+                    freshArray(type.deepComponentType, size, type.getArrayDimensions())
                 }
+                else -> evalAsArray(initializer.initializers.asList(), type.deepComponentType, ::evaluate)
             }
-        } else if (node is KtLiteralStringTemplateEntry) {
-            return node.getText()
-        } else if (node is KtStringTemplateExpression) {
-            val sb = StringBuilder()
-            var parts = false
-            for (entry in node.entries) {
-                if (entry is KtLiteralStringTemplateEntry) {
-                    sb.append(entry.getText())
-                    parts = true
-                    continue
-                }
-                val expression = entry.expression
-                val part = evaluate(expression)
-                if (part is String) {
-                    sb.append(part)
-                    parts = true
-                }
-            }
-            if (parts) {
-                return sb.toString()
-            }
-        } else {
-            // If we resolve to a "val" in Kotlin, if it's not a const val but in reality is a val
-            // (because
-            // it has a constant expression and no getters and setters (and is not a var), then
-            // compute
-            // its value anyway.
-            if (node is KtLightMethod) {
-                return valueFromProperty(node.kotlinOrigin)
-            }
-            if (node is KtLightField) {
-                return valueFromProperty(node.kotlinOrigin)
-            }
-            if (node is KtProperty) {
-                return valueFromProperty(node)
-            }
+            else -> null
         }
-
+        is KtLiteralStringTemplateEntry -> node.getText()
+        is KtStringTemplateExpression -> node.entries.map { entry ->
+            when (entry) {
+                is KtLiteralStringTemplateEntry -> entry.text
+                else -> (evaluate(entry.expression) as? String)
+            }
+        }.takeIf { it.isNotEmpty() }?.joinToString(separator = "")
+        // If we resolve to a "val" in Kotlin, if it's not a const val but in reality is a val
+        // (because it has a constant expression and no getters and setters
+        // and is not a var), then compute its value anyway.
+        is KtLightMethod -> valueFromProperty(node.kotlinOrigin)
+        is KtLightField -> valueFromProperty(node.kotlinOrigin)
+        is KtProperty -> valueFromProperty(node)
+        else -> null
         // TODO: Check for MethodInvocation and perform some common operations -
         // Math.* methods, String utility methods like notNullize, etc
-        return null
     }
 
-    private fun valueFromProperty(origin: KtDeclaration?): Any? {
-        if (origin is KtProperty) {
-            val property = origin
-            if (allowFieldInitializers) {
-                val initializer = property.initializer
-                if (initializer != null) {
-                    return evaluate(initializer)
-                }
-            } else if (!property.isVar && property.getter == null && property.setter == null) {
-                // Property with no custom getter or setter? If it has an initializer
-                // it might be
-                // No setter: might be a constant not declared as such
-                val initializer = property.initializer
-                if (initializer != null) {
-                    return evaluate(initializer)
-                }
-            }
-        }
-        return null
+    private fun valueFromProperty(origin: KtDeclaration?): Any? = when {
+        (origin is KtProperty) &&
+            (
+                allowFieldInitializers ||
+                    // Property with no custom getter or setter? If it has an initializer
+                    // it might be
+                    // No setter: might be a constant not declared as such
+                    (!origin.isVar && origin.getter == null && origin.setter == null)
+                ) ->
+            origin.initializer?.let(::evaluate)
+        else -> null
     }
 
-    class ArrayReference {
-        val type: Class<*>?
-        val className: String?
-        val size: Int
-        val dimensions: Int
+    private fun PsiVariable.getAllowedInitializer() = initializer?.takeIf {
+        allowFieldInitializers ||
+            (hasModifierProperty(PsiModifier.STATIC) && hasModifierProperty(PsiModifier.FINAL))
+    }
 
-        constructor(type: Class<*>?, size: Int, dimensions: Int) {
-            this.type = type
-            className = null
-            this.size = size
-            this.dimensions = dimensions
+    sealed class ArrayReference {
+        abstract val size: Int
+        abstract val dimensions: Int
+        protected abstract val className: String
+        private data class ByClass(private val type: Class<*>, override val size: Int, override val dimensions: Int) : ArrayReference() {
+            override val className get() = type.toString()
+        }
+        private data class ByName(override val className: String, override val size: Int, override val dimensions: Int) : ArrayReference()
+
+        override fun toString(): String = StringBuilder("Array Reference: $className").let { sb ->
+            repeat(dimensions) { sb.append("[]") }
+            sb.append("[$size]")
+            sb.toString()
         }
 
-        constructor(className: String?, size: Int, dimensions: Int) {
-            this.className = className
-            type = null
-            this.size = size
-            this.dimensions = dimensions
-        }
-
-        override fun equals(o: Any?): Boolean {
-            if (this === o) {
-                return true
-            }
-            if (o == null || javaClass != o.javaClass) {
-                return false
-            }
-            val that = o as ArrayReference
-            return size == that.size && dimensions == that.dimensions && type == that.type && className == that.className
-        }
-
-        override fun hashCode(): Int {
-            return Objects.hash(type, className, size, dimensions)
-        }
-
-        override fun toString(): String {
-            val sb = StringBuilder()
-            sb.append("Array Reference: ")
-            if (type != null) {
-                sb.append(type.toString())
-            } else if (className != null) {
-                sb.append(className)
-            }
-            for (i in 0 until dimensions - 1) {
-                sb.append("[]")
-            }
-            sb.append("[")
-            sb.append(Integer.toString(size))
-            sb.append("]")
-            return sb.toString()
+        companion object {
+            @JvmStatic
+            fun of(klass: Class<*>, size: Int, dimensions: Int): ArrayReference = ByClass(klass, size, dimensions)
+            @JvmStatic
+            fun of(name: String, size: Int, dimensions: Int): ArrayReference = ByName(name, size, dimensions)
         }
     }
 
     companion object {
-        /**
-         * When evaluating expressions that resolve to arrays, this is the largest array size we'll
-         * initialize; for larger arrays we'll return a [ArrayReference] instead
-         */
-        private const val LARGEST_LITERAL_ARRAY = 12
-        private fun getKotlinPrimitiveArrayType(constructorName: String): PsiType? {
-            when (constructorName) {
-                "ByteArray", "byteArrayOf" -> return PsiPrimitiveType.BYTE
-                "CharArray", "charArrayOf" -> return PsiPrimitiveType.CHAR
-                "ShortArray", "shortArrayOf" -> return PsiPrimitiveType.SHORT
-                "IntArray", "intArrayOf" -> return PsiPrimitiveType.INT
-                "LongArray", "longArrayOf" -> return PsiPrimitiveType.LONG
-                "FloatArray", "floatArrayOf" -> return PsiPrimitiveType.FLOAT
-                "DoubleArray", "doubleArrayOf" -> return PsiPrimitiveType.DOUBLE
-                "BooleanArray", "booleanArrayOf" -> return PsiPrimitiveType.BOOLEAN
-            }
-            return null
+        private data class PrimArrayType(val constructorName: String, val varargConstructorName: String, val type: PsiPrimitiveType)
+        private val kotlinPrimArrayTypes = listOf(
+            PrimArrayType("ByteArray", "byteArrayOf", PsiPrimitiveType.BYTE),
+            PrimArrayType("CharArray", "charArrayOf", PsiPrimitiveType.CHAR),
+            PrimArrayType("ShortArray", "shortArrayOf", PsiPrimitiveType.SHORT),
+            PrimArrayType("IntArray", "intArrayOf", PsiPrimitiveType.INT),
+            PrimArrayType("LongArray", "longArrayOf", PsiPrimitiveType.LONG),
+            PrimArrayType("FloatArray", "floatArrayOf", PsiPrimitiveType.FLOAT),
+            PrimArrayType("DoubleArray", "doubleArrayOf", PsiPrimitiveType.DOUBLE),
+            PrimArrayType("BooleanArray", "booleanArrayOf", PsiPrimitiveType.BOOLEAN)
+        )
+        private val kotlinPrimArrayFixedArgConstructors = kotlinPrimArrayTypes.map(PrimArrayType::constructorName)
+        private val kotlinPrimArrayVarargConstructors = kotlinPrimArrayTypes.map(PrimArrayType::varargConstructorName)
+        private val kotlinPrimArrayTypeByConstructor =
+            kotlinPrimArrayTypes.associate { (k, _, t) -> k to t } +
+                kotlinPrimArrayTypes.associate { (_, k, t) -> k to t }
+
+        fun getArraySize(array: Any?): Int = when (array) {
+            is ArrayReference -> array.size
+            is IntArray -> array.size
+            is LongArray -> array.size
+            is FloatArray -> array.size
+            is DoubleArray -> array.size
+            is CharArray -> array.size
+            is ByteArray -> array.size
+            is ShortArray -> array.size
+            is Array<*> -> array.size
+            else -> -1
         }
 
-        fun getArraySize(array: Any?): Int {
-            // This is kinda repetitive but there is no subtyping relationship between
-            // primitive arrays; int[] is not a subtype of Object[] etc.
-            if (array is ArrayReference) {
-                return array.size
-            }
-            if (array is IntArray) {
-                return array.size
-            }
-            if (array is LongArray) {
-                return array.size
-            }
-            if (array is FloatArray) {
-                return array.size
-            }
-            if (array is DoubleArray) {
-                return array.size
-            }
-            if (array is CharArray) {
-                return array.size
-            }
-            if (array is ByteArray) {
-                return array.size
-            }
-            if (array is ShortArray) {
-                return array.size
-            }
-            return if (array is Array<*>) {
-                array.size
-            } else -1
-        }
-
-        private fun surroundedByVariableCheck(
-            node: UElement?,
-            variable: PsiVariable
-        ): Boolean {
-            if (node == null) {
-                return false
-            }
-
+        private fun surroundedByVariableCheck(node: UElement?, variable: PsiVariable): Boolean {
             // See if it looks like the value has been clamped locally, e.g.
-            var curr = node.getParentOfType(UIfExpression::class.java)
-            while (curr != null) {
-                if (references(curr.condition, variable)) {
-                    // variable is referenced surrounding this reference; don't
-                    // take the variable initializer since the value may have been
-                    // value checked for some other later assigned value
-                    // ...but only if it's not the condition!
-                    val condition = curr.condition
-                    if (!node.isUastChildOf(condition, false)) {
-                        return true
-                    }
-                }
-                curr = curr.getParentOfType(UIfExpression::class.java)
+            tailrec fun check(curr: UIfExpression?): Boolean = when {
+                curr == null -> false
+                // variable is referenced surrounding this reference; don't
+                // take the variable initializer since the value may have been
+                // value checked for some other later assigned value
+                // ...but only if it's not the condition!
+                references(curr.condition, variable) && !node!!.isUastChildOf(curr.condition, false) -> true
+                else -> check(curr.getParentOfType(UIfExpression::class.java))
             }
-            return false
-        }
-
-        private fun isStringType(type: PsiType): Boolean {
-            if (type !is PsiClassType) {
-                return false
-            }
-            val resolvedClass = type.resolve()
-            return resolvedClass != null && TYPE_STRING == resolvedClass.qualifiedName
-        }
-
-        private fun isObjectType(type: PsiType): Boolean {
-            if (type !is PsiClassType) {
-                return false
-            }
-            val resolvedClass = type.resolve()
-            return resolvedClass != null && TYPE_OBJECT == resolvedClass.qualifiedName
-        }
-
-        private fun getArray(type: PsiType, size: Int, dimensions: Int): Any? {
-            if (type is PsiPrimitiveType) {
-                if (size <= LARGEST_LITERAL_ARRAY) {
-                    if (PsiType.BYTE == type) {
-                        return ByteArray(size)
-                    }
-                    if (PsiType.BOOLEAN == type) {
-                        return BooleanArray(size)
-                    }
-                    if (PsiType.INT == type) {
-                        return IntArray(size)
-                    }
-                    if (PsiType.LONG == type) {
-                        return LongArray(size)
-                    }
-                    if (PsiType.CHAR == type) {
-                        return CharArray(size)
-                    }
-                    if (PsiType.FLOAT == type) {
-                        return FloatArray(size)
-                    }
-                    if (PsiType.DOUBLE == type) {
-                        return DoubleArray(size)
-                    }
-                    if (PsiType.SHORT == type) {
-                        return ShortArray(size)
-                    }
-                } else {
-                    if (PsiType.BYTE == type) {
-                        return ArrayReference(java.lang.Byte.TYPE, size, dimensions)
-                    }
-                    if (PsiType.BOOLEAN == type) {
-                        return ArrayReference(java.lang.Boolean.TYPE, size, dimensions)
-                    }
-                    if (PsiType.INT == type) {
-                        return ArrayReference(Integer.TYPE, size, dimensions)
-                    }
-                    if (PsiType.LONG == type) {
-                        return ArrayReference(java.lang.Long.TYPE, size, dimensions)
-                    }
-                    if (PsiType.CHAR == type) {
-                        return ArrayReference(Character.TYPE, size, dimensions)
-                    }
-                    if (PsiType.FLOAT == type) {
-                        return ArrayReference(java.lang.Float.TYPE, size, dimensions)
-                    }
-                    if (PsiType.DOUBLE == type) {
-                        return ArrayReference(java.lang.Double.TYPE, size, dimensions)
-                    }
-                    if (PsiType.SHORT == type) {
-                        return ArrayReference(java.lang.Short.TYPE, size, dimensions)
-                    }
-                }
-            } else if (type is PsiClassType) {
-                val className = type.getCanonicalText()
-                return if (TYPE_STRING == className) {
-                    if (size < LARGEST_LITERAL_ARRAY) {
-                        arrayOfNulls<String>(size)
-                    } else {
-                        ArrayReference(String::class.java, size, dimensions)
-                    }
-                } else if (TYPE_OBJECT == className) {
-                    if (size < LARGEST_LITERAL_ARRAY) {
-                        arrayOfNulls<Any>(size)
-                    } else {
-                        ArrayReference(Any::class.java, size, dimensions)
-                    }
-                } else {
-                    ArrayReference(className, size, dimensions)
-                }
-            }
-            return null
-        }
-
-        /** Returns true if the given variable is referenced from within the given element  */
-        private fun references(
-            element: PsiExpression,
-            variable: PsiVariable
-        ): Boolean {
-            val found = AtomicBoolean()
-            element.accept(
-                object : JavaRecursiveElementVisitor() {
-                    override fun visitReferenceElement(reference: PsiJavaCodeReferenceElement) {
-                        val refersTo = reference.resolve()
-                        if (variable == refersTo) {
-                            found.set(true)
-                        }
-                        super.visitReferenceElement(reference)
-                    }
-                })
-            return found.get()
+            return check(node?.getParentOfType(UIfExpression::class.java))
         }
 
         /** Returns true if the given variable is referenced from within the given element  */
@@ -2574,11 +576,8 @@ class ConstantEvaluator
             val found = AtomicBoolean()
             element.accept(
                 object : AbstractUastVisitor() {
-                    override fun visitSimpleNameReferenceExpression(
-                        node: USimpleNameReferenceExpression
-                    ): Boolean {
-                        val refersTo = node.resolve()
-                        if (variable == refersTo) {
+                    override fun visitSimpleNameReferenceExpression(node: USimpleNameReferenceExpression): Boolean {
+                        if (variable == node.resolve()) {
                             found.set(true)
                         }
                         return super.visitSimpleNameReferenceExpression(node)
@@ -2587,67 +586,31 @@ class ConstantEvaluator
             return found.get()
         }
 
-        /** Returns true if the node is pointing to a an array literal  */
-        fun isArrayLiteral(node: PsiElement?): Boolean {
-            if (node is PsiReference) {
-                val resolved = (node as PsiReference).resolve()
-                if (resolved is PsiField) {
-                    val field = resolved
-                    if (field.initializer != null) {
-                        return isArrayLiteral(field.initializer)
-                    }
-                } else if (resolved is PsiLocalVariable) {
-                    val last = findLastAssignment(node, resolved)
-                    if (last != null) {
-                        return isArrayLiteral(last)
-                    }
-                }
-            } else if (node is PsiNewExpression) {
-                val creation = node
-                if (creation.arrayInitializer != null) {
-                    return true
-                }
-                val type = creation.type
-                if (type is PsiArrayType) {
-                    return true
-                }
-            } else if (node is PsiParenthesizedExpression) {
-                val expression = node.expression
-                if (expression != null) {
-                    return isArrayLiteral(expression)
-                }
-            } else if (node is PsiTypeCastExpression) {
-                val operand = node.operand
-                if (operand != null) {
-                    return isArrayLiteral(operand)
-                }
+        /** Returns true if the node is pointing to an array literal  */
+        tailrec fun isArrayLiteral(node: PsiElement?): Boolean = when (node) {
+            is PsiReference -> when (val resolved = (node as PsiReference).resolve()) {
+                is PsiField -> isArrayLiteral(resolved.initializer)
+                is PsiLocalVariable -> isArrayLiteral(findLastAssignment(node, resolved))
+                else -> false
             }
-            return false
+            is PsiNewExpression -> node.arrayInitializer != null || node.type is PsiArrayType
+            is PsiParenthesizedExpression -> isArrayLiteral(node.expression)
+            is PsiTypeCastExpression -> isArrayLiteral(node.operand)
+            else -> false
         }
 
-        /** Returns true if the node is pointing to a an array literal  */
-        fun isArrayLiteral(node: UElement?): Boolean {
-            if (node is UReferenceExpression) {
-                val resolved = node.resolve()
-                if (resolved is PsiVariable) {
-                    val lastAssignment = findLastAssignment(resolved, node)
-                    if (lastAssignment != null) {
-                        return isArrayLiteral(lastAssignment)
-                    }
-                }
-            } else if (node!!.isNewArrayWithDimensions()) {
-                return true
-            } else if (node.isNewArrayWithInitializer()) {
-                return true
-            } else if (node is UParenthesizedExpression) {
-                val expression = node.expression
-                return isArrayLiteral(expression)
-            } else if (node.isTypeCast()) {
-                val castExpression = (node as UBinaryExpressionWithType?)!!
-                val operand = castExpression.operand
-                return isArrayLiteral(operand)
+        /** Returns true if the node is pointing to an array literal  */
+        tailrec fun isArrayLiteral(node: UElement?): Boolean = when {
+            node == null -> false
+            node is UReferenceExpression -> when (val resolved = node.resolve()) {
+                is PsiVariable -> isArrayLiteral(findLastAssignment(resolved, node))
+                else -> false
             }
-            return false
+            node.isNewArrayWithDimensions() -> true
+            node.isNewArrayWithInitializer() -> true
+            node is UParenthesizedExpression -> isArrayLiteral(node.expression)
+            node.isTypeCast() -> isArrayLiteral((node as UBinaryExpressionWithType).operand)
+            else -> false
         }
 
         /**
@@ -2692,7 +655,8 @@ class ConstantEvaluator
                       System.out.println();
                   }
               }
-              */return ConstantEvaluator().evaluate(node)
+              */
+            return ConstantEvaluator().evaluate(node)
         }
 
         /**
@@ -2705,11 +669,9 @@ class ConstantEvaluator
          * @return the corresponding constant value - a String, an Integer, a Float, and so on
          */
         @JvmStatic
-        fun evaluate(context: JavaContext?, element: UElement): Any? {
-            return if (element is ULiteralExpression) {
-                element.value
-            } else ConstantEvaluator()
-                .evaluate(element)
+        fun evaluate(context: JavaContext?, element: UElement): Any? = when (element) {
+            is ULiteralExpression -> element.value
+            else -> ConstantEvaluator().evaluate(element)
         }
 
         /**
@@ -2728,30 +690,7 @@ class ConstantEvaluator
             context: JavaContext?,
             node: PsiElement,
             allowUnknown: Boolean
-        ): String? {
-            val evaluator = ConstantEvaluator()
-            if (allowUnknown) {
-                evaluator.allowUnknowns()
-            }
-            val value = evaluator.evaluate(node)
-            return if (value is String) value else null
-        }
-
-        /**
-         * Computes the last assignment to a given variable counting backwards from the given context
-         * element
-         *
-         * @param usage the usage site to search backwards from
-         * @param variable the variable
-         * @return the last assignment or null
-         */
-        @JvmStatic
-        fun findLastAssignment(
-            usage: PsiElement,
-            variable: PsiVariable
-        ): PsiExpression? {
-            return findLastAssignment(usage, variable, false)
-        }
+        ): String? = runEvaluator(allowUnknown, node, ConstantEvaluator::evaluate)
 
         /**
          * Computes the last assignment to a given variable counting backwards from the given context
@@ -2764,69 +703,46 @@ class ConstantEvaluator
          * determinable.
          * @return the last assignment or null
          */
-        private fun findLastAssignment(
+        @JvmStatic
+        @JvmOverloads
+        fun findLastAssignment(
             usage: PsiElement,
             variable: PsiVariable,
-            allowNonConst: Boolean
-        ): PsiExpression? {
-            // Walk backwards through assignments to find the most recent initialization
-            // of this variable
+            allowNonConst: Boolean = false
+        ): PsiExpression? = variable.name?.let { targetName ->
+            data class Exact<T>(val value: T) // `Exact(null)` means definitely don't know, and stop looking further
+
+            fun check(stm: PsiStatement): Exact<PsiExpression?>? = when (stm) {
+                is PsiDeclarationStatement -> variable.initializer.takeIf { variable in stm.declaredElements }?.let(::Exact)
+                is PsiExpressionStatement -> (stm.expression as? PsiAssignmentExpression)?.let { expression ->
+                    (expression.lExpression as? PsiReferenceExpression)?.let { lhs ->
+                        expression.rExpression.takeIf { targetName == lhs.referenceName && lhs.qualifier == null }
+                    }
+                }?.let(::Exact)
+                is PsiIfStatement -> {
+                    fun find(stm: PsiBlockStatement): Exact<PsiExpression?>? = stm.codeBlock.statements.lastOrNull()?.let { last ->
+                        findLastAssignment(last, variable, true)?.let { asn -> Exact(asn.takeIf { allowNonConst }) }
+                    }
+                    stm.thenBranch.tryOn(::find) ?: stm.elseBranch.tryOn(::find)
+                }
+                else -> null
+            }
+
             val statement = PsiTreeUtil.getParentOfType(usage, PsiStatement::class.java, false)
-            if (statement != null) {
-                var prev = if (allowNonConst) // If allowNonConst is true, it means the search starts from the last
+            val start = when {
+                // If allowNonConst is true, it means the search starts from the last
                 // statement in an if/else
                 // block, so don't skip the passed-in statement
-                    statement else PsiTreeUtil.getPrevSiblingOfType(statement, PsiStatement::class.java)
-                val targetName = variable.name ?: return null
-                while (prev != null) {
-                    if (prev is PsiDeclarationStatement) {
-                        for (element in prev.declaredElements) {
-                            if (variable == element) {
-                                return variable.initializer
-                            }
-                        }
-                    } else if (prev is PsiExpressionStatement) {
-                        val expression = prev.expression
-                        if (expression is PsiAssignmentExpression) {
-                            val assign = expression
-                            val lhs = assign.lExpression
-                            if (lhs is PsiReferenceExpression) {
-                                val reference = lhs
-                                if (targetName == reference.referenceName && reference.qualifier == null) {
-                                    return assign.rExpression
-                                }
-                            }
-                        }
-                    } else if (prev is PsiIfStatement) {
-                        val thenBranch = prev.thenBranch
-                        if (thenBranch is PsiBlockStatement) {
-                            val thenStatements = thenBranch.codeBlock.statements
-                            val assignmentInIf = if (thenStatements.size > 0) findLastAssignment(
-                                thenStatements[thenStatements.size - 1],
-                                variable,
-                                true
-                            ) else null
-                            if (assignmentInIf != null) {
-                                return if (allowNonConst) assignmentInIf else null
-                            }
-                        }
-                        val elseBranch = prev.elseBranch
-                        if (elseBranch is PsiBlockStatement) {
-                            val elseStatements = elseBranch.codeBlock.statements
-                            val assignmentInElse = if (elseStatements.size > 0) findLastAssignment(
-                                elseStatements[elseStatements.size - 1],
-                                variable,
-                                true
-                            ) else null
-                            if (assignmentInElse != null) {
-                                return if (allowNonConst) assignmentInElse else null
-                            }
-                        }
-                    }
-                    prev = PsiTreeUtil.getPrevSiblingOfType(prev, PsiStatement::class.java)
-                }
+                allowNonConst -> statement
+                else -> PsiTreeUtil.getPrevSiblingOfType(statement, PsiStatement::class.java)
             }
-            return null
+
+            // Walk backwards through assignments to find the most recent initialization
+            // of this variable
+            generateSequence(start) { PsiTreeUtil.getPrevSiblingOfType(it, PsiStatement::class.java) }
+                .map(::check)
+                .filterIsInstance<Exact<PsiExpression?>>()
+                .firstOrNull()?.value
         }
 
         /**
@@ -2845,16 +761,221 @@ class ConstantEvaluator
             context: JavaContext?,
             element: UElement,
             allowUnknown: Boolean
-        ): String? {
-            val evaluator = ConstantEvaluator()
-            if (allowUnknown) {
-                evaluator.allowUnknowns()
+        ): String? = runEvaluator(allowUnknown, element, ConstantEvaluator::evaluate)
+
+        private inline fun <X, reified T> runEvaluator(
+            allowUnknown: Boolean,
+            expr: X,
+            eval: ConstantEvaluator.(X) -> Any?
+        ): T? =
+            with(ConstantEvaluator().apply { if (allowUnknown) allowUnknowns() }) {
+                eval(expr) as? T
             }
-            val value = evaluator.evaluate(element)
-            return if (value is String) value else null
+    }
+}
+
+private fun <T : Comparable<T>> T.gt(that: T) = this > that
+private fun <T : Comparable<T>> T.ge(that: T) = this >= that
+private fun <T : Comparable<T>> T.lt(that: T) = this < that
+private fun <T : Comparable<T>> T.le(that: T) = this <= that
+private fun <T> T.notEquals(that: T) = this != that
+
+private inline fun <X, reified T : X, A : Any> X.tryOn(crossinline f: (T) -> A?): A? = (this as? T)?.let(f)
+
+@JvmInline
+private value class ArgList<out X>(val values: List<X>) {
+    inline fun <reified T0, reified T1, A : Any> tryOn(f: (T0, T1) -> A?): A? = when (values.size) {
+        2 -> (values[0] as? T0)?.let { x0 -> (values[1] as? T1)?.let { x1 -> f(x0, x1) } }
+        else -> null
+    }
+
+    inline fun <reified T> ifAny(): ArgList<X>? = takeIf { values.any { it is T } }
+    inline fun <reified T> ifAll(): ArgList<T>? = (takeIf { values.all { it is T } })?.let { this as ArgList<T> }
+    inline fun ifAny(p: (X) -> Boolean): ArgList<X>? = takeIf { values.any(p) }
+    inline fun ifAll(p: (X) -> Boolean): ArgList<X>? = takeIf { values.all(p) }
+    inline fun ifFirst(p: (X) -> Boolean): ArgList<X>? = takeIf { values.firstOrNull()?.let(p) == true }
+    inline fun <T> split(onSplit: (X, ArgList<X>) -> T): T? = when {
+        values.isEmpty() -> null
+        else -> onSplit(values[0], ArgList(values.subList(1, values.size)))
+    }
+    inline fun <A> join(f: (List<X>) -> A): A = f(values)
+    fun <T : Any> reduceOn(onElem: (X) -> T, f: (T, T) -> T): T? = values.asSequence().map(onElem).reduceOrNull(f)
+    fun <R, T> foldOn(onElem: (X) -> T, init: R, op: (R, T) -> R): R = values.asSequence().map(onElem).fold(init, op)
+    inline fun isOrdered(ordered: (X, X) -> Boolean) =
+        values.asSequence().zipWithNext().all { (l, r) -> ordered(l, r) }
+    inline fun <T> isOrderedOn(noinline prop: (X) -> T, ordered: (T, T) -> Boolean) =
+        values.asSequence().map(prop).zipWithNext().all { (l, r) -> ordered(l, r) }
+    fun <T> const(x: T): T = x
+}
+
+private fun <X> ArgList<X>.reduce(op: (X, X) -> X): X? = values.reduceOrNull(op)
+
+// Assumption: due to Java's infix syntax, 0-arg polyadic expression is not a thing,
+// so we don't need to worry about each operation's identity element
+private fun ArgList<Any?>.reduceAsNumbers(
+    opDouble: (Double, Double) -> Double,
+    opFloat: (Float, Float) -> Float,
+    opLong: (Long, Long) -> Long,
+    opInt: (Int, Int) -> Int
+): Number? =
+    ifAll<Number>()?.let {
+        it.ifAny<Double>()?.reduceOn(Number::toDouble, opDouble)
+            ?: it.ifAny<Float>()?.reduceOn(Number::toFloat, opFloat)
+            ?: it.ifAny<Long>()?.reduceOn(Number::toLong, opLong)
+            ?: it.ifAny<Int>()?.reduceOn(Number::toInt, opInt)
+    }
+
+private fun ArgList<Any?>.reduceAsInts(
+    opLong: (Long, Long) -> Long,
+    opInt: (Int, Int) -> Int
+): Number? =
+    ifAll<Number>()?.let {
+        it.ifAny<Long>()?.reduceOn(Number::toLong, opLong)
+            ?: it.ifAny<Int>()?.reduceOn(Number::toInt, opInt)
+    }
+
+private inline fun ArgList<Any?>.isOrdered(
+    onDouble: (Double, Double) -> Boolean,
+    onLong: (Long, Long) -> Boolean
+) =
+    ifAll<Number>()?.let {
+        (it.ifAny<Float>() ?: it.ifAny<Double>())?.isOrderedOn(Number::toDouble, onDouble)
+            ?: (it.ifAny<Int>() ?: it.ifAny<Long>())?.isOrderedOn(Number::toLong, onLong)
+    }
+
+private fun ArgList<Any?>.logicalOr() = ifAll<Boolean>()?.reduce(Boolean::or) ?: ifAny(true::equals)?.const(true)
+private fun ArgList<Any?>.logicalAnd() = ifAll<Boolean>()?.reduce(Boolean::and) ?: ifAny(false::equals)?.const(false)
+
+private fun Any?.tryInv() = when (this) {
+    is Int -> inv()
+    is Long -> inv()
+    is Short -> inv().toInt()
+    is Char -> code.inv()
+    is Byte -> inv().toInt()
+    else -> null
+}
+
+private fun Any?.tryUnaryMinus() = when (this) {
+    is Int -> -this
+    is Long -> -this
+    is Double -> -this
+    is Float -> -this
+    is Short -> -this
+    is Char -> -this.code
+    is Byte -> -this
+    else -> null
+}
+
+private fun Any?.tryToNum(type: PsiType) = (this as? Number)?.let { n ->
+    when (type) {
+        PsiType.FLOAT -> n.toFloat()
+        PsiType.DOUBLE -> n.toDouble()
+        PsiType.INT -> n.toInt()
+        PsiType.LONG -> n.toLong()
+        PsiType.SHORT -> n.toShort()
+        PsiType.BYTE -> n.toByte()
+        else -> this
+    }
+} ?: this
+
+private fun ArgList<Any?>.plus(allowUnknown: Boolean) =
+    reduceAsNumbers(Double::plus, Float::plus, Long::plus, Int::plus)
+        ?: ifAny { it is String }?.let { args ->
+        when {
+            allowUnknown -> args.join { it.asSequence().filterNotNull().joinToString(separator = "") }
+            else -> args.ifAll { it is String || it is Char }?.join { it.joinToString(separator = "") }
+        }
+    }
+private fun ArgList<Any?>.times() = reduceAsNumbers(Double::times, Float::times, Long::times, Int::times)
+private fun ArgList<Any?>.minus() = reduceAsNumbers(Double::minus, Float::minus, Long::minus, Int::minus)
+private fun ArgList<Any?>.bitwiseOr() = logicalOr() ?: reduceAsInts(Long::or, Int::or)
+private fun ArgList<Any?>.bitwiseAnd() = logicalAnd() ?: reduceAsInts(Long::and, Int::and)
+private fun ArgList<Any?>.bitwiseXor() =
+    ifAll<Boolean>()?.reduce(Boolean::xor)
+        ?: reduceAsInts(Long::xor, Int::xor)
+private fun ArgList<Any?>.div() =
+    ifFirst { it == 0 }?.const(0)
+        ?: ifFirst { it == 0L }?.const(0L)
+        ?: ifAll { it != 0 && it != 0L }?.reduceAsNumbers(Double::div, Float::div, Long::div, Int::div)
+private fun ArgList<Any?>.mod() =
+    ifFirst { it == 0 }?.const(0)
+        ?: ifFirst { it == 0L }?.const(0L)
+        ?: ifAll { it != 0 && it != 0L }?.reduceAsNumbers(Double::mod, Float::mod, Long::mod, Int::mod)
+private fun ArgList<Any?>.shl() = shift(Long::shl, Int::shl)
+private fun ArgList<Any?>.shr() = shift(Long::shr, Int::shr)
+private fun ArgList<Any?>.ushr() = shift(Long::ushr, Int::ushr)
+private fun ArgList<Any?>.shift(onLong: (Long, Int) -> Long, onInt: (Int, Int) -> Int) =
+    ifAll<Number>()?.split { n, ns ->
+        when (n) {
+            is Long -> ns.foldOn(Number::toInt, n, onLong)
+            is Int -> ns.foldOn(Number::toInt, n, onInt)
+            else -> null
+        }
+    }
+
+private fun isType(type: PsiType, name: String) = (type as? PsiClassType)?.resolve()?.qualifiedName == name
+
+private fun List<Any?>.reifiedAsArray(elemType: PsiType): Any? = when {
+    elemType == PsiType.BOOLEAN -> BooleanArray(size) { this[it] as? Boolean ?: false }
+    elemType == PsiType.CHAR -> CharArray(size) { this[it] as? Char ?: 0.toChar() }
+    elemType == PsiType.BYTE -> ByteArray(size) { this[it] as? Byte ?: 0.toByte() }
+    elemType == PsiType.DOUBLE -> DoubleArray(size) { this[it] as? Double ?: 0.0 }
+    elemType == PsiType.FLOAT -> FloatArray(size) { this[it] as? Float ?: 0F }
+    elemType == PsiType.INT -> IntArray(size) { this[it] as? Int ?: 0 }
+    elemType == PsiType.SHORT -> ShortArray(size) { this[it] as? Short ?: 0.toShort() }
+    elemType == PsiType.LONG -> LongArray(size) { this[it] as? Long ?: 0L }
+    isType(elemType, TYPE_OBJECT) -> Array(size) { this[it] }
+    isType(elemType, TYPE_STRING) -> Array(size) { this[it] as? String }
+    else -> {
+        tailrec fun widen(src: Class<*>, tgt: Class<*>): Class<*> =
+            if (src.isAssignableFrom(tgt)) src else widen(src.superclass, tgt)
+        asSequence().mapNotNull { it?.javaClass }.reduceOrNull(::widen)?.let(::reifiedAsArray)
+    }
+}
+
+private fun List<Any?>.reifiedAsArray(klass: Class<*>): Array<*> =
+    toArray { n -> java.lang.reflect.Array.newInstance(klass, n) as Array<*> }
+
+private inline fun <reified A, X> Any.asArray(crossinline indices: (A) -> IntRange, crossinline get: (A, Int) -> X): ((Int) -> X?)? =
+    (this as? A)?.let { { if (it in indices(this)) get(this, it) else null } }
+
+/**
+ * When evaluating expressions that resolve to arrays, this is the largest array size we'll
+ * initialize; for larger arrays we'll return a [ArrayReference] instead
+ */
+private const val LARGEST_LITERAL_ARRAY = 12
+
+private fun freshArray(type: PsiType, size: Int, dimensions: Int): Any = when {
+    size <= LARGEST_LITERAL_ARRAY -> when (type) {
+        PsiType.BYTE -> ByteArray(size)
+        PsiType.BOOLEAN -> BooleanArray(size)
+        PsiType.INT -> IntArray(size)
+        PsiType.LONG -> LongArray(size)
+        PsiType.CHAR -> CharArray(size)
+        PsiType.FLOAT -> FloatArray(size)
+        PsiType.DOUBLE -> DoubleArray(size)
+        PsiType.SHORT -> ShortArray(size)
+        else -> when (val className = type.canonicalText) {
+            TYPE_STRING -> arrayOfNulls<String>(size)
+            TYPE_OBJECT -> arrayOfNulls<Any>(size)
+            else -> ArrayReference.of(className, size, dimensions)
+        }
+    }
+    else -> when (type) {
+        PsiType.BYTE -> ArrayReference.of(java.lang.Byte.TYPE, size, dimensions)
+        PsiType.BOOLEAN -> ArrayReference.of(java.lang.Boolean.TYPE, size, dimensions)
+        PsiType.INT -> ArrayReference.of(Integer.TYPE, size, dimensions)
+        PsiType.LONG -> ArrayReference.of(java.lang.Long.TYPE, size, dimensions)
+        PsiType.CHAR -> ArrayReference.of(Character.TYPE, size, dimensions)
+        PsiType.FLOAT -> ArrayReference.of(java.lang.Float.TYPE, size, dimensions)
+        PsiType.DOUBLE -> ArrayReference.of(java.lang.Double.TYPE, size, dimensions)
+        PsiType.SHORT -> ArrayReference.of(java.lang.Short.TYPE, size, dimensions)
+        else -> when (val className = type.canonicalText) {
+            TYPE_STRING -> ArrayReference.of(String::class.java, size, dimensions)
+            TYPE_OBJECT -> ArrayReference.of(Any::class.java, size, dimensions)
+            else -> ArrayReference.of(className, size, dimensions)
         }
     }
 }
 
-private fun Char.inv() = code.inv()
-private operator fun Char.unaryMinus() = -code
+private infix fun <A, B, C> ((A) -> B).then(that: (B) -> C): (A) -> C = { that(this(it)) }
