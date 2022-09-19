@@ -2691,12 +2691,6 @@ public class ConstantEvaluator {
 
                         return super.visitSimpleNameReferenceExpression(node);
                     }
-
-                    @Override
-                    public boolean visitQualifiedReferenceExpression(
-                            UQualifiedReferenceExpression node) {
-                        return super.visitQualifiedReferenceExpression(node);
-                    }
                 });
 
         return found.get();
