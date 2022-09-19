@@ -39,7 +39,7 @@ class PairCommandHandler : HostCommandHandler() {
         val mdnsServices = fakeAdbServer.mdnsServicesCopy.get()
 
         val service = mdnsServices.firstOrNull { service ->
-            service.deviceAddress.toString() == deviceAddress
+            "${service.deviceAddress.hostString}:${service.deviceAddress.port}" == deviceAddress
         }
         if (service == null) {
             // See https://cs.android.com/android/platform/superproject/+/3a52886262ae22477a7d8ffb12adba64daf6aafa:packages/modules/adb/client/adb_wifi.cpp;l=233
