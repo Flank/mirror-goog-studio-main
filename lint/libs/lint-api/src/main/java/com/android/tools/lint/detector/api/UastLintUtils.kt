@@ -18,7 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.tools.lint.client.api.ResourceReference
-import com.android.tools.lint.detector.api.ConstantEvaluator.LastAssignmentFinder.Companion.LAST_ASSIGNMENT_VALUE_UNKNOWN
+import com.android.tools.lint.detector.api.ConstantEvaluator.LastAssignmentFinder.LastAssignmentValueUnknown
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement
@@ -197,7 +197,7 @@ class UastLintUtils {
                         if (value == null && finder.lastAssignment != null) {
                             // Special return value: variable was assigned, but we don't know
                             // the value
-                            return LAST_ASSIGNMENT_VALUE_UNKNOWN
+                            return LastAssignmentValueUnknown
                         }
                     }
                 }

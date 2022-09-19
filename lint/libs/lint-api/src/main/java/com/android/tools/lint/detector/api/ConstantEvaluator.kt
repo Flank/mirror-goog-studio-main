@@ -279,7 +279,7 @@ class ConstantEvaluator
                 // Special return value: the variable *was* assigned something but we don't know
                 // the value. In that case we should not continue to look at the initializer
                 // since the initial value is no longer relevant.
-                if (value === LastAssignmentFinder.LAST_ASSIGNMENT_VALUE_UNKNOWN) {
+                if (value == LastAssignmentFinder.LastAssignmentValueUnknown) {
                     return null
                 }
                 if (value != null) {
@@ -943,13 +943,13 @@ class ConstantEvaluator
             super.afterVisitElement(node)
         }
 
+        /**
+         * Special marker value from [findLastValue] to indicate that a node was assigned to, but
+         * the value is unknown
+         */
+        internal object LastAssignmentValueUnknown: Any()
+
         companion object {
-            /**
-             * Special marker value from [findLastValue] to indicate that a node was assigned to, but
-             * the value is unknown
-             */
-            // prevent interning; no aliases
-            val LAST_ASSIGNMENT_VALUE_UNKNOWN: Any = java.lang.String("<unknown>")
             private fun elementHasLevel(node: UElement): Boolean {
                 return !(
                         node is UBlockExpression ||
