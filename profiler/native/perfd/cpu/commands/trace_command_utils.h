@@ -16,14 +16,14 @@
 #ifndef PERFD_CPU_COMMANDS_TRACE_COMMAND_UTILS_H_
 #define PERFD_CPU_COMMANDS_TRACE_COMMAND_UTILS_H_
 
-#include "perfd/common/profiling_app.h"
+#include "perfd/common/capture_info.h"
 #include "proto/commands.pb.h"
 #include "proto/common.pb.h"
 
 namespace profiler {
 
 profiler::proto::Event PopulateCpuTraceEvent(
-    const ProfilingApp& capture, const profiler::proto::Command& command_data,
+    const CaptureInfo& capture, const profiler::proto::Command& command_data,
     bool is_end);
 
 }  // namespace profiler

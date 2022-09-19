@@ -24,7 +24,7 @@ namespace profiler {
 
 static const int64_t kTraceRecordBufferSize = 10;
 
-ProfilingApp* TraceManager::StartProfiling(
+CaptureInfo* TraceManager::StartCapture(
     int64_t request_timestamp_ns,
     const proto::CpuTraceConfiguration& configuration,
     TraceStartStatus* status) {
@@ -32,7 +32,7 @@ ProfilingApp* TraceManager::StartProfiling(
 
   const auto& app_name = configuration.app_name();
   // obtain the CircularBuffer, create in place if one does not exist already.
-  CircularBuffer<ProfilingApp>& cache =
+  CircularBuffer<CaptureInfo>& cache =
       capture_cache_
           .emplace(std::piecewise_construct, std::forward_as_tuple(app_name),
                    std::forward_as_tuple(kTraceRecordBufferSize))
@@ -48,7 +48,7 @@ ProfilingApp* TraceManager::StartProfiling(
   std::string error_message;
   bool success = false;
   if (configuration.initiation_type() == proto::INITIATED_BY_API) {
-    // Special case for API-initiated tracing: Only cache the ProfilingApp
+    // Special case for API-initiated tracing: Only cache the CaptureInfo
     // record, as the trace logic is handled via the app.
     success = true;
   } else {
@@ -88,14 +88,14 @@ ProfilingApp* TraceManager::StartProfiling(
   }
 
   if (success) {
-    ProfilingApp profiling_app;
-    profiling_app.trace_id = clock_->GetCurrentTime();
-    profiling_app.start_timestamp = request_timestamp_ns;
-    profiling_app.end_timestamp = -1;  // -1 means trace is ongoing
-    profiling_app.configuration = configuration;
-    profiling_app.start_status.CopyFrom(*status);
+    CaptureInfo capture;
+    capture.trace_id = clock_->GetCurrentTime();
+    capture.start_timestamp = request_timestamp_ns;
+    capture.end_timestamp = -1;  // -1 means trace is ongoing
+    capture.configuration = configuration;
+    capture.start_status.CopyFrom(*status);
 
-    return cache.Add(profiling_app);
+    return cache.Add(capture);
   } else {
     status->set_status(TraceStartStatus::FAILURE);
     status->set_error_message(error_message);
@@ -103,10 +103,10 @@ ProfilingApp* TraceManager::StartProfiling(
   }
 }
 
-ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
-                                          const std::string& app_name,
-                                          bool need_trace,
-                                          TraceStopStatus* status) {
+CaptureInfo* TraceManager::StopCapture(int64_t request_timestamp_ns,
+                                       const std::string& app_name,
+                                       bool need_trace,
+                                       TraceStopStatus* status) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
   auto* ongoing_capture = GetOngoingCapture(app_name);
@@ -121,7 +121,7 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
   if (ongoing_capture->configuration.initiation_type() ==
       proto::INITIATED_BY_API) {
     // Special for API-initiated tracing: only update the
-    // ProfilingApp record, as the trace logic is handled via the app.
+    // CaptureInfo record, as the trace logic is handled via the app.
     // End timestamp should come from when the stop request was invoked
     // in the app.
     ongoing_capture->end_timestamp = request_timestamp_ns;
@@ -155,7 +155,7 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
   return ongoing_capture;
 }
 
-ProfilingApp* TraceManager::GetOngoingCapture(const std::string& app_name) {
+CaptureInfo* TraceManager::GetOngoingCapture(const std::string& app_name) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
   auto itr = capture_cache_.find(app_name);
@@ -163,7 +163,7 @@ ProfilingApp* TraceManager::GetOngoingCapture(const std::string& app_name) {
     return nullptr;
   }
 
-  CircularBuffer<ProfilingApp>& cache = itr->second;
+  CircularBuffer<CaptureInfo>& cache = itr->second;
   if (!cache.empty() && cache.back().end_timestamp == -1) {
     return &cache.back();
   }
@@ -171,17 +171,17 @@ ProfilingApp* TraceManager::GetOngoingCapture(const std::string& app_name) {
   return nullptr;
 }
 
-std::vector<ProfilingApp> TraceManager::GetCaptures(const std::string& app_name,
-                                                    int64_t from, int64_t to) {
+std::vector<CaptureInfo> TraceManager::GetCaptures(const std::string& app_name,
+                                                   int64_t from, int64_t to) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
-  std::vector<ProfilingApp> captures;
+  std::vector<CaptureInfo> captures;
   auto itr = capture_cache_.find(app_name);
   if (itr == capture_cache_.end()) {
     return captures;
   }
 
-  CircularBuffer<ProfilingApp>& cache = itr->second;
+  CircularBuffer<CaptureInfo>& cache = itr->second;
   for (size_t i = 0; i < cache.size(); i++) {
     const auto& candidate = cache.Get(i);
     // Skip completed captures that ends earlier than |from| and those

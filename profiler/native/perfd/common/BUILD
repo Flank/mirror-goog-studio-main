@@ -22,7 +22,7 @@ cc_library(
         "trace_manager.cc",
     ],
     hdrs = [
-        "profiling_app.h",
+        "capture_info.h",
         "trace_manager.h",
     ],
     copts = ANDROID_COPTS + [

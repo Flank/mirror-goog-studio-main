@@ -52,8 +52,8 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
 
     TraceStartStatus start_status;
-    auto* capture = trace_manager_->StartProfiling(
-        request->timestamp(), configuration, &start_status);
+    auto* capture = trace_manager_->StartCapture(request->timestamp(),
+                                                 configuration, &start_status);
     if (capture == nullptr) {
       std::cout << " START request ignored. " << start_status.error_message()
                 << std::endl;
@@ -77,7 +77,7 @@ Status InternalCpuServiceImpl::SendTraceEvent(
              "initiated by startMetghodTracing* APIs");
     } else {
       TraceStopStatus stop_status;
-      auto* capture = trace_manager_->StopProfiling(
+      auto* capture = trace_manager_->StopCapture(
           request->timestamp(), app_name, false, &stop_status);
       assert(capture != nullptr);
       std::ostringstream oss;

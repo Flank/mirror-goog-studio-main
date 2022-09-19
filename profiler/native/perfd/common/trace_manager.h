@@ -22,11 +22,11 @@
 #include <string>
 #include <vector>
 
+#include "capture_info.h"
 #include "perfd/common/atrace/atrace_manager.h"
 #include "perfd/common/perfetto/perfetto_manager.h"
 #include "perfd/common/simpleperf/simpleperf.h"
 #include "perfd/common/simpleperf/simpleperf_manager.h"
-#include "profiling_app.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/transport.grpc.pb.h"
 #include "utils/activity_manager.h"
@@ -81,7 +81,7 @@ class TraceManager final {
     });
   }
 
-  // Request to start tracing. It returns the cached ProfilingApp if the trace
+  // Request to start tracing. It returns the cached CaptureInfo if the trace
   // started successfully (e.g. if there are no ongoing trace for the specified
   // app), nullptr otherwise.
   //
@@ -91,16 +91,15 @@ class TraceManager final {
   // the start trace request. For API-initiated tracing, the timestamp
   // originates from the app agent. Also for API-initiated tracing, the trace
   // logic is handled via the app, so this method will only log and generate
-  // the |ProfilingApp| record without calling any trace commands.
-  ProfilingApp* StartProfiling(
-      int64_t request_timestamp_ns,
-      const proto::CpuTraceConfiguration& configuration,
-      proto::TraceStartStatus* status);
+  // the |CaptureInfo| record without calling any trace commands.
+  CaptureInfo* StartCapture(int64_t request_timestamp_ns,
+                            const proto::CpuTraceConfiguration& configuration,
+                            proto::TraceStartStatus* status);
 
-  // Request to stop an ongoing trace. Returns the cached ProfilingApp with
+  // Request to stop an ongoing trace. Returns the cached CaptureInfo with
   // the end timestamp marked if there is an existing trace, nullptr otherwise.
   // Note that the caller is responsible for parsing/reading the trace outputs
-  // that should be generated in the returned ProfilingApp's configuration's
+  // that should be generated in the returned CaptureInfo's configuration's
   // trace path.
   //
   // TODO: currently we only support one ongoing capture per app, we should
@@ -110,18 +109,18 @@ class TraceManager final {
   // trace (e.g. it stops any ongoing trace), the more correct logic would be
   // to pass in a |CpuTraceConfiguration| and validate we are stopping the
   // correct one.
-  ProfilingApp* StopProfiling(int64_t request_timestamp_ns,
-                              const std::string& app_name, bool need_trace,
-                              proto::TraceStopStatus* status);
+  CaptureInfo* StopCapture(int64_t request_timestamp_ns,
+                           const std::string& app_name, bool need_trace,
+                           proto::TraceStopStatus* status);
 
-  // Returns the |ProfilingApp| of an app if there is an ongoing tracing, null
+  // Returns the |CaptureInfo| of an app if there is an ongoing tracing, null
   // otherwise.
-  ProfilingApp* GetOngoingCapture(const std::string& app_name);
+  CaptureInfo* GetOngoingCapture(const std::string& app_name);
 
   // Returns the captures from process of |pid| that overlap with the given
   // interval [|from|, |to|], both inclusive.
-  std::vector<ProfilingApp> GetCaptures(const std::string& app_name,
-                                        int64_t from, int64_t to);
+  std::vector<CaptureInfo> GetCaptures(const std::string& app_name,
+                                       int64_t from, int64_t to);
 
   // Visible for testing.
   SimpleperfManager* simpleperf_manager() { return simpleperf_manager_.get(); }
@@ -142,7 +141,7 @@ class TraceManager final {
   std::recursive_mutex capture_mutex_;
 
   // Map from app package name to the corresponding data of ongoing captures.
-  std::map<std::string, CircularBuffer<ProfilingApp>> capture_cache_;
+  std::map<std::string, CircularBuffer<CaptureInfo>> capture_cache_;
 };
 
 }  // namespace profiler

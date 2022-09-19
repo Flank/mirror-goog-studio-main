@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 
-#include "perfd/common/profiling_app.h"
+#include "perfd/common/capture_info.h"
 #include "perfd/cpu/cpu_config.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
@@ -126,7 +126,7 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
                                           GetTraceInfoResponse* response) {
   Trace trace("CPU:GetTraceInfo");
   string app_name = ProcessManager::GetCmdlineForPid(request->session().pid());
-  const vector<ProfilingApp>& data = trace_manager_->GetCaptures(
+  const vector<CaptureInfo>& data = trace_manager_->GetCaptures(
       app_name, request->from_timestamp(), request->to_timestamp());
   for (const auto& datum : data) {
     CpuTraceInfo* info = response->add_trace_info();
@@ -176,8 +176,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     CpuProfilingAppStartResponse* response) {
   Trace trace("CPU:StartProfilingApp");
   auto* status = response->mutable_status();
-  trace_manager_->StartProfiling(clock_->GetCurrentTime(),
-                                 request->configuration(), status);
+  trace_manager_->StartCapture(clock_->GetCurrentTime(),
+                               request->configuration(), status);
   return Status::OK;
 }
 
@@ -193,7 +193,7 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
                                         CpuProfilingAppStopResponse* response) {
   proto::TraceStopStatus status;
   bool need_response = response != nullptr;
-  ProfilingApp* capture = trace_manager_->StopProfiling(
+  CaptureInfo* capture = trace_manager_->StopCapture(
       clock_->GetCurrentTime(), app_name, need_response, &status);
 
   if (need_response) {
@@ -230,7 +230,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     const profiler::proto::StartupProfilingRequest* request,
     profiler::proto::StartupProfilingResponse* response) {
   TraceStartStatus start_status;
-  ProfilingApp* capture = trace_manager_->StartProfiling(
+  CaptureInfo* capture = trace_manager_->StartCapture(
       clock_->GetCurrentTime(), request->configuration(), &start_status);
 
   if (capture != nullptr) {
@@ -245,7 +245,7 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
 
 int64_t CpuServiceImpl::GetEarliestDataTime(int32_t pid) {
   string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  ProfilingApp* app = trace_manager_->GetOngoingCapture(app_pkg_name);
+  CaptureInfo* app = trace_manager_->GetOngoingCapture(app_pkg_name);
   return app != nullptr ? app->start_timestamp : LLONG_MAX;
 }
 

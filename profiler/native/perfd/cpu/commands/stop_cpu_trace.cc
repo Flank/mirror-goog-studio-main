@@ -16,7 +16,7 @@
 #include "stop_cpu_trace.h"
 
 #include <sstream>
-#include "perfd/common/profiling_app.h"
+#include "perfd/common/capture_info.h"
 #include "perfd/cpu/commands/trace_command_utils.h"
 #include "proto/cpu.pb.h"
 #include "utils/fs/disk_file_system.h"
@@ -35,7 +35,7 @@ namespace {
 constexpr char kCacheLocation[] = "cache/complete/";
 
 Event PopulateTraceStatusEvent(const profiler::proto::Command& command_data,
-                               const ProfilingApp* capture) {
+                               const CaptureInfo* capture) {
   Event status_event;
   status_event.set_pid(command_data.pid());
   status_event.set_kind(Event::CPU_TRACE_STATUS);
@@ -79,7 +79,7 @@ void Stop(Daemon* daemon, const profiler::proto::Command command_data,
   // Send CPU_TRACE event after the stopping has returned, successfully or not.
   int64_t trace_id = ongoing->trace_id;
   TraceStopStatus status;
-  auto* capture = trace_manager->StopProfiling(
+  auto* capture = trace_manager->StopCapture(
       stop_timestamp, app_name, stop_command.need_trace_response(), &status);
   if (capture != nullptr) {
     if (status.status() == TraceStopStatus::SUCCESS) {

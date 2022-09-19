@@ -19,7 +19,7 @@ using profiler::proto::Event;
 
 namespace profiler {
 
-Event PopulateCpuTraceEvent(const ProfilingApp& capture,
+Event PopulateCpuTraceEvent(const CaptureInfo& capture,
                             const profiler::proto::Command& command_data,
                             bool is_end) {
   Event event;
