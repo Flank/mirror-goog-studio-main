@@ -2772,7 +2772,7 @@ public final class SdkConstants {
 
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     /** The minimum version of Gradle that this version of Studio will support. */
-    public static final String GRADLE_MINIMUM_VERSION = "4.8.1";
+    public static final String GRADLE_MINIMUM_VERSION = "4.10";
     /**
      * The minimum version of Gradle that this version of the Gradle plugin will support. This also
      * happens to be a version of Gradle that is embedded and distributed along with the Android
