@@ -2788,6 +2788,12 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "3.2.0";
 
     /**
+     * The minimum released version of the Android Gradle Plugin that the next version of Studio
+     * will support.
+     */
+    public static final String GRADLE_PLUGIN_NEXT_MINIMUM_VERSION = "4.0.0";
+
+    /**
      * A version of the Android Gradle Plugin that this version of Studio and associated tools (e.g.
      * lint) can safely recommend during its development cycle. If an up-to-date version is
      * required, consider using `LatestKnownPluginVersionProvider` instead.
