@@ -96,6 +96,7 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         resultsOutDir: File,
     ) {
         val projectName = parameters.quotaProjectName.get()
+        val requestId = UUID.randomUUID().toString()
 
         val toolResultsClient = ToolResults.Builder(
             GoogleNetHttpTransport.newTrustedTransport(),
@@ -117,7 +118,7 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         }.build()
 
         val testApkStorageObject = uploadToCloudStorage(
-            testData.testApk, storageClient, defaultBucketName
+            testData.testApk, requestId, storageClient, defaultBucketName
         )
 
         val deviceId = device.device
@@ -129,7 +130,10 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
             deviceId, deviceLocale, deviceApiLevel
         )
         val appApkStorageObject = uploadToCloudStorage(
-            testData.testedApkFinder(configProvider).first(), storageClient, defaultBucketName
+            testData.testedApkFinder(configProvider).first(),
+            requestId,
+            storageClient,
+            defaultBucketName
         )
 
         val testingClient = Testing.Builder(
@@ -141,7 +145,6 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         }.build()
 
         val testMatricesClient = testingClient.projects().testMatrices()
-        val requestId = UUID.randomUUID().toString()
 
         val testMatrix = TestMatrix().apply {
             projectId = projectName
@@ -241,12 +244,13 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
      * Uploads the given file to cloud storage.
      *
      * @param file the file to be uploaded
+     * @param runId a uuid that is unique to this test run.
      * @param storageClient the storage connection for the file to be written to.
      * @param bucketName a unique id for the set of files to be associated with this test.
      * @return a handle to the Storage object in the cloud.
      */
     private fun uploadToCloudStorage(
-        file: File, storageClient: Storage, bucketName: String
+        file: File, runId: String, storageClient: Storage, bucketName: String
     ): StorageObject =
         FileInputStream(file).use { fileInputStream ->
             storageClient.objects().insert(
@@ -256,7 +260,7 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
                     length = file.length()
                 }
             ).apply {
-                name = file.name
+                name = "${runId}_${file.name}"
             }.execute()
         }
 
