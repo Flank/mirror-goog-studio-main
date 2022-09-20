@@ -344,6 +344,11 @@ public class VirtualTimeScheduler implements ScheduledExecutorService {
         return mCurrentTimeNanos;
     }
 
+    /** @return the current virtual time in milliseconds of this scheduler. */
+    public long getCurrentTimeMillis() {
+        return TimeUnit.NANOSECONDS.toMillis(mCurrentTimeNanos);
+    }
+
     /**
      * @return a copy of the {@link PriorityQueue} of queued futures.
      */
