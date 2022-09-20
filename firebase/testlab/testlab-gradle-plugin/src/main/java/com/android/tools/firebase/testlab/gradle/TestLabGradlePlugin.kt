@@ -16,7 +16,10 @@
 
 package com.android.tools.firebase.testlab.gradle
 
+import com.android.build.api.AndroidPluginVersion
 import com.android.build.api.dsl.CommonExtension
+import com.android.build.api.variant.AndroidComponentsExtension
+import com.android.build.gradle.api.AndroidBasePlugin
 import com.google.firebase.testlab.gradle.ManagedDevice
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -27,13 +30,19 @@ import org.gradle.api.Project
  */
 class TestLabGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val androidExtension = project.extensions.findByName("android")
-        if (androidExtension !is CommonExtension<*, *, *, *>) {
-            error("Android Gradle plugin is required for 'com.google.firebase.testlab' plugin.")
+        project.plugins.withType(AndroidBasePlugin::class.java) {
+            val agpVersion =
+                project.extensions.getByType(AndroidComponentsExtension::class.java).pluginVersion
+            if (agpVersion < AndroidPluginVersion(8, 0, 0).alpha(2)) {
+                error("Android Gradle plugin version 8.0.0-alpha02 or higher is required." +
+                              " Current version is $agpVersion.")
+            }
+
+            val androidExtension = project.extensions.getByType(CommonExtension::class.java)
+            androidExtension.testOptions.managedDevices.devices.registerBinding(
+                ManagedDevice::class.java,
+                ManagedDeviceImpl::class.java
+            )
         }
-        androidExtension.testOptions.managedDevices.devices.registerBinding(
-            ManagedDevice::class.java,
-            ManagedDeviceImpl::class.java
-        )
     }
 }
