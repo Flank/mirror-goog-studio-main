@@ -23,9 +23,12 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.googleapis.util.Utils
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.InputStreamContent
+import com.google.api.client.http.HttpRequestFactory
+import com.google.api.client.http.GenericUrl
 import com.google.api.client.json.GenericJson
 import com.google.api.client.json.JsonObjectParser
 import com.google.api.client.json.jackson2.JacksonFactory
+import com.google.api.client.util.Key
 import com.google.api.services.testing.Testing
 import com.google.api.services.testing.model.AndroidDevice
 import com.google.api.services.testing.model.AndroidDeviceCatalog
@@ -34,6 +37,7 @@ import com.google.api.services.testing.model.AndroidInstrumentationTest
 import com.google.api.services.testing.model.ClientInfo
 import com.google.api.services.testing.model.EnvironmentMatrix
 import com.google.api.services.testing.model.FileReference
+import com.google.api.services.toolresults.model.StackTrace
 import com.google.api.services.testing.model.GoogleCloudStorage
 import com.google.api.services.testing.model.ResultStorage
 import com.google.api.services.testing.model.TestMatrix
@@ -42,6 +46,19 @@ import com.google.api.services.storage.Storage
 import com.google.api.services.storage.model.StorageObject
 import com.google.api.services.toolresults.ToolResults
 import com.google.firebase.testlab.gradle.ManagedDevice
+import com.google.protobuf.util.Timestamps
+import com.android.tools.firebase.testlab.gradle.ManagedDeviceTestRunner.Companion.FtlTestRunResult
+import com.google.testing.platform.proto.api.core.TestResultProto.TestResult
+import com.google.testing.platform.proto.api.core.TestCaseProto
+import com.google.testing.platform.proto.api.core.LabelProto.Label
+import com.google.testing.platform.proto.api.core.ErrorProto.Error
+import com.google.testing.platform.proto.api.core.PathProto.Path
+import com.google.testing.platform.proto.api.core.TestArtifactProto.Artifact
+import com.google.testing.platform.proto.api.core.TestArtifactProto.ArtifactType
+import com.google.testing.platform.proto.api.core.IssueProto.Issue
+import com.google.testing.platform.proto.api.core.TestStatusProto.TestStatus
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteResult
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto.TestSuiteMetaData
 import java.io.File
 import java.io.FileInputStream
 import java.nio.charset.StandardCharsets
@@ -64,8 +81,43 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         const val clientApplicationName: String = "Firebase TestLab Gradle Plugin"
         const val xGoogUserProjectHeaderKey: String = "X-Goog-User-Project"
         val cloudStorageUrlRegex = Regex("""gs://(.*?)/(.*)""")
+        val TAG: String = TestLabBuildService::class.java.simpleName
 
         const val CHECK_TEST_STATE_WAIT_MS = 10 * 1000L;
+
+        class TestCases : GenericJson() {
+            @Key var testCases: List<TestCase>? = null
+            @Key var nextPageToken: String? = null
+        }
+
+        class TestCase : GenericJson() {
+            @Key var testCaseId: String? = null
+            @Key var startTime: TimeStamp? = null
+            @Key var endTime: TimeStamp? = null
+            @Key var stackTraces: List<StackTrace>? = null
+            @Key var status: String? = null
+            @Key var testCaseReference: TestCaseReference? = null
+            @Key var toolOutputs: List<ToolOutputReference>? = null
+        }
+
+        class TimeStamp : GenericJson() {
+            @Key var seconds: String? = null
+            @Key var nanos: Int? = null
+        }
+
+        class TestCaseReference : GenericJson() {
+            @Key var name: String? = null
+            @Key var className: String? = null
+            @Key var testSuiteName: String? = null
+        }
+
+        class ToolOutputReference: GenericJson() {
+            @Key var output: FileReference? = null
+        }
+
+        class FileReference: GenericJson() {
+            @Key var fileUri: String? = null
+        }
     }
 
     private val logger = Logging.getLogger(this.javaClass)
@@ -94,7 +146,7 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         device: ManagedDevice,
         testData: StaticTestData,
         resultsOutDir: File,
-    ) {
+    ): ArrayList<FtlTestRunResult> {
         val projectName = parameters.quotaProjectName.get()
         val requestId = UUID.randomUUID().toString()
 
@@ -153,10 +205,10 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
             }
             testSpecification = TestSpecification().apply {
                 androidInstrumentationTest = AndroidInstrumentationTest().apply {
-                    testApk = FileReference().apply {
+                    testApk = com.google.api.services.testing.model.FileReference().apply {
                         gcsPath = "gs://$defaultBucketName/${testApkStorageObject.name}"
                     }
-                    appApk = FileReference().apply {
+                    appApk = com.google.api.services.testing.model.FileReference().apply {
                         gcsPath = "gs://$defaultBucketName/${appApkStorageObject.name}"
                     }
                     appPackageId = testData.testedApplicationId
@@ -202,6 +254,7 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
             Thread.sleep (CHECK_TEST_STATE_WAIT_MS)
         }
 
+        val ftlTestRunResults: ArrayList<FtlTestRunResult> = ArrayList<FtlTestRunResult>()
         resultTestMatrix.testExecutions.forEach { testExecution ->
             val executionStep = toolResultsClient.projects().histories().executions().steps().get(
                 testExecution.toolResultsStep.projectId,
@@ -221,7 +274,21 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
                     }
                 }
             }
+            val testSuiteResult = getTestSuiteResult(
+                toolResultsClient,
+                testExecution.toolResultsStep.projectId,
+                testExecution.toolResultsStep.historyId,
+                testExecution.toolResultsStep.executionId,
+                testExecution.toolResultsStep.stepId
+            )
+            val testSuitePassed = testSuiteResult.testStatus.isPassedOrSkipped()
+            val hasAnyFailedTestCase = testSuiteResult.testResultList.any { testCaseResult ->
+                !testCaseResult.testStatus.isPassedOrSkipped()
+            }
+            val testPassed = testSuitePassed && !hasAnyFailedTestCase && !testSuiteResult.hasPlatformError()
+            ftlTestRunResults.add(FtlTestRunResult(testPassed, testSuiteResult))
         }
+        return ftlTestRunResults
     }
 
     fun catalog(): AndroidDeviceCatalog {
@@ -238,6 +305,198 @@ abstract class TestLabBuildService : BuildService<TestLabBuildService.Parameters
         }.execute()
 
         return catalog.androidDeviceCatalog
+    }
+
+    private fun getTestSuiteResult(toolResultsClient: ToolResults, projectId: String, historyId: String, executionId: String, stepId:String): TestSuiteResult {
+        val step = toolResultsClient.projects().histories().executions().steps().get(
+            projectId,
+            historyId,
+            executionId,
+            stepId
+        ).execute()
+
+        val testSuiteResult = TestSuiteResult.newBuilder()
+        testSuiteResult.apply {
+            testSuiteMetaData = TestSuiteMetaData.newBuilder().apply {
+                testSuiteName = step.name
+                var scheduledTestCount = 0
+                for (testSuiteOverview in step.testExecutionStep.testSuiteOverviews) {
+                    scheduledTestCount += testSuiteOverview.totalCount
+                }
+                scheduledTestCaseCount = scheduledTestCount
+            }.build()
+
+            testStatus = when (step.outcome.summary) {
+                "success" -> TestStatus.PASSED
+                "failure" -> TestStatus.FAILED
+                "skipped" -> TestStatus.SKIPPED
+                else -> TestStatus.TEST_STATUS_UNSPECIFIED
+            }
+            addOutputArtifact(
+                Artifact.newBuilder().apply {
+                    label = Label.newBuilder().apply {
+                        label = "firebase.xmlSource"
+                        namespace = "android"
+                    }.build()
+                    sourcePath = Path.newBuilder().apply {
+                        path = step.testExecutionStep.testSuiteOverviews[0].xmlSource.fileUri
+                    }.build()
+                    type = ArtifactType.TEST_DATA
+                }.build()
+            )
+        }
+
+        // TODO: platformError
+
+        for (log in step.testExecutionStep.toolExecution.toolLogs) {
+            testSuiteResult.apply {
+                addOutputArtifact(Artifact.newBuilder().apply {
+                    label = Label.newBuilder().apply {
+                        label = "firebase.toolLog"
+                        namespace = "android"
+                    }.build()
+                    sourcePath = Path.newBuilder().apply {
+                        path = log.fileUri
+                    }.build()
+                    type = ArtifactType.TEST_DATA
+                    mimeType = "text/plain"
+                }.build())
+            }
+        }
+        for (toolOutput in step.testExecutionStep.toolExecution.toolOutputs) {
+            val outputArtifact = Artifact.newBuilder().apply {
+                label = Label.newBuilder().apply {
+                    label = "firebase.toolOutput"
+                    namespace = "android"
+                }.build()
+                sourcePath = Path.newBuilder().apply {
+                    path = toolOutput.output.fileUri
+                }.build()
+                type = ArtifactType.TEST_DATA
+            }.build()
+            if (toolOutput.testCase == null) {
+                testSuiteResult.apply {
+                    addOutputArtifact(outputArtifact)
+                }
+            }
+        }
+        val thumbnails = toolResultsClient.projects().histories().executions().steps().thumbnails().list(
+            projectId,
+            historyId,
+            executionId,
+            stepId
+        ).execute().thumbnails
+        if (thumbnails != null) {
+            for (thumbnail in thumbnails) {
+                testSuiteResult.apply {
+                    addOutputArtifact(
+                        Artifact.newBuilder().apply {
+                            label = Label.newBuilder().apply {
+                                label = "firebase.thumbnail"
+                                namespace = "android"
+                            }.build()
+                            sourcePath = Path.newBuilder().apply {
+                                path = thumbnail.sourceImage.output.fileUri
+                            }.build()
+                            type = ArtifactType.TEST_DATA
+                            mimeType = "image/jpeg"
+                        })
+                }
+            }
+        }
+
+        for (testIssue in step.testExecutionStep.testIssues) {
+            logger.error(TAG, testIssue.errorMessage)
+            testSuiteResult.apply {
+                addIssue(Issue.newBuilder().apply {
+                    message = testIssue.errorMessage
+                    name = testIssue.get("type").toString()
+                    namespace = Label.newBuilder().apply {
+                        label = "firebase.issue"
+                        namespace = "android"
+                    }.build()
+                    severity = when (testIssue.get("severity")) {
+                        "info" -> Issue.Severity.INFO
+                        "suggestion" -> Issue.Severity.SUGGESTION
+                        "warning" -> Issue.Severity.WARNING
+                        "severe" -> Issue.Severity.SEVERE
+                        else -> Issue.Severity.SEVERITY_UNSPECIFIED
+                    }
+                    code = testIssue.get("type").toString().hashCode()
+                }.build())
+            }
+        }
+
+        // Need latest version of google-api-client to use
+        // toolResultsClient.projects().histories().executions().steps().testCases().list().
+        // Manually calling this API until this is available.
+        val httpRequestFactory: HttpRequestFactory = GoogleNetHttpTransport.newTrustedTransport().createRequestFactory(httpRequestInitializer)
+        val url = "https://toolresults.googleapis.com/toolresults/v1beta3/projects/$projectId/histories/$historyId/executions/$executionId/steps/$stepId/testCases"
+        val request = httpRequestFactory.buildGetRequest(GenericUrl(url))
+        val parser = JsonObjectParser(Utils.getDefaultJsonFactory())
+        request.setParser(parser)
+        val response = request.execute()
+        response.content.use {
+            val testCaseContents = parser.parseAndClose<TestCases>(
+                it, StandardCharsets.UTF_8,
+                TestCases::class.java
+            )
+            for (case in testCaseContents["testCases"] as List<TestCase>) {
+                testSuiteResult.apply {
+                    addTestResult(TestResult.newBuilder().apply {
+                        testCase = TestCaseProto.TestCase.newBuilder().apply {
+                            var packageName: String = case.testCaseReference!!.className!!
+                            val className: String = packageName.split(".").last()
+                            testClass = className
+                            testPackage = packageName.dropLast(className.length + 1)
+                            testMethod = case.testCaseReference!!.name
+                            startTime = Timestamps.fromNanos(case.startTime!!.nanos!!.toLong())
+                            endTime = Timestamps.fromNanos(case.endTime!!.nanos!!.toLong())
+                        }.build()
+
+                        val status = case.status
+                        testStatus = when (status) {
+                            null -> TestStatus.PASSED
+                            "passed" -> TestStatus.PASSED
+                            "failed" -> TestStatus.FAILED
+                            "error" -> TestStatus.ERROR
+                            "skipped" -> TestStatus.SKIPPED
+                            else -> TestStatus.TEST_STATUS_UNSPECIFIED
+                        }
+
+                        if (status == "failed" || status == "error") {
+                            error = Error.newBuilder().apply {
+                                stackTrace = case.stackTraces!![0].exception
+                            }.build()
+                        }
+
+                        if (case.toolOutputs != null) {
+                            for (toolOutput in (case.toolOutputs as List<ToolOutputReference>)) {
+                                addOutputArtifact(Artifact.newBuilder().apply {
+                                    Label.newBuilder().apply {
+                                        label = "firebase.toolOutput"
+                                        namespace = "android"
+                                    }.build()
+                                    sourcePath = Path.newBuilder().apply {
+                                        path = toolOutput.output!!.fileUri
+                                    }.build()
+                                    type = ArtifactType.TEST_DATA
+                                }.build())
+                            }
+                        }
+                    }.build())
+                }
+            }
+        }
+        return testSuiteResult.build()
+    }
+    private fun TestStatus.isPassedOrSkipped(): Boolean {
+        return when (this) {
+            TestStatus.PASSED,
+            TestStatus.IGNORED,
+            TestStatus.SKIPPED -> true
+            else -> false
+        }
     }
 
     /**

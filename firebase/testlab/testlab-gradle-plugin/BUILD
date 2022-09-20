@@ -43,6 +43,8 @@ maven_repository(
         "@maven//:com.google.apis.google-api-services-storage",
         "@maven//:com.google.apis.google-api-services-testing",
         "@maven//:com.google.apis.google-api-services-toolresults",
+        "@maven//:com.google.protobuf.protobuf-java-util",
+        "@maven//:com.google.testing.platform.android-device-provider-local",
     ],
     visibility = [
         "//tools/base/build-system/integration-test:__subpackages__",

@@ -23,6 +23,8 @@ import com.google.firebase.testlab.gradle.ManagedDevice
 import java.io.File
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
+import com.google.testing.platform.proto.api.core.TestStatusProto.TestStatus
+import com.google.testing.platform.proto.api.core.TestSuiteResultProto
 
 /**
  * A test runner implementation for Firebase TestLab Gradle Managed Device.
@@ -43,12 +45,25 @@ class ManagedDeviceTestRunner(
         helperApks: Set<File>,
         logger: Logger,
     ): Boolean {
-        testLabBuildService.get().runTestsOnDevice(
+        val results = testLabBuildService.get().runTestsOnDevice(
             managedDevice as ManagedDevice,
             testData,
             outputDirectory,
         )
-        // TODO: retrieve test results and return false when a test fails.
-        return true
+        return results.all(FtlTestRunResult::testPassed)
+    }
+
+    companion object {
+        /**
+         * Encapsulates result of a FTL test run.
+         *
+         * @property testPassed true when all test cases in the test suite is passed.
+         * @property resultsProto test suite result protobuf message. This can be null if
+         *     the test runner exits unexpectedly.
+         */
+        data class FtlTestRunResult(
+            val testPassed: Boolean,
+            val resultsProto: TestSuiteResultProto.TestSuiteResult?,
+        )
     }
 }

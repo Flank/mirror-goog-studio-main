@@ -45,6 +45,9 @@ dependencies {
     testImplementation libs.mockito_core
     testImplementation libs.guava
     testImplementation libs.com.android.tools.testutils
+    implementation libs.unified_test_platform_device_provider
+    implementation libs.unified_test_platform
+    implementation libs.protobuf_util
 }
 
 sourceSets {
