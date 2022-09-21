@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * DSL object for per-variant CMake options, such as CMake arguments and compiler flags.
  *
@@ -25,7 +23,6 @@ import org.gradle.api.Incubating
  * [Add C and C++ Code to Your Project](https://developer.android.com/studio/projects/add-native-code.html).
  * You can also read more documentation about [the Android CMake toolchain](https://developer.android.com/ndk/guides/cmake.html).
  */
-@Incubating
 interface ExternalNativeCmakeOptions {
     /**
      * Specifies arguments for CMake.

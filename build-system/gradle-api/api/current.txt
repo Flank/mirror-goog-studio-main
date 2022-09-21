@@ -987,7 +987,7 @@ package com.android.build.api.dsl {
     property public abstract com.android.build.api.dsl.ExternalNativeNdkBuildOptions ndkBuild;
   }
 
-  @org.gradle.api.Incubating public interface ExternalNativeCmakeOptions {
+  public interface ExternalNativeCmakeOptions {
     method public void abiFilters(java.lang.String... abiFilters);
     method public void arguments(java.lang.String... arguments);
     method public void cFlags(java.lang.String... cFlags);
