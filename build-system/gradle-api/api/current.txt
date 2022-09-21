@@ -1717,12 +1717,12 @@ package com.android.build.api.dsl {
   }
 
   public interface TestVariantDimension extends com.android.build.api.dsl.VariantDimension {
-    method @org.gradle.api.Incubating public Boolean? getMultiDexEnabled();
-    method @org.gradle.api.Incubating public com.android.build.api.dsl.ApkSigningConfig? getSigningConfig();
-    method @org.gradle.api.Incubating public void setMultiDexEnabled(Boolean? multiDexEnabled);
-    method @org.gradle.api.Incubating public void setSigningConfig(com.android.build.api.dsl.ApkSigningConfig? signingConfig);
-    property @org.gradle.api.Incubating public abstract Boolean? multiDexEnabled;
-    property @org.gradle.api.Incubating public abstract com.android.build.api.dsl.ApkSigningConfig? signingConfig;
+    method public Boolean? getMultiDexEnabled();
+    method public com.android.build.api.dsl.ApkSigningConfig? getSigningConfig();
+    method public void setMultiDexEnabled(Boolean? multiDexEnabled);
+    method public void setSigningConfig(com.android.build.api.dsl.ApkSigningConfig? signingConfig);
+    property public abstract Boolean? multiDexEnabled;
+    property public abstract com.android.build.api.dsl.ApkSigningConfig? signingConfig;
   }
 
   public interface TestedExtension {
