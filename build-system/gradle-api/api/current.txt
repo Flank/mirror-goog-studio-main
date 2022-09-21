@@ -428,16 +428,16 @@ package com.android.build.api.dsl {
   public interface ApplicationExtension extends com.android.build.api.dsl.CommonExtension<com.android.build.api.dsl.ApplicationBuildFeatures,com.android.build.api.dsl.ApplicationBuildType,com.android.build.api.dsl.ApplicationDefaultConfig,com.android.build.api.dsl.ApplicationProductFlavor> com.android.build.api.dsl.ApkExtension com.android.build.api.dsl.TestedExtension {
     method public void bundle(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.Bundle,kotlin.Unit> action);
     method public void dependenciesInfo(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.DependenciesInfo,kotlin.Unit> action);
-    method @org.gradle.api.Incubating public java.util.Set<java.lang.String> getAssetPacks();
+    method public java.util.Set<java.lang.String> getAssetPacks();
     method public com.android.build.api.dsl.Bundle getBundle();
     method public com.android.build.api.dsl.DependenciesInfo getDependenciesInfo();
-    method @org.gradle.api.Incubating public java.util.Set<java.lang.String> getDynamicFeatures();
+    method public java.util.Set<java.lang.String> getDynamicFeatures();
     method public com.android.build.api.dsl.ApplicationPublishing getPublishing();
     method public void publishing(kotlin.jvm.functions.Function1<? super com.android.build.api.dsl.ApplicationPublishing,kotlin.Unit> action);
-    property @org.gradle.api.Incubating public abstract java.util.Set<java.lang.String> assetPacks;
+    property public abstract java.util.Set<java.lang.String> assetPacks;
     property public abstract com.android.build.api.dsl.Bundle bundle;
     property public abstract com.android.build.api.dsl.DependenciesInfo dependenciesInfo;
-    property @org.gradle.api.Incubating public abstract java.util.Set<java.lang.String> dynamicFeatures;
+    property public abstract java.util.Set<java.lang.String> dynamicFeatures;
     property public abstract com.android.build.api.dsl.ApplicationPublishing publishing;
   }
 

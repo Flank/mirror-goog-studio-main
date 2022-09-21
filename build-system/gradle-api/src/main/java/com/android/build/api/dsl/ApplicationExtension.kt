@@ -16,8 +16,6 @@
 
 package com.android.build.api.dsl
 
-import org.gradle.api.Incubating
-
 /**
  * Extension for the Android Gradle Plugin Application plugin.
  *
@@ -45,13 +43,11 @@ interface ApplicationExtension :
 
     fun bundle(action: Bundle.() -> Unit)
 
-    @get:Incubating
     val dynamicFeatures: MutableSet<String>
 
     /**
      * Set of asset pack subprojects to be included in the app's bundle.
      */
-    @get:Incubating
     val assetPacks: MutableSet<String>
 
     /**
