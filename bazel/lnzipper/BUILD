@@ -29,6 +29,7 @@ java_binary(
     visibility = [
         "//prebuilts/studio/intellij-sdk:__pkg__",
         "//tools/adt/idea/studio:__pkg__",
+        "//tools/vendor/google/asfp/studio:__pkg__",
     ],
     runtime_deps = [
         ":lnzipper_lib",
