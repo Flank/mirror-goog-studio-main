@@ -190,14 +190,14 @@ internal class AnnotationHandler(private val driver: LintDriver, private val sca
             }
         } else if (call is UVariable) {
             val variable = call
-            val variablePsi = call.sourcePsi
+            val variablePsi = call.javaPsi
             // TODO: What about fields?
             call.getContainingUMethod()?.accept(object : AbstractUastVisitor() {
                 override fun visitSimpleNameReferenceExpression(
                     node: USimpleNameReferenceExpression
                 ): Boolean {
                     val referencedVariable = node.resolve()
-                    if (variable == referencedVariable || variablePsi == referencedVariable) {
+                    if (variablePsi == referencedVariable) {
                         val expression = node.getParentOfType(UExpression::class.java, true)
                         if (expression != null) {
                             val inner = node.getParentOfType(UExpression::class.java, false) ?: return false

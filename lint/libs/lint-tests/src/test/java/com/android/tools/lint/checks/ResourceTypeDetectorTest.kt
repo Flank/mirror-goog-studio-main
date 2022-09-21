@@ -715,7 +715,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
         ).run().expect(expected)
     }
 
-    fun testComparingResourceTypes() {
+    fun testComparingResourceTypesJava() {
         val expected = "" +
             "src/test/pkg/ResourceTypeTest.java:9: Error: Comparing resource types (@DrawableRes) other than equality is dangerous and usually wrong;  some resource types set top bit which turns the value negative [ResourceType]\n" +
             "        if (id < 0) { // ERROR\n" +
@@ -747,6 +747,43 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                     "        }\n" +
                     "    }\n" +
                     "}"
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).allowDuplicates().run().expect(expected)
+    }
+
+    fun testComparingResourceTypesKotlin() {
+        val expected = "" +
+                "src/test/pkg/ResourceTypeTest.kt:9: Error: Comparing resource types (@DrawableRes) other than equality is dangerous and usually wrong;  some resource types set top bit which turns the value negative [ResourceType]\n" +
+                "        if (id < 0) { // ERROR\n" +
+                "            ~~~~~~\n" +
+                "src/test/pkg/ResourceTypeTest.kt:11: Error: Comparing resource types (@DrawableRes) other than equality is dangerous and usually wrong;  some resource types set top bit which turns the value negative [ResourceType]\n" +
+                "        if (0 >= id) { // ERROR\n" +
+                "            ~~~~~~~\n" +
+                "2 errors, 0 warnings\n"
+
+        lint().files(
+            kotlin(
+                "src/test/pkg/ResourceTypeTest.kt",
+                "" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.content.res.Resources\n" +
+                        "import androidx.annotation.DrawableRes\n" +
+                        "import androidx.annotation.StringRes\n" +
+                        "\n" +
+                        "class ResourceTypeTest {\n" +
+                        "    fun test(res: Resources, @DrawableRes @StringRes id: Int) {\n" +
+                        "        if (id < 0) { // ERROR\n" +
+                        "        }\n" +
+                        "        if (0 >= id) { // ERROR\n" +
+                        "        }\n" +
+                        "        if (id == 0) { // OK\n" +
+                        "        }\n" +
+                        "        if (id != 0) { // OK\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}"
             ),
             SUPPORT_ANNOTATIONS_JAR
         ).allowDuplicates().run().expect(expected)
