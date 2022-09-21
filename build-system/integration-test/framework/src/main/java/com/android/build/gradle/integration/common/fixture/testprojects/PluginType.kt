@@ -35,6 +35,10 @@ sealed class PluginType(
         id = "java",
         isJava = true
     )
+    object JAVA_PLATFORM: PluginType(
+        id = "java-platform",
+        isJava = true
+    )
     object APPLICATION: PluginType(
         id = "application",
         isJava = true
