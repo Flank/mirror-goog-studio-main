@@ -840,6 +840,97 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         ).run().expect(expected)
     }
 
+    fun testVisibleForTestingInAndroid() {
+        // Regression test for
+        //   247885568: com.android.internal.annotations.VisibleForTesting's visibility property
+        //              is not recognized
+        val expected =
+            """
+            src/production/otherpkg/OtherPkg.java:7: Warning: This method should only be accessed from tests or within protected scope [VisibleForTests]
+                    new ProductionCode().testHelper3(); // ERROR
+                                         ~~~~~~~~~~~
+            src/production/otherpkg/OtherPkg.java:8: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    new ProductionCode().testHelper4(); // ERROR
+                                         ~~~~~~~~~~~
+            src/production/otherpkg/OtherPkg.java:9: Warning: This method should only be accessed from tests or within package private scope [VisibleForTests]
+                    new ProductionCode().testHelper5(); // ERROR
+                                         ~~~~~~~~~~~
+            src/production/pkg/SamePkg.java:8: Warning: This method should only be accessed from tests or within private scope [VisibleForTests]
+                    new ProductionCode().testHelper4(); // ERROR
+                                         ~~~~~~~~~~~
+            0 errors, 4 warnings
+            """.trimIndent()
+        lint().files(
+            java(
+                """
+                package production.pkg;
+                import com.android.internal.annotations.VisibleForTesting;
+
+                @SuppressWarnings("ClassNameDiffersFromFileName")
+                public class ProductionCode {
+                    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
+                    public void testHelper3() {
+                    }
+
+                    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+                    public void testHelper4() {
+                    }
+
+                    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+                    public void testHelper5() {
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package production.pkg;
+                import production.pkg.ProductionCode;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class SamePkg {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // OK
+                        new ProductionCode().testHelper4(); // ERROR
+                        new ProductionCode().testHelper5(); // OK
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package production.otherpkg;
+                import production.pkg.ProductionCode;
+
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class OtherPkg {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // ERROR
+                        new ProductionCode().testHelper4(); // ERROR
+                        new ProductionCode().testHelper5(); // ERROR
+                    }
+                }
+                """
+            ).indented(),
+            // test/ prefix makes it a test folder entry:
+            java(
+                "test/test/pkg/UnitTest.java",
+                """
+                package test.pkg;
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                public class UnitTest {
+                    public void test() {
+                        new ProductionCode().testHelper3(); // OK
+                        new ProductionCode().testHelper4(); // OK
+                        new ProductionCode().testHelper5(); // OK
+                    }
+                }
+                """
+            ).indented(),
+            androidVisibleForTestingAnnotation
+        ).run().expect(expected)
+    }
+
     fun testRestrictedInheritedAnnotation() {
         // Regression test for http://b.android.com/230387
         // Ensure that when we perform the @RestrictTo check, we don't incorrectly
@@ -2047,6 +2138,23 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 PROTECTED
             }
           Visibility productionVisibility() default Visibility.PRIVATE;
+        }
+        """
+    ).indented()
+
+    private val androidVisibleForTestingAnnotation: TestFile = java(
+        """
+        package com.android.internal.annotations;
+        import java.lang.annotation.Retention;
+        import java.lang.annotation.RetentionPolicy;
+        @Retention(RetentionPolicy.CLASS)
+        public @interface VisibleForTesting {
+            enum Visibility {
+                PROTECTED,
+                PACKAGE,
+                PRIVATE
+            }
+            Visibility visibility() default Visibility.PRIVATE;
         }
         """
     ).indented()

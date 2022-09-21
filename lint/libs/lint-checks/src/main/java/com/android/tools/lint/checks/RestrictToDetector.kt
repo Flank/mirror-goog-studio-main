@@ -470,6 +470,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         private const val VISIBLE_FOR_TESTING_SUFFIX = ".VisibleForTesting"
         private const val ATTR_OTHERWISE = "otherwise"
         private const val ATTR_PRODUCTION_VISIBILITY = "productionVisibility"
+        private const val ATTR_VISIBILITY = "visibility"
 
         // Must match constants in @VisibleForTesting:
         private const val VISIBILITY_PRIVATE = 2
@@ -482,6 +483,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val value = annotation.findDeclaredAttributeValue(ATTR_OTHERWISE)
                 // Guava within Google3:
                 ?: annotation.findDeclaredAttributeValue(ATTR_PRODUCTION_VISIBILITY)
+                // Used in many android versions like com.android.internal.annotations.VisibleForTesting
+                ?: annotation.findDeclaredAttributeValue(ATTR_VISIBILITY)
             if (value is ULiteralExpression) {
                 val v = value.value
                 if (v is Int) {
@@ -495,6 +498,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     "PRIVATE" -> return VISIBILITY_PRIVATE
                     "PROTECTED" -> return VISIBILITY_PROTECTED
                     "PACKAGE_PRIVATE" -> return VISIBILITY_PACKAGE_PRIVATE
+                    "PACKAGE" -> return VISIBILITY_PACKAGE_PRIVATE
                 }
             } else if (value is UnknownJavaExpression) {
                 // Workaround for https://youtrack.jetbrains.com/issue/KT-47290 -- see
@@ -516,6 +520,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (psi is ClsAnnotationImpl) {
                     val otherwise = psi.findAttribute(ATTR_OTHERWISE)
                         ?: psi.findAttribute(ATTR_PRODUCTION_VISIBILITY)
+                        ?: psi.findAttribute(ATTR_VISIBILITY)
                     val v = otherwise?.attributeValue
                     if (v is JvmAnnotationConstantValue) {
                         val constant = v.constantValue
