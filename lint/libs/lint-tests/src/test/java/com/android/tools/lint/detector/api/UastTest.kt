@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.psi.KtTypeParameter
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULocalVariable
 import org.jetbrains.uast.UMethod
@@ -1435,6 +1436,38 @@ class UastTest : TestCase() {
                     return super.visitCallExpression(node)
                 }
             })
+        }
+    }
+
+    fun testCommentOnDataClass() {
+        val source = kotlin(
+            """
+            // Single-line comment on data class
+            data class DataClass(val id: String)
+            """
+        ).indented()
+
+        check(
+            source
+        ) { file ->
+            val commentMap : MutableMap<String, MutableSet<UElement>> = mutableMapOf()
+            file.accept(object : AbstractUastVisitor() {
+                override fun visitElement(node: UElement): Boolean {
+                    node.comments.forEach {
+                        val boundUElement = commentMap.computeIfAbsent(it.text) {
+                            mutableSetOf()
+                        }
+                        boundUElement.add(node)
+                    }
+                    return super.visitElement(node)
+                }
+            })
+            assertTrue(commentMap.keys.isNotEmpty())
+            commentMap.forEach { (_, uElementSet) ->
+                // TODO(b/235184438): comments should be bound to one single UElement, in this case, just data class
+                //   Currently it appears on data class and its synthetic members; will fail when an upstream fix is bundled
+                assertEquals(5, uElementSet.size)
+            }
         }
     }
 }
