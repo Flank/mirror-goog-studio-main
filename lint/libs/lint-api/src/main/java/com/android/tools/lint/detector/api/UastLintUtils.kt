@@ -18,7 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.tools.lint.client.api.ResourceReference
-import com.android.tools.lint.detector.api.ConstantEvaluator.LastAssignmentFinder.LAST_ASSIGNMENT_VALUE_UNKNOWN
+import com.android.tools.lint.detector.api.ConstantEvaluator.LastAssignmentFinder.Companion.LAST_ASSIGNMENT_VALUE_UNKNOWN
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiElement

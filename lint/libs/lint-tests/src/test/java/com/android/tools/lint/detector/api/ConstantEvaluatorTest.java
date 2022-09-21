@@ -441,6 +441,7 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(~5, "~5");
         checkExpression(~(long) 5, "~(long)5");
         checkExpression(~(short) 5, "~(short)5");
+        checkExpression(~(char) 5, "~(char)5");
         checkExpression(~(byte) 5, "~(byte)5");
         checkExpression(-(long) 5, "-(long)5");
         checkExpression(-(short) 5, "-(short)5");
