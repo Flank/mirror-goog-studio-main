@@ -15,7 +15,6 @@
  */
 package com.android.adblib.tools.debugging.impl
 
-import com.android.adblib.AdbLogger
 import com.android.adblib.AdbSession
 import com.android.adblib.ByteBufferAdbOutputChannel
 import com.android.adblib.DeviceSelector
@@ -24,6 +23,7 @@ import com.android.adblib.testingutils.CoroutineTestUtils.runBlockingWithTimeout
 import com.android.adblib.testingutils.CoroutineTestUtils.yieldUntil
 import com.android.adblib.testingutils.FakeAdbServerProvider
 import com.android.adblib.tools.debugging.JdwpSession
+import com.android.adblib.tools.debugging.SharedJdwpSession
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.MutableJdwpPacket
 import com.android.adblib.tools.debugging.packets.clone

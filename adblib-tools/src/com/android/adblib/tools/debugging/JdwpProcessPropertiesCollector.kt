@@ -18,7 +18,6 @@ package com.android.adblib.tools.debugging
 import com.android.adblib.AdbSession
 import com.android.adblib.ByteBufferAdbOutputChannel
 import com.android.adblib.thisLogger
-import com.android.adblib.tools.debugging.impl.SharedJdwpSession
 import com.android.adblib.tools.debugging.packets.AdbBufferedInputChannel
 import com.android.adblib.tools.debugging.packets.JdwpPacketConstants.PACKET_HEADER_LENGTH
 import com.android.adblib.tools.debugging.packets.JdwpPacketView

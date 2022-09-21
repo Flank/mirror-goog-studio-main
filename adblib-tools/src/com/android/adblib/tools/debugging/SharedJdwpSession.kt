@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adblib.tools.debugging.impl
+package com.android.adblib.tools.debugging
 
 import com.android.adblib.AdbChannel
 import com.android.adblib.AdbSession
-import com.android.adblib.tools.debugging.JdwpSession
+import com.android.adblib.tools.debugging.impl.SharedJdwpSessionImpl
 import com.android.adblib.tools.debugging.packets.JdwpPacketView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
