@@ -155,7 +155,6 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertNotNull(client.clientData)
         Assert.assertEquals(10, client.clientData.pid)
         Assert.assertTrue(client.isDdmAware)
-        assertThrows { client.kill() }
         Assert.assertTrue(client.isValid)
         Assert.assertTrue(client.debuggerListenPort > 0)
         Assert.assertFalse(client.isDebuggerAttached)
@@ -315,6 +314,37 @@ class AdbLibDeviceClientManagerTest {
         Assert.assertSame(event.deviceClientManager, deviceClientManager)
         Assert.assertNotNull(event.client)
         Assert.assertEquals("FakeVM", event.client!!.clientData.vmIdentifier)
+    }
+
+    @Test
+    fun testClientKillWorks() = runBlockingWithTimeout {
+        // Prepare
+        val session = fakeAdb.createAdbSession(closeables)
+        val clientManager = AdbLibClientManager(session)
+        val listener = TestDeviceClientManagerListener()
+        val (device, deviceState) = fakeAdb.connectTestDevice()
+        val deviceClientManager =
+            clientManager.createDeviceClientManager(
+                fakeAdb.bridge,
+                device,
+                listener
+            )
+
+        // Act
+        deviceState.startClient(10, 0, "foo.bar", false)
+        yieldUntil {
+            // Wait for both processes to show up and for both the JDWP proxy
+            // and process properties to be initialized.
+            deviceClientManager.clients.size == 1 &&
+                    deviceClientManager.clients.all {
+                        it.debuggerListenPort > 0 && it.clientData.vmIdentifier != null
+                    }
+        }
+        val client = deviceClientManager.clients.first { it.clientData.pid == 10 }
+        client.kill()
+
+        // Assert: Wait until process has disappeared from the list of Clients
+        yieldUntil { deviceClientManager.clients.isEmpty() }
     }
 
     private fun assertThrows(block: () -> Unit) {

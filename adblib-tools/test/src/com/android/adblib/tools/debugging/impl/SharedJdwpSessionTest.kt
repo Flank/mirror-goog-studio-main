@@ -32,6 +32,8 @@ import com.android.adblib.tools.debugging.packets.ddms.DdmsChunkView
 import com.android.adblib.tools.debugging.packets.ddms.DdmsPacketConstants
 import com.android.adblib.tools.debugging.packets.ddms.MutableDdmsChunk
 import com.android.adblib.tools.debugging.packets.ddms.writeToChannel
+import com.android.adblib.tools.debugging.sendDdmsExit
+import com.android.adblib.tools.debugging.sendVmExit
 import com.android.adblib.tools.testutils.AdbLibToolsTestBase
 import com.android.adblib.utils.ResizableBuffer
 import kotlinx.coroutines.CancellationException
@@ -85,7 +87,6 @@ class SharedJdwpSessionTest : AdbLibToolsTestBase() {
 
     @Test
     fun sendPacketWithActiveReceiverWorks() = runBlockingWithTimeout {
-        //println("============================ sendPacketWithActiveReceiverWorks")
         val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
         val fakeDevice = addFakeDevice(fakeAdb, 30)
         val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
@@ -452,6 +453,38 @@ class SharedJdwpSessionTest : AdbLibToolsTestBase() {
 
         // Assert
         assertEquals(packetToReplay.id - 1, replayPacket.id)
+    }
+
+    @Test
+    fun sendVmExitPacketWorks() = runBlockingWithTimeout {
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb, 30)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+        val session = createSession(fakeAdb)
+        fakeDevice.startClient(10, 0, "a.b.c", false)
+
+        // Act
+        val jdwpSession = openSharedJdwpSession(session, deviceSelector, 10)
+        jdwpSession.sendVmExit(1)
+
+        // Assert: Wait until client process is gone
+        yieldUntil { fakeDevice.getClient(10) == null }
+    }
+
+    @Test
+    fun sendDdmsExitPacketWorks() = runBlockingWithTimeout {
+        val fakeAdb = registerCloseable(FakeAdbServerProvider().buildDefault().start())
+        val fakeDevice = addFakeDevice(fakeAdb, 30)
+        val deviceSelector = DeviceSelector.fromSerialNumber(fakeDevice.deviceId)
+        val session = createSession(fakeAdb)
+        fakeDevice.startClient(10, 0, "a.b.c", false)
+
+        // Act
+        val jdwpSession = openSharedJdwpSession(session, deviceSelector, 10)
+        jdwpSession.sendDdmsExit(1)
+
+        // Assert: Wait until client process is gone
+        yieldUntil { fakeDevice.getClient(10) == null }
     }
 
     private suspend fun DdmsChunkView.toBufferedInputChannel(): AdbBufferedInputChannel {

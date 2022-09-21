@@ -27,7 +27,12 @@ import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.DDMPacketHan
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.DdmPacket;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.ExitHandler;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.HeloHandler;
+import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpCommandId;
 import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacket;
+import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpPacketHandler;
+
+import com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers.JdwpVmExitHandler;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,18 +47,24 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
 
     private static final String HANDSHAKE_STRING = "JDWP-Handshake";
 
-    private final Map<Integer, DDMPacketHandler> packetHandlers = new HashMap<>();
+    private final Map<Integer, DDMPacketHandler> ddmPacketHandlers = new HashMap<>();
+
+    private final Map<JdwpCommandId, JdwpPacketHandler> jdwpPacketHandlers = new HashMap<>();
 
     public JdwpCommandHandler() {
         super("jdwp");
-        addPacketHandler(HeloHandler.CHUNK_TYPE, new HeloHandler());
-        addPacketHandler(ExitHandler.CHUNK_TYPE, new ExitHandler());
+        addDdmPacketHandler(HeloHandler.CHUNK_TYPE, new HeloHandler());
+        addDdmPacketHandler(ExitHandler.CHUNK_TYPE, new ExitHandler());
+
+        addJdwpPacketHandler(JdwpVmExitHandler.Companion.getCommandId(), new JdwpVmExitHandler());
     }
 
-    public JdwpCommandHandler addPacketHandler(
-            int chunkType, @NonNull DDMPacketHandler packetHandler) {
-        packetHandlers.put(chunkType, packetHandler);
-        return this;
+    public void addDdmPacketHandler(int chunkType, @NonNull DDMPacketHandler packetHandler) {
+        ddmPacketHandlers.put(chunkType, packetHandler);
+    }
+
+    public void addJdwpPacketHandler(@NonNull JdwpCommandId commandId, @NonNull JdwpPacketHandler packetHandler) {
+        jdwpPacketHandlers.put(commandId, packetHandler);
     }
 
     @Override
@@ -131,7 +142,8 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
         }
 
         // default - ignore the packet and keep listening
-        DDMPacketHandler defaultHandler = (unused, unused3, unused2, unused4) -> true;
+        DDMPacketHandler defaultDdmHandler = (unused, unused3, unused2, unused4) -> true;
+        JdwpPacketHandler defaultJdwpHandler = (unused, unused3, unused2, unused4) -> true;
 
         boolean running = true;
 
@@ -141,9 +153,15 @@ public class JdwpCommandHandler extends DeviceCommandHandler {
                 if (DdmPacket.isDdmPacket(packet)) {
                     DdmPacket ddmPacket = DdmPacket.fromJdwpPacket(packet);
                     running =
-                            packetHandlers
-                                    .getOrDefault(ddmPacket.getChunkType(), defaultHandler)
+                            ddmPacketHandlers
+                                    .getOrDefault(ddmPacket.getChunkType(), defaultDdmHandler)
                                     .handlePacket(device, client, ddmPacket, oStream);
+                } else {
+                    JdwpCommandId commandId = new JdwpCommandId(packet.getCmdSet(), packet.getCmd());
+                    running =
+                            jdwpPacketHandlers
+                                    .getOrDefault(commandId, defaultJdwpHandler)
+                                    .handlePacket(device, client, packet, oStream);
                 }
             } catch (IOException e) {
                 writeFailResponse(oStream, "Could not read packet.");

@@ -52,6 +52,21 @@ interface JdwpProcess {
      * as changes over time.
      */
     val propertiesFlow: StateFlow<JdwpProcessProperties>
+
+    /**
+     * Invokes [block] on the [SharedJdwpSession] corresponding to this process.
+     * The [SharedJdwpSession] is opened if needed before [block] is invoked, and closed
+     * after [block] exits (if needed, i.e. if there are no other active blocks).
+     *
+     * Note: This method and [SharedJdwpSession] are both thread-safe, and there
+     * can be an arbitrary number of concurrently active [block], they all share
+     * the same underlying [SharedJdwpSession].
+     *
+     * Note: Given Android is limited to a single JDWP session per process per device
+     * at any point in time, [block] should exit as soon as the session is
+     * not needed anymore.
+     */
+    suspend fun <T> withJdwpSession(block: suspend SharedJdwpSession.() -> T): T
 }
 
 /**

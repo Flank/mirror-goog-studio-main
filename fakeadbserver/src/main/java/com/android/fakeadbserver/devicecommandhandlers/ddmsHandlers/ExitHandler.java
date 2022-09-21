@@ -30,7 +30,8 @@ public class ExitHandler implements DDMPacketHandler {
             @NonNull ClientState client,
             @NonNull DdmPacket packet,
             @NonNull OutputStream oStream) {
-        // Kill the connection
+        // Kill the client and the connection
+        device.stopClient(client.getPid());
         return false;
     }
 }

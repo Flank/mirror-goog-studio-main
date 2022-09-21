@@ -63,7 +63,7 @@ internal class AdbLibDeviceClientManager(
 
     private val deviceSelector = DeviceSelector.fromSerialNumber(iDevice.serialNumber)
 
-    private val session: AdbSession
+    internal val session: AdbSession
         get() = clientManager.session
 
     private val retryDelay = Duration.ofSeconds(2)

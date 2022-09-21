@@ -42,7 +42,7 @@ import java.io.EOFException
  *   underlying [AdbChannel] is executed in a custom [CoroutineScope] so that cancellation
  *   of receivers coroutine does not close the underlying [socket][AdbChannel].
  */
-internal interface SharedJdwpSession : AutoCloseable {
+interface SharedJdwpSession : AutoCloseable {
 
     /**
      * The process ID this [SharedJdwpSession] handles
@@ -123,7 +123,7 @@ internal interface SharedJdwpSession : AutoCloseable {
 
     companion object {
 
-        fun create(session: AdbSession, pid: Int, jdwpSession: JdwpSession): SharedJdwpSession {
+        internal fun create(session: AdbSession, pid: Int, jdwpSession: JdwpSession): SharedJdwpSession {
             return SharedJdwpSessionImpl(session, pid, jdwpSession)
         }
     }

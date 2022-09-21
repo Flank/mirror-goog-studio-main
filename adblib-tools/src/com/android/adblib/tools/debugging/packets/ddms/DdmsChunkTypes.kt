@@ -31,6 +31,8 @@ internal class DdmsChunkTypes {
 
         val WAIT: Int = chunkTypeFromString("WAIT")
 
+        val EXIT: Int = chunkTypeFromString("EXIT")
+
         /**
          * Convert a 4-character string to a 32-bit chunk type.
          */

@@ -15,14 +15,21 @@
  */
 package com.android.adblib.ddmlibcompatibility.debugging
 
+import com.android.adblib.AdbSession
 import com.android.adblib.tools.debugging.JdwpProcess
 import com.android.adblib.tools.debugging.properties
+import com.android.adblib.tools.debugging.sendDdmsExit
+import com.android.adblib.withErrorTimeout
 import com.android.ddmlib.Client
 import com.android.ddmlib.ClientData
 import com.android.ddmlib.DebugViewDumpHandler
 import com.android.ddmlib.IDevice
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
+import java.time.Duration
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * Implementation of the ddmlib [Client] interface based on a [JdwpProcess] instance.
@@ -33,7 +40,7 @@ internal class AdblibClientWrapper(
     val jdwpProcess: JdwpProcess
 ) : Client {
 
-    val clientDataWrapper = ClientData(this, jdwpProcess.pid)
+    private val clientDataWrapper = ClientData(this, jdwpProcess.pid)
 
     override fun getDevice(): IDevice {
         return iDevice
@@ -53,7 +60,12 @@ internal class AdblibClientWrapper(
     }
 
     override fun kill() {
-        TODO("Not yet implemented")
+        // Sends a DDMS EXIT packet to the VM
+        deviceClientManager.session.runBlockingLegacy {
+            jdwpProcess.withJdwpSession {
+                sendDdmsExit(1)
+            }
+        }
     }
 
     /**
@@ -141,4 +153,22 @@ internal class AdblibClientWrapper(
     override fun dumpDisplayList(viewRoot: String, view: String) {
         TODO("Not yet implemented")
     }
+
+    /**
+     * Similar to [runBlocking] but with a custom [timeout]
+     *
+     * @throws TimeoutException if [block] take more than [timeout] to execute
+     */
+    private fun <T> AdbSession.runBlockingLegacy(
+        timeout: Duration = RUN_BLOCKING_LEGACY_DEFAULT_TIMEOUT,
+        block: suspend CoroutineScope.() -> T
+    ): T {
+        return runBlocking {
+            withErrorTimeout(timeout) {
+                block()
+            }
+        }
+    }
 }
+
+private val RUN_BLOCKING_LEGACY_DEFAULT_TIMEOUT: Duration = Duration.ofMillis(5_000)
