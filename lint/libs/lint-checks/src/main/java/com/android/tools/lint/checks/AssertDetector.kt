@@ -33,6 +33,7 @@ import com.intellij.psi.PsiAssertStatement
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiLocalVariable
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiParameter
 import org.jetbrains.kotlin.psi.KtIsExpression
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
@@ -332,7 +333,7 @@ class AssertDetector : Detector(), SourceCodeScanner {
 
     private fun isLocal(lhs: UExpression): Boolean {
         val resolved = lhs.tryResolve()
-        return resolved is PsiLocalVariable
+        return resolved is PsiLocalVariable || resolved is PsiParameter
     }
 
     private fun createKotlinAssertionStatusFix(

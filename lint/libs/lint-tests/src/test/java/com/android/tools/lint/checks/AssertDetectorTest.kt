@@ -222,6 +222,40 @@ class AssertDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testSideEffect() {
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                public class SideEffectTest {
+                    public void test(int x) {
+                        assert something(x);
+                    }
+
+                    private boolean something(int x) {
+                        if (x < 5) {
+                            return true;
+                        }
+
+                        x = align(x);
+                        return x == 40;
+                    }
+
+                    private int align(int x) {
+                        return x % 2;
+                    }
+                }
+                """
+            )
+        )
+            .issues(AssertDetector.SIDE_EFFECT)
+            .platforms(Platform.JDK_SET)
+            .testModes(TestMode.DEFAULT)
+            .run()
+            .expectClean()
+    }
+
     private val kotlinTestFile = kotlin(
         """
                 package test.pkg
