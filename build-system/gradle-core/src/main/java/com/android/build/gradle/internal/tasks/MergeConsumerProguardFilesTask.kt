@@ -68,9 +68,14 @@ abstract class MergeConsumerProguardFilesTask : MergeFileTask() {
                     consumerProguardFiles
             ) { errorMessage: String? -> throw EvalIssueException(errorMessage!!) }
         }
+
         consumerProguardFiles.forEach { file: File ->
-            if (!file.isFile) {
-                logger.warn("Supplied consumer proguard configuration file does not exist: ${file.path}")
+            if (file.isFile) {
+                // do nothing
+            } else if (file.isDirectory) {
+                logger.warn("Directories as consumer proguard configuration are not supported: ${file.path}")
+            } else {
+                logger.warn("Supplied consumer proguard configuration does not exist: ${file.path}")
             }
         }
 

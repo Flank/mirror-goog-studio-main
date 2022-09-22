@@ -150,12 +150,7 @@ abstract class ProguardConfigurableTask(
         // return.
         if (!componentType.get().isBaseModule) {
             return proguardFiles.files.mapNotNull { proguardFile ->
-                if (!proguardFile.isFile) {
-                    logger.warn("Supplied proguard configuration file does not exist: ${proguardFile.path}")
-                    null
-                } else {
-                    proguardFile
-                }
+                removeIfAbsent(proguardFile)
             }
         }
 
@@ -173,13 +168,20 @@ abstract class ProguardConfigurableTask(
             if (defaultFiles.contains(proguardFile)) {
                extractedDefaultProguardFile.get().file(proguardFile.name).asFile
             } else {
-                if(!proguardFile.isFile) {
-                    logger.warn("Supplied proguard configuration file does not exist: ${proguardFile.path}")
-                    null
-                } else {
-                    proguardFile
-                }
+                removeIfAbsent(proguardFile)
             }
+        }
+    }
+
+    private fun removeIfAbsent(file: File): File? {
+        return if(file.isFile) {
+            file
+        } else if(file.isDirectory) {
+            logger.warn("Directories as proguard configuration are not supported: ${file.path}")
+            null
+        } else {
+            logger.warn("Supplied proguard configuration does not exist: ${file.path}")
+            null
         }
     }
 
