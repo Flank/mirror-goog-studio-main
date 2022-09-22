@@ -44,8 +44,11 @@ message Event {
 
     // Profilers Prefix = 100
     // Session is a profiler only concept.
+    // Trace status is shared across all profiler tracing status events.
     // group_id: session id
     SESSION = 101;
+    // group_id:: trace id (populated only if the trace record exists)
+    TRACE_STATUS = 102;
 
     // Network Profiler Prefix = 200
     // group_id: |NETWORK_TX| or |NETWORK_RX|
@@ -68,8 +71,6 @@ message Event {
     CPU_CORE_CONFIG = 303;
     // group_id:: trace id
     CPU_TRACE = 304;
-    // group_id:: trace id (populated only if the trace record exists)
-    CPU_TRACE_STATUS = 305;
 
     // Memory Profiler Prefix = 400
     // no specified group id.
@@ -177,6 +178,7 @@ message Event {
 
     // Profiler Prefix = 100
     SessionData session = 101;
+    TraceStatusData trace_status = 102;
 
     // Network Profiler Prefix = 200
     // Populated when |kind| is |NETWORK_SPEED|
@@ -195,7 +197,6 @@ message Event {
     CpuThreadData cpu_thread = 302;
     CpuCoreConfigData cpu_core_config = 303;
     CpuTraceData cpu_trace = 304;
-    TraceStatusData cpu_trace_status = 305;
 
     // Memory Profiler Prefix = 400
     MemoryUsageData memory_usage = 401;

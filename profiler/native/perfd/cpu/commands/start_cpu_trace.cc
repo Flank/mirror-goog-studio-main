@@ -44,11 +44,10 @@ Status StartCpuTrace::ExecuteOn(Daemon* daemon) {
 
   Event status_event;
   status_event.set_pid(command().pid());
-  status_event.set_kind(Event::CPU_TRACE_STATUS);
+  status_event.set_kind(Event::TRACE_STATUS);
   status_event.set_command_id(command().command_id());
-  status_event.mutable_cpu_trace_status()
-      ->mutable_trace_start_status()
-      ->CopyFrom(start_status);
+  status_event.mutable_trace_status()->mutable_trace_start_status()->CopyFrom(
+      start_status);
 
   vector<Event> events_to_send;
   if (capture != nullptr) {

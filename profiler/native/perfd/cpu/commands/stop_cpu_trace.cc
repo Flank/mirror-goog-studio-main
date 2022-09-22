@@ -38,11 +38,11 @@ Event PopulateTraceStatusEvent(const profiler::proto::Command& command_data,
                                const CaptureInfo* capture) {
   Event status_event;
   status_event.set_pid(command_data.pid());
-  status_event.set_kind(Event::CPU_TRACE_STATUS);
+  status_event.set_kind(Event::TRACE_STATUS);
   status_event.set_command_id(command_data.command_id());
 
   auto* stop_status =
-      status_event.mutable_cpu_trace_status()->mutable_trace_stop_status();
+      status_event.mutable_trace_status()->mutable_trace_stop_status();
   if (capture == nullptr) {
     stop_status->set_error_message("No ongoing capture exists");
     stop_status->set_status(TraceStopStatus::NO_ONGOING_PROFILING);
@@ -70,7 +70,7 @@ void Stop(Daemon* daemon, const profiler::proto::Command command_data,
     stop_timestamp = daemon->clock()->GetCurrentTime();
   }
 
-  // Send CPU_TRACE_STATUS event right away.
+  // Send TRACE_STATUS event right away.
   const auto* ongoing = trace_manager->GetOngoingCapture(app_name);
   Event status_event = PopulateTraceStatusEvent(command_data, ongoing);
   daemon->buffer()->Add(status_event);
@@ -109,7 +109,7 @@ void Stop(Daemon* daemon, const profiler::proto::Command command_data,
     Event trace_event = PopulateCpuTraceEvent(*capture, command_data, true);
     daemon->buffer()->Add(trace_event);
   } else {
-    // When execution reaches here, a CPU_TRACE_STATUS event has been sent
+    // When execution reaches here, a TRACE_STATUS event has been sent
     // to signal the stopping has initiated. In case the ongoing recording
     // cannot be found when StopProfiling() is called, we still a CPU_TRACE
     // event to mark the end of the stopping.

@@ -154,9 +154,9 @@ TEST_F(CpuTraceCommandsTest, CommandsGeneratesEvents) {
   EXPECT_EQ(events_[0].kind(), proto::Event::SESSION);
   EXPECT_TRUE(events_[0].has_session());
   EXPECT_TRUE(events_[0].session().has_session_started());
-  EXPECT_EQ(events_[1].kind(), proto::Event::CPU_TRACE_STATUS);
-  EXPECT_TRUE(events_[1].has_cpu_trace_status());
-  EXPECT_TRUE(events_[1].cpu_trace_status().has_trace_start_status());
+  EXPECT_EQ(events_[1].kind(), proto::Event::TRACE_STATUS);
+  EXPECT_TRUE(events_[1].has_trace_status());
+  EXPECT_TRUE(events_[1].trace_status().has_trace_start_status());
   EXPECT_EQ(events_[2].kind(), proto::Event::CPU_TRACE);
   EXPECT_FALSE(events_[2].is_ended());
   EXPECT_TRUE(events_[2].has_cpu_trace());
@@ -179,9 +179,9 @@ TEST_F(CpuTraceCommandsTest, CommandsGeneratesEvents) {
   }
   EXPECT_EQ(5, events_.size());
   EXPECT_TRUE(trace_manager_->GetOngoingCapture("fake_app") == nullptr);
-  EXPECT_EQ(events_[3].kind(), proto::Event::CPU_TRACE_STATUS);
-  EXPECT_TRUE(events_[3].has_cpu_trace_status());
-  EXPECT_TRUE(events_[3].cpu_trace_status().has_trace_stop_status());
+  EXPECT_EQ(events_[3].kind(), proto::Event::TRACE_STATUS);
+  EXPECT_TRUE(events_[3].has_trace_status());
+  EXPECT_TRUE(events_[3].trace_status().has_trace_stop_status());
   EXPECT_EQ(events_[4].kind(), proto::Event::CPU_TRACE);
   EXPECT_TRUE(events_[4].is_ended());
   EXPECT_TRUE(events_[4].has_cpu_trace());
@@ -216,7 +216,7 @@ TEST_F(CpuTraceCommandsTest, FailToStartCapture) {
   EXPECT_TRUE(events_[0].has_session());
   EXPECT_TRUE(events_[0].session().has_session_started());
 
-  EXPECT_EQ(events_[1].kind(), proto::Event::CPU_TRACE_STATUS);
-  EXPECT_TRUE(events_[1].has_cpu_trace_status());
+  EXPECT_EQ(events_[1].kind(), proto::Event::TRACE_STATUS);
+  EXPECT_TRUE(events_[1].has_trace_status());
 }
 }  // namespace profiler
