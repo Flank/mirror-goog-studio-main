@@ -460,14 +460,13 @@ public class AvdManager {
 
     @NonNull private final ILogger mLog;
 
+    @NonNull private final DeviceManager mDeviceManager;
+
     @GuardedBy("mAllAvdList")
     private final ArrayList<AvdInfo> mAllAvdList = new ArrayList<>();
 
     @GuardedBy("mAllAvdList")
     private ImmutableList<AvdInfo> mValidAvdList;
-
-    @GuardedBy("mAllAvdList")
-    private DeviceManager mDeviceManager = null;
 
     protected AvdManager(
             @NonNull AndroidSdkHandler sdkHandler,
@@ -477,6 +476,7 @@ public class AvdManager {
         mSdkHandler = sdkHandler;
         mBaseAvdFolder = baseAvdFolder;
         mLog = log;
+        mDeviceManager = DeviceManager.createInstance(mSdkHandler, mLog);
         buildAvdList(mAllAvdList);
     }
 
@@ -1485,24 +1485,6 @@ public class AvdManager {
         }
     }
 
-    private DeviceManager getDeviceManager() {
-        synchronized (mAllAvdList) {
-            if (mDeviceManager == null) {
-                mDeviceManager = DeviceManager.createInstance(mSdkHandler, mLog);
-                // TODO: If our DeviceManager changes, clear it and create a new one, which will be
-                // initialized from disk. Meanwhile, whatever updated the device manager will likely
-                // write the changes to disk, so we likely have a race condition.
-                mDeviceManager.registerListener(
-                        () -> {
-                            synchronized (mAllAvdList) {
-                                mDeviceManager = null;
-                            }
-                        });
-            }
-            return mDeviceManager;
-        }
-    }
-
     /**
      * Parses an AVD .ini file to create an {@link AvdInfo}.
      *
@@ -1598,8 +1580,7 @@ public class AvdManager {
             Device d;
 
             if (deviceName != null && deviceMfctr != null) {
-                DeviceManager devMan = getDeviceManager();
-                d = devMan.getDevice(deviceName, deviceMfctr);
+                d = mDeviceManager.getDevice(deviceName, deviceMfctr);
                 deviceStatus = d == null ? DeviceStatus.MISSING : DeviceStatus.EXISTS;
 
                 if (d != null) {
@@ -1916,8 +1897,7 @@ public class AvdManager {
         // Overwrite the properties derived from the device and nothing else
         Map<String, String> properties = new HashMap<>(avd.getProperties());
 
-        DeviceManager devMan = getDeviceManager();
-        Collection<Device> devices = devMan.getDevices(DeviceManager.ALL_DEVICES);
+        Collection<Device> devices = mDeviceManager.getDevices(DeviceManager.ALL_DEVICES);
         String name = properties.get(AvdManager.AVD_INI_DEVICE_NAME);
         String manufacturer = properties.get(AvdManager.AVD_INI_DEVICE_MANUFACTURER);
 
