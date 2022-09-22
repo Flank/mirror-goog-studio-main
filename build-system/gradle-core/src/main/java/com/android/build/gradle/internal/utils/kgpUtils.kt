@@ -47,9 +47,6 @@ const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 const val KSP_PLUGIN_ID = "com.google.devtools.ksp"
 private val KOTLIN_MPP_PLUGIN_IDS = listOf("kotlin-multiplatform", "org.jetbrains.kotlin.multiplatform")
 
-private val irBackendByDefault = KotlinVersion(1, 5)
-private val irBackendIntroduced = KotlinVersion(1, 3, 70)
-
 /**
  * Returns `true` if any of the Kotlin plugins is applied (there are many Kotlin plugins). If we
  * want to check a specific Kotlin plugin, use another method (e.g.,
@@ -147,23 +144,14 @@ fun recordIrBackendForAnalytics(allPropertiesList: List<ComponentCreationConfig>
                 try {
                     // Enabling compose forces IR, so handle that case.
                     if (composeIsEnabled) {
-                        setIrUsedInAnalytics(creationConfig, project)
+                        setIrUsedInAnalytics(creationConfig, project, useIr = true)
                         return@configureKotlinCompileForProject
                     }
 
                     val kotlinVersion = getProjectKotlinPluginKotlinVersion(project)
-                    val irBackendEnabled = when {
-                        kotlinVersion == null -> return@configureKotlinCompileForProject
-                        kotlinVersion >= irBackendByDefault -> {
-                            !getKotlinOptionsValueIfSet(task, extension, "getUseOldBackend", false)
-                        }
-                        kotlinVersion >= irBackendIntroduced -> {
-                            getKotlinOptionsValueIfSet(task, extension, "getUseIR", false)
-                        }
-                        else -> null
-                    }
-                    irBackendEnabled?.let {
-                        setIrUsedInAnalytics(creationConfig, project)
+                    if (kotlinVersion != null) {
+                        val irBackendEnabled = !getKotlinOptionsValueIfSet(task, extension, "getUseOldBackend", false)
+                        setIrUsedInAnalytics(creationConfig, project, irBackendEnabled)
                     }
                 } catch (ignored: Throwable) {
                 }
@@ -173,6 +161,7 @@ fun recordIrBackendForAnalytics(allPropertiesList: List<ComponentCreationConfig>
     }
 }
 
+@Suppress("SameParameterValue")
 private fun getKotlinOptionsValueIfSet(task: Task, extension: BaseExtension, methodName: String, defaultValue: Boolean): Boolean {
     // We need reflection because AGP and KGP can be in different class loaders.
     val getKotlinOptions = task.javaClass.getMethod("getKotlinOptions")
@@ -189,16 +178,11 @@ private fun getKotlinOptionsValueIfSet(task: Task, extension: BaseExtension, met
     return defaultValue
 }
 
-/** User reflection as API has been removed in newer KGP versions. */
-private fun enableUseIr(task: Task) {
-    // We need reflection because AGP and KGP can be in different class loaders.
-    val getKotlinOptions = task.javaClass.getMethod("getKotlinOptions")
-    val kotlinOptions = getKotlinOptions.invoke(task)
-    val method = kotlinOptions.javaClass.getMethod("setUseIR", Boolean::class.java)
-    method.invoke(kotlinOptions, true)
-}
-
-private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, project: Project) {
+private fun setIrUsedInAnalytics(
+    creationConfig: ComponentCreationConfig,
+    project: Project,
+    useIr: Boolean
+) {
     val buildService: AnalyticsConfiguratorService =
             getBuildService(
                     creationConfig.services.buildServiceRegistry,
@@ -206,7 +190,7 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
                     .get()
 
     buildService.getVariantBuilder(project.path, creationConfig.name)
-            ?.setKotlinOptions(GradleBuildVariant.KotlinOptions.newBuilder().setUseIr(true))
+            ?.setKotlinOptions(GradleBuildVariant.KotlinOptions.newBuilder().setUseIr(useIr))
 }
 
 /** Add compose compiler extension args to Kotlin compile task. */
@@ -223,12 +207,6 @@ fun addComposeArgsToKotlinCompile(
     }
 
     val kotlinVersion = getProjectKotlinPluginKotlinVersion(task.project)
-    kotlinVersion?.let { version ->
-        when {
-            version >= irBackendByDefault -> return@let // IR is enabled by default
-            version >= irBackendIntroduced -> enableUseIr(task)
-        }
-    }
 
     task.addPluginClasspath(kotlinVersion, compilerExtension)
 
