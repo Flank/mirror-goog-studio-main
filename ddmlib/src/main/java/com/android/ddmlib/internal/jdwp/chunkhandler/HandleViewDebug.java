@@ -22,8 +22,9 @@ import com.android.ddmlib.ByteBufferUtil;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.DebugViewDumpHandler;
 import com.android.ddmlib.Log;
-import com.android.ddmlib.internal.MonitorThread;
 import com.android.ddmlib.internal.ClientImpl;
+import com.android.ddmlib.internal.DebugViewChunkHandler;
+import com.android.ddmlib.internal.MonitorThread;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -56,8 +57,7 @@ public final class HandleViewDebug extends ChunkHandler {
 
     private static final HandleViewDebug sInstance = new HandleViewDebug();
 
-    private static final DebugViewDumpHandler sViewOpNullChunkHandler =
-            new NullChunkHandler(DebugViewDumpHandler.CHUNK_VUOP);
+    private static final DebugViewDumpHandler sViewOpNullChunkHandler = new NullChunkHandler();
 
     private HandleViewDebug() {}
 
@@ -83,7 +83,11 @@ public final class HandleViewDebug extends ChunkHandler {
         ByteBuffer chunkBuf = getChunkDataBuf(buf);
         chunkBuf.putInt(1);
         finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VULW, chunkBuf.position());
-        ((ClientImpl) client).send(packet, replyHandler);
+
+        ((ClientImpl) client)
+                .send(
+                        packet,
+                        new DebugViewChunkHandler(DebugViewDumpHandler.CHUNK_VULW, replyHandler));
     }
 
     public static void dumpViewHierarchy(
@@ -113,7 +117,8 @@ public final class HandleViewDebug extends ChunkHandler {
         chunkBuf.putInt(useV2 ? 1 : 0);
 
         finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
-        ((ClientImpl) client).send(packet, handler);
+        ((ClientImpl) client)
+                .send(packet, new DebugViewChunkHandler(DebugViewDumpHandler.CHUNK_VURT, handler));
     }
 
     public static void captureLayers(
@@ -132,7 +137,7 @@ public final class HandleViewDebug extends ChunkHandler {
         ByteBufferUtil.putString(chunkBuf, viewRoot);
 
         finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
-        client.send(packet, handler);
+        client.send(packet, new DebugViewChunkHandler(DebugViewDumpHandler.CHUNK_VURT, handler));
     }
 
     private static void sendViewOpPacket(
@@ -167,7 +172,8 @@ public final class HandleViewDebug extends ChunkHandler {
         }
 
         finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VUOP, chunkBuf.position());
-        ((ClientImpl) client).send(packet, handler);
+        ((ClientImpl) client)
+                .send(packet, new DebugViewChunkHandler(DebugViewDumpHandler.CHUNK_VUOP, handler));
     }
 
     public static void profileView(
@@ -225,15 +231,11 @@ public final class HandleViewDebug extends ChunkHandler {
         ByteBufferUtil.putString(chunkBuf, viewRoot);
 
         finishChunkPacket(packet, DebugViewDumpHandler.CHUNK_VURT, chunkBuf.position());
-        client.send(packet, handler);
+        client.send(packet, new DebugViewChunkHandler(DebugViewDumpHandler.CHUNK_VURT, handler));
     }
 
-    /** A {@link ViewDumpHandler} to use when no response is expected. */
+    /** A {@link DebugViewDumpHandler} to use when no response is expected. */
     private static class NullChunkHandler extends DebugViewDumpHandler {
-        public NullChunkHandler(int chunkType) {
-            super(chunkType);
-        }
-
         @Override
         protected void handleViewDebugResult(ByteBuffer data) {
         }

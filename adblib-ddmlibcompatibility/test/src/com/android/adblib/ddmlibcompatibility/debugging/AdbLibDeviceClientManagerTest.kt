@@ -168,14 +168,14 @@ class AdbLibDeviceClientManagerTest {
         assertThrows { client.notifyVmMirrorExited() }
         assertThrows { client.listViewRoots(null) }
         assertThrows {
-            client.captureView("v", "v1", object : DebugViewDumpHandler(10) {
+            client.captureView("v", "v1", object : DebugViewDumpHandler() {
                 override fun handleViewDebugResult(data: ByteBuffer?) {
                 }
             })
         }
 
         assertThrows {
-            client.dumpViewHierarchy("v", false, false, false, object : DebugViewDumpHandler(10) {
+            client.dumpViewHierarchy("v", false, false, false, object : DebugViewDumpHandler() {
                 override fun handleViewDebugResult(data: ByteBuffer?) {
                 }
             })

@@ -15,14 +15,13 @@
  */
 package com.android.ddmlib;
 
-import com.android.ddmlib.internal.ClientImpl;
-import com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler;
-import java.io.IOException;
+import static com.android.ddmlib.internal.jdwp.chunkhandler.ChunkHandler.type;
+
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public abstract class DebugViewDumpHandler extends ChunkHandler {
+public abstract class DebugViewDumpHandler {
     /** Enable/Disable tracing of OpenGL calls. */
     public static final int CHUNK_VUGL = type("VUGL");
 
@@ -38,26 +37,20 @@ public abstract class DebugViewDumpHandler extends ChunkHandler {
     public static final int CHUNK_VUOP = type("VUOP");
 
     private final CountDownLatch mLatch = new CountDownLatch(1);
-    private final int mChunkType;
 
-    public DebugViewDumpHandler(int chunkType) {
-        mChunkType = chunkType;
+    public DebugViewDumpHandler() {}
+
+    /** @deprecated Use {@link DebugViewDumpHandler#DebugViewDumpHandler()} instead */
+    @Deprecated
+    public DebugViewDumpHandler(int chunkType) {}
+
+    /** @deprecated Use {@link #handleChunkData(ByteBuffer)} instead */
+    @Deprecated
+    public void handleChunk(Client client, int type, ByteBuffer data, boolean isReply, int msgId) {
+        handleChunkData(data);
     }
 
-    @Override
-    public void clientReady(ClientImpl client) throws IOException {}
-
-    @Override
-    public void clientDisconnected(ClientImpl client) {}
-
-    @Override
-    public void handleChunk(
-            ClientImpl client, int type, ByteBuffer data, boolean isReply, int msgId) {
-        if (type != mChunkType) {
-            handleUnknownChunk(client, type, data, isReply, msgId);
-            return;
-        }
-
+    public void handleChunkData(ByteBuffer data) {
         handleViewDebugResult(data);
         mLatch.countDown();
     }
