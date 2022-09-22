@@ -193,9 +193,8 @@ proto::AgentLiveEditResponse LiveEdit(jvmtiEnv* jvmti, JNIEnv* jni,
     // and never call whole program recompose.
     if (req.composable() && !hasNewlyPrimedClass) {
       std::string error = "";
-      bool result = recompose.InvalidateGroupsWithKey(
-          reloader, jni->NewStringUTF(target_class.class_name().c_str()),
-          req.group_id(), error);
+      bool result =
+          recompose.InvalidateGroupsWithKey(reloader, req.group_id(), error);
       Log::V("InvalidateGroupsWithKey %d", req.group_id());
       if (result) {
         resp.set_recompose_type(proto::AgentLiveEditResponse::NORMAL);

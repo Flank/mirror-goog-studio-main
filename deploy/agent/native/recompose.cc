@@ -101,16 +101,14 @@ void Recompose::LoadStateAndCompose(jobject reloader, jobject state) const {
   }
 }
 
-bool Recompose::InvalidateGroupsWithKey(jobject reloader, jstring className,
-                                        jint groupId,
+bool Recompose::InvalidateGroupsWithKey(jobject reloader, jint groupId,
                                         std::string& error) const {
   JniClass support(jni_, Recompose::kComposeSupportClass);
   JniObject reloader_jnio(jni_, reloader);
 
   jstring jresult = (jstring)support.CallStaticObjectMethod(
-      "recomposeFunction",
-      "(Ljava/lang/Object;Ljava/lang/String;I)Ljava/lang/String;", reloader,
-      className, groupId);
+      "recomposeFunction", "(Ljava/lang/Object;I)Ljava/lang/String;", reloader,
+      groupId);
 
   if (jni_->ExceptionCheck()) {
     jni_->ExceptionDescribe();

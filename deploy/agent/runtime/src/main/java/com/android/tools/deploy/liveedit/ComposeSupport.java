@@ -27,7 +27,7 @@ public class ComposeSupport {
     public static final String KEY_META_NAME = "androidx.compose.runtime.internal.FunctionKeyMeta";
 
     // Return empty string if success. Otherwise, an error message is returned.
-    public static String recomposeFunction(Object reloader, String className, int groupId) {
+    public static String recomposeFunction(Object reloader, int groupId) {
         Method invalidateGroupsWithKey = null;
         try {
             invalidateGroupsWithKey =
