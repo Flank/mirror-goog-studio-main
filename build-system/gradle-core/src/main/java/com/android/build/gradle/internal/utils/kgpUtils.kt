@@ -37,9 +37,7 @@ import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.SourceSet
-import org.jetbrains.kotlin.gradle.plugin.CompilerPluginConfig
 import org.jetbrains.kotlin.gradle.plugin.KotlinBasePluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 const val KOTLIN_ANDROID_PLUGIN_ID = "org.jetbrains.kotlin.android"
@@ -211,11 +209,19 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
 
 /** Add compose compiler extension args to Kotlin compile task. */
 fun addComposeArgsToKotlinCompile(
-    task: KotlinCompile,
-    creationConfig: ComponentCreationConfig,
-    compilerExtension: FileCollection,
-    useLiveLiterals: Boolean
-) {
+        task: Task,
+        creationConfig: ComponentCreationConfig,
+        compilerExtension: FileCollection,
+        useLiveLiterals: Boolean) {
+    task as KotlinCompile
+    // Add as input
+    task.inputs.files(compilerExtension)
+            .withPropertyName("composeCompilerExtension")
+            .withNormalizer(ClasspathNormalizer::class.java)
+
+    // Add useLiveLiterals as an input
+    task.inputs.property("useLiveLiterals", useLiveLiterals)
+
     val debuggable = if (creationConfig is ApkCreationConfig || creationConfig is LibraryCreationConfig) {
         creationConfig.debuggable
     } else {
@@ -223,53 +229,31 @@ fun addComposeArgsToKotlinCompile(
     }
 
     val kotlinVersion = getProjectKotlinPluginKotlinVersion(task.project)
-    kotlinVersion?.let { version ->
-        when {
-            version >= irBackendByDefault -> return@let // IR is enabled by default
-            version >= irBackendIntroduced -> enableUseIr(task)
+    task.doFirst {
+        it as KotlinCompile
+        kotlinVersion?.let { version ->
+            when {
+                version >= irBackendByDefault -> return@let // IR is enabled by default
+                version >= irBackendIntroduced -> enableUseIr(it)
+            }
         }
-    }
+        val extraFreeCompilerArgs = mutableListOf(
+                "-Xplugin=${compilerExtension.files.first().absolutePath}",
+                "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
+                "-Xallow-unstable-dependencies"
+        )
+        if (debuggable) {
+            extraFreeCompilerArgs += listOf(
+                    "-P",
+                    "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true")
 
-    task.addPluginClasspath(kotlinVersion, compilerExtension)
-
-    task.addPluginOption(kotlinVersion, "androidx.compose.plugins.idea", "enabled", "true")
-    if (debuggable) {
-        task.addPluginOption(kotlinVersion, "androidx.compose.compiler.plugins.kotlin", "sourceInformation", "true")
-        if (useLiveLiterals) {
-            task.addPluginOption(kotlinVersion, "androidx.compose.compiler.plugins.kotlin", "liveLiterals", "true")
+            if (useLiveLiterals) {
+                extraFreeCompilerArgs += listOf(
+                        "-P",
+                        "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true")
+            }
         }
-    }
-
-    task.kotlinOptions.freeCompilerArgs += "-Xallow-unstable-dependencies"
-}
-
-private fun KotlinCompile.addPluginClasspath(
-    kotlinVersion: KotlinVersion?, compilerExtension: FileCollection
-) {
-    // If kotlinVersion == null, it's likely a newer Kotlin version
-    if (kotlinVersion == null || kotlinVersion.isAtLeast(1, 7)) {
-        pluginClasspath.from(compilerExtension)
-    } else {
-        inputs.files(compilerExtension)
-            .withPropertyName("composeCompilerExtension")
-            .withNormalizer(ClasspathNormalizer::class.java)
-        doFirst {
-            (it as KotlinCompile).kotlinOptions.freeCompilerArgs +=
-                "-Xplugin=${compilerExtension.files.single().path}"
-        }
-    }
-}
-
-private fun KotlinCompile.addPluginOption(
-    kotlinVersion: KotlinVersion?, pluginId: String, key: String, value: String
-) {
-    // If kotlinVersion == null, it's likely a newer Kotlin version
-    if (kotlinVersion == null || kotlinVersion.isAtLeast(1, 7)) {
-        pluginOptions.add(CompilerPluginConfig().apply {
-            addPluginArgument(pluginId, SubpluginOption(key, value))
-        })
-    } else {
-        kotlinOptions.freeCompilerArgs += listOf("-P", "plugin:$pluginId:$key=$value")
+        it.kotlinOptions.freeCompilerArgs += extraFreeCompilerArgs
     }
 }
 
