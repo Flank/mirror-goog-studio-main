@@ -2839,26 +2839,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             name: String,
             owner: String
         ): Boolean {
-            if (equivalentName(owner, "android/os/Build\$VERSION_CODES")) {
+            if (equivalentName(owner, "android.os.Build.VERSION_CODES")) {
                 // These constants are required for compilation, not execution
                 // and valid code checks it even on older platforms
                 return true
             }
-            if (equivalentName(
-                    owner,
-                    "android/view/ViewGroup\$LayoutParams"
-                ) && name == "MATCH_PARENT"
-            ) {
+            if (equivalentName(owner, "android.view.ViewGroup.LayoutParams") && name == "MATCH_PARENT") {
                 return true
             }
-            if (equivalentName(
-                    owner,
-                    "android/widget/AbsListView"
-                ) && (
-                    name == "CHOICE_MODE_NONE" ||
-                        name == "CHOICE_MODE_MULTIPLE" ||
-                        name == "CHOICE_MODE_SINGLE"
-                    )
+            if (equivalentName(owner, "android.widget.AbsListView") &&
+                (name == "CHOICE_MODE_NONE" || name == "CHOICE_MODE_MULTIPLE" || name == "CHOICE_MODE_SINGLE")
             ) {
                 // android.widget.ListView#CHOICE_MODE_MULTIPLE and friends have API=1,
                 // but in API 11 it was moved up to the parent class AbsListView.
@@ -2871,18 +2861,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             // Gravity#START and Gravity#END are okay; these were specifically written to
             // be backwards compatible (by using the same lower bits for START as LEFT and
             // for END as RIGHT)
-            if (equivalentName(
-                    owner,
-                    "android/view/Gravity"
-                ) && ("START" == name || "END" == name)
-            ) {
+            if (equivalentName(owner, "android.view.Gravity") && ("START" == name || "END" == name)) {
                 return true
             }
 
-            if (equivalentName(
-                    owner, "android/app/PendingIntent"
-                ) && ("FLAG_MUTABLE" == name || "FLAG_IMMUTABLE" == name)
-            ) {
+            if (equivalentName(owner, "android.app.PendingIntent") && ("FLAG_MUTABLE" == name || "FLAG_IMMUTABLE" == name)) {
+                return true
+            }
+
+            if (equivalentName(owner, "android.provider.MediaStore.MediaColumns")) {
+                // Various constants were moved up to the MediaStore but are correctly handled; see b/154635330
                 return true
             }
 

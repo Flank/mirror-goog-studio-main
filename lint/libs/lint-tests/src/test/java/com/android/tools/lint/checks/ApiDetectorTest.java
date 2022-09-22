@@ -3202,19 +3202,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testMovedField() {
-        // Constant moved up to super interface in API 29; see b/154635330
-        String expected =
-                ""
-                        + "src/test/pkg/Test.java:9: Warning: Field requires API level 29 (current min is 1): android.provider.MediaStore.MediaColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
-                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
-                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/Test.java:11: Warning: Field requires API level 3 (current min is 1): android.provider.MediaStore.Video.VideoColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
-                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
-                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/Test.java:12: Warning: Field requires API level 29 (current min is 1): android.provider.MediaStore.MediaColumns#BUCKET_DISPLAY_NAME [InlinedApi]\n"
-                        + "        System.out.println(MediaColumns.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
-                        + "                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 3 warnings";
+        // Constant moved up to super interface in API 29; see b/154635330.
         lint().files(
                         manifest().minSdk(1),
                         java(
@@ -3227,16 +3215,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "\n"
                                         + "public class Test {\n"
                                         + "    public void test(MediaColumns media, ImageColumns image, VideoColumns video) {\n"
-                                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                                        + "        System.out.println(media.BUCKET_DISPLAY_NAME); // OK\n"
                                         + "        System.out.println(image.BUCKET_DISPLAY_NAME); // OK\n"
-                                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // ERROR - req 3\n"
-                                        + "        System.out.println(MediaColumns.BUCKET_DISPLAY_NAME); // ERROR - req 29\n"
+                                        + "        System.out.println(video.BUCKET_DISPLAY_NAME); // OK\n"
+                                        + "        System.out.println(MediaColumns.BUCKET_DISPLAY_NAME); // OK\n"
                                         + "        System.out.println(ImageColumns.BUCKET_DISPLAY_NAME); // OK\n"
+                                        + "        System.out.println(MediaStore.MediaColumns.DATE_TAKEN); // OK\n"
                                         + "    }\n"
                                         + "}"))
                 .checkMessage(this::checkReportedError)
                 .run()
-                .expect(expected);
+                .expectClean();
     }
 
     public void testMovedField2() {
