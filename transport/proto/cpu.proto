@@ -21,6 +21,7 @@ option java_outer_classname = "CpuProfiler";
 
 import "common.proto";
 import "cpu_data.proto";
+import "trace.proto";
 
 service CpuService {
   rpc GetData(CpuDataRequest) returns (CpuDataResponse) {

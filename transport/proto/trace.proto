@@ -1,0 +1,64 @@
+/*
+* Copyright (C) 2018 The Android Open Source Project
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Trace";
+
+message TraceStartStatus {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+
+  Status status = 1;
+  string error_message = 2;
+}
+
+message TraceStopStatus {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NO_ONGOING_PROFILING = 2;
+    APP_PROCESS_DIED = 3;
+    APP_PID_CHANGED = 4;
+    PROFILER_PROCESS_DIED = 5;
+    STOP_COMMAND_FAILED = 6;
+    STILL_PROFILING_AFTER_STOP = 7;
+    CANNOT_START_WAITING = 8;
+    WAIT_TIMEOUT = 9;
+    WAIT_FAILED = 10;
+    CANNOT_READ_WAIT_EVENT = 11;
+    CANNOT_COPY_FILE = 12;
+    CANNOT_FORM_FILE = 13;
+    CANNOT_READ_FILE = 14;
+  }
+
+  Status status = 1;
+  string error_message = 2;
+  // The time taken to stop the trace;
+  int64 stopping_time_ns = 3;
+}
+
+
+message TraceStatusData {
+  oneof union {
+    TraceStartStatus trace_start_status = 1;
+    TraceStopStatus trace_stop_status = 2;
+  }
+}

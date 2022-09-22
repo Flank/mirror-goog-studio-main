@@ -28,6 +28,7 @@ import "memory_data.proto";
 import "network_data.proto";
 import "user_counter_data.proto";
 import "layout_inspector.proto";
+import "trace.proto";
 
 
 message Event {
@@ -194,7 +195,7 @@ message Event {
     CpuThreadData cpu_thread = 302;
     CpuCoreConfigData cpu_core_config = 303;
     CpuTraceData cpu_trace = 304;
-    CpuTraceStatusData cpu_trace_status = 305;
+    TraceStatusData cpu_trace_status = 305;
 
     // Memory Profiler Prefix = 400
     MemoryUsageData memory_usage = 401;
