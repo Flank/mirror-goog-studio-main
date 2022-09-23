@@ -33,7 +33,6 @@ class BuildDirRelocationTest {
         .fromTestApp(HelloWorldApp.forPlugin("com.android.library"))
         .addGradleProperties("${BooleanOption.USE_ANDROID_X.propertyName}=true")
         .addGradleProperties("org.gradle.caching=true")
-        .addGradleProperties("${BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG.propertyName}=true")
         .create()
 
     // Regression test for b/146922959

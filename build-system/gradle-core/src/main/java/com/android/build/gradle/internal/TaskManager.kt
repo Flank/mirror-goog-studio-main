@@ -1532,9 +1532,6 @@ abstract class TaskManager<VariantBuilderT : VariantBuilder, VariantT : VariantC
             compileTask.configure { task: Task ->
                 val testConfigInputs = TestConfigInputs(unitTestCreationConfig)
                 val taskInputs = task.inputs
-                taskInputs.property(
-                        "isUseRelativePathEnabled",
-                        testConfigInputs.isUseRelativePathEnabled)
                 taskInputs
                         .files(testConfigInputs.resourceApk)
                         .withPropertyName("resourceApk")

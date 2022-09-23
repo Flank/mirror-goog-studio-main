@@ -215,8 +215,6 @@ enum class BooleanOption(
     /* ------------------------
      * SOFTLY-ENFORCED FEATURES
      */
-    USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
-
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, FeatureStage.SoftlyEnforced(VERSION_8_0)),
 
 
@@ -514,6 +512,12 @@ enum class BooleanOption(
 
     ENABLE_ART_PROFILES(
         "android.enableArtProfiles",
+        true,
+        FeatureStage.Enforced(Version.VERSION_8_0)
+    ),
+
+    USE_RELATIVE_PATH_IN_TEST_CONFIG(
+        "android.testConfig.useRelativePath",
         true,
         FeatureStage.Enforced(Version.VERSION_8_0)
     ),

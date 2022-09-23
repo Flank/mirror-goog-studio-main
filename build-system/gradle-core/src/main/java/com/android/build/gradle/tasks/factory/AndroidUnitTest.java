@@ -186,8 +186,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                     testOptions.getUnitTests().isIncludeAndroidResources();
 
             ProjectOptions configOptions = creationConfig.getServices().getProjectOptions();
-            boolean useRelativePathInTestConfig = configOptions
-                    .get(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG);
 
             // Get projectOptions to determine if the test is invoked from the IDE or the terminal.
             task.isIdeInvoked = configOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE);
@@ -235,19 +233,6 @@ public abstract class AndroidUnitTest extends Test implements VariantAwareTask {
                             task.getName()));
 
             ((UnitTestOptions) testOptions.getUnitTests()).applyConfiguration(task);
-
-            // The task is not yet cacheable when includeAndroidResources=true and
-            // android.testConfig.useRelativePath=false (bug 115873047). We set it explicitly here
-            // so Gradle doesn't have to store cache entries that won't be reused.
-            task.getOutputs()
-                    .doNotCacheIf(
-                            "AndroidUnitTest task is not yet cacheable"
-                                    + " when includeAndroidResources=true"
-                                    + " and android.testConfig.useRelativePath=false",
-                            (Spec<? super Task> & Serializable)
-                                    ((thisTask) ->
-                                            includeAndroidResources
-                                                    && !useRelativePathInTestConfig));
 
             task.dependencies =
                     creationConfig

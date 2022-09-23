@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
@@ -124,9 +123,7 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
-        GradleTaskExecutor runGradleTasks =
-                project.executor()
-                        .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true);
+        GradleTaskExecutor runGradleTasks = project.executor();
 
         runGradleTasks.run("testDebugUnitTest");
 
@@ -147,7 +144,6 @@ public class UnitTestingAndroidResourcesTest {
         // Check that the model contains the generated file
         AndroidProject model =
                 project.model()
-                        .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING) // Bug 184745958
                         .fetchAndroidProjects()
                         .getOnlyModelMap()

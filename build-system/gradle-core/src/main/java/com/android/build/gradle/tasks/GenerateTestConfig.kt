@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_MAN
 import com.android.build.gradle.internal.tasks.BuildAnalyzer
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.internal.tasks.TaskCategory
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
@@ -136,9 +135,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
     }
 
     class TestConfigInputs(creationConfig: UnitTestCreationConfig) {
-        @get:Input
-        val isUseRelativePathEnabled: Boolean
-
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
         @get:Optional
@@ -162,9 +158,6 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
         val packageNameOfFinalRClass: Provider<String>
 
         init {
-            isUseRelativePathEnabled = creationConfig.services.projectOptions.get(
-                BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
-            )
             resourceApk = creationConfig.artifacts.get(APK_FOR_LOCAL_TEST)
             mergedAssets = creationConfig.mainVariant.artifacts.get(SingleArtifact.ASSETS)
             mergedManifest = if (creationConfig.mainVariant.componentType.isApk) {
@@ -187,19 +180,11 @@ abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFacto
                     ?: error("Unable to find manifest output")
 
             return TestConfigProperties(
-                resourceApk?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
-                getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
-                getRelativePathIfRequired(File(manifestOutput.outputFile), projectDir),
+                resourceApk?.get()?.asFile?.relativeTo(projectDir)?.toString(),
+                mergedAssets.get().asFile.relativeTo(projectDir).toString(),
+                File(manifestOutput.outputFile).relativeTo(projectDir).toString(),
                 packageNameOfFinalRClass.get()
             )
-        }
-
-        private fun getRelativePathIfRequired(file: File, rootProjectDir: File): String {
-            return if (isUseRelativePathEnabled) {
-                rootProjectDir.toPath().relativize(file.toPath()).toString()
-            } else {
-                rootProjectDir.toPath().resolve(file.toPath()).toString()
-            }
         }
     }
 
