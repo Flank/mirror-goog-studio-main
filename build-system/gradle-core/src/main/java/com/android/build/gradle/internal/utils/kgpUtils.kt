@@ -209,19 +209,11 @@ private fun setIrUsedInAnalytics(creationConfig: ComponentCreationConfig, projec
 
 /** Add compose compiler extension args to Kotlin compile task. */
 fun addComposeArgsToKotlinCompile(
-        task: Task,
-        creationConfig: ComponentCreationConfig,
-        compilerExtension: FileCollection,
-        useLiveLiterals: Boolean) {
-    task as KotlinCompile
-    // Add as input
-    task.inputs.files(compilerExtension)
-            .withPropertyName("composeCompilerExtension")
-            .withNormalizer(ClasspathNormalizer::class.java)
-
-    // Add useLiveLiterals as an input
-    task.inputs.property("useLiveLiterals", useLiveLiterals)
-
+    task: KotlinCompile,
+    creationConfig: ComponentCreationConfig,
+    compilerExtension: FileCollection,
+    useLiveLiterals: Boolean
+) {
     val debuggable = if (creationConfig is ApkCreationConfig || creationConfig is LibraryCreationConfig) {
         creationConfig.debuggable
     } else {
@@ -229,32 +221,54 @@ fun addComposeArgsToKotlinCompile(
     }
 
     val kotlinVersion = getProjectKotlinPluginKotlinVersion(task.project)
-    task.doFirst {
-        it as KotlinCompile
-        kotlinVersion?.let { version ->
-            when {
-                version >= irBackendByDefault -> return@let // IR is enabled by default
-                version >= irBackendIntroduced -> enableUseIr(it)
-            }
+    kotlinVersion?.let { version ->
+        when {
+            version >= irBackendByDefault -> return@let // IR is enabled by default
+            version >= irBackendIntroduced -> enableUseIr(task)
         }
-        val extraFreeCompilerArgs = mutableListOf(
-                "-Xplugin=${compilerExtension.files.first().absolutePath}",
-                "-P", "plugin:androidx.compose.plugins.idea:enabled=true",
-                "-Xallow-unstable-dependencies"
-        )
-        if (debuggable) {
-            extraFreeCompilerArgs += listOf(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:sourceInformation=true")
-
-            if (useLiveLiterals) {
-                extraFreeCompilerArgs += listOf(
-                        "-P",
-                        "plugin:androidx.compose.compiler.plugins.kotlin:liveLiterals=true")
-            }
-        }
-        it.kotlinOptions.freeCompilerArgs += extraFreeCompilerArgs
     }
+
+    task.addPluginClasspath(kotlinVersion, compilerExtension)
+
+    task.addPluginOption("androidx.compose.plugins.idea", "enabled", "true")
+    if (debuggable) {
+        task.addPluginOption("androidx.compose.compiler.plugins.kotlin", "sourceInformation", "true")
+        if (useLiveLiterals) {
+            task.addPluginOption("androidx.compose.compiler.plugins.kotlin", "liveLiterals", "true")
+        }
+    }
+
+    task.kotlinOptions.freeCompilerArgs += "-Xallow-unstable-dependencies"
+}
+
+private fun KotlinCompile.addPluginClasspath(
+    kotlinVersion: KotlinVersion?, compilerExtension: FileCollection
+) {
+    // If kotlinVersion == null, it's likely a newer Kotlin version
+    if (kotlinVersion == null || kotlinVersion.isAtLeast(1, 7)) {
+        pluginClasspath.from(compilerExtension)
+    } else {
+        inputs.files(compilerExtension)
+            .withPropertyName("composeCompilerExtension")
+            .withNormalizer(ClasspathNormalizer::class.java)
+        doFirst {
+            (it as KotlinCompile).kotlinOptions.freeCompilerArgs +=
+                "-Xplugin=${compilerExtension.files.single().path}"
+        }
+    }
+}
+
+private fun KotlinCompile.addPluginOption(pluginId: String, key: String, value: String) {
+    // Once https://youtrack.jetbrains.com/issue/KT-54160 is fixed, we will be able to use the new
+    // API to add plugin options as follows:
+    //     // If kotlinVersion == null, it's likely a newer Kotlin version
+    //     if (kotlinVersion == null || kotlinVersion.isAtLeast(X, Y)) {
+    //         pluginOptions.add(CompilerPluginConfig().apply {
+    //             addPluginArgument(pluginId, SubpluginOption(key, value))
+    //         })
+    //     } else { ... }
+    // For now, continue to use the old way to add plugin options.
+    kotlinOptions.freeCompilerArgs += listOf("-P", "plugin:$pluginId:$key=$value")
 }
 
 /**
