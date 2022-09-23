@@ -4193,6 +4193,24 @@ class VersionChecksTest : AbstractCheckTest() {
         )
     }
 
+    fun testCurDevelopment() {
+        lint().files(
+            kotlin(
+                """
+                import android.os.Build.VERSION.SDK_INT
+
+                fun test() {
+                    if (SDK_INT >= 10000) requires10000()          // OK 1
+                    if (SDK_INT == 10000) requires10000()          // OK 2
+                    if (SDK_INT < 10000) { } else requires10000()  // OK 3
+                }
+                @RequiresApi(10000) fun requires10000() { }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return ApiDetector()
     }

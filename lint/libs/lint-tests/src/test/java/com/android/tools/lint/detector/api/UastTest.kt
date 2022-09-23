@@ -1450,7 +1450,7 @@ class UastTest : TestCase() {
         check(
             source
         ) { file ->
-            val commentMap : MutableMap<String, MutableSet<UElement>> = mutableMapOf()
+            val commentMap: MutableMap<String, MutableSet<UElement>> = mutableMapOf()
             file.accept(object : AbstractUastVisitor() {
                 override fun visitElement(node: UElement): Boolean {
                     node.comments.forEach {

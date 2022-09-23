@@ -192,11 +192,15 @@ value class ApiConstraint(
 
         // Represents the end point in an open interval corresponding to say "API > 26", e.g. [26, ∞)
         private const val INFINITY = 65 // the final bit (64) is usd to mark infinity; this is an exclusive index
-        /** Marker for the special API level CUR_DEVELOPMENT = 10000 */
-        private const val CUR_DEVELOPMENT_MARKER = 63
+
+        /** Marker for the special API level CUR_DEVELOPMENT. */
+        private const val CUR_DEVELOPMENT_MARKER = 62
+
+        /** API Value corresponding to [CUR_DEVELOPMENT_MARKER]. */
         private const val CUR_DEVELOPMENT = 10000
+
         /** Largest API level we allow being set */
-        private const val MAX_LEVEL = 63
+        private const val MAX_LEVEL = 61
 
         val ALL_LEVELS = ApiConstraint(0xffffffffffffffffUL)
         val NO_LEVELS = ApiConstraint(0UL)
@@ -217,19 +221,19 @@ value class ApiConstraint(
         private fun toInternalApiLevel(level: Int): Int {
             return if (level <= MAX_LEVEL) {
                 level - FIRST_LEVEL
-            } else if (level == CUR_DEVELOPMENT)
-                CUR_DEVELOPMENT_MARKER - FIRST_LEVEL
-            else {
+            } else if (level == CUR_DEVELOPMENT || level == CUR_DEVELOPMENT + 1) { // +1: 10001 is exclusive offset for exactly(10000)
+                CUR_DEVELOPMENT_MARKER + (level - CUR_DEVELOPMENT) - FIRST_LEVEL
+            } else {
                 error("Unsupported API level $level")
             }
         }
 
         private fun fromInternalApiLevel(level: Int): Int {
             val userLevel = level + FIRST_LEVEL
-            if (userLevel == CUR_DEVELOPMENT_MARKER) {
-                return CUR_DEVELOPMENT
+            return if (userLevel == CUR_DEVELOPMENT_MARKER || userLevel == CUR_DEVELOPMENT_MARKER + 1) {
+                CUR_DEVELOPMENT + (userLevel - CUR_DEVELOPMENT_MARKER)
             } else {
-                return userLevel
+                userLevel
             }
         }
 

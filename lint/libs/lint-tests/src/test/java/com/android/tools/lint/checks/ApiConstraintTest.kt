@@ -131,6 +131,18 @@ class ApiConstraintTest {
     }
 
     @Test
+    fun testEverHigher() {
+        assertTrue(below(21).everHigher(19)) // includes 20
+        assertFalse(below(21).everHigher(20))
+        assertFalse(atMost(21).everHigher(21))
+        assertTrue(below(22).everHigher(20))
+        assertTrue(atLeast(5).everHigher(21))
+        assertTrue(exactly(50).everHigher(21))
+        assertFalse(exactly(21).everHigher(21))
+        assertTrue(exactly(21).everHigher(20)) // includes 21
+    }
+
+    @Test
     fun testNotLowerThan() {
         assertTrue(atLeast(24).notLowerThan(24))
         assertTrue(atLeast(24).notLowerThan(23))
@@ -152,6 +164,11 @@ class ApiConstraintTest {
     @Test
     fun testCurDevelopment() {
         assertEquals("API level < 10000", below(10000).toString())
+        assertEquals("API level < 10001", below(10001).toString())
+        assertEquals(
+            "API level = 33 or API level = 10000",
+            (exactly(10000) or exactly(33)).toString()
+        )
     }
 
     @Test(expected = IllegalStateException::class)

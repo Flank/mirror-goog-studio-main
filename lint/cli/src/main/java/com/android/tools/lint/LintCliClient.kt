@@ -1718,7 +1718,6 @@ open class LintCliClient : LintClient {
                         }
                     }
                 }
-
             }
             if (mainManifest == null) {
                 return null
