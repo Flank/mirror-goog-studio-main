@@ -95,8 +95,6 @@ public class LiveEditInstrumentationTest extends AgentTestBase {
                 Deploy.LiveEditRequest.newBuilder()
                         .setTargetClass(clazz)
                         .setComposable(true)
-                        .setStartOffset(1234)
-                        .setEndOffset(12340)
                         .setPackageName(PACKAGE)
                         .build();
 

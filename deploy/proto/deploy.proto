@@ -737,21 +737,15 @@ message LiveEditRequest {
   // and should a function recompose be triggered.
   bool composable = 3;
 
-  // NOTE: These are no longer in use.
-  // The start and end offset of the function. This will be
-  // use to look up the compose group for partial recomposition.
-  int32 start_offset = 4;
-  int32 end_offset = 5;
+  string package_name = 4;
+  Arch arch = 5;
+  repeated int32 process_ids = 6;
 
-  string package_name = 6;
-  Arch arch = 7;
-  repeated int32 process_ids = 8;
-
-  bool debugModeEnabled = 9;
+  bool debugModeEnabled = 7;
 
   // The recompose group ID used for partial recomposition
   // API calls.
-  int32 group_id = 10;
+  int32 group_id = 8;
 }
 
 message LiveEditClass {
