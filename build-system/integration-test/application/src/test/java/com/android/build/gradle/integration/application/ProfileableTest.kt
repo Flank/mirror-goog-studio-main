@@ -31,6 +31,7 @@ import com.android.build.gradle.options.StringOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.util.Locale
 
 /**
  * Tests verifying that builds using the profileable option are configured correctly.
@@ -108,19 +109,25 @@ class ProfileableTest {
     @Test
     fun `test injecting the debug build type to be profileable`() {
         val app = project.getSubproject(":app")
-        project.executor()
-            .with(StringOption.PROFILING_MODE, "profileable")
-            .run("assembleDebug")
+        val result = project.executor()
+                .with(StringOption.PROFILING_MODE, "profileable")
+                .run("assembleDebug")
+        assertThat(result.tasks.filter { it.lowercase(Locale.US).contains("lint") })
+                .named("Lint tasks")
+                .isEmpty()
         checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.DEBUG)
     }
 
     @Test
     fun `test injecting the release build type to be profileable`() {
         val app = project.getSubproject(":app")
-        project.executor()
+        val result = project.executor()
             .with(StringOption.PROFILING_MODE, "profileable")
             .with(BooleanOption.ENABLE_DEFAULT_DEBUG_SIGNING_CONFIG, true)
             .run("assembleRelease")
+        assertThat(result.tasks.filter { it.lowercase(Locale.US).contains("lint") })
+                .named("Lint tasks")
+                .isEmpty()
         checkProjectContainsProfileableInManifest(app, GradleTestProject.ApkType.RELEASE_SIGNED)
     }
 

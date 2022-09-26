@@ -2,6 +2,7 @@ package com.android.build.gradle.internal.lint
 
 import com.android.build.api.dsl.Lint
 import com.android.build.gradle.internal.component.AndroidTestCreationConfig
+import com.android.build.gradle.internal.component.ApplicationCreationConfig
 import com.android.build.gradle.internal.component.TestComponentCreationConfig
 import com.android.build.gradle.internal.component.UnitTestCreationConfig
 import com.android.build.gradle.internal.component.VariantCreationConfig
@@ -120,6 +121,7 @@ class LintTaskManager constructor(
             val mainVariant = variantWithTests.main
             if (mainVariant.componentType.isBaseModule &&
                 !mainVariant.debuggable &&
+                !(mainVariant as ApplicationCreationConfig).profileable &&
                 globalTaskCreationConfig.lintOptions.checkReleaseBuilds
             ) {
                 taskFactory.register(
