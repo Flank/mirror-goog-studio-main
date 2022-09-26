@@ -17,35 +17,33 @@
 @file:JvmName("ModelContainerUtils")
 package com.android.build.gradle.integration.common.utils
 
+import com.android.SdkConstants.GRADLE_PATH_SEPARATOR
 import com.android.build.gradle.integration.common.fixture.ModelContainer
 import com.android.builder.model.AndroidProject
 import com.google.common.collect.ImmutableList
 
 /**
- * Returns the generate sources task list.
+ * Returns the generates sources task list.
  *
  * @param projectToVariantName a function that returns the variant for a given project.
  *
  */
 fun ModelContainer<AndroidProject>.getGenerateSourcesCommands(projectToVariantName: (String) -> String): List<String> {
-
     val commands = ImmutableList.builder<String>()
     for ((projectPath, project) in rootBuildModelMap) {
         val debug = project.getVariantByName(projectToVariantName(projectPath))
-
-        commands.add(projectPath + ":" + debug.mainArtifact.sourceGenTaskName)
+        commands.add(createCommandTask(projectPath, debug.mainArtifact.sourceGenTaskName))
         for (artifact in debug.extraAndroidArtifacts) {
-            commands.add(projectPath + ":" + artifact.sourceGenTaskName)
+            commands.add(createCommandTask(projectPath, artifact.sourceGenTaskName))
         }
         for (artifact in debug.extraJavaArtifacts) {
             for (taskName in artifact.ideSetupTaskNames) {
-                commands.add(projectPath + ":" + taskName)
+                commands.add(createCommandTask(projectPath, taskName))
             }
         }
     }
     return commands.build()
 }
-
 
 /**
  * Returns the generates sources commands for all projects for the debug variant.
@@ -63,9 +61,8 @@ fun ModelContainer<AndroidProject>.getGenerateSourcesCommands(projectToVariantNa
  *  * :app:prepareDebugUnitTestDependencies
  *
  */
-fun ModelContainer<AndroidProject>.getDebugGenerateSourcesCommands(): List<String> {
-    return getGenerateSourcesCommands({ _ -> "debug" })
-}
+fun ModelContainer<AndroidProject>.getDebugGenerateSourcesCommands() =
+    getGenerateSourcesCommands { _ -> "debug" }
 
-
-
+private fun createCommandTask(projectPath: String, taskName: String) =
+    if (projectPath == GRADLE_PATH_SEPARATOR) ":$taskName" else "$projectPath:$taskName"
